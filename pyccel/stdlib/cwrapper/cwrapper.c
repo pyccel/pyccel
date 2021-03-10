@@ -37,7 +37,7 @@ float complex PyComplex_to_Complex64(PyObject *o)
 	float			real_part;
 	float			imag_part;
 
-	// numpy complex64
+	//https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
 	//https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
 	if (PyArray_IsScalar(o, Complex64))
 		PyArray_ScalarAsCtype(o, &c);
@@ -51,7 +51,7 @@ float complex PyComplex_to_Complex64(PyObject *o)
 	}
 	return	c;
 }
-
+//-----------------------------------------------------//
 double complex	PyComplex_to_Complex128(PyObject *o)
 {
 	double complex	c;
@@ -65,7 +65,7 @@ double complex	PyComplex_to_Complex128(PyObject *o)
 
 	return	c;
 }
-
+//-----------------------------------------------------//
 int64_t	PyInt64_to_Int64(PyObject *o)
 {
 	int64_t		i;
@@ -77,7 +77,7 @@ int64_t	PyInt64_to_Int64(PyObject *o)
 
 	return	i;
 }
-
+//-----------------------------------------------------//
 int32_t	PyInt32_to_Int32(PyObject *o)
 {
 	int32_t	i;
@@ -89,7 +89,7 @@ int32_t	PyInt32_to_Int32(PyObject *o)
 
 	return	i;
 }
-
+//-----------------------------------------------------//
 int16_t	PyInt16_to_Int16(PyObject *o)
 {
 	int16_t	i;
@@ -101,7 +101,7 @@ int16_t	PyInt16_to_Int16(PyObject *o)
 
 	return	i;
 }
-
+//-----------------------------------------------------//
 int8_t	PyInt8_to_Int8(PyObject *o)
 {
 	int8_t	i;
@@ -113,7 +113,7 @@ int8_t	PyInt8_to_Int8(PyObject *o)
 
 	return	i;
 }
-
+//-----------------------------------------------------//
 bool	PyBool_to_Bool(PyObject *o)
 {
 	bool	b;
@@ -122,7 +122,7 @@ bool	PyBool_to_Bool(PyObject *o)
 
 	return	b;
 }
-
+//-----------------------------------------------------//
 float	PyFloat_to_Float(PyObject *o)
 {
 	float	f;
@@ -134,7 +134,7 @@ float	PyFloat_to_Float(PyObject *o)
 
 	return	f;
 }
-
+//-----------------------------------------------------//
 double	PyDouble_to_Double(PyObject *o)
 {
 	double	d;
@@ -151,14 +151,18 @@ double	PyDouble_to_Double(PyObject *o)
  * Some of the function used below are based on C/python api
  * with more tolerance to different precisions and complex type.
  *	Parameterss	:
- *		C object
+ *		o	        : the python object
+ *		hard_check  : boolean
+ *			true if we need to check the exact precision otherwise false
  *	Returns     :
- *		o  : python object
+ *		boolean : logic statement responsible for checking python data type
  * reference of the used c/python api function
  * ---------------------------------------------------
- * https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
- * https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
- * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_Check
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_Check
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
+ * https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
+ * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
  */
 
 PyObject	*Complex128_to_PyComplex(double complex *c)
@@ -173,8 +177,7 @@ PyObject	*Complex128_to_PyComplex(double complex *c)
 
 	return o;
 }
-
-
+//-----------------------------------------------------//
 PyObject	*Complex64_to_PyComplex(float complex *c)
 {
 	float		real_part;
@@ -187,12 +190,12 @@ PyObject	*Complex64_to_PyComplex(float complex *c)
 
 	return o;
 }
-
+//-----------------------------------------------------//
 PyObject	*Bool_to_PyBool(bool *b)
 {
 	return *b == true ? Py_True : Py_False;
 }
-
+//-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
 {
 	PyObject	*o;
@@ -201,8 +204,7 @@ PyObject	*Int64_to_PyLong(int64_t *i)
 
 	return o;
 }
-
-
+//-----------------------------------------------------//
 PyObject	*Int32_to_PyLong(int32_t *i)
 {
 	PyObject	*o;
@@ -211,8 +213,7 @@ PyObject	*Int32_to_PyLong(int32_t *i)
 
 	return o;
 }
-
-
+//-----------------------------------------------------//
 PyObject	*Int16_to_PyLong(int16_t *i)
 {
 	PyObject	*o;
@@ -221,8 +222,7 @@ PyObject	*Int16_to_PyLong(int16_t *i)
 
 	return o;
 }
-
-
+//--------------------------------------------------------//
 PyObject	*Int8_to_PyLong(int8_t *i)
 {
 	PyObject	*o;
@@ -231,7 +231,7 @@ PyObject	*Int8_to_PyLong(int8_t *i)
 
 	return o;
 }
-
+//--------------------------------------------------------//
 PyObject	*Double_to_PyDouble(double *d)
 {
 	PyObject	*o;
@@ -240,7 +240,7 @@ PyObject	*Double_to_PyDouble(double *d)
 
 	return o;
 }
-
+//--------------------------------------------------------//
 PyObject	*Float_to_PyDouble(float *d)
 {
 	PyObject	*o;
@@ -249,6 +249,108 @@ PyObject	*Float_to_PyDouble(float *d)
 
 	return o;
 }
+
+
+/*
+ * Functions : Check type functions
+ * ---------------------------
+ * Some of the function used below are based on C/python api
+ * and numpy/c api with more tolerance to different precisions,
+ * different system architectures and complex type.
+ *	Parameterss	:
+ *		C object
+ *	Returns     :
+ *		o  : python object
+ * reference of the used c/python api function
+ * ---------------------------------------------------
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
+ */
+
+
+
+
+bool    PyIs_Int8(PyObject *o, bool hard_check)
+{
+	if (hard_check == true)
+		return PyArray_IsScalar(o, Int8);
+
+	return PyLong_Check(o) || PyArray_IsScalar(o, Int8);
+}
+//--------------------------------------------------------//
+bool    PyIs_Int16(PyObject *o, bool hard_check)
+{	
+	if (hard_check == true)
+		return PyArray_IsScalar(o, Int16);
+
+	return PyLong_Check(o) || PyArray_IsScalar(o, Int16);
+}
+//--------------------------------------------------------//
+bool    PyIs_Int32(PyObject *o, bool hard_check)
+{
+	#ifdef _WIN32
+		return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
+	#endif
+
+	if (hard_check == true)
+		return PyArray_IsScalar(o, Int32);
+
+	return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
+}
+//--------------------------------------------------------//
+bool    PyIs_Int64(PyObject *o, bool hard_check)
+{
+	#ifndef _WIN32
+		return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
+	#endif
+
+	if (hard_check == true)
+		return PyArray_IsScalar(o, Int64);
+
+	return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
+}
+//--------------------------------------------------------//
+bool    PyIs_Float(PyObject *o, bool hard_check)
+{
+	if (hard_check == true)
+		return PyArray_IsScalar(o, Float32);
+
+	return PyFloat_Check(o) || PyArray_IsScalar(o, Float32);
+}
+//--------------------------------------------------------//
+bool    PyIs_Double(PyObject *o, bool hard_check)
+{
+	(void)hard_check;
+
+	return PyFloat_Check(o) || PyArray_IsScalar(o, Float64);
+}
+//--------------------------------------------------------//
+bool    PyIs_Bool(PyObject *o, bool hard_check)
+{
+	(void)hard_check;
+
+	return PyBool_Check(o) || PyArray_IsScalar(o, Bool);
+}
+//--------------------------------------------------------//
+bool    PyIs_Complex128(PyObject *o, bool hard_check)
+{
+	(void)hard_check;
+
+	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
+}
+//--------------------------------------------------------//
+bool    PyIs_Complex64(PyObject *o, bool hard_check)
+{
+	if (hard_check == true)
+		return PyArray_IsScalar(o, Complex64);
+
+	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
+}
+
+
+
+
 
 
 /*

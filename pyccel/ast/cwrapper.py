@@ -14,7 +14,7 @@ from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
 
-from .literals  import LiteralInteger
+from .literals  import LiteralTrue, LiteralFalse
 
 from .datatypes import (DataType, NativeInteger, NativeReal, NativeComplex,
                         NativeBool, NativeString, NativeGeneric, NativeVoid)
@@ -129,7 +129,7 @@ class PyArg_ParseTupleNode(Basic):
                        python_func_kwargs,
                        arg_names,
                        func_args,
-                       parse_args = None,
+                       parse_args = [],
                        converters = None):
 
         if not isinstance(python_func_args, Variable):
@@ -308,35 +308,6 @@ py_to_c_registry = {
     (NativeComplex(), 4)   : 'PyComplex_to_Complex64',
     (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
 
-
-def scalar_checker(py_variable, c_variable):
-    """
-    Generate collector codeblock responsible for collecting value
-    and managing errors (data type, precision) of arguments
-    with rank less than 1
-    Parameters:
-    ----------
-    py_variable  : Variable
-        python variable used in check
-    c_variable   : Variable
-        variable holdding information (data type, precision) needed
-        in selecting check functions
-    Returns:
-    --------
-    body   : condition
-    """
-    #TODO is there any way to make it like array one ?
-    from .numpy_wrapper import NumpyType_Check #avoid import problem
-    
-    body = []
-    numpy_check  = NumpyType_Check(py_variable, c_variable)
-    python_check = PythonType_Check(py_variable, c_variable)
-
-    check        = PyccelNot(PyccelOr(numpy_check, python_check))
-
-    return check
-
-
 def C_to_Python(c_object):
     """
     Create FunctionDef responsible for casting c argument to python
@@ -352,6 +323,7 @@ def C_to_Python(c_object):
         cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
@@ -442,36 +414,48 @@ def generate_datatype_error(variable):
 # https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
 # https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
 
-check_type_registry  = {
-    NativeInteger() : 'PyLong_Check',
-    NativeComplex() : 'PyComplex_Check',
-    NativeReal()    : 'PyFloat_Check',
-    NativeBool()    : 'PyBool_Check',
-}
+# Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
+check_type_registry = {
+    (NativeBool(), 4)      : 'PyIs_Bool',
+    (NativeInteger(), 1)   : 'PyIs_Int8',
+    (NativeInteger(), 2)   : 'PyIs_Int16',
+    (NativeInteger(), 4)   : 'PyIs_Int32',
+    (NativeInteger(), 8)   : 'PyIs_Int64',
+    (NativeReal(), 4)      : 'PyIs_Float',
+    (NativeReal(), 8)      : 'PyIs_Double',
+    (NativeComplex(), 4)   : 'PyIs_Complex64',
+    (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
-def PythonType_Check(py_object, c_object):
+def scalar_object_check(py_object, c_object, hard_check = False):
     """
     Create FunctionCall responsible for checking python argument data type
     Parameters:
     ----------
     py_object  : Variable
         The python argument of the check function
-    c_object : Variable
+    c_object   : Variable
         The variable needed for the generation of the type check
+    hard_check : boolean
+        True if checking the exact precision is needed
     Returns
     -------
     FunctionCall : Check type FunctionCall
     """
+
     try :
-        check_type = check_type_registry[c_object.dtype]
+        check_type = check_type_registry[c_object.dtype, c_object.precision]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+
+    hard_check = LiteralTrue() if hard_check else LiteralFalse()
+
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                 Variable(dtype = NativeBool(), name = 'hard_check')],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
-    return FunctionCall(check_func, [py_object])
+    return FunctionCall(check_func, [py_object, hard_check])
 
 # This registry is used for interface management,
 # mapping each data type to a given flag

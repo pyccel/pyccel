@@ -57,5 +57,15 @@ PyObject	*Int8_to_PyLong(int8_t *i);
 PyObject	*Double_to_PyDouble(double *d);
 PyObject	*Float_to_PyDouble(float *d);
 
+bool    PyIs_Int8(PyObject *o, bool hard_check);
+bool    PyIs_Int16(PyObject *o, bool hard_check);
+bool    PyIs_Int32(PyObject *o, bool hard_check);
+bool    PyIs_Int64(PyObject *o, bool hard_check);
+bool    PyIs_Float(PyObject *o, bool hard_check);
+bool    PyIs_Double(PyObject *o, bool hard_check);
+bool    PyIs_Bool(PyObject *o, bool hard_check);
+bool    PyIs_Complex128(PyObject *o, bool hard_check);
+bool    PyIs_Complex64(PyObject *o, bool hard_check);
+
 
 #endif
