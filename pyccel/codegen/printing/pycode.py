@@ -419,7 +419,13 @@ class PythonCodePrinter(CodePrinter):
                 order = expr.order)
 
     def _print_NumpyLinspace(self, expr):
-        return expr.__str__()
+        type_name = type(expr).__name__
+        func_name = type_name[5:].lower()
+        return "{func_name}({start}, {stop}, {size})".format(
+                func_name = func_name,
+                start = self._print(expr.start),
+                stop = self._print(expr.stop),
+                size = self._print(expr.size))
 
     def _print_NumpyMatmul(self, expr):
         type_name = type(expr).__name__
