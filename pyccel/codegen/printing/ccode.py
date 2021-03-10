@@ -1339,7 +1339,7 @@ class CCodePrinter(CodePrinter):
                                                           stop=stop, step=step, body=body)
         else:
             return (
-                'for ({loop_counter} = {start}; (({step} > 0 ? 1 : -1)*({loop_counter})) < (({step} > 0 ? 1 : -1)*({stop})); {loop_counter} += '
+                'for ({loop_counter} = {start}; ({step} > 0) ? ({loop_counter} < {stop}) : ({loop_counter} > {stop}); {loop_counter} += '
                 '{step})\n{{\n{body}\n}}').format(loop_counter=loop_counter, start=start,
                                                   stop=stop, step=step, body=body)
 
