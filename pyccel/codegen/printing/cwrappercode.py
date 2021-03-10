@@ -423,33 +423,27 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def need_memory_allocation(self, argument, variable):
+    def need_memory_allocation(self, variable):
         """
         allocated needed memory to hold value this is used to avoid creating mass
-        temporary variables and multiples checks, add the allocated variable
-        to list (to_free_objects) to free it later
+        temporary variables and multiples checks
         Parameters:
         -----------
         variable : Variable
-            variable to allocate if needed
-        Returns     : List of Assign
+            variable to allocate
+
+        Returns     : AliasAssign
         -----------
         """
-        body = []
 
-        if variable.is_optional:
-            if variable.rank > 0:
-                dtype = 't_ndarray'
-            else:
-                dtype = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+        if variable.rank > 0:
+            dtype = 't_ndarray'
+        else:
+            dtype = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
 
-            size = Variable(NativeGeneric(), dtype)
-            body += [AliasAssign(variable,
-                FunctionCall(malloc, [
-                    FunctionCall(sizeof, [size])
-                    ])
-                )]
-            self.to_free_objects.append(argument)
+        size = Variable(NativeGeneric(), dtype)
+        size = FunctionCall(sizeof, [size])
+        body = AliasAssign(variable, FunctionCall(malloc, [size]))
 
         return body
 
@@ -485,7 +479,8 @@ class CWrapperCodePrinter(CCodePrinter):
         body = [If(*body)]
 
         # Allocate memory if needed
-        body.extend(self.need_memory_allocation(c_var, c_arg))
+        if c_var.is_optional:
+            body.append(self.need_memory_allocation(c_arg))
 
         # Collect value from python object and check if and error occurred during conversion
         body.append(Assign(c_arg, FunctionCall(cast_function, [p_arg])))
