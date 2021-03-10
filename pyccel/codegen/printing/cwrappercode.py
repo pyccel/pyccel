@@ -5,6 +5,8 @@
 #------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 
+from collections import OrderedDict
+
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
@@ -660,6 +662,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name  = 'Py_BuildValue'
         flags = expr.flags
+
         args  = ', '.join(['&{}, &{}'.format(f.name, a.name) for f, a in zip(expr.converters, expr.args)])
 
         #to change for args rank 1 +
@@ -676,9 +679,9 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs = expr.functions
 
         # Save all used names
-        used_names = set([a.name for a in expr.func[0].arguments]
-            + [r.name for r in expr.func[0].results]
-            + [f.name for f in expr.func])
+        used_names = set([a.name for a in funcs[0].arguments]
+            + [r.name for r in funcs[0].results]
+            + [f.name for f in funcs])
 
         # Find a name for the wrapper function
         wrapper_name = self.get_wrapper_name(used_names, expr)
@@ -688,7 +691,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
         # build keyword_list
-        arg_names         = [a.name for a in expr.arguments]
+        arg_names         = [a.name for a in funcs[0].arguments]
         keyword_list_name = self.get_new_name(used_names, 'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
@@ -702,11 +705,11 @@ class CWrapperCodePrinter(CCodePrinter):
                           for a in funcs[0].arguments]
 
         #dict to collect each variable possible type
-        types_dict     = OrderedDict((a, set()) for a in funcs[0].arguments)
+        types_dict     = OrderedDict((a, set()) for a in parse_args)
         # To store the mini function responsible for collecting value and
         # calling interfaces functions and return the builded value
         wrapper_functions           = []
-        parsing_converter_functions = {}
+
         for func in expr.functions:
             mini_wrapper_name = self.get_wrapper_name(used_names, expr)
             mini_wrapper_body = []
@@ -714,15 +717,15 @@ class CWrapperCodePrinter(CCodePrinter):
             flag              = 0
 
             # loop on all functions argument to collect needed converter functions
-            for f_arg, p_arg in zip(func.arguments, parse_args):
-                function = self.get_PyArgParse_Converter(used_names, f_arg)
-                func_args.extend(self.get_static_args(arg)) # Bind_C args
-                parsing_converter_functions = function
+            for c_arg, p_arg in zip(func.arguments, parse_args):
+                function = self.get_PyArgParse_Converter(used_names, c_arg)
+                func_args.extend(self.get_static_args(c_arg)) # Bind_C args
 
-                flag = self.get_flag_value(flag, f_arg) # set flag value
-                types_dict[p_arg].add(f_arg.dtype) # collect type
-                call = FunctionCall(p_arg, VariableAddress(f_arg)) # convert py to c type
-                body = If(IfSection(PyccelNot(call), RETURN_NULL)) # check in cas of error
+                flag = self.set_flag_value(flag, c_arg) # set flag value
+                types_dict[p_arg].add(c_arg.dtype) # collect type
+
+                call = FunctionCall(function, [p_arg, VariableAddress(c_arg)]) # convert py to c type
+                body = If(IfSection(PyccelNot(call), [RETURN_NULL]))            # check in cas of error
                 mini_wrapper_body.append(body)
 
             # Call function
@@ -736,13 +739,13 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_body.append(function_call)
 
             # loop on all results to collect needed converter functions
-            building_converter_functions = {}
-            for res in expr.results:
-                convert_func = self.get_PyBuildValue_Converter(res)
-            building_converter_functions[get_custom_key(res)] = convert_func
+            converters = []
+            for res in func.results:
+                function = self.get_PyBuildValue_Converter(res)
+                converters.append(function)
 
             # builde results
-            build_node = PyBuildValueNode(func.results, building_converter_functions)
+            build_node = PyBuildValueNode(func.results, converters)
 
             mini_wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
             # Return
@@ -758,29 +761,29 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # call mini_wrapper function from the interface wrapper with the correponding check
             call  = AliasAssign(wrapper_results[0], FunctionCall(mini_wrapper_function, parse_args))
-            check = If(IfSection(PyccelEq(check_variable, LiteralInteger(flags)), [call]))
+            check = IfSection(PyccelEq(check_variable, LiteralInteger(flag)), [call])
             wrapper_body.append(check)
 
         # Errors / Types management
         # Creating check_type function
-        check_function = self.generate_interface_check_function(types_dict)
-        wrapper_functions.append(check_function)
+        #check_function = self.generate_interface_check_function(types_dict)
+        #wrapper_functions.append(check_function)
         # generate error
         wrapper_body.append(IfSection(LiteralTrue(),
             [PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
              RETURN_NULL]))
 
+        wrapper_body = [If(*wrapper_body)]
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
-                                    parsing_converter_functions,
-                                    expr.arguments, keyword_list)
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], keyword_list,
+                                           funcs[0].arguments, parse_args = parse_args)
 
         parse_node   = If(IfSection(PyccelNot(parse_node), [RETURN_NULL]))
-        check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
-        wrapper_body = [keyword_list, parse_node, check_call] + wrapper_body
+        #check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
+        wrapper_body = [keyword_list, parse_node] + wrapper_body
 
         # Create FunctionDef for interface wrapper
-        funcs_def.append(FunctionDef(
+        wrapper_functions.append(FunctionDef(
                     name       = wrapper_name,
                     arguments  = wrapper_args,
                     results    = wrapper_results,

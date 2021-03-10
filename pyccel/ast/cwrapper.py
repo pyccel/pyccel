@@ -129,8 +129,8 @@ class PyArg_ParseTupleNode(Basic):
                        python_func_kwargs,
                        arg_names,
                        func_args,
-                       parse_args = [],
-                       converters = {}):
+                       parse_args = None,
+                       converters = None):
 
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
@@ -144,14 +144,13 @@ class PyArg_ParseTupleNode(Basic):
         self._flags = ''
         i           = 0
         args_count  = len(func_args)
-
         while i < args_count and not isinstance(func_args[i], ValuedVariable):
-            self._flags += 'O&'
+            self._flags += 'O&' if converters != {} else 'O'
             i += 1
         if i < args_count:
             self._flags += '|'
         while i < args_count:
-            self._flags += 'O&'
+            self._flags += 'O&' if converters != {} else 'O'
             i += 1
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in parse_args]):
