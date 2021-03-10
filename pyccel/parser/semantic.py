@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment, CommentBlock
+from pyccel.ast.core import Comment, CommentBlock, Pass
 
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -877,7 +877,7 @@ class SemanticParser(BasicParser):
                         if expr._has_nowait:
                             node._has_nowait = True
                     else:
-                        if isinstance(node, (Comment, CommentBlock)):
+                        if isinstance(node, (Comment, CommentBlock, Pass)):
                             index += 1
                         else:
                             errors.report(msg, symbol=type(node).__name__,

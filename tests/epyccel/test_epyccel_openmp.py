@@ -272,6 +272,19 @@ def test_omp_matmul_2d_2d(language):
     assert np.array_equal(y1, y2)
 
 
+def test_omp_nowait(language):
+    f1 = epyccel(openmp.omp_nowait, accelerator='openmp', language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
+    set_num_threads(4)
+    from numpy import random
+    x = random.randint(20, size=(1000))
+    y = np.zeros((1000,), dtype=int)
+    z = np.zeros((1000,))
+    f1(x, y, z)
+
+    assert np.array_equal(y, x*2)
+    assert np.array_equal(z, x/2)
+
 def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
