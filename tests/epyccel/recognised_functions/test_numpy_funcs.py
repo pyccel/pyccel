@@ -6173,7 +6173,6 @@ def test_numpy_norm_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
-        #    pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
