@@ -6049,8 +6049,10 @@ def test_numpy_matmul_array_like_1d(language):
     assert (f_integer(integer) == get_matmul(integer))
     assert (f_integer32(integer32) == get_matmul(integer32))
 
-    f_integer64 = epyccel(get_matmul, language=language)
-    assert (f_integer64(integer64) == get_matmul(integer64))
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_matmul, language=language)
+        assert (f_integer64(integer64) == get_matmul(integer64))
 
     f_fl = epyccel(get_matmul, language=language)
     f_fl32 = epyccel(get_matmul, language=language)
@@ -6134,8 +6136,10 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert (f_integer(integer) == get_matmul(integer))
     assert (f_integer32(integer32) == get_matmul(integer32))
 
-    f_integer64 = epyccel(get_matmul, language=language)
-    assert (f_integer64(integer64) == get_matmul(integer64))
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_matmul, language=language)
+        assert (f_integer64(integer64) == get_matmul(integer64))
 
     f_fl = epyccel(get_matmul, language=language)
     f_fl32 = epyccel(get_matmul, language=language)
