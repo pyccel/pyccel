@@ -44,13 +44,14 @@ __all__ = (
 #                      Numpy functions
 #-------------------------------------------------------------------
 
-# https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DATA
-array_get_data  = FunctionDef(name   = 'nd_data',
-                           body      = [],
-                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
+# https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE
+numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
+                             body      = [],
+                             arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                             results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
-#  numpy array to fortrab ndarray : function definition in pyccel/stdlib/cwrapper.c
+
+# numpy array to fortrab ndarray : function definition in pyccel/stdlib/cwrapper.c
 pyarray_to_c_ndarray = FunctionDef(
                 name      = 'pyarray_to_c_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
@@ -58,14 +59,14 @@ pyarray_to_c_ndarray = FunctionDef(
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
 
-#  numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper.c
+# numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper.c
 pyarray_to_f_ndarray = FunctionDef(
                 name      = 'pyarray_to_f_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
                 body      = [],
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
-#  numpy array to check element : function definition in pyccel/stdlib/cwrapper.c
+# numpy array to check element : function definition in pyccel/stdlib/cwrapper.c
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
@@ -84,6 +85,12 @@ array_get_dim  = FunctionDef(name    = 'nd_ndim',
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
+
+# Return the data of ndarray : function definition in pyccel/stdlib/cwrapper.c
+array_get_data  = FunctionDef(name   = 'nd_data',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
 
 
 
@@ -223,6 +230,14 @@ def array_checker(py_variable, c_variable, type_check_needed, language):
     check = PyccelNot(FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag]))
 
     return check
+
+def array_type_check(py_variable, c_variable):
+    """
+    """
+    # extract numpy type ref
+    type_ref = find_in_numpy_dtype_registry(c_variable)
+    
+    return PyccelEq(FunctionCall(numpy_get_type, [py_variable]), type_ref)
 
 
 def NumpyType_Check(py_variable, c_variable):

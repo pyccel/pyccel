@@ -18,7 +18,7 @@ from pyccel.ast.datatypes   import NativeInteger, NativeGeneric, NativeBool, Nat
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
-from pyccel.ast.core        import Assign, AliasAssign, Nil, datatype
+from pyccel.ast.core        import Assign, AliasAssign, Nil, datatype, AugAssign
 from pyccel.ast.core        import If, IfSection, Import, Return, Deallocate
 
 from pyccel.ast.cwrapper    import PyArgKeywords, PyArg_ParseTupleNode, PyBuildValueNode
@@ -33,6 +33,7 @@ from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, scalar_o
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_get_dim, array_get_data
 from pyccel.ast.numpy_wrapper   import pyarray_to_f_ndarray, pyarray_to_c_ndarray
+from pyccel.ast.numpy_wrapper   import find_in_numpy_dtype_registry, numpy_get_type
 
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
@@ -369,7 +370,7 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             raise NotImplementedError(
             'datatype not implemented as arguments : {}'.format(variable.dtype))
-        return (flag << 4) + flag
+        return (flag << 4) + new_flag
 
 
     def get_default_assign(self, variable):
@@ -423,6 +424,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
+    def need_mempry_deallocation(self, variable):
+        """
+        """
+
+        return variable.is_optional or (variable.rank > 0 and self._target_language is 'c')
+
     def need_memory_allocation(self, variable):
         """
         allocated needed memory to hold value this is used to avoid creating mass
@@ -447,11 +454,27 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
+    def argument_check(self, p_arg, c_arg, is_interface):
+        """
+        """
+        body = []
+
+        if c_arg.rank > 0: #array
+            check = array_checker(p_arg, c_arg, is_interface, self._target_language)
+            body.append(IfSection(check, [RETURN_ZERO]))
+
+        elif not is_interface:
+            check = PyccelNot(scalar_object_check(p_arg, c_arg, False))
+            error = [generate_datatype_error(c_arg)]
+            body.append(IfSection(check, error + [RETURN_ZERO]))
+
+        return body
+
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def generate_converter_function(self, name, cast_function, c_var, is_interface = False):
+    def generate_converter_function(self, name, cast_function, c_var, is_interface):
         """
         """
         c_arg = c_var.clone(name = 'c_arg', is_pointer = True)
@@ -467,14 +490,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body.append(IfSection(check, [Return([Py_CLEANUP_SUPPORTED])]))
 
         # Getting argument type check statement
-        if c_arg.rank > 0:
-            check = array_checker(p_arg, c_arg, is_interface, self._target_language)
-            body.append(IfSection(check, [RETURN_ZERO]))
-
-        if not is_interface:
-            check = PyccelNot(scalar_object_check(p_arg, c_arg, False))
-            error = [generate_datatype_error(c_arg)]
-            body.append(IfSection(check, error + [RETURN_ZERO]))
+        body.extend(self.argument_check(p_arg, c_arg, is_interface))
 
         body = [If(*body)]
 
@@ -535,10 +551,64 @@ class CWrapperCodePrinter(CCodePrinter):
         return name
 
     # -------------------------------------------------------------------
+    #                     Interfaces helpers
+    # -------------------------------------------------------------------
+
+    def generate_interface_check_function(self, check_var, parse_args, type_dict, used_names, wrapper_name):
+        """
+        """
+        arg_size = len(type_dict.keys()) - 1
+
+        function_body  = [Assign(check_var, LiteralInteger(0))]
+
+        for p_arg in type_dict.keys():
+            types = set()
+            name = type_dict[p_arg][0].name #get argument name
+            body = []
+
+            for c_arg in type_dict[p_arg]:
+                dtype = self.find_in_dtype_registry(self._print(c_arg.dtype), c_arg.precision)
+
+                if (dtype) in types: #to avoid check same type
+                    continue
+                types.add(dtype)
+    
+                flag = self.set_flag_value(0, c_arg)
+                flag = flag << (4 * arg_size) #shift by 4 x argument position
+
+                if c_arg.rank > 0:
+                    ref   = find_in_numpy_dtype_registry(c_arg)
+                    check = PyccelEq(FunctionCall(numpy_get_type, [p_arg]), ref)
+
+                else:
+                    check = scalar_object_check(p_arg, c_arg, True)
+
+                body.append(IfSection(check, [AugAssign(check_var, '+', flag)]))
+            # Set error
+            error = '"{} must be ({})"'.format(name, ' or '.join(types))
+            body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', error)])) 
+            arg_size -= 1  # move to the next argument
+            types.clear()  # clear the set
+            function_body.append(If(*body))
+        
+        #return
+        function_body.append(Return([check_var]))
+
+        name = self.get_new_name(used_names.union(self._global_names), wrapper_name+'_type_check')
+        self._global_names.add(name)
+
+        function = FunctionDef(
+                    name       = name,
+                    arguments  = parse_args,
+                    results    = [check_var],
+                    body       = function_body)
+        return function
+
+    # -------------------------------------------------------------------
     #       Parsing arguments and building values functions
     # -------------------------------------------------------------------
 
-    def get_PyArgParse_Converter(self, used_names, argument):
+    def get_PyArgParse_Converter(self, used_names, argument, is_interface = False):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert python to C. To avoid creating the same converter, functions are
@@ -575,7 +645,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 raise NotImplementedError(
                 'parser not implemented for this datatype : {}'.format(argument.dtype))
 
-        function = self.generate_converter_function(name, cast_function, argument)
+        function = self.generate_converter_function(name, cast_function, argument, is_interface)
         self._converter_functions[key] = function
 
         return function
@@ -806,17 +876,21 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_body = []
             func_args         = []
             flag              = 0
+            garbage_collector = []
 
             # loop on all functions argument to collect needed converter functions
             for c_arg, p_arg in zip(func.arguments, parse_args):
-                function = self.get_PyArgParse_Converter(used_names, c_arg)
+                function = self.get_PyArgParse_Converter(used_names, c_arg, True)
                 func_args.extend(self.get_static_args(c_arg)) # Bind_C args
 
                 flag = self.set_flag_value(flag, c_arg) # set flag value
-                types_dict[p_arg].append(c_arg) # collect type
+                types_dict[p_arg].append(c_arg)         # collect type
 
                 if isinstance(c_arg, ValuedVariable):
                     mini_wrapper_body.append(self.get_default_assign(c_arg))
+
+                if self.need_mempry_deallocation(c_arg):
+                    garbage_collector = FunctionCall(function, [Nil(), VariableAddress(c_arg)])
 
                 call = FunctionCall(function, [p_arg, VariableAddress(c_arg)]) # convert py to c type
                 body = If(IfSection(PyccelNot(call), [RETURN_NULL]))            # check in cas of error
@@ -850,7 +924,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     arguments   = parse_args,
                     results     = wrapper_results,
                     body        = mini_wrapper_body,
-                    local_vars  = func.arguments)
+                    local_vars  = func.arguments + func.results)
             wrapper_functions.append(mini_wrapper_function)
 
             # call mini_wrapper function from the interface wrapper with the correponding check
@@ -860,8 +934,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        #check_function = self.generate_interface_check_function(types_dict)
-        #wrapper_functions.append(check_function)
+        check_function = self.generate_interface_check_function(check_variable, 
+                                                                parse_args, types_dict,
+                                                                used_names, wrapper_name)
+        wrapper_functions.append(check_function)
         # generate error
         wrapper_body.append(IfSection(LiteralTrue(),
             [PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
@@ -873,8 +949,10 @@ class CWrapperCodePrinter(CCodePrinter):
                                            funcs[0].arguments, parse_args = parse_args)
 
         parse_node   = If(IfSection(PyccelNot(parse_node), [RETURN_NULL]))
-        #check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
-        wrapper_body = [keyword_list, parse_node] + wrapper_body
+        check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
+        wrapper_body = [keyword_list, parse_node, check_call] + wrapper_body
+    
+        wrapper_body.append(Return(wrapper_results)) # Return
 
         # Create FunctionDef for interface wrapper
         wrapper_functions.append(FunctionDef(
