@@ -25,6 +25,7 @@ class CodePrinter:
     """
     The base class for code-printing subclasses.
     """
+    language = None
 
     def doprint(self, expr, assign_to=None):
         """

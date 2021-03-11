@@ -5978,9 +5978,14 @@ def test_numpy_norm_scalar(language):
     @types('float')
     @types('float32')
     @types('float64')
+    def get_norm(a):
+        from numpy.linalg import norm
+        b = norm(a)
+        return b
+
     @types('complex64')
     @types('complex128')
-    def get_norm(a):
+    def get_norm_complex(a):
         from numpy.linalg import norm
         b = norm(a)
         return b
@@ -6076,17 +6081,17 @@ def test_numpy_norm_scalar(language):
     assert np.isclose(f_fl64_output, test_float64_output, rtol=RTOL, atol=ATOL)
     assert matching_types(f_fl64_output, test_float64_output)
 
-    f_complex64 = epyccel(get_norm, language=language)
-    f_complex128 = epyccel(get_norm, language=language)
+    f_complex64 = epyccel(get_norm_complex, language=language)
+    f_complex128 = epyccel(get_norm_complex, language=language)
 
     f_complex64_output = f_complex64(cmplx64)
-    test_complex64_output = get_norm(cmplx64)
+    test_complex64_output = get_norm_complex(cmplx64)
 
     assert np.isclose(f_complex64_output, test_complex64_output, rtol=RTOL32, atol=ATOL32)
     assert matching_types(f_complex64_output, test_complex64_output)
 
     f_complex128_output = f_complex128(cmplx128)
-    test_complex128_output = get_norm(cmplx128)
+    test_complex128_output = get_norm_complex(cmplx128)
 
     assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
     assert matching_types(f_complex128_output, test_complex128_output)
