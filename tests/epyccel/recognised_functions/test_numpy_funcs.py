@@ -53,6 +53,9 @@ else:
     RTOL = 1e-14
     ATOL = 1e-15
 
+RTOL32 = 1e-6
+ATOL32 = 1e-7
+
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise
     """
@@ -6094,7 +6097,7 @@ def test_numpy_matmul_array_like_2x2d(language):
         from numpy import matmul, shape
         a = matmul(arr, arr)
         s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+        return len(s) + s[0] + s[1] + a[0,1] + a[1,0]
 
     size = (2, 2)
 
@@ -6111,11 +6114,11 @@ def test_numpy_matmul_array_like_2x2d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int64, max_int64, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) + uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+    cmplx128 = uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) + uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) * 1j
 
     f_bl = epyccel(get_matmul, language=language)
 
@@ -6138,16 +6141,15 @@ def test_numpy_matmul_array_like_2x2d(language):
     f_fl32 = epyccel(get_matmul, language=language)
     f_fl64 = epyccel(get_matmul, language=language)
 
-    assert (f_fl(fl) == get_matmul(fl))
-    assert (f_fl32(fl32) == get_matmul(fl32))
-    assert (f_fl64(fl64) == get_matmul(fl64))
+    assert np.isclose(f_fl(fl), get_matmul(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32(fl32), get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(f_fl64(fl64), get_matmul(fl64), rtol=RTOL, atol=ATOL)
 
     f_complex64 = epyccel(get_matmul, language=language)
     f_complex128 = epyccel(get_matmul, language=language)
 
-    assert (f_complex64(cmplx64) == get_matmul(cmplx64))
-    assert (f_complex128(cmplx128) == get_matmul(cmplx128))
-
+    assert np.isclose(f_complex64(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(f_complex128(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
@@ -6346,8 +6348,8 @@ def test_numpy_where_array_like_1d(language):
     @types('complex128[:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        a = where(a)
-        s = shape(arr)
+        a = where(arr)
+        s = shape(a)
         return len(s), s[0], a[1], a[0]
 
     size = 5
