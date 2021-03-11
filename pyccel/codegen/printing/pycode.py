@@ -463,7 +463,7 @@ class PythonCodePrinter(CodePrinter):
         name = type_name[5:].lower()
         return "{name}({arg})".format(
                 name = name,
-                arg  = self._print(expr.arg))
+                arg  = self._print(expr.python_arg))
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__

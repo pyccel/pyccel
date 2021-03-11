@@ -813,6 +813,12 @@ class NumpyNorm(PyccelInternalFunction):
     def arg(self):
         return self._arg
 
+    # the actual arg property contains casting methods for C/Fortran,
+    # which is not necessary for a Python code, and the casting makes Python language tests fail.
+    @property
+    def python_arg(self):
+        return self._args[0]
+
     @property
     def dim(self):
         return self._args[1]
