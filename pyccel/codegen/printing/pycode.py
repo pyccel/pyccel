@@ -458,6 +458,15 @@ class PythonCodePrinter(CodePrinter):
             args += ", size = {}".format(size)
         return "randint({})".format(args)
 
+    def _print_NumpyNorm(self, expr):
+        type_name = type(expr).__name__
+        name = type_name[5:].lower()
+        print(name)
+        return "{name}({arg}, dim={dim})".format(
+                name = name,
+                arg  = self._print(expr.arg),
+                dim  = self._print(expr.dim))
+
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
         name = type_name[5:].lower()
