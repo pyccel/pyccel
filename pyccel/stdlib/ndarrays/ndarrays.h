@@ -84,6 +84,10 @@ typedef struct  s_ndarray
 
 /* functions prototypes */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* allocations */
 void        stack_array_init(t_ndarray *arr);
 t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type);
@@ -116,5 +120,9 @@ int64_t         get_index(t_ndarray arr, ...);
 /* data converting between numpy and ndarray */
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
