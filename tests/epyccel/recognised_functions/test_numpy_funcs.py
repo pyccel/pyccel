@@ -6783,7 +6783,8 @@ def test_numpy_linspace_array_like_2d(language):
         stop = arr
         a = linspace(start, stop, numberOfSamplesToGenerate)
         s = shape(a)
-        return len(s), s[0], s[1], s[2], a[0, 0, 0], a[0, 1, 0], a[1, 0, 0], a[1, 1, 0]
+        return len(s), s[0], s[1], s[2], a[0, 0, 0], a[0, 1, 0], a[1, 0, 0], a[1, 1, 0], \
+                                         a[0, 0, 4], a[0, 1, 4], a[1, 0, 4], a[1, 1, 4]
 
     size = (2, 5)
 
