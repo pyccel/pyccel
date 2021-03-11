@@ -35,7 +35,13 @@ internal_libs = {
 lang_ext_dict = {
     "c"         : ".c",
     "fortran"   : ".f90",
-    "ccuda"     : ".cu",
+    "ccuda"     : ".c",
+}
+
+cuda_flags = {
+    "-fPIC" : "-X-compiler -fPIC",
+    "-Werror" : "-Werror all-warnings",
+    "-Wconversion": "",
 }
 
 #==============================================================================
@@ -223,6 +229,7 @@ def execute_pyccel(fname, *,
                                  includes=())
 
     # Build position-independent code, suited for use in shared library
+
     if language != "ccuda":
         fflags = ' {} -fPIC '.format(fflags)
     # ...
@@ -401,7 +408,6 @@ def execute_pyccel(fname, *,
         dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
         inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
         # ...
-
         includes += inc_dirs
 
         if codegen.is_program:
@@ -414,14 +420,18 @@ def execute_pyccel(fname, *,
                                 debug=debug,
                                 accelerator=accelerator,
                                 includes=includes)
-
         # Compile Fortran code
         #
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
+        if language == "ccuda":
+            cflags = ' '.join([flag if flag not in cuda_flags  else cuda_flags[flag] for flag in flags.split(' ')])
+        else:
+            cflags = flags
+
         try:
-            compile_files(fname, f90exec, flags,
+            compile_files(fname, f90exec, cflags,
                             binary=None,
                             verbose=verbose,
                             modules=modules,
