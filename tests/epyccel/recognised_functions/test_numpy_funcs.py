@@ -5962,7 +5962,8 @@ def test_numpy_prod_array_like_2d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
     )
 )
 
@@ -6095,7 +6096,8 @@ def test_numpy_norm_scalar(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
     )
 )
 
@@ -6176,7 +6178,8 @@ def test_numpy_norm_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
     )
 )
 

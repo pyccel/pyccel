@@ -461,11 +461,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyNorm(self, expr):
         type_name = type(expr).__name__
         name = type_name[5:].lower()
-        print(name)
-        return "{name}({arg}, dim={dim})".format(
+        return "{name}({arg})".format(
                 name = name,
-                arg  = self._print(expr.arg),
-                dim  = self._print(expr.dim))
+                arg  = self._print(expr.arg))
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__

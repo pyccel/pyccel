@@ -104,7 +104,8 @@ class CodePrinter:
     def _print_not_supported(self, expr):
         """ Print an error message if the print function for the type
         is not implemented """
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol = expr,
+        msg = '_print_{} is not yet implemented for language : {}\n'.format(type(expr).__name__, self.language)
+        errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
                 severity='fatal')
 
     # Number constants
