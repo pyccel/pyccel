@@ -113,6 +113,7 @@ class PyccelOperator(PyccelAstNode):
             super().__init__()
             return
         self._dtype, self._precision = self._calculate_dtype(*self._args)
+        print((self._args[1]))
         self._shape, self._rank = self._calculate_shape_rank(*self._args)
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
@@ -417,7 +418,8 @@ class PyccelBinaryOperator(PyccelOperator):
                 _shape = None
 
             elif all(sh is not None for tup in shapes for sh in tup):
-                shape = broadcast(_args[1].shape, _args[1].shape)
+                shape = broadcast(_args[0].shape, _args[1].shape)
+                print(shape)
 
                 _shape = shape
                 _rank  = len(shape)
