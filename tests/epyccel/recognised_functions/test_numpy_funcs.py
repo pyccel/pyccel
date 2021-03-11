@@ -6099,7 +6099,7 @@ def test_numpy_matmul_array_like_2x2d(language):
         from numpy import matmul, shape
         a = matmul(arr, arr)
         s = shape(a)
-        return len(s) + s[0] + s[1] + a[0,1] + a[1,0]
+        return len(s) , s[0] , s[1] , a[0,1] , a[1,0]
 
     size = (2, 2)
 
@@ -6145,15 +6145,15 @@ def test_numpy_matmul_array_like_2x2d(language):
     f_fl32 = epyccel(get_matmul, language=language)
     f_fl64 = epyccel(get_matmul, language=language)
 
-    assert np.isclose(f_fl(fl), get_matmul(fl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_fl32(fl32), get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
-    assert np.isclose(f_fl64(fl64), get_matmul(fl64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl(fl), get_matmul(fl), rtol=RTOL, atol=ATOL).any()
+    assert np.isclose(f_fl32(fl32), get_matmul(fl32), rtol=RTOL32, atol=ATOL32).any()
+    assert np.isclose(f_fl64(fl64), get_matmul(fl64), rtol=RTOL, atol=ATOL).any()
 
     f_complex64 = epyccel(get_matmul, language=language)
     f_complex128 = epyccel(get_matmul, language=language)
 
-    assert np.isclose(f_complex64(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
-    assert np.isclose(f_complex128(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex64(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32).any()
+    assert np.isclose(f_complex128(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL).any()
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
