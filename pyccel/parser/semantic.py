@@ -874,7 +874,7 @@ class SemanticParser(BasicParser):
                         if node.txt.startswith(expr.name, 4):
                             node._has_nowait = True
 
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, 
+        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
                             OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
             msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
             if index == (len(code.body) - 1):
