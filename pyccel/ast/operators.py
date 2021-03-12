@@ -418,7 +418,6 @@ class PyccelBinaryOperator(PyccelOperator):
 
             elif all(sh is not None for tup in shapes for sh in tup):
                 shape = broadcast(_args[0].shape, _args[1].shape)
-                print(shape)
 
                 _shape = shape
                 _rank  = len(shape)
