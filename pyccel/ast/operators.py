@@ -2,6 +2,8 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+# TODO [EB 12.03.21]: Remove pylint command with PR #797
+# pylint: disable=W0201
 """
 Module handling all python builtin operators
 These operators all have a precision as detailed here:
