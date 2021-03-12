@@ -494,6 +494,7 @@ class PyccelAdd(PyccelArithmeticOperator):
 
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
+        self._precision = 0
 
     def __repr__(self):
         return '{} + {}'.format(self.args[0], self.args[1])

@@ -371,7 +371,7 @@ class NumpyProduct(PyccelInternalFunction):
 
     arg : list , tuple , PythonTuple, PythonList, Variable
     """
-    __slots__ = ('_dtype','_precision')
+    __slots__ = ('_arg','_dtype','_precision')
     _rank  = 0
     _shape = ()
     _order = None

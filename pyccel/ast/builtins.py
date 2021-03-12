@@ -343,6 +343,7 @@ class PythonTuple(PyccelAstNode):
             strs      = [a for a in args if a.dtype is NativeString()]
             if strs:
                 self._dtype = NativeString()
+                self._precision = 0
                 self._rank  = 0
                 self._shape = ()
             else:
