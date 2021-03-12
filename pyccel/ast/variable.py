@@ -103,7 +103,8 @@ class Variable(PyccelAstNode):
     """
     __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
             '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp')
+            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
+            '_rank','_shape','_order')
     _attribute_nodes = ()
 
     def __init__(
@@ -711,7 +712,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices')
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(
@@ -801,7 +802,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
-    __slots__ = ('_variable',)
+    __slots__ = ('_variable','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):

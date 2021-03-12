@@ -104,7 +104,7 @@ class PyccelOperator(PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
-    __slots__ = ('_args',)
+    __slots__ = ('_args','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):

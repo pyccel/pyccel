@@ -79,9 +79,6 @@ class MacroType(Macro):
     _shape     = ()
     _order     = None
 
-    def __init__(self, argument):
-        super().__init__(argument)
-
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
 
@@ -94,9 +91,6 @@ class MacroCount(Macro):
     _rank      = 0
     _shape     = ()
     _order     = None
-
-    def __init__(self, argument):
-        super().__init__(argument)
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
