@@ -56,6 +56,7 @@ class OmpConstruct(BasicStmt):
         if name:
             txt += name
         if simd:
+            _valid_clauses += _valid_simd_clauses
             txt += ' ' + simd
         if clauses:
             clause_expr, has_nowait = check_get_clauses(self, _valid_clauses, clauses, combined)
