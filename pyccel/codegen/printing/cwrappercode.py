@@ -312,9 +312,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_func : FunctionDef
         """
         if self._target_language == 'fortran':
-            static_func = as_static_function_call(function,
-                                                  self._module_name,
-                                                  name = function.name)
+            static_func = as_static_function_call(function, self._module_name)
         else:
             static_func = function
 
