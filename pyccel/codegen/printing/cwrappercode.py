@@ -412,22 +412,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def free_allocated_memory(self):
-        """
-        """
-        body = []
-
-        for elem in  self.to_free_objects:
-            body += self.get_free_statements(elem)
-
-        self.to_free_objects.clear()
-
-        return body
-
     def need_free(self, variable):
         """
         """
-
         return variable.is_optional or (variable.rank > 0 and self._target_language is 'c')
 
     def need_memory_allocation(self, variable):
@@ -477,37 +464,46 @@ class CWrapperCodePrinter(CCodePrinter):
     def generate_converter_function(self, name, cast_function, c_var, is_interface):
         """
         """
-        c_arg = c_var.clone(name = 'c_arg', is_pointer = True)
-        p_arg = Variable(name = 'p_arg', dtype = PyccelPyObject(), is_pointer = True)
+        argument    = c_var.clone(name = 'c_arg', is_pointer = True)
+
+        parse_dtype = PyccelPyArrayObject() if (is_interface and argument.rank > 0) else PyccelPyObject()
+        parse_arg   = Variable(name = 'p_arg', dtype = parse_dtype, is_pointer = True)
+
+        succes_return = Return([LiteralInteger(1)])
+        body          = []
 
         # Setting up the destructor to free allocated memory in case of error
-        check = PyccelIs(VariableAddress(p_arg), Nil())
-        body = [IfSection(check, self.get_free_statements(c_arg) + [RETURN_ZERO])]
+        if self.need_free(argument):
+            succes_return = Return([Py_CLEANUP_SUPPORTED])
+            check         = PyccelIs(VariableAddress(parse_arg), Nil())
+            body.append(IfSection(check, self.get_free_statements(argument) + [RETURN_ZERO]))
 
         # Setting up the converter to know if an argument can be optional
-        if c_var.is_optional:
-            check = PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None))
-            body.append(IfSection(check, [Return([Py_CLEANUP_SUPPORTED])]))
+        if argument.is_optional:
+            check = PyccelEq(VariableAddress(parse_arg), VariableAddress(Py_None))
+            body.append(IfSection(check, [succes_return]))
 
         # Getting argument type check statement
-        body.extend(self.argument_check(p_arg, c_arg, is_interface))
+        body.extend(self.argument_check(parse_arg, argument, is_interface))
 
         body = [If(*body)]
 
-        # Allocate memory if needed
+        # Allocate memory if needed (we only allocate optional variable for the moment)
         if c_var.is_optional:
-            body.append(self.need_memory_allocation(c_arg))
+            body.append(self.need_memory_allocation(argument))
 
-        # Collect value from python object and check if and error occurred during conversion
-        body.append(Assign(c_arg, FunctionCall(cast_function, [p_arg])))
+        # Collect value from python object
+        body.append(Assign(argument, FunctionCall(cast_function, [parse_arg])))
+
+        # check if and error occurred during conversion
         check = FunctionCall(PyErr_Occurred, [])
-        body.append(If(IfSection(check, self.get_free_statements(c_arg) + [RETURN_ZERO])))
+        body.append(If(IfSection(check, self.get_free_statements(argument) + [RETURN_ZERO])))
 
         # Succes return
-        body.append(Return([Py_CLEANUP_SUPPORTED]))
+        body.append(succes_return)
 
         function = FunctionDef(name      = name,
-                               arguments = [p_arg, c_arg],
+                               arguments = [parse_arg, argument],
                                body      = body,
                                results   = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)])
 
@@ -893,7 +889,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     garbage_collector = FunctionCall(function, [Nil(), VariableAddress(c_arg)])
 
                 call = FunctionCall(function, [p_arg, VariableAddress(c_arg)]) # convert py to c type
-                body = If(IfSection(PyccelNot(call), [RETURN_NULL]))            # check in cas of error
+                body = If(IfSection(PyccelNot(call), [RETURN_NULL]))           # check in cas of error
                 mini_wrapper_body.append(body)
 
             # Call function
@@ -1032,9 +1028,6 @@ class CWrapperCodePrinter(CCodePrinter):
         build_node = PyBuildValueNode(expr.results, converters)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
-
-        # Free all allocated memory :
-        wrapper_body.extend(self.free_allocated_memory())
         
         # Return
         wrapper_body.append(Return(wrapper_results))
