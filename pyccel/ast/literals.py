@@ -28,14 +28,15 @@ class Literal(PyccelAstNode):
     Represents a python literal
     This class is abstract and should be implemented for each dtype
     """
-    _attribute_nodes  = ()
+    _attribute_nodes  = ('_precision')
+    _rank      = 0
+    _shape     = ()
+    _order     = None
 
     def __init__(self, precision):
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
-        self._rank      = 0
-        self._shape     = ()
         super().__init__()
 
     @PyccelAstNode.precision.setter
@@ -62,9 +63,9 @@ class Literal(PyccelAstNode):
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
+    _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
-        self._dtype     = NativeBool()
         super().__init__(precision)
 
     @property
@@ -74,9 +75,9 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
+    _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
-        self._dtype     = NativeBool()
         super().__init__(precision)
 
     @property
@@ -87,9 +88,9 @@ class LiteralFalse(Literal, metaclass = ArgumentSingleton):
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
     __slots__ = ('_value',)
+    _dtype     = NativeInteger()
 
     def __init__(self, value, precision = default_precision['integer']):
-        self._dtype     = NativeInteger()
         super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
@@ -106,9 +107,9 @@ class LiteralInteger(Literal):
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
     __slots__ = ('_value',)
+    _dtype     = NativeReal()
 
     def __init__(self, value, *, precision = default_precision['float']):
-        self._dtype     = NativeReal()
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
@@ -126,6 +127,7 @@ class LiteralFloat(Literal):
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
     __slots__ = ('_real_part','_imag_part')
+    _dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
         if cls is LiteralImaginaryUnit:
@@ -138,7 +140,6 @@ class LiteralComplex(Literal):
             return super().__new__(cls)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
-        self._dtype     = NativeComplex()
         super().__init__(precision)
         self._real_part = LiteralFloat(self._collect_python_val(real))
         self._imag_part = LiteralFloat(self._collect_python_val(imag))
@@ -183,13 +184,13 @@ class LiteralImaginaryUnit(LiteralComplex):
 class LiteralString(Literal):
     """Represents a string literal in python"""
     __slots__ = ('_string',)
+    _dtype     = NativeString()
 
     def __init__(self, arg):
         self._precision = 0
         super().__init__(self._precision)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
-        self._dtype     = NativeString()
         self._string = arg
 
     @property

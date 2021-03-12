@@ -56,6 +56,10 @@ class PyccelArraySize(PyccelInternalFunction):
     """
     __slots__ = ('_arg','_index')
     _attribute_nodes = ('_arg', '_index')
+    _dtype = NativeInteger()
+    _precision = default_precision['integer']
+    _rank  = 0
+    _shape = ()
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
@@ -69,10 +73,6 @@ class PyccelArraySize(PyccelInternalFunction):
 
         self._arg   = arg
         self._index = index
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
         super().__init__()
 
     @property
