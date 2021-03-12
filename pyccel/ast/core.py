@@ -305,15 +305,18 @@ class Dlist(PyccelAstNode):
 
     shape : the shape of the array
     """
-    __slots__ = ('_val', '_length')
+    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._rank = val.rank
-        self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
-        self._order = val.order
-        self._val = val
-        self._length = length
+        self._dtype     = val.dtype
+        self._precision = val.precision
+        self._rank      = val.rank
+        self._shape     = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
+        self._order     = val.order
+
+        self._val       = val
+        self._length    = length
         super().__init__()
 
     @property
@@ -1601,7 +1604,8 @@ class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
     """
-    __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name')
+    __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
+                 '_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):

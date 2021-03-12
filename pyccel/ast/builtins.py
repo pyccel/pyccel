@@ -270,7 +270,7 @@ class PythonFloat(PyccelAstNode):
         if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
             return arg
         if isinstance(arg, (LiteralInteger, LiteralFloat)):
-            return LiteralFloat(arg.python_value, precision = cls._default_precision)
+            return LiteralFloat(arg.python_value, precision = cls._precision)
         return super().__new__(cls)
 
     def __init__(self, arg):
