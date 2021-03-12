@@ -360,6 +360,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_Continue(self, expr):
         return 'continue'
 
+    def _print_NoneType(self, expr):
+        return 'None'
+
     def _print_Assign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
@@ -461,10 +464,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyNorm(self, expr):
         type_name = type(expr).__name__
         name = type_name[5:].lower()
-        axis = self._print(expr.axis) if expr.axis else None
-        if axis:
-            return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
-        return  "{name}({arg})".format(name = name, arg  = self._print(expr.python_arg))
+        return  "{name}({arg},axis={axis})".format(
+                name = name,
+                arg  = self._print(expr.python_arg),
+                axis=self._print(expr.axis))
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
