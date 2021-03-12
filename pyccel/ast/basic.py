@@ -308,49 +308,35 @@ class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
     stage      = None
-    __slots__ = ('_shape', '_rank', '_dtype', '_precision', '_order')
-
-    def __init__(self):
-        super().__init__()
-        if not hasattr(self, '_shape'):
-            self._shape = None
-        if not hasattr(self, '_rank'):
-            self._rank = None
-        if not hasattr(self, '_dtype'):
-            self._dtype = None
-        if not hasattr(self, '_precision'):
-            self._precision = None
-        if not hasattr(self, '_order'):
-            self._order = None
 
     @property
     def shape(self):
         """ Tuple containing the length of each dimension
         of the object """
-        return self._shape
+        return self._shape # pylint: disable=no-member
 
     @property
     def rank(self):
         """ Number of dimensions of the object
         """
-        return self._rank
+        return self._rank # pylint: disable=no-member
 
     @property
     def dtype(self):
         """ Datatype of the object """
-        return self._dtype
+        return self._dtype # pylint: disable=no-member
 
     @property
     def precision(self):
         """ Precision of the datatype of the object """
-        return self._precision
+        return self._precision # pylint: disable=no-member
 
     @property
     def order(self):
         """ Indicates whether the data is stored in
         row-major ('C') or column-major ('F') format.
         This is only relevant if rank > 1 """
-        return self._order
+        return self._order # pylint: disable=no-member
 
     def copy_attributes(self, x):
         self._shape     = x.shape
