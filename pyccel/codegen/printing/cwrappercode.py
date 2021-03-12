@@ -424,7 +424,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def need_mempry_deallocation(self, variable):
+    def need_free(self, variable):
         """
         """
 
@@ -889,7 +889,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if isinstance(c_arg, ValuedVariable):
                     mini_wrapper_body.append(self.get_default_assign(c_arg))
 
-                if self.need_mempry_deallocation(c_arg):
+                if self.need_free(c_arg):
                     garbage_collector = FunctionCall(function, [Nil(), VariableAddress(c_arg)])
 
                 call = FunctionCall(function, [p_arg, VariableAddress(c_arg)]) # convert py to c type
