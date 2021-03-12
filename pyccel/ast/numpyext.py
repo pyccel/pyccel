@@ -786,8 +786,6 @@ class NumpyZerosLike:
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     _dtype = NativeReal()
-    _shape = ()
-    _rank  = 0
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
@@ -808,6 +806,7 @@ class NumpyNorm(PyccelInternalFunction):
         else:
             self._shape = ()
         self._rank = len(self._shape)
+        self._order = arg.order
 
     @property
     def arg(self):
@@ -816,7 +815,7 @@ class NumpyNorm(PyccelInternalFunction):
 
     @property
     def python_arg(self):
-        """numpy.norm arguement without casting.
+        """numpy.norm argument without casting.
         the actual arg property contains casting methods for C/Fortran,
         which is not necessary for a Python code, and the casting makes Python language tests fail.
         """
