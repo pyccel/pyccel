@@ -41,9 +41,9 @@ OmpConstructOrDirective:
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
 OmpParallelConstruct:   'parallel'        combined=ParallelCombined? clauses*=AllOmpClauses;
-OmpLoopConstruct:       'for'             clauses*=AllOmpClauses;
+OmpLoopConstruct:       'for'             combinedsimd='simd'? clauses*=AllOmpClauses;
 OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
-OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
+OmpSingleConstruct:     'single'          clauses*=AllOmpClauses;
 OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
 OmpMaskedConstruct:     'masked'          combined=MaskedCombined? clauses*=AllOmpClauses;
 OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
@@ -52,8 +52,8 @@ OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
 OmpTargetConstruct:     'target'          combined=TargetCombined? clauses*=AllOmpClauses;
 OmpTeamsConstruct:      'teams'           combined=TeamsCombined? clauses*=AllOmpClauses;
-OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
-OmpSectionsConstruct:   name='sections'   clauses*=AllOmpClauses;
+OmpDistributeConstruct: 'distribute'      combinedsimd='simd'? clauses*=AllOmpClauses;
+OmpSectionsConstruct:   'sections'        clauses*=AllOmpClauses;
 OmpFlushConstruct:      name='flush'      clauses*=AllOmpClauses;
 OmpSectionConstruct:    name='section';
 OmpBarrierConstruct:    name='barrier';

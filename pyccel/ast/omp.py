@@ -91,6 +91,11 @@ class OMP_Distribute_Construct(OmpAnnotatedComment):
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'distribute'
+
 class OMP_Parallel_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
     _is_multiline = True
@@ -110,6 +115,11 @@ class OMP_Single_Construct(OmpAnnotatedComment):
     _is_multiline = True
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'single'
 
 class OMP_Critical_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Critical construct. """
@@ -157,6 +167,11 @@ class OMP_Sections_Construct(OmpAnnotatedComment):
     _is_multiline = True
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'sections'
 
 class OMP_Section_Construct(OmpAnnotatedComment):
     """ Represent OpenMP Section construct. """

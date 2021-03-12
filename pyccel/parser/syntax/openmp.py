@@ -27,6 +27,7 @@ class OmpConstruct(BasicStmt):
         name     = kwargs.pop('name', None)
         clauses  = kwargs.pop('clauses', None)
         combined = kwargs.pop('combined', None)
+        simd     = kwargs.pop('combinedsimd', None)
 
         _valid_clauses = vclauses
 
@@ -54,6 +55,8 @@ class OmpConstruct(BasicStmt):
         txt = ''
         if name:
             txt += name
+        if simd:
+            txt += ' ' + simd
         if clauses:
             clause_expr, has_nowait = check_get_clauses(self, _valid_clauses, clauses, combined)
             txt += clause_expr
@@ -92,7 +95,7 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
         if isinstance(clause, valid_clauses) and \
            not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
             if isinstance(clause, OmpNowait):
-                if isinstance(name, OmpLoopConstruct):
+                if isinstance(name, (OmpLoopConstruct, OmpSectionsConstruct, OmpSingleConstruct)):
                     has_nowait = True
                 else:
                     raise TypeError("Wrong clause nowait")
@@ -232,10 +235,9 @@ class OmpEndClause(BasicStmt):
     def __init__(self, **kwargs):
         self.construct = kwargs.pop('construct')
         self.simd      = kwargs.pop('simd', '')
-        self.nowait    = kwargs.pop('nowait', '')
 
         construct = ' '.join(self.construct)
-        txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
+        txt = 'end {0} {1}'.format(construct, self.simd)
 
         self._expr = Omp_End_Clause(txt, False)
 
@@ -679,7 +681,8 @@ class OmpTargetTeams(OmpClauses):
 # whenever a new rule (construct/clause) is added in the grammar, we must update the following tuples.
 
 _valid_single_clauses = (OmpPrivate,
-                         OmpFirstPrivate)
+                         OmpFirstPrivate,
+                         OmpNowait)
 
 _valid_atomic_clauses = (OmpAtomicClause,
                          AtomicMemoryClause)
@@ -711,7 +714,8 @@ _valid_teams_clauses = (OmpPrivate,
 _valid_sections_clauses = (OmpPrivate,
                            OmpFirstPrivate,
                            OmpLastPrivate,
-                           OmpReduction)
+                           OmpReduction,
+                           OmpNowait)
 
 _valid_Distribute_clauses = (OmpPrivate,
                              OmpFirstPrivate,

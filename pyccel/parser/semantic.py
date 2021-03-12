@@ -93,7 +93,8 @@ from pyccel.ast.internals import Slice, PyccelSymbol
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
-                            OMP_TaskLoop_Construct)
+                            OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
+                            OMP_Single_Construct)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -858,13 +859,19 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+
     def _visit_OmpAnnotatedComment(self, expr, **settings):
         code = expr._user_nodes
         code = code[len(code) - 1]
         index = code.body.index(expr)
-        combined_loop = False
-        if expr.combined:
-            combined_loop = ('for' in expr.combined or 'distribute' in expr.combined)
+        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
+        if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
+           and expr._has_nowait:
+            for i, node in enumerate(code.body):
+                if i > index:
+                    if isinstance(node, Omp_End_Clause):
+                        if node.txt.startswith(expr.name, 4):
+                            node._has_nowait = True
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, 
                             OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
             msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
@@ -874,16 +881,20 @@ class SemanticParser(BasicParser):
             for i, node in enumerate(code.body):
                 if i == index + 1:
                     if isinstance(node, For):
+                        print(expr.txt.startswith(' simd'))
                         if expr._has_nowait:
-                            node._has_nowait = True
+                            node._nowait_expr = '!$omp end do'
+                            if expr.txt.startswith(' simd'):
+                                node._nowait_expr += ' simd'
+                            node._nowait_expr += ' nowait\n'
+                    elif isinstance(node, (Comment, CommentBlock, Pass)):
+                        index += 1
                     else:
-                        if isinstance(node, (Comment, CommentBlock, Pass)):
-                            index += 1
-                        else:
-                            errors.report(msg, symbol=type(node).__name__,
+                        errors.report(msg, symbol=type(node).__name__,
                             severity='fatal', blocker=self.blocking)
 
         return expr
+
     def _visit_Literal(self, expr, **settings):
         return expr
     def _visit_PythonComplex(self, expr, **settings):
@@ -2084,7 +2095,7 @@ class SemanticParser(BasicParser):
             return ForIterator(target, iterable, body)
 
         for_expr = For(target, iterable, body, local_vars=local_vars)
-        for_expr._has_nowait = expr._has_nowait
+        for_expr._nowait_expr = expr._nowait_expr
         return for_expr
 
 

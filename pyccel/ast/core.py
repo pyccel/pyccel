@@ -1346,7 +1346,7 @@ class For(Basic):
         self._iterable = iter_obj
         self._body = body
         self._local_vars = local_vars
-        self._has_nowait = False
+        self._nowait_expr = None
         super().__init__()
 
     @property
