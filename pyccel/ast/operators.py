@@ -113,7 +113,6 @@ class PyccelOperator(PyccelAstNode):
             super().__init__()
             return
         self._dtype, self._precision = self._calculate_dtype(*self._args)
-        print((self._args[1]))
         self._shape, self._rank = self._calculate_shape_rank(*self._args)
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
