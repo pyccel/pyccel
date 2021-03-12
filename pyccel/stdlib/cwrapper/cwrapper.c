@@ -487,13 +487,13 @@ static bool _check_pyarray_type(PyObject *a)
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
-static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
+static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
 
     ndarray_strides = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        ndarray_strides[i] = np_strides[i] / type_size;
+        ndarray_strides[i] = (int64_t) np_strides[i] / type_size;
 
     return ndarray_strides;
 }
@@ -504,13 +504,13 @@ static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, in
 ** avoid the problem of variation of system architecture because numpy shape
 ** is not saved in fixed length type.
 */
-static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
+static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
 {
     int64_t *nd_shape;
 
     nd_shape = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        nd_shape[i] = np_shape[i];
+        nd_shape[i] = (int64_t) np_shape[i];
     return nd_shape;
 
 }
