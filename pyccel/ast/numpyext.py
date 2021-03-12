@@ -789,8 +789,8 @@ class NumpyNorm(PyccelInternalFunction):
     _shape = ()
     _rank  = 0
 
-    def __init__(self, arg, dim=None):
-        super().__init__(arg, dim)
+    def __init__(self, arg, axis=None):
+        super().__init__(arg, axis)
         cmplx_precision = None
         if isinstance(arg.dtype, NativeBool):
             arg = PythonFloat(arg)
@@ -801,9 +801,9 @@ class NumpyNorm(PyccelInternalFunction):
             arg = PythonFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
         self._precision = cmplx_precision if cmplx_precision else arg.precision
-        if self.dim is not None:
-            sh = list(sh)
-            del sh[self.dim]
+        if self.axis is not None:
+            sh = list(arg.shape)
+            del sh[self.axis]
             self._shape = tuple(sh)
         else:
             self._shape = ()
@@ -823,7 +823,7 @@ class NumpyNorm(PyccelInternalFunction):
         return self._args[0]
 
     @property
-    def dim(self):
+    def axis(self):
         return self._args[1]
 
 #====================================================

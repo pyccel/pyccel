@@ -658,8 +658,9 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
 
-        if expr.dim:
-            rhs = 'Norm2({},{})'.format(self._print(expr.arg),self._print(expr.dim))
+        if expr.axis:
+            axis = '1' if expr.axis == 0 else self._print(expr.axis)
+            rhs = 'Norm2({},{})'.format(self._print(expr.arg), axis)
         else:
             rhs = 'Norm2({})'.format(self._print(expr.arg))
 

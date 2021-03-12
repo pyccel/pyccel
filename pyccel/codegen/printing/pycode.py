@@ -461,9 +461,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyNorm(self, expr):
         type_name = type(expr).__name__
         name = type_name[5:].lower()
-        return "{name}({arg})".format(
-                name = name,
-                arg  = self._print(expr.python_arg))
+        code =  "{name}({arg},".format(name = name, arg  = self._print(expr.python_arg))
+        code = code + 'axis=' + self._print(expr.axis) + ')' if expr.axis else code + ')'
+        return code
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
