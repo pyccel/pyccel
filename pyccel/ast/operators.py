@@ -118,6 +118,8 @@ class PyccelOperator(PyccelAstNode):
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
+        else:
+            self._order = None
         super().__init__()
 
     @property

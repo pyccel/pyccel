@@ -89,26 +89,18 @@ class MathFunctionBase(PyccelInternalFunction):
     _shape = ()
     _rank  = 0
     _order = None
-    def __init__(self, *args):
-        super().__init__(*args)
 
 class MathFunctionFloat(MathFunctionBase):
     _dtype = NativeReal()
     _precision = default_precision['real']
-    def __init__(self, *args):
-        super().__init__(*args)
 
 class MathFunctionInt(MathFunctionBase):
     _dtype = NativeInteger()
     _precision = default_precision['integer']
-    def __init__(self, *args):
-        super().__init__(*args)
 
 class MathFunctionBool(MathFunctionBase):
     _dtype = NativeBool()
     _precision = default_precision['bool']
-    def __init__(self, *args):
-        super().__init__(*args)
 
 #==============================================================================
 # Functions that return one value

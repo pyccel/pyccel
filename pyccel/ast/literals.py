@@ -28,7 +28,8 @@ class Literal(PyccelAstNode):
     Represents a python literal
     This class is abstract and should be implemented for each dtype
     """
-    _attribute_nodes  = ('_precision')
+    __slots__ = ('_precision',)
+    _attribute_nodes  = ()
     _rank      = 0
     _shape     = ()
     _order     = None

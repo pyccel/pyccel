@@ -60,6 +60,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _precision = default_precision['integer']
     _rank  = 0
     _shape = ()
+    _order = None
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
