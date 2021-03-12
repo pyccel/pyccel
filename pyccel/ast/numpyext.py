@@ -824,6 +824,10 @@ class NumpyNorm(PyccelInternalFunction):
 
     @property
     def axis(self):
+        """
+        Mimic the behavior of axis argument of numpy.norm in python,
+        and dim argument of Norm2 in Fortran.
+        """
         return self._args[1]
 
 #====================================================
