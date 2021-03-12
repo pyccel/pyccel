@@ -1336,6 +1336,8 @@ class CCodePrinter(CodePrinter):
         body_stmts = []
         for b in body_exprs :
             code = self._print(b)
+            if isinstance(b, FunctionCall):
+                code += ';'
             code = self._additional_code + code
             self._additional_code = ''
             body_stmts.append(code)
