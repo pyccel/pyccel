@@ -1850,7 +1850,7 @@ class FCodePrinter(CodePrinter):
             return ''
         omp_expr = omp_expr.replace("for", "do")
         if expr._has_nowait:
-            omp_expr += 'nowait'
+            omp_expr += ' nowait'
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
 

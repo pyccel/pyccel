@@ -865,6 +865,7 @@ class SemanticParser(BasicParser):
         code = code[len(code) - 1]
         index = code.body.index(expr)
         combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
+
         if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
            and expr._has_nowait:
             for i, node in enumerate(code.body):
@@ -872,6 +873,7 @@ class SemanticParser(BasicParser):
                     if isinstance(node, Omp_End_Clause):
                         if node.txt.startswith(expr.name, 4):
                             node._has_nowait = True
+
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, 
                             OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
             msg = "Statement after {} must be a for loop.".format(type(expr).__name__)

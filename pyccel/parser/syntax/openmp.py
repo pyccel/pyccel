@@ -234,11 +234,10 @@ class OmpAtomicConstruct(OmpConstruct):
 class OmpEndClause(BasicStmt):
     """Class representing the End construct."""
     def __init__(self, **kwargs):
-        self.construct = kwargs.pop('construct')
-        self.simd      = kwargs.pop('simd', '')
+        lst_construct = kwargs.pop('construct')
 
-        construct = ' '.join(self.construct)
-        txt = 'end {0} {1}'.format(construct, self.simd)
+        construct = ' '.join(lst_construct)
+        txt = 'end {0}'.format(construct)
 
         self._expr = Omp_End_Clause(txt, False)
 

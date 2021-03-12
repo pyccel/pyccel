@@ -149,7 +149,7 @@ OmpCollapse: 'collapse' '(' n=INT ')';
 OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
 OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
-OmpEndClause: 'end' construct*=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+OmpEndClause: 'end' construct*=OpenmpConstructs;
 OmpCriticalName: '(' args=ID ')';
 OmpFilter: name='filter' '(' n=INT ')';
 OmpPriority: name='priority' '(' n=PriorityIndex ')';
