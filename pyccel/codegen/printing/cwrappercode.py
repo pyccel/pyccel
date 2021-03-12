@@ -982,12 +982,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body      = [keyword_list]
         static_func_args  = []
+        garbage_collector = []
 
         if expr.is_private:
             return self.private_function_printer(wrapper_name, wrapper_args, wrapper_results)
 
         if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
             return self.python_function_as_argument(wrapper_name, wrapper_args, wrapper_results)
+
 
         converters = []
         # Loop on all the arguments and collect the needed converter functions
@@ -1001,6 +1003,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Set default value when the argument is valued
             if isinstance(c_arg, ValuedVariable):
                 wrapper_body.append(self.get_default_assign(c_arg))
+            
+            # call converter with Null destroy allocatet memory 
+            if self.need_free(c_arg):
+                garbage_collector.append(FunctionCall(function, [Nil(), VariableAddress(c_arg)]))
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], keyword_list, expr.arguments,
@@ -1029,6 +1035,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
         
+        wrapper_body.extend(garbage_collector)
+
         # Return
         wrapper_body.append(Return(wrapper_results))
 
