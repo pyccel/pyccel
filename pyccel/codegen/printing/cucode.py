@@ -216,8 +216,12 @@ class CuCodePrinter(CCodePrinter):
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
+        ######
         if isinstance(expr.rhs, (CudaArray)):
             return self.copy_CudaArray_Data(expr)
+        if isinstance(expr.rhs, (CudaMalloc)):
+            return ''
+        ######
         if isinstance(expr.rhs, (CupyArray)):
             return self.copy_CudaArray_Data(expr)
         if isinstance(expr.rhs, (CupyFull)):

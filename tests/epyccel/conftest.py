@@ -7,6 +7,7 @@ import pytest
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
     ]
 )
 def language(request):

@@ -61,7 +61,7 @@ def create_shared_library(codegen,
 
     sharedlib_folder = ''
 
-    if language in ['c', 'fortran', 'cu']:
+    if language in ['c', 'fortran', 'ccuda']:
         extra_libs = []
         extra_libdirs = []
         if language == 'fortran':
@@ -90,6 +90,9 @@ def create_shared_library(codegen,
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
 
+        if language == 'ccuda':
+            extra_libs.append('cudart')
+            extra_libdirs.append('/usr/local/cuda/lib64/')
         if sys.platform == 'win32':
             extra_libs.append('quadmath')
 
