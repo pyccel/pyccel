@@ -428,10 +428,8 @@ class PythonCodePrinter(CodePrinter):
                 size = self._print(expr.size))
 
     def _print_NumpyMatmul(self, expr):
-        type_name = type(expr).__name__
-        func_name = type_name[5:].lower()
         return "{func_name}({x1}, {x2})".format(
-                func_name = func_name,
+                func_name = 'matmul',
                 x1 = self._print(expr.a),
                 x2 = self._print(expr.b))
 
