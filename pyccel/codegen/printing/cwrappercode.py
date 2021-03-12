@@ -116,7 +116,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return wrapper_name
 
-    def get_new_PyObject(self, name, used_names):
+    def get_new_PyObject(self, name, used_names, rank = False):
         """
         Create new PyccelPyObject Variable with the desired name
 
@@ -131,7 +131,10 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns: Variable
         -------
         """
-        dtype = PyccelPyObject()
+        if rank is False:
+            dtype = PyccelPyObject()
+        else:
+            dtype = PyccelPyArrayObject()
 
         return Variable(dtype      = dtype,
                         name       = self.get_new_name(used_names, name),
@@ -400,12 +403,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         # once valued variable rank > 0 are implemented change should be made here
         if variable.rank > 0 and self._target_language is 'c':
-            if variable.is_pointer and variable.is_optional: #double pointer
-                body.append(Deallocate(variable))
-            else: # anyway there should be a better way to handle this
-                arg = variable.clone(name = variable.name, is_pointer = True, is_optional = False)
-                body.append(Deallocate(arg))
-
+            body.append(Deallocate(variable))
 
         if variable.is_optional:
             body.append(FunctionCall(free, [variable]))
@@ -447,7 +445,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
 
         if c_arg.rank > 0: #array
-            check = array_checker(p_arg, c_arg, is_interface, self._target_language)
+            check = array_checker(p_arg, c_arg, not is_interface, self._target_language)
             body.append(IfSection(check, [RETURN_ZERO]))
 
         elif not is_interface:
@@ -466,7 +464,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         argument    = c_var.clone(name = 'c_arg', is_pointer = True)
 
-        parse_dtype = PyccelPyArrayObject() if (is_interface and argument.rank > 0) else PyccelPyObject()
+        parse_dtype = PyccelPyArrayObject() if (argument.rank > 0) else PyccelPyObject()
         parse_arg   = Variable(name = 'p_arg', dtype = parse_dtype, is_pointer = True)
 
         succes_return = Return([LiteralInteger(1)])
@@ -857,7 +855,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                    name = self.get_new_name(used_names , "check"))
 
         # temporary parsing args needed to hold python value
-        parse_args     = [self.get_new_PyObject(a.name + 'tmp', used_names)
+        parse_args     = [self.get_new_PyObject('py_' + a.name, used_names, a.rank > 0)
                           for a in funcs[0].arguments]
 
         #dict to collect each variable possible type
@@ -886,7 +884,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     mini_wrapper_body.append(self.get_default_assign(c_arg))
 
                 if self.need_free(c_arg):
-                    garbage_collector = FunctionCall(function, [Nil(), VariableAddress(c_arg)])
+                    garbage_collector.append(FunctionCall(function, [Nil(), VariableAddress(c_arg)]))
 
                 call = FunctionCall(function, [p_arg, VariableAddress(c_arg)]) # convert py to c type
                 body = If(IfSection(PyccelNot(call), [RETURN_NULL]))           # check in cas of error
@@ -912,6 +910,8 @@ class CWrapperCodePrinter(CCodePrinter):
             build_node = PyBuildValueNode(func.results, converters)
 
             mini_wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
+
+            mini_wrapper_body.extend(garbage_collector)
             # Return
             mini_wrapper_body.append(Return(wrapper_results))
             # Creating mini_wrapper functionDef
@@ -927,7 +927,7 @@ class CWrapperCodePrinter(CCodePrinter):
             call  = AliasAssign(wrapper_results[0], FunctionCall(mini_wrapper_function, parse_args))
             check = IfSection(PyccelEq(check_variable, LiteralInteger(flag)), [call])
             wrapper_body.append(check)
-
+    
         # Errors / Types management
         # Creating check_type function
         check_function = self.generate_interface_check_function(check_variable, 

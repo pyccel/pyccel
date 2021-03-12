@@ -530,12 +530,9 @@ static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-t_ndarray	pyarray_to_c_ndarray(PyObject *o)
+t_ndarray	pyarray_to_c_ndarray(PyArrayObject *a)
 {
 	t_ndarray		array;
-	PyArrayObject	*a;
-
-	a = (PyArrayObject *)o;
 
 	array.nd          = PyArray_NDIM(a);
 	array.raw_data    = PyArray_DATA(a);
@@ -566,12 +563,9 @@ t_ndarray	pyarray_to_c_ndarray(PyObject *o)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-t_ndarray	pyarray_to_f_ndarray(PyObject *o)
+t_ndarray	pyarray_to_f_ndarray(PyArrayObject *a)
 {
 	t_ndarray	array;
-	PyArrayObject *a;
-
-	a = (PyArrayObject *)o;
 
 	array.data	= PyArray_DATA(a);
 	array.shape = PyArray_SHAPE(a);
@@ -593,20 +587,16 @@ t_ndarray	pyarray_to_f_ndarray(PyObject *o)
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
+bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
 {
-	PyArrayObject *a;
-
-	if (!_check_pyarray_type(o)) return false;
-
-	a = (PyArrayObject *)o;
+	if (!_check_pyarray_type((PyObject *)o)) return false;
 
 	// check array element type / rank / order
-	if(!check_pyarray_dtype(a, dtype)) return false;
+	if(!check_pyarray_dtype(o, dtype)) return false;
 
-	if(!_check_pyarray_rank(a, rank)) return false;
+	if(!_check_pyarray_rank(o, rank)) return false;
 
-	if(rank > 1 && !_check_pyarray_order(a, flag)) return false;
+	if(rank > 1 && !_check_pyarray_order(o, flag)) return false;
 
 	return true;
 }

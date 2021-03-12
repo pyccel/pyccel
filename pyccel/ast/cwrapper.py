@@ -145,12 +145,12 @@ class PyArg_ParseTupleNode(Basic):
         i           = 0
         args_count  = len(func_args)
         while i < args_count and not isinstance(func_args[i], ValuedVariable):
-            self._flags += 'O&' if converters else 'O'
+            self._flags += self.get_pytype(func_args[i], converters)
             i += 1
         if i < args_count:
             self._flags += '|'
         while i < args_count:
-            self._flags += 'O&' if converters else 'O'
+            self._flags += self.get_pytype(func_args[i], converters)
             i += 1
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in parse_args]):
@@ -160,12 +160,30 @@ class PyArg_ParseTupleNode(Basic):
         if converters:
             parse_args = [[c, a] for a, c in zip(func_args, converters)]
             parse_args = [a for args in parse_args for a in args]
+        
+        else:
+            parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
+                                            else [a] for a in parse_args]
+            parse_args = [a for arg in parse_args for a in arg]
 
         self._pyarg               = python_func_args
         self._pykwarg             = python_func_kwargs
         self._parse_args          = parse_args
         self._arg_names           = arg_names
         super().__init__()
+
+
+    def get_pytype(self, argument, converter):
+        """Return the needed flag to parse or build value
+        """
+        if converter is not None:
+            return 'O&'
+        
+        if argument.rank > 0:
+            return 'O!'
+        
+        return 'O'
+
 
     @property
     def pyarg(self):

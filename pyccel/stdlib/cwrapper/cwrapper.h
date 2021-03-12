@@ -17,12 +17,12 @@
 
 
 
-t_ndarray	pyarray_to_c_ndarray(PyObject *o);
-t_ndarray	pyarray_to_f_ndarray(PyObject *o);
+t_ndarray	pyarray_to_c_ndarray(PyArrayObject *o);
+t_ndarray	pyarray_to_f_ndarray(PyArrayObject *o);
 
 
 /* arrays checkers and helpers */
-bool	pyarray_check(PyObject *o, int dtype, int rank, int flag);
+bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
 
 void    *nd_data(t_ndarray *a);
 int     nd_ndim(t_ndarray *a, int n);
