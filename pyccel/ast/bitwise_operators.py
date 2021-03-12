@@ -47,7 +47,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
         _precision = a.precision
-        _dtype = a.dtype
+        _dtype = self._args[0].dtype
         return _dtype, _precision
 
     def __repr__(self):
@@ -66,8 +66,6 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _rank = 0
-    _shape = ()
 
     def _calculate_dtype(self, *_args):
         """ Sets the dtype and precision
