@@ -302,8 +302,8 @@ def execute_pyccel(fname, *,
             raise PyccelCodegenError('Code generation failed')
 
         if language == 'python':
-            basename = os.path.basename(fname)
-            new_location = os.path.join(folder, basename)
+            output_file = (output_name + '.py') if output_name else os.path.basename(fname)
+            new_location = os.path.join(folder, output_file)
             if verbose:
                 print("cp {} {}".format(fname, new_location))
             shutil.copyfile(fname, new_location)

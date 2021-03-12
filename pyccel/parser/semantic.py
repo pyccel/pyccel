@@ -80,7 +80,8 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
 from pyccel.ast.numpyext import NumpyZeros
-from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
+from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
@@ -668,7 +669,7 @@ class SemanticParser(BasicParser):
         d_var = {}
         # TODO improve => put settings as attribut of Parser
 
-        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
 					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
@@ -857,24 +858,14 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+    def _visit_OmpAnnotatedComment(self, expr, **settings):
+        return expr
     def _visit_Literal(self, expr, **settings):
         return expr
-    def _visit_Integer(self, expr, **settings):
-        """Visit sympy.Integer"""
-        return LiteralInteger(expr.p)
-    def _visit_Float(self, expr, **settings):
-        """Visit sympy.Integer"""
-        return LiteralFloat(expr)
     def _visit_PythonComplex(self, expr, **settings):
         return expr
     def _visit_Pass(self, expr, **settings):
         return expr
-
-    def _visit_NumberSymbol(self, expr, **settings):
-        return expr.n()
-
-    def _visit_Number(self, expr, **settings):
-        return expr.n()
 
     def _visit_Variable(self, expr, **settings):
         name = expr.name
@@ -1112,6 +1103,7 @@ class SemanticParser(BasicParser):
             for i in methods:
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():
+                        self.insert_import('numpy', rhs_name)
                         func = i.decorators['numpy_wrapper']
                         return func(visited_lhs, *args)
                     else:
@@ -1367,7 +1359,10 @@ class SemanticParser(BasicParser):
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
-            lhs = Variable(dtype, name, **d_lhs)
+            if isinstance(name, PyccelSymbol):
+                lhs = Variable(dtype, name, **d_lhs, is_temp=name.is_temp)
+            else:
+                lhs = Variable(dtype, name, **d_lhs)
 
         return lhs
 
@@ -1910,7 +1905,7 @@ class SemanticParser(BasicParser):
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
-            index = Variable('int',index_name)
+            index = Variable('int',index_name, is_temp=True)
             range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
             var   = IndexedElement(name, index)
@@ -2357,12 +2352,12 @@ class SemanticParser(BasicParser):
         return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
-            if not (isinstance(r, PyccelSymbol) and r == v):
+            if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = Assign(v, r)
                 a.set_fst(expr.fst)
+                a = self._visit_Assign(a)
                 assigns.append(a)
 
-        assigns = [self._visit_Assign(e) for e in assigns]
         results = [self._visit(i, **settings) for i in return_vars]
 
         #add the Deallocate node before the Return node
@@ -2412,8 +2407,8 @@ class SemanticParser(BasicParser):
                         severity='warning')
         for hd in headers:
             if (args_number != len(hd.dtypes)):
-                msg = 'The number of arguments in the function {} ({}) does not match the number\
-                        of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
+                msg = """The number of arguments in the function {} ({}) does not match the number
+                        of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))"""
                 if (args_number < len(hd.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
@@ -2958,7 +2953,7 @@ class SemanticParser(BasicParser):
                 expr = Import(expr.source.name)
 
             if source_target in container['imports']:
-                targets = container['imports'][source_target].target + expr.target
+                targets = container['imports'][source_target].target.union(expr.target)
             else:
                 targets = expr.target
 
@@ -3062,7 +3057,7 @@ class SemanticParser(BasicParser):
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
-                length = length.p
+                length = length.python_value
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:

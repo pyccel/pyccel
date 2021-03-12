@@ -2,11 +2,22 @@
 # pylint: disable=wildcard-import
 import multiprocessing
 import os
+import sys
 import pytest
 import numpy as np
 import modules.openmp as openmp
 
 from pyccel.epyccel import epyccel
+#==============================================================================
+
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c)
+    ]
+)
+def language(request):
+    return request.param
+
 #==============================================================================
 
 def test_module_1(language):
@@ -121,7 +132,7 @@ def test_modules_11(language):
     set_num_threads(8)
     assert f1() == 8
 
-@pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
+@pytest.mark.xfail(reason = "arithmetic expression not managed yet inside a clause !")
 def test_modules_12(language):
     f1 = epyccel(openmp.test_omp_in_final, accelerator='openmp', language=language)
 
@@ -132,42 +143,66 @@ def test_modules_13(language):
 
     assert f1() >= 0
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="omp_get_num_devices and omp_get_default_device unrecognized in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
+#@pytest.mark.parametrize( 'language', [
+#        pytest.param("c", marks = [
+#            pytest.mark.xfail(sys.platform == 'darwin', reason="omp_get_num_devices and omp_get_default_device unrecognized in C !"),
+#            pytest.mark.c]),
+#        pytest.param("fortran", marks = pytest.mark.fortran)
+#    ]
+#)
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_14_0(language):
     f1 = epyccel(openmp.test_omp_set_get_default_device, accelerator='openmp', language=language)
     f2 = epyccel(openmp.test_omp_get_num_devices, accelerator='openmp', language=language)
 
     assert f1(1) == 1
-    assert f1(0) == 0
+    assert f1(2) == 2
     assert f2() >= 0
 
-# omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !"
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_14_1(language):
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp', language=language)
-    # f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Target construct not implemented yet and need a non-host device to test the function
+    f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp', language=language) #Needs a non-host device to test the function properly
 
     assert f3() == 1
+    assert f4() == 0
 
-@pytest.mark.xfail(reason = "Teams not supported yet for openmp !")
+#@pytest.mark.parametrize( 'language', [
+#        pytest.param("c", marks = [
+#            pytest.mark.xfail(reason="omp_get_team_num() return a wrong result!"),
+#            pytest.mark.c]),
+#        pytest.param("fortran", marks = [
+#            pytest.mark.xfail(reason="Compilation fails on github action"),
+#            pytest.mark.fortran])
+#
+#    ]
+#)
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_15(language):
+    f1 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp', language=language)
+
+    assert f1(0) == 0
+    assert f1(1) == 1
+
+#@pytest.mark.parametrize( 'language', [
+#        pytest.param("c", marks = [
+#            pytest.mark.xfail(reason="omp_get_num_teams() return a wrong result!"),
+#            pytest.mark.c]),
+#        pytest.param("fortran", marks = [
+#            pytest.mark.xfail(reason="Compilation fails on github action"),
+#            pytest.mark.fortran])
+#    ]
+#)
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
+def test_modules_15_1(language):
     f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp', language=language)
-    f2 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp', language=language)
 
     assert f1() == 2
-    assert f2(0) == 0
-    assert f2(1) == 1
 
-@pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
 def test_modules_16(language):
     f1 = epyccel(openmp.test_omp_get_max_task_priority, accelerator='openmp', language=language)
 
-    assert f1() == 5
+    assert f1() == 0 # omp_get_max_task_priority() return always 0
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -241,13 +276,7 @@ def test_omp_matmul_2d_2d(language):
 
     assert np.array_equal(y1, y2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="for reduction doesn't work in C"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
+
 def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
@@ -257,6 +286,23 @@ def test_omp_arraysum(language):
 
     assert f1(x) == np.sum(x)
 
+def test_omp_arraysum_combined(language):
+    f1 = epyccel(openmp.omp_arraysum_combined, accelerator='openmp', language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
+    set_num_threads(4)
+    from numpy import random
+    x = random.randint(20, size=(5))
+
+    assert f1(x) == np.sum(x)
+
+def test_omp_range_sum_critical(language):
+    f1 = epyccel(openmp.omp_range_sum_critical, accelerator='openmp', language=language)
+    from numpy import random
+
+    for _ in range(0, 4):
+        x = random.randint(10, 1000)
+        assert f1(x) == openmp.omp_range_sum_critical(x)
+
 def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
@@ -265,3 +311,56 @@ def test_omp_arraysum_single(language):
     x = random.randint(20, size=(10))
 
     assert f1(x) == np.sum(x)
+
+def test_omp_master(language):
+    f1 = epyccel(openmp.omp_master, accelerator='openmp', language=language)
+    assert f1() == openmp.omp_master()
+
+def test_omp_taskloop(language):
+    f1 = epyccel(openmp.omp_taskloop, accelerator='openmp', language=language)
+    from numpy import random
+
+    for _ in range(0, 4):
+        x = random.randint(1, 4)
+        result = 0
+        for _ in range(0, x * 10):
+            result = result + 1
+        assert result == f1(x)
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Nested functions not handled for C !"),
+            pytest.mark.c]),
+            pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
+def test_omp_tasks(language):
+    f1 = epyccel(openmp.omp_tasks, accelerator='openmp', language=language)
+    from numpy import random
+
+    for _ in range(0, 4):
+        x = random.randint(10, 20)
+        assert openmp.omp_tasks(x) == f1(x)
+
+def test_omp_simd(language):
+    f1 = epyccel(openmp.omp_simd, accelerator='openmp', language=language)
+    assert openmp.omp_simd(1337) == f1(1337)
+
+def test_omp_flush(language):
+    f1 = epyccel(openmp.omp_flush, accelerator='openmp', language=language)
+    assert 2 == f1()
+
+def test_omp_barrier(language):
+    f1 = epyccel(openmp.omp_barrier, accelerator='openmp', language=language)
+    f2 = openmp.omp_barrier
+    assert f1() == f2()
+
+def test_combined_for_simd(language):
+    f1 = epyccel(openmp.combined_for_simd, accelerator='openmp', language=language)
+    f2 = openmp.combined_for_simd
+    assert f1() == f2()
+
+def test_omp_sections(language):
+    f1 = epyccel(openmp.omp_sections, accelerator='openmp', language=language)
+    f2 = openmp.omp_sections
+    assert f1() == f2()

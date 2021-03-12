@@ -92,11 +92,11 @@ class LiteralInteger(Literal):
         super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
-        self.p = value
+        self._value = value
 
     @property
     def python_value(self):
-        return self.p
+        return self._value
 
     def __index__(self):
         return self.python_value
@@ -281,7 +281,7 @@ def convert_to_literal(value, dtype = None, precision = None):
     if isinstance(dtype, NativeInteger):
         literal_val = LiteralInteger(value, precision)
     elif isinstance(dtype, NativeReal):
-        literal_val = LiteralFloat(value, precision)
+        literal_val = LiteralFloat(value, precision=precision)
     elif isinstance(dtype, NativeComplex):
         literal_val = LiteralComplex(value.real, value.imag, precision)
     elif isinstance(dtype, NativeBool):

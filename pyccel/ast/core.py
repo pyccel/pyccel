@@ -97,11 +97,7 @@ __all__ = (
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs',
-    'OMP_For_Loop',
-    'OMP_Parallel_Construct',
-    'OMP_Single_Construct',
-    'Omp_End_Clause'
+    'subs'
 )
 
 #==============================================================================
@@ -248,7 +244,7 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
     name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
 
-    return PyccelSymbol(name), counter
+    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(Basic):
@@ -1661,8 +1657,8 @@ class FunctionCall(PyccelAstNode):
 
         if isinstance(func, Interface):
             self._interface = func
-            func = func.point(args)
             self._interface_name = func.name
+            func = func.point(args)
         else:
             self._interface = None
 
@@ -1787,8 +1783,8 @@ class Return(Basic):
 
     def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, (Assign, CodeBlock)):
-            raise TypeError('stmt should only be of type Assign')
+        if stmt and not isinstance(stmt, CodeBlock):
+            raise TypeError('stmt should only be of type CodeBlock')
 
         self._expr = expr
         self._stmt = stmt
@@ -2785,13 +2781,13 @@ class Import(Basic):
             source = Import._format(source)
 
         self._source = source
-        self._target = []
+        self._target = set()
         self._ignore_at_print = ignore_at_print
         if isinstance(target, (str, DottedName, AsName)):
-            self._target = [Import._format(target)]
+            self._target = set([Import._format(target)])
         elif iterable(target):
             for i in target:
-                self._target.append(Import._format(i))
+                self._target.add(Import._format(i))
         super().__init__()
 
     @staticmethod
@@ -2836,7 +2832,7 @@ class Import(Basic):
                     target=target)
 
     def define_target(self, new_target):
-        self._target.append(new_target)
+        self._target.add(new_target)
 
     def find_module_target(self, new_target):
         for t in self._target:
@@ -3208,7 +3204,7 @@ class AnnotatedComment(Basic):
     Parameters
     ----------
     accel : str
-       accelerator id. One among {'omp', 'acc'}
+       accelerator id. One among {'acc'}
 
     txt: str
         statement to print
@@ -3216,8 +3212,8 @@ class AnnotatedComment(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import AnnotatedComment
-    >>> AnnotatedComment('omp', 'parallel')
-    AnnotatedComment(omp, parallel)
+    >>> AnnotatedComment('acc', 'parallel')
+    AnnotatedComment(acc, parallel)
     """
     _attribute_nodes = ()
 
@@ -3239,26 +3235,6 @@ class AnnotatedComment(Basic):
 
         args = (self.accel, self.txt)
         return args
-
-class OMP_For_Loop(AnnotatedComment):
-    """ Represents an OpenMP Loop construct. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
-
-class OMP_Parallel_Construct(AnnotatedComment):
-    """ Represents an OpenMP Parallel construct. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
-
-class OMP_Single_Construct(AnnotatedComment):
-    """ Represents an OpenMP Single construct. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
-
-class Omp_End_Clause(AnnotatedComment):
-    """ Represents the End of an OpenMP block. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
 
 class CommentBlock(Basic):
 
