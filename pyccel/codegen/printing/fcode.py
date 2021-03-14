@@ -1837,7 +1837,7 @@ class FCodePrinter(CodePrinter):
 
         body = self._print(expr.body)
 
-        if expr._nowait_expr:
+        if expr.nowait_expr:
             epilog += expr.nowait_expr
         return ('{prolog}'
                 '{body}'
