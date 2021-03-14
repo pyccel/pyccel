@@ -1838,7 +1838,7 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
 
         if expr._nowait_expr:
-            epilog += expr._nowait_expr
+            epilog += expr.nowait_expr
         return ('{prolog}'
                 '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
@@ -1864,7 +1864,7 @@ class FCodePrinter(CodePrinter):
         if "section" in omp_expr and "sections" not in omp_expr:
             return ''
         omp_expr = omp_expr.replace("for", "do")
-        if expr._has_nowait:
+        if expr.has_nowait:
             omp_expr += ' nowait'
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr

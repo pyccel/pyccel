@@ -867,12 +867,12 @@ class SemanticParser(BasicParser):
         combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
 
         if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
-           and expr._has_nowait:
+           and expr.has_nowait:
             for i, node in enumerate(code.body):
                 if i > index:
                     if isinstance(node, Omp_End_Clause):
                         if node.txt.startswith(expr.name, 4):
-                            node._has_nowait = True
+                            node.set_nowait(True)
 
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
                             OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
@@ -884,11 +884,12 @@ class SemanticParser(BasicParser):
                 if i == index + 1:
                     if isinstance(node, For):
                         print(expr.txt.startswith(' simd'))
-                        if expr._has_nowait:
-                            node._nowait_expr = '!$omp end do'
+                        if expr.has_nowait:
+                            nowait_expr = '!$omp end do'
                             if expr.txt.startswith(' simd'):
-                                node._nowait_expr += ' simd'
-                            node._nowait_expr += ' nowait\n'
+                                nowait_expr += ' simd'
+                            nowait_expr += ' nowait\n'
+                            node.set_nowait_expr(nowait_expr)
                     elif isinstance(node, (Comment, CommentBlock, Pass)):
                         index += 1
                     else:
@@ -2097,7 +2098,7 @@ class SemanticParser(BasicParser):
             return ForIterator(target, iterable, body)
 
         for_expr = For(target, iterable, body, local_vars=local_vars)
-        for_expr._nowait_expr = expr._nowait_expr
+        for_expr.set_nowait_expr(expr.nowait_expr)
         return for_expr
 
 

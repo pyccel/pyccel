@@ -1350,6 +1350,13 @@ class For(Basic):
         super().__init__()
 
     @property
+    def nowait_expr(self):
+        return self._nowait_expr
+
+    def set_nowait_expr(self, expr):
+        self._nowait_expr = expr
+
+    @property
     def target(self):
         return self._target
 
