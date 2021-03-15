@@ -80,11 +80,13 @@ __all__ = (
 )
 
 class PyccelPyObject(DataType):
+    __slots__ = ()
     _name = 'pyobject'
 
 class PyccelPyArrayObject(DataType):
     """ Datatype representing a PyArrayObject which is the
     class used to hold numpy objects"""
+    __slots__ = ()
     _name = 'pyarrayobject'
 
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')

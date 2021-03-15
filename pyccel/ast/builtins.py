@@ -81,6 +81,7 @@ class PythonReal(PythonComplexProperty):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
             return PythonInt(arg)
@@ -100,6 +101,7 @@ class PythonImag(PythonComplexProperty):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     def __new__(cls, arg):
         if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
@@ -408,6 +410,7 @@ class PythonLen(PyccelInternalFunction):
     Represents a 'len' expression in the code.
     """
 
+    __slots__ = ()
     _dtype     = NativeInteger()
     _precision = default_precision['int']
     _rank      = 0
@@ -425,6 +428,7 @@ class PythonLen(PyccelInternalFunction):
 class PythonList(PythonTuple):
     """ Represents a call to Python's native list() function.
     """
+    __slots__ = ()
     _is_homogeneous = True
 
 #==============================================================================

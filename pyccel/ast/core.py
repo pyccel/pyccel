@@ -752,27 +752,33 @@ class SymbolicAssign(Basic):
 class NativeOp(metaclass=Singleton):
 
     """Base type for native operands."""
+    __slots__ = ()
 
     pass
 
 
 class AddOp(NativeOp):
+    __slots__ = ()
     _symbol = '+'
 
 
 class SubOp(NativeOp):
+    __slots__ = ()
     _symbol = '-'
 
 
 class MulOp(NativeOp):
+    __slots__ = ()
     _symbol = '*'
 
 
 class DivOp(NativeOp):
+    __slots__ = ()
     _symbol = '/'
 
 
 class ModOp(NativeOp):
+    __slots__ = ()
     _symbol = '%'
 
 
@@ -1389,12 +1395,14 @@ class For(Basic):
 
 
 class DoConcurrent(For):
+    __slots__ = ()
     pass
 
 
 class ForIterator(For):
 
     """Class that describes iterable classes defined by the user."""
+    __slots__ = ()
 
     def __init__(
         self,
@@ -2427,12 +2435,14 @@ class ValuedFunctionAddress(FunctionAddress):
 class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
+    __slots__ = ()
 
 
 # TODO: [EB 06.01.2021] Is this class used? What for? See issue #668
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
+    __slots__ = ()
 
 
 class BindCFunctionDef(FunctionDef):
@@ -2993,18 +3003,21 @@ class Declare(Basic):
 class Break(Basic):
 
     """Represents a break in the code."""
+    __slots__ = ()
     _attribute_nodes = ()
 
 
 class Continue(Basic):
 
     """Represents a continue in the code."""
+    __slots__ = ()
     _attribute_nodes = ()
 
 
 class Raise(Basic):
 
     """Represents a raise in the code."""
+    __slots__ = ()
     _attribute_nodes = ()
 
 
@@ -3100,6 +3113,7 @@ class EmptyNode(Basic):
     >>> EmptyNode()
 
     """
+    __slots__ = ()
     _attribute_nodes = ()
 
     def __str__(self):
@@ -3172,6 +3186,7 @@ class SeparatorComment(Comment):
     >>> SeparatorComment(n=40)
     # ........................................
     """
+    __slots__ = ()
 
     def __init__(self, n):
         text = """.""" * n
@@ -3265,7 +3280,7 @@ class Assert(Basic):
     Examples
     --------
     """
-    __sympy__ = ('_test',)
+    __slots__ = ('_test',)
     _attribute_nodes = ('_test',)
     #TODO add type check in the semantic stage
     def __init__(self, test):
@@ -3284,17 +3299,20 @@ class Assert(Basic):
 class Pass(Basic):
 
     """Basic class for pass instruction."""
+    __slots__ = ()
     _attribute_nodes = ()
 
 class Exit(Basic):
 
     """Basic class for exits."""
+    __slots__ = ()
     _attribute_nodes = ()
 
 #TODO: [EB 26.01.2021] Do we need this unused class?
 class ErrorExit(Exit):
 
     """Exit with error."""
+    __slots__ = ()
 
 class IfSection(Basic):
     """Represents a condition and associated code block

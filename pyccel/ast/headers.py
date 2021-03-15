@@ -34,6 +34,7 @@ errors = Errors()
 
 #==============================================================================
 class Header(Basic):
+    __slots__ = ()
     _attribute_nodes = ()
 
 #==============================================================================
@@ -457,6 +458,7 @@ class MethodHeader(FunctionHeader):
     >>> m.name
     'point.rotate'
     """
+    __slots__ = ()
 
     def __init__(self, name, dtypes, results=None, is_static=False):
         if not isinstance(name, (list, tuple)):

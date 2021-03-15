@@ -111,6 +111,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
 
 class DataType(metaclass=Singleton):
     """Base class representing native datatypes"""
+    __slots__ = ()
     _name = '__UNDEFINED__'
 
     @property
@@ -121,36 +122,46 @@ class DataType(metaclass=Singleton):
         return str(self.name).lower()
 
 class NativeBool(DataType):
+    __slots__ = ()
     _name = 'Bool'
 
 class NativeInteger(DataType):
+    __slots__ = ()
     _name = 'Int'
 
 class NativeReal(DataType):
+    __slots__ = ()
     _name = 'Real'
 
 class NativeComplex(DataType):
+    __slots__ = ()
     _name = 'Complex'
 
 NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
 
 class NativeString(DataType):
+    __slots__ = ()
     _name = 'String'
 
 class NativeVoid(DataType):
+    __slots__ = ()
     _name = 'Void'
 
 class NativeNil(DataType):
+    __slots__ = ()
     _name = 'Nil'
 
 class NativeTuple(DataType):
     """Base class representing native datatypes"""
+    __slots__ = ()
     _name = 'Tuple'
 
 class NativeRange(DataType):
+    __slots__ = ()
     _name = 'Range'
 
 class NativeSymbol(DataType):
+    __slots__ = ()
     _name = 'Symbol'
 
 

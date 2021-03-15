@@ -22,6 +22,7 @@ iterable = lambda x : isinstance(x, iterable_types)
 class Immutable:
     """ Superclass for classes which cannot inherit
     from Basic """
+    __slots__ = ()
 
 #==============================================================================
 class Basic:

@@ -72,6 +72,7 @@ class MacroShape(Macro):
 #==============================================================================
 class MacroType(Macro):
     """."""
+    __slots__ = ()
     _name      = 'dtype'
     _dtype     = NativeGeneric()
     _precision = 0
@@ -85,6 +86,7 @@ class MacroType(Macro):
 #==============================================================================
 class MacroCount(Macro):
     """."""
+    __slots__ = ()
     _name      = 'count'
     _dtype     = NativeInteger()
     _precision = default_precision['integer']

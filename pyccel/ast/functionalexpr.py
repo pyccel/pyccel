@@ -61,12 +61,14 @@ class FunctionalFor(Basic):
 class GeneratorComprehension(FunctionalFor):
     """ Super class for all functions which reduce generator expressions to scalars
     """
+    __slots__ = ()
 
 #==============================================================================
 class FunctionalSum(GeneratorComprehension):
     """ Represents a call to sum for a list argument
     >>> sum([i in range(5)])
     """
+    __slots__ = ()
     name = 'sum'
 
 #==============================================================================
@@ -74,6 +76,7 @@ class FunctionalMax(GeneratorComprehension):
     """ Represents a call to max for a list argument
     >>> max([i in range(5)])
     """
+    __slots__ = ()
     name = 'max'
 #==============================================================================
 
@@ -81,4 +84,5 @@ class FunctionalMin(GeneratorComprehension):
     """ Represents a call to min for a list argument
     >>> min([i in range(5)])
     """
+    __slots__ = ()
     name = 'min'

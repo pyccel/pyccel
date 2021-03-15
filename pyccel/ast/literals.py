@@ -64,6 +64,7 @@ class Literal(PyccelAstNode):
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
+    __slots__ = ()
     _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
@@ -76,6 +77,7 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
+    __slots__ = ()
     _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
@@ -171,6 +173,7 @@ class LiteralComplex(Literal):
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
+    __slots__ = ()
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
@@ -216,6 +219,7 @@ class Nil(Basic, metaclass=Singleton):
     """
     class for None object in the code.
     """
+    __slots__ = ()
     _attribute_nodes = ()
 
     def __str__(self):
