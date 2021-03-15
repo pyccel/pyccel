@@ -21,8 +21,10 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      - name: Test with pytest
+      - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
       - name: Test with valgrind for memory leaks
         uses: ./.github/actions/valgrind_run
       - name: Collect coverage information
@@ -90,5 +92,7 @@ jobs:
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Test with pytest
+      - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python

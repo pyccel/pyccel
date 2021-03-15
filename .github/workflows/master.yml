@@ -25,8 +25,10 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      - name: Test with pytest
+      - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
@@ -92,5 +94,7 @@ jobs:
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Test with pytest
+      - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
