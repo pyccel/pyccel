@@ -868,11 +868,10 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
            and expr.has_nowait:
-            for i, node in enumerate(code.body):
-                if i > index:
-                    if isinstance(node, Omp_End_Clause):
-                        if node.txt.startswith(expr.name, 4):
-                            node.has_nowait = True
+            for i, node in enumerate(code.body[index+1:], index + 1):
+                if isinstance(node, Omp_End_Clause):
+                    if node.txt.startswith(expr.name, 4):
+                        node.has_nowait = True
 
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
                             OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
@@ -880,20 +879,23 @@ class SemanticParser(BasicParser):
             if index == (len(code.body) - 1):
                 errors.report(msg, symbol=type(expr).__name__,
                 severity='fatal', blocker=self.blocking)
-            for i, node in enumerate(code.body):
-                if i == index + 1:
-                    if isinstance(node, For):
-                        if expr.has_nowait:
-                            nowait_expr = '!$omp end do'
-                            if expr.txt.startswith(' simd'):
-                                nowait_expr += ' simd'
-                            nowait_expr += ' nowait\n'
-                            node.nowait_expr = nowait_expr
-                    elif isinstance(node, (Comment, CommentBlock, Pass)):
-                        index += 1
-                    else:
-                        errors.report(msg, symbol=type(node).__name__,
-                            severity='fatal', blocker=self.blocking)
+
+            index += 1
+            while index < len(code.body):
+                if isinstance(code.body[index], For):
+                    if expr.has_nowait:
+                        nowait_expr = '!$omp end do'
+                        if expr.txt.startswith(' simd'):
+                            nowait_expr += ' simd'
+                        nowait_expr += ' nowait\n'
+                        code.body[index].nowait_expr = nowait_expr
+                    break
+                elif isinstance(code.body[index], (Comment, CommentBlock, Pass)):
+                    index += 1
+                else:
+                    errors.report(msg, symbol=type(code.body[index]).__name__,
+                        severity='fatal', blocker=self.blocking)
+                    break
 
         return expr
 
