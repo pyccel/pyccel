@@ -376,8 +376,6 @@ def fib(n):
 print(fib(10))
 #$ omp end single
 #$ omp end parallel
-
-print("result :", result)
 ```
 
 The output of this program is:
