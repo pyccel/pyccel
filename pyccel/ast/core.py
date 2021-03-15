@@ -1341,8 +1341,8 @@ class For(Basic):
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
-    __slots__ = ('_target','_iterable','_body','_local_vars')
-    _attribute_nodes = ('_target','_iterable','_body','_local_vars')
+    __slots__ = ('_target','_iterable','_body','_local_vars','_nowait_expr')
+    _attribute_nodes = ('_target','_iterable','_body','_local_vars','_nowait_expr')
 
     def __init__(
         self,
