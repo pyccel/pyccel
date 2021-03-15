@@ -872,7 +872,7 @@ class SemanticParser(BasicParser):
                 if i > index:
                     if isinstance(node, Omp_End_Clause):
                         if node.txt.startswith(expr.name, 4):
-                            node.set_nowait(True)
+                            node.has_nowait = True
 
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
                             OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:

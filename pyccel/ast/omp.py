@@ -50,6 +50,11 @@ class OmpAnnotatedComment(Basic):
         """Used to check if the construct has a nowait clause."""
         return self._has_nowait
 
+    @has_nowait.setter
+    def has_nowait(self, value):
+        """Used to set the _has_nowait var."""
+        self._has_nowait = value
+
     @property
     def name(self):
         """Name of the construct."""
@@ -188,10 +193,3 @@ class Omp_End_Clause(OmpAnnotatedComment):
     """ Represents the End of an OpenMP block. """
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
-
-    @OmpAnnotatedComment.has_nowait.getter
-    def has_nowait(self):
-        return self._has_nowait
-
-    def set_nowait(self, value):
-        self._has_nowait = value
