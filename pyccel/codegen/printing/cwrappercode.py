@@ -509,11 +509,11 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self._print(argument.dtype)
         prec  = argument.precision
         dtype = self.find_in_dtype_registry(dtype, prec)
- 
+        dtype = dtype.replace(" ", "_")
+
         rank   = ''   if argument.rank < 1 else '_{}'.format(argument.rank)       
         order  = ''   if argument.order is None else '_{}'.format(argument.order)
-        valued = ''   if not isinstance(argument, ValuedVariable) else 'v_'
-        valued = 'o_' if argument.is_optional else valued
+        valued = ''   if not argument.is_optional else 'o_'
 
         name = 'py_to_{valued}{dtype}{precision}{rank}{order}'.format(
             valued    = valued,
@@ -602,7 +602,7 @@ class CWrapperCodePrinter(CCodePrinter):
             the converter function
 
         """
-        key = get_custom_key(argument)
+        key = get_custom_key(argument, is_interface)
 
         # Chech if converter already created
         if key in self._converter_functions:

@@ -244,17 +244,16 @@ class PyBuildValueNode(Basic):
     def converters(self):
         return self._converters
 
-def get_custom_key(variable):
+def get_custom_key(variable, for_interface):
     """
     """
     dtype     = variable.dtype
     precision = variable.precision
     rank      = variable.rank
     order     = variable.order
-    valued    = isinstance(variable, ValuedVariable)
     optional  = variable.is_optional
 
-    return (valued, optional, dtype, precision, order, rank)
+    return (for_interface, optional, dtype, precision, order, rank)
 
 
 #-------------------------------------------------------------------
