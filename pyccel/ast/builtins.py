@@ -270,6 +270,7 @@ class PythonFloat(PyccelAstNode):
         self._arg = arg
         self._shape = arg.shape
         self._rank  = len(self._shape)
+        self._order = arg.order
         super().__init__()
 
     @property

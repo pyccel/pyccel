@@ -459,8 +459,7 @@ class PythonCodePrinter(CodePrinter):
         return "randint({})".format(args)
 
     def _print_NumpyNorm(self, expr):
-        type_name = type(expr).__name__
-        name = type_name[5:].lower()
+        name = 'norm'
         axis = self._print(expr.axis) if expr.axis else None
         if axis:
             return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
