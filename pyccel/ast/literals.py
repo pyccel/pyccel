@@ -8,7 +8,7 @@ from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeString, default_precision)
+                                  NativeComplex, NativeString, default_precision, NativeReal)
 
 __all__ = (
     'LiteralTrue',
@@ -28,15 +28,17 @@ class Literal(PyccelAstNode):
     Represents a python literal
     This class is abstract and should be implemented for each dtype
     """
+    __slots__ = ('_precision',)
+    _attribute_nodes  = ()
     _rank      = 0
     _shape     = ()
-    _attribute_nodes  = ()
+    _order     = None
 
     def __init__(self, precision):
-        super().__init__()
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
+        super().__init__()
 
     @PyccelAstNode.precision.setter
     def precision(self, precision):
@@ -62,6 +64,7 @@ class Literal(PyccelAstNode):
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
+    __slots__ = ()
     _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
@@ -74,6 +77,7 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
+    __slots__ = ()
     _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
@@ -86,6 +90,7 @@ class LiteralFalse(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
+    __slots__ = ('_value',)
     _dtype     = NativeInteger()
 
     def __init__(self, value, precision = default_precision['integer']):
@@ -104,6 +109,7 @@ class LiteralInteger(Literal):
 #------------------------------------------------------------------------------
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
+    __slots__ = ('_value',)
     _dtype     = NativeReal()
 
     def __init__(self, value, *, precision = default_precision['float']):
@@ -123,6 +129,7 @@ class LiteralFloat(Literal):
 #------------------------------------------------------------------------------
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
+    __slots__ = ('_real_part','_imag_part')
     _dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
@@ -166,6 +173,7 @@ class LiteralComplex(Literal):
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
+    __slots__ = ()
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
@@ -179,10 +187,11 @@ class LiteralImaginaryUnit(LiteralComplex):
 #------------------------------------------------------------------------------
 class LiteralString(Literal):
     """Represents a string literal in python"""
+    __slots__ = ('_string',)
     _dtype     = NativeString()
-    _precision = 0
 
     def __init__(self, arg):
+        self._precision = 0
         super().__init__(self._precision)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
@@ -210,6 +219,7 @@ class Nil(Basic, metaclass=Singleton):
     """
     class for None object in the code.
     """
+    __slots__ = ()
     _attribute_nodes = ()
 
     def __str__(self):
