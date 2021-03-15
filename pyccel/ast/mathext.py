@@ -86,19 +86,23 @@ math_constants = {
 #==============================================================================
 class MathFunctionBase(PyccelInternalFunction):
     """Abstract base class for the Math Functions"""
+    __slots__ = ()
     _shape = ()
     _rank  = 0
     _order = None
 
 class MathFunctionFloat(MathFunctionBase):
+    __slots__ = ()
     _dtype = NativeReal()
     _precision = default_precision['real']
 
 class MathFunctionInt(MathFunctionBase):
+    __slots__ = ()
     _dtype = NativeInteger()
     _precision = default_precision['integer']
 
 class MathFunctionBool(MathFunctionBase):
+    __slots__ = ()
     _dtype = NativeBool()
     _precision = default_precision['bool']
 
@@ -107,61 +111,144 @@ class MathFunctionBool(MathFunctionBase):
 #==============================================================================
 
 # Floating-point result
-class MathAcos    (MathFunctionFloat): pass
-class MathAcosh   (MathFunctionFloat): pass
-class MathAsin    (MathFunctionFloat): pass
-class MathAsinh   (MathFunctionFloat): pass
-class MathAtan    (MathFunctionFloat): pass
-class MathAtan2   (MathFunctionFloat): pass
-class MathAtanh   (MathFunctionFloat): pass
-class MathCopysign(MathFunctionFloat): pass
-class MathCos     (MathFunctionFloat): pass
-class MathCosh    (MathFunctionFloat): pass
-class MathErf     (MathFunctionFloat): pass
-class MathErfc    (MathFunctionFloat): pass
-class MathExp     (MathFunctionFloat): pass
-class MathExpm1   (MathFunctionFloat): pass
-class MathFabs    (MathFunctionFloat): pass
-class MathFmod    (MathFunctionFloat): pass
-class MathFsum    (MathFunctionFloat): pass
-class MathGamma   (MathFunctionFloat): pass
-class MathHypot   (MathFunctionFloat): pass
-class MathLdexp   (MathFunctionFloat): pass
-class MathLgamma  (MathFunctionFloat): pass
-class MathLog     (MathFunctionFloat): pass
-class MathLog10   (MathFunctionFloat): pass
-class MathLog1p   (MathFunctionFloat): pass
-class MathLog2    (MathFunctionFloat): pass
-class MathPow     (MathFunctionFloat): pass
-class MathSin     (MathFunctionFloat): pass
-class MathSinh    (MathFunctionFloat): pass
-class MathSqrt    (MathFunctionFloat): pass
-class MathTan     (MathFunctionFloat): pass
-class MathTanh    (MathFunctionFloat): pass
-class MathRemainder (MathFunctionFloat): pass
+class MathAcos    (MathFunctionFloat):
+    """Represent a call to the acos function in the Math library"""
+    __slots__ = ()
+class MathAcosh   (MathFunctionFloat):
+    """Represent a call to the acosh function in the Math library"""
+    __slots__ = ()
+class MathAsin    (MathFunctionFloat):
+    """Represent a call to the asin function in the Math library"""
+    __slots__ = ()
+class MathAsinh   (MathFunctionFloat):
+    """Represent a call to the asinh function in the Math library"""
+    __slots__ = ()
+class MathAtan    (MathFunctionFloat):
+    """Represent a call to the atan function in the Math library"""
+    __slots__ = ()
+class MathAtan2   (MathFunctionFloat):
+    """Represent a call to the atan2 function in the Math library"""
+    __slots__ = ()
+class MathAtanh   (MathFunctionFloat):
+    """Represent a call to the atanh function in the Math library"""
+    __slots__ = ()
+class MathCopysign(MathFunctionFloat):
+    """Represent a call to the copysign function in the Math library"""
+    __slots__ = ()
+class MathCos     (MathFunctionFloat):
+    """Represent a call to the cos function in the Math library"""
+    __slots__ = ()
+class MathCosh    (MathFunctionFloat):
+    """Represent a call to the cosh function in the Math library"""
+    __slots__ = ()
+class MathErf     (MathFunctionFloat):
+    """Represent a call to the erf function in the Math library"""
+    __slots__ = ()
+class MathErfc    (MathFunctionFloat):
+    """Represent a call to the erfc function in the Math library"""
+    __slots__ = ()
+class MathExp     (MathFunctionFloat):
+    """Represent a call to the exp function in the Math library"""
+    __slots__ = ()
+class MathExpm1   (MathFunctionFloat):
+    """Represent a call to the expm1 function in the Math library"""
+    __slots__ = ()
+class MathFabs    (MathFunctionFloat):
+    """Represent a call to the fabs function in the Math library"""
+    __slots__ = ()
+class MathFmod    (MathFunctionFloat):
+    """Represent a call to the fmod function in the Math library"""
+    __slots__ = ()
+class MathFsum    (MathFunctionFloat):
+    """Represent a call to the fsum function in the Math library"""
+    __slots__ = ()
+class MathGamma   (MathFunctionFloat):
+    """Represent a call to the gamma function in the Math library"""
+    __slots__ = ()
+class MathHypot   (MathFunctionFloat):
+    """Represent a call to the hypot function in the Math library"""
+    __slots__ = ()
+class MathLdexp   (MathFunctionFloat):
+    """Represent a call to the ldexp function in the Math library"""
+    __slots__ = ()
+class MathLgamma  (MathFunctionFloat):
+    """Represent a call to the lgamma function in the Math library"""
+    __slots__ = ()
+class MathLog     (MathFunctionFloat):
+    """Represent a call to the log function in the Math library"""
+    __slots__ = ()
+class MathLog10   (MathFunctionFloat):
+    """Represent a call to the log10 function in the Math library"""
+    __slots__ = ()
+class MathLog1p   (MathFunctionFloat):
+    """Represent a call to the log1p function in the Math library"""
+    __slots__ = ()
+class MathLog2    (MathFunctionFloat):
+    """Represent a call to the log2 function in the Math library"""
+    __slots__ = ()
+class MathPow     (MathFunctionFloat):
+    """Represent a call to the pow function in the Math library"""
+    __slots__ = ()
+class MathSin     (MathFunctionFloat):
+    """Represent a call to the sin function in the Math library"""
+    __slots__ = ()
+class MathSinh    (MathFunctionFloat):
+    """Represent a call to the sinh function in the Math library"""
+    __slots__ = ()
+class MathSqrt    (MathFunctionFloat):
+    """Represent a call to the sqrt function in the Math library"""
+    __slots__ = ()
+class MathTan     (MathFunctionFloat):
+    """Represent a call to the tan function in the Math library"""
+    __slots__ = ()
+class MathTanh    (MathFunctionFloat):
+    """Represent a call to the tanh function in the Math library"""
+    __slots__ = ()
+class MathRemainder (MathFunctionFloat):
+    """Represent a call to the remainder function in the Math library"""
+    __slots__ = ()
 
 class MathRadians (MathFunctionFloat):
     """Represent a call to the radians function in the Math library"""
+    __slots__ = ()
 class MathDegrees (MathFunctionFloat):
     """Represent a call to the degrees function in the Math library"""
+    __slots__ = ()
 
 # Integer result
 class MathFactorial(MathFunctionInt):
     """Represent a call to the factorial function in the Math library"""
+    __slots__ = ()
 class MathGcd      (MathFunctionInt):
     """Represent a call to the gcd function in the Math library"""
+    __slots__ = ()
 class MathLcm      (MathFunctionInt):
     """Represent a call to the lcm function in the Math library"""
+    __slots__ = ()
 
-class MathCeil     (MathFunctionInt): pass
-class MathFloor    (MathFunctionInt): pass
-class MathTrunc    (MathFunctionInt): pass
+class MathCeil     (MathFunctionInt):
+    """Represent a call to the ceil function in the Math library"""
+    __slots__ = ()
+class MathFloor    (MathFunctionInt):
+    """Represent a call to the floor function in the Math library"""
+    __slots__ = ()
+class MathTrunc    (MathFunctionInt):
+    """Represent a call to the trunc function in the Math library"""
+    __slots__ = ()
 
 # Boolean result
-class MathIsclose (MathFunctionBool): pass
-class MathIsfinite(MathFunctionBool): pass
-class MathIsinf   (MathFunctionBool): pass
-class MathIsnan   (MathFunctionBool): pass
+class MathIsclose (MathFunctionBool):
+    """Represent a call to the isclose function in the Math library"""
+    __slots__ = ()
+class MathIsfinite(MathFunctionBool):
+    """Represent a call to the isfinite function in the Math library"""
+    __slots__ = ()
+class MathIsinf   (MathFunctionBool):
+    """Represent a call to the isinf function in the Math library"""
+    __slots__ = ()
+class MathIsnan   (MathFunctionBool):
+    """Represent a call to the isnan function in the Math library"""
+    __slots__ = ()
 
 #==============================================================================
 # Functions that return two values
@@ -176,6 +263,7 @@ class MathFrexp(MathFunctionBase):
     m is a float and e is an int, such that x = m * 2.**e.
     If x is 0, m and e are both 0.  Else 0.5 <= abs(m) < 1.0.
     """
+    __slots__ = ()
 
 # TODO
 class MathModf(MathFunctionBase):
@@ -185,6 +273,7 @@ class MathModf(MathFunctionBase):
     Return the fractional and integer parts of x.  Both results carry the sign
     of x and are floats.
     """
+    __slots__ = ()
 
 #==============================================================================
 # Dictionary to map math functions to classes above
