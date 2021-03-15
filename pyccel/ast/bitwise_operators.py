@@ -8,6 +8,8 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
+# TODO [EB 12.03.21]: Remove pylint command with PR #797
+# pylint: disable=W0201
 from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeReal,
                            NativeComplex, NativeString)
