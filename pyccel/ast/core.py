@@ -1342,7 +1342,7 @@ class For(Basic):
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
     __slots__ = ('_target','_iterable','_body','_local_vars','_nowait_expr')
-    _attribute_nodes = ('_target','_iterable','_body','_local_vars','_nowait_expr')
+    _attribute_nodes = ('_target','_iterable','_body','_local_vars')
 
     def __init__(
         self,
