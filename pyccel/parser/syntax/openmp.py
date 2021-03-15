@@ -89,6 +89,7 @@ class OmpClauses(BasicStmt):
 def check_get_clauses(name, valid_clauses, clauses, combined = None):
     """
     Function to check if the clauses are correct for a given construct.
+    And set the has_nowait variable to True if there is a nowait clause, to finally add the nowait clause at the end of the construct.
     """
     has_nowait = False
     txt = ''
