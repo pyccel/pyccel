@@ -89,7 +89,7 @@ hello from thread: 1
 #### Syntax of *loop*
 
 ```python
-#$ omp for [clause[ [,] clause] ... ]
+#$ omp for [nowait] [clause[ [,] clause] ... ]
 for-loops
 ```
 
@@ -120,7 +120,7 @@ The output of this program is:
 #### Syntax of *single*
 
 ```python
-#$ omp single [clause[ [,] clause] ... ]
+#$ omp single [nowait] [clause[ [,] clause] ... ]
 structured-block
 #$ omp end single [end_clause[ [,] end_clause] ... ]
 ```
@@ -536,7 +536,7 @@ Team num : 1
 #### Syntax of *sections*
 
 ```python
-#$ omp sections [clause[ [,]clause] ... ]
+#$ omp sections [nowait] [clause[ [,]clause] ... ]
 
 #$ omp section
 structured-block-sequence
@@ -665,6 +665,15 @@ z[ 5 ] : 3
 z[ 6 ] : 3
 z[ 7 ] : 3
 ```
+### for simd
+
+#### Syntax of *for simd*
+
+```python
+
+#$ omp for simd [clause[ [,]clause] ... ]
+for-loops
+```
 
 ### teams distribute
 
@@ -674,6 +683,39 @@ z[ 7 ] : 3
 #$ omp teams distribute [clause[ [,]clause] ... ]
 loop-nest
 ```
+
+#### Example
+
+```python
+import numpy as np
+x = np.array([1,2,1,2,1,2,1,2])
+y = np.array([2,1,2,1,2,1,2,1])
+z = np.zeros(8, dtype = int)
+result = 0
+#$ omp parallel
+#$ omp for simd
+for i in range(0, 8):
+    z[i] = x[i] + y[i]
+
+#$ omp end parallel
+for i in range(0, 8):
+    print("z[",i,"] :", z[i])
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+z[ 0 ] : 3
+z[ 1 ] : 3
+z[ 2 ] : 3
+z[ 3 ] : 3
+z[ 4 ] : 3
+z[ 5 ] : 3
+z[ 6 ] : 3
+z[ 7 ] : 3
+```
+
 
 ### teams distribute simd
 
