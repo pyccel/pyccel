@@ -1353,7 +1353,8 @@ class For(Basic):
     def nowait_expr(self):
         return self._nowait_expr
 
-    def set_nowait_expr(self, expr):
+    @nowait_expr.setter
+    def nowait_expr(self, expr):
         self._nowait_expr = expr
 
     @property

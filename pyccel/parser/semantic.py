@@ -888,7 +888,7 @@ class SemanticParser(BasicParser):
                             if expr.txt.startswith(' simd'):
                                 nowait_expr += ' simd'
                             nowait_expr += ' nowait\n'
-                            node.set_nowait_expr(nowait_expr)
+                            node.nowait_expr = nowait_expr
                     elif isinstance(node, (Comment, CommentBlock, Pass)):
                         index += 1
                     else:
@@ -2097,7 +2097,7 @@ class SemanticParser(BasicParser):
             return ForIterator(target, iterable, body)
 
         for_expr = For(target, iterable, body, local_vars=local_vars)
-        for_expr.set_nowait_expr(expr.nowait_expr)
+        for_expr.nowait_expr = expr.nowait_expr
         return for_expr
 
 
