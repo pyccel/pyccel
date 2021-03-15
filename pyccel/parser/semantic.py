@@ -874,28 +874,26 @@ class SemanticParser(BasicParser):
                         node.has_nowait = True
 
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
-                            OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
+                    OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
             msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
             if index == (len(code.body) - 1):
                 errors.report(msg, symbol=type(expr).__name__,
                 severity='fatal', blocker=self.blocking)
 
             index += 1
-            while index < len(code.body):
-                if isinstance(code.body[index], For):
-                    if expr.has_nowait:
-                        nowait_expr = '!$omp end do'
-                        if expr.txt.startswith(' simd'):
-                            nowait_expr += ' simd'
-                        nowait_expr += ' nowait\n'
-                        code.body[index].nowait_expr = nowait_expr
-                    break
-                elif isinstance(code.body[index], (Comment, CommentBlock, Pass)):
-                    index += 1
-                else:
-                    errors.report(msg, symbol=type(code.body[index]).__name__,
-                        severity='fatal', blocker=self.blocking)
-                    break
+            while isinstance(code.body[index], (Comment, CommentBlock, Pass)) and index < len(code.body):
+                index += 1
+
+            if index < len(code.body) and isinstance(code.body[index], For):
+                if expr.has_nowait:
+                    nowait_expr = '!$omp end do'
+                    if expr.txt.startswith(' simd'):
+                        nowait_expr += ' simd'
+                    nowait_expr += ' nowait\n'
+                    code.body[index].nowait_expr = nowait_expr
+            else:
+                errors.report(msg, symbol=type(code.body[index]).__name__,
+                    severity='fatal', blocker=self.blocking)
 
         return expr
 
