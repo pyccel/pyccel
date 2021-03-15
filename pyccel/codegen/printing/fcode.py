@@ -30,6 +30,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfSection)
+
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
                              DottedName, PyccelArraySize)
@@ -54,7 +55,7 @@ from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.literals  import Nil
 
@@ -76,11 +77,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 # TODO: use _get_statement when returning a string
 
 __all__ = ["FCodePrinter", "fcode"]
-
-known_functions = {
-    "sign": "sign",       # TODO: move to numpyext
-    "conjugate": "conjg"  # TODO: move to numpyext
-}
 
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
@@ -174,43 +170,18 @@ class FCodePrinter(CodePrinter):
     language = "Fortran"
 
     _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'precision': 15,
-        'user_functions': {},
-        'human': True,
-        'source_format': 'fixed',
         'tabwidth': 2,
-        'contract': True,
-        'standard': 77
-    }
-
-    _operators = {
-        'and': '.and.',
-        'or': '.or.',
-        'xor': '.neqv.',
-        'equivalent': '.eqv.',
-        'not': '.not. ',
-    }
-
-    _relationals = {
-        '!=': '/=',
     }
 
 
-    def __init__(self, parser, **settings):
-
-        prefix_module = settings.pop('prefix_module', None)
+    def __init__(self, parser, prefix_module = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        CodePrinter.__init__(self, settings)
+        super().__init__()
         self.parser = parser
         self._namespace = self.parser.namespace
-        self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
-        self.known_functions.update(userfuncs)
         self._current_function = None
         self._current_class    = None
 
@@ -645,8 +616,6 @@ class FCodePrinter(CodePrinter):
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
         return 'real({0})'.format(value)
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
@@ -814,7 +783,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        if (expr.arg.dtype is NativeBool()):
+            code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+        else:
+            code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        return code
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -828,9 +801,6 @@ class FCodePrinter(CodePrinter):
         prec = expr.precision
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
-
-    def _print_Real(self, expr):
-        return expr.fprint(self._print)
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
@@ -870,8 +840,8 @@ class FCodePrinter(CodePrinter):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
-        if expr.high is None:
-            randreal = self._print(PyccelMul(expr.low, NumpyRand()))
+        if expr.low is None:
+            randreal = self._print(PyccelMul(expr.high, NumpyRand()))
         else:
             randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low), NumpyRand()), expr.low))
 
@@ -1524,7 +1494,6 @@ class FCodePrinter(CodePrinter):
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use, intrinsic :: ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
@@ -1787,8 +1756,24 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
-        stop  = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
         step  = self._print(expr.step)
+
+        test_step = expr.step
+        if isinstance(test_step, PyccelUnarySub):
+            test_step = expr.step.args[0]
+
+        # testing if the step is a value or an expression
+        if isinstance(test_step, Literal):
+            if isinstance(expr.step, PyccelUnarySub):
+                stop = PyccelAdd(expr.stop, LiteralInteger(1))
+            else:
+                stop = PyccelMinus(expr.stop, LiteralInteger(1))
+        else:
+            stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
+                                     PyccelMinus(expr.stop, LiteralInteger(1)),
+                                     PyccelAdd(expr.stop, LiteralInteger(1)))
+
+        stop = self._print(stop)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_FunctionalFor(self, expr):
@@ -1857,27 +1842,28 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     # .....................................................
-    #                   OpenMP statements
+    #               Print OpenMP AnnotatedComment
     # .....................................................
-    def _print_OMP_Parallel_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
+
+    def _print_OmpAnnotatedComment(self, expr):
+        clauses = ''
+        if expr.combined:
+            combined = expr.combined.replace("for", "do")
+            clauses = ' ' + combined
+
+        omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
+        clauses += str(expr.txt).replace("cancel for", "cancel do")
+        omp_expr = '{}{}\n'.format(omp_expr, clauses)
+
+        return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
+        if "section" in omp_expr and "sections" not in omp_expr:
+            return ''
         omp_expr = omp_expr.replace("for", "do")
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
-
-    def _print_OMP_Single_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
-
-    def _print_OMP_For_Loop(self, expr):
-        omp_expr   = str(expr.txt)
-        return '!$omp do{}\n'.format(omp_expr)
+        omp_expr = '!$omp {}\n'.format(omp_expr)
+        return omp_expr
 
     # .....................................................
     def _print_OMP_Parallel(self, expr):
@@ -2279,9 +2265,6 @@ class FCodePrinter(CodePrinter):
         lines = []
 
         for i, (c, e) in enumerate(expr.blocks):
-
-            if (not e) or (isinstance(e, CodeBlock) and not e.body):
-                continue
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
