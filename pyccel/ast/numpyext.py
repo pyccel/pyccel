@@ -157,6 +157,7 @@ class NumpyReal(PythonReal):
     > np.real(a)
     1.0
     """
+    __slots__ = ('_rank','_shape','_order')
     def __init__(self, arg):
         super().__init__(arg)
         self._precision = arg.precision
@@ -465,6 +466,7 @@ class NumpyImag(PythonImag):
     > np.imag(a)
     2.0
     """
+    __slots__ = ('_rank','_shape','_order')
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
             dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype

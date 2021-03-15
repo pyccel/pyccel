@@ -52,14 +52,14 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
-    __slots__ = ('_precision','_rank','_shape','_order')
+    __slots__ = ('_precision')
     _dtype = NativeReal()
+    _rank  = 0
+    _shape = ()
+    _order = None
 
     def __init__(self, arg):
         self._precision = arg.precision
-        self._rank  = 0
-        self._shape = ()
-        self._order = None
         super().__init__(arg)
 
     @property
