@@ -691,6 +691,7 @@ class Constant(ValuedVariable):
     --------
 
     """
+    __slots__ = ()
     # The value of a constant is not a translated object
     _attribute_nodes = ()
 
