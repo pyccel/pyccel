@@ -868,7 +868,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
            and expr.has_nowait:
-            for i, node in enumerate(code.body[index+1:], index + 1):
+            for node in code.body[index+1:]:
                 if isinstance(node, Omp_End_Clause):
                     if node.txt.startswith(expr.name, 4):
                         node.has_nowait = True
