@@ -61,7 +61,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names                = set()
         self._module_name                 = None
         self._converter_functions         = dict()
-        self.to_free_objects              = []
+
     # --------------------------------------------------------------------
     #                       Helper functions
     # --------------------------------------------------------------------
@@ -278,23 +278,6 @@ class CWrapperCodePrinter(CCodePrinter):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
-
-    def stored_in_c_pointer(self, expr):
-        """
-        Return True if variable is pointer or stored in pointer
-
-        Parameters:
-        -----------
-        a      : Variable
-            Variable holding information needed (is_pointer, is_optional)
-
-        Returns: boolean
-        --------
-        """
-        if not isinstance(expr, Variable):
-            return False
-
-        return expr.is_pointer or expr.is_optional
 
     def get_static_function(self, function):
         """
@@ -864,7 +847,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_functions           = []
 
         for func in expr.functions:
-            mini_wrapper_name = self.get_wrapper_name(used_names, expr)
+            mini_wrapper_name = self.get_wrapper_name(used_names, func)
             mini_wrapper_body = []
             func_args         = []
             flag              = 0
@@ -872,6 +855,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # loop on all functions argument to collect needed converter functions
             for c_arg, p_arg in zip(func.arguments, parse_args):
+                if c_arg.rank > 0:
+                    c_arg = c_arg.clone(c_arg.name, allocatable = False)
+
                 function = self.get_PyArgParse_Converter(used_names, c_arg, True)
                 func_args.extend(self.get_static_args(c_arg)) # Bind_C args
 
@@ -882,10 +868,10 @@ class CWrapperCodePrinter(CCodePrinter):
                     mini_wrapper_body.append(self.get_default_assign(c_arg))
 
                 if self.need_free(c_arg):
-                    garbage_collector.append(FunctionCall(function, [Nil(), VariableAddress(c_arg)]))
+                    garbage_collector.extend(self.get_free_statements(c_arg))
 
-                call = FunctionCall(function, [p_arg, VariableAddress(c_arg)]) # convert py to c type
-                body = If(IfSection(PyccelNot(call), [RETURN_NULL]))           # check in cas of error
+                call = FunctionCall(function, [p_arg, VariableAddress(c_arg)])           # convert py to c type
+                body = If(IfSection(PyccelNot(call), garbage_collector + [RETURN_NULL])) # check in cas of error
                 mini_wrapper_body.append(body)
 
             # Call function
@@ -992,6 +978,9 @@ class CWrapperCodePrinter(CCodePrinter):
         converters = []
         # Loop on all the arguments and collect the needed converter functions
         for c_arg in expr.arguments:
+            if c_arg.rank > 0:
+                c_arg = c_arg.clone(c_arg.name, allocatable = False)
+
             function = self.get_PyArgParse_Converter(used_names, c_arg)
             converters.append(function)
 
@@ -1001,10 +990,9 @@ class CWrapperCodePrinter(CCodePrinter):
             # Set default value when the argument is valued
             if isinstance(c_arg, ValuedVariable):
                 wrapper_body.append(self.get_default_assign(c_arg))
-            
-            # call converter with Null destroy allocatet memory 
+
             if self.need_free(c_arg):
-                garbage_collector.append(FunctionCall(function, [Nil(), VariableAddress(c_arg)]))
+                garbage_collector.extend(self.get_free_statements(c_arg))
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], keyword_list, expr.arguments,
