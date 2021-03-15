@@ -5822,74 +5822,6 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert np.isclose(epyccel_func(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32).all()
     assert np.isclose(epyccel_func(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL).all()
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #770")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
-        )
-    )
-)
-
-# Not all arguments are supported
-
-def test_numpy_where_scalar(language):
-
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    @types('complex64')
-    @types('complex128')
-    def get_where(a):
-        from numpy import where, shape
-        b = where(a)
-        s = shape(b)
-        return len(s), s[0], a[0]
-
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
-
-    fl = uniform(min_int / 2, max_int / 2)
-    fl32 = uniform(min_int, max_int)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int / 2, max_int / 2)
-
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
-
-    epyccel_func = epyccel(get_where, language=language)
-
-    assert epyccel_func(True) == get_where(True)
-    assert epyccel_func(False) == get_where(False)
-    assert epyccel_func(integer8) == get_where(integer8)
-    assert epyccel_func(integer16) == get_where(integer16)
-    assert epyccel_func(integer) == get_where(integer)
-    assert epyccel_func(integer32) == get_where(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_where(integer64)
-    assert epyccel_func(fl) == get_where(fl)
-    assert epyccel_func(fl32) == get_where(fl32)
-    assert epyccel_func(fl64) == get_where(fl64)
-    assert (epyccel_func(cmplx64) == get_where(cmplx64))
-    assert (epyccel_func(cmplx128) == get_where(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
@@ -5900,7 +5832,7 @@ def test_numpy_where_scalar(language):
         ),
         pytest.param("python", marks = [
             pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
+            pytest.mark.skip(reason="Outdated Python printer")]
         )
     )
 )
@@ -5970,78 +5902,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
         ),
         pytest.param("python", marks = [
             pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
-        )
-    )
-)
-
-def test_numpy_where_array_like_1d(language):
-
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    @types('complex64[:]')
-    @types('complex128[:]')
-    def get_chosen_elements(arr):
-        from numpy import where, shape
-        a = where(arr)
-        s = shape(a)
-        return len(s), s[0], a[1], a[0]
-
-    size = 5
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_int, max_int, size = size)
-    fl32 = uniform(min_int, max_int, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int64, max_int64, size = size)
-
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
-
-    epyccel_func = epyccel(get_chosen_elements, language=language)
-
-    assert epyccel_func(bl) == get_chosen_elements(bl)
-    assert epyccel_func(integer8) == get_chosen_elements(integer8)
-    assert epyccel_func(integer16) == get_chosen_elements(integer16)
-    assert epyccel_func(integer) == get_chosen_elements(integer)
-    assert epyccel_func(integer32) == get_chosen_elements(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_chosen_elements(integer64)
-    assert epyccel_func(fl) == get_chosen_elements(fl)
-    assert epyccel_func(fl32) == get_chosen_elements(fl32)
-    assert epyccel_func(fl64) == get_chosen_elements(fl64)
-    assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
-    assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #770")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
+            pytest.mark.skip(reason="Outdated Python printer")]
         )
     )
 )
@@ -6062,76 +5923,6 @@ def test_numpy_where_array_like_2d_with_condition(language):
     def get_chosen_elements(arr):
         from numpy import where, shape
         a = where(arr%2, arr, arr+1)
-        s = shape(a)
-        return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
-
-    size = (2, 5)
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_int, max_int, size = size)
-    fl32 = uniform(min_int, max_int, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int64, max_int64, size = size)
-
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
-
-    epyccel_func = epyccel(get_chosen_elements, language=language)
-
-    assert epyccel_func(bl) == get_chosen_elements(bl)
-    assert epyccel_func(integer8) == get_chosen_elements(integer8)
-    assert epyccel_func(integer16) == get_chosen_elements(integer16)
-    assert epyccel_func(integer) == get_chosen_elements(integer)
-    assert epyccel_func(integer32) == get_chosen_elements(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_chosen_elements(integer64)
-    assert epyccel_func(fl) == get_chosen_elements(fl)
-    assert epyccel_func(fl32) == get_chosen_elements(fl32)
-    assert epyccel_func(fl64) == get_chosen_elements(fl64)
-    assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
-    assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #770")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
-        )
-    )
-)
-
-def test_numpy_where_array_like_2d(language):
-
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    @types('complex64[:,:]')
-    @types('complex128[:,:]')
-    def get_chosen_elements(arr):
-        from numpy import where, shape
-        a = where(arr)
         s = shape(a)
         return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
 
