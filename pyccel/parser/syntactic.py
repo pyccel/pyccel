@@ -499,13 +499,13 @@ class SyntaxParser(BasicParser):
         second = self._visit(stmt.right)
 
         if isinstance(stmt.op, ast.Add):
-            return PyccelAdd(first, second)
+            return PyccelAdd(first, second, simplify = True)
 
         elif isinstance(stmt.op, ast.Mult):
             return PyccelMul(first, second)
 
         elif isinstance(stmt.op, ast.Sub):
-            return PyccelMinus(first, second)
+            return PyccelMinus(first, second, simplify = True)
 
         elif isinstance(stmt.op, ast.Div):
             return PyccelDiv(first, second)

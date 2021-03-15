@@ -17,7 +17,7 @@ from .datatypes             import (NativeBool, NativeInteger, NativeReal,
                                     NativeComplex, NativeString, default_precision,
                                     NativeNumeric)
 
-from .literals              import LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex, Nil
 
 errors = Errors()
 
@@ -332,7 +332,7 @@ class PyccelBinaryOperator(PyccelOperator):
         The second argument passed to the operator
     """
 
-    def __init__(self, arg1, arg2):
+    def __init__(self, arg1, arg2, simplify = False):
         super().__init__(arg1, arg2)
 
     @classmethod
@@ -490,14 +490,17 @@ class PyccelAdd(PyccelArithmeticOperator):
     """
     _precedence = 12
 
-    def __new__(cls, arg1, arg2):
+    def __new__(cls, arg1, arg2, simplify = False):
+        if simplify:
+            if isinstance(arg2, PyccelUnarySub):
+                return PyccelMinus(arg1, arg2.args[0], simplify = True)
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
-           isinstance(arg2, LiteralComplex) and \
-           arg2.real == LiteralFloat(0):
+            isinstance(arg2, LiteralComplex) and \
+            arg2.real == LiteralFloat(0):
             return LiteralComplex(arg1, arg2.imag)
         elif isinstance(arg2, (LiteralInteger, LiteralFloat)) and \
-           isinstance(arg1, LiteralComplex) and \
-           arg1.real == LiteralFloat(0):
+            isinstance(arg1, LiteralComplex) and \
+            arg1.real == LiteralFloat(0):
             return LiteralComplex(arg2, arg1.imag)
         else:
             return super().__new__(cls)
@@ -552,14 +555,17 @@ class PyccelMinus(PyccelArithmeticOperator):
     """
     _precedence = 12
 
-    def __new__(cls, arg1, arg2):
+    def __new__(cls, arg1, arg2, simplify = False):
+        if simplify:
+            if isinstance(arg2, PyccelUnarySub):
+                return PyccelAdd(arg1, arg2.args[0], simplify = True)
         if isinstance(arg1, LiteralFloat) and \
-           isinstance(arg2, LiteralComplex) and \
-           arg2.real == LiteralFloat(0):
+            isinstance(arg2, LiteralComplex) and \
+            arg2.real == LiteralFloat(0):
             return LiteralComplex(arg1, -arg2.imag.python_value)
         elif isinstance(arg2, LiteralFloat) and \
-           isinstance(arg1, LiteralComplex) and \
-           arg1.real == LiteralFloat(0):
+            isinstance(arg1, LiteralComplex) and \
+            arg1.real == LiteralFloat(0):
             return LiteralComplex(-arg2.python_value, arg1.imag)
         else:
             return super().__new__(cls)
@@ -793,13 +799,13 @@ class PyccelBooleanOperator(PyccelOperator):
     """
 
     @staticmethod
-    def _calculate_dtype(*_args): #koka
+    def _calculate_dtype(*_args):
         _dtype = NativeBool()
         _precision = default_precision['bool']
         return _dtype, _precision
 
     @staticmethod
-    def _calculate_shape_rank(*_args): #koka
+    def _calculate_shape_rank(*_args):
         _rank = 0
         _shape = ()
         return _shape, _rank
