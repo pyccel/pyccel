@@ -862,7 +862,7 @@ class SemanticParser(BasicParser):
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
         code = expr._user_nodes
-        code = code[len(code) - 1]
+        code = code[-1]
         index = code.body.index(expr)
         combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
 
@@ -883,7 +883,6 @@ class SemanticParser(BasicParser):
             for i, node in enumerate(code.body):
                 if i == index + 1:
                     if isinstance(node, For):
-                        print(expr.txt.startswith(' simd'))
                         if expr.has_nowait:
                             nowait_expr = '!$omp end do'
                             if expr.txt.startswith(' simd'):
