@@ -659,7 +659,7 @@ class FCodePrinter(CodePrinter):
         """Fortran print."""
         arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
         if expr.axis:
-            axis = '1' if expr.axis == 0 else self._print(expr.axis)
+            axis = str(abs(expr.axis.python_value - arg.rank)) + '_C_DOUBLE'
             code = 'Norm2({},{})'.format(self._print(arg), axis)
         else:
             code = 'Norm2({})'.format(self._print(arg))

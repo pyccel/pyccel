@@ -6169,9 +6169,11 @@ def test_numpy_norm_array_like_2d(language):
     def get_norm(arr):
         from numpy.linalg import norm
         from numpy import shape
-        a = norm(arr, axis=1)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        a = norm(arr, axis=0)
+        b = norm(arr, axis=1)
+        sa = shape(a)
+        sb = shape(b)
+        return len(sb), sb[0],len(sa), sa[0], a[0], b[0]
 
     size = (2, 5)
 
