@@ -210,6 +210,23 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return '{0} '.format(dtype)
 
+    def stored_in_c_pointer(self, expr):
+        """
+        Return True if variable is pointer or stored in pointer
+
+        Parameters:
+        -----------
+        a      : Variable
+            Variable holding information needed (is_pointer, is_optional)
+
+        Returns: boolean
+        --------
+        """
+        if not isinstance(expr, Variable):
+            return False
+
+        return expr.is_pointer or expr.is_optional
+
     def get_static_declare_type(self, variable):
         """
         Get the declaration type of a variable, this function is used for
