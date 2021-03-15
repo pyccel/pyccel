@@ -933,9 +933,9 @@ class CCodePrinter(CodePrinter):
         return '{}\n{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
-        if expr.variable.is_pointer:
-            return 'free_pointer({});'.format(self._print(expr.variable))
-        return 'free_array({});'.format(self._print(expr.variable))
+        if expr.variable.allocatable:
+            return 'free_array({});'.format(self._print(expr.variable))
+        return 'free_pointer({});'.format(self._print(expr.variable))
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
@@ -1349,8 +1349,6 @@ class CCodePrinter(CodePrinter):
         body_stmts = []
         for b in body_exprs :
             code = self._print(b)
-            if isinstance(b, FunctionCall):
-                code += ';'
             code = self._additional_code + code
             self._additional_code = ''
             body_stmts.append(code)
