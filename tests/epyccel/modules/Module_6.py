@@ -24,5 +24,7 @@ def f(x : 'float[:]', y : 'float[:]'):
     n = x.shape[0]
     for i in range(n):
         set_i(x, i, float(i))
-    b = inplace_max(y)
+    for i in range(n//3):
+        set_i(x[::3], i, -1.0)
+    b = inplace_max(y[:])
     return b
