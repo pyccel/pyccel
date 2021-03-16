@@ -6,6 +6,7 @@ import sys
 import re
 import pytest
 import numpy as np
+from pyccel.commands.pyccel_clean import pyccel_clean
 
 #==============================================================================
 # UTILITIES
@@ -239,28 +240,19 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 #==============================================================================
 # PYTEST MODULE SETUP AND TEARDOWN
 #==============================================================================
-def setup():
-    teardown()
 
 #------------------------------------------------------------------------------
-def teardown(path_dir = None):
-    if path_dir is None:
-        path_dir = os.path.dirname(os.path.realpath(__file__))
+def teardown_module(module):
+    path_dir = os.path.dirname(os.path.realpath(__file__))
+    move_coverage(path_dir)
 
-    for root, _, files in os.walk(path_dir):
-        for name in files:
-            if name.startswith(".coverage"):
-                shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
-
-    files = os.listdir(path_dir)
-    for f in files:
-        file_name = os.path.join(path_dir,f)
-        if f == "__pyccel__":
-            shutil.rmtree( file_name )
-        elif not os.path.isfile(file_name):
-            teardown(file_name)
-        elif not f.endswith(".py") and not f.endswith(".pyh") and not f.endswith(".pyccel"):
-            os.remove(file_name)
+    config = module.config
+    xdist_plugin = config.pluginmanager.getplugin("xdist")
+    if xdist_plugin is None or "PYTEST_XDIST_WORKER_COUNT" not in os.environ \
+            or os.getenv('PYTEST_XDIST_WORKER_COUNT') == 1:
+        marks = [m.name for m in item.own_markers ]
+        if 'parallel' not in marks:
+            pyccel_clean(path_dir)
 
 #==============================================================================
 # UNIT TESTS
