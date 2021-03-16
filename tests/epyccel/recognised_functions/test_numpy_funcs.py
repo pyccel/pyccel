@@ -6103,72 +6103,7 @@ def test_numpy_norm_array_like_1d(language):
     @types('complex128[:]')
     def get_norm(arr):
         from numpy.linalg import norm
-        a = norm(arr, axis=0)
-        return a
-
-    size = 5
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(low=-((abs(min_float) / size)**(1/2)), high=(abs(max_float) / size)**(1/2), size=size)
-    fl32 = uniform(low=-((abs(min_float32) / size)**(1/2)), high=(abs(max_float32) / size)**(1/2), size=size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(low=-((abs(min_float64) / size)**(1/2)), high=(abs(max_float64) / size)**(1/2), size=size)
-
-    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size * 2))**(1/2)), high=(abs(max_float32) / (size * 2))**(1/2), size=size) + \
-                            uniform(low=-((abs(min_float32) / (size * 2))**(1/2)), high=(abs(max_float32) / (size * 2))**(1/2), size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float64) / (size * 2))**(1/2)), high=(abs(max_float64) / (size * 2))**(1/2), size=size) + \
-              uniform(low=-((abs(min_float64) / (size * 2))**(1/2)), high=(abs(max_float64) / (size * 2))**(1/2), size=size) * 1j
-
-    epyccel_func = epyccel(get_norm, language=language)
-
-    assert np.isclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
-    assert np.isclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
-    assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #769"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [pytest.mark.python])
-    )
-)
-
-def test_numpy_norm_array_like_1d_fortran_order(language):
-
-    @types('bool[:](order=F)')
-    @types('int[:](order=F)')
-    @types('int8[:](order=F)')
-    @types('int16[:](order=F)')
-    @types('int32[:](order=F)')
-    @types('int64[:](order=F)')
-    @types('float[:](order=F)')
-    @types('float32[:](order=F)')
-    @types('float64[:](order=F)')
-    @types('complex64[:](order=F)')
-    @types('complex128[:](order=F)')
-    def get_norm(arr):
-        from numpy.linalg import norm
-        a = norm(arr, axis=0)
+        a = norm(arr)
         return a
 
     size = 5
@@ -6234,11 +6169,8 @@ def test_numpy_norm_array_like_2d(language):
     def get_norm(arr):
         from numpy.linalg import norm
         from numpy import shape
-        a = norm(arr, axis=0)
-        b = norm(arr, axis=1)
-        sa = shape(a)
-        sb = shape(b)
-        return len(sb), sb[0],len(sa), sa[0], a[0], b[0]
+        s = shape(arr)
+        return len(s), s[0], arr[0]
 
     size = (2, 5)
 
@@ -6385,13 +6317,9 @@ def test_numpy_norm_array_like_3d(language):
     def get_norm(arr):
         from numpy.linalg import norm
         from numpy import shape
-        a = norm(arr, axis=0)
-        b = norm(arr, axis=1)
-        c = norm(arr, axis=2)
-        sa = shape(a)
-        sb = shape(b)
-        sc = shape(c)
-        return len(sc), sc[0],len(sb), sb[0],len(sa), sa[0], a[0][0], b[0][0], c[0][0]
+        a = norm(arr)
+        s = shape(a)
+        return len(s), s[0], a[0][0]
 
     size = (2, 5, 5)
 
