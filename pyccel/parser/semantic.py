@@ -2641,7 +2641,8 @@ class SemanticParser(BasicParser):
             modified_args = [func_arg for f in calls
                                 for func_arg, inout in zip(f.args,f.funcdef.arguments_inout) if inout]
             # Collect modified variables
-            all_assigned = [v for a in (lhs_assigns + modified_args) for v in a.get_attribute_nodes(Variable)]
+            all_assigned = [v for a in (lhs_assigns + modified_args) for v in
+                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
             permanent_assign = [a.name for a in all_assigned if a.rank > 0]
             local_assign     = [i.name for i in all_assigned]
