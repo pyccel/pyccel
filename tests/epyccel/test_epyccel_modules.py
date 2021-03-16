@@ -86,5 +86,5 @@ def test_module_4(language):
     max_pyt = mod.f(x,y)
     max_pyc = modnew.f(x_pyc, y_pyc)
     assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
-    assert np.isclose( x, x_pyc, rtol=1e-14, atol=1e-14 ).all()
-    assert np.isclose( y, y_pyc, rtol=1e-14, atol=1e-14 ).all()
+    assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )
