@@ -32,14 +32,20 @@ def teardown(path_dir = None):
             os.remove(file_name)
 
 def pytest_runtest_setup(item):
-    marks = [m.name for m in item.own_markers ]
-    if 'parallel' not in marks:
-        teardown()
+    config = item.config
+    xdist_plugin = config.pluginmanager.getplugin("xdist")
+    if xdist_plugin is None:
+        marks = [m.name for m in item.own_markers ]
+        if 'parallel' not in marks:
+            teardown()
 
 def pytest_runtest_teardown(item, nextitem):
-    marks = [m.name for m in item.own_markers ]
-    if 'parallel' not in marks:
-        teardown()
+    config = item.config
+    xdist_plugin = config.pluginmanager.getplugin("xdist")
+    if xdist_plugin is None:
+        marks = [m.name for m in item.own_markers ]
+        if 'parallel' not in marks:
+            teardown()
 
 def pytest_addoption(parser):
     parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")
