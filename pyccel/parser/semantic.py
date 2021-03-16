@@ -2665,7 +2665,7 @@ class SemanticParser(BasicParser):
                     i_fa = 0
                     while not(intent) and i_fa < n_fa:
                         fa = d_apps[a][i_fa]
-                        f_name = fa.__class__.__name__
+                        f_name = fa.funcdef.name
                         func = self.get_function(f_name)
 
                         j = list(fa.args).index(a)
