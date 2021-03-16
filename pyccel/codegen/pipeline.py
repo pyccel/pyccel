@@ -36,6 +36,11 @@ lang_ext_dict = {
     "c" : ".c",
     "fortran": ".f90",
 }
+# map language to its object file extension
+lang_obj_ext_dict = {
+    "c" : ".o",
+    "fortran": ".mod",
+}
 
 #==============================================================================
 # NOTE:
@@ -325,9 +330,8 @@ def execute_pyccel(fname, *,
                     # remove library folder to avoid missing files and copy
                     # new one from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-                    if os.path.exists(lib_dest_path):
-                        shutil.rmtree(lib_dest_path)
-                    shutil.copytree(lib_path, lib_dest_path)
+                    if not os.path.exists(lib_dest_path):
+                        shutil.copytree(lib_path, lib_dest_path)
 
                     # stop after copying lib to __pyccel__ directory for
                     # convert only
@@ -335,10 +339,15 @@ def execute_pyccel(fname, *,
                         continue
 
                     # get library source files
-                    source_files = []
-                    for e in os.listdir(lib_dest_path):
-                        if e.endswith(lang_ext_dict[language]):
-                            source_files.append(os.path.join(lib_dest_path, e))
+                    ext = lang_ext_dict[language]
+                    obj_ext = lang_obj_ext_dict[language]
+                    source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
+                                                                if e.endswith(ext)]
+
+                    # stop if object files already exist
+                    object_files = [s.replace(ext, obj_ext) for s in source_files]
+                    if all(os.path.exists(o) for o in object_files):
+                        continue
 
                     # compile library source files
                     flags = construct_flags(f90exec,
