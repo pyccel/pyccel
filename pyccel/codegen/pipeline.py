@@ -344,6 +344,13 @@ def execute_pyccel(fname, *,
                     source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
                                                                 if e.endswith(ext)]
 
+                    # Add internal lib to internal_libs_name set
+                    internal_libs_name.add(lib)
+                    # add source file without extension to internal_libs_files
+                    internal_libs_files.extend(os.path.splitext(f)[0] for f in source_files)
+                    # add library path to internal_libs_path
+                    internal_libs_path.append(lib_dest_path)
+
                     # stop if object files already exist
                     object_files = [s.replace(ext, obj_ext) for s in source_files]
                     if all(os.path.exists(o) for o in object_files):
@@ -365,12 +372,6 @@ def execute_pyccel(fname, *,
                     except Exception:
                         handle_error('C {} library compilation'.format(lib))
                         raise
-                    # Add internal lib to internal_libs_name set
-                    internal_libs_name.add(lib)
-                    # add source file without extension to internal_libs_files
-                    internal_libs_files.extend(os.path.splitext(f)[0] for f in source_files)
-                    # add library path to internal_libs_path
-                    internal_libs_path.append(lib_dest_path)
 
         if convert_only:
             continue
