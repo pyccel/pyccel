@@ -6,21 +6,10 @@ import sys
 import re
 import pytest
 import numpy as np
-from pyccel.commands.pyccel_clean import pyccel_clean
 
 #==============================================================================
 # UTILITIES
 #==============================================================================
-
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c)
-    ],
-    scope='module'
-)
-def language(request):
-    return request.param
-#------------------------------------------------------------------------------
 
 def get_abs_path(relative_path):
     relative_path = os.path.normpath(relative_path)
@@ -235,25 +224,6 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     lang_out = get_lang_output(get_exe(test_file))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
-
-
-#==============================================================================
-# PYTEST MODULE SETUP AND TEARDOWN
-#==============================================================================
-
-#------------------------------------------------------------------------------
-def teardown_module(module):
-    path_dir = os.path.dirname(os.path.realpath(__file__))
-    for root, _, files in os.walk(path_dir):
-        for name in files:
-            if name.startswith(".coverage"):
-                shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
-
-    config = module.config
-    xdist_plugin = config.pluginmanager.getplugin("xdist")
-    if xdist_plugin is None or "PYTEST_XDIST_WORKER_COUNT" not in os.environ \
-            or os.getenv('PYTEST_XDIST_WORKER_COUNT') == 1:
-        pyccel_clean(path_dir)
 
 #==============================================================================
 # UNIT TESTS
