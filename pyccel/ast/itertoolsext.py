@@ -17,6 +17,7 @@ class Product(Basic):
 
     arg : list, tuple
     """
+    __slots__ = ('_elements',)
     _attribute_nodes = ('_elements',)
 
     def __new__(cls, *args):

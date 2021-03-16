@@ -22,6 +22,8 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
+from pyccel.ast.core import Comment, CommentBlock, Pass
+
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -88,6 +90,10 @@ from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
+
+from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
+                            OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
+                            OMP_Single_Construct)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -852,8 +858,44 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+
     def _visit_OmpAnnotatedComment(self, expr, **settings):
+        code = expr._user_nodes
+        code = code[-1]
+        index = code.body.index(expr)
+        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
+
+        if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
+           and expr.has_nowait:
+            for node in code.body[index+1:]:
+                if isinstance(node, Omp_End_Clause):
+                    if node.txt.startswith(expr.name, 4):
+                        node.has_nowait = True
+
+        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
+                    OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
+            msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
+            if index == (len(code.body) - 1):
+                errors.report(msg, symbol=type(expr).__name__,
+                severity='fatal', blocker=self.blocking)
+
+            index += 1
+            while isinstance(code.body[index], (Comment, CommentBlock, Pass)) and index < len(code.body):
+                index += 1
+
+            if index < len(code.body) and isinstance(code.body[index], For):
+                if expr.has_nowait:
+                    nowait_expr = '!$omp end do'
+                    if expr.txt.startswith(' simd'):
+                        nowait_expr += ' simd'
+                    nowait_expr += ' nowait\n'
+                    code.body[index].nowait_expr = nowait_expr
+            else:
+                errors.report(msg, symbol=type(code.body[index]).__name__,
+                    severity='fatal', blocker=self.blocking)
+
         return expr
+
     def _visit_Literal(self, expr, **settings):
         return expr
     def _visit_PythonComplex(self, expr, **settings):
@@ -2053,7 +2095,9 @@ class SemanticParser(BasicParser):
         if isinstance(iterable, Variable):
             return ForIterator(target, iterable, body)
 
-        return For(target, iterable, body, local_vars=local_vars)
+        for_expr = For(target, iterable, body, local_vars=local_vars)
+        for_expr.nowait_expr = expr.nowait_expr
+        return for_expr
 
 
     def _visit_GeneratorComprehension(self, expr, **settings):
