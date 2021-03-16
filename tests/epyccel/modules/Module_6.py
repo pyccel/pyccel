@@ -10,13 +10,14 @@ def swap(x : 'float[:]', i : 'int', j : 'int'):
 
 def inplace_max(x : 'float[:]'):
     n = x.shape[0]
-    i = 0
     # bubble sort
-    while i < n-1:
-        if x[i] < x[i+1]:
-            swap(x, i, i+1)
-        else:
-            i+=1
+    for j in range(n):
+        i = n-1-j
+        while i < n-1:
+            if x[i] > x[i+1]:
+                swap(x, i, i+1)
+            else:
+                i+=1
     return x[-1]
 
 def f(x : 'float[:]', y : 'float[:]'):
