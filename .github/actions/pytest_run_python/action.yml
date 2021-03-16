@@ -1,0 +1,10 @@
+name: 'Pyccel pytest commands generating python'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Python tests with pytest
+      run:
+        python -m pytest -n auto -rx -m "not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+      shell: bash
+      working-directory: ./tests

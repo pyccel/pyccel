@@ -15,25 +15,27 @@ __all__ = ('Basic', 'PyccelAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
-iterable_types = (list, tuple, dict_keys, dict_values)
+iterable_types = (list, tuple, dict_keys, dict_values, set)
 iterable = lambda x : isinstance(x, iterable_types)
 
 #==============================================================================
 class Immutable:
     """ Superclass for classes which cannot inherit
     from Basic """
+    __slots__ = ()
 
 #==============================================================================
 class Basic:
     """Basic class for Pyccel AST."""
-    _fst = None
+    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress')
     _ignored_types = (Immutable, type)
+    _attribute_nodes = None
 
     def __init__(self):
         self._user_nodes = []
         self._fst = []
         self._recursion_in_progress = False
-        for c_name in self._attribute_nodes:
+        for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
 
             from pyccel.ast.literals import convert_to_literal
@@ -75,7 +77,7 @@ class Basic:
         This will allow it to remove itself from its children's users.
         If a child subsequently has no users, invalidate_node is called recursively
         """
-        for c_name in self._attribute_nodes:
+        for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
 
             if self.ignore(c):
@@ -136,7 +138,7 @@ class Basic:
         self._recursion_in_progress = True
 
         results = []
-        for n in self._attribute_nodes:
+        for n in self._my_attribute_nodes:
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -201,7 +203,7 @@ class Basic:
                     rep.set_current_user_node(self)
             return rep
 
-        for n in self._attribute_nodes:
+        for n in self._my_attribute_nodes:
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -230,9 +232,11 @@ class Basic:
 
     @property
     def is_atomic(self):
-        """ Indicates whether the object has any attribute nodes
+        """ Indicates whether the object has any attribute nodes.
+        Returns true if it is an atom (no attribute nodes) and
+        false otherwise
         """
-        return bool(self._attribute_nodes)
+        return not self._my_attribute_nodes
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
@@ -292,44 +296,49 @@ class Basic:
         """
         return len(self._user_nodes)==0
 
+    @property
+    def _my_attribute_nodes(self):
+        """ Getter for _attribute_nodes to avoid codacy warnings
+        about no-member. This attribute must be instantiated in
+        the subclasses and this ensures that an error is raised
+        if it isn't
+        """
+        return self._attribute_nodes # pylint: disable=no-member
+
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
     stage      = None
-    _shape     = None
-    _rank      = None
-    _dtype     = None
-    _precision = None
-    _order     = None
+    __slots__  = ()
 
     @property
     def shape(self):
         """ Tuple containing the length of each dimension
         of the object """
-        return self._shape
+        return self._shape # pylint: disable=no-member
 
     @property
     def rank(self):
         """ Number of dimensions of the object
         """
-        return self._rank
+        return self._rank # pylint: disable=no-member
 
     @property
     def dtype(self):
         """ Datatype of the object """
-        return self._dtype
+        return self._dtype # pylint: disable=no-member
 
     @property
     def precision(self):
         """ Precision of the datatype of the object """
-        return self._precision
+        return self._precision # pylint: disable=no-member
 
     @property
     def order(self):
         """ Indicates whether the data is stored in
         row-major ('C') or column-major ('F') format.
         This is only relevant if rank > 1 """
-        return self._order
+        return self._order # pylint: disable=no-member
 
     def copy_attributes(self, x):
         self._shape     = x.shape
