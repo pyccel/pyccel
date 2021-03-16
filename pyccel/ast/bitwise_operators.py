@@ -8,6 +8,8 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
+# TODO [EB 12.03.21]: Remove pylint command with PR #797
+# pylint: disable=W0201
 from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeReal,
                            NativeComplex, NativeString)
@@ -37,10 +39,11 @@ class PyccelInvert(PyccelUnaryOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 14
-    _dtype     = NativeInteger()
 
     def _set_dtype(self):
+        self._dtype     = NativeInteger()
         a = self._args[0]
         if a.dtype not in (NativeInteger(), NativeBool()):
             raise TypeError('unsupported operand type(s): {}'.format(self))
@@ -65,8 +68,7 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _rank = 0
-    _shape = ()
+    __slots__ = ()
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -91,7 +93,8 @@ class PyccelBitOperator(PyccelOperator):
             raise TypeError('cannot determine the type of {}'.format(self))
 
     def _set_shape_rank(self):
-        pass
+        self._rank = 0
+        self._shape = ()
 
     def _handle_integer_type(self, integers):
         self._dtype     = NativeInteger()
@@ -115,6 +118,7 @@ class PyccelRShift(PyccelBitOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 11
 
     def __repr__(self):
@@ -137,6 +141,7 @@ class PyccelLShift(PyccelBitOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 11
 
     def __repr__(self):
@@ -155,6 +160,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     def _handle_integer_type(self, integers):
         if all(a.dtype is NativeInteger() for a in integers):
             self._dtype = NativeInteger()
@@ -182,6 +188,7 @@ class PyccelBitXor(PyccelBitComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 9
 
     def __repr__(self):
@@ -204,6 +211,7 @@ class PyccelBitOr(PyccelBitComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 8
 
     def __repr__(self):
@@ -226,6 +234,7 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 10
 
     def __repr__(self):
