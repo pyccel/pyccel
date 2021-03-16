@@ -840,6 +840,7 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = ()
             self._order = None
         self._rank = len(self._shape)
+        self._order = arg.order
 
     @property
     def arg(self):

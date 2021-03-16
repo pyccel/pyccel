@@ -6334,6 +6334,19 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
 
     epyccel_func = epyccel(get_norm, language=language)
 
+    #re-ordering to Fortran order
+    bl = np.ndarray(size, buffer=bl, order='F', dtype=bool)
+    integer8 = np.ndarray(size, buffer=integer8, order='F', dtype=bool)
+    integer16 = np.ndarray(size, buffer=integer16, order='F', dtype=bool)
+    integer = np.ndarray(size, buffer=integer, order='F', dtype=bool)
+    integer32 = np.ndarray(size, buffer=integer32, order='F', dtype=bool)
+    integer64 = np.ndarray(size, buffer=integer64, order='F', dtype=bool)
+    fl = np.ndarray(size, buffer=fl, order='F', dtype=bool)
+    fl32 = np.ndarray(size, buffer=fl32, order='F', dtype=bool)
+    fl64 = np.ndarray(size, buffer=fl64, order='F', dtype=bool)
+    cmplx64 = np.ndarray(size, buffer=cmplx64, order='F', dtype=bool)
+    cmplx128 = np.ndarray(size, buffer=cmplx128, order='F', dtype=bool)
+
     assert np.isclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL).all()
@@ -6341,9 +6354,9 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
     assert np.isclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL).all()
-    assert np.isclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32).all()
+    assert np.isclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL).all()
-    assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32).all()
+    assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL).all()
 
 @pytest.mark.parametrize( 'language', (
@@ -6476,6 +6489,19 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
 
     epyccel_func = epyccel(get_norm, language=language)
 
+    #re-ordering to Fortran order
+    bl = np.ndarray(size, buffer=bl, order='F', dtype=bool)
+    integer8 = np.ndarray(size, buffer=integer8, order='F', dtype=bool)
+    integer16 = np.ndarray(size, buffer=integer16, order='F', dtype=bool)
+    integer = np.ndarray(size, buffer=integer, order='F', dtype=bool)
+    integer32 = np.ndarray(size, buffer=integer32, order='F', dtype=bool)
+    integer64 = np.ndarray(size, buffer=integer64, order='F', dtype=bool)
+    fl = np.ndarray(size, buffer=fl, order='F', dtype=bool)
+    fl32 = np.ndarray(size, buffer=fl32, order='F', dtype=bool)
+    fl64 = np.ndarray(size, buffer=fl64, order='F', dtype=bool)
+    cmplx64 = np.ndarray(size, buffer=cmplx64, order='F', dtype=bool)
+    cmplx128 = np.ndarray(size, buffer=cmplx128, order='F', dtype=bool)
+
     assert np.isclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL).all()
@@ -6483,7 +6509,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
     assert np.isclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL).all()
-    assert np.isclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32).all()
+    assert np.isclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL).all()
-    assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32).all()
+    assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL).all()
     assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL).all()
