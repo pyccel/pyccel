@@ -68,3 +68,23 @@ def test_module_3(language):
     x_expected = mod.circle_volume(r)
     x = modnew.circle_volume(r)
     assert np.isclose( x, x_expected, rtol=1e-14, atol=1e-14 )
+
+def test_module_4(language):
+    import modules.Module_6 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    n_x = np.random.randint(20)
+    n_y = np.random.randint(20)
+
+    x = np.empty(n_x, dtype=float)
+    y = np.random.random_sample(n_y)
+
+    x_pyc = x.copy()
+    y_pyc = y.copy()
+
+    max_pyt = mod.f(x,y)
+    max_pyc = modnew.f(x_pyc, y_pyc)
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.isclose( x, x_pyc, rtol=1e-14, atol=1e-14 ).all()
+    assert np.isclose( y, y_pyc, rtol=1e-14, atol=1e-14 ).all()
