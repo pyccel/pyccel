@@ -74,8 +74,8 @@ def test_module_4(language):
 
     modnew = epyccel(mod, language=language)
 
-    n_x = np.random.randint(20)
-    n_y = np.random.randint(20)
+    n_x = np.random.randint(4,20)
+    n_y = np.random.randint(4,20)
 
     x = np.empty(n_x, dtype=float)
     y = np.random.random_sample(n_y)
