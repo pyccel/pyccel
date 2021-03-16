@@ -231,6 +231,9 @@ class Nil(Basic, metaclass=Singleton):
     def __eq__(self, other):
         return isinstance(other, Nil)
 
+    def __hash__(self):
+        return hash('Nil')+hash(None)
+
 #------------------------------------------------------------------------------
 
 def get_default_literal_value(dtype):
