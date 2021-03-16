@@ -50,7 +50,6 @@ from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
@@ -2589,12 +2588,21 @@ class SemanticParser(BasicParser):
 
             results_names = [i.name for i in results]
 
-            all_assigned = get_assigned_symbols(body)
-            assigned     = [a.name for a in all_assigned if a.rank > 0]
-            all_assigned = [i.name for i in all_assigned]
+            # Find all nodes which can modify variables
+            assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
+            calls   = body.get_attribute_nodes(FunctionCall)
 
-            apps = body.get_attribute_nodes(FunctionCall)
-            apps = [i for i in apps if (i.__class__.__name__
+            # Collect the modified objects
+            lhs_assigns   = [a.lhs for a in assigns]
+            modified_args = [func_arg for f in calls
+                                for func_arg, inout in zip(f.args,f.funcdef.arguments_inout) if inout]
+            # Collect modified variables
+            all_assigned = [v for a in (assigns + modified_args) for v in a.get_attribute_nodes(Variable)]
+
+            permanent_assign = [a.name for a in all_assigned if a.rank > 0]
+            local_assign     = [i.name for i in all_assigned]
+
+            apps = [i for i in calls if (i.funcdef.name
                     in self.get_parent_functions())]
 
             d_apps = OrderedDict((a, []) for a in args)
@@ -2604,7 +2612,7 @@ class SemanticParser(BasicParser):
                     d_apps[a].append(f)
 
             for i, a in enumerate(args):
-                if a.name in chain(results_names, assigned, ['self']):
+                if a.name in chain(results_names, permanent_assign, ['self']):
                     args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
@@ -2623,7 +2631,7 @@ class SemanticParser(BasicParser):
 
                         i_fa += 1
                 if isinstance(a, Variable):
-                    if a.is_const and (args_inout[i] or (a.name in all_assigned)):
+                    if a.is_const and (args_inout[i] or (a.name in local_assign)):
                         msg = "Cannot modify 'const' argument ({})".format(a)
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
