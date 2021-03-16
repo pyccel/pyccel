@@ -510,7 +510,7 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_index','_start','_stop','_size','_shape')
+    __slots__ = ('_index','_start','_stop','_size','_shape', '_rank')
     _dtype     = NativeReal()
     _precision = default_precision['real']
     _order     = 'F'
