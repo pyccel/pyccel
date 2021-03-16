@@ -819,9 +819,8 @@ class NumpyZerosLike:
 
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
-    __slots__ = ('_shape','_rank','_order')
+    __slots__ = ('_shape','_rank','_order','_arg','_precision')
     _dtype = NativeReal()
-    _precision = default_precision['real']
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
@@ -841,12 +840,10 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = ()
             self._order = None
         self._rank = len(self._shape)
-        self._order = arg.order
 
     @property
     def arg(self):
         return self._arg
-
 
     @property
     def python_arg(self):
