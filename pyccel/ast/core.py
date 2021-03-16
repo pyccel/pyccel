@@ -1341,7 +1341,7 @@ class For(Basic):
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
-    __slots__ = ('_target','_iterable','_body','_local_vars')
+    __slots__ = ('_target','_iterable','_body','_local_vars','_nowait_expr')
     _attribute_nodes = ('_target','_iterable','_body','_local_vars')
 
     def __init__(
@@ -1371,7 +1371,16 @@ class For(Basic):
         self._iterable = iter_obj
         self._body = body
         self._local_vars = local_vars
+        self._nowait_expr = None
         super().__init__()
+
+    @property
+    def nowait_expr(self):
+        return self._nowait_expr
+
+    @nowait_expr.setter
+    def nowait_expr(self, expr):
+        self._nowait_expr = expr
 
     @property
     def target(self):
