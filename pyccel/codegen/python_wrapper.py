@@ -119,7 +119,7 @@ def create_shared_library(codegen,
 
         setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
                 dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags)
-        setup_filename = "setup_{}.py".format(module_name)
+        setup_filename = "setup_{}.py".format(sharedlib_modname)
 
         with open(setup_filename, 'w') as f:
             f.writelines(setup_code)

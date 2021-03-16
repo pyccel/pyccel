@@ -90,6 +90,7 @@ def epyccel_seq(function_or_module, *,
             tag = random_string(12)
 
         module_name = pymod.__name__.split('.')[-1] + '_' + tag
+        pymod_filename = os.path.splitext(pymod_filename)[0] + tag + '.py'
 
     else:
         raise TypeError('> Expecting a FunctionType or a ModuleType')
