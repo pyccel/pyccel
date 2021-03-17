@@ -4632,14 +4632,12 @@ def test_numpy_matmul_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
-       #     pytest.mark.skip(reason="TypeError: cannot determine the type of <pyccel.ast.numpyext.NumpyMatmul object at 0x1218b9d60> (semantic.py -> numpyext.py)")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
             pytest.mark.python],
-        #    pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
