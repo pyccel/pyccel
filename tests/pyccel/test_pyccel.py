@@ -536,7 +536,7 @@ def test_arrays_view(language):
 
 #------------------------------------------------------------------------------
 def test_headers(language):
-    test_file = "scripts/test_headers.py"
+    test_file = "scripts/runtest_headers.py"
     test_file = os.path.normpath(test_file)
     test_file = get_abs_path(test_file)
 
