@@ -1189,8 +1189,8 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
 
         if expr.stmt:
-            # get Assign nodes form the CodeBlock object expr.stmt.
-            last_assign = expr.stmt.get_attribute_nodes(Assign)
+            # get Assign nodes from the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
 
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.

@@ -88,7 +88,7 @@ def count_access(expr, visual=True):
 
     elif isinstance(expr, Basic):
 
-        atoms = expr.get_attribute_nodes(PyccelSymbol)
+        atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
         return READ*len(atoms)
 
     else:
