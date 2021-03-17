@@ -281,6 +281,7 @@ def epyccel( python_function_or_module, **kwargs ):
                 try:
                     mod = importlib.import_module(mod_name)
                 except ModuleNotFoundError as e:
+                    print(sys.path)
                     print(folder)
                     print(mod_path)
                     print(mod_name)
