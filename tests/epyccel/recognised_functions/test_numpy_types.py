@@ -12,6 +12,9 @@ from test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 
+
+from test_numpy_funcs import matching_types
+
 def test_numpy_bool_scalar(language):
 
     @types('bool')
