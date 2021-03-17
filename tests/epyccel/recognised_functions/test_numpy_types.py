@@ -107,21 +107,78 @@ def test_numpy_bool_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
-def test_numpy_int_scalar(language):
+@types('bool')
+@types('int')
+@types('int8')
+@types('int16')
+@types('int32')
+@types('int64')
+@types('float')
+@types('float32')
+@types('float64')
+def get_int(a):
+    from numpy import int as Numpyint
+    b = Numpyint(a)
+    return b
 
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    def get_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
+@types('bool')
+@types('int')
+@types('int8')
+@types('int16')
+@types('int32')
+@types('int64')
+@types('float')
+@types('float32')
+@types('float64')
+def get_int64(a):
+    from numpy import int64
+    b = int64(a)
+    return b
+
+@types('bool')
+@types('int')
+@types('int8')
+@types('int16')
+@types('int32')
+@types('int64')
+@types('float')
+@types('float32')
+@types('float64')
+def get_int32(a):
+    from numpy import int32
+    b = int32(a)
+    return b
+
+@types('bool')
+@types('int')
+@types('int8')
+@types('int16')
+@types('int32')
+@types('int64')
+@types('float')
+@types('float32')
+@types('float64')
+def get_int16(a):
+    from numpy import int16
+    b = int16(a)
+    return b
+
+@types('bool')
+@types('int')
+@types('int8')
+@types('int16')
+@types('int32')
+@types('int64')
+@types('float')
+@types('float32')
+@types('float64')
+def get_int8(a):
+    from numpy import int8
+    b = int8(a)
+    return b
+
+@pytest.mark.parametrize( 'get_int', [get_int, get_int64, get_int32, get_int16, get_int8])
+def test_numpy_int_scalar(language, get_int):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -133,6 +190,32 @@ def test_numpy_int_scalar(language):
     fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int, max_int)
+
+    if get_int == get_int8:
+        fl = uniform(min_int8, max_int8)
+        fl32 = uniform(min_int8, max_int8)
+        fl32 = np.float32(fl32)
+        fl64 = uniform(min_int8, max_int8)
+
+    if get_int == get_int16:
+        fl = uniform(min_int16, max_int16)
+        fl32 = uniform(min_int16, max_int16)
+        fl32 = np.float32(fl32)
+        fl64 = uniform(min_int16, max_int16)
+
+    if get_int == get_int32:
+        fl = uniform(min_int32, max_int32)
+        fl32 = uniform(min_int32, max_int32)
+        fl32 = np.float32(fl32)
+        fl64 = uniform(min_int32, max_int32)
+
+    if get_int == get_int64:
+        fl = uniform(min_int64, max_int64)
+        fl32 = uniform(min_int64, max_int64)
+        fl32 = np.float32(fl64)
+        fl64 = uniform(min_int64, max_int64)
+
+
 
     epyccel_func = epyccel(get_int, language=language)
 
@@ -198,97 +281,66 @@ def test_numpy_int_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
-def test_numpy_int8_scalar(language):
 
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    def get_int8(a):
-        from numpy import int8
-        b = int8(a)
-        return b
+@types('bool[:]')
+@types('int[:]')
+@types('int8[:]')
+@types('int16[:]')
+@types('int32[:]')
+@types('int64[:]')
+@types('float[:]')
+@types('float32[:]')
+@types('float64[:]')
+def get_int64_arr_1d(arr):
+    from numpy import int64, shape
+    a = int64(arr)
+    s = shape(a)
+    return len(s), s[0], a[0], a[1]
 
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+@types('bool[:]')
+@types('int[:]')
+@types('int8[:]')
+@types('int16[:]')
+@types('int32[:]')
+@types('int64[:]')
+@types('float[:]')
+@types('float32[:]')
+@types('float64[:]')
+def get_int32_arr_1d(arr):
+    from numpy import int32, shape
+    a = int32(arr)
+    s = shape(a)
+    return len(s), s[0], a[0], a[1]
 
-    fl = uniform(min_int8, max_int8)
-    fl32 = uniform(min_int8, max_int8)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int8, max_int8)
+@types('bool[:]')
+@types('int[:]')
+@types('int8[:]')
+@types('int16[:]')
+@types('int32[:]')
+@types('int64[:]')
+@types('float[:]')
+@types('float32[:]')
+@types('float64[:]')
+def get_int16_arr_1d(arr):
+    from numpy import int16, shape
+    a = int16(arr)
+    s = shape(a)
+    return len(s), s[0], a[0], a[1]
 
-
-    epyccel_func = epyccel(get_int8, language=language)
-
-    f_bl_true_output = epyccel_func(True)
-    test_bool_true_output = get_int8(True)
-
-    f_bl_false_output = epyccel_func(False)
-    test_bool_false_output = get_int8(False)
-
-    assert f_bl_true_output == test_bool_true_output
-    assert f_bl_false_output == test_bool_false_output
-
-    assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
-
-    f_integer_output = epyccel_func(integer)
-    test_int_output  = get_int8(integer)
-
-    assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output)
-
-    f_integer8_output = epyccel_func(integer8)
-    test_int8_output = get_int8(integer8)
-
-    assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output)
-
-    f_integer16_output = epyccel_func(integer16)
-    test_int16_output = get_int8(integer16)
-
-    assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output)
-
-    f_integer32_output = epyccel_func(integer32)
-    test_int32_output = get_int8(integer32)
-
-    assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output)
-
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_int8(integer64)
-
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
-
-    f_fl_output = epyccel_func(fl)
-    test_float_output = get_int8(fl)
-
-    assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output)
-
-    f_fl32_output = epyccel_func(fl32)
-    test_float32_output = get_int8(fl32)
-
-    assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output)
-
-    f_fl64_output = epyccel_func(fl64)
-    test_float64_output = get_int8(fl64)
-
-    assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output)
+@types('bool[:]')
+@types('int[:]')
+@types('int8[:]')
+@types('int16[:]')
+@types('int32[:]')
+@types('int64[:]')
+@types('float[:]')
+@types('float32[:]')
+@types('float64[:]')
+def get_int8_arr_1d(arr):
+    from numpy import int8, shape
+    a = int8(arr)
+    s = shape(a)
+    return len(s), s[0], a[0], a[1]
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -302,22 +354,8 @@ def test_numpy_int8_scalar(language):
     )
 )
 
-def test_numpy_int8_array_like_1d(language):
-
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def get_int8(arr):
-        from numpy import int8, shape
-        a = int8(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+@pytest.mark.parametrize( 'get_int', [get_int64_arr_1d, get_int32_arr_1d, get_int16_arr_1d, get_int8_arr_1d])
+def test_numpy_int_array_like_1d(language, get_int):
 
     size = 5
 
@@ -334,19 +372,79 @@ def test_numpy_int8_array_like_1d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    epyccel_func = epyccel(get_int8, language=language)
+    epyccel_func = epyccel(get_int, language=language)
 
-    assert epyccel_func(bl) == get_int8(bl)
-    assert epyccel_func(integer8) == get_int8(integer8)
-    assert epyccel_func(integer16) == get_int8(integer16)
-    assert epyccel_func(integer) == get_int8(integer)
-    assert epyccel_func(integer32) == get_int8(integer32)
+    assert epyccel_func(bl) == get_int(bl)
+    assert epyccel_func(integer8) == get_int(integer8)
+    assert epyccel_func(integer16) == get_int(integer16)
+    assert epyccel_func(integer) == get_int(integer)
+    assert epyccel_func(integer32) == get_int(integer32)
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int8(integer64)
-        assert epyccel_func(fl) == get_int8(fl)
-        assert epyccel_func(fl64) == get_int8(fl64)
-    assert epyccel_func(fl32) == get_int8(fl32)
+        assert epyccel_func(integer64) == get_int(integer64)
+        assert epyccel_func(fl) == get_int(fl)
+        assert epyccel_func(fl64) == get_int(fl64)
+    assert epyccel_func(fl32) == get_int(fl32)
+
+@types('bool[:,:]')
+@types('int[:,:]')
+@types('int8[:,:]')
+@types('int16[:,:]')
+@types('int32[:,:]')
+@types('int64[:,:]')
+@types('float[:,:]')
+@types('float32[:,:]')
+@types('float64[:,:]')
+def get_int64_arr_2d(arr):
+    from numpy import int64, shape
+    a = int64(arr)
+    s = shape(a)
+    return len(s), s[0], s[1], a[0,0], a[1,0]
+
+@types('bool[:,:]')
+@types('int[:,:]')
+@types('int8[:,:]')
+@types('int16[:,:]')
+@types('int32[:,:]')
+@types('int64[:,:]')
+@types('float[:,:]')
+@types('float32[:,:]')
+@types('float64[:,:]')
+def get_int32_arr_2d(arr):
+    from numpy import int32, shape
+    a = int32(arr)
+    s = shape(a)
+    return len(s), s[0], s[1], a[0,0], a[1,0]
+
+@types('bool[:,:]')
+@types('int[:,:]')
+@types('int8[:,:]')
+@types('int16[:,:]')
+@types('int32[:,:]')
+@types('int64[:,:]')
+@types('float[:,:]')
+@types('float32[:,:]')
+@types('float64[:,:]')
+def get_int16_arr_2d(arr):
+    from numpy import int16, shape
+    a = int16(arr)
+    s = shape(a)
+    return len(s), s[0], s[1], a[0,0], a[1,0]
+
+@types('bool[:,:]')
+@types('int[:,:]')
+@types('int8[:,:]')
+@types('int16[:,:]')
+@types('int32[:,:]')
+@types('int64[:,:]')
+@types('float[:,:]')
+@types('float32[:,:]')
+@types('float64[:,:]')
+def get_int8_arr_2d(arr):
+    from numpy import int8, shape
+    a = int8(arr)
+    s = shape(a)
+    return len(s), s[0], s[1], a[0,0], a[1,0]
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -360,22 +458,8 @@ def test_numpy_int8_array_like_1d(language):
     )
 )
 
-def test_numpy_int8_array_like_2d(language):
-
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    def get_int8(arr):
-        from numpy import int8, shape
-        a = int8(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,0], a[0,1]
+@pytest.mark.parametrize( 'get_int', [get_int64_arr_2d, get_int32_arr_2d, get_int16_arr_2d, get_int8_arr_2d])
+def test_numpy_int_array_like_2d(language, get_int):
 
     size = (2, 5)
 
@@ -392,647 +476,19 @@ def test_numpy_int8_array_like_2d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    epyccel_func = epyccel(get_int8, language=language)
+    epyccel_func = epyccel(get_int, language=language)
 
-    assert epyccel_func(bl) == get_int8(bl)
-    assert epyccel_func(integer8) == get_int8(integer8)
-    assert epyccel_func(integer16) == get_int8(integer16)
-    assert epyccel_func(integer) == get_int8(integer)
-    assert epyccel_func(integer32) == get_int8(integer32)
+    assert epyccel_func(bl) == get_int(bl)
+    assert epyccel_func(integer8) == get_int(integer8)
+    assert epyccel_func(integer16) == get_int(integer16)
+    assert epyccel_func(integer) == get_int(integer)
+    assert epyccel_func(integer32) == get_int(integer32)
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int8(integer64)
-        assert epyccel_func(fl) == get_int8(fl)
-        assert epyccel_func(fl64) == get_int8(fl64)
-    assert epyccel_func(fl32) == get_int8(fl32)
-
-
-def test_numpy_int16_scalar(language):
-
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    def get_int16(a):
-        from numpy import int16
-        b = int16(a)
-        return b
-
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
-
-    fl = uniform(min_int16, max_int16)
-    fl32 = uniform(min_int16, max_int16)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int16, max_int16)
-
-
-    epyccel_func = epyccel(get_int16, language=language)
-
-    f_bl_true_output = epyccel_func(True)
-    test_bool_true_output = get_int16(True)
-
-    f_bl_false_output = epyccel_func(False)
-    test_bool_false_output = get_int16(False)
-
-    assert f_bl_true_output == test_bool_true_output
-    assert f_bl_false_output == test_bool_false_output
-
-    assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
-
-    f_integer_output = epyccel_func(integer)
-    test_int_output  = get_int16(integer)
-
-    assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output)
-
-    f_integer8_output = epyccel_func(integer8)
-    test_int8_output = get_int16(integer8)
-
-    assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output)
-
-    f_integer16_output = epyccel_func(integer16)
-    test_int16_output = get_int16(integer16)
-
-    assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output)
-
-    f_integer32_output = epyccel_func(integer32)
-    test_int32_output = get_int16(integer32)
-
-    assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output)
-
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_int16(integer64)
-
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
-
-    f_fl_output = epyccel_func(fl)
-    test_float_output = get_int16(fl)
-
-    assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output)
-
-    f_fl32_output = epyccel_func(fl32)
-    test_float32_output = get_int16(fl32)
-
-    assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output)
-
-    f_fl64_output = epyccel_func(fl64)
-    test_float64_output = get_int16(fl64)
-
-    assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output)
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
-def test_numpy_int16_array_like_1d(language):
-
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def get_int16(arr):
-        from numpy import int16, shape
-        a = int16(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
-    size = 5
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(get_int16, language=language)
-
-    assert epyccel_func(bl) == get_int16(bl)
-    assert epyccel_func(integer8) == get_int16(integer8)
-    assert epyccel_func(integer16) == get_int16(integer16)
-    assert epyccel_func(integer) == get_int16(integer)
-    assert epyccel_func(integer32) == get_int16(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int16(integer64)
-        assert epyccel_func(fl) == get_int16(fl)
-        assert epyccel_func(fl64) == get_int16(fl64)
-    assert epyccel_func(fl32) == get_int16(fl32)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
-def test_numpy_int16_array_like_2d(language):
-
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    def get_int16(arr):
-        from numpy import int16, shape
-        a = int16(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,0], a[0,1]
-
-    size = (2, 5)
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(get_int16, language=language)
-
-    assert epyccel_func(bl) == get_int16(bl)
-    assert epyccel_func(integer8) == get_int16(integer8)
-    assert epyccel_func(integer16) == get_int16(integer16)
-    assert epyccel_func(integer) == get_int16(integer)
-    assert epyccel_func(integer32) == get_int16(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int16(integer64)
-        assert epyccel_func(fl) == get_int16(fl)
-        assert epyccel_func(fl64) == get_int16(fl64)
-    assert epyccel_func(fl32) == get_int16(fl32)
-
-def test_numpy_int32_scalar(language):
-
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    def get_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
-
-    fl = uniform(min_int32 / 2, max_int32 / 2)
-    fl32 = uniform(min_int32, max_int32)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int32 / 2, max_int32 / 2)
-
-
-    epyccel_func = epyccel(get_int32, language=language)
-
-    f_bl_true_output = epyccel_func(True)
-    test_bool_true_output = get_int32(True)
-
-    f_bl_false_output = epyccel_func(False)
-    test_bool_false_output = get_int32(False)
-
-    assert f_bl_true_output == test_bool_true_output
-    assert f_bl_false_output == test_bool_false_output
-
-    assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
-
-    f_integer_output = epyccel_func(integer)
-    test_int_output  = get_int32(integer)
-
-    assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output)
-
-    f_integer8_output = epyccel_func(integer8)
-    test_int8_output = get_int32(integer8)
-
-    assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output)
-
-    f_integer16_output = epyccel_func(integer16)
-    test_int16_output = get_int32(integer16)
-
-    assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output)
-
-    f_integer32_output = epyccel_func(integer32)
-    test_int32_output = get_int32(integer32)
-
-    assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output)
-
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_int32(integer64)
-
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
-
-    f_fl_output = epyccel_func(fl)
-    test_float_output = get_int32(fl)
-
-    assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output)
-
-    f_fl32_output = epyccel_func(fl32)
-    test_float32_output = get_int32(fl32)
-
-    assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output)
-
-    f_fl64_output = epyccel_func(fl64)
-    test_float64_output = get_int32(fl64)
-
-    assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output)
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
-def test_numpy_int32_array_like_1d(language):
-
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def get_int32(arr):
-        from numpy import int32, shape
-        a = int32(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
-    size = 5
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(get_int32, language=language)
-
-    assert epyccel_func(bl) == get_int32(bl)
-    assert epyccel_func(integer8) == get_int32(integer8)
-    assert epyccel_func(integer16) == get_int32(integer16)
-    assert epyccel_func(integer) == get_int32(integer)
-    assert epyccel_func(integer32) == get_int32(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int32(integer64)
-        assert epyccel_func(fl) == get_int32(fl)
-        assert epyccel_func(fl64) == get_int32(fl64)
-    assert epyccel_func(fl32) == get_int32(fl32)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
-def test_numpy_int32_array_like_2d(language):
-
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    def get_int32(arr):
-        from numpy import int32, shape
-        a = int32(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,0], a[0,1]
-
-    size = (2, 5)
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(get_int32, language=language)
-
-    assert epyccel_func(bl) == get_int32(bl)
-    assert epyccel_func(integer8) == get_int32(integer8)
-    assert epyccel_func(integer16) == get_int32(integer16)
-    assert epyccel_func(integer) == get_int32(integer)
-    assert epyccel_func(integer32) == get_int32(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int32(integer64)
-        assert epyccel_func(fl) == get_int32(fl)
-        assert epyccel_func(fl64) == get_int32(fl64)
-    assert epyccel_func(fl32) == get_int32(fl32)
-
-def test_numpy_int64_scalar(language):
-
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    def get_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
-
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
-
-    fl = uniform(min_int64, max_int64)
-    fl32 = uniform(min_int64, max_int64)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int64, max_int64)
-
-
-    epyccel_func = epyccel(get_int64, language=language)
-
-    f_bl_true_output = epyccel_func(True)
-    test_bool_true_output = get_int64(True)
-
-    f_bl_false_output = epyccel_func(False)
-    test_bool_false_output = get_int64(False)
-
-    assert f_bl_true_output == test_bool_true_output
-    assert f_bl_false_output == test_bool_false_output
-
-    assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
-
-    f_integer_output = epyccel_func(integer)
-    test_int_output  = get_int64(integer)
-
-    assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output)
-
-    f_integer8_output = epyccel_func(integer8)
-    test_int8_output = get_int64(integer8)
-
-    assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output)
-
-    f_integer16_output = epyccel_func(integer16)
-    test_int16_output = get_int64(integer16)
-
-    assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output)
-
-    f_integer32_output = epyccel_func(integer32)
-    test_int32_output = get_int64(integer32)
-
-    assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output)
-
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_int64(integer64)
-
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
-
-    f_fl_output = epyccel_func(fl)
-    test_float_output = get_int64(fl)
-
-    assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output)
-
-    f_fl32_output = epyccel_func(fl32)
-    test_float32_output = get_int64(fl32)
-
-    assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output)
-
-    f_fl64_output = epyccel_func(fl64)
-    test_float64_output = get_int64(fl64)
-
-    assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output)
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
-def test_numpy_int64_array_like_1d(language):
-
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def get_int64(arr):
-        from numpy import int64, shape
-        a = int64(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
-    size = 5
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(get_int64, language=language)
-
-    assert epyccel_func(bl) == get_int64(bl)
-    assert epyccel_func(integer8) == get_int64(integer8)
-    assert epyccel_func(integer16) == get_int64(integer16)
-    assert epyccel_func(integer) == get_int64(integer)
-    assert epyccel_func(integer32) == get_int64(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int64(integer64)
-        assert epyccel_func(fl) == get_int64(fl)
-        assert epyccel_func(fl64) == get_int64(fl64)
-    assert epyccel_func(fl32) == get_int64(fl32)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
-def test_numpy_int64_array_like_2d(language):
-
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    def get_int64(arr):
-        from numpy import int64, shape
-        a = int64(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,0], a[0,1]
-
-    size = (2, 5)
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(get_int64, language=language)
-
-    assert epyccel_func(bl) == get_int64(bl)
-    assert epyccel_func(integer8) == get_int64(integer8)
-    assert epyccel_func(integer16) == get_int64(integer16)
-    assert epyccel_func(integer) == get_int64(integer)
-    assert epyccel_func(integer32) == get_int64(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_int64(integer64)
-        assert epyccel_func(fl) == get_int64(fl)
-        assert epyccel_func(fl64) == get_int64(fl64)
-    assert epyccel_func(fl32) == get_int64(fl32)
+        assert epyccel_func(integer64) == get_int(integer64)
+        assert epyccel_func(fl) == get_int(fl)
+        assert epyccel_func(fl64) == get_int(fl64)
+    assert epyccel_func(fl32) == get_int(fl32)
 
 @types('bool')
 @types('int')
@@ -1543,7 +999,7 @@ def get_complex128(a):
     return b
 
 @pytest.mark.parametrize( 'get_complex', [get_complex128, get_complex64])
-def test_numpy_complex(language, get_complex):
+def test_numpy_complex_scalar(language, get_complex):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
