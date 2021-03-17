@@ -76,8 +76,8 @@ jobs:
         run: |
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
           pyccel-clean
-          python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
-          pyccel-clean
+          #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          #pyccel-clean
         working-directory: ./tests
       - name: ND-Array tests
         run: |
