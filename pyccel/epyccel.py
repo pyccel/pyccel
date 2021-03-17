@@ -278,7 +278,14 @@ def epyccel( python_function_or_module, **kwargs ):
             if comm.rank != root:
                 folder = os.path.split(mod_path)[0]
                 sys.path.insert(0, folder)
-                mod = importlib.import_module(mod_name)
+                try:
+                    mod = importlib.import_module(mod_name)
+                except ModuleNotFoundError as e:
+                    print(folder)
+                    print(mod_path)
+                    print(mod_name)
+                    print(os.listdir(folder))
+                    raise e
                 sys.path.remove(folder)
                 fun = getattr(mod, fun_name) if fun_name else None
 
