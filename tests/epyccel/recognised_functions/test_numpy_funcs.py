@@ -4921,7 +4921,6 @@ def test_numpy_linspace_scalar(language):
     )
 )
 
-
 def test_numpy_linspace_array_like_1d(language):
 
     @types('bool[:]')
@@ -4993,7 +4992,6 @@ def test_numpy_linspace_array_like_1d(language):
         )
     )
 )
-
 
 def test_numpy_linspace_array_like_2d(language):
 
