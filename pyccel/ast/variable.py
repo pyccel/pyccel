@@ -796,6 +796,9 @@ class IndexedElement(PyccelAstNode):
         """
         return self._indices
 
+    def __str__(self):
+        return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
+
 class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
