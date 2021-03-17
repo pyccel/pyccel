@@ -281,18 +281,7 @@ def epyccel( python_function_or_module, **kwargs ):
                 # http://ballingt.com/import-invalidate-caches
                 # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
                 importlib.invalidate_caches()
-                try:
-                    mod = importlib.import_module(mod_name)
-                except ModuleNotFoundError as e:
-                    print(sys.path)
-                    print(folder)
-                    print(mod_path)
-                    print(mod_name)
-                    print(os.listdir(folder))
-                    if kwargs['language']=="python":
-                        with open(mod_path, 'r') as f:
-                            print(f.read())
-                    raise e
+                mod = importlib.import_module(mod_name)
                 sys.path.remove(folder)
                 fun = getattr(mod, fun_name) if fun_name else None
 
