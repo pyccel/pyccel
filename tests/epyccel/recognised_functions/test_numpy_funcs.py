@@ -6170,8 +6170,7 @@ def test_numpy_norm_array_like_2d(language):
         from numpy.linalg import norm
         from numpy import shape
         a = norm(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
     size = (2, 5)
 
@@ -6317,10 +6316,8 @@ def test_numpy_norm_array_like_3d(language):
     @types('complex128[:,:,:]')
     def get_norm(arr):
         from numpy.linalg import norm
-        from numpy import shape
         a = norm(arr)
-        s = shape(a)
-        return len(s), s[0], a[0][0]
+        return a
 
     size = (2, 5, 5)
 
