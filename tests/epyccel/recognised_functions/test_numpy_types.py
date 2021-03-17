@@ -362,20 +362,20 @@ def test_numpy_int8_array_like_1d(language):
 
 def test_numpy_int8_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_int8(arr):
         from numpy import int8, shape
         a = int8(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -572,20 +572,20 @@ def test_numpy_int16_array_like_1d(language):
 
 def test_numpy_int16_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_int16(arr):
         from numpy import int16, shape
         a = int16(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -781,20 +781,20 @@ def test_numpy_int32_array_like_1d(language):
 
 def test_numpy_int32_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_int32(arr):
         from numpy import int32, shape
         a = int32(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -988,22 +988,22 @@ def test_numpy_int64_array_like_1d(language):
     )
 )
 
-def test_numpy_int64_array_like_2(language):
+def test_numpy_int64_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_int64(arr):
         from numpy import int64, shape
         a = int64(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -1291,20 +1291,20 @@ def test_numpy_float32_array_like_1d(language):
 
 def test_numpy_float32_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_float32(arr):
         from numpy import float32, shape
         a = float32(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -1500,20 +1500,20 @@ def test_numpy_float64_array_like_1d(language):
 
 def test_numpy_float64_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_float64(arr):
         from numpy import float64, shape
         a = float64(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -1709,20 +1709,20 @@ def test_numpy_double_array_like_1d(language):
 
 def test_numpy_double_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_double(arr):
         from numpy import double, shape
         a = double(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -1918,20 +1918,20 @@ def test_numpy_complex64_array_like_1d(language):
 
 def test_numpy_complex64_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_complex64(arr):
         from numpy import complex64, shape
         a = complex64(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
@@ -2128,20 +2128,20 @@ def test_numpy_complex128_array_like_1d(language):
 
 def test_numpy_complex128_array_like_2d(language):
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
     def get_complex128(arr):
         from numpy import complex128, shape
         a = complex128(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,0], a[0,1]
 
     size = (2, 5)
 
