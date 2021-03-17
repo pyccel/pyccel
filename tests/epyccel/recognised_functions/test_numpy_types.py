@@ -2,7 +2,6 @@
 import sys
 import pytest
 from numpy.random import randint, uniform
-from numpy import iinfo, finfo
 import numpy as np
 
 from pyccel.decorators import types
