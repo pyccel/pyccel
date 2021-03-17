@@ -29,6 +29,8 @@ jobs:
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
@@ -109,3 +111,5 @@ jobs:
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel

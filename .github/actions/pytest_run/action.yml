@@ -13,8 +13,5 @@ runs:
         pyccel-clean
         python -m pytest -n auto ndarrays/ -rx
         pyccel-clean
-        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
-        pyccel-clean
-        #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
       shell: bash
       working-directory: ./tests
