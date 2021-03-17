@@ -331,7 +331,10 @@ def execute_pyccel(fname, *,
                     # new one from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
                     if not os.path.exists(lib_dest_path):
-                        shutil.copytree(lib_path, lib_dest_path)
+                        try:
+                            shutil.copytree(lib_path, lib_dest_path)
+                        except FileExistsError:
+                            pass
 
                     # stop after copying lib to __pyccel__ directory for
                     # convert only
