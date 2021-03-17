@@ -278,6 +278,9 @@ def epyccel( python_function_or_module, **kwargs ):
             if comm.rank != root:
                 folder = os.path.split(mod_path)[0]
                 sys.path.insert(0, folder)
+                # http://ballingt.com/import-invalidate-caches
+                # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
+                importlib.invalidate_caches()
                 try:
                     mod = importlib.import_module(mod_name)
                 except ModuleNotFoundError as e:
