@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 import pytest
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import randint, uniform
+from numpy import iinfo, finfo
 import numpy as np
 
 from pyccel.decorators import types
@@ -191,25 +191,25 @@ def test_numpy_int_scalar(language, get_int):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int, max_int)
 
-    if get_int == get_int8:
+    if get_int == get_int8: # pylint: disable=comparison-with-callable
         fl = uniform(min_int8, max_int8)
         fl32 = uniform(min_int8, max_int8)
         fl32 = np.float32(fl32)
         fl64 = uniform(min_int8, max_int8)
 
-    if get_int == get_int16:
+    if get_int == get_int16: # pylint: disable=comparison-with-callable
         fl = uniform(min_int16, max_int16)
         fl32 = uniform(min_int16, max_int16)
         fl32 = np.float32(fl32)
         fl64 = uniform(min_int16, max_int16)
 
-    if get_int == get_int32:
+    if get_int == get_int32: # pylint: disable=comparison-with-callable
         fl = uniform(min_int32, max_int32)
         fl32 = uniform(min_int32, max_int32)
         fl32 = np.float32(fl32)
         fl64 = uniform(min_int32, max_int32)
 
-    if get_int == get_int64:
+    if get_int == get_int64: # pylint: disable=comparison-with-callable
         fl = uniform(min_int64, max_int64)
         fl32 = uniform(min_int64, max_int64)
         fl32 = np.float32(fl64)
@@ -263,24 +263,23 @@ def test_numpy_int_scalar(language, get_int):
         assert f_integer64_output == test_int64_output
         assert matching_types(f_integer64_output, test_int64_output)
 
-    f_fl_output = epyccel_func(fl)
-    test_float_output = get_int(fl)
+        f_fl_output = epyccel_func(fl)
+        test_float_output = get_int(fl)
 
-    assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output)
+        assert f_fl_output == test_float_output
+        assert matching_types(f_fl_output, test_float_output)
+
+        f_fl64_output = epyccel_func(fl64)
+        test_float64_output = get_int(fl64)
+
+        assert f_fl64_output == test_float64_output
+        assert matching_types(f_fl64_output, test_float64_output)
 
     f_fl32_output = epyccel_func(fl32)
     test_float32_output = get_int(fl32)
 
     assert f_fl32_output == test_float32_output
     assert matching_types(f_fl32_output, test_float32_output)
-
-    f_fl64_output = epyccel_func(fl64)
-    test_float64_output = get_int(fl64)
-
-    assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output)
-
 
 @types('bool[:]')
 @types('int[:]')
@@ -489,7 +488,7 @@ def test_numpy_int_array_like_2d(language, get_int):
         assert epyccel_func(fl) == get_int(fl)
         assert epyccel_func(fl64) == get_int(fl64)
     # Python returns always -32768 wich is less than min_int8, epyccel function returns 0.
-    if get_int != get_int16_arr_2d:
+    if get_int != get_int16_arr_2d: # pylint: disable=comparison-with-callable
         assert epyccel_func(fl32) == get_int(fl32)
 
 @types('bool')
