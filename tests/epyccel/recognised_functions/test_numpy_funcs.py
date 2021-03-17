@@ -4534,7 +4534,7 @@ def test_numpy_prod_array_like_2d(language):
     integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
 
-    fl = uniform(min_float**(1/10), max_float / 10, size = size)
+    fl = uniform(min_float / 10, max_float / 10, size = size)
     fl32 = uniform(min_float32 / 10, max_float32 / 10, size = size)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 10, max_float64 / 10, size=size)
