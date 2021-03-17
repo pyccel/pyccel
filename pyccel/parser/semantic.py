@@ -1231,7 +1231,7 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument))))
+        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument), excluded_nodes = FunctionDef)))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
