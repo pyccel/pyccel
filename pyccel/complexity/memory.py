@@ -37,7 +37,7 @@ from sympy import Poly, LT
 
 from pyccel.ast.basic        import Basic
 from pyccel.ast.builtins     import PythonTuple
-from pyccel.ast.core         import For, Assign, CodeBlock
+from pyccel.ast.core         import For, Assign, CodeBlock, FunctionDef
 from pyccel.ast.internals    import PyccelSymbol
 from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
