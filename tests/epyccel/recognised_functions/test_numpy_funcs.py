@@ -4673,10 +4673,10 @@ def test_numpy_matmul_array_like_2x2d(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(-((abs(min_float) / size[0])**(1/2)), (abs(max_float) / size[0])**(1/2), size = size)
+    fl32 = uniform(-((abs(min_float32) / size[0])**(1/2)), (abs(max_float32) / size[0])**(1/2), size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(-((abs(min_float64) / size[0])**(1/2)), (abs(max_float64) / size[0])**(1/2), size = size)
 
     cmplx128_from_float32 = uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) + uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,

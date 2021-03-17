@@ -344,9 +344,9 @@ def test_numpy_int8_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int8(integer64)
-    assert epyccel_func(fl) == get_int8(fl)
+        assert epyccel_func(fl) == get_int8(fl)
+        assert epyccel_func(fl64) == get_int8(fl64)
     assert epyccel_func(fl32) == get_int8(fl32)
-    assert epyccel_func(fl64) == get_int8(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -402,9 +402,9 @@ def test_numpy_int8_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int8(integer64)
-    assert epyccel_func(fl) == get_int8(fl)
+        assert epyccel_func(fl) == get_int8(fl)
+        assert epyccel_func(fl64) == get_int8(fl64)
     assert epyccel_func(fl32) == get_int8(fl32)
-    assert epyccel_func(fl64) == get_int8(fl64)
 
 
 def test_numpy_int16_scalar(language):
@@ -554,9 +554,9 @@ def test_numpy_int16_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int16(integer64)
-    assert epyccel_func(fl) == get_int16(fl)
+        assert epyccel_func(fl) == get_int16(fl)
+        assert epyccel_func(fl64) == get_int16(fl64)
     assert epyccel_func(fl32) == get_int16(fl32)
-    assert epyccel_func(fl64) == get_int16(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -612,9 +612,9 @@ def test_numpy_int16_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int16(integer64)
-    assert epyccel_func(fl) == get_int16(fl)
+        assert epyccel_func(fl) == get_int16(fl)
+        assert epyccel_func(fl64) == get_int16(fl64)
     assert epyccel_func(fl32) == get_int16(fl32)
-    assert epyccel_func(fl64) == get_int16(fl64)
 
 def test_numpy_int32_scalar(language):
 
@@ -763,9 +763,9 @@ def test_numpy_int32_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int32(integer64)
-    assert epyccel_func(fl) == get_int32(fl)
+        assert epyccel_func(fl) == get_int32(fl)
+        assert epyccel_func(fl64) == get_int32(fl64)
     assert epyccel_func(fl32) == get_int32(fl32)
-    assert epyccel_func(fl64) == get_int32(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -821,9 +821,9 @@ def test_numpy_int32_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int32(integer64)
-    assert epyccel_func(fl) == get_int32(fl)
+        assert epyccel_func(fl) == get_int32(fl)
+        assert epyccel_func(fl64) == get_int32(fl64)
     assert epyccel_func(fl32) == get_int32(fl32)
-    assert epyccel_func(fl64) == get_int32(fl64)
 
 def test_numpy_int64_scalar(language):
 
@@ -972,9 +972,9 @@ def test_numpy_int64_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int64(integer64)
-    assert epyccel_func(fl) == get_int64(fl)
+        assert epyccel_func(fl) == get_int64(fl)
+        assert epyccel_func(fl64) == get_int64(fl64)
     assert epyccel_func(fl32) == get_int64(fl32)
-    assert epyccel_func(fl64) == get_int64(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -1030,9 +1030,9 @@ def test_numpy_int64_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_int64(integer64)
-    assert epyccel_func(fl) == get_int64(fl)
+        assert epyccel_func(fl) == get_int64(fl)
+        assert epyccel_func(fl64) == get_int64(fl64)
     assert epyccel_func(fl32) == get_int64(fl32)
-    assert epyccel_func(fl64) == get_int64(fl64)
 
 def test_numpy_float_scalar(language):
 
@@ -1273,9 +1273,9 @@ def test_numpy_float32_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_float32(integer64)
-    assert epyccel_func(fl) == get_float32(fl)
+        assert epyccel_func(fl) == get_float32(fl)
+        assert epyccel_func(fl64) == get_float32(fl64)
     assert epyccel_func(fl32) == get_float32(fl32)
-    assert epyccel_func(fl64) == get_float32(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -1331,9 +1331,9 @@ def test_numpy_float32_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_float32(integer64)
-    assert epyccel_func(fl) == get_float32(fl)
+        assert epyccel_func(fl) == get_float32(fl)
+        assert epyccel_func(fl64) == get_float32(fl64)
     assert epyccel_func(fl32) == get_float32(fl32)
-    assert epyccel_func(fl64) == get_float32(fl64)
 
 def test_numpy_float64_scalar(language):
 
@@ -1482,9 +1482,9 @@ def test_numpy_float64_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_float64(integer64)
-    assert epyccel_func(fl) == get_float64(fl)
+        assert epyccel_func(fl) == get_float64(fl)
+        assert epyccel_func(fl64) == get_float64(fl64)
     assert epyccel_func(fl32) == get_float64(fl32)
-    assert epyccel_func(fl64) == get_float64(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -1540,9 +1540,9 @@ def test_numpy_float64_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_float64(integer64)
-    assert epyccel_func(fl) == get_float64(fl)
+        assert epyccel_func(fl) == get_float64(fl)
+        assert epyccel_func(fl64) == get_float64(fl64)
     assert epyccel_func(fl32) == get_float64(fl32)
-    assert epyccel_func(fl64) == get_float64(fl64)
 
 def test_numpy_double_scalar(language):
 
@@ -1691,9 +1691,9 @@ def test_numpy_double_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_double(integer64)
-    assert epyccel_func(fl) == get_double(fl)
+        assert epyccel_func(fl) == get_double(fl)
+        assert epyccel_func(fl64) == get_double(fl64)
     assert epyccel_func(fl32) == get_double(fl32)
-    assert epyccel_func(fl64) == get_double(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -1749,9 +1749,9 @@ def test_numpy_double_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_double(integer64)
-    assert epyccel_func(fl) == get_double(fl)
+        assert epyccel_func(fl) == get_double(fl)
+        assert epyccel_func(fl64) == get_double(fl64)
     assert epyccel_func(fl32) == get_double(fl32)
-    assert epyccel_func(fl64) == get_double(fl64)
 
 def test_numpy_complex64_scalar(language):
 
@@ -1900,9 +1900,9 @@ def test_numpy_complex64_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_complex64(integer64)
-    assert epyccel_func(fl) == get_complex64(fl)
+        assert epyccel_func(fl) == get_complex64(fl)
+        assert epyccel_func(fl64) == get_complex64(fl64)
     assert epyccel_func(fl32) == get_complex64(fl32)
-    assert epyccel_func(fl64) == get_complex64(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -1958,9 +1958,9 @@ def test_numpy_complex64_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_complex64(integer64)
-    assert epyccel_func(fl) == get_complex64(fl)
+        assert epyccel_func(fl) == get_complex64(fl)
+        assert epyccel_func(fl64) == get_complex64(fl64)
     assert epyccel_func(fl32) == get_complex64(fl32)
-    assert epyccel_func(fl64) == get_complex64(fl64)
 
 def test_numpy_complex128_scalar(language):
 
@@ -2110,9 +2110,9 @@ def test_numpy_complex128_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_complex128(integer64)
-    assert epyccel_func(fl) == get_complex128(fl)
+        assert epyccel_func(fl) == get_complex128(fl)
+        assert epyccel_func(fl64) == get_complex128(fl64)
     assert epyccel_func(fl32) == get_complex128(fl32)
-    assert epyccel_func(fl64) == get_complex128(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -2168,6 +2168,6 @@ def test_numpy_complex128_array_like_2d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_complex128(integer64)
-    assert epyccel_func(fl) == get_complex128(fl)
+        assert epyccel_func(fl) == get_complex128(fl)
+        assert epyccel_func(fl64) == get_complex128(fl64)
     assert epyccel_func(fl32) == get_complex128(fl32)
-    assert epyccel_func(fl64) == get_complex128(fl64)
