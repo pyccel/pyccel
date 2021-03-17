@@ -286,7 +286,7 @@ def epyccel( python_function_or_module, **kwargs ):
                     print(mod_path)
                     print(mod_name)
                     print(os.listdir(folder))
-                    if language=="python":
+                    if kwargs['language']=="python":
                         with open(mod_path, 'r') as f:
                             print(f.read())
                     raise e
