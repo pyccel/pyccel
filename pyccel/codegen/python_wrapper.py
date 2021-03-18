@@ -9,6 +9,7 @@ import subprocess
 import os
 import glob
 import warnings
+from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module
 from pyccel.ast.core                        import SeparatorComment
