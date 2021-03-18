@@ -382,7 +382,7 @@ def test_numpy_int_array_like_1d(language, get_int):
         assert epyccel_func(integer64) == get_int(integer64)
         assert epyccel_func(fl) == get_int(fl)
         assert epyccel_func(fl64) == get_int(fl64)
-    assert epyccel_func(fl32) == get_int(fl32)
+        assert epyccel_func(fl32) == get_int(fl32)
 
 @types('bool[:,:]')
 @types('int[:,:]')
@@ -486,9 +486,9 @@ def test_numpy_int_array_like_2d(language, get_int):
         assert epyccel_func(integer64) == get_int(integer64)
         assert epyccel_func(fl) == get_int(fl)
         assert epyccel_func(fl64) == get_int(fl64)
-    # Python returns always -32768 wich is less than min_int8, epyccel function returns 0.
-    if get_int != get_int16_arr_2d: # pylint: disable=comparison-with-callable
-        assert epyccel_func(fl32) == get_int(fl32)
+        # Python returns always -32768 wich is less than min_int8, epyccel function returns 0.
+        if get_int != get_int16_arr_2d: # pylint: disable=comparison-with-callable
+            assert epyccel_func(fl32) == get_int(fl32)
 
 @types('bool')
 @types('int')
