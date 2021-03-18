@@ -13,7 +13,7 @@ a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int
 
 @types( 'int32[:]', 'int32' )
 def array_int32_1d_scalar_add( x, a ):
-    x[:] += a
+    x[:] += a + b
 
 @types( 'int32[:]', 'int32' )
 def array_int32_1d_scalar_sub( x, a ):
