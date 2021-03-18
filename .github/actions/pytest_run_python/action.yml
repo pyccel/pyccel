@@ -5,8 +5,9 @@ runs:
   steps:
     - name: Python tests with pytest
       run: |
-        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=symbolic --ignore=ndarrays
+        # Uncomment to run xdist_incompatible python tests (no tests raises exit code 5)
+        #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
       shell: bash
       working-directory: ./tests
