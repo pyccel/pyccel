@@ -11,6 +11,7 @@ import os
 import sys
 import shutil
 from collections import OrderedDict
+rom filelock import FileLock
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
