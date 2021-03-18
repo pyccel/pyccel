@@ -24,6 +24,10 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False):
                 Indicates whether the function should recurse
                 into sub-folders
                 Default : True
+    remove_shared_libs : bool
+                Indicates whether shared libraries generated
+                by python should also be removed from the
+                directory path_dir
     """
     if path_dir is None:
         path_dir = os.getcwd()
