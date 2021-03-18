@@ -1317,7 +1317,7 @@ class CCodePrinter(CodePrinter):
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
-        target = self._print(expr.target)
+        counter = self._print(expr.target)
         body  = self._print(expr.body)
         if isinstance(expr.iterable, PythonRange):
             start = self._print(expr.iterable.start)
@@ -1325,9 +1325,22 @@ class CCodePrinter(CodePrinter):
             step  = self._print(expr.iterable.step )
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                '{step})\n{{\n{body}\n}}').format(target=target, start=start,
-                stop=stop, step=step, body=body)
+
+        test_step = expr.iterable.step
+        if isinstance(test_step, PyccelUnarySub):
+            test_step = expr.iterable.step.args[0]
+
+        # testing if the step is a value or an expression
+        if isinstance(test_step, Literal):
+            op = '>' if isinstance(expr.iterable.step, PyccelUnarySub) else '<'
+            return ('for ({counter} = {start}; {counter} {op} {stop}; {counter} += '
+                        '{step})\n{{\n{body}\n}}').format(counter=counter, start=start, op=op,
+                                                          stop=stop, step=step, body=body)
+        else:
+            return (
+                'for ({counter} = {start}; ({step} > 0) ? ({counter} < {stop}) : ({counter} > {stop}); {counter} += '
+                '{step})\n{{\n{body}\n}}').format(counter=counter, start=start,
+                                                  stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
         body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
@@ -1470,6 +1483,8 @@ class CCodePrinter(CodePrinter):
         if expr.combined:
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
+        if expr.has_nowait:
+            clauses = clauses + ' nowait'
         omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
         if expr.is_multiline:
