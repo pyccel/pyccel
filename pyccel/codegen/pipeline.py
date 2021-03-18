@@ -36,11 +36,6 @@ lang_ext_dict = {
     "c" : ".c",
     "fortran": ".f90",
 }
-# map language to its object file extension
-lang_obj_ext_dict = {
-    "c" : ".o",
-    "fortran": ".mod",
-}
 
 #==============================================================================
 # NOTE:
@@ -327,14 +322,14 @@ def execute_pyccel(fname, *,
                     lib_name = internal_libs[lib]
                     # get lib path (stdlib_path/lib_name)
                     lib_path = os.path.join(stdlib_path, lib_name)
-                    # if the library does not yet exist in the destination
-                    # folder, copy from pyccel stdlib
+                    # remove library folder to avoid missing files and copy
+                    # new one from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-                    if not os.path.exists(lib_dest_path):
-                        try:
+                    lock_path = lib_dest_path + '.lock'
+                    lock = FileLock(lock_path)
+                    with lock:
+                        if not os.path.exists(lib_dest_path):
                             shutil.copytree(lib_path, lib_dest_path)
-                        except FileExistsError:
-                            pass
 
                     # stop after copying lib to __pyccel__ directory for
                     # convert only
@@ -343,7 +338,6 @@ def execute_pyccel(fname, *,
 
                     # get library source files
                     ext = lang_ext_dict[language]
-                    obj_ext = lang_obj_ext_dict[language]
                     source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
                                                                 if e.endswith(ext)]
 
@@ -354,11 +348,6 @@ def execute_pyccel(fname, *,
                     # add library path to internal_libs_path
                     internal_libs_path.append(lib_dest_path)
 
-                    # stop if object files already exist
-                    object_files = [s.replace(ext, obj_ext) for s in source_files]
-                    if all(os.path.exists(o) for o in object_files):
-                        continue
-
                     # compile library source files
                     flags = construct_flags(f90exec,
                                             fflags=fflags,
@@ -366,12 +355,15 @@ def execute_pyccel(fname, *,
                                             includes=[lib_dest_path])
                     try:
                         for f in source_files:
-                            compile_files(f, f90exec, flags,
-                                            binary=None,
-                                            verbose=verbose,
-                                            is_module=True,
-                                            output=lib_dest_path,
-                                            language=language)
+                            lock_path = f + '.lock'
+                            lock = FileLock(lock_path)
+                            with lock:
+                                compile_files(f, f90exec, flags,
+                                                binary=None,
+                                                verbose=verbose,
+                                                is_module=True,
+                                                output=lib_dest_path,
+                                                language=language)
                     except Exception:
                         handle_error('C {} library compilation'.format(lib))
                         raise

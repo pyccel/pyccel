@@ -41,6 +41,7 @@ install_requires = [
     'sympy>=1.2',
     'termcolor',
     'textx>=1.6',
+    'filelock'
 ]
 
 def setup_package():
