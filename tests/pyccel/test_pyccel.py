@@ -11,6 +11,16 @@ import numpy as np
 # UTILITIES
 #==============================================================================
 
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c)
+    ],
+    scope='module'
+)
+def language(request):
+    return request.param
+#------------------------------------------------------------------------------
+
 def get_abs_path(relative_path):
     relative_path = os.path.normpath(relative_path)
     base_dir = os.path.dirname(os.path.realpath(__file__))
