@@ -218,6 +218,10 @@ In order to run the unit tests and to get a coverage report, four additional Pyt
   pip3 install --user pytest
   pip3 install --user coverage
 
+Most of the unit tests can also be run in parallel. This can be done by installing one additional package::
+
+  pip3 install --user pytest-xdist
+
 Testing
 =======
 
