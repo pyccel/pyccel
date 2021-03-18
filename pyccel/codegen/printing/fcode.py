@@ -1187,8 +1187,11 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self.parser.get_new_variable, language_has_vectors = True)
-        self.add_vars_to_namespace(*new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self.parser.get_new_variable, language_has_vectors = True)
+            self.add_vars_to_namespace(*new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)

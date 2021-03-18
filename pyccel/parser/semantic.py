@@ -1231,7 +1231,7 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument))))
+        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument), excluded_nodes = FunctionDef)))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -2713,7 +2713,7 @@ class SemanticParser(BasicParser):
                     functions = sub_funcs,
                     interfaces = func_interfaces,
                     doc_string = doc_string)
-            if recursive_func_obj not in body.get_attribute_nodes(FunctionDef):
+            if not is_recursive:
                 recursive_func_obj.invalidate_node()
 
             if cls_name:
