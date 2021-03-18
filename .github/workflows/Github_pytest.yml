@@ -58,33 +58,43 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Failing Serial C tests
+
+      # This is split into many tests as the test raising an error must be the last line in a multi-line powershell command
+      - name: Serial C tests run in parallel
         run: |
-          echo $ErrorActionPreference
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays -x
-      - name: Serial C tests
+        working-directory: ./tests
+      - name: Serial C tests run in serial
         run: |
-          echo $LASTEXITCODE
           pyccel-clean
           python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
-      - name: Serial fortran tests and non-tagged tests
+      - name: Serial fortran tests and non-tagged tests run in parallel
         run: |
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays
+        working-directory: ./tests
+      - name: Serial fortran tests and non-tagged tests run in serial
+        run: |
           pyccel-clean
           python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
-      - name: Serial Python tests
+      - name: Serial Python tests run in parallel
         run: |
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=symbolic --ignore=ndarrays
+        working-directory: ./tests
+      - name: Serial Python tests cleanup
+        run: |
           pyccel-clean
           #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: ND-Array tests
         run: |
           python -m pytest -n auto ndarrays/ -rx
-          pyccel-clean
         working-directory: ./tests
+      - name: ND-Array tests cleanup
+        run: |
+          pyccel-clean
+        working-directory: ./tests/ndarrays
       - name: Parallel tests
         run: |
           mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
