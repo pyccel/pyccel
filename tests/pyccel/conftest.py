@@ -30,4 +30,4 @@ def pytest_sessionfinish(session):
     xdist_plugin = config.pluginmanager.getplugin("xdist")
     if xdist_plugin is None or "PYTEST_XDIST_WORKER_COUNT" not in os.environ \
             or os.getenv('PYTEST_XDIST_WORKER_COUNT') == 1:
-        pyccel_clean(path_dir)
+        pyccel_clean(path_dir, remove_shared_libs = True)
