@@ -29,7 +29,7 @@ def pytest_runtest_teardown(item, nextitem):
             or os.getenv('PYTEST_XDIST_WORKER_COUNT') == 1:
         marks = [m.name for m in item.own_markers ]
         if 'parallel' not in marks:
-            pyccel_clean(path_dir)
+            pyccel_clean(path_dir, remove_shared_libs = True)
 
 def pytest_addoption(parser):
     parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")
