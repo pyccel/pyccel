@@ -58,39 +58,35 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Serial C tests
+      - name: Failing Serial C tests
         run: |
           echo $ErrorActionPreference
-          $ErrorActionPreference = 'Stop' #Command must be run at the start of every multiline powershell command
-          echo $ErrorActionPreference
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=printers --ignore=symbolic --ignore=ndarrays -x
+      - name: Serial C tests
+        run: |
           echo $LASTEXITCODE
           pyccel-clean
           python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
-          $ErrorActionPreference='Stop' #Command must be run at the start of every multiline powershell command
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
           pyccel-clean
           python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial Python tests
         run: |
-          $ErrorActionPreference='Stop' #Command must be run at the start of every multiline powershell command
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
           pyccel-clean
           #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: ND-Array tests
         run: |
-          $ErrorActionPreference='Stop' #Command must be run at the start of every multiline powershell command
           python -m pytest -n auto ndarrays/ -rx
           pyccel-clean
         working-directory: ./tests
       - name: Parallel tests
         run: |
-          $ErrorActionPreference='Stop' #Command must be run at the start of every multiline powershell command
           mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
           # mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
         working-directory: ./tests
