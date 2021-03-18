@@ -28,6 +28,8 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False):
     if path_dir is None:
         path_dir = os.getcwd()
 
+    print(ext_suffix)
+
     files = os.listdir(path_dir)
     for f in files:
         file_name = os.path.join(path_dir,f)
