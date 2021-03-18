@@ -3,6 +3,10 @@ name: 'Windows installation commands'
 runs:
   using: "composite"
   steps:
+    - name: Ensure powershell fails if any command fails
+      run:
+        echo "ErrorActionPreference='Stop'" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      shell: powershell
     - name: Fix 'Unknown MS Compiler version 1900' problem
       run: |
         # Use utf for output
