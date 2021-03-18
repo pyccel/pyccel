@@ -61,24 +61,24 @@ jobs:
       - name: Failing Serial C tests
         run: |
           echo $ErrorActionPreference
-          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=printers --ignore=symbolic --ignore=ndarrays -x
+          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays -x
       - name: Serial C tests
         run: |
           echo $LASTEXITCODE
           pyccel-clean
-          python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
-          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays
           pyccel-clean
-          python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial Python tests
         run: |
-          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=symbolic --ignore=ndarrays
           pyccel-clean
-          #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: ND-Array tests
         run: |
