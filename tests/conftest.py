@@ -2,6 +2,7 @@
 import os
 import shutil
 import pytest
+from mpi4py import MPI
 from pyccel.commands.pyccel_clean import pyccel_clean
 
 @pytest.fixture( params=[
@@ -30,6 +31,11 @@ def pytest_runtest_teardown(item, nextitem):
         marks = [m.name for m in item.own_markers ]
         if 'parallel' not in marks:
             pyccel_clean(path_dir, remove_shared_libs = True)
+        else:
+            comm = MPI.COMM_WORLD
+            comm.Barrier()
+            if comm.rank == root:
+                pyccel_clean(path_dir, remove_shared_libs = True)
 
 def pytest_addoption(parser):
     parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")
