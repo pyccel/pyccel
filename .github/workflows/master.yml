@@ -83,11 +83,17 @@ jobs:
         run: |
           python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
+      # Remove this action if uncommenting the next action
       - name: Serial Python tests cleanup
         run: |
           pyccel-clean
-          #python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
+      # Uncomment this test to activate python xdist_incompatible tests (pytest tests raises exit code 5 when it finds no tests)
+      #- name: Serial Python tests run in serial
+      #- run: |
+      #-   pyccel-clean
+      #-   python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
+      #- working-directory: ./tests
       - name: ND-Array tests
         run: |
           python -m pytest -n auto ndarrays/ -rx
