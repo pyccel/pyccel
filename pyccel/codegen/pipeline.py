@@ -327,8 +327,8 @@ def execute_pyccel(fname, *,
                     lib_name = internal_libs[lib]
                     # get lib path (stdlib_path/lib_name)
                     lib_path = os.path.join(stdlib_path, lib_name)
-                    # remove library folder to avoid missing files and copy
-                    # new one from pyccel stdlib
+                    # if the library does not yet exist in the destination
+                    # folder, copy from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
                     if not os.path.exists(lib_dest_path):
                         try:
