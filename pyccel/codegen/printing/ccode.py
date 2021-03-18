@@ -1343,8 +1343,11 @@ class CCodePrinter(CodePrinter):
                                                   stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
-        self._additional_declare.extend(new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+            self._additional_declare.extend(new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             code = self._print(b)
