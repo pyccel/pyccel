@@ -35,7 +35,7 @@ def pytest_runtest_teardown(item, nextitem):
         else:
             comm = MPI.COMM_WORLD
             comm.Barrier()
-            if comm.rank == root:
+            if comm.rank == 0:
                 pyccel_clean(path_dir, remove_shared_libs = True)
             comm.Barrier()
 
