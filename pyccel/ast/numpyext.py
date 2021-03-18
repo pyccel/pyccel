@@ -824,9 +824,7 @@ class NumpyNorm(PyccelInternalFunction):
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
-        if isinstance(arg.dtype, NativeBool):
-            arg = PythonFloat(arg)
-        elif not isinstance(arg.dtype, (NativeComplex, NativeReal)):
+        if not isinstance(arg.dtype, (NativeComplex, NativeReal)):
             arg = PythonFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
         self._precision = arg.precision
