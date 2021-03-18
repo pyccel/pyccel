@@ -129,7 +129,15 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        lock_names = [d+'.lock' for d in dep_mods]
+        locks = [FileLock(n) for n in lock_names]
+        for l in locks:
+            l.acquire()
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        finally:
+            for l in locks:
+                l.release()
         out, err = p.communicate()
         if verbose:
             print(out)
