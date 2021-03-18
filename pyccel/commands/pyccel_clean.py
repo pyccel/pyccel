@@ -28,14 +28,12 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False):
     if path_dir is None:
         path_dir = os.getcwd()
 
-    print(ext_suffix)
-
     files = os.listdir(path_dir)
     for f in files:
         file_name = os.path.join(path_dir,f)
         if f in  ("__pyccel__", "__epyccel__"):
             shutil.rmtree( file_name, ignore_errors=True)
         elif not os.path.isfile(file_name) and recursive:
-            pyccel_clean(file_name)
+            pyccel_clean(file_name, recursive, remove_shared_libs)
         elif remove_shared_libs and f.endswith(ext_suffix):
             os.remove(file_name)
