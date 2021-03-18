@@ -131,6 +131,7 @@ def create_shared_library(codegen,
         if verbose:
             print(' '.join(cmd))
         lock_names = [d+'.lock' for d in dep_mods]
+        print("Locking for linking : ",lock_names)
         locks = [FileLock(n) for n in lock_names]
         for l in locks:
             l.acquire()
