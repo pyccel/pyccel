@@ -601,23 +601,33 @@ class CodeBlock(Basic):
        ==========
        body : iterable
     """
-    __slots__ = ('_body',)
+    __slots__ = ('_body','_unravelled')
     _attribute_nodes = ('_body',)
 
 
-    def __init__(self, body):
+    def __init__(self, body, unravelled = False):
         ls = []
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
             elif i is not None and not isinstance(i, EmptyNode):
                 ls.append(i)
+        if not isinstance(unravelled, bool):
+            raise TypeError("unravelled must be a boolean")
         self._body = tuple(ls)
+        self._unravelled = unravelled
         super().__init__()
 
     @property
     def body(self):
         return self._body
+
+    @property
+    def unravelled(self):
+        """ Indicates whether the vector syntax of python
+        has been unravelled into for loops
+        """
+        return self._unravelled
 
     @property
     def lhs(self):

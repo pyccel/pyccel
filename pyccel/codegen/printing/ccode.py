@@ -1189,8 +1189,8 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
 
         if expr.stmt:
-            # get Assign nodes form the CodeBlock object expr.stmt.
-            last_assign = expr.stmt.get_attribute_nodes(Assign)
+            # get Assign nodes from the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
             deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
             vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
@@ -1345,8 +1345,11 @@ class CCodePrinter(CodePrinter):
                                                   stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
-        self._additional_declare.extend(new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+            self._additional_declare.extend(new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             code = self._print(b)
