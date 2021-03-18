@@ -824,13 +824,12 @@ class NumpyNorm(PyccelInternalFunction):
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
-        cmplx_precision = None
         if isinstance(arg.dtype, NativeBool):
             arg = PythonFloat(arg)
         elif not isinstance(arg.dtype, (NativeComplex, NativeReal)):
             arg = PythonFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
-        self._precision = cmplx_precision if cmplx_precision else arg.precision
+        self._precision = arg.precision
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
