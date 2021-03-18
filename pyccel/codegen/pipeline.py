@@ -327,7 +327,6 @@ def execute_pyccel(fname, *,
                     # new one from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
                     lock_path = lib_dest_path + '.lock'
-                    print("Locking :",lock_path)
                     lock = FileLock(lock_path)
                     with lock:
                         if not os.path.exists(lib_dest_path):
@@ -342,6 +341,7 @@ def execute_pyccel(fname, *,
                     ext = lang_ext_dict[language]
                     source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
                                                                 if e.endswith(ext)]
+                    internal_modules = [os.path.splitext(f)[0] for f in source_files]
 
                     # compile library source files
                     flags = construct_flags(f90exec,
@@ -349,9 +349,8 @@ def execute_pyccel(fname, *,
                                             debug=debug,
                                             includes=[lib_dest_path])
                     try:
-                        for f in source_files:
-                            lock_path = f + '.lock'
-                            lock = FileLock(lock_path)
+                        for f,l in zip(source_files, internal_modules):
+                            lock = FileLock(z + '.lock')
                             with lock:
                                 compile_files(f, f90exec, flags,
                                                 binary=None,
@@ -366,7 +365,7 @@ def execute_pyccel(fname, *,
                     # Add internal lib to internal_libs_name set
                     internal_libs_name.add(lib)
                     # add source file without extension to internal_libs_files
-                    internal_libs_files.extend(os.path.splitext(f)[0] for f in source_files)
+                    internal_libs_files.extend(internal_modules)
                     # add library path to internal_libs_path
                     internal_libs_path.append(lib_dest_path)
 
