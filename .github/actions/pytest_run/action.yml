@@ -5,11 +5,11 @@ runs:
   steps:
     - name: Test with pytest
       run: |
-        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays -x
-        python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays -xs
+        python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays -s
         pyccel-clean
-        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays -s
+        python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays -s
         pyccel-clean
         python -m pytest -n auto ndarrays/ -rx
         pyccel-clean
