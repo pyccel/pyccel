@@ -9,7 +9,7 @@ import numpy
 
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonImag, PythonList)
+                             PythonComplex, PythonReal, PythonAbs, PythonImag, PythonList)
 
 from .core           import (ClassDef, FunctionDef,
                             process_shape, ValuedArgument)
@@ -819,30 +819,44 @@ class NumpyZerosLike:
 
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
-    __slots__ = ('_shape','_rank','_order')
+    __slots__ = ('_shape','_rank','_order','_arg','_precision')
     _dtype = NativeReal()
-    _precision = default_precision['real']
 
-    def __init__(self, arg, dim=None):
-        if isinstance(dim, ValuedArgument):
-            dim = dim.value
-        if self.dim is not None:
+    def __init__(self, arg, axis=None):
+        super().__init__(arg, axis)
+        if not isinstance(arg.dtype, (NativeComplex, NativeReal)):
+            arg = PythonFloat(arg)
+        self._arg = PythonList(arg) if arg.rank == 0 else arg
+        self._precision = arg.precision
+        if self.axis is not None:
             sh = list(arg.shape)
-            del sh[self.dim]
+            del sh[self.axis]
             self._shape = tuple(sh)
             self._order = arg.order
         else:
             self._shape = ()
             self._order = None
         self._rank = len(self._shape)
-        super().__init__(arg, dim)
+        self._order = arg.order
 
     @property
     def arg(self):
+        return self._arg
+
+    @property
+    def python_arg(self):
+        """numpy.norm argument without casting.
+        the actual arg property contains casting methods for C/Fortran,
+        which is not necessary for a Python code, and the casting makes Python language tests fail.
+        """
         return self._args[0]
 
     @property
-    def dim(self):
+    def axis(self):
+        """
+        Mimic the behavior of axis argument of numpy.norm in python,
+        and dim argument of Norm2 in Fortran.
+        """
         return self._args[1]
 
 #====================================================
