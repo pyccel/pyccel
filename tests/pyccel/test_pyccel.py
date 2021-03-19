@@ -356,6 +356,7 @@ def test_folder_imports(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
 
@@ -396,6 +397,7 @@ def test_default_arguments():
                 float,float,float,float])
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_pyccel_calling_directory(language):
     cwd = get_abs_path(".")
 
