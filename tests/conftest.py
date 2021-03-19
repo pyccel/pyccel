@@ -1,9 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import os
+import sys
 import shutil
 import pytest
 from mpi4py import MPI
 from pyccel.commands.pyccel_clean import pyccel_clean
+
+sys.stdout = sys.stderr
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
