@@ -11,7 +11,7 @@ runs:
         python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays -s
         python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays -s
         pyccel-clean
-        python -m pytest -n auto ndarrays/ -rx
+        python -m pytest ndarrays/ -rx
         pyccel-clean
       shell: bash
       working-directory: ./tests

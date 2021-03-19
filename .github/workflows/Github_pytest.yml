@@ -95,7 +95,7 @@ jobs:
       #- working-directory: ./tests
       - name: ND-Array tests
         run: |
-          python -m pytest -n auto ndarrays/ -rx
+          python -m pytest ndarrays/ -rx
         working-directory: ./tests
       - name: ND-Array tests cleanup
         run: |
