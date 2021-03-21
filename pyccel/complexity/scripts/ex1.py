@@ -179,6 +179,20 @@ def array_int32_1d_scalar_add_stride4( x: 'int32[:,:]', a: 'int32' ):
     x[:5, 2:] += a
 
 # ...
+def sum_natural_numbers_range_step_int( n: 'int' ):
+    x = 0
+    for i in range( 1, n+1, 5 ):
+        x += i
+    return x
+
+# ...
+def sum_natural_numbers_range_step_variable( n: 'int', b: 'int' ):
+    x = 0
+    for i in range( 1, n+1, b ):
+        x += i
+    return x
+
+# ...
 def abs_real_scalar( x: 'real' ):
     return abs(x)
 

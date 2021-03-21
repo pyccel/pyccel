@@ -13,7 +13,6 @@ Example
 """
 
 from sympy import sympify, Symbol
-from sympy import Poly, LT
 from sympy import summation
 
 from pyccel.ast.basic        import Basic
@@ -28,48 +27,12 @@ from pyccel.complexity.basic import Complexity
 from pyccel.complexity.basic import SHAPE
 
 
-__all__ = ["count_access", "MemComplexity"]
+__all__ = ["MemComplexity"]
 
 WRITE = Symbol('WRITE')
 READ  = Symbol('READ')
 
-
-# ...
-def count_access(expr, visual=True):
-    """
-    returns the number of access to memory in terms of WRITE and READ.
-
-    expr: sympy.Expr
-        any sympy expression or pyccel.ast.core object
-    visual: bool
-        If ``visual`` is ``True`` then the number of each type of operation is shown
-        with the core class types (or their virtual equivalent) multiplied by the
-        number of times they occur.
-    local_vars: list
-        list of variables that are supposed to be in the fast memory. We will
-        ignore their corresponding memory accesses.
-    """
-
-
-    symbol_map = {}
-    used_names = set()
-
-    if isinstance(expr, Assign):
-        return count_access(expr.rhs, visual) + WRITE
-
-    elif isinstance(expr, (NumpyZeros, NumpyOnes)):
-        import numpy as np
-        return WRITE*np.prod(expr.shape)
-
-    elif isinstance(expr, Basic):
-
-        atoms = expr.get_attribute_nodes(PyccelSymbol)
-        return READ*len(atoms)
-
-    else:
-        raise NotImplementedError('TODO count_access for {}'.format(type(expr)))
-
-# ...
+# ==============================================================================
 class MemComplexity(Complexity):
     """
     Class for memory complexity computation.

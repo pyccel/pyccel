@@ -8,6 +8,9 @@ from collections import OrderedDict
 
 from sympy import summation
 from sympy import Function
+from sympy import Symbol
+from sympy import Poly, LT
+from sympy import simplify as sp_simplify
 
 from pyccel.parser.parser import Parser
 from pyccel.ast.sympy_helper import pyccel_to_sympy
@@ -19,8 +22,7 @@ __all__ = ["Complexity"]
 
 SHAPE = Function('shape')
 
-
-# ...
+# ==============================================================================
 class Complexity(object):
     """Abstract class for complexity computation."""
     def __init__(self, filename_or_text):
@@ -82,7 +84,7 @@ class Complexity(object):
     def visual(self):
         return self._visual
 
-    def cost(self, visual=True, mode=None):
+    def cost(self, visual=True, mode=None, simplify=True, bigo=None):
         """
         Computes the complexity of the given code.
 
@@ -91,6 +93,13 @@ class Complexity(object):
 
         mode: string
             possible values are (None, simple)
+
+        simplify: bool
+            if true, calls sympy simplify function
+
+        bigo: list
+            a list containing variable names (str) for which we want to take the
+            highest degree (expansion serie)
         """
         # ...
         self._visual = visual
@@ -105,6 +114,13 @@ class Complexity(object):
             for fname, d in self.functions.items():
                 expr =  self._cost(d)
 
+                if simplify:
+                    expr = sp_simplify(expr)
+
+                if bigo:
+                    for n in bigo:
+                        expr = LT(expr, Symbol(n))
+
                 costs[fname] = expr
 
         self._costs.update(costs)
@@ -112,6 +128,13 @@ class Complexity(object):
 
         # ... then we compute the complexity for the main program
         expr = self._cost(self.ast)
+
+        if simplify:
+            expr = sp_simplify(expr)
+
+        if bigo:
+            for n in bigo:
+                expr = LT(expr, Symbol(n))
         # ...
 
         return expr
@@ -167,10 +190,16 @@ class Complexity(object):
 
         e = expr.iterable.stop
         e = pyccel_to_sympy(e, self._symbol_map, self._used_names)
+
+        step = expr.iterable.step
+        step = pyccel_to_sympy(step, self._symbol_map, self._used_names)
         # ...
 
-        # TODO treat the case step /= 1
-        return summation(ops, (i, b, e-1))
+        # TODO is this correct?
+        end = (e-b-1) / step
+
+        # translate so that we always start from 0
+        return summation(ops, (i, 0, end))
 
     def _cost_PyccelOperator(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
@@ -237,4 +266,3 @@ class Complexity(object):
                 ntimes *= (stop - start) #// step
 
         return ntimes
-
