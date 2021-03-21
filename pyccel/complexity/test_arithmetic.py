@@ -19,6 +19,7 @@ def test_complexity(f, mode=None):
     complexity = OpComplexity(f)
     complexity.cost(mode=mode, simplify=True, bigo=None)
 #    complexity.cost(mode=mode, simplify=True, bigo=['n'])
+
     print('----------------------')
     for f, c in complexity.costs.items():
         print('> cost of {} = {}'.format(f, c))
@@ -26,16 +27,16 @@ def test_complexity(f, mode=None):
 ######################
 if __name__ == '__main__':
 
-    test_complexity('scripts/mxm.py')
+#    test_complexity('scripts/mxm.py')
 #    test_complexity('scripts/qr.py')
 
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***     TESTING COMPLEXITY    ***')
-#    print('***                           ***')
-#    print('*********************************')
-#
-#    for f in files:
-#        print('> testing {0}'.format(str(os.path.basename(f))))
-#        test_complexity(f)
-#        print("\n")
+    print('*********************************')
+    print('***                           ***')
+    print('***     TESTING COMPLEXITY    ***')
+    print('***                           ***')
+    print('*********************************')
+
+    for f in files:
+        print('> testing {0}'.format(str(os.path.basename(f))))
+        test_complexity(f)
+        print("\n")

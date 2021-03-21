@@ -26,8 +26,8 @@ def test_complexity(f, mode=None):
 if __name__ == '__main__':
 
     test_complexity('scripts/qr.py')
-#    test_complexity('scripts/ex2.py')
-#    test_complexity('scripts/ex_assembly.py')
+    test_complexity('scripts/ex2.py')
+    test_complexity('scripts/ex_assembly.py')
 
 #    print('*********************************')
 #    print('***                           ***')

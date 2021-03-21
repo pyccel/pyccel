@@ -6,6 +6,8 @@
 
 # TODO - use SHAPE(...) as args for Poly => ex1.py breaks down for a function
 #        like array_int32_1d_scalar_add
+#      - for the moment, we should put only tests that are working (because of
+#      SHAPE(...))
 
 """
 This module provides us with functions and objects that allow us to compute
