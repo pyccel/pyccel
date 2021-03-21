@@ -130,7 +130,7 @@ def test_f6(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Arrays are not yet implemented for C language"),
+            pytest.mark.xfail(reason="Lists are not yet implemented for C language"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]

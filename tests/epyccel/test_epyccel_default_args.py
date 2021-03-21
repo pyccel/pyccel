@@ -1,10 +1,21 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
-
+import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+        pytest.mark.python]
+    )]
+)
+def language(request):
+    return request.param
 
 #------------------------------------------------------------------------------
 def test_f1(language):
@@ -20,14 +31,14 @@ def test_f1(language):
     assert f() == f1()
     # ...
 #------------------------------------------------------------------------------
-def test_f2():
+def test_f2(language):
     @types('real [:]', 'int')
     def f5(x, m1 = 2):
         x[:] = 0.
         for i in range(0, m1):
             x[i] = i * 1.
 
-    f = epyccel(f5)
+    f = epyccel(f5, language=language)
 
     # ...
     m1 = 3

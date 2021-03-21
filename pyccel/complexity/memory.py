@@ -17,7 +17,7 @@ from sympy import summation
 
 from pyccel.ast.basic        import Basic
 from pyccel.ast.builtins     import PythonTuple
-from pyccel.ast.core         import For, Assign, CodeBlock
+from pyccel.ast.core         import For, Assign, CodeBlock, FunctionDef
 from pyccel.ast.internals    import PyccelSymbol
 from pyccel.ast.internals    import Slice
 from pyccel.ast.literals     import Literal
@@ -71,7 +71,8 @@ class MemComplexity(Complexity):
         return sum(self._cost(i, **settings) for i in expr.args)
 
     def _cost_PyccelFloorDiv(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr.args)
+        atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
+        return READ*len(atoms)
 
     def _cost_PyccelMul(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)

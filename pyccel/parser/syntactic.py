@@ -62,7 +62,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -797,7 +797,7 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return)]
+        returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1
@@ -1029,6 +1029,8 @@ class SyntaxParser(BasicParser):
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0].blocks
             return If(IfSection(test, body), *orelse)
+        elif len(orelse)==0:
+            return If(IfSection(test, body))
         else:
             orelse = IfSection(LiteralTrue(), orelse)
             return If(IfSection(test, body), orelse)

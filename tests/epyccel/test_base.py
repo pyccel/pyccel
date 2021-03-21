@@ -99,22 +99,10 @@ def test_not_int(language):
     test.compare_epyccel( 0 )
     test.compare_epyccel( 4 )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c)
-    ]
-)
 def test_compare_is_nil(language):
     test = epyccel_test(base.is_nil, lang=language)
     test.compare_epyccel( None )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c)
-    ]
-)
 def test_compare_is_not_nil(language):
     test = epyccel_test(base.is_not_nil, lang=language)
     test.compare_epyccel( None )
@@ -198,9 +186,18 @@ def test_pass_if(language):
 
 def test_pass2_if(language):
     test = epyccel_test(base.pass2_if, lang=language)
-    test.compare_epyccel(True)
-    test.compare_epyccel(False)
+    test.compare_epyccel(0.2)
+    test.compare_epyccel(0.0)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_use_optional(language):
     test = epyccel_test(base.use_optional, lang=language)
     test.compare_epyccel()

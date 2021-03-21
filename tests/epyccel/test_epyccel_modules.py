@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
-import pytest
 from pyccel.epyccel import epyccel
 
 def test_module_1(language):
@@ -43,14 +42,6 @@ def test_local_module_1(language):
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="slicing not implemented in C language"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_module_2(language):
     import modules.Module_2 as mod
 
@@ -77,3 +68,23 @@ def test_module_3(language):
     x_expected = mod.circle_volume(r)
     x = modnew.circle_volume(r)
     assert np.isclose( x, x_expected, rtol=1e-14, atol=1e-14 )
+
+def test_module_4(language):
+    import modules.Module_6 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    n_x = np.random.randint(4,20)
+    n_y = np.random.randint(4,20)
+
+    x = np.empty(n_x, dtype=float)
+    y = np.random.random_sample(n_y)
+
+    x_pyc = x.copy()
+    y_pyc = y.copy()
+
+    max_pyt = mod.f(x,y)
+    max_pyc = modnew.f(x_pyc, y_pyc)
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( x, x_pyc, rtol=1e-14, atol=1e-14 )
+    assert np.allclose( y, y_pyc, rtol=1e-14, atol=1e-14 )

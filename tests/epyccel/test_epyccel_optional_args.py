@@ -6,6 +6,17 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+        pytest.mark.python]
+    )]
+)
+def language(request):
+    return request.param
+
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')
@@ -137,12 +148,13 @@ def test_f11(language):
     assert mod.call_optional_12() == modnew.call_optional_12()
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', [
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy array are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
+            pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
+            pytest.mark.c]
+        )
+    )
 )
 def test_optional_args_1d(language):
     @types( 'int[:]', 'int[:]')
@@ -162,12 +174,13 @@ def test_optional_args_1d(language):
     assert np.array_equal(x1, x2)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', [
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy array are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
+            pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
+            pytest.mark.c]
+        )
+    )
 )
 def test_optional_2d_F(language):
     @types('int32[:,:](order=F)', 'int32[:,:](order=F)')

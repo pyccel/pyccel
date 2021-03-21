@@ -9,10 +9,13 @@ that could be shown by pyccel.
 """
 import ast
 import sys
+import traceback as tb
 
 from collections import OrderedDict
 from os.path import basename
+
 from pyccel.ast.basic import Basic
+from pyccel.utilities.metaclasses import Singleton
 
 # ...
 #ERROR = 'error'
@@ -82,7 +85,8 @@ class ErrorInfo:
                  severity=None,
                  message='',
                  symbol=None,
-                 blocker=False):
+                 blocker=False,
+                 traceback=None):
         # The parser stage
         self.stage = stage
         # The source file that was the source of this error.
@@ -101,17 +105,20 @@ class ErrorInfo:
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
         self.blocker = blocker or (severity == 'fatal')
+        # The traceback at the moment that the error was raised
+        self.traceback = traceback
 
     def __str__(self):
 
-        pattern = '|{severity} [{stage}]: {filename}{location}| {message}{symbol}'
+        pattern = '{traceback}|{severity} [{stage}]: {filename}{location}| {message}{symbol}'
         info = {
             'stage'   : self.stage,
             'severity': _severity_registry[self.severity],
             'filename': self.filename,
             'location': '',
             'message' : self.message,
-            'symbol'  : ''
+            'symbol'  : '',
+            'traceback': self.traceback or ''
         }
 
         if self.line:
@@ -121,25 +128,15 @@ class ErrorInfo:
                 info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            info['symbol'] = ' ({})'.format(self.symbol)
+            if self.traceback:
+                info['symbol'] = ' ({})'.format(repr(self.symbol))
+            else:
+                info['symbol'] = ' ({})'.format(self.symbol)
 
         return pattern.format(**info)
 
 
-def _singleton(cls):
-    """
-    A Class representing a singleton. Python does not offer this pattern.
-    """
-    instances = {}
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls() # Line 5
-        return instances[cls]
-    return getinstance
-
-
-@_singleton
-class ErrorsMode:
+class ErrorsMode(metaclass = Singleton):
     """Developper or User mode.
     pyccel command line will set it.
     """
@@ -155,8 +152,7 @@ class ErrorsMode:
         self._mode = mode
 
 
-@_singleton
-class Errors:
+class Errors(metaclass = Singleton):
     """Container for compile errors.
     """
 
@@ -164,7 +160,7 @@ class Errors:
         self.error_info_map = None
         self._target = None
         self._parser_stage = None
-        self._mode = ErrorsMode().value
+        self._mode = ErrorsMode()
 
         self.initialize()
 
@@ -178,7 +174,7 @@ class Errors:
 
     @property
     def mode(self):
-        return self._mode
+        return self._mode.value
 
     def initialize(self):
         self.error_info_map = OrderedDict()
@@ -256,6 +252,10 @@ class Errors:
             line   = fst.lineno
             column = fst.col_offset
 
+        traceback = None
+        if self.mode == 'developer':
+            traceback = ''.join(tb.format_stack(limit=5))
+
         info = ErrorInfo(stage=self._parser_stage,
                          filename=filename,
                          line=line,
@@ -263,7 +263,8 @@ class Errors:
                          severity=severity,
                          message=message,
                          symbol=symbol,
-                         blocker=blocker)
+                         blocker=blocker,
+                         traceback=traceback)
 
         if verbose: print(info)
 

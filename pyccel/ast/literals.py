@@ -4,11 +4,11 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
-from sympy               import Float as sp_Float
+from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeString, default_precision)
+                                  NativeComplex, NativeString, default_precision, NativeReal)
 
 __all__ = (
     'LiteralTrue',
@@ -28,15 +28,17 @@ class Literal(PyccelAstNode):
     Represents a python literal
     This class is abstract and should be implemented for each dtype
     """
+    __slots__ = ('_precision',)
+    _attribute_nodes  = ()
     _rank      = 0
     _shape     = ()
-    _attribute_nodes  = ()
+    _order     = None
 
     def __init__(self, precision):
-        super().__init__()
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
+        super().__init__()
 
     @PyccelAstNode.precision.setter
     def precision(self, precision):
@@ -47,11 +49,8 @@ class Literal(PyccelAstNode):
     def python_value(self):
         """ Get python literal represented by this instance """
 
-    def __repr__(self):
-        return repr(self.python_value)
-
-    def _sympystr(self, printer):
-        return printer.doprint(self.python_value)
+    def __str__(self):
+        return str(self.python_value)
 
     def __eq__(self, other):
         if isinstance(other, PyccelAstNode):
@@ -63,8 +62,9 @@ class Literal(PyccelAstNode):
         return hash(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal):
+class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
+    __slots__ = ()
     _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
@@ -75,8 +75,9 @@ class LiteralTrue(Literal):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal):
+class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
+    __slots__ = ()
     _dtype     = NativeBool()
 
     def __init__(self, precision = default_precision['bool']):
@@ -89,52 +90,57 @@ class LiteralFalse(Literal):
 #------------------------------------------------------------------------------
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
+    __slots__ = ('_value',)
     _dtype     = NativeInteger()
 
     def __init__(self, value, precision = default_precision['integer']):
         super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
-        self.p = value
+        self._value = value
 
     @property
     def python_value(self):
-        return self.p
+        return self._value
 
     def __index__(self):
         return self.python_value
 
 #------------------------------------------------------------------------------
-class LiteralFloat(Literal, sp_Float):
+class LiteralFloat(Literal):
     """Represents a float literal in python"""
+    __slots__ = ('_value',)
     _dtype     = NativeReal()
-    def __new__(cls, value, *, precision = default_precision['float']):
-        return sp_Float.__new__(cls, value)
 
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
+        if isinstance(value, LiteralFloat):
+            self._value = value.python_value
+        else:
+            self._value = float(value)
 
     @property
     def python_value(self):
-        return float(self)
+        return self._value
 
 
 #------------------------------------------------------------------------------
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
+    __slots__ = ('_real_part','_imag_part')
     _dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
         if cls is LiteralImaginaryUnit:
-            return super().__new__(cls, real, imag)
+            return super().__new__(cls)
         real_part = cls._collect_python_val(real)
         imag_part = cls._collect_python_val(imag)
         if real_part == 0 and imag_part == 1:
             return LiteralImaginaryUnit()
         else:
-            return super().__new__(cls, real, imag)
+            return super().__new__(cls)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
         super().__init__(precision)
@@ -167,6 +173,7 @@ class LiteralComplex(Literal):
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
+    __slots__ = ()
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
@@ -180,10 +187,11 @@ class LiteralImaginaryUnit(LiteralComplex):
 #------------------------------------------------------------------------------
 class LiteralString(Literal):
     """Represents a string literal in python"""
+    __slots__ = ('_string',)
     _dtype     = NativeString()
-    _precision = 0
 
     def __init__(self, arg):
+        self._precision = 0
         super().__init__(self._precision)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
@@ -206,11 +214,12 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
-class Nil(Basic):
+class Nil(Basic, metaclass=Singleton):
 
     """
     class for None object in the code.
     """
+    __slots__ = ()
     _attribute_nodes = ()
 
     def __str__(self):
@@ -220,9 +229,10 @@ class Nil(Basic):
         return False
 
     def __eq__(self, other):
-        #TODO [EB 7.2.2021] Make Nil singleton. See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python method 3
-        #                   Blocked by issue 662
         return isinstance(other, Nil)
+
+    def __hash__(self):
+        return hash('Nil')+hash(None)
 
 #------------------------------------------------------------------------------
 
@@ -284,7 +294,7 @@ def convert_to_literal(value, dtype = None, precision = None):
     if isinstance(dtype, NativeInteger):
         literal_val = LiteralInteger(value, precision)
     elif isinstance(dtype, NativeReal):
-        literal_val = LiteralFloat(value, precision)
+        literal_val = LiteralFloat(value, precision=precision)
     elif isinstance(dtype, NativeComplex):
         literal_val = LiteralComplex(value.real, value.imag, precision)
     elif isinstance(dtype, NativeBool):

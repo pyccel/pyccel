@@ -17,7 +17,8 @@ class Product(Basic):
 
     arg : list, tuple
     """
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_elements',)
+    _attribute_nodes = ('_elements',)
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list)):
@@ -25,7 +26,7 @@ class Product(Basic):
         elif len(args) < 2:
             return args[0]
         else:
-            return super().__new__(cls, *args)
+            return super().__new__(cls)
 
     def __init__(self, *args):
         self._elements = args

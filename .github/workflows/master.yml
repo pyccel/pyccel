@@ -25,8 +25,10 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      - name: Test with pytest
+      - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
@@ -62,7 +64,11 @@ jobs:
         working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
-          python -m pytest -rx -m "not parallel and not c" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        working-directory: ./tests
+      - name: Serial python tests
+        run: |
+          python -m pytest -rx -m "not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: ND-Array tests
         run: |
@@ -88,5 +94,7 @@ jobs:
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Test with pytest
+      - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
