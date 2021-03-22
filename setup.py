@@ -41,13 +41,14 @@ install_requires = [
     'sympy>=1.2',
     'termcolor',
     'textx>=1.6',
+    'filelock'
 ]
 
 def setup_package():
     setup(packages=packages, \
           include_package_data=True, \
           install_requires=install_requires, \
-          entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel']}, \
+          entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel', 'pyccel-clean = pyccel.commands.pyccel_clean:pyccel_clean_command']}, \
           **setup_args)
 
 if __name__ == "__main__":
