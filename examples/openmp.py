@@ -12,7 +12,7 @@ arr3 = np.copy(arr)
 @types('int[:,:]','int')
 def openmp_ex1(arr, it):
     p = 0
-    #$ omp parallel num_threads(2) private(p, x, y, c_i, c_r, z_i, z_r, i)
+    #$ omp parallel num_threads(8) private(p, x, y, c_i, c_r, z_i, z_r, i, tmp)
     #$ omp for
     for p in range(0, (1000 * 1000)):
         x = int(p % 1000)
@@ -28,30 +28,38 @@ def openmp_ex1(arr, it):
             z_i = 2 * tmp * z_i + c_i
             i += 1
         if i != it:
-            arr[y,x] = 1
+            arr[y,x] = 2
     #$ omp end parallel
     "by pass issue"
 
-omp_f1 = epyccel(openmp_ex1, accelerator='openmp', language='fortran', verbose=True)
-#f1 = epyccel(openmp_ex1, language='c')
+omp_f1 = epyccel(openmp_ex1, accelerator='openmp', language='c')
+f1 = epyccel(openmp_ex1, language='c')
 
 start = time.time()
-omp_f1(arr1, 100000)
+omp_f1(arr1, 1000)
 end = time.time()
 omp_time = end - start
 
-#start = time.time()
-#f1(arr2, 100000)
-#end = time.time()
-#c_time = end - start
+start = time.time()
+f1(arr2, 1000)
+end = time.time()
+c_time = end - start
+
+start = time.time()
+openmp_ex1(arr3, 1000)
+end = time.time()
+py_time = end - start
 
 print("Time using OpenMP: ", omp_time)
-#print("Time without OpenMP: ", c_time)
-#openmp_ex1(arr3, 100)
+print("Time without using OpenMP: ", c_time)
+print("Time using pure Python: ", py_time)
 
+
+print(np.array_equal(arr1, arr3))
+print(np.array_equal(arr2, arr3))
 img1 = Image.frombytes('1', arr1.shape[::-1], np.packbits(arr1, 1))
-img1.show(title="C_OpenMP")
+#img1.show(title="C_OpenMP")
 
-#img2 = Image.frombytes('1', arr2.shape[::-1], np.packbits(arr2, 1))
+img2 = Image.frombytes('1', arr2.shape[::-1], np.packbits(arr2, 1))
 #img2.show(title="C")
 
