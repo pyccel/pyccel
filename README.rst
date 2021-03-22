@@ -210,7 +210,7 @@ Any required Python packages will be installed automatically from PyPI.
 Additional packages
 ===================
 
-In order to run the unit tests and to get a coverage report, four additional Python packages should be installed:::
+In order to run the unit tests and to get a coverage report, five additional Python packages should be installed:::
 
   pip3 install --user scipy
   pip3 install --user mpi4py
