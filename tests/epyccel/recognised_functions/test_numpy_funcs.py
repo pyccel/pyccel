@@ -60,6 +60,9 @@ else:
     RTOL = 1e-14
     ATOL = 1e-15
 
+RTOL32 = 1e-6
+ATOL32 = 1e-7
+
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise
     """
@@ -5963,3 +5966,486 @@ def test_numpy_prod_array_like_2d(language):
 
     assert (f_complex64(cmplx64) == get_prod(cmplx64))
     assert (f_complex128(cmplx128) == get_prod(cmplx128))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
+    )
+)
+
+def test_numpy_norm_scalar(language):
+
+    @types('bool')
+    @types('int')
+    @types('int8')
+    @types('int16')
+    @types('int32')
+    @types('int64')
+    @types('float')
+    @types('float32')
+    @types('float64')
+    @types('complex64')
+    @types('complex128')
+    def get_norm(a):
+        from numpy.linalg import norm
+        b = norm(a)
+        return b
+
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(low=-(abs(min_float)**(1/2)), high=abs(max_float)**(1/2))
+    fl32 = uniform(low=-(abs(min_float32)**(1/2)), high=abs(max_float32)**(1/2))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-(abs(min_float64)**(1/2)), high=abs(max_float64)**(1/2))
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / 2)**(1/2)), high=((abs(max_float32) / 2)**(1/2))) + \
+                            uniform(low=-((abs(max_float32) / 2)**(1/2)), high=((abs(max_float32) / 2)**(1/2))) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=-((abs(min_float32) / 2)**(1/2)), high=(abs(max_float64) / 2)**(1/2)) + \
+               uniform(low=-((abs(min_float64) / 2)**(1/2)), high=(abs(max_float64) / 2)**(1/2)) * 1j
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    f_bl_true_output = epyccel_func(True)
+    test_bool_true_output = get_norm(True)
+
+    f_bl_false_output = epyccel_func(False)
+    test_bool_false_output = get_norm(False)
+
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
+
+    assert matching_types(f_bl_false_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+
+    f_integer_output = epyccel_func(integer)
+    test_int_output  = get_norm(integer)
+
+    assert np.isclose(f_integer_output, test_int_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer_output, test_int_output)
+
+    f_integer8_output = epyccel_func(integer8)
+    test_int8_output = get_norm(integer8)
+
+    assert np.isclose(f_integer8_output, test_int8_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer8_output, test_int8_output)
+
+    f_integer16_output = epyccel_func(integer16)
+    test_int16_output = get_norm(integer16)
+
+    assert np.isclose(f_integer16_output, test_int16_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer16_output, test_int16_output)
+
+    f_integer32_output = epyccel_func(integer32)
+    test_int32_output = get_norm(integer32)
+
+    assert np.isclose(f_integer32_output, test_int32_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer32_output, test_int32_output)
+
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_norm(integer64)
+
+    assert np.isclose(f_integer64_output, test_int64_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_integer64_output, test_int64_output)
+
+    f_fl_output = epyccel_func(fl)
+    test_float_output = get_norm(fl)
+
+    assert np.isclose(f_fl_output, test_float_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_fl_output, test_float_output)
+
+    f_fl32_output = epyccel_func(fl32)
+    test_float32_output = get_norm(fl32)
+
+    assert np.isclose(f_fl32_output, test_float32_output, rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f_fl32_output, test_float32_output)
+
+    f_fl64_output = epyccel_func(fl64)
+    test_float64_output = get_norm(fl64)
+
+    assert np.isclose(f_fl64_output, test_float64_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_fl64_output, test_float64_output)
+
+    f_complex64_output = epyccel_func(cmplx64)
+    test_complex64_output = get_norm(cmplx64)
+
+    assert np.isclose(f_complex64_output, test_complex64_output, rtol=RTOL32, atol=ATOL32)
+    assert matching_types(f_complex64_output, test_complex64_output)
+
+    f_complex128_output = epyccel_func(cmplx128)
+    test_complex128_output = get_norm(cmplx128)
+
+    assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
+    assert matching_types(f_complex128_output, test_complex128_output)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
+    )
+)
+
+def test_numpy_norm_array_like_1d(language):
+
+    @types('bool[:]')
+    @types('int[:]')
+    @types('int8[:]')
+    @types('int16[:]')
+    @types('int32[:]')
+    @types('int64[:]')
+    @types('float[:]')
+    @types('float32[:]')
+    @types('float64[:]')
+    @types('complex64[:]')
+    @types('complex128[:]')
+    def get_norm(arr):
+        from numpy.linalg import norm
+        a = norm(arr)
+        return a
+
+    size = 5
+
+    bl = randint(0, 1, size=size, dtype= bool)
+
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(low=-((abs(min_float) / size)**(1/2)), high=(abs(max_float) / size)**(1/2), size=size)
+    fl32 = uniform(low=-((abs(min_float32) / size)**(1/2)), high=(abs(max_float32) / size)**(1/2), size=size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-((abs(min_float64) / size)**(1/2)), high=(abs(max_float64) / size)**(1/2), size=size)
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size * 2))**(1/2)), high=(abs(max_float32) / (size * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size * 2))**(1/2)), high=(abs(max_float32) / (size * 2))**(1/2), size=size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=-((abs(min_float64) / (size * 2))**(1/2)), high=(abs(max_float64) / (size * 2))**(1/2), size=size) + \
+              uniform(low=-((abs(min_float64) / (size * 2))**(1/2)), high=(abs(max_float64) / (size * 2))**(1/2), size=size) * 1j
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    assert np.isclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
+    )
+)
+
+def test_numpy_norm_array_like_2d(language):
+
+    @types('bool[:,:]')
+    @types('int[:,:]')
+    @types('int8[:,:]')
+    @types('int16[:,:]')
+    @types('int32[:,:]')
+    @types('int64[:,:]')
+    @types('float[:,:]')
+    @types('float32[:,:]')
+    @types('float64[:,:]')
+    @types('complex64[:,:]')
+    @types('complex128[:,:]')
+    def get_norm(arr):
+        from numpy.linalg import norm
+        from numpy import shape
+        a = norm(arr)
+        return a
+
+    size = (2, 5)
+
+    bl = randint(0, 1, size=size, dtype= bool)
+
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(low=-((abs(min_float) / (size[0] * size[1]))**(1/2)), high=(abs(max_float) / (size[0] * size[1]))**(1/2), size=size)
+    fl32 = uniform(low=-((abs(min_float32) / (size[0] * size[1]))**(1/2)), high=(abs(max_float32) / (size[0] * size[1]))**(1/2), size=size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1]))**(1/2), size=size)
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+              uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    assert np.allclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
+    )
+)
+
+def test_numpy_norm_array_like_2d_fortran_order(language):
+
+    @types('bool[:,:](order=F)')
+    @types('int[:,:](order=F)')
+    @types('int8[:,:](order=F)')
+    @types('int16[:,:](order=F)')
+    @types('int32[:,:](order=F)')
+    @types('int64[:,:](order=F)')
+    @types('float[:,:](order=F)')
+    @types('float32[:,:](order=F)')
+    @types('float64[:,:](order=F)')
+    @types('complex64[:,:](order=F)')
+    @types('complex128[:,:](order=F)')
+    def get_norm(arr):
+        from numpy.linalg import norm
+        from numpy import shape
+        a = norm(arr, axis=0)
+        b = norm(arr, axis=1)
+        sa = shape(a)
+        sb = shape(b)
+        return len(sb), sb[0],len(sa), sa[0], a[0], b[0]
+
+    size = (2, 5)
+
+    bl = randint(0, 1, size=size, dtype= bool)
+
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(low=-((abs(min_float) / (size[0] * size[1]))**(1/2)), high=(abs(max_float) / (size[0] * size[1]))**(1/2), size=size)
+    fl32 = uniform(low=-((abs(min_float32) / (size[0] * size[1]))**(1/2)), high=(abs(max_float32) / (size[0] * size[1]))**(1/2), size=size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1]))**(1/2), size=size)
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+              uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    #re-ordering to Fortran order
+    bl = np.ndarray(size, buffer=bl, order='F', dtype=bool)
+    integer8 = np.ndarray(size, buffer=integer8, order='F', dtype=np.int8)
+    integer16 = np.ndarray(size, buffer=integer16, order='F', dtype=np.int16)
+    integer = np.ndarray(size, buffer=integer, order='F', dtype=np.int)
+    integer32 = np.ndarray(size, buffer=integer32, order='F', dtype=np.int32)
+    integer64 = np.ndarray(size, buffer=integer64, order='F', dtype=np.int64)
+    fl = np.ndarray(size, buffer=fl, order='F', dtype=np.float)
+    fl32 = np.ndarray(size, buffer=fl32, order='F', dtype=np.float32)
+    fl64 = np.ndarray(size, buffer=fl64, order='F', dtype=np.float64)
+    cmplx64 = np.ndarray(size, buffer=cmplx64, order='F', dtype=np.complex64)
+    cmplx128 = np.ndarray(size, buffer=cmplx128, order='F', dtype=np.complex128)
+
+    assert np.allclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
+    )
+)
+
+def test_numpy_norm_array_like_3d(language):
+
+    @types('bool[:,:,:]')
+    @types('int[:,:,:]')
+    @types('int8[:,:,:]')
+    @types('int16[:,:,:]')
+    @types('int32[:,:,:]')
+    @types('int64[:,:,:]')
+    @types('float[:,:,:]')
+    @types('float32[:,:,:]')
+    @types('float64[:,:,:]')
+    @types('complex64[:,:,:]')
+    @types('complex128[:,:,:]')
+    def get_norm(arr):
+        from numpy.linalg import norm
+        a = norm(arr)
+        return a
+
+    size = (2, 5, 5)
+
+    bl = randint(0, 1, size=size, dtype= bool)
+
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(low=-((abs(min_float) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float) / (size[0] * size[1] * size[2]))**(1/2), size=size)
+    fl32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2]))**(1/2), size=size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2]))**(1/2), size=size)
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+              uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    assert np.allclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [pytest.mark.python])
+    )
+)
+
+def test_numpy_norm_array_like_3d_fortran_order(language):
+
+    @types('bool[:,:,:](order=F)')
+    @types('int[:,:,:](order=F)')
+    @types('int8[:,:,:](order=F)')
+    @types('int16[:,:,:](order=F)')
+    @types('int32[:,:,:](order=F)')
+    @types('int64[:,:,:](order=F)')
+    @types('float[:,:,:](order=F)')
+    @types('float32[:,:,:](order=F)')
+    @types('float64[:,:,:](order=F)')
+    @types('complex64[:,:,:](order=F)')
+    @types('complex128[:,:,:](order=F)')
+    def get_norm(arr):
+        from numpy.linalg import norm
+        from numpy import shape
+        a = norm(arr, axis=0)
+        b = norm(arr, axis=1)
+        c = norm(arr, axis=2)
+        sa = shape(a)
+        sb = shape(b)
+        sc = shape(c)
+        return len(sc), sc[0],len(sb), sb[0],len(sa), sa[0], a[0][0], b[0][0], c[0][0]
+
+    size = (2, 5, 5)
+
+    bl = randint(0, 1, size=size, dtype= bool)
+
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(low=-((abs(min_float) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float) / (size[0] * size[1] * size[2]))**(1/2), size=size)
+    fl32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2]))**(1/2), size=size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2]))**(1/2), size=size)
+
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+              uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+
+    epyccel_func = epyccel(get_norm, language=language)
+
+    #re-ordering to Fortran order
+    bl = np.ndarray(size, buffer=bl, order='F', dtype=bool)
+    integer8 = np.ndarray(size, buffer=integer8, order='F', dtype=np.int8)
+    integer16 = np.ndarray(size, buffer=integer16, order='F', dtype=np.int16)
+    integer = np.ndarray(size, buffer=integer, order='F', dtype=np.int)
+    integer32 = np.ndarray(size, buffer=integer32, order='F', dtype=np.int32)
+    integer64 = np.ndarray(size, buffer=integer64, order='F', dtype=np.int64)
+    fl = np.ndarray(size, buffer=fl, order='F', dtype=np.float)
+    fl32 = np.ndarray(size, buffer=fl32, order='F', dtype=np.float32)
+    fl64 = np.ndarray(size, buffer=fl64, order='F', dtype=np.float64)
+    cmplx64 = np.ndarray(size, buffer=cmplx64, order='F', dtype=np.complex64)
+    cmplx128 = np.ndarray(size, buffer=cmplx128, order='F', dtype=np.complex128)
+
+    assert np.allclose(epyccel_func(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
