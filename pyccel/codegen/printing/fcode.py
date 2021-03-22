@@ -44,11 +44,11 @@ from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
                                   PythonZip, PythonFloat, PythonTuple)
-from pyccel.ast.builtins  import PythonComplex, PythonBool
+from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
@@ -657,13 +657,18 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-
-        if expr.dim:
-            rhs = 'Norm2({},{})'.format(self._print(expr.arg),self._print(expr.dim))
+        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
+        if expr.axis:
+            axis = expr.axis
+            if expr.order != 'F':
+                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis)
+            else:
+                axis = LiteralInteger(expr.axis.python_value + 1)
+            code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))
         else:
-            rhs = 'Norm2({})'.format(self._print(expr.arg))
+            code = 'Norm2({})'.format(self._print(arg))
 
-        return rhs
+        return code
 
     def _print_NumpyLinspace(self, expr):
 
