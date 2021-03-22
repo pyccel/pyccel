@@ -339,7 +339,8 @@ def omp_tasks(x):
         #$ omp end task
         #$ omp taskwait
         return i + j
-    #$ omp parallel
+
+    #$ omp parallel shared(x)
     #$ omp single
     m = fib(x)
     #$ omp end single
