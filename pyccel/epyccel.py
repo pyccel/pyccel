@@ -67,11 +67,11 @@ def epyccel_seq(function_or_module, *,
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
 
-        tag = random_string(8)
+        tag = random_string(12)
         module_name = 'mod_{}'.format(tag)
 
         while module_name in sys.modules.keys():
-            tag = random_string(8)
+            tag = random_string(12)
             module_name = 'mod_{}'.format(tag)
 
         pymod_filename = '{}.py'.format(module_name)
@@ -84,10 +84,10 @@ def epyccel_seq(function_or_module, *,
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
 
-        tag = random_string(8)
+        tag = random_string(12)
         module_import_prefix = pymod.__name__ + '_'
         while module_import_prefix + tag in sys.modules.keys():
-            tag = random_string(n=8)
+            tag = random_string(12)
 
         module_name = pymod.__name__.split('.')[-1] + '_' + tag
 
@@ -277,6 +277,9 @@ def epyccel( python_function_or_module, **kwargs ):
             if comm.rank != root:
                 folder = os.path.split(mod_path)[0]
                 sys.path.insert(0, folder)
+                # http://ballingt.com/import-invalidate-caches
+                # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
+                importlib.invalidate_caches()
                 mod = importlib.import_module(mod_name)
                 sys.path.remove(folder)
                 fun = getattr(mod, fun_name) if fun_name else None
