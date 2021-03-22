@@ -494,6 +494,14 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
+            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
+                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                if dtype is NativeInteger():
+                    return LiteralInteger(arg1.python_value + arg2.python_value, precision=precision)
+                if dtype is NativeReal():
+                    return LiteralFloat(arg1.python_value + arg2.python_value, precision=precision)
+                if dtype is NativeComplex():
+                    return LiteralComplex(arg1.python_value + arg2.python_value, precision=precision)
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
@@ -559,6 +567,14 @@ class PyccelMinus(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
+            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
+                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                if dtype is NativeInteger():
+                    return LiteralInteger(arg1.python_value - arg2.python_value, precision=precision)
+                if dtype is NativeReal():
+                    return LiteralFloat(arg1.python_value - arg2.python_value, precision=precision)
+                if dtype is NativeComplex():
+                    return LiteralComplex(arg1.python_value - arg2.python_value, precision=precision)
         if isinstance(arg1, LiteralFloat) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):

@@ -430,14 +430,14 @@ class CCodePrinter(CodePrinter):
             return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
         else:
             return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()), simplify = True)))
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
             value = self._print(expr.internal_var)
         else:
             value = self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()), simplify = True)))
         type_name = self.find_in_dtype_registry('complex', expr.precision)
         return '({0})({1})'.format(type_name, value)
 
@@ -807,7 +807,7 @@ class CCodePrinter(CodePrinter):
         allow_negative_indexes = base.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
-                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
             else:
                 #indices of indexedElement of len==1 shouldn't be a tuple
                 if isinstance(ind, tuple) and len(ind) == 1:
@@ -815,7 +815,7 @@ class CCodePrinter(CodePrinter):
                 if allow_negative_indexes and \
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
-                        PyccelAdd(base_shape[i], ind), ind)
+                        PyccelAdd(base_shape[i], ind, simplify = True), ind)
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
@@ -828,7 +828,7 @@ class CCodePrinter(CodePrinter):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
                     else:
-                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
@@ -881,16 +881,16 @@ class CCodePrinter(CodePrinter):
 
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, start.args[0])
+            start = PyccelMinus(array_size, start.args[0], simplify = True)
         elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                            PyccelMinus(array_size, start), start)
+                            PyccelMinus(array_size, start, simplify = True), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, stop.args[0])
+            stop = PyccelMinus(array_size, stop.args[0], simplify = True)
         elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                            PyccelMinus(array_size, stop), stop)
+                            PyccelMinus(array_size, stop, simplify = True), stop)
 
         # steps in slices
         step = _slice.step
@@ -900,13 +900,13 @@ class CCodePrinter(CodePrinter):
 
         # negative step in slice
         elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, LiteralInteger(1)) if _slice.start is None else start
+            start = PyccelMinus(array_size, LiteralInteger(1), simplify = True) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
 
         # variable step in slice
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
             og_start = start
-            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1)))
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1), simplify = True))
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
 
         return Slice(start, stop, step)
