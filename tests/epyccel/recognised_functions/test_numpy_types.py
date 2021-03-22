@@ -174,8 +174,8 @@ def get_int8(a):
     b = int8(a)
     return b
 
-@pytest.mark.parametrize( 'get_int', [get_int, get_int64, get_int32, get_int16, get_int8])
-def test_numpy_int_scalar(language, get_int):
+@pytest.mark.parametrize( 'function_boundaries', [(get_int, min_int, max_int), (get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),  (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)])
+def test_numpy_int_scalar(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -183,36 +183,17 @@ def test_numpy_int_scalar(language, get_int):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_int, max_int)
-    fl32 = uniform(min_int, max_int)
+    get_int = function_boundaries[0]
+    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # ffb stands for 'from function_boundaries'
+    max_int_ffb = function_boundaries[1]
+    min_int_ffb = function_boundaries[2]
+
+    fl = uniform(min_int_ffb, max_int_ffb)
+    fl32 = uniform(min_int_ffb, max_int_ffb)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_int, max_int)
-
-    if get_int == get_int8: # pylint: disable=comparison-with-callable
-        fl = uniform(min_int8, max_int8)
-        fl32 = uniform(min_int8, max_int8)
-        fl32 = np.float32(fl32)
-        fl64 = uniform(min_int8, max_int8)
-
-    if get_int == get_int16: # pylint: disable=comparison-with-callable
-        fl = uniform(min_int16, max_int16)
-        fl32 = uniform(min_int16, max_int16)
-        fl32 = np.float32(fl32)
-        fl64 = uniform(min_int16, max_int16)
-
-    if get_int == get_int32: # pylint: disable=comparison-with-callable
-        fl = uniform(min_int32, max_int32)
-        fl32 = uniform(min_int32, max_int32)
-        fl32 = np.float32(fl32)
-        fl64 = uniform(min_int32, max_int32)
-
-    if get_int == get_int64: # pylint: disable=comparison-with-callable
-        fl = uniform(min_int64, max_int64)
-        fl32 = uniform(min_int64, max_int64)
-        fl32 = np.float32(fl64)
-        fl64 = uniform(min_int64, max_int64)
-
-
+    fl64 = uniform(min_int_ffb, max_int_ffb)
 
     epyccel_func = epyccel(get_int, language=language)
 
