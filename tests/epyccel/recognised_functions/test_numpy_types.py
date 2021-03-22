@@ -174,7 +174,8 @@ def get_int8(a):
     b = int8(a)
     return b
 
-@pytest.mark.parametrize( 'function_boundaries', [(get_int, min_int, max_int), (get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),  (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)])
+@pytest.mark.parametrize( 'function_boundaries', [(get_int, min_int, max_int), (get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),\
+                                                 (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)])
 def test_numpy_int_scalar(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -253,11 +254,11 @@ def test_numpy_int_scalar(language, function_boundaries):
         assert f_fl64_output == test_float64_output
         assert matching_types(f_fl64_output, test_float64_output)
 
-    f_fl32_output = epyccel_func(fl32)
-    test_float32_output = get_int(fl32)
+        f_fl32_output = epyccel_func(fl32)
+        test_float32_output = get_int(fl32)
 
-    assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output)
+        assert f_fl32_output == test_float32_output
+        assert matching_types(f_fl32_output, test_float32_output)
 
 @types('bool[:]')
 @types('int[:]')
