@@ -326,9 +326,7 @@ def execute_pyccel(fname, *,
                     # remove library folder to avoid missing files and copy
                     # new one from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-                    lock_path = lib_dest_path + '.lock'
-                    lock = FileLock(lock_path)
-                    with lock:
+                    with FileLock(lib_dest_path + '.lock'):
                         if not os.path.exists(lib_dest_path):
                             shutil.copytree(lib_path, lib_dest_path)
 
