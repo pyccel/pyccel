@@ -351,9 +351,7 @@ def execute_pyccel(fname, *,
                                             includes=[lib_dest_path])
                     try:
                         for f,l in zip(source_files, internal_modules):
-                            lock = FileLock(l + '.lock', timeout=1)
-                            print("Locking ", l + '.lock')
-                            with lock:
+                            with FileLock(l + '.lock'):
                                 compile_files(f, f90exec, flags,
                                                 binary=None,
                                                 verbose=verbose,
