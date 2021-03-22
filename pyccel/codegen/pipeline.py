@@ -278,7 +278,6 @@ def execute_pyccel(fname, *,
     internal_libs_path = []
     internal_libs_files = []
     for parser, module_name in zip(parsers, module_names):
-        print(module_name)
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
         try:
