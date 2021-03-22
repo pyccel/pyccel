@@ -9,7 +9,6 @@ import subprocess
 import os
 import glob
 import warnings
-import time
 from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module
@@ -136,7 +135,6 @@ def create_shared_library(codegen,
         for l in locks:
             l.acquire()
         try:
-            time.sleep(10)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             out, err = p.communicate()
         finally:
