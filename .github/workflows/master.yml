@@ -63,7 +63,7 @@ jobs:
       # This is split into many tests as the test raising an error must be the last line in a multi-line powershell command
       - name: Serial C tests run in parallel
         run: |
-          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays -x
+          python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial C tests run in serial
         run: |
