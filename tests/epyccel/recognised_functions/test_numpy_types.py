@@ -450,7 +450,9 @@ def test_numpy_int_array_like_2d(language, get_int):
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl32 = uniform(min_float32 / 2, min_float32 / 2, size = size)
+    if language == 'fortran' and get_int == get_int16_arr_2d: # pylint: disable=comparison-with-callable
+        fl32 = uniform(min_int16, max_int16, size = size)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
@@ -466,9 +468,8 @@ def test_numpy_int_array_like_2d(language, get_int):
         assert epyccel_func(integer64) == get_int(integer64)
         assert epyccel_func(fl) == get_int(fl)
         assert epyccel_func(fl64) == get_int(fl64)
-        # Python returns always -32768 wich is less than min_int8, epyccel function returns 0.
-        if get_int != get_int16_arr_2d: # pylint: disable=comparison-with-callable
-            assert epyccel_func(fl32) == get_int(fl32)
+        # Python returns always -32768, epyccel function returns 0.
+        assert epyccel_func(fl32) == get_int(fl32)
 
 @types('bool')
 @types('int')
