@@ -331,9 +331,9 @@ def get_int8_arr_1d(arr):
         )
     )
 )
-
-@pytest.mark.parametrize( 'get_int', [get_int64_arr_1d, get_int32_arr_1d, get_int16_arr_1d, get_int8_arr_1d])
-def test_numpy_int_array_like_1d(language, get_int):
+@pytest.mark.parametrize( 'function_boundaries', [(get_int64_arr_1d, min_int64, max_int64), (get_int32_arr_1d, min_int32, max_int32),\
+                                                 (get_int16_arr_1d, min_int16, max_int16), (get_int8_arr_1d, min_int8, max_int8)])
+def test_numpy_int_array_like_1d(language, function_boundaries):
 
     size = 5
 
@@ -345,10 +345,17 @@ def test_numpy_int_array_like_1d(language, get_int):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    get_int = function_boundaries[0]
+    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # ffb stands for 'from function_boundaries'
+    max_int_ffb = function_boundaries[1]
+    min_int_ffb = function_boundaries[2]
+
+    fl = uniform(min_int_ffb, max_int_ffb, size=size)
+    fl32 = uniform(min_int_ffb, max_int_ffb, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_int_ffb, max_int_ffb, size=size)
 
     epyccel_func = epyccel(get_int, language=language)
 
@@ -436,8 +443,9 @@ def get_int8_arr_2d(arr):
     )
 )
 
-@pytest.mark.parametrize( 'get_int', [get_int64_arr_2d, get_int32_arr_2d, get_int16_arr_2d, get_int8_arr_2d])
-def test_numpy_int_array_like_2d(language, get_int):
+@pytest.mark.parametrize( 'function_boundaries', [(get_int64_arr_2d, min_int64, max_int64), (get_int32_arr_2d, min_int32, max_int32),\
+                                                 (get_int16_arr_2d, min_int16, max_int16), (get_int8_arr_2d, min_int8, max_int8)])
+def test_numpy_int_array_like_2d(language, function_boundaries):
 
     size = (2, 5)
 
@@ -449,12 +457,17 @@ def test_numpy_int_array_like_2d(language, get_int):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, min_float32 / 2, size = size)
-    if language == 'fortran' and get_int == get_int16_arr_2d: # pylint: disable=comparison-with-callable
-        fl32 = uniform(min_int16, max_int16, size = size)
+    get_int = function_boundaries[0]
+    # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
+    # we need to keep min_int/max_int as they are, and make different names for those that come from function_boundries
+    # ffb stands for 'from function_boundaries'
+    max_int_ffb = function_boundaries[1]
+    min_int_ffb = function_boundaries[2]
+
+    fl = uniform(min_int_ffb, max_int_ffb, size=size)
+    fl32 = uniform(min_int_ffb, max_int_ffb, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_int_ffb, max_int_ffb, size=size)
 
     epyccel_func = epyccel(get_int, language=language)
 
@@ -468,7 +481,6 @@ def test_numpy_int_array_like_2d(language, get_int):
         assert epyccel_func(integer64) == get_int(integer64)
         assert epyccel_func(fl) == get_int(fl)
         assert epyccel_func(fl64) == get_int(fl64)
-        # Python returns always -32768, epyccel function returns 0.
         assert epyccel_func(fl32) == get_int(fl32)
 
 @types('bool')
