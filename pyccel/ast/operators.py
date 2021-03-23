@@ -501,7 +501,8 @@ class PyccelAdd(PyccelArithmeticOperator):
                 if dtype is NativeReal():
                     return LiteralFloat(arg1.python_value + arg2.python_value, precision=precision)
                 if dtype is NativeComplex():
-                    return LiteralComplex(arg1.python_value + arg2.python_value, precision=precision)
+                    result = arg1.python_value - arg2.python_value
+                    return LiteralComplex(result.real, result.imag, precision=precision)
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
@@ -574,7 +575,8 @@ class PyccelMinus(PyccelArithmeticOperator):
                 if dtype is NativeReal():
                     return LiteralFloat(arg1.python_value - arg2.python_value, precision=precision)
                 if dtype is NativeComplex():
-                    return LiteralComplex(arg1.python_value - arg2.python_value, precision=precision)
+                    result = arg1.python_value - arg2.python_value
+                    return LiteralComplex(result.real, result.imag, precision=precision)
         if isinstance(arg1, LiteralFloat) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):

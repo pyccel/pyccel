@@ -430,14 +430,14 @@ class CCodePrinter(CodePrinter):
             return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
         else:
             return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                            PyccelMul(expr.imag, LiteralImaginaryUnit()), simplify = True)))
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
             value = self._print(expr.internal_var)
         else:
             value = self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                            PyccelMul(expr.imag, LiteralImaginaryUnit()), simplify = True)))
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
         type_name = self.find_in_dtype_registry('complex', expr.precision)
         return '({0})({1})'.format(type_name, value)
 

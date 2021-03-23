@@ -980,7 +980,7 @@ class FCodePrinter(CodePrinter):
                             shape.append(i.stop)
                     elif i.stop is None:
                         if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
-                            shape.append(PyccelMinus(s, i.start), simplify = True)
+                            shape.append(PyccelMinus(s, i.start, simplify = True))
                     else:
                         shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, LiteralInteger(1), simplify = True), simplify = True))
 
@@ -1740,11 +1740,11 @@ class FCodePrinter(CodePrinter):
         like   = expr.like
 
         if isinstance(op, AddOp):
-            rhs = PyccelAdd(lhs, rhs, simplify = True)
+            rhs = PyccelAdd(lhs, rhs)
         elif isinstance(op, MulOp):
             rhs = PyccelMul(lhs, rhs)
         elif isinstance(op, SubOp):
-            rhs = PyccelMinus(lhs, rhs, simplify = True)
+            rhs = PyccelMinus(lhs, rhs)
         # TODO fix bug with division of integers
         elif isinstance(op, DivOp):
             rhs = PyccelDiv(lhs, rhs)
@@ -1767,7 +1767,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr.step, PyccelUnarySub):
                 stop = PyccelAdd(expr.stop, LiteralInteger(1), simplify = True)
             else:
-                stop = PyccelMinus(expr.stop, LiteralInteger(1)), simplify = True
+                stop = PyccelMinus(expr.stop, LiteralInteger(1), simplify = True)
         else:
             stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
                                      PyccelMinus(expr.stop, LiteralInteger(1), simplify = True),
