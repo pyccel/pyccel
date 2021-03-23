@@ -494,12 +494,20 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            else:
                 dtype, precision = cls._calculate_dtype(arg1, arg2)
                 if dtype is NativeInteger():
-                    return LiteralInteger(arg1.python_value + arg2.python_value, precision=precision)
+                    result = arg1.python_value + arg2.python_value
+                    if result >= 0:
+                        return LiteralInteger(result, precision=precision)
+                    else:
+                        return PyccelUnarySub(LiteralInteger(-result, precision=precision))
                 if dtype is NativeReal():
-                    return LiteralFloat(arg1.python_value + arg2.python_value, precision=precision)
+                    result = arg1.python_value + arg2.python_value
+                    if result >= 0:
+                        return LiteralFloat(result, precision=precision)
+                    else:
+                        return PyccelUnarySub(LiteralFloat(-result, precision=precision))
                 if dtype is NativeComplex():
                     result = arg1.python_value - arg2.python_value
                     return LiteralComplex(result.real, result.imag, precision=precision)
@@ -568,12 +576,20 @@ class PyccelMinus(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
-            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
+            else:
                 dtype, precision = cls._calculate_dtype(arg1, arg2)
                 if dtype is NativeInteger():
-                    return LiteralInteger(arg1.python_value - arg2.python_value, precision=precision)
+                    result = arg1.python_value - arg2.python_value
+                    if result >= 0:
+                        return LiteralInteger(result, precision=precision)
+                    else:
+                        return PyccelUnarySub(LiteralInteger(-result, precision=precision))
                 if dtype is NativeReal():
-                    return LiteralFloat(arg1.python_value - arg2.python_value, precision=precision)
+                    result = arg1.python_value - arg2.python_value
+                    if result >= 0:
+                        return LiteralFloat(result, precision=precision)
+                    else:
+                        return PyccelUnarySub(LiteralFloat(-result, precision=precision))
                 if dtype is NativeComplex():
                     result = arg1.python_value - arg2.python_value
                     return LiteralComplex(result.real, result.imag, precision=precision)
