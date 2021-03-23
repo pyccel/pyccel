@@ -11,6 +11,7 @@ import sys
 import os
 import string
 import random
+from filelock import FileLock, Timeout
 
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
@@ -48,6 +49,56 @@ def get_source_function(func):
     return code
 
 #==============================================================================
+def get_unique_name(prefix, path):
+    """
+    Get a unique name based on the prefix
+    which does not coincide with a module which
+    already exists and is not being created by
+    another thread
+
+    Parameters
+    ----------
+    prefix : str
+             The starting string of the random name
+    path   : str
+             The folder where the lock file should be saved
+
+    Returns
+    -------
+    module_name : str
+                  A unique name for the new module
+    module_lock : FileLock
+                  A file lock preventing other threads
+                  from creating a module with the same name
+    """
+    module_import_prefix = prefix + '_'
+
+    # Find an unused name
+    tag = random_string(12)
+    module_name = module_import_prefix + tag
+
+    while module_name in sys.modules.keys():
+        tag = random_string(12)
+        module_name = module_import_prefix + tag
+
+    module_name = module_name.split('.')[-1] + '_' + tag
+
+    path = os.path.join(path, '__epyccel__')
+
+    # Create new directories if not existing
+    os.makedirs(path, exist_ok=True)
+
+    # Ensure that the name is not in use by another thread
+    lock = FileLock(os.path.join(path, module_name)+'.lock')
+    try:
+        lock.acquire(timeout=0.1)
+        if module_name in sys.modules.keys():
+            raise Timeout("Newly created collision")
+    except Timeout:
+        return get_unique_name(prefix)
+    return module_name, lock
+
+#==============================================================================
 def epyccel_seq(function_or_module, *,
                 language     = None,
                 compiler     = None,
@@ -67,99 +118,94 @@ def epyccel_seq(function_or_module, *,
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
 
-        tag = random_string(12)
-        module_name = 'mod_{}'.format(tag)
+        dirpath = os.getcwd()
 
-        while module_name in sys.modules.keys():
-            tag = random_string(12)
-            module_name = 'mod_{}'.format(tag)
-
-        pymod_filename = '{}.py'.format(module_name)
-        pymod_filepath = os.path.abspath(pymod_filename)
+        module_name, module_lock = get_unique_name('mod', dirpath)
 
     elif isinstance(function_or_module, ModuleType):
         pymod = function_or_module
-        pymod_filepath = pymod.__file__
-        pymod_filename = os.path.basename(pymod_filepath)
+        dirpath = os.path.dirname(pymod.__file__)
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
 
-        tag = random_string(12)
-        module_import_prefix = pymod.__name__ + '_'
-        while module_import_prefix + tag in sys.modules.keys():
-            tag = random_string(12)
-
-        module_name = pymod.__name__.split('.')[-1] + '_' + tag
+        module_name, module_lock = get_unique_name(pymod.__name__, dirpath)
 
     else:
         raise TypeError('> Expecting a FunctionType or a ModuleType')
-    # ...
 
-    # Store current directory
-    base_dirpath = os.getcwd()
-
-    # Define working directory 'folder'
-    if folder is None:
-        folder = os.path.dirname(pymod_filepath)
-    else:
-        folder = os.path.abspath(folder)
-
-    # Define directory name and path for epyccel files
-    epyccel_dirname = '__epyccel__'
-    epyccel_dirpath = os.path.join(folder, epyccel_dirname)
-
-    # Create new directories if not existing
-    os.makedirs(folder, exist_ok=True)
-    os.makedirs(epyccel_dirpath, exist_ok=True)
-
-    # Change working directory to '__epyccel__'
-    os.chdir(epyccel_dirpath)
-
-    # Store python file in '__epyccel__' folder, so that execute_pyccel can run
-    with open(pymod_filename, 'w') as f:
-        f.writelines(code)
-
+    # Try is necessary to ensure lock is released
     try:
-        # Generate shared library
-        execute_pyccel(pymod_filename,
-                       verbose     = verbose,
-                       language    = language,
-                       compiler    = compiler,
-                       mpi_compiler= mpi_compiler,
-                       fflags      = fflags,
-                       includes    = includes,
-                       libdirs     = libdirs,
-                       modules     = modules,
-                       libs        = libs,
-                       debug       = debug,
-                       accelerator = accelerator,
-                       output_name = module_name)
+        pymod_filename = '{}.py'.format(module_name)
+        pymod_filepath = os.path.join(dirpath, pymod_filename)
+        # ...
+
+        # Store current directory
+        base_dirpath = os.getcwd()
+
+        # Define working directory 'folder'
+        if folder is None:
+            folder = os.path.dirname(pymod_filepath)
+        else:
+            folder = os.path.abspath(folder)
+
+        # Define directory name and path for epyccel files
+        epyccel_dirname = '__epyccel__'
+        epyccel_dirpath = os.path.join(folder, epyccel_dirname)
+
+        # Create new directories if not existing
+        os.makedirs(folder, exist_ok=True)
+        os.makedirs(epyccel_dirpath, exist_ok=True)
+
+        # Change working directory to '__epyccel__'
+        os.chdir(epyccel_dirpath)
+
+        # Store python file in '__epyccel__' folder, so that execute_pyccel can run
+        with open(pymod_filename, 'w') as f:
+            f.writelines(code)
+
+        try:
+            # Generate shared library
+            execute_pyccel(pymod_filename,
+                           verbose     = verbose,
+                           language    = language,
+                           compiler    = compiler,
+                           mpi_compiler= mpi_compiler,
+                           fflags      = fflags,
+                           includes    = includes,
+                           libdirs     = libdirs,
+                           modules     = modules,
+                           libs        = libs,
+                           debug       = debug,
+                           accelerator = accelerator,
+                           output_name = module_name)
+        finally:
+            # Change working directory back to starting point
+            os.chdir(base_dirpath)
+
+
+        # Import shared library
+        sys.path.insert(0, epyccel_dirpath)
+
+        # http://ballingt.com/import-invalidate-caches
+        # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
+        importlib.invalidate_caches()
+
+        package = importlib.import_module(module_name)
+        sys.path.remove(epyccel_dirpath)
+
+        if language != 'python':
+            # Verify that we have imported the shared library, not the Python one
+            loader = getattr(package, '__loader__', None)
+            if not isinstance(loader, ExtensionFileLoader):
+                raise ImportError('Could not load shared library')
+
+        # If Python object was function, extract it from module
+        if isinstance(function_or_module, FunctionType):
+            func = getattr(package, pyfunc.__name__)
+        else:
+            func = None
     finally:
-        # Change working directory back to starting point
-        os.chdir(base_dirpath)
-
-
-    # Import shared library
-    sys.path.insert(0, epyccel_dirpath)
-
-    # http://ballingt.com/import-invalidate-caches
-    # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
-    importlib.invalidate_caches()
-
-    package = importlib.import_module(module_name)
-    sys.path.remove(epyccel_dirpath)
-
-    if language != 'python':
-        # Verify that we have imported the shared library, not the Python one
-        loader = getattr(package, '__loader__', None)
-        if not isinstance(loader, ExtensionFileLoader):
-            raise ImportError('Could not load shared library')
-
-    # If Python object was function, extract it from module
-    if isinstance(function_or_module, FunctionType):
-        func = getattr(package, pyfunc.__name__)
-    else:
-        func = None
+        module_lock.release()
 
     # Return accelerated Python module and function
     return package, func
