@@ -83,19 +83,19 @@ def get_unique_name(prefix, path):
 
     module_name = module_name.split('.')[-1] + '_' + tag
 
-    path = os.path.join(path, '__epyccel__')
+    save_path = os.path.join(path, '__epyccel__')
 
     # Create new directories if not existing
-    os.makedirs(path, exist_ok=True)
+    os.makedirs(save_path, exist_ok=True)
 
     # Ensure that the name is not in use by another thread
-    lock = FileLock(os.path.join(path, module_name)+'.lock')
+    lock = FileLock(os.path.join(save_path, module_name)+'.lock')
     try:
         lock.acquire(timeout=0.1)
         if module_name in sys.modules.keys():
             raise Timeout("Newly created collision")
     except Timeout:
-        return get_unique_name(prefix)
+        return get_unique_name(prefix, path)
     return module_name, lock
 
 #==============================================================================
