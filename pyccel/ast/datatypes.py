@@ -13,8 +13,6 @@ import numpy
 
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic import Basic
-
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
 __all__ = (
@@ -113,6 +111,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
 
 class DataType(metaclass=Singleton):
     """Base class representing native datatypes"""
+    __slots__ = ()
     _name = '__UNDEFINED__'
 
     @property
@@ -123,53 +122,63 @@ class DataType(metaclass=Singleton):
         return str(self.name).lower()
 
 class NativeBool(DataType):
+    __slots__ = ()
     _name = 'Bool'
 
 class NativeInteger(DataType):
+    __slots__ = ()
     _name = 'Int'
 
 class NativeReal(DataType):
+    __slots__ = ()
     _name = 'Real'
 
 class NativeComplex(DataType):
+    __slots__ = ()
     _name = 'Complex'
 
 NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
 
 class NativeString(DataType):
+    __slots__ = ()
     _name = 'String'
 
 class NativeVoid(DataType):
+    __slots__ = ()
     _name = 'Void'
 
 class NativeNil(DataType):
+    __slots__ = ()
     _name = 'Nil'
 
 class NativeTuple(DataType):
     """Base class representing native datatypes"""
+    __slots__ = ()
     _name = 'Tuple'
 
 class NativeRange(DataType):
+    __slots__ = ()
     _name = 'Range'
 
 class NativeSymbol(DataType):
+    __slots__ = ()
     _name = 'Symbol'
 
 
 # TODO to be removed
 class CustomDataType(DataType):
-    _name = '__UNDEFINED__'
+    __slots__ = ('_name',)
 
     def __init__(self, name='__UNDEFINED__'):
         self._name = name
 
 class NativeGeneric(DataType):
     _name = 'Generic'
-    pass
 
 
 # ...
 class VariableType(DataType):
+    __slots__ = ('_alias','_rhs','_name')
 
     def __init__(self, rhs, alias):
         self._alias = alias
@@ -181,6 +190,7 @@ class VariableType(DataType):
         return self._alias
 
 class FunctionType(DataType):
+    __slots__ = ('_domain','_codomain','_domains','_name')
 
     def __init__(self, domains):
         self._domain = domains[0]
@@ -221,8 +231,13 @@ dtype_registry = {'bool': Bool,
                   'str': String}
 
 
-class UnionType(Basic):
-    _attribute_nodes = ()
+class UnionType:
+    """ Class representing multiple different possible
+    datatypes for a function argument. If multiple
+    arguments have union types then the result is a
+    cross product of types
+    """
+    __slots__ = ('_args',)
 
     def __init__(self, args):
         self._args = args

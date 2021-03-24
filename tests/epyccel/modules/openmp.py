@@ -252,6 +252,19 @@ def omp_matmul_single(A, x, out):
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
 
+
+@types('int[:]', 'int[:]', 'real[:]')
+def omp_nowait(x, y, z):
+    #$ omp parallel
+    #$ omp for nowait
+    for i in range(0, 1000):
+        y[i] = x[i] * 2
+    #$ omp for nowait
+    for j in range(0, 1000):
+        z[j] = x[j] / 2
+    #$ omp end parallel
+    "bypass issue #468" # pylint: disable=W0105
+
 @types('int[:]')
 def omp_arraysum(x):
     result = 0

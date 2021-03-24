@@ -265,7 +265,7 @@ def test_optional_var_4(language):
 # TEST DATA TYPES
 #--------------------------------------------------------------------
 def test_int_types(language):
-    f1 = epyccel(mod2.int_types , language = language, verbose=True)
+    f1 = epyccel(mod2.int_types , language = language)
     f2 = mod2.int_types
 
     assert f1(10, 5) == f2(10, 5)
@@ -276,7 +276,7 @@ def test_int_types(language):
     assert f1(np.int64(155), np.int64(177)) == f2(np.int64(155), np.int64(177))
 
 def test_float_types(language):
-    f1 = epyccel(mod2.float_types , language = language, verbose=True)
+    f1 = epyccel(mod2.float_types , language = language)
     f2 = mod2.float_types
 
     assert f1(10.5, 5.5) == f2(10.5, 5.5)
@@ -285,7 +285,7 @@ def test_float_types(language):
     assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
 
 def test_complex_types(language):
-    f1 = epyccel(mod2.complex_types , language = language, verbose=True)
+    f1 = epyccel(mod2.complex_types , language = language)
     f2 = mod2.complex_types
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
@@ -294,7 +294,7 @@ def test_complex_types(language):
     assert f1(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j))
 
 def test_mix_types_1(language):
-    f1 = epyccel(mod2.mix_types_1 , language = language, verbose=True)
+    f1 = epyccel(mod2.mix_types_1 , language = language)
     f2 = mod2.mix_types_1
 
     assert f1(complex(1, 2), 15, np.int16(5)) == f2(complex(1, 2), 15, np.int16(5))
@@ -308,7 +308,7 @@ def test_mix_types_1(language):
 
 
 def test_mix_types_2(language):
-    f1 = epyccel(mod2.mix_types_2 , language = language, verbose=True)
+    f1 = epyccel(mod2.mix_types_2 , language = language)
     f2 = mod2.mix_types_2
 
     assert f1(-1, -1) == f2(-1, -1)
@@ -319,7 +319,7 @@ def test_mix_types_2(language):
     assert f1(np.float32(16), np.float32(16)) == f2(np.float32(16), np.float32(16))
 
 def test_mix_types_3(language):
-    f1 = epyccel(mod2.mix_types_3 , language = language, verbose=True)
+    f1 = epyccel(mod2.mix_types_3 , language = language)
     f2 = mod2.mix_types_3
 
     assert f1(-1, -1) == f2(-1, -1)

@@ -34,11 +34,13 @@ errors = Errors()
 
 #==============================================================================
 class Header(Basic):
+    __slots__ = ()
     _attribute_nodes = ()
 
 #==============================================================================
 class MetaVariable(Header):
     """Represents the MetaVariable."""
+    __slots__ = ('_name', '_value')
 
     def __init__(self, name, value):
         if not isinstance(name, str):
@@ -92,6 +94,7 @@ class VariableHeader(Header):
     Examples
 
     """
+    __slots__ = ('_name','_dtypes')
 
     def __init__(self, name, dtypes):
         if not(isinstance(dtypes, dict)):
@@ -151,6 +154,7 @@ class Template(Header):
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
     >>> T = Template('T', [d_var0, d_var1])
     """
+    __slots__ = ('_name','_dtypes')
 
     def __init__(self, name, dtypes):
         super().__init__()
@@ -217,6 +221,7 @@ class FunctionHeader(Header):
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
     """
+    __slots__ = ('_name','_dtypes','_results','_is_static')
 
     # TODO dtypes should be a dictionary (useful in syntax)
     def __init__(self, name, dtypes,
@@ -453,6 +458,7 @@ class MethodHeader(FunctionHeader):
     >>> m.name
     'point.rotate'
     """
+    __slots__ = ()
 
     def __init__(self, name, dtypes, results=None, is_static=False):
         if not isinstance(name, (list, tuple)):
@@ -518,6 +524,7 @@ class ClassHeader(Header):
     >>> ClassHeader('Matrix', ('abstract', 'public'))
     ClassHeader(Matrix, (abstract, public))
     """
+    __slots__ = ('_name','_options')
 
     def __init__(self, name, options):
         if not(iterable(options)):
@@ -558,6 +565,7 @@ class InterfaceHeader(Header):
     >>> m.name
     'axpy'
     """
+    __slots__ = ('_name','_funcs')
 
     def __init__(self, name, funcs):
         if not isinstance(name,str):
@@ -580,6 +588,7 @@ class InterfaceHeader(Header):
 #==============================================================================
 class MacroFunction(Header):
     """."""
+    __slots__ = ('_name','_arguments','_master','_master_arguments','_results')
 
     def __init__(self, name, args, master, master_args, results=None):
         if not isinstance(name, str):
@@ -727,6 +736,7 @@ class MacroFunction(Header):
 #==============================================================================
 class MacroVariable(Header):
     """."""
+    __slots__ = ('_name','_master')
 
     def __init__(self, name,  master):
         if not isinstance(name, (str, DottedName)):

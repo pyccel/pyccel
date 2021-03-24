@@ -17,7 +17,7 @@ from .datatypes             import (NativeBool, NativeInteger, NativeReal,
                                     NativeComplex, NativeString, default_precision,
                                     NativeNumeric)
 
-from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals              import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 
 errors = Errors()
 
@@ -104,6 +104,7 @@ class PyccelOperator(PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
+    __slots__ = ('_args','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -117,6 +118,8 @@ class PyccelOperator(PyccelAstNode):
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
+        else:
+            self._order = None
         super().__init__()
 
     @property
@@ -193,6 +196,7 @@ class PyccelUnaryOperator(PyccelOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+    __slots__ = ()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -200,7 +204,8 @@ class PyccelUnaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_dtype(*_args):
         """ Sets the dtype and precision
-        They are chosen to match the argument
+        They are chosen to match the argument unless the class has
+        a _dtype or _precision member
         """
         a = _args[0]
         _dtype = a.dtype
@@ -210,7 +215,8 @@ class PyccelUnaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape_rank(*_args):
         """ Sets the shape and rank
-        They are chosen to match the argument
+        They are chosen to match the argument unless the class has
+        a _shape or _rank member
         """
         a = _args[0]
         _rank = a.rank
@@ -232,6 +238,7 @@ class PyccelUnary(PyccelUnaryOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 14
     def _handle_precedence(self, args):
         args = PyccelUnaryOperator._handle_precedence(self, args)
@@ -256,6 +263,7 @@ class PyccelUnarySub(PyccelUnary):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '-{}'.format(repr(self.args[0]))
@@ -275,6 +283,7 @@ class PyccelNot(PyccelUnaryOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 6
 
     @staticmethod
@@ -311,6 +320,7 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     arg: PyccelAstNode
         The argument in the PyccelAssociativeParenthesis
     """
+    __slots__ = ()
     _precedence = 18
     def _handle_precedence(self, args):
         return args
@@ -331,6 +341,7 @@ class PyccelBinaryOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __init__(self, arg1, arg2, simplify = False):
         super().__init__(arg1, arg2)
@@ -338,7 +349,9 @@ class PyccelBinaryOperator(PyccelOperator):
     @classmethod
     def _calculate_dtype(cls, *_args):
         """ Sets the dtype and precision
+
         If one argument is a string then all arguments must be strings
+
         If the arguments are numeric then the dtype and precision
         match the broadest type and the largest precision
         e.g.
@@ -398,7 +411,9 @@ class PyccelBinaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape_rank(*_args):
         """ Sets the shape and rank
+
         Strings must be scalars.
+
         For numeric types the rank and shape is determined according
         to numpy broadcasting rules where possible
         """
@@ -444,6 +459,7 @@ class PyccelArithmeticOperator(PyccelBinaryOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     def _handle_precedence(self, args):
         args = PyccelBinaryOperator._handle_precedence(self, args)
         args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a for a in args)
@@ -466,6 +482,7 @@ class PyccelPow(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence  = 15
 
     def __repr__(self):
@@ -488,6 +505,7 @@ class PyccelAdd(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 12
 
     def __new__(cls, arg1, arg2, simplify = False):
@@ -548,6 +566,7 @@ class PyccelMul(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
@@ -570,6 +589,7 @@ class PyccelMinus(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 12
 
     def __new__(cls, arg1, arg2, simplify = False):
@@ -624,6 +644,7 @@ class PyccelDiv(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 13
 
     @staticmethod
@@ -655,6 +676,7 @@ class PyccelMod(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
@@ -677,6 +699,7 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
@@ -695,6 +718,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 7
     @staticmethod
     def _calculate_dtype(*_args):
@@ -719,6 +743,7 @@ class PyccelEq(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} == {}'.format(self.args[0], self.args[1])
@@ -738,6 +763,7 @@ class PyccelNe(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} != {}'.format(self.args[0], self.args[1])
@@ -757,6 +783,7 @@ class PyccelLt(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} < {}'.format(self.args[0], self.args[1])
@@ -776,6 +803,7 @@ class PyccelLe(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} <= {}'.format(self.args[0], self.args[1])
@@ -795,6 +823,7 @@ class PyccelGt(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} > {}'.format(self.args[0], self.args[1])
@@ -814,6 +843,7 @@ class PyccelGe(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} >= {}'.format(self.args[0], self.args[1])
@@ -861,6 +891,7 @@ class PyccelAnd(PyccelBooleanOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 5
     def _handle_precedence(self, args):
         args = PyccelBooleanOperator._handle_precedence(self, args)
@@ -887,6 +918,7 @@ class PyccelOr(PyccelBooleanOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 4
     def _handle_precedence(self, args):
         args = PyccelBooleanOperator._handle_precedence(self, args)
@@ -911,6 +943,7 @@ class PyccelIs(PyccelBooleanOperator):
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
     """
+    __slots__ = ()
     _precedence = 7
 
     def __init__(self, arg1, arg2):
@@ -944,6 +977,7 @@ class PyccelIsNot(PyccelIs):
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
     """
+    __slots__ = ()
 
     def __repr__(self):
         return '{} is not {}'.format(self.args[0], self.args[1])
@@ -970,6 +1004,7 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
+    __slots__ = ()
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
