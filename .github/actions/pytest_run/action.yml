@@ -1,15 +1,17 @@
-name: 'Pyccel pytest commands'
+name: 'Pyccel pytest commands generating fortran or c'
 
 runs:
   using: "composite"
   steps:
     - name: Test with pytest
       run: |
-        python -m pytest -rx -m "not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -rx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
+        pyccel-clean
+        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -rx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
+        pyccel-clean
         python -m pytest ndarrays/ -rx
-        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
-        #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
+        pyccel-clean
       shell: bash
       working-directory: ./tests
