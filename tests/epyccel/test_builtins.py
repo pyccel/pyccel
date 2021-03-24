@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+import pytest
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
+from pyccel.decorators import types, template
 
 def test_abs_i(language):
     @types('int')
@@ -46,7 +47,9 @@ def test_abs_c(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="min not implemented in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+
     )
 )
 def test_min_2_args(language):
@@ -66,14 +69,15 @@ def test_min_2_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="min not implemented in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_3_args(language):
     @types('int','int','int')
     @types('float','float','float')
-    def f(x, y):
-        return min(x, y)
+    def f(x, y, z):
+        return min(x, y, z)
 
     a = randint(100)
     b = randint(100)
@@ -87,7 +91,8 @@ def test_min_3_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="max not implemented in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_2_args(language):
@@ -107,14 +112,15 @@ def test_max_2_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="max not implemented in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_3_args(language):
     @types('int','int','int')
     @types('float','float','float')
-    def f(x, y):
-        return min(x, y)
+    def f(x, y, z):
+        return min(x, y, z)
 
     a = randint(100)
     b = randint(100)
@@ -128,7 +134,8 @@ def test_max_3_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="sum not implemented in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_matching_types(language):
@@ -143,25 +150,3 @@ def test_sum_matching_types(language):
     assert epyc_f(a,b) == f(a,b)
     assert epyc_f(float(a),float(b)) == f(float(a),float(b))
     assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in C"),
-            pytest.mark.c]
-        )
-    )
-)
-def test_sum_different_types(language):
-    @template('T',['int','float','complex'])
-    @template('S',['int','float','complex'])
-    @types('T','S')
-    def f(x, y):
-        return sum([x, y])
-
-    a = randint(100)
-    b = randint(100)
-    epyc_f = epyccel(f, language=language)
-    assert epyc_f(a,float(b)) == f(a,float(b))
-    assert epyc_f(float(a),complex(b)) == f(float(a),complex(b))
-    assert epyc_f(complex(a),b) == f(complex(a),b)
