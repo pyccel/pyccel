@@ -494,7 +494,7 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            else:
+            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 dtype, precision = cls._calculate_dtype(arg1, arg2)
                 if dtype is NativeInteger():
                     result = arg1.python_value + arg2.python_value
@@ -576,7 +576,7 @@ class PyccelMinus(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
-            else:
+            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 dtype, precision = cls._calculate_dtype(arg1, arg2)
                 if dtype is NativeInteger():
                     result = arg1.python_value - arg2.python_value
