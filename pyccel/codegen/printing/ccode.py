@@ -445,6 +445,13 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add("complex")
         return '_Complex_I'
 
+    def _print_PythonLen(self, expr):
+        var = expr.arg
+        if var.rank > 0:
+            return self._print(PyccelArraySize(var, 0))
+        else:
+            raise NotImplementedError("PythonLen not implemented for type {}".format(type(expr.arg)))
+
     def _print_ModuleHeader(self, expr):
         name = expr.module.name
         # TODO: Add classes and interfaces
