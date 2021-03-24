@@ -230,6 +230,15 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonAbs(self, expr):
         return 'abs({})'.format(self._print(expr.arg))
 
+    def _print_PythonMin(self, expr):
+        return 'min({})'.format(self._print(expr.args[0]))
+
+    def _print_PythonMax(self, expr):
+        return 'max({})'.format(self._print(expr.args[0]))
+
+    def _print_PythonSum(self, expr):
+        return 'sum({})'.format(self._print(expr.args[0]))
+
     def _print_PythonBool(self, expr):
         return 'bool({})'.format(self._print(expr.arg))
 
