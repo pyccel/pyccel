@@ -190,6 +190,12 @@ class NumpyReal(PythonReal):
     1.0
     """
     __slots__ = ('_rank','_shape','_order')
+    def __new__(cls, arg):
+        if isinstance(arg.dtype, NativeBool):
+            return NumpyInt(arg)
+        else:
+            return super().__new__(cls, arg)
+
     def __init__(self, arg):
         super().__init__(arg)
         self._precision = arg.precision
