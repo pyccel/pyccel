@@ -1191,6 +1191,8 @@ class CCodePrinter(CodePrinter):
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
             last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
+            deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
+            vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
@@ -1200,14 +1202,14 @@ class CCodePrinter(CodePrinter):
             # make sure that stmt contains one assign node.
             assert(len(last_assign)==1)
             variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-            unneeded_var = not any(b.allocatable and not b.is_argument for b in variables)
+            unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
                 code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
                 return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
             else:
                 code = '\n'+self._print(expr.stmt)
                 self._additional_declare.append(last_assign[0].lhs)
-        return code + 'return {0};'.format(self._print(args[0]))
+        return code + '\nreturn {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'

@@ -429,7 +429,7 @@ class NumpyMatmul(PyccelInternalFunction):
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
-        if reals:
+        elif reals:
             self._dtype     = NativeReal()
             self._precision = max(e.precision for e in reals)
         elif integers:
@@ -510,10 +510,9 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_index','_start','_stop','_size','_shape')
+    __slots__ = ('_index','_start','_stop','_size','_shape', '_rank')
     _dtype     = NativeReal()
     _precision = default_precision['real']
-    _rank      = 1
     _order     = 'F'
 
     def __init__(self, start, stop, size):
@@ -532,8 +531,8 @@ class NumpyLinspace(NumpyNewArray):
         self._start = start
         self._stop  = stop
         self._size  = size
-        self._shape = (self.size,)
-
+        self._shape = (self._size,) + self._start.shape
+        self._rank  = len(self._shape)
         super().__init__()
 
     @property
