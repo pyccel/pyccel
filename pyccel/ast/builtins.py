@@ -113,9 +113,12 @@ class PythonImag(PythonComplexProperty):
 class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
-    __slots__ = ('_arg','_shape','_rank','_order')
+    __slots__ = ('_arg',)
     _dtype = NativeBool()
     _precision = default_precision['bool']
+    _rank = 0
+    _shape = ()
+    _order = None
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -128,9 +131,6 @@ class PythonBool(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
-        self._order = arg.order
         super().__init__()
 
     @property
@@ -264,9 +264,12 @@ class PythonEnumerate(Basic):
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
-    __slots__ = ('_arg','_shape','_rank','_order')
+    __slots__ = ('_arg')
     _dtype = NativeReal()
     _precision = default_precision['real']
+    _rank = 0
+    _shape = ()
+    _order = None
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -278,9 +281,6 @@ class PythonFloat(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
-        self._order = arg.order
         super().__init__()
 
     @property
@@ -288,16 +288,19 @@ class PythonFloat(PyccelAstNode):
         return self._arg
 
     def __str__(self):
-        return 'LiteralFloat({0})'.format(str(self.arg))
+        return 'float({0})'.format(str(self.arg))
 
 #==============================================================================
 class PythonInt(PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
-    __slots__ = ('_arg','_shape','_rank','_order')
+    __slots__ = ('_arg')
     _dtype = NativeInteger()
     _precision = default_precision['integer']
+    _rank = 0
+    _shape = ()
+    _order = None
     _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
@@ -308,9 +311,6 @@ class PythonInt(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
-        self._order = arg.order
         super().__init__()
 
     @property

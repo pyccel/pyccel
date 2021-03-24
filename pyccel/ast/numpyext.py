@@ -92,7 +92,14 @@ __all__ = (
 class NumpyComplex(PythonComplex):
     """ Represents a call to numpy.complex() function.
     """
-    __slots__ = ()
+    __slots__ = ('_rank','_shape','_order')
+    def __init__(self, arg0, arg1 = None):
+        if arg1 is not None:
+            raise NotImplementedError("Use builtin complex function not deprecated np.complex")
+        self._shape = arg0.shape
+        self._rank  = arg0.rank
+        self._order = arg0.order
+        super().__init__(arg0)
 
 class NumpyComplex64(NumpyComplex):
     """ Represents a call to numpy.complex64() function.
@@ -110,7 +117,12 @@ class NumpyComplex128(NumpyComplex):
 class NumpyFloat(PythonFloat):
     """ Represents a call to numpy.float() function.
     """
-    __slots__ = ()
+    __slots__ = ('_rank','_shape','_order')
+    def __init__(self, arg):
+        self._shape = arg.shape
+        self._rank  = arg.rank
+        self._order = arg.order
+        super().__init__(arg)
 
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
@@ -128,17 +140,24 @@ class NumpyFloat64(NumpyFloat):
 class NumpyBool(PythonBool):
     """ Represents a call to numpy.bool() function.
     """
-    def __new__(cls, arg=None, base=10):
-        return super().__new__(cls, arg)
+    __slots__ = ('_shape','_rank','_order')
+    def __init__(self, arg):
+        self._shape = arg.shape
+        self._rank  = arg.rank
+        self._order = arg.order
+        super().__init__(arg)
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
-    __slots__ = ()
-    def __new__(cls, arg=None, base=10):
-        return super().__new__(cls, arg)
+    __slots__ = ('_shape','_rank','_order')
+    def __init__(self, arg=None, base=10):
+        self._shape = arg.shape
+        self._rank  = arg.rank
+        self._order = arg.order
+        super().__init__(arg)
 
 class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
