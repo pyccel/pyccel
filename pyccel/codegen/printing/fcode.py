@@ -673,7 +673,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyLinspace(self, expr):
 
         template = '[({start} + {index}*{step},{index} = {zero},{end})]'
-
+        var = Variable('int', 'linspace_index')
+        self.add_vars_to_namespace(var)
         init_value = template.format(
             start = self._print(expr.start),
             step  = self._print(expr.step ),

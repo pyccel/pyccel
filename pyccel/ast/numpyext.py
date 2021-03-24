@@ -25,7 +25,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, conver
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelUnarySub
 from .variable       import (Variable, IndexedElement, Constant)
 
 
@@ -519,11 +519,13 @@ class NumpyLinspace(NumpyNewArray):
     def __init__(self, start, stop, size):
 
 
-        _valid_args = (Variable, IndexedElement, LiteralFloat,
-                       LiteralInteger)
+        _valid_args = (Variable, IndexedElement, LiteralFloat, LiteralInteger, PyccelUnarySub)
 
         for arg in (start, stop, size):
-            if not isinstance(arg, _valid_args):
+            if not isinstance(arg, PyccelAstNode):
+            #if isinstance(arg, PyccelUnarySub):
+            #    print(arg.args)
+            #if not isinstance(arg, _valid_args):
                 raise TypeError('Expecting valid args')
 
         self._index = Variable('int', 'linspace_index')
@@ -552,7 +554,8 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        return (self.stop - self.start) / (self.size - 1)
+        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.size, LiteralInteger(1)))
+        #return (self.stop - self.start) / (self.size - 1)
 
     def __str__(self):
         code = 'linspace({}, {}, {})'.format(str(self.start),
