@@ -329,7 +329,14 @@ class PythonTuple(PyccelAstNode):
     def __init__(self, *args):
         self._args = args
         super().__init__()
-        if self.stage == 'syntactic' or len(args) == 0:
+        if self.stage == 'syntactic':
+            return
+        elif len(args) == 0:
+            self._dtype = NativeGeneric()
+            self._precision = 0
+            self._rank = 0
+            self._shape = ()
+            self._is_homogeneous = False
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
