@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
@@ -39,3 +40,88 @@ def test_abs_c(language):
     assert f1(5j + 0) == f2(5j + 0)
     assert f1(0j + 5) == f2(0j + 5)
     assert f1(0j + 0) == f2(0j + 0)
+
+def test_min_2_args(language):
+    @types('int','int')
+    @types('float','float')
+    @types('complex','complex')
+    def f(x, y):
+        return min(x, y)
+
+    a = randint(100)
+    b = randint(100)
+    epyc_f = epyccel(f, language=language)
+    assert epyc_f(a,b) == f(a,b)
+    assert epyc_f(float(a),float(b)) == f(float(a),float(b))
+    assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
+
+def test_min_3_args(language):
+    @types('int','int','int')
+    @types('float','float','float')
+    @types('complex','complex','complex')
+    def f(x, y):
+        return min(x, y)
+
+    a = randint(100)
+    b = randint(100)
+    c = randint(100)
+    epyc_f = epyccel(f, language=language)
+    assert epyc_f(a,b,c) == f(a,b,c)
+    assert epyc_f(float(a),float(b),float(c)) == f(float(a),float(b),float(c))
+    assert epyc_f(complex(a),complex(b),complex(c)) == f(complex(a),complex(b),complex(c))
+
+def test_max_2_args(language):
+    @types('int','int')
+    @types('float','float')
+    @types('complex','complex')
+    def f(x, y):
+        return max(x, y)
+
+    a = randint(100)
+    b = randint(100)
+    epyc_f = epyccel(f, language=language)
+    assert epyc_f(a,b) == f(a,b)
+    assert epyc_f(float(a),float(b)) == f(float(a),float(b))
+    assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
+
+def test_max_3_args(language):
+    @types('int','int','int')
+    @types('float','float','float')
+    @types('complex','complex','complex')
+    def f(x, y):
+        return min(x, y)
+
+    a = randint(100)
+    b = randint(100)
+    c = randint(100)
+    epyc_f = epyccel(f, language=language)
+    assert epyc_f(a,b,c) == f(a,b,c)
+    assert epyc_f(float(a),float(b),float(c)) == f(float(a),float(b),float(c))
+    assert epyc_f(complex(a),complex(b),complex(c)) == f(complex(a),complex(b),complex(c))
+
+def test_sum_matching_types(language):
+    @template('T',['int','float','complex'])
+    @types('T','T')
+    def f(x, y):
+        return sum([x, y])
+
+    a = randint(100)
+    b = randint(100)
+    epyc_f = epyccel(f, language=language)
+    assert epyc_f(a,b) == f(a,b)
+    assert epyc_f(float(a),float(b)) == f(float(a),float(b))
+    assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
+
+def test_sum_different_types(language):
+    @template('T',['int','float','complex'])
+    @template('S',['int','float','complex'])
+    @types('T','S')
+    def f(x, y):
+        return sum([x, y])
+
+    a = randint(100)
+    b = randint(100)
+    epyc_f = epyccel(f, language=language)
+    assert epyc_f(a,float(b)) == f(a,float(b))
+    assert epyc_f(float(a),complex(b)) == f(float(a),complex(b))
+    assert epyc_f(complex(a),b) == f(complex(a),b)
