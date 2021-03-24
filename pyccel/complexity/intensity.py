@@ -61,6 +61,7 @@ def _intensity(f, m):
     args = f.free_symbols.union(m.free_symbols) - _cost_symbols
     args = list(args)
 
+    # TODO _leading_term does not retrieve the right output
     lt_f = _leading_term(f, *args)
     lt_m = _leading_term(m, *args)
 
