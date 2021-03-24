@@ -269,7 +269,7 @@ def test_int_types(language):
     f2 = mod2.int_types
 
     assert f1(10, 5) == f2(10, 5)
-    assert f1(np.int(15) , np.int(10)) == f2(np.int(15) , np.int(10))
+    assert f1(int(15) , int(10)) == f2(int(15) , int(10))
     assert f1(np.int16(5), np.int16(4)) == f2(np.int16(5), np.int16(4))
     assert f1(np.int8(4), np.int8(7)) == f2(np.int8(4), np.int8(7))
     assert f1(np.int32(155), np.int32(177)) == f2(np.int32(155), np.int32(177))
@@ -423,7 +423,7 @@ def test_mix_int_array_2(language):
     f2(x2, a)
     assert np.array_equal( x1, x2 )
 
-    x1 = np.array([127,229,3], dtype=np.int)
+    x1 = np.array([127,229,3], dtype=int)
     x2 = np.copy(x1)
     f1(x1, a)
     f2(x2, a)
