@@ -89,6 +89,10 @@ class Variable(PyccelAstNode):
     is_const: bool
         if object is a const argument of a function [Default value: False]
 
+    is_temp: bool
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+        and was not present in the original Python code [default value : False].
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
@@ -100,6 +104,10 @@ class Variable(PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
+    __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
+            '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
+            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
+            '_rank','_shape','_order')
     _attribute_nodes = ()
 
     def __init__(
@@ -121,6 +129,7 @@ class Variable(PyccelAstNode):
         precision=0,
         is_argument=False,
         is_kwonly=False,
+        is_temp =False,
         allows_negative_indexes=False
         ):
         super().__init__()
@@ -210,6 +219,7 @@ class Variable(PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
+        self._is_temp        = is_temp
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -292,6 +302,14 @@ class Variable(PyccelAstNode):
         if not isinstance(is_pointer, bool):
             raise TypeError('is_pointer must be a boolean.')
         self._is_pointer = is_pointer
+
+    @property
+    def is_temp(self):
+        """
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+		and was not present in the original Python code [default value : False].
+        """
+        return self._is_temp
 
     @property
     def is_target(self):
@@ -426,9 +444,9 @@ class Variable(PyccelAstNode):
             cls = new_class
 
         args = inspect.signature(Variable.__init__)
-        new_kwargs = {k:self.__dict__['_'+k] \
+        new_kwargs = {k:getattr(self, '_'+k) \
                             for k in args.parameters.keys() \
-                            if '_'+k in self.__dict__}
+                            if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
 
@@ -501,6 +519,7 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    __slots__ = ('_name',)
     _attribute_nodes = ()
 
     def __init__(self, *args):
@@ -536,6 +555,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
+    __slots__ = ('_value',)
     _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
@@ -573,6 +593,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
+    __slots__ = ('_vars','_inconsistent_shape','_is_homogeneous')
     _attribute_nodes = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
@@ -690,6 +711,7 @@ class Constant(ValuedVariable):
     --------
 
     """
+    __slots__ = ()
     # The value of a constant is not a translated object
     _attribute_nodes = ()
 
@@ -711,6 +733,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(
@@ -793,6 +816,9 @@ class IndexedElement(PyccelAstNode):
         """
         return self._indices
 
+    def __str__(self):
+        return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
+
 class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
@@ -800,6 +826,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    __slots__ = ('_variable','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
@@ -833,6 +860,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    __slots__ = ('_lhs',)
     _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):

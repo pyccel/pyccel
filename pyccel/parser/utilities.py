@@ -24,12 +24,6 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
 
 #==============================================================================
-def random_string( n ):
-    chars    = string.ascii_lowercase + string.digits
-    selector = random.SystemRandom()
-    return ''.join( selector.choice( chars ) for _ in range( n ) )
-
-#==============================================================================
 
 def read_file(filename):
     """Returns the source code from a filename."""

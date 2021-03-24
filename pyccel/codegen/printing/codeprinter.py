@@ -7,8 +7,7 @@
 
 
 
-from sympy.core.basic import Basic
-from sympy.printing.str import StrPrinter
+from pyccel.ast.basic import Basic
 
 from pyccel.ast.core      import Assign
 from pyccel.ast.internals import PyccelSymbol
@@ -22,16 +21,11 @@ __all__ = ["CodePrinter"]
 
 errors = Errors()
 
-class CodePrinter(StrPrinter):
+class CodePrinter:
     """
     The base class for code-printing subclasses.
     """
-
-    _operators = {
-        'and': '&&',
-        'or': '||',
-        'not': '!',
-    }
+    language = None
 
     def doprint(self, expr, assign_to=None):
         """
@@ -60,7 +54,23 @@ class CodePrinter(StrPrinter):
         # Format the output
         return ''.join(self._format_code(lines))
 
+    def _print(self, expr):
+        """Print the AST node in the printer language
 
+        The printing is done by finding the appropriate function _print_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _print_X functions. If none are found then an error is
+        raised
+        """
+
+        classes = type(expr).__mro__
+        for cls in classes:
+            print_method = '_print_' + cls.__name__
+            if hasattr(self, print_method):
+                obj = getattr(self, print_method)(expr)
+                return obj
+        return self._print_not_supported(expr)
 
     def _get_statement(self, codestring):
         """Formats a codestring with the proper line ending."""
@@ -84,16 +94,19 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
-
     def _print_NumberSymbol(self, expr):
+        """ Print sympy symbols used for constants"""
         return str(expr)
 
-    def _print_Dummy(self, expr):
-        # dummies must be printed as unique symbols
-        return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
+    def _print_str(self, expr):
+        """ Basic print functionality for strings """
+        return expr
 
     def _print_not_supported(self, expr):
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol = expr,
+        """ Print an error message if the print function for the type
+        is not implemented """
+        msg = '_print_{} is not yet implemented for language : {}\n'.format(type(expr).__name__, self.language)
+        errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
                 severity='fatal')
 
     # Number constants
@@ -102,36 +115,3 @@ class CodePrinter(StrPrinter):
     _print_GoldenRatio = _print_NumberSymbol
     _print_Exp1 = _print_NumberSymbol
     _print_Pi = _print_NumberSymbol
-
-    # The following can not be simply translated into C or Fortran
-    _print_Basic = _print_not_supported
-    _print_ComplexInfinity = _print_not_supported
-    _print_Derivative = _print_not_supported
-    _print_dict = _print_not_supported
-    _print_ExprCondPair = _print_not_supported
-    _print_GeometryEntity = _print_not_supported
-    _print_Infinity = _print_not_supported
-    _print_Integral = _print_not_supported
-    _print_Interval = _print_not_supported
-    _print_Limit = _print_not_supported
-    _print_list = _print_not_supported
-    _print_Matrix = _print_not_supported
-    _print_ImmutableMatrix = _print_not_supported
-    _print_MutableDenseMatrix = _print_not_supported
-    _print_MatrixBase = _print_not_supported
-    _print_DeferredVector = _print_not_supported
-    _print_NaN = _print_not_supported
-    _print_NegativeInfinity = _print_not_supported
-    _print_Normal = _print_not_supported
-    _print_Order = _print_not_supported
-    _print_PDF = _print_not_supported
-    _print_RootOf = _print_not_supported
-    _print_RootsOf = _print_not_supported
-    _print_RootSum = _print_not_supported
-    _print_Sample = _print_not_supported
-    _print_SparseMatrix = _print_not_supported
-    _print_tuple = _print_not_supported
-    _print_Uniform = _print_not_supported
-    _print_Unit = _print_not_supported
-    _print_Wild = _print_not_supported
-    _print_WildFunction = _print_not_supported

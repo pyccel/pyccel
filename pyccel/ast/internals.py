@@ -21,6 +21,7 @@ class PyccelInternalFunction(PyccelAstNode):
     """ Abstract class used by function calls
     which are translated to Pyccel objects
     """
+    __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
     def __init__(self, *args):
         self._args   = tuple(args)
@@ -53,7 +54,13 @@ class PyccelArraySize(PyccelInternalFunction):
             The dimension along which the shape is
             provided
     """
+    __slots__ = ('_arg','_index')
     _attribute_nodes = ('_arg', '_index')
+    _dtype = NativeInteger()
+    _precision = default_precision['integer']
+    _rank  = 0
+    _shape = ()
+    _order = None
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
@@ -67,10 +74,6 @@ class PyccelArraySize(PyccelInternalFunction):
 
         self._arg   = arg
         self._index = index
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
         super().__init__()
 
     @property
@@ -121,6 +124,7 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
+    __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start','_stop','_step')
 
     def __init__(self, start, stop, step = None):
@@ -182,6 +186,22 @@ class PyccelSymbol(str, Immutable):
     >>> x = PyccelSymbol('x')
     x
     """
+    __slots__ = ('_is_temp',)
+
+    def __new__(cls, name, is_temp=False):
+        return super().__new__(cls, name)
+
+    def __init__(self, name, is_temp=False):
+        self._is_temp = is_temp
+        super().__init__()
+
+    @property
+    def is_temp(self):
+        """
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+        and was not present in the original Python code [default value : False].
+        """
+        return self._is_temp
 
 def symbols(names):
     """

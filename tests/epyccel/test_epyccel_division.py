@@ -144,7 +144,7 @@ def test_call_fdiv_i_i_8(language):
     y = randint(low=1, high= 100, dtype='int8')
 
     assert (f(x, y) == fdiv_i_i(x, y))
-    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
+    assert isinstance(f(x, y), (type(fdiv_i_i(x, y).item()), type(fdiv_i_i(x, y))))
 
 def test_call_fdiv_i_i_16(language):
     @types('int16', 'int16')
@@ -161,7 +161,7 @@ def test_call_fdiv_i_i_16(language):
     assert (f(-x, y) == fdiv_i_i(-x, y))
     assert (f(x, -y) == fdiv_i_i(x, -y))
     assert (f(-x, -y) == fdiv_i_i(-x, -y))
-    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
+    assert isinstance(f(x, y), (type(fdiv_i_i(x, y).item()), type(fdiv_i_i(x, y))))
 
 def test_call_fdiv_i_i_32(language):
     @types('int32', 'int32')
@@ -178,7 +178,7 @@ def test_call_fdiv_i_i_32(language):
     assert (f(-x, y) == fdiv_i_i(-x, y))
     assert (f(x, -y) == fdiv_i_i(x, -y))
     assert (f(-x, -y) == fdiv_i_i(-x, -y))
-    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
+    assert isinstance(f(x, y), (type(fdiv_i_i(x, y).item()), type(fdiv_i_i(x, y))))
 
 def test_call_fdiv_i_i_i(language):
     @types(int, int, int)

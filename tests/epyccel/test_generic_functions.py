@@ -111,6 +111,15 @@ def test_multi_tmplt_2(language):
 # TEST DEFAULT ARGUMENTS
 #--------------------------------------------------------------------
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_default_var_1(language):
     f1 = epyccel(mod2.default_var_1, language = language)
     f2 = mod2.default_var_1
@@ -121,6 +130,15 @@ def test_default_var_1(language):
     assert f1(5, 2) == f2(5, 2)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_default_var_2(language):
     f1 = epyccel(mod2.default_var_2, language = language)
     f2 = mod2.default_var_2
@@ -131,6 +149,15 @@ def test_default_var_2(language):
     assert f1(5, 4.44+15.2j) == f2(5, 4.44+15.2j)
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_default_var_3(language):
     f1 = epyccel(mod2.default_var_3, language = language)
     f2 = mod2.default_var_3
@@ -140,6 +167,15 @@ def test_default_var_3(language):
     assert f1(5.3, True) == f1(5.3, True)
     assert f1(5, True) == f2(5, True)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_default_var_4(language):
     f1 = epyccel(mod2.default_var_4 , language = language)
     f2 = mod2.default_var_4
@@ -153,6 +189,15 @@ def test_default_var_4(language):
 # TEST OPTIONAL ARGUMENTS
 #--------------------------------------------------------------------
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_optional_var_1(language):
     f1 = epyccel(mod2.optional_var_1 , language = language)
     f2 = mod2.optional_var_1
@@ -162,6 +207,15 @@ def test_optional_var_1(language):
     assert f1(5.3, 2) == f2(5.3, 2)
     assert f1(5, 2) == f2(5, 2)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_optional_var_2(language):
     f1 = epyccel(mod2.optional_var_2 , language = language)
     f2 = mod2.optional_var_2
@@ -171,6 +225,15 @@ def test_optional_var_2(language):
     assert f1(5.3, complex(1, 5)) == f2(5.3, complex(1, 5))
     assert f1(5, complex(1, 4)) == f2(5, complex(1, 4))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_optional_var_3(language):
     f1 = epyccel(mod2.optional_var_3 , language = language)
     f2 = mod2.optional_var_3
@@ -180,6 +243,15 @@ def test_optional_var_3(language):
     assert f1(4) == f2(4)
     assert f1(5.2) == f2(5.2)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_optional_var_4(language):
     f1 = epyccel(mod2.optional_var_4 , language = language)
     f2 = mod2.optional_var_4
@@ -193,7 +265,7 @@ def test_optional_var_4(language):
 # TEST DATA TYPES
 #--------------------------------------------------------------------
 def test_int_types(language):
-    f1 = epyccel(mod2.int_types , language = language, verbose=True)
+    f1 = epyccel(mod2.int_types , language = language)
     f2 = mod2.int_types
 
     assert f1(10, 5) == f2(10, 5)
@@ -204,7 +276,7 @@ def test_int_types(language):
     assert f1(np.int64(155), np.int64(177)) == f2(np.int64(155), np.int64(177))
 
 def test_float_types(language):
-    f1 = epyccel(mod2.float_types , language = language, verbose=True)
+    f1 = epyccel(mod2.float_types , language = language)
     f2 = mod2.float_types
 
     assert f1(10.5, 5.5) == f2(10.5, 5.5)
@@ -213,7 +285,7 @@ def test_float_types(language):
     assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
 
 def test_complex_types(language):
-    f1 = epyccel(mod2.complex_types , language = language, verbose=True)
+    f1 = epyccel(mod2.complex_types , language = language)
     f2 = mod2.complex_types
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
@@ -222,7 +294,7 @@ def test_complex_types(language):
     assert f1(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j))
 
 def test_mix_types_1(language):
-    f1 = epyccel(mod2.mix_types_1 , language = language, verbose=True)
+    f1 = epyccel(mod2.mix_types_1 , language = language)
     f2 = mod2.mix_types_1
 
     assert f1(complex(1, 2), 15, np.int16(5)) == f2(complex(1, 2), 15, np.int16(5))
@@ -236,7 +308,7 @@ def test_mix_types_1(language):
 
 
 def test_mix_types_2(language):
-    f1 = epyccel(mod2.mix_types_2 , language = language, verbose=True)
+    f1 = epyccel(mod2.mix_types_2 , language = language)
     f2 = mod2.mix_types_2
 
     assert f1(-1, -1) == f2(-1, -1)
@@ -247,7 +319,7 @@ def test_mix_types_2(language):
     assert f1(np.float32(16), np.float32(16)) == f2(np.float32(16), np.float32(16))
 
 def test_mix_types_3(language):
-    f1 = epyccel(mod2.mix_types_3 , language = language, verbose=True)
+    f1 = epyccel(mod2.mix_types_3 , language = language)
     f2 = mod2.mix_types_3
 
     assert f1(-1, -1) == f2(-1, -1)

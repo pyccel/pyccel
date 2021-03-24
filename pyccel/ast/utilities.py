@@ -15,8 +15,8 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core          import (AsName, Import, FunctionDef, FunctionCall,KernelCall,
-                            Allocate, Dlist, Assign, For)
+from .core          import (AsName, Import, FunctionDef, FunctionCall,
+                            Allocate, Dlist, Assign, For, CodeBlock,KernelCall)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -507,6 +507,7 @@ def insert_fors(blocks, indices, level = 0):
     if blocks.length == 1:
         return body
     else:
+        body = CodeBlock(body, unravelled = True)
         return [For(indices[level], PythonRange(0,blocks.length), body)]
 
 #==============================================================================

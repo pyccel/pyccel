@@ -89,7 +89,7 @@ hello from thread: 1
 #### Syntax of *loop*
 
 ```python
-#$ omp for [clause[ [,] clause] ... ]
+#$ omp for [nowait] [clause[ [,] clause] ... ]
 for-loops
 ```
 
@@ -120,7 +120,7 @@ The output of this program is:
 #### Syntax of *single*
 
 ```python
-#$ omp single [clause[ [,] clause] ... ]
+#$ omp single [nowait] [clause[ [,] clause] ... ]
 structured-block
 #$ omp end single [end_clause[ [,] end_clause] ... ]
 ```
@@ -282,14 +282,12 @@ x2 = 0
 for i in range(0, 100):
   #$ omp atomic
   x1 = x1 + 1 #Will be executed (100 x 2) times.
-  #$ omp end atomic
 
 #$ omp single
 #$ omp taskloop
 for i in range(0, 100):
   #$ omp atomic
   x2 = x2 + 1 #Will be executed (100) times.
-  #$ omp end atomic
 #$ omp end single
 
 #$ omp end parallel
@@ -374,12 +372,10 @@ def fib(n):
   return i+j
 
 #$ omp parallel
-#$ omp omp single
+#$ omp single
 print(fib(10))
 #$ omp end single
 #$ omp end parallel
-
-print("result :", result)
 ```
 
 The output of this program is:
@@ -458,6 +454,8 @@ flag: 2
 
 The ``` #$ omp cancel ``` is used to request cancellation of the innermost enclosing region of the type specified.
 ```python
+import numpy as np
+v = np.array([1, -5, 3, 4, 5])
 result = 0
 #$ omp parallel
 #$ omp for private(i) reduction (+:result)
@@ -465,7 +463,7 @@ for i in range(len(v)):
   result = result + v[i]
   if result < 0:
     #$ omp cancel for
-    break
+    pass
 #$ omp end parallel
 ```
 
@@ -503,14 +501,16 @@ The ``` #$ omp distribute ``` directive specifies that the iterations of one or 
 from numpy import zeros
 from pyccel.stdlib.internal.openmp import omp_get_team_num
 n = 8
+threadlimit = 4
 a = zeros(n, dtype=int)
-#$ omp target map(to: n) map(tofrom: a)
-#$ omp teams num_teams(2) thread_limit(n/2)
+#$ omp target
+#$ omp teams num_teams(2) thread_limit(threadlimit)
 #$ omp distribute
 for i in range(0, n):
-  a[i] = omp_get_team_num()
+  a[i]    = omp_get_team_num()
 #$ omp end teams
 #$ omp end target
+
 for i in range(0, n):
   print("Team num :", a[i])
 ```
@@ -534,13 +534,15 @@ Team num : 1
 #### Syntax of *sections*
 
 ```python
-#$ omp sections [clause[ [,]clause] ... ]
+#$ omp sections [nowait] [clause[ [,]clause] ... ]
+
 #$ omp section
 structured-block-sequence
 #$ omp end section
 #$ omp section
 structured-block-sequence
 #$ omp end section
+
 #$ omp end sections
 ```
 
@@ -556,7 +558,7 @@ sum1 = 0
 sum2 = 0
 sum3 = 0
 #$ omp parallel num_threads(2)
-#$ omp omp sections
+#$ omp sections
 
 #$ omp section
 for i in range(0, int(n/3)):
@@ -575,8 +577,8 @@ for i in range(0, n):
   sum3 = sum3 + i
 print("sum3 :", sum3, ", thread :", omp_get_thread_num())
 #$ omp end section
-#$ omp omp end sections
 
+#$ omp end sections
 #$ omp end parallel
 ```
 
@@ -587,4 +589,240 @@ The output of this program is :
 sum1 : 1, thread : 0
 sum2 : 6, thread : 0
 sum3 : 28, thread : 1
+```
+
+## Combined Constructs Usage on Pyccel
+
+### parallel for
+
+#### Syntax of *parallel for*
+
+```python
+#$ omp parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
+The ```#$ omp parallel for``` construct specifies a parallel construct containing a worksharingloop construct with a canonical loop nest.
+
+```python
+import numpy as np
+x = np.array([2,5,4,3,2,5,7])
+result = 0
+#$ omp parallel for reduction (+:result)
+for i in range(0, len(x)):
+    result += x[i]
+print("result:", result)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+result: 28
+```
+
+### parallel for simd
+
+#### Syntax of *parallel for simd*
+
+```python
+#$ omp parallel for simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loop SIMD construct.
+
+```python
+import numpy as np
+x = np.array([1,2,1,2,1,2,1,2])
+y = np.array([2,1,2,1,2,1,2,1])
+z = np.zeros(8, dtype = int)
+result = 0
+#$ omp parallel for simd
+for i in range(0, 8):
+    z[i] = x[i] + y[i]
+
+for i in range(0, 8):
+    print("z[",i,"] :", z[i])
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+z[ 0 ] : 3
+z[ 1 ] : 3
+z[ 2 ] : 3
+z[ 3 ] : 3
+z[ 4 ] : 3
+z[ 5 ] : 3
+z[ 6 ] : 3
+z[ 7 ] : 3
+```
+### for simd
+
+#### Syntax of *for simd*
+
+```python
+
+#$ omp for simd [clause[ [,]clause] ... ]
+for-loops
+```
+
+### teams distribute
+
+#### Syntax of *teams distribute*
+
+```python
+#$ omp teams distribute [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
+```python
+import numpy as np
+x = np.array([1,2,1,2,1,2,1,2])
+y = np.array([2,1,2,1,2,1,2,1])
+z = np.zeros(8, dtype = int)
+result = 0
+#$ omp parallel
+#$ omp for simd
+for i in range(0, 8):
+    z[i] = x[i] + y[i]
+
+#$ omp end parallel
+for i in range(0, 8):
+    print("z[",i,"] :", z[i])
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+z[ 0 ] : 3
+z[ 1 ] : 3
+z[ 2 ] : 3
+z[ 3 ] : 3
+z[ 4 ] : 3
+z[ 5 ] : 3
+z[ 6 ] : 3
+z[ 7 ] : 3
+```
+
+
+### teams distribute simd
+
+#### Syntax of *teams distribut simd*
+
+```python
+#$ omp teams distribute simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### teams distribute parallel for
+
+#### Syntax of *teams distribute parallel for*
+
+```python
+#$ omp teams distribute parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target parallel
+
+#### Syntax of *target parallel*
+
+```python
+#$ omp target parallel [clause[ [,]clause] ... ]
+structured-block
+#$ omp end target parallel
+```
+
+### target parallel for
+
+#### Syntax of *target parallel for*
+
+```python
+#$ omp target parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target parallel for simd
+
+#### Syntax of *target parallel for simd*
+
+```python
+#$ omp target parallel for simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams
+
+#### Syntax of *target teams*
+
+```python
+#$ omp target teams [clause[ [,]clause] ... ]
+structured-block
+#$ omp end target teams
+```
+
+### target teams distribute
+
+#### Syntax of *target teams distribute*
+
+```python
+#$ omp target teams distribute [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams distribute simd
+
+#### Syntax of *target teams distribute simd*
+
+```python
+#$ omp target teams distribute simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams distribute parallel for
+
+#### Syntax of *target teams distribute parallel for*
+
+```python
+#$ omp target teams distribute parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams distribute parallel for simd
+
+#### Syntax of *target teams distribute parallel for simd*
+
+```python
+#$ omp target teams distribute parallel for simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loop SIMD construct.
+
+```python
+r = 0
+#$ omp target teams distribute parallel for reduction(+:r)
+for i in range(0, 10000):
+    r = r + i
+
+print("result:",r)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+result: 49995000
 ```

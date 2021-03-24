@@ -11,396 +11,779 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
+
+from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct,
+                            OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct,
+                            OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
+                            OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
+                            OMP_Sections_Construct, OMP_Section_Construct, OMP_Simd_Construct,
+                            OMP_Distribute_Construct, OMP_TaskLoop_Construct)
 
 DEBUG = False
+
+class OmpConstruct(BasicStmt):
+    """Class representing all OpenMP constructs."""
+    def __init__(self, omp_type, vclauses, **kwargs):
+        name     = kwargs.pop('name', None)
+        clauses  = kwargs.pop('clauses', None)
+        combined = kwargs.pop('combined', None)
+        simd     = kwargs.pop('combinedsimd', None)
+
+        _valid_clauses = vclauses
+
+        com = None
+        if combined:
+            if 'for' in combined.expr:
+                _valid_clauses += _valid_loop_clauses
+            if 'simd' in combined.expr:
+                _valid_clauses += _valid_simd_clauses
+            if 'taskloop' in combined.expr:
+                _valid_clauses += _valid_taskloop_clauses
+            if 'masked' in combined.expr:
+                _valid_clauses += (OmpFilter,)
+            if 'sections' in combined.expr:
+                _valid_clauses += _valid_sections_clauses
+            if 'distribute' in combined.expr:
+                _valid_clauses += _valid_Distribute_clauses
+            if 'parallel' in combined.expr:
+                _valid_clauses += _valid_parallel_clauses
+            if 'teams' in combined.expr:
+                _valid_clauses += _valid_teams_clauses
+            com = combined.expr
+
+        has_nowait = False
+        txt = ''
+        if name:
+            txt += name
+        if simd:
+            _valid_clauses += _valid_simd_clauses
+            txt += ' ' + simd
+        if clauses:
+            clause_expr, has_nowait = check_get_clauses(self, _valid_clauses, clauses, combined)
+            txt += clause_expr
+
+        if combined:
+            self._expr = omp_type(txt, has_nowait, com)
+        else:
+            self._expr = omp_type(txt, has_nowait)
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> {}: expr".format(type(self).__name__))
+
+        return self._expr
+
+class OmpClauses(BasicStmt):
+    """Class representing the clause expr."""
+    _expr = None
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> {}: expr".format(type(self).__name__))
+
+        return self._expr
+
+def check_get_clauses(name, valid_clauses, clauses, combined = None):
+    """
+    Function to check if the clauses are correct for a given construct.
+    And set the has_nowait variable to True if there is a nowait clause, to finally add the nowait clause at the end of the construct.
+    """
+    has_nowait = False
+    txt = ''
+    for clause in clauses:
+        if isinstance(clause, valid_clauses) and \
+           not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
+            if isinstance(clause, OmpNowait):
+                if isinstance(name, (OmpLoopConstruct, OmpSectionsConstruct, OmpSingleConstruct)):
+                    has_nowait = True
+                else:
+                    raise TypeError("Wrong clause nowait")
+            else:
+                txt = '{0} {1}'.format(txt, clause.expr)
+        else:
+            msg = "Wrong clause " + type(clause).__name__
+            raise TypeError(msg)
+    return txt, has_nowait
+
 
 class Openmp(object):
     """Class for Openmp syntax."""
     def __init__(self, **kwargs):
-        """
-        Constructor for Openmp.
-
-        """
         self.statements = kwargs.pop('statements', [])
 
 class OpenmpStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing an OpenMP statement."""
     def __init__(self, **kwargs):
-        """
-        """
         self.stmt = kwargs.pop('stmt')
 
-        super(OpenmpStmt, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> OpenmpStmt: expr")
+            print("> {}: expr".format(type(self).__name__))
 
         stmt = self.stmt
-        if isinstance(stmt, OmpEndClause):
-            return stmt.expr
-        elif isinstance(stmt, OmpParallelConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpLoopConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpSingleConstruct):
+        if isinstance(stmt, omp_directives):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
-class OmpParallelConstruct(BasicStmt):
-    """Class representing a ."""
+class OmpParallelConstruct(OmpConstruct):
+    """Class representing the Parallel construct."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        super().__init__(OMP_Parallel_Construct, _valid_parallel_clauses, **kwargs)
 
-        super(OmpParallelConstruct, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpParallelConstruct: expr")
-
-        _valid_clauses = (OmpNumThread, \
-                         OmpDefault, \
-                         OmpPrivate, \
-                         OmpShared, \
-                         OmpFirstPrivate, \
-                         OmpCopyin, \
-                         OmpReduction, \
-                         OmpProcBind)
-
-        txt = 'parallel'
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpParallelConstruct')
-
-        return OMP_Parallel_Construct(txt)
-
-class OmpLoopConstruct(BasicStmt):
-    """Class representing a ."""
+class OmpLoopConstruct(OmpConstruct):
+    """Class representing the For loop construct."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        super().__init__(OMP_For_Loop, _valid_loop_clauses, **kwargs)
 
-        super(OmpLoopConstruct, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpLoopConstruct: expr")
-
-        _valid_clauses = (OmpPrivate, \
-                         OmpFirstPrivate, \
-                         OmpLastPrivate, \
-                         OmpReduction, \
-                         OmpSchedule, \
-                         OmpCollapse, \
-                         OmpLinear, \
-                         OmpOrdered)
-
-        txt = ''
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
-                                type(clause))
-        return OMP_For_Loop(txt)
-
-class OmpSingleConstruct(BasicStmt):
-    """Class representing a ."""
+class OmpTaskLoopConstruct(OmpConstruct):
+    """Class representing the Taskloop construct."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.clauses = kwargs.pop('clauses')
+        super().__init__(OMP_TaskLoop_Construct, (_valid_taskloop_clauses + (OmpinReduction,)), **kwargs)
 
-        super(OmpSingleConstruct, self).__init__(**kwargs)
+class OmpTaskConstruct(OmpConstruct):
+    """Class representing the Task construct """
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Task_Construct, _valid_task_clauses, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpSingleConstruct: expr")
+class OmpSingleConstruct(OmpConstruct):
+    """Class representing the Single construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Single_Construct, _valid_single_clauses, **kwargs)
 
-        _valid_clauses = (OmpPrivate, \
-                         OmpFirstPrivate)
+class OmpCriticalConstruct(OmpConstruct):
+    """Class representing the Critical construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Critical_Construct, (OmpCriticalName,), **kwargs)
 
-        txt = 'single'
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpSingleConstruct')
+class OmpSimdConstruct(OmpConstruct):
+    """Class representing the Simd construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Simd_Construct, _valid_simd_clauses, **kwargs)
 
-        return OMP_Single_Construct(txt)
+class OmpMasterConstruct(OmpConstruct):
+    """Class representing the master construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Master_Construct, _valid_simd_clauses, **kwargs)
+
+class OmpMaskedConstruct(OmpConstruct):
+    """Class representing the Masked construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Masked_Construct, (OmpFilter,), **kwargs)
+
+class OmpSectionsConstruct(OmpConstruct):
+    """Class representing the Sections construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Sections_Construct, _valid_sections_clauses, **kwargs)
+
+class OmpSectionConstruct(OmpConstruct):
+    """Class representing the Section construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Section_Construct, None, **kwargs)
+
+class OmpDistributeConstruct(OmpConstruct):
+    """Class representing the Distribute construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Distribute_Construct, _valid_Distribute_clauses, **kwargs)
+
+class OmpBarrierConstruct(OmpConstruct):
+    """Class representing the Barrier construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OmpAnnotatedComment, None, **kwargs)
+
+class OmpTaskWaitConstruct(OmpConstruct):
+    """Class representing the TaskWait construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OmpAnnotatedComment, None, **kwargs)
+
+class OmpTaskyieldConstruct(OmpConstruct):
+    """Class representing the Taskyield construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OmpAnnotatedComment, None, **kwargs)
+
+class OmpFlushConstruct(OmpConstruct):
+    """Class representing the Flush construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OmpAnnotatedComment, (FlushList,), **kwargs)
+
+class OmpCancelConstruct(OmpConstruct):
+    """Class representing the Cancel construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Cancel_Construct, (OmpCancelType,), **kwargs)
+
+class OmpTargetConstruct(OmpConstruct):
+    """Class representing the Target construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Target_Construct, _valid_target_clauses, **kwargs)
+
+class OmpTeamsConstruct(OmpConstruct):
+    """Class representing the Teams construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Teams_Construct, _valid_teams_clauses, **kwargs)
+
+class OmpAtomicConstruct(OmpConstruct):
+    """Class representing the Atomic construct ."""
+    def __init__(self, **kwargs):
+        super().__init__(OmpAnnotatedComment, _valid_atomic_clauses, **kwargs)
 
 class OmpEndClause(BasicStmt):
-    """Class representing a ."""
+    """Class representing the End construct."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.construct = kwargs.pop('construct')
-        self.simd      = kwargs.pop('simd', '')
-        self.nowait    = kwargs.pop('nowait', '')
+        lst_construct = kwargs.pop('construct')
 
-        super(OmpEndClause, self).__init__(**kwargs)
+        construct = ' '.join(lst_construct)
+        txt = 'end {0}'.format(construct)
+
+        self._expr = Omp_End_Clause(txt, False)
+
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
             print("> OmpEndClause: expr")
 
-        txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
-        return Omp_End_Clause(txt)
+        return self._expr
 
-class OmpNumThread(BasicStmt):
-    """Class representing a ."""
+class OmpFinal(OmpClauses):
+    """Class representing the final clause"""
     def __init__(self, **kwargs):
-        """
-        """
-        self.thread = kwargs.pop('thread')
+        final = kwargs.pop('final')
 
-        super(OmpNumThread, self).__init__(**kwargs)
+        self._expr = 'final({})'.format(final)
 
-    @property
-    def expr(self):
-        # TODO check if variable exist in namespace
-        if DEBUG:
-            print("> OmpNumThread: expr")
+        super().__init__(**kwargs)
 
-        thread = self.thread
-        return 'num_threads({})'.format(thread)
-
-class OmpDefault(BasicStmt):
-    """Class representing a ."""
+class OmpNumThread(OmpClauses):
+    """Class representing the num_thread clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.status = kwargs.pop('status')
+        thread = kwargs.pop('thread')
 
-        super(OmpDefault, self).__init__(**kwargs)
+        self._expr = 'num_threads({})'.format(thread)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpDefault: expr")
+        super().__init__(**kwargs)
 
-        return 'default({})'.format(self.status)
-
-class OmpProcBind(BasicStmt):
-    """Class representing a ."""
+class OmpNumTeams(OmpClauses):
+    """Class representing the num_teams clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.status = kwargs.pop('status')
+        teams = kwargs.pop('teams')
 
-        super(OmpProcBind, self).__init__(**kwargs)
+        self._expr = 'num_teams({})'.format(teams)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpProcBind: expr")
+        super().__init__(**kwargs)
 
-        return 'proc_bind({})'.format(self.status)
-
-class OmpPrivate(BasicStmt):
-    """Class representing a ."""
+class OmpThreadLimit(OmpClauses):
+    """Class representing the thread_limit clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        limit = kwargs.pop('limit')
 
-        super(OmpPrivate, self).__init__(**kwargs)
+        self._expr = 'thread_limit({})'.format(limit)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpPrivate: expr")
+        super().__init__(**kwargs)
 
-        # TODO check if variable exist in namespace
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'private({})'.format(args)
-
-class OmpShared(BasicStmt):
-    """Class representing a ."""
+class OmpNumTasks(OmpClauses):
+    """Class representing the num_tasks clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        tasks = kwargs.pop('tasks')
 
-        super(OmpShared, self).__init__(**kwargs)
+        self._expr = 'num_tasks({})'.format(tasks)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpShared: expr")
+        super().__init__(**kwargs)
 
-        # TODO check if variable exist in namespace
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'shared({})'.format(args)
-
-class OmpFirstPrivate(BasicStmt):
-    """Class representing a ."""
+class OmpGrainSize(OmpClauses):
+    """Class representing the grainsize clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        size = kwargs.pop('tasks')
 
-        super(OmpFirstPrivate, self).__init__(**kwargs)
+        self._expr = 'grainsize({})'.format(size)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpFirstPrivate: expr")
+        super().__init__(**kwargs)
 
-        # TODO check if variable exist in namespace
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'firstprivate({})'.format(args)
-
-class OmpLastPrivate(BasicStmt):
-    """Class representing a ."""
+class OmpDefault(OmpClauses):
+    """Class representing the default clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        status = kwargs.pop('status')
 
-        super(OmpLastPrivate, self).__init__(**kwargs)
+        self._expr = 'default({})'.format(status)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpLastPrivate: expr")
+        super().__init__(**kwargs)
 
-        # TODO check if variable exist in namespace
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'lastprivate({})'.format(args)
-
-class OmpCopyin(BasicStmt):
-    """Class representing a ."""
+class OmpProcBind(OmpClauses):
+    """Class representing the proc_bind clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
+        status = kwargs.pop('status')
 
-        super(OmpCopyin, self).__init__(**kwargs)
+        self._expr = 'proc_bind({})'.format(status)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpCopyin: expr")
+        super().__init__(**kwargs)
 
-        # TODO check if variable exist in namespace
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'copyin({})'.format(args)
-
-class OmpReduction(BasicStmt):
-    """Class representing a ."""
+class OmpPrivate(OmpClauses):
+    """Class representing the private clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.op   = kwargs.pop('op')
-        self.args = kwargs.pop('args')
+        args = kwargs.pop('args')
 
-        super(OmpReduction, self).__init__(**kwargs)
+        #TODO check for variables in namespace
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'private({})'.format(txt)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpReduction: expr")
+        super().__init__(**kwargs)
 
-        # TODO check if variable exist in namespace
-        op   = self.op
-        args = ', '.join(str(arg) for arg in self.args)
-        return 'reduction({0}: {1})'.format(op, args)
-
-class OmpCollapse(BasicStmt):
-    """Class representing a ."""
+class FlushList(OmpClauses):
+    """Class representing a list of variables for the flush construct."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n')
+        args = kwargs.pop('args')
 
-        super(OmpCollapse, self).__init__(**kwargs)
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = '({})'.format(txt)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpCollapse: expr")
+        super().__init__(**kwargs)
 
-        return 'collapse({})'.format(self.n)
-
-class OmpOrdered(BasicStmt):
-    """Class representing a ."""
+class OmpCriticalName(OmpClauses):
+    """Class representing the name of a critical construct."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.n = kwargs.pop('n', None)
+        args = kwargs.pop('args')
 
-        super(OmpOrdered, self).__init__(**kwargs)
+        self._expr = '({})'.format(str(args))
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpOrdered: expr")
+        super().__init__(**kwargs)
 
-        if self.n:
-            return 'ordered({})'.format(self.n)
+class OmpShared(OmpClauses):
+    """Class representing the shared clause."""
+    def __init__(self, **kwargs):
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'shared({})'.format(txt)
+
+        super().__init__(**kwargs)
+
+class OmpFirstPrivate(OmpClauses):
+    """Class representing the firstprivate clause."""
+    def __init__(self, **kwargs):
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'firstprivate({})'.format(txt)
+
+        super().__init__(**kwargs)
+
+class OmpLastPrivate(OmpClauses):
+    """Class representing the lastprivate clause."""
+    def __init__(self, **kwargs):
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'lastprivate({})'.format(txt)
+
+        super().__init__(**kwargs)
+
+class OmpCopyin(OmpClauses):
+    """Class representing the copyin clause."""
+    def __init__(self, **kwargs):
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'copyin({})'.format(txt)
+
+        super().__init__(**kwargs)
+
+class OmpReduction(OmpClauses):
+    """Class representing the reduction clause."""
+    def __init__(self, **kwargs):
+        op   = kwargs.pop('op')
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'reduction({0}: {1})'.format(op, txt)
+
+        super().__init__(**kwargs)
+
+class OmpDepend(OmpClauses):
+    """Class representing the depend clause."""
+    def __init__(self, **kwargs):
+        dtype   = kwargs.pop('dtype')
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'depend({0}: {1})'.format(dtype, txt)
+
+        super().__init__(**kwargs)
+
+class OmpMap(OmpClauses):
+    """Class representing the map clause."""
+    def __init__(self, **kwargs):
+        mtype   = kwargs.pop('mtype')
+        args = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = 'map({0} {1})'.format(mtype, txt)
+
+        super().__init__(**kwargs)
+
+class OmpinReduction(OmpClauses):
+    """Class representing the in_reduction clause."""
+    def __init__(self, **kwargs):
+        ctype  = kwargs.pop('ctype')
+        op     = kwargs.pop('op')
+        args   = kwargs.pop('args')
+
+        txt = ', '.join(str(arg) for arg in args)
+        self._expr = '{0}({1}: {2})'.format(ctype, op, txt)
+
+        super().__init__(**kwargs)
+
+class OmpCollapse(OmpClauses):
+    """Class representing the collapse clause."""
+    def __init__(self, **kwargs):
+        n = kwargs.pop('n')
+
+        self._expr = 'collapse({})'.format(n)
+
+        super().__init__(**kwargs)
+
+class OmpOrdered(OmpClauses):
+    """Class representing the ordered clause."""
+    def __init__(self, **kwargs):
+        n = kwargs.pop('n', None)
+
+        if n:
+            self._expr = 'ordered({})'.format(n)
         else:
-            return 'ordered'
+            self._expr = 'ordered'
 
-class OmpLinear(BasicStmt):
-    """Class representing a ."""
+        super().__init__(**kwargs)
+
+class OmpLinear(OmpClauses):
+    """Class representing the linear clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.val  = kwargs.pop('val')
-        self.step = kwargs.pop('step')
+        val  = kwargs.pop('val')
+        step = kwargs.pop('step')
 
-        super(OmpLinear, self).__init__(**kwargs)
+        self._expr = 'linear({0}:{1})'.format(val, step)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpLinear: expr")
+        super().__init__(**kwargs)
 
-        return 'linear({0}:{1})'.format(self.val, self.step)
-
-class OmpSchedule(BasicStmt):
-    """Class representing a ."""
+class OmpSchedule(OmpClauses):
+    """Class representing the schedule clause."""
     def __init__(self, **kwargs):
-        """
-        """
-        self.kind       = kwargs.pop('kind')
-        self.chunk_size = kwargs.pop('chunk_size', None)
+        kind       = kwargs.pop('kind')
+        chunk_size = kwargs.pop('chunk_size', None)
 
-        super(OmpSchedule, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpSchedule: expr")
-
-        if self.chunk_size:
-            return 'schedule({0}, {1})'.format(self.kind, self.chunk_size)
+        if chunk_size:
+            self._expr = 'schedule({0}, {1})'.format(kind, chunk_size)
         else:
-            return 'schedule({0})'.format(self.kind)
+            self._expr = 'schedule({0})'.format(kind)
+
+        super().__init__(**kwargs)
+
+class OmpFilter(OmpClauses):
+    """Class representing the filter clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+        n = kwargs.pop('n')
+
+        self._expr = '{}({})'.format(name, n)
+
+        super().__init__(**kwargs)
+
+class OmpUntied(OmpClauses):
+    """Class representing the untied clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class OmpMergeable(OmpClauses):
+    """Class representing the mergeable clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class OmpNogroup(OmpClauses):
+    """Class representing the nogroup clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class OmpPriority(OmpClauses):
+    """Class representing the priority clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+        n = kwargs.pop('n')
+
+        self._expr = '{}({})'.format(name, n)
+
+        super().__init__(**kwargs)
+
+class OmpAtomicClause(OmpClauses):
+    """Class representing the atomic clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class OmpCancelType(OmpClauses):
+    """Class representing the type of the cancel construct."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class AtomicMemoryClause(OmpClauses):
+    """Class representing the atomic memory clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class OmpNowait(OmpClauses):
+    """Class representing the nowait clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
+class OmpForSimd(OmpClauses):
+    """Class representing the combined For Simd construct."""
+    def __init__(self, **kwargs):
+        fname = kwargs.pop('fname')
+        sname = kwargs.pop('sname', None)
+
+        txt = fname
+        if sname:
+            txt = txt + ' ' + sname
+        self._expr = '{}'.format(txt)
+
+        super().__init__(**kwargs)
+
+class OmpMaskedTaskloop(OmpClauses):
+    """Class representing the combined Masked Taskloop construct."""
+    def __init__(self, **kwargs):
+        mname = kwargs.pop('mname')
+        tname = kwargs.pop('tname', None)
+        sname = kwargs.pop('sname', None)
+
+        txt = mname
+        if tname:
+            txt = txt + ' ' + tname
+            if sname:
+                txt = txt + ' ' + sname
+        self._expr = '{}'.format(txt)
+
+        super().__init__(**kwargs)
+
+class OmpPSections(OmpClauses):
+    """Class representing the combined Parallel Sections construct."""
+    def __init__(self, **kwargs):
+        sname = kwargs.pop('sname')
+
+        self._expr = sname
+
+        super().__init__(**kwargs)
+
+class OmpTaskloopSimd(OmpClauses):
+    """Class representing the combined Taskloop Simd comstruct."""
+    def __init__(self, **kwargs):
+        tname = kwargs.pop('tname')
+        sname = kwargs.pop('sname', None)
+
+        txt = tname
+        if sname:
+            txt += ' ' + sname
+        self._expr = txt
+
+        super().__init__(**kwargs)
+
+class OmpDistributeCombined(OmpClauses):
+    """Class representing the combined Distribute construct."""
+    def __init__(self, **kwargs):
+        dname  = kwargs.pop('dname')
+        sname  = kwargs.pop('sname', None)
+        pname  = kwargs.pop('pname', None)
+        fname  = kwargs.pop('fname', None)
+        ssname = kwargs.pop('ssname', None)
+
+        txt = dname
+        if sname:
+            txt += ' ' + sname
+        elif pname:
+            txt += ' ' + pname
+            txt += ' ' + fname
+            if ssname:
+                txt += ' ' + ssname
+        self._expr = txt
+
+        super().__init__(**kwargs)
+
+class OmpTargetParallel(OmpClauses):
+    """Class representing the combined Target Parallel construct."""
+    def __init__(self, **kwargs):
+        pname = kwargs.pop('pname')
+        fname = kwargs.pop('fname', None)
+        sname = kwargs.pop('sname', None)
+
+        txt = pname
+        if fname:
+            txt = ' ' + fname
+            if sname:
+                txt += ' ' + sname
+        self._expr = txt
+
+        super().__init__(**kwargs)
+
+class OmpTargetTeams(OmpClauses):
+    """Class representing the combined Target Teams construct."""
+    def __init__(self, **kwargs):
+        tname  = kwargs.pop('tname')
+        dname  = kwargs.pop('dname', None)
+        sname  = kwargs.pop('sname', None)
+        pname  = kwargs.pop('pname', None)
+        fname  = kwargs.pop('fname', None)
+        ssname = kwargs.pop('ssname', None)
+
+        txt = tname
+        if dname:
+            txt += ' ' + dname
+            if sname:
+                txt += ' ' + sname
+            else:
+                txt += ' ' + pname + ' ' + fname
+                if ssname:
+                    txt += ' ' + ssname
+        self._expr = txt
+
+        super().__init__(**kwargs)
+
 #################################################
 
 #################################################
-# whenever a new rule is added in the grammar, we must update the following
-# lists.
-omp_directives = [OmpParallelConstruct,
+# whenever a new rule (construct/clause) is added in the grammar, we must update the following tuples.
+
+_valid_single_clauses = (OmpPrivate,
+                         OmpFirstPrivate,
+                         OmpNowait)
+
+_valid_atomic_clauses = (OmpAtomicClause,
+                         AtomicMemoryClause)
+
+_valid_task_clauses = (OmpPriority,
+                       OmpFinal,
+                       OmpDefault,
+                       OmpPrivate,
+                       OmpShared,
+                       OmpFirstPrivate,
+                       OmpUntied,
+                       OmpMergeable,
+                       OmpinReduction,
+                       OmpDepend)
+
+_valid_target_clauses = (OmpPrivate,
+                         OmpLastPrivate,
+                         OmpinReduction,
+                         OmpDepend,
+                         OmpMap)
+
+_valid_teams_clauses = (OmpPrivate,
+                        OmpLastPrivate,
+                        OmpShared,
+                        OmpReduction,
+                        OmpNumTeams,
+                        OmpThreadLimit)
+
+_valid_sections_clauses = (OmpPrivate,
+                           OmpFirstPrivate,
+                           OmpLastPrivate,
+                           OmpReduction,
+                           OmpNowait)
+
+_valid_Distribute_clauses = (OmpPrivate,
+                             OmpFirstPrivate,
+                             OmpLastPrivate,
+                             OmpCollapse)
+
+_valid_simd_clauses = (OmpLinear,
+                       OmpReduction,
+                       OmpCollapse,
+                       OmpLastPrivate)
+
+_valid_taskloop_clauses = (OmpShared,
+                           OmpPrivate,
+                           OmpFirstPrivate,
+                           OmpLastPrivate,
+                           OmpReduction,
+                           OmpinReduction,
+                           OmpNumTasks,
+                           OmpGrainSize,
+                           OmpCollapse,
+                           OmpUntied,
+                           OmpMergeable,
+                           OmpNogroup,
+                           OmpPriority)
+
+_valid_loop_clauses = (OmpPrivate,
+                       OmpFirstPrivate,
+                       OmpLastPrivate,
+                       OmpReduction,
+                       OmpSchedule,
+                       OmpCollapse,
+                       OmpLinear,
+                       OmpOrdered,
+                       OmpNowait)
+
+_valid_parallel_clauses = (OmpNumThread,
+                           OmpDefault,
+                           OmpPrivate,
+                           OmpShared,
+                           OmpFirstPrivate,
+                           OmpCopyin,
+                           OmpReduction,
+                           OmpProcBind)
+
+omp_directives = (OmpParallelConstruct,
                   OmpLoopConstruct,
                   OmpSingleConstruct,
-                  OmpEndClause]
+                  OmpEndClause,
+                  OmpCriticalConstruct,
+                  OmpBarrierConstruct,
+                  OmpMasterConstruct,
+                  OmpMaskedConstruct,
+                  OmpTaskLoopConstruct,
+                  OmpSimdConstruct,
+                  OmpAtomicConstruct,
+                  OmpTaskWaitConstruct,
+                  OmpTaskyieldConstruct,
+                  OmpTaskConstruct,
+                  OmpFlushConstruct,
+                  OmpCancelConstruct,
+                  OmpTargetConstruct,
+                  OmpTeamsConstruct,
+                  OmpDistributeConstruct,
+                  OmpSectionsConstruct,
+                  OmpSectionConstruct)
 
-omp_clauses = [OmpCollapse,
+omp_clauses = (OmpCollapse,
                OmpCopyin,
                OmpFirstPrivate,
                OmpLastPrivate,
@@ -413,10 +796,35 @@ omp_clauses = [OmpCollapse,
                OmpPrivate,
                OmpReduction,
                OmpSchedule,
-               OmpShared]
+               OmpShared,
+               OmpCriticalName,
+               OmpFilter,
+               OmpinReduction,
+               OmpNumTasks,
+               OmpGrainSize,
+               OmpUntied,
+               OmpMergeable,
+               OmpNogroup,
+               OmpPriority,
+               OmpAtomicClause,
+               AtomicMemoryClause,
+               OmpDepend,
+               FlushList,
+               OmpFinal,
+               OmpCancelType,
+               OmpMap,
+               OmpNumTeams,
+               OmpThreadLimit,
+               OmpForSimd,
+               OmpMaskedTaskloop,
+               OmpPSections,
+               OmpTaskloopSimd,
+               OmpDistributeCombined,
+               OmpTargetParallel,
+               OmpTargetTeams,
+               OmpNowait)
 
-omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
-
+omp_classes = (Openmp, OpenmpStmt) + omp_directives + omp_clauses
 
 this_folder = dirname(__file__)
 

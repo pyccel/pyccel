@@ -9,8 +9,9 @@ import subprocess
 import os
 import glob
 import warnings
+from filelock import FileLock
 
-from pyccel.ast.bind_c                      import as_static_function_call
+from pyccel.ast.bind_c                      import as_static_module
 from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
@@ -66,11 +67,10 @@ def create_shared_library(codegen,
         extra_libdirs = []
         if language == 'fortran':
             # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
-            funcs = [f for f in codegen.routines if not f.is_private]
-            sep = fcode(SeparatorComment(40), codegen.parser)
-            bind_c_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
-            bind_c_code = '\n'.join([sep + fcode(f, codegen.parser) + sep for f in bind_c_funcs])
-            bind_c_filename = 'bind_c_{}.f90'.format(module_name)
+            new_module_name = 'bind_c_{}'.format(module_name)
+            bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
+            bind_c_code = fcode(bind_c_mod, codegen.parser)
+            bind_c_filename = '{}.f90'.format(new_module_name)
 
             with open(bind_c_filename, 'w') as f:
                 f.writelines(bind_c_code)
@@ -130,8 +130,15 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        out, err = p.communicate()
+        locks = [FileLock(d+'.lock') for d in dep_mods]
+        for l in locks:
+            l.acquire()
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            out, err = p.communicate()
+        finally:
+            for l in locks:
+                l.release()
         if verbose:
             print(out)
         if p.returncode != 0:
