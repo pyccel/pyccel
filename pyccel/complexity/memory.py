@@ -59,7 +59,8 @@ class MemComplexity(Complexity):
 
     def _cost_AugAssign(self, expr, **settings):
         ntimes = self._compute_size_lhs(expr)
-        return  self._cost(expr.rhs, **settings) + ntimes * WRITE
+        # Right? Because x += a should also READ x which is in lrs
+        return  self._cost(expr.rhs, **settings) + ntimes * WRITE + ntimes * READ
 
     def _cost_PyccelAdd(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
@@ -71,8 +72,9 @@ class MemComplexity(Complexity):
         return sum(self._cost(i, **settings) for i in expr.args)
 
     def _cost_PyccelFloorDiv(self, expr, **settings):
-        atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
-        return READ*len(atoms)
+        #atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
+        #return READ*len(atoms)
+        return sum(self._cost(i, **settings) for i in expr.args)
 
     def _cost_PyccelMul(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
@@ -188,3 +190,7 @@ class MemComplexity(Complexity):
 
     def _cost_NumpyArctanh(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
+
+    def _cost_PyccelArraySize(self, expr, **settings):
+        # x = size(z) has a READ right?
+        return READ

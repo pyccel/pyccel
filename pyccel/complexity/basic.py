@@ -223,6 +223,7 @@ class Complexity(object):
         return sum(self._cost(i, **settings) for i in [expr.stmt, expr.expr])
 
     def _cost_PyccelArraySize(self, expr, **settings):
+        # x = size(z) has a READ right?
         return 0
 
     def _compute_size_lhs(self, expr):
