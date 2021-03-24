@@ -45,7 +45,7 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 # ==============================================================================
 def test_complexity_ex1():
 
-    f = '/home/khaoula/pyccelWorkspace/pyccel/tests/complexity/scripts/ex1.py'
+    f = path_dir + '/ex1.py'
     mode = None
 
     complexity = OpComplexity(f)
@@ -135,7 +135,7 @@ def test_complexity_ex1():
 # ==============================================================================
 def test_complexity_ex2():
 
-    f = '/home/khaoula/pyccelWorkspace/pyccel/tests/complexity/scripts/ex2.py'
+    f = path_dir + '/ex2.py'
     mode = None
 
     complexity = OpComplexity(f)
@@ -157,7 +157,7 @@ def test_complexity_ex2():
 # ==============================================================================
 def test_complexity_ex_assembly():
 
-    f = '/home/khaoula/pyccelWorkspace/pyccel/tests/complexity/scripts/ex_assembly.py'
+    f = path_dir + '/ex_assembly.py'
     mode = None
 
     complexity = OpComplexity(f)
