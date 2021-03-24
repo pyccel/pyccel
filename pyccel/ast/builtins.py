@@ -619,7 +619,7 @@ class PythonMax(PyccelInternalFunction):
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
         if not x.is_homogeneous:
-            raise NotImplementedError("Cannot determine dtype of min({})".format(x))
+            raise NotImplementedError("Cannot determine dtype of max({})".format(x))
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
