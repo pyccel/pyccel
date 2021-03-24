@@ -172,3 +172,53 @@ def test_complexity_ex_assembly():
     for f, c in complexity.costs.items():
         assert c == comp[i]
         i = i + 1
+
+
+
+# ==============================================================================
+def test_complexity_mxm():
+
+    f = path_dir + '/mxm.py'
+    mode = None
+
+    complexity = OpComplexity(f)
+    complexity.cost(mode=mode, simplify=True, bigo=None)
+    # complexity.cost(mode=mode, simplify=True, bigo=['n'])
+
+    print('----------------------')
+    i = 0
+    comp = [n**3*(ADD + MUL),
+            n**3*(ADD + MUL)
+            ]
+
+    for f, c in complexity.costs.items():
+        assert c == comp[i]
+        i = i + 1
+
+
+
+
+# ==============================================================================
+def test_complexity_qr():
+
+    f = path_dir + '/qr.py'
+    mode = None
+
+    complexity = OpComplexity(f)
+    complexity.cost(mode=mode, simplify=True, bigo=None)
+    # complexity.cost(mode=mode, simplify=True, bigo=['n'])
+
+    print('----------------------')
+    i = 0
+    comp = [n*(ADD*n**2 - ADD + 3*DIV*n - 3*DIV + MUL*n**2 - MUL + 6*SQRT + 3*SUB*n + 3*SUB)/6
+            ]
+
+    for f, c in complexity.costs.items():
+        print(c == comp[i])
+        i = i + 1
+        print('> cost of {} = {}'.format(f, c))
+######################
+if __name__ == '__main__':
+
+#    test_complexity('scripts/mxm.py')
+    test_complexity_qr()
