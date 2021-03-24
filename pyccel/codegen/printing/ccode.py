@@ -448,7 +448,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         if var.rank > 0:
-            return self._print(PyccelArraySize(var, 0))
+            return self._print(var.shape[0])
         else:
             raise NotImplementedError("PythonLen not implemented for type {}".format(type(expr.arg)))
 
