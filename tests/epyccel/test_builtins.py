@@ -41,10 +41,17 @@ def test_abs_c(language):
     assert f1(0j + 5) == f2(0j + 5)
     assert f1(0j + 0) == f2(0j + 0)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="min not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_min_2_args(language):
     @types('int','int')
     @types('float','float')
-    @types('complex','complex')
     def f(x, y):
         return min(x, y)
 
@@ -53,12 +60,18 @@ def test_min_2_args(language):
     epyc_f = epyccel(f, language=language)
     assert epyc_f(a,b) == f(a,b)
     assert epyc_f(float(a),float(b)) == f(float(a),float(b))
-    assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="min not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_min_3_args(language):
     @types('int','int','int')
     @types('float','float','float')
-    @types('complex','complex','complex')
     def f(x, y):
         return min(x, y)
 
@@ -68,12 +81,18 @@ def test_min_3_args(language):
     epyc_f = epyccel(f, language=language)
     assert epyc_f(a,b,c) == f(a,b,c)
     assert epyc_f(float(a),float(b),float(c)) == f(float(a),float(b),float(c))
-    assert epyc_f(complex(a),complex(b),complex(c)) == f(complex(a),complex(b),complex(c))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="max not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_max_2_args(language):
     @types('int','int')
     @types('float','float')
-    @types('complex','complex')
     def f(x, y):
         return max(x, y)
 
@@ -82,12 +101,18 @@ def test_max_2_args(language):
     epyc_f = epyccel(f, language=language)
     assert epyc_f(a,b) == f(a,b)
     assert epyc_f(float(a),float(b)) == f(float(a),float(b))
-    assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="max not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_max_3_args(language):
     @types('int','int','int')
     @types('float','float','float')
-    @types('complex','complex','complex')
     def f(x, y):
         return min(x, y)
 
@@ -97,8 +122,15 @@ def test_max_3_args(language):
     epyc_f = epyccel(f, language=language)
     assert epyc_f(a,b,c) == f(a,b,c)
     assert epyc_f(float(a),float(b),float(c)) == f(float(a),float(b),float(c))
-    assert epyc_f(complex(a),complex(b),complex(c)) == f(complex(a),complex(b),complex(c))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_sum_matching_types(language):
     @template('T',['int','float','complex'])
     @types('T','T')
@@ -112,6 +144,14 @@ def test_sum_matching_types(language):
     assert epyc_f(float(a),float(b)) == f(float(a),float(b))
     assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_sum_different_types(language):
     @template('T',['int','float','complex'])
     @template('S',['int','float','complex'])
