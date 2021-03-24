@@ -515,11 +515,13 @@ class NumpyLinspace(NumpyNewArray):
     _precision = default_precision['real']
     _order     = 'F'
 
-    def __init__(self, start, stop, size):
+    def __init__(self, start, stop, size=None):
 
 
         _valid_args = (Variable, IndexedElement, LiteralFloat, LiteralInteger, PyccelUnarySub)
 
+        if not size:
+            size = LiteralInteger(50)
         for arg in (start, stop, size):
             if not isinstance(arg, PyccelAstNode):
             #if isinstance(arg, PyccelUnarySub):
