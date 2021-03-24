@@ -60,20 +60,20 @@ def test_complexity_ex1():
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_scalar_mul
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_scalar_div
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_scalar_idiv
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_scalar_add
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_scalar_sub
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_scalar_mul
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_scalar_div
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_scalar_idiv
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_scalar_add
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_scalar_sub
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_scalar_mul
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_scalar_div
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_scalar_idiv
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_add
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_sub
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_mul
             (READ * 2 + WRITE) * SHAPE(x, 0),## array_int32_1d_idiv
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_add
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_sub
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_mul
-            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 0),## array_int32_2d_idiv
-            (READ * 2 + WRITE) * 9,## array_int32_1d_scalar_add_stride1
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_add
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_sub
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_mul
+            (READ * 2 + WRITE) * SHAPE(x, 0) * SHAPE(x, 1),## array_int32_2d_idiv
+            (READ * 2 + WRITE) * SHAPE(x, 1) * 9,## array_int32_1d_scalar_add_stride1
             (READ * 2 + WRITE) * 9 * 3,## array_int32_1d_scalar_add_stride2
             (READ * 2 + WRITE) * 5 * 3,## array_int32_1d_scalar_add_stride3
             (READ * 2 + WRITE) * 5 * (SHAPE(x, 1) - 2),## array_int32_1d_scalar_add_stride4
