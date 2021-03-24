@@ -280,7 +280,6 @@ def test_float_types(language):
     f2 = mod2.float_types
 
     assert f1(10.5, 5.5) == f2(10.5, 5.5)
-    assert f1(np.float(15.5) , np.float(10.5)) == f2(np.float(15.5) , np.float(10.5))
     assert f1(np.float32(155.2), np.float32(177.1)) == f2(np.float32(155.2), np.float32(177.1))
     assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
 
@@ -289,9 +288,8 @@ def test_complex_types(language):
     f2 = mod2.complex_types
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
-    assert f1(np.complex(15.5, 2.0) , np.complex(10.5, 3.4)) == f2(np.complex(15.5, 2.0) , np.complex(10.5, 3.4))
     assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
-    assert f1(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j))
+    assert f1(np.complex128(15.5+ 2.0j) , np.complex128(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex128(10.5+ 3.4j))
 
 def test_mix_types_1(language):
     f1 = epyccel(mod2.mix_types_1 , language = language)

@@ -1743,7 +1743,7 @@ def arr_arange_3():
 
 def arr_arange_4():
     import numpy as np
-    a = np.arange(1, 28, 3, dtype=np.float)
+    a = np.arange(1, 28, 3, dtype=float)
     return np.shape(a)[0], a[0], a[-1]
 
 def arr_arange_5():
