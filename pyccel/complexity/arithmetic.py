@@ -234,8 +234,12 @@ class OpComplexity(Complexity):
             return ops + ABS
 
     def _cost_PyccelPow(self, expr, **settings):
-        # TODO
-        return 0
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            # TODO is this correct?
+            return ops +expr.args[1]
+        else:
+            return (int(expr.args[1])-1) * MUL
 
     def _cost_Assign(self, expr, **settings):
         if isinstance(expr.rhs, (Comment, EmptyNode)):

@@ -195,9 +195,7 @@ class Complexity(object):
         step = pyccel_to_sympy(step, self._symbol_map, self._used_names)
         # ...
 
-        # TODO is this correct?
-        end = (e-b-1) / step
-
+        end = ((e-b) / step)-1
         # translate so that we always start from 0
         return summation(ops, (i, 0, end))
 
