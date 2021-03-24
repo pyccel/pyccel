@@ -1189,8 +1189,10 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
 
         if expr.stmt:
-            # get Assign nodes form the CodeBlock object expr.stmt.
-            last_assign = expr.stmt.get_attribute_nodes(Assign)
+            # get Assign nodes from the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
+            deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
+            vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
@@ -1200,14 +1202,14 @@ class CCodePrinter(CodePrinter):
             # make sure that stmt contains one assign node.
             assert(len(last_assign)==1)
             variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-            unneeded_var = not any(b.allocatable and not b.is_argument for b in variables)
+            unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
                 code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
                 return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
             else:
                 code = '\n'+self._print(expr.stmt)
                 self._additional_declare.append(last_assign[0].lhs)
-        return code + 'return {0};'.format(self._print(args[0]))
+        return code + '\nreturn {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'
@@ -1343,8 +1345,11 @@ class CCodePrinter(CodePrinter):
                                                   stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
-        self._additional_declare.extend(new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+            self._additional_declare.extend(new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             code = self._print(b)
@@ -1483,6 +1488,8 @@ class CCodePrinter(CodePrinter):
         if expr.combined:
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
+        if expr.has_nowait:
+            clauses = clauses + ' nowait'
         omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
         if expr.is_multiline:

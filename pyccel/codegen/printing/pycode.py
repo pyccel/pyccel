@@ -418,6 +418,18 @@ class PythonCodePrinter(CodePrinter):
                 dtype = dtype,
                 order = expr.order)
 
+    def _print_NumpyLinspace(self, expr):
+        return "linspace({0}, {1}, {2})".format(
+                self._print(expr.start),
+                self._print(expr.stop),
+                self._print(expr.size))
+
+    def _print_NumpyMatmul(self, expr):
+        return "matmul({0}, {1})".format(
+                self._print(expr.a),
+                self._print(expr.b))
+
+
     def _print_NumpyFull(self, expr):
         dtype = self._print(expr.dtype)
         if expr.precision != default_precision[str(expr.dtype)]:
@@ -457,6 +469,13 @@ class PythonCodePrinter(CodePrinter):
             size = self._print(expr.shape)
             args += ", size = {}".format(size)
         return "randint({})".format(args)
+
+    def _print_NumpyNorm(self, expr):
+        name = 'norm'
+        axis = self._print(expr.axis) if expr.axis else None
+        if axis:
+            return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
+        return  "{name}({arg})".format(name = name, arg  = self._print(expr.python_arg))
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__

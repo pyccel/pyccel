@@ -44,11 +44,11 @@ from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
                                   PythonZip, PythonFloat, PythonTuple)
-from pyccel.ast.builtins  import PythonComplex, PythonBool
+from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
@@ -657,13 +657,18 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-
-        if expr.dim:
-            rhs = 'Norm2({},{})'.format(self._print(expr.arg),self._print(expr.dim))
+        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
+        if expr.axis:
+            axis = expr.axis
+            if expr.order != 'F':
+                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis)
+            else:
+                axis = LiteralInteger(expr.axis.python_value + 1)
+            code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))
         else:
-            rhs = 'Norm2({})'.format(self._print(expr.arg))
+            code = 'Norm2({})'.format(self._print(arg))
 
-        return rhs
+        return code
 
     def _print_NumpyLinspace(self, expr):
 
@@ -1182,8 +1187,11 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_CodeBlock(self, expr):
-        body_exprs, new_vars = expand_to_loops(expr, self.parser.get_new_variable, language_has_vectors = True)
-        self.add_vars_to_namespace(*new_vars)
+        if not expr.unravelled:
+            body_exprs, new_vars = expand_to_loops(expr, self.parser.get_new_variable, language_has_vectors = True)
+            self.add_vars_to_namespace(*new_vars)
+        else:
+            body_exprs = expr.body
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)
@@ -1837,6 +1845,8 @@ class FCodePrinter(CodePrinter):
 
         body = self._print(expr.body)
 
+        if expr.nowait_expr:
+            epilog += expr.nowait_expr
         return ('{prolog}'
                 '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
@@ -1862,6 +1872,8 @@ class FCodePrinter(CodePrinter):
         if "section" in omp_expr and "sections" not in omp_expr:
             return ''
         omp_expr = omp_expr.replace("for", "do")
+        if expr.has_nowait:
+            omp_expr += ' nowait'
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
 

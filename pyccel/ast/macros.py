@@ -24,6 +24,7 @@ __all__ = (
 #==============================================================================
 class Macro(PyccelAstNode):
     """."""
+    __slots__ = ('_argument',)
     _name = '__UNDEFINED__'
     _attribute_nodes = ()
 
@@ -45,11 +46,13 @@ class Macro(PyccelAstNode):
 #==============================================================================
 class MacroShape(Macro):
     """."""
+    __slots__ = ('_index',)
     _name      = 'shape'
-    _rank      = 1
-    _shape     = ()
     _dtype     = NativeInteger()
     _precision = default_precision['integer']
+    _rank      = 1
+    _shape     = ()
+    _order     = None
 
     def __init__(self, argument, index=None):
         self._index = index
@@ -69,11 +72,13 @@ class MacroShape(Macro):
 #==============================================================================
 class MacroType(Macro):
     """."""
+    __slots__ = ()
     _name      = 'dtype'
     _dtype     = NativeGeneric()
+    _precision = 0
     _rank      = 0
     _shape     = ()
-    _precision = 0
+    _order     = None
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -81,11 +86,13 @@ class MacroType(Macro):
 #==============================================================================
 class MacroCount(Macro):
     """."""
+    __slots__ = ()
     _name      = 'count'
-    _rank      = 0
-    _shape     = ()
     _dtype     = NativeInteger()
     _precision = default_precision['integer']
+    _rank      = 0
+    _shape     = ()
+    _order     = None
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
