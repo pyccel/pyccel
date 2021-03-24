@@ -2,6 +2,8 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+# TODO [EB 12.03.21]: Remove pylint command with PR #797
+# pylint: disable=W0201
 """
 Module handling all python builtin operators
 These operators all have a precision as detailed here:
@@ -17,7 +19,7 @@ from .datatypes             import (NativeBool, NativeInteger, NativeReal,
                                     NativeComplex, NativeString, default_precision,
                                     NativeNumeric)
 
-from .literals              import LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex, Nil
 
 errors = Errors()
 
@@ -204,8 +206,7 @@ class PyccelUnaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_dtype(*_args):
         """ Sets the dtype and precision
-        They are chosen to match the argument unless the class has
-        a _dtype or _precision member
+        They are chosen to match the argument
         """
         a = _args[0]
         _dtype = a.dtype
@@ -215,8 +216,7 @@ class PyccelUnaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape_rank(*_args):
         """ Sets the shape and rank
-        They are chosen to match the argument unless the class has
-        a _shape or _rank member
+        They are chosen to match the argument
         """
         a = _args[0]
         _rank = a.rank
@@ -861,7 +861,7 @@ class PyccelBooleanOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-
+    __slots__ = ()
     @staticmethod
     def _calculate_dtype(*_args):
         _dtype = NativeBool()
