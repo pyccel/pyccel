@@ -1,9 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 from numpy.random import randint
+from numpy import isclose, iinfo, finfo
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types, template
+
+min_int = iinfo('int').min
+max_int = iinfo('int').max
+
+min_float = finfo('float').min
+max_float = finfo('float').max
 
 def test_abs_i(language):
     @types('int')
@@ -12,9 +19,12 @@ def test_abs_i(language):
 
     f2 = epyccel(f1, language=language)
 
+    negative_test = randint(min_int, 0)
+    positive_test = randint(0, max_int)
+
     assert f1(0) == f2(0)
-    assert f1(-5) == f2(-5)
-    assert f1(11) == f2(11)
+    assert f1(negative_test) == f2(negative_test)
+    assert f1(positive_test) == f2(positive_test)
 
 def test_abs_r(language):
     @types('real')
@@ -23,9 +33,12 @@ def test_abs_r(language):
 
     f2 = epyccel(f1, language=language)
 
+    negative_test = uniform(min_float, 0.0)
+    positive_test = uniform(0.0, max_float)
+
     assert f1(0.00000) == f2(0.00000)
-    assert f1(-3.1415) == f2(-3.1415)
-    assert f1(2.71828) == f2(2.71828)
+    assert f1(negative_test) == f2(negative_test)
+    assert f1(positive_test) == f2(positive_test)
 
 
 
@@ -36,10 +49,22 @@ def test_abs_c(language):
 
     f2 = epyccel(f1, language=language)
 
-    assert f1(3j + 4) == f2(3j + 4)
-    assert f1(3j - 4) == f2(3j - 4)
-    assert f1(5j + 0) == f2(5j + 0)
-    assert f1(0j + 5) == f2(0j + 5)
+    max_compl_abs = np.sqrt(max_float / 2)
+    min_compl_abs = np.sqrt(-min_float / 2)
+
+    pos_pos = uniform(0.0, max_compl_abs) + 1j*uniform(0.0, max_compl_abs)
+    pos_neg = uniform(0.0, max_compl_abs) + 1j*uniform(min_compl_abs, 0.0)
+    neg_pos = uniform(min_compl_abs, 0.0) + 1j*uniform(0.0, max_compl_abs)
+    neg_neg = uniform(min_compl_abs, 0.0) + 1j*uniform(min_compl_abs, 0.0)
+    zero_rand = 1j*uniform(min_compl_abs, max_compl_abs)
+    rand_zero = uniform(min_compl_abs, max_compl_abs) + 0j
+
+    assert f1(pos_pos) == f2(pos_pos)
+    assert f1(pos_neg) == f2(pos_neg)
+    assert f1(neg_pos) == f2(neg_pos)
+    assert f1(neg_neg) == f2(neg_neg)
+    assert f1(zero_rand) == f2(zero_rand)
+    assert f1(rand_zero) == f2(rand_zero)
     assert f1(0j + 0) == f2(0j + 0)
 
 @pytest.mark.parametrize( 'language', (
