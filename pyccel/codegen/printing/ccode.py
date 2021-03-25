@@ -414,7 +414,7 @@ class CCodePrinter(CodePrinter):
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         else:
-            return errors.report("min not yet supported in C", symbol=expr,
+            return errors.report("min in C is only supported for 2 float arguments", symbol=expr,
                     severity='fatal')
 
     def _print_PythonMax(self, expr):
@@ -424,7 +424,7 @@ class CCodePrinter(CodePrinter):
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         else:
-            return errors.report("max not yet supported in C", symbol=expr,
+            return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
                     severity='fatal')
 
     def _print_PythonFloat(self, expr):
