@@ -1193,10 +1193,9 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=True)
 
-    def _visit_PyccelOperator(self, expr, **settings):
-        args     = [self._visit(a, **settings) for a in expr.args]
+    def _create_PyccelOperator(self, expr, visited_args):
         try:
-            expr_new = type(expr)(*args)
+            expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
@@ -1206,6 +1205,10 @@ class SemanticParser(BasicParser):
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
+    def _visit_PyccelOperator(self, expr, **settings):
+        args     = [self._visit(a, **settings) for a in expr.args]
+        return self._create_PyccelOperator(expr, args)
+
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
@@ -1213,20 +1216,31 @@ class SemanticParser(BasicParser):
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
         else:
-            _ = [a.invalidate_node() for a in args]
-            expr_new = self._visit_PyccelOperator(expr, **settings)
+            expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._visit(Dlist(args[0], args[1]))
+            expr_new = self._create_Dlist(args[0], args[1])
         elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._visit(Dlist(args[1], args[0]))
+            expr_new = self._create_Dlist(args[1], args[0])
         else:
-            _ = [a.invalidate_node() for a in args]
-            expr_new = self._visit_PyccelOperator(expr, **settings)
+            expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
+
+    def _create_Dlist(self, val, length):
+        # Arguments have been treated in PyccelMul
+
+        if isinstance(val, (TupleVariable, PythonTuple)) and \
+                not isinstance(val, PythonList):
+            if isinstance(length, LiteralInteger):
+                length = length.python_value
+            if isinstance(val, TupleVariable):
+                return PythonTuple(*(val.get_vars()*length))
+            else:
+                return PythonTuple(*(val.args*length))
+        return Dlist(val, length)
 
     def _visit_Lambda(self, expr, **settings):
 
@@ -3089,21 +3103,6 @@ class SemanticParser(BasicParser):
         expr = MacroVariable(expr.name, var)
         self.insert_macro(expr)
         return expr
-
-    def _visit_Dlist(self, expr, **settings):
-        # Arguments have been treated in PyccelMul
-
-        val = expr.val
-        length = expr.length
-        if isinstance(val, (TupleVariable, PythonTuple)) and \
-                not isinstance(val, PythonList):
-            if isinstance(length, LiteralInteger):
-                length = length.python_value
-            if isinstance(val, TupleVariable):
-                return PythonTuple(*(val.get_vars()*length))
-            else:
-                return PythonTuple(*(val.args*length))
-        return Dlist(val, length)
 
     def _visit_StarredArguments(self, expr, **settings):
         var = self._visit(expr.args_var)
