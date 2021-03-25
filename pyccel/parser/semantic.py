@@ -1366,7 +1366,6 @@ class SemanticParser(BasicParser):
         return Slice(start, stop, step)
 
     def _visit_IndexedElement(self, expr, **settings):
-        name = str(expr.base)
         var = self._visit(expr.base)
 
          # TODO check consistency of indices with shape/rank
