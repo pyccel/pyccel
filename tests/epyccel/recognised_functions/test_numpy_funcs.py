@@ -54,11 +54,20 @@ ATOL32 = 1e-7
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise
     """
-    if isinstance(python_result, np.generic):
-        #TODO: Remove when #735 is fixed
-        return isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
+    if isinstance(pyccel_result, np.generic):
+        python_type_alignment = np.dtype(type(pyccel_result.item())).alignment
+        returned_type_alignment = np.dtype(type(pyccel_result)).alignment
+        if python_type_alignment != returned_type_alignment:
+            return isinstance(pyccel_result, type(python_result))
+        else:
+            return isinstance(pyccel_result, type(python_result)) or \
+                    isinstance(pyccel_result.item(), type(python_result))
     else:
-        return isinstance(pyccel_result, type(python_result))
+        if isinstance(python_result, np.generic):
+            #TODO: Remove when #735 is fixed
+            return isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
+        else:
+            return isinstance(pyccel_result, type(python_result))
 
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
