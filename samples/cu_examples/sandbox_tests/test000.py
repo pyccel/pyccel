@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import cupy as cp
 import numpy as np
 
@@ -22,10 +21,3 @@ x2 = cp.arange(25, dtype=np.float32)
 y = cp.zeros((5, 5), dtype=np.float32)
 
 # add_kernel((5,), (5,), (x1, x2, y))  # grid, block and arguments
-=======
-import cupy
-import numpy
-# from pyccel.stdlib.internal.cuda import array
-
-a = numpy.array([1, 2, 3])
->>>>>>> 222f29b33ba6c502a39a4543ad1c1a99ab1d7cda
