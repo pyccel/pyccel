@@ -407,6 +407,26 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonMin(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmin({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            errors.report("min not yet supported in C", symbol=expr,
+                    severity='fatal')
+
+    def _print_PythonMax(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmax({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            errors.report("max not yet supported in C", symbol=expr,
+                    severity='fatal')
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('real', expr.precision)
