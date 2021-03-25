@@ -1444,7 +1444,9 @@ class SemanticParser(BasicParser):
             Provided to all _visit_ClassName functions
         """
 
-        if isinstance(lhs, PyccelSymbol):
+        if isinstance(lhs, IndexedElement):
+            lhs = self._visit(lhs)
+        elif isinstance(lhs, PyccelSymbol):
 
             name = lhs
             dtype = d_var.pop('datatype')
@@ -1962,7 +1964,7 @@ class SemanticParser(BasicParser):
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
         elif isinstance(lhs, (PythonTuple, PythonList)):
-            is_pointer = any(l.is_pointer for l in lhs)
+            is_pointer = any(l.is_pointer for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
