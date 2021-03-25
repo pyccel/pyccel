@@ -404,7 +404,7 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add("complex")
             func = "cabs"
         else:
-            func = "abs"
+            func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
