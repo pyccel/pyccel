@@ -89,31 +89,6 @@ __all__ = (
 )
 
 #=======================================================================================
-class NumpyComplex(PythonComplex):
-    """ Represents a call to numpy.complex() function.
-    """
-    __slots__ = ('_rank','_shape','_order')
-    def __init__(self, arg0, arg1 = None):
-        if arg1 is not None:
-            raise NotImplementedError("Use builtin complex function not deprecated np.complex")
-        self._shape = arg0.shape
-        self._rank  = arg0.rank
-        self._order = arg0.order
-        super().__init__(arg0)
-
-class NumpyComplex64(NumpyComplex):
-    """ Represents a call to numpy.complex64() function.
-    """
-    __slots__ = ()
-    _precision = dtype_registry['complex64'][1]
-
-class NumpyComplex128(NumpyComplex):
-    """ Represents a call to numpy.complex128() function.
-    """
-    __slots__ = ()
-    _precision = dtype_registry['complex128'][1]
-
-#=======================================================================================
 class NumpyFloat(PythonFloat):
     """ Represents a call to numpy.float() function.
     """
@@ -209,6 +184,65 @@ class NumpyReal(PythonReal):
         called elementwise for an array argument
         """
         return True
+
+#==============================================================================
+
+class NumpyImag(PythonImag):
+    """Represents a call to  numpy.imag for code generation.
+
+    > a = 1+2j
+    > np.imag(a)
+    2.0
+    """
+    __slots__ = ('_rank','_shape','_order')
+    def __new__(cls, arg):
+        if not isinstance(arg.dtype, NativeComplex):
+            dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
+            if arg.rank == 0:
+                return convert_to_literal(0, dtype, arg.precision)
+            return NumpyZeros(arg.shape, dtype=dtype)
+        return super().__new__(cls, arg)
+
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._precision = arg.precision
+        self._order = arg.order
+        self._shape = self.internal_var.shape
+        self._rank  = len(self._shape)
+
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
+#=======================================================================================
+class NumpyComplex(PythonComplex):
+    """ Represents a call to numpy.complex() function.
+    """
+    _real_cast = NumpyReal
+    _imag_cast = NumpyImag
+    __slots__ = ('_rank','_shape','_order')
+    def __init__(self, arg0, arg1 = None):
+        if arg1 is not None:
+            raise NotImplementedError("Use builtin complex function not deprecated np.complex")
+        self._shape = arg0.shape
+        self._rank  = arg0.rank
+        self._order = arg0.order
+        super().__init__(arg0)
+
+class NumpyComplex64(NumpyComplex):
+    """ Represents a call to numpy.complex64() function.
+    """
+    __slots__ = ()
+    _precision = dtype_registry['complex64'][1]
+
+class NumpyComplex128(NumpyComplex):
+    """ Represents a call to numpy.complex128() function.
+    """
+    __slots__ = ()
+    _precision = dtype_registry['complex128'][1]
 
 DtypePrecisionToCastFunction = {
     'Int' : {
@@ -495,38 +529,6 @@ def Shape(arg):
         return arg.shape
     else:
         return PythonTuple(*arg.shape)
-
-#==============================================================================
-
-class NumpyImag(PythonImag):
-    """Represents a call to  numpy.imag for code generation.
-
-    > a = 1+2j
-    > np.imag(a)
-    2.0
-    """
-    __slots__ = ('_rank','_shape','_order')
-    def __new__(cls, arg):
-        if not isinstance(arg.dtype, NativeComplex):
-            dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
-            if arg.rank == 0:
-                return convert_to_literal(0, dtype, arg.precision)
-            return NumpyZeros(arg.shape, dtype=dtype)
-        return super().__new__(cls, arg)
-
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._precision = arg.precision
-        self._order = arg.order
-        self._shape = self.internal_var.shape
-        self._rank  = len(self._shape)
-
-    @property
-    def is_elemental(self):
-        """ Indicates whether the function should be
-        called elementwise for an array argument
-        """
-        return True
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):

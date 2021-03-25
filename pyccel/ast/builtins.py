@@ -151,6 +151,8 @@ class PythonComplex(PyccelAstNode):
     _rank = 0
     _shape = ()
     _order = None
+    _real_cast = PythonReal
+    _imag_cast = PythonImag
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
@@ -189,8 +191,8 @@ class PythonComplex(PyccelAstNode):
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
-            self._real_part = PythonReal(arg0)
-            self._imag_part = PythonImag(arg0)
+            self._real_part = self._real_cast(arg0)
+            self._imag_part = self._imag_cast(arg0)
             self._internal_var = arg0
 
         else:
@@ -199,20 +201,20 @@ class PythonComplex(PyccelAstNode):
             if arg0.dtype is NativeComplex() and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
                 # first arg is complex. Second arg is non-0
-                self._real_part = PythonReal(arg0)
-                self._imag_part = PyccelAdd(PythonImag(arg0), arg1)
+                self._real_part = self._real_cast(arg0)
+                self._imag_part = PyccelAdd(self._imag_cast(arg0), arg1)
             elif arg1.dtype is NativeComplex():
                 if isinstance(arg0, Literal) and arg0.python_value == 0:
                     # second arg is complex. First arg is 0
-                    self._real_part = PyccelUnarySub(PythonImag(arg1))
-                    self._imag_part = PythonReal(arg1)
+                    self._real_part = PyccelUnarySub(self._imag_cast(arg1))
+                    self._imag_part = self._real_cast(arg1)
                 else:
                     # Second arg is complex. First arg is non-0
-                    self._real_part = PyccelMinus(arg0, PythonImag(arg1))
-                    self._imag_part = PythonReal(arg1)
+                    self._real_part = PyccelMinus(arg0, self._imag_cast(arg1))
+                    self._imag_part = self._real_cast(arg1)
             else:
-                self._real_part = PythonInt(arg0) if isinstance(arg0.dtype, NativeBool) else arg0
-                self._imag_part = PythonInt(arg1) if isinstance(arg1.dtype, NativeBool) else arg1
+                self._real_part = self._real_cast(arg0)
+                self._imag_part = self._real_cast(arg1)
         super().__init__()
 
     @property
