@@ -8,7 +8,7 @@
 import functools
 import operator
 
-from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex
 
 from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
@@ -404,8 +404,28 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add("complex")
             func = "cabs"
         else:
-            func = "abs"
+            func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
+
+    def _print_PythonMin(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmin({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            return errors.report("min in C is only supported for 2 float arguments", symbol=expr,
+                    severity='fatal')
+
+    def _print_PythonMax(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmax({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
+                    severity='fatal')
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
@@ -573,9 +593,9 @@ class CCodePrinter(CodePrinter):
             return "{} % {}".format(first, second)
 
         if expr.args[0].dtype is NativeInteger():
-            first = self._print(PythonFloat(expr.args[0]))
+            first = self._print(NumpyFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
-            second = self._print(PythonFloat(expr.args[1]))
+            second = self._print(NumpyFloat(expr.args[1]))
         return "fmod({}, {})".format(first, second)
 
     def _print_PyccelPow(self, expr):
@@ -589,8 +609,8 @@ class CCodePrinter(CodePrinter):
             return 'cpow({}, {})'.format(b, e)
 
         self._additional_imports.add("math")
-        b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
-        e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
+        b = self._print(b if b.dtype is NativeReal() else NumpyFloat(b))
+        e = self._print(e if e.dtype is NativeReal() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
         if expr.dtype is NativeInteger():
             dtype = self._print(expr.dtype)
@@ -1030,7 +1050,7 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != NativeReal() and not func_name.startswith("pyc"):
-                args.append(self._print(PythonFloat(arg)))
+                args.append(self._print(NumpyFloat(arg)))
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -1046,7 +1066,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isfinite({})".format(code_arg)
@@ -1058,7 +1078,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isinf({})".format(code_arg)
@@ -1070,7 +1090,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isnan({})".format(code_arg)
@@ -1082,7 +1102,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "trunc({})".format(code_arg)
@@ -1240,7 +1260,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
+            args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
         return  ' / '.join(self._print(a) for a in args)
@@ -1251,7 +1271,7 @@ class CCodePrinter(CodePrinter):
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
         need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
-        code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
+        code = ' / '.join(self._print(a if a.dtype is NativeReal() else NumpyFloat(a)) for a in expr.args)
         if (need_to_cast):
             cast_type = self.find_in_dtype_registry('int', expr.precision)
             return "({})floor({})".format(cast_type, code)

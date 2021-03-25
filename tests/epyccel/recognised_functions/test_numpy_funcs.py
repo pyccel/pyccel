@@ -48,17 +48,19 @@ else:
     RTOL = 1e-14
     ATOL = 1e-15
 
-RTOL32 = 1e-6
-ATOL32 = 1e-7
+RTOL32 = 1e-5
+ATOL32 = 1e-6
 
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise
     """
-    if isinstance(python_result, np.generic):
-        #TODO: Remove when #735 is fixed
-        return isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
+    if type(pyccel_result) is type(python_result):
+        return True
+    if isinstance(pyccel_result, np.generic):
+        return isinstance(pyccel_result.item(), type(python_result))
     else:
-        return isinstance(pyccel_result, type(python_result))
+        #TODO: Remove when #735 is fixed
+        return isinstance(python_result, np.generic) and isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
 
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
