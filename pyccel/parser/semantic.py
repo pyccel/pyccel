@@ -1401,7 +1401,7 @@ class SemanticParser(BasicParser):
             args = new_args
             len_args = len(args)
 
-        return self._extract_indexed_from_var(var, args, name)
+        return self._extract_indexed_from_var(var, args)
 
     def _visit_PyccelSymbol(self, expr, **settings):
         name = expr
