@@ -77,7 +77,7 @@ def test_abs_c(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_min_2_args(language):
+def test_min_2_args_i(language):
     @types('int','int')
     def f(x, y):
         return min(x, y)
@@ -88,7 +88,7 @@ def test_min_2_args(language):
 
     assert epyc_f(*int_args) == f(*int_args)
 
-def test_min_2_args(language):
+def test_min_2_args_f(language):
     @types('float','float')
     def f(x, y):
         return min(x, y)
