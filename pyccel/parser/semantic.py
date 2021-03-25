@@ -1230,7 +1230,7 @@ class SemanticParser(BasicParser):
         return expr_new
 
     def _create_Dlist(self, val, length):
-        # Arguments have been treated in PyccelMul
+        # Arguments have been visited in PyccelMul
 
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
