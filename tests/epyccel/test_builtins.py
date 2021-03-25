@@ -269,7 +269,7 @@ def test_sum_matching_types(language):
 
     epyc_f = epyccel(f, language=language)
 
-    int_args = [randint(min_int, max_int) for _ in range(2)]
+    int_args = [randint(min_int/2, max_int/2) for _ in range(2)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
     complex_args = [uniform(min_float/2, max_float/2) + 1j*uniform(min_float/2, max_float/2)
                     for _ in range(2)]
