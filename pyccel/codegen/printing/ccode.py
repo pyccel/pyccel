@@ -450,7 +450,7 @@ class CCodePrinter(CodePrinter):
         if var.rank > 0:
             return self._print(var.shape[0])
         else:
-            errors.report("PythonLen not implemented for type {}\n".format(type(expr.arg)) +
+            return errors.report("PythonLen not implemented for type {}\n".format(type(expr.arg)) +
                     PYCCEL_RESTRICTION_TODO,
                     symbol = expr, severity='fatal')
 
