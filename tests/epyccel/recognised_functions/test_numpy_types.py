@@ -1085,22 +1085,22 @@ def get_complex128_arr_1d(arr):
     from numpy import complex128, shape
     a = complex128(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[0,1]
+    return len(s), s[0], a[0], a[1]
 
-@types('bool[:,:]')
-@types('int[:,:]')
-@types('int8[:,:]')
-@types('int16[:,:]')
-@types('int32[:,:]')
-@types('int64[:,:]')
-@types('float[:,:]')
-@types('float32[:,:]')
-@types('float64[:,:]')
+@types('bool[:]')
+@types('int[:]')
+@types('int8[:]')
+@types('int16[:]')
+@types('int32[:]')
+@types('int64[:]')
+@types('float[:]')
+@types('float32[:]')
+@types('float64[:]')
 def get_complex64_arr_1d(arr):
     from numpy import complex64, shape
     a = complex64(arr)
     s = shape(a)
-    return len(s), s[0], s[1], a[0,0], a[0,1]
+    return len(s), s[0], a[0], a[1]
 
 @types('bool[:,:]')
 @types('int[:,:]')
@@ -1132,22 +1132,20 @@ def get_complex64_arr_2d(arr):
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[0,1]
 
+
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="AttributeError: _dtype"),
-            pytest.mark.fortran]
-        ),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
+            pytest.mark.skip(reason="Tuples not handled yet."),
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="AttributeError: _dtype"),
+            pytest.mark.skip(reason=("complex handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
 )
-
 @pytest.mark.parametrize( 'get_complex', [get_complex128_arr_1d, get_complex64_arr_1d])
 def test_numpy_complex_array_like_1d(language, get_complex):
 
@@ -1181,21 +1179,18 @@ def test_numpy_complex_array_like_1d(language, get_complex):
     assert epyccel_func(fl32) == get_complex(fl32)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="AttributeError: _dtype"),
-            pytest.mark.fortran]
-        ),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
+            pytest.mark.skip(reason="Tuples not handled yet."),
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="AttributeError: _dtype"),
+            pytest.mark.skip(reason=("complex handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
 )
-
 @pytest.mark.parametrize( 'get_complex', [get_complex128_arr_2d, get_complex64_arr_2d])
 def test_numpy_complex_array_like_2d(language, get_complex):
 
