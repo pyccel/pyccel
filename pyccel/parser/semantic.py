@@ -178,6 +178,10 @@ class SemanticParser(BasicParser):
         self.annotate()
         # ...
 
+    #================================================================
+    #                  Property accessors
+    #================================================================
+
     @property
     def parents(self):
         """Returns the parents parser."""
@@ -188,6 +192,10 @@ class SemanticParser(BasicParser):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
+
+    #================================================================
+    #                     Public functions
+    #================================================================
 
     def annotate(self, **settings):
         """."""
@@ -247,22 +255,13 @@ class SemanticParser(BasicParser):
         # Calling the Garbage collecting,
         # it will add the necessary Deallocate nodes
         # to the ast
-        self._ast = ast = self.garbage_collector(ast)
+        self._ast = ast = self._garbage_collector(ast)
 
         return ast
 
-    def garbage_collector(self, expr):
-        """
-        Search in a CodeBlock if no trailing Return Node is present add the needed frees.
-
-        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
-        """
-        code = expr
-        if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
-            code = CodeBlock(code)
-        self._allocs.pop()
-        return code
+    #================================================================
+    #              Utility functions for scope handling
+    #================================================================
 
     def get_variable_from_scope(self, name):
         """
@@ -649,7 +648,22 @@ class SemanticParser(BasicParser):
     def exit_loop_scope(self):
         self._namespace = self._namespace.parent_scope
 
-#==============================================================================
+    #=======================================================
+    #              Utility functions
+    #=======================================================
+
+    def _garbage_collector(self, expr):
+        """
+        Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
+        """
+        code = expr
+        if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
+            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
+            code = CodeBlock(code)
+        self._allocs.pop()
+        return code
 
     def _infere_type(self, expr, **settings):
         """
@@ -776,164 +790,28 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=self.blocking)
 
-
-#==============================================================================
-#==============================================================================
-#==============================================================================
-
-
-    def _visit(self, expr, **settings):
-        """Annotates the AST.
-
-        The annotation is done by finding the appropriate function _visit_X
-        for the object expr. X is the type of the object expr. If this function
-        does not exist then the method resolution order is used to search for
-        other compatible _visit_X functions. If none are found then an error is
-        raised
+    def _extract_indexed_from_var(self, var, indices):
+        """ Use indices to extract appropriate element from
+        object 'var'
+        This contains most of the contents of _visit_IndexedElement
+        but is a separate function in order to be recursive
         """
-
-        # TODO - add settings to Errors
-        #      - line and column
-        #      - blocking errors
-        current_fst = self._current_fst_node
-
-        if hasattr(expr,'fst') and expr.fst is not None:
-            self._current_fst_node = expr.fst
-
-        classes = type(expr).__mro__
-        for cls in classes:
-            annotation_method = '_visit_' + cls.__name__
-            if hasattr(self, annotation_method):
-                obj = getattr(self, annotation_method)(expr, **settings)
-                if isinstance(obj, Basic) and self._current_fst_node:
-                    obj.set_fst(self._current_fst_node)
-                self._current_fst_node = current_fst
-                return obj
-
-        # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
-
-    def _visit_tuple(self, expr, **settings):
-        return tuple(self._visit(i, **settings) for i in expr)
-
-    def _visit_PythonTuple(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        return PythonTuple(*ls)
-
-    def _visit_PythonList(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        expr = PythonList(*ls)
-
-        if not expr.is_homogeneous:
-            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal')
-        return expr
-
-    def _visit_ValuedArgument(self, expr, **settings):
-        value = self._visit(expr.value, **settings)
-        d_var      = self._infere_type(value, **settings)
-        dtype      = d_var.pop('datatype')
-        return ValuedVariable(dtype, expr.name,
-                               value=value, **d_var)
-
-    def _visit_CodeBlock(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr.body]
-        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
-        return CodeBlock(ls)
-
-    def _visit_Nil(self, expr, **settings):
-        return expr
-    def _visit_EmptyNode(self, expr, **settings):
-        return expr
-    def _visit_Break(self, expr, **settings):
-        return expr
-    def _visit_Continue(self, expr, **settings):
-        return expr
-    def _visit_Comment(self, expr, **settings):
-        return expr
-    def _visit_CommentBlock(self, expr, **settings):
-        return expr
-    def _visit_AnnotatedComment(self, expr, **settings):
-        return expr
-
-    def _visit_OmpAnnotatedComment(self, expr, **settings):
-        code = expr._user_nodes
-        code = code[-1]
-        index = code.body.index(expr)
-        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
-
-        if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
-           and expr.has_nowait:
-            for node in code.body[index+1:]:
-                if isinstance(node, Omp_End_Clause):
-                    if node.txt.startswith(expr.name, 4):
-                        node.has_nowait = True
-
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
-                    OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
-            msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
-            if index == (len(code.body) - 1):
-                errors.report(msg, symbol=type(expr).__name__,
-                severity='fatal', blocker=self.blocking)
-
-            index += 1
-            while isinstance(code.body[index], (Comment, CommentBlock, Pass)) and index < len(code.body):
-                index += 1
-
-            if index < len(code.body) and isinstance(code.body[index], For):
-                if expr.has_nowait:
-                    nowait_expr = '!$omp end do'
-                    if expr.txt.startswith(' simd'):
-                        nowait_expr += ' simd'
-                    nowait_expr += ' nowait\n'
-                    code.body[index].nowait_expr = nowait_expr
-            else:
-                errors.report(msg, symbol=type(code.body[index]).__name__,
-                    severity='fatal', blocker=self.blocking)
-
-        return expr
-
-    def _visit_Literal(self, expr, **settings):
-        return expr
-    def _visit_PythonComplex(self, expr, **settings):
-        return expr
-    def _visit_Pass(self, expr, **settings):
-        return expr
-
-    def _visit_Variable(self, expr, **settings):
-        name = expr.name
-        return self.get_variable(name)
-
-    def _visit_str(self, expr, **settings):
-        return repr(expr)
-
-    def _visit_Slice(self, expr, **settings):
-        start = self._visit(expr.start) if expr.start is not None else None
-        stop = self._visit(expr.stop) if expr.stop is not None else None
-        step = self._visit(expr.step) if expr.step is not None else None
-
-        return Slice(start, stop, step)
-
-    def _extract_indexed_from_var(self, var, args, name):
 
         # case of Pyccel ast Variable
         # if not possible we use symbolic objects
 
         if not isinstance(var, Variable):
             assert(hasattr(var,'__getitem__'))
-            if len(args)==1:
-                return var[args[0]]
+            if len(indices)==1:
+                return var[indices[0]]
             else:
-                return self._visit(var[args[0]][args[1:]])
+                return self._visit(var[indices[0]][indices[1:]])
 
-        args = tuple(args)
+        indices = tuple(indices)
 
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            arg = args[0]
+            arg = indices[0]
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
@@ -945,25 +823,25 @@ class SemanticParser(BasicParser):
                 idx = slice(arg.start, arg.stop)
                 selected_vars = var.get_var(idx)
                 if len(selected_vars)==1:
-                    if len(args) == 1:
+                    if len(indices) == 1:
                         return selected_vars[0]
                     else:
                         var = selected_vars[0]
-                        return self._extract_indexed_from_var(var, args[1:], name)
+                        return self._extract_indexed_from_var(var, indices[1:])
                 elif len(selected_vars)<1:
                     return None
-                elif len(args)==1:
+                elif len(indices)==1:
                     return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, args[1:], name) for var in selected_vars])
+                    return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:]) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
-                if len(args)==1:
+                if len(indices)==1:
                     return var[arg]
 
                 var = var[arg]
-                return self._extract_indexed_from_var(var, args[1:], name)
+                return self._extract_indexed_from_var(var, indices[1:])
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
@@ -975,228 +853,20 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
 
-        for arg in var[args].indices:
+        for arg in var[indices].indices:
             if not isinstance(arg, Slice) and not \
                 (hasattr(arg, 'dtype') and isinstance(arg.dtype, NativeInteger)):
-                errors.report(INVALID_INDICES, symbol=var[args],
+                errors.report(INVALID_INDICES, symbol=var[indices],
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
-        return var[args]
+        return var[indices]
 
-    def _visit_IndexedElement(self, expr, **settings):
-        name = str(expr.base)
-        var = self._visit(expr.base)
-
-         # TODO check consistency of indices with shape/rank
-
-        args = list(expr.indices)
-
-        new_args = [self._visit(arg, **settings) for arg in args]
-
-        if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
-            len_args = len(new_args[0])
-            args = [new_args[0][i] for i in range(len_args)]
-        elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
-            n_exprs = None
-            for a in new_args:
-                if hasattr(a,'__len__'):
-                    if n_exprs:
-                        assert(n_exprs)==len(a)
-                    else:
-                        n_exprs = len(a)
-            new_expr_args = []
-            for i in range(n_exprs):
-                ls = []
-                for j,a in enumerate(new_args):
-                    if hasattr(a,'__getitem__'):
-                        ls.append(args[j][i])
-                    else:
-                        ls.append(args[j])
-                new_expr_args.append(ls)
-
-            return tuple(var[a] for a in new_expr_args)
-        else:
-            args = new_args
-            len_args = len(args)
-
-        return self._extract_indexed_from_var(var, args, name)
-
-    def _visit_PyccelSymbol(self, expr, **settings):
-        name = expr
-
-        var = self.check_for_variable(name)
-
-        if var is None:
-            var = self.get_function(name)
-        if var is None:
-            var = self.get_symbolic_function(name)
-        if var is None:
-            var = python_builtin_datatype(name)
-
-        if var is None:
-
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=True)
-        return var
-
-
-    def _visit_DottedName(self, expr, **settings):
-
-        var = self.check_for_variable(_get_name(expr))
-        if var:
-            return var
-
-        lhs = expr.name[0] if len(expr.name) == 2 \
-                else DottedName(*expr.name[:-1])
-        rhs = expr.name[-1]
-
-        visited_lhs = self._visit(lhs)
-        first = visited_lhs
-        if isinstance(visited_lhs, FunctionCall):
-            results = visited_lhs.funcdef.results
-            if len(results) != 1:
-                errors.report("Cannot get attribute of function call with multiple returns",
-                        symbol=expr,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=True)
-            first = results[0]
-        rhs_name = _get_name(rhs)
-        attr_name = []
-
-        # Handle case of imported module
-        if isinstance(first, dict):
-
-            if rhs_name in first:
-                imp = self.get_import(_get_name(lhs))
-
-                new_name = rhs_name
-                # If pyccelized file
-                if imp is not None:
-                    new_name = imp.find_module_target(rhs_name)
-                    if new_name is None:
-                        new_name = self.get_new_name(rhs_name)
-
-                        # Save the import target that has been used
-                        if new_name == rhs_name:
-                            imp.define_target(PyccelSymbol(rhs_name))
-                        else:
-                            imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
-
-                if isinstance(rhs, FunctionCall):
-                    # If object is a function
-                    args  = self._handle_function_args(rhs.args, **settings)
-                    func  = first[rhs_name]
-                    if new_name != rhs_name:
-                        if hasattr(func, 'clone'):
-                            func  = func.clone(new_name)
-                    return self._handle_function(func, args, **settings)
-                elif isinstance(rhs, Constant):
-                    var = first[rhs_name]
-                    if new_name != rhs_name:
-                        var.name = new_name
-                    return var
-                else:
-                    # If object is something else (eg. dict)
-                    var = first[rhs_name]
-                    return var
-            else:
-                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
-                        symbol=expr,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=True)
-
-        if not hasattr(first, 'cls_base') or first.cls_base is None:
-            errors.report('Attribute {} not found'.format(rhs_name),
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=True)
-
-        if first.cls_base:
-            attr_name = [i.name for i in first.cls_base.attributes]
-
-        # look for a class method
-        if isinstance(rhs, FunctionCall):
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
-            for method in methods:
-                if isinstance(method, Interface):
-                    errors.report('Generic methods are not supported yet',
-                        symbol=method.name,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                        severity='fatal')
-            macro = self.get_macro(rhs_name)
-            if macro is not None:
-                master = macro.master
-                name = macro.name
-                args = rhs.args
-                args = [lhs] + list(args)
-                args = [self._visit(i, **settings) for i in args]
-                args = macro.apply(args)
-                return FunctionCall(master, args, self._current_function)
-
-            args = [self._visit(arg, **settings) for arg in
-                    rhs.args]
-            for i in methods:
-                if str(i.name) == rhs_name:
-                    if 'numpy_wrapper' in i.decorators.keys():
-                        self.insert_import('numpy', rhs_name)
-                        func = i.decorators['numpy_wrapper']
-                        return func(visited_lhs, *args)
-                    else:
-                        return DottedFunctionCall(i, args, prefix = visited_lhs,
-                                    current_function = self._current_function)
-
-        # look for a class attribute / property
-        elif isinstance(rhs, PyccelSymbol) and first.cls_base:
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
-            for method in methods:
-                if isinstance(method, Interface):
-                    errors.report('Generic methods are not supported yet',
-                        symbol=method.name,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                        severity='fatal')
-            # standard class attribute
-            if rhs in attr_name:
-                self._current_class = first.cls_base
-                second = self._visit(rhs, **settings)
-                self._current_class = None
-                return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
-
-            # class property?
-            else:
-                for i in methods:
-                    if i.name == rhs and \
-                            'property' in i.decorators.keys():
-                        if 'numpy_wrapper' in i.decorators.keys():
-                            func = i.decorators['numpy_wrapper']
-                            self.insert_import('numpy', rhs)
-                            return func(visited_lhs)
-                        else:
-                            return DottedFunctionCall(i, [], prefix = visited_lhs,
-                                    current_function = self._current_function)
-
-        # look for a macro
-        else:
-
-            macro = self.get_macro(rhs_name)
-
-            # Macro
-            if isinstance(macro, MacroVariable):
-                return macro.master
-            elif isinstance(macro, MacroFunction):
-                args = macro.apply([visited_lhs])
-                return FunctionCall(macro.master, args, self._current_function)
-
-        # did something go wrong?
-        return errors.report('Attribute {} not found'.format(rhs_name),
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=True)
-
-    def _visit_PyccelOperator(self, expr, **settings):
-        args     = [self._visit(a, **settings) for a in expr.args]
+    def _create_PyccelOperator(self, expr, visited_args):
+        """ Called by _visit_PyccelOperator and other classes
+        inheriting from PyccelOperator
+        """
         try:
-            expr_new = type(expr)(*args)
+            expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
@@ -1206,52 +876,21 @@ class SemanticParser(BasicParser):
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _visit_PyccelAdd(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
-            tuple_args = [ai for a in args for ai in get_vars(a)]
-            expr_new = PythonTuple(*tuple_args)
-        else:
-            _ = [a.invalidate_node() for a in args]
-            expr_new = self._visit_PyccelOperator(expr, **settings)
-        return expr_new
+    def _create_Dlist(self, val, length):
+        """ Called by _visit_PyccelMul when a Dlist is
+        identified
+        """
+        # Arguments have been visited in PyccelMul
 
-    def _visit_PyccelMul(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._visit(Dlist(args[0], args[1]))
-        elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._visit(Dlist(args[1], args[0]))
-        else:
-            _ = [a.invalidate_node() for a in args]
-            expr_new = self._visit_PyccelOperator(expr, **settings)
-        return expr_new
-
-    def _visit_Lambda(self, expr, **settings):
-
-
-        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument), excluded_nodes = FunctionDef)))
-        var_names = map(str, expr.variables)
-        missing_vars = expr_names.difference(var_names)
-        if len(missing_vars) > 0:
-            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=True)
-        funcs = expr.expr.get_attribute_nodes(FunctionCall)
-        for func in funcs:
-            name = _get_name(func)
-            f = self.get_symbolic_function(name)
-            if f is None:
-                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal', blocker=True)
+        if isinstance(val, (TupleVariable, PythonTuple)) and \
+                not isinstance(val, PythonList):
+            if isinstance(length, LiteralInteger):
+                length = length.python_value
+            if isinstance(val, TupleVariable):
+                return PythonTuple(*(val.get_vars()*length))
             else:
-
-                f = f(*func.args)
-                expr_new = expr.expr.subs(func, f)
-                expr = Lambda(tuple(expr.variables), expr_new)
-        return expr
+                return PythonTuple(*(val.args*length))
+        return Dlist(val, length)
 
     def _handle_function_args(self, arguments, **settings):
         args  = []
@@ -1278,75 +917,6 @@ class SemanticParser(BasicParser):
         else:
             expr = FunctionCall(func, args, self._current_function)
             return expr
-
-    def _visit_FunctionCall(self, expr, **settings):
-        name     = expr.funcdef
-
-        # Check for specialised method
-        annotation_method = '_visit_' + name
-        if hasattr(self, annotation_method):
-            return getattr(self, annotation_method)(expr, **settings)
-
-        func     = self.get_function(name)
-
-        args = self._handle_function_args(expr.args, **settings)
-
-        if name == 'lambdify':
-            args = self.get_symbolic_function(str(expr.args[0]))
-        F = pyccel_builtin_function(expr, args)
-
-        if F is not None:
-            return F
-
-        elif self.find_class_construct(name):
-
-            # TODO improve the test
-            # we must not invoke the namespace like this
-
-            cls = self.get_class(name)
-            d_methods = cls.methods_as_dict
-            method = d_methods.pop('__init__', None)
-
-            if method is None:
-
-                # TODO improve case of class with the no __init__
-
-                errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error', blocker=True)
-            args = expr.args
-
-            # TODO check compatibility
-            # TODO treat parametrized arguments.
-
-            expr = ConstructorCall(method, args, cls_variable=None)
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
-            return expr
-        else:
-
-            # first we check if it is a macro, in this case, we will create
-            # an appropriate FunctionCall
-
-            macro = self.get_macro(name)
-            if macro is not None:
-                func = macro.master
-                name = _get_name(func.name)
-                args = macro.apply(args)
-            else:
-                func = self.get_function(name)
-            if func is None:
-                return errors.report(UNDEFINED_FUNCTION, symbol=name,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=self.blocking)
-            else:
-                return self._handle_function(func, args, **settings)
-
-    def _visit_Expr(self, expr, **settings):
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
         """
@@ -1398,19 +968,18 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _ensure_target(self, rhs, d_lhs):
+        """ Function using data about the new lhs to determine
+        whether the lhs is a pointer and the rhs is a target
+        """
         if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
-            # TODO uncomment this line, to make rhs target for
-            #      lists/tuples.
             rhs.is_target = True
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
-            # TODO uncomment this line, to make rhs target for
-            #      lists/tuples.
             rhs.base.is_target = not rhs.base.is_pointer
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
@@ -1654,6 +1223,474 @@ class SemanticParser(BasicParser):
             raise NotImplementedError("_assign_lhs_variable does not handle {}".format(str(type(lhs))))
 
         return lhs
+
+
+    #====================================================
+    #                 _visit functions
+    #====================================================
+
+
+    def _visit(self, expr, **settings):
+        """Annotates the AST.
+
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised
+        """
+
+        # TODO - add settings to Errors
+        #      - line and column
+        #      - blocking errors
+        current_fst = self._current_fst_node
+
+        if hasattr(expr,'fst') and expr.fst is not None:
+            self._current_fst_node = expr.fst
+
+        classes = type(expr).__mro__
+        for cls in classes:
+            annotation_method = '_visit_' + cls.__name__
+            if hasattr(self, annotation_method):
+                obj = getattr(self, annotation_method)(expr, **settings)
+                if isinstance(obj, Basic) and self._current_fst_node:
+                    obj.set_fst(self._current_fst_node)
+                self._current_fst_node = current_fst
+                return obj
+
+        # Unknown object, we raise an error.
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='fatal', blocker=self.blocking)
+
+    def _visit_tuple(self, expr, **settings):
+        return tuple(self._visit(i, **settings) for i in expr)
+
+    def _visit_PythonTuple(self, expr, **settings):
+        ls = [self._visit(i, **settings) for i in expr]
+        return PythonTuple(*ls)
+
+    def _visit_PythonList(self, expr, **settings):
+        ls = [self._visit(i, **settings) for i in expr]
+        expr = PythonList(*ls)
+
+        if not expr.is_homogeneous:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal')
+        return expr
+
+    def _visit_ValuedArgument(self, expr, **settings):
+        value = self._visit(expr.value, **settings)
+        d_var      = self._infere_type(value, **settings)
+        dtype      = d_var.pop('datatype')
+        return ValuedVariable(dtype, expr.name,
+                               value=value, **d_var)
+
+    def _visit_CodeBlock(self, expr, **settings):
+        ls = [self._visit(i, **settings) for i in expr.body]
+        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
+        return CodeBlock(ls)
+
+    def _visit_Nil(self, expr, **settings):
+        return expr
+    def _visit_EmptyNode(self, expr, **settings):
+        return expr
+    def _visit_Break(self, expr, **settings):
+        return expr
+    def _visit_Continue(self, expr, **settings):
+        return expr
+    def _visit_Comment(self, expr, **settings):
+        return expr
+    def _visit_CommentBlock(self, expr, **settings):
+        return expr
+    def _visit_AnnotatedComment(self, expr, **settings):
+        return expr
+
+    def _visit_OmpAnnotatedComment(self, expr, **settings):
+        code = expr._user_nodes
+        code = code[-1]
+        index = code.body.index(expr)
+        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
+
+        if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
+           and expr.has_nowait:
+            for node in code.body[index+1:]:
+                if isinstance(node, Omp_End_Clause):
+                    if node.txt.startswith(expr.name, 4):
+                        node.has_nowait = True
+
+        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
+                    OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
+            msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
+            if index == (len(code.body) - 1):
+                errors.report(msg, symbol=type(expr).__name__,
+                severity='fatal', blocker=self.blocking)
+
+            index += 1
+            while isinstance(code.body[index], (Comment, CommentBlock, Pass)) and index < len(code.body):
+                index += 1
+
+            if index < len(code.body) and isinstance(code.body[index], For):
+                if expr.has_nowait:
+                    nowait_expr = '!$omp end do'
+                    if expr.txt.startswith(' simd'):
+                        nowait_expr += ' simd'
+                    nowait_expr += ' nowait\n'
+                    code.body[index].nowait_expr = nowait_expr
+            else:
+                errors.report(msg, symbol=type(code.body[index]).__name__,
+                    severity='fatal', blocker=self.blocking)
+
+        return expr
+
+    def _visit_Literal(self, expr, **settings):
+        return expr
+    def _visit_PythonComplex(self, expr, **settings):
+        return expr
+    def _visit_Pass(self, expr, **settings):
+        return expr
+
+    def _visit_Variable(self, expr, **settings):
+        name = expr.name
+        return self.get_variable(name)
+
+    def _visit_str(self, expr, **settings):
+        return repr(expr)
+
+    def _visit_Slice(self, expr, **settings):
+        start = self._visit(expr.start) if expr.start is not None else None
+        stop = self._visit(expr.stop) if expr.stop is not None else None
+        step = self._visit(expr.step) if expr.step is not None else None
+
+        return Slice(start, stop, step)
+
+    def _visit_IndexedElement(self, expr, **settings):
+        var = self._visit(expr.base)
+
+         # TODO check consistency of indices with shape/rank
+
+        args = list(expr.indices)
+
+        new_args = [self._visit(arg, **settings) for arg in args]
+
+        if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
+            len_args = len(new_args[0])
+            args = [new_args[0][i] for i in range(len_args)]
+        elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
+            n_exprs = None
+            for a in new_args:
+                if hasattr(a,'__len__'):
+                    if n_exprs:
+                        assert(n_exprs)==len(a)
+                    else:
+                        n_exprs = len(a)
+            new_expr_args = []
+            for i in range(n_exprs):
+                ls = []
+                for j,a in enumerate(new_args):
+                    if hasattr(a,'__getitem__'):
+                        ls.append(args[j][i])
+                    else:
+                        ls.append(args[j])
+                new_expr_args.append(ls)
+
+            return tuple(var[a] for a in new_expr_args)
+        else:
+            args = new_args
+            len_args = len(args)
+
+        return self._extract_indexed_from_var(var, args)
+
+    def _visit_PyccelSymbol(self, expr, **settings):
+        name = expr
+
+        var = self.check_for_variable(name)
+
+        if var is None:
+            var = self.get_function(name)
+        if var is None:
+            var = self.get_symbolic_function(name)
+        if var is None:
+            var = python_builtin_datatype(name)
+
+        if var is None:
+
+            errors.report(UNDEFINED_VARIABLE, symbol=name,
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='fatal', blocker=True)
+        return var
+
+
+    def _visit_DottedName(self, expr, **settings):
+
+        var = self.check_for_variable(_get_name(expr))
+        if var:
+            return var
+
+        lhs = expr.name[0] if len(expr.name) == 2 \
+                else DottedName(*expr.name[:-1])
+        rhs = expr.name[-1]
+
+        visited_lhs = self._visit(lhs)
+        first = visited_lhs
+        if isinstance(visited_lhs, FunctionCall):
+            results = visited_lhs.funcdef.results
+            if len(results) != 1:
+                errors.report("Cannot get attribute of function call with multiple returns",
+                        symbol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=True)
+            first = results[0]
+        rhs_name = _get_name(rhs)
+        attr_name = []
+
+        # Handle case of imported module
+        if isinstance(first, dict):
+
+            if rhs_name in first:
+                imp = self.get_import(_get_name(lhs))
+
+                new_name = rhs_name
+                # If pyccelized file
+                if imp is not None:
+                    new_name = imp.find_module_target(rhs_name)
+                    if new_name is None:
+                        new_name = self.get_new_name(rhs_name)
+
+                        # Save the import target that has been used
+                        if new_name == rhs_name:
+                            imp.define_target(PyccelSymbol(rhs_name))
+                        else:
+                            imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
+
+                if isinstance(rhs, FunctionCall):
+                    # If object is a function
+                    args  = self._handle_function_args(rhs.args, **settings)
+                    func  = first[rhs_name]
+                    if new_name != rhs_name:
+                        if hasattr(func, 'clone'):
+                            func  = func.clone(new_name)
+                    return self._handle_function(func, args, **settings)
+                elif isinstance(rhs, Constant):
+                    var = first[rhs_name]
+                    if new_name != rhs_name:
+                        var.name = new_name
+                    return var
+                else:
+                    # If object is something else (eg. dict)
+                    var = first[rhs_name]
+                    return var
+            else:
+                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
+                        symbol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=True)
+
+        if not hasattr(first, 'cls_base') or first.cls_base is None:
+            errors.report('Attribute {} not found'.format(rhs_name),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+
+        if first.cls_base:
+            attr_name = [i.name for i in first.cls_base.attributes]
+
+        # look for a class method
+        if isinstance(rhs, FunctionCall):
+            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            for method in methods:
+                if isinstance(method, Interface):
+                    errors.report('Generic methods are not supported yet',
+                        symbol=method.name,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                        severity='fatal')
+            macro = self.get_macro(rhs_name)
+            if macro is not None:
+                master = macro.master
+                name = macro.name
+                args = rhs.args
+                args = [lhs] + list(args)
+                args = [self._visit(i, **settings) for i in args]
+                args = macro.apply(args)
+                return FunctionCall(master, args, self._current_function)
+
+            args = [self._visit(arg, **settings) for arg in
+                    rhs.args]
+            for i in methods:
+                if str(i.name) == rhs_name:
+                    if 'numpy_wrapper' in i.decorators.keys():
+                        self.insert_import('numpy', rhs_name)
+                        func = i.decorators['numpy_wrapper']
+                        return func(visited_lhs, *args)
+                    else:
+                        return DottedFunctionCall(i, args, prefix = visited_lhs,
+                                    current_function = self._current_function)
+
+        # look for a class attribute / property
+        elif isinstance(rhs, PyccelSymbol) and first.cls_base:
+            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            for method in methods:
+                if isinstance(method, Interface):
+                    errors.report('Generic methods are not supported yet',
+                        symbol=method.name,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                        severity='fatal')
+            # standard class attribute
+            if rhs in attr_name:
+                self._current_class = first.cls_base
+                second = self._visit(rhs, **settings)
+                self._current_class = None
+                return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
+
+            # class property?
+            else:
+                for i in methods:
+                    if i.name == rhs and \
+                            'property' in i.decorators.keys():
+                        if 'numpy_wrapper' in i.decorators.keys():
+                            func = i.decorators['numpy_wrapper']
+                            self.insert_import('numpy', rhs)
+                            return func(visited_lhs)
+                        else:
+                            return DottedFunctionCall(i, [], prefix = visited_lhs,
+                                    current_function = self._current_function)
+
+        # look for a macro
+        else:
+
+            macro = self.get_macro(rhs_name)
+
+            # Macro
+            if isinstance(macro, MacroVariable):
+                return macro.master
+            elif isinstance(macro, MacroFunction):
+                args = macro.apply([visited_lhs])
+                return FunctionCall(macro.master, args, self._current_function)
+
+        # did something go wrong?
+        return errors.report('Attribute {} not found'.format(rhs_name),
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='fatal', blocker=True)
+
+    def _visit_PyccelOperator(self, expr, **settings):
+        args     = [self._visit(a, **settings) for a in expr.args]
+        return self._create_PyccelOperator(expr, args)
+
+    def _visit_PyccelAdd(self, expr, **settings):
+        args = [self._visit(a, **settings) for a in expr.args]
+        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
+            get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
+            tuple_args = [ai for a in args for ai in get_vars(a)]
+            expr_new = PythonTuple(*tuple_args)
+        else:
+            expr_new = self._create_PyccelOperator(expr, args)
+        return expr_new
+
+    def _visit_PyccelMul(self, expr, **settings):
+        args = [self._visit(a, **settings) for a in expr.args]
+        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
+            expr_new = self._create_Dlist(args[0], args[1])
+        elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
+            expr_new = self._create_Dlist(args[1], args[0])
+        else:
+            expr_new = self._create_PyccelOperator(expr, args)
+        return expr_new
+
+    def _visit_Lambda(self, expr, **settings):
+
+
+        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument), excluded_nodes = FunctionDef)))
+        var_names = map(str, expr.variables)
+        missing_vars = expr_names.difference(var_names)
+        if len(missing_vars) > 0:
+            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+        funcs = expr.expr.get_attribute_nodes(FunctionCall)
+        for func in funcs:
+            name = _get_name(func)
+            f = self.get_symbolic_function(name)
+            if f is None:
+                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal', blocker=True)
+            else:
+
+                f = f(*func.args)
+                expr_new = expr.expr.subs(func, f)
+                expr = Lambda(tuple(expr.variables), expr_new)
+        return expr
+
+    def _visit_FunctionCall(self, expr, **settings):
+        name     = expr.funcdef
+
+        # Check for specialised method
+        annotation_method = '_visit_' + name
+        if hasattr(self, annotation_method):
+            return getattr(self, annotation_method)(expr, **settings)
+
+        func     = self.get_function(name)
+
+        args = self._handle_function_args(expr.args, **settings)
+
+        if name == 'lambdify':
+            args = self.get_symbolic_function(str(expr.args[0]))
+        F = pyccel_builtin_function(expr, args)
+
+        if F is not None:
+            return F
+
+        elif self.find_class_construct(name):
+
+            # TODO improve the test
+            # we must not invoke the namespace like this
+
+            cls = self.get_class(name)
+            d_methods = cls.methods_as_dict
+            method = d_methods.pop('__init__', None)
+
+            if method is None:
+
+                # TODO improve case of class with the no __init__
+
+                errors.report(UNDEFINED_INIT_METHOD, symbol=name,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='error', blocker=True)
+            args = expr.args
+
+            # TODO check compatibility
+            # TODO treat parametrized arguments.
+
+            expr = ConstructorCall(method, args, cls_variable=None)
+            #if len(stmts) > 0:
+            #    stmts.append(expr)
+            #    return CodeBlock(stmts)
+            return expr
+        else:
+
+            # first we check if it is a macro, in this case, we will create
+            # an appropriate FunctionCall
+
+            macro = self.get_macro(name)
+            if macro is not None:
+                func = macro.master
+                name = _get_name(func.name)
+                args = macro.apply(args)
+            else:
+                func = self.get_function(name)
+            if func is None:
+                return errors.report(UNDEFINED_FUNCTION, symbol=name,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=self.blocking)
+            else:
+                return self._handle_function(func, args, **settings)
+
+    def _visit_Expr(self, expr, **settings):
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='fatal', blocker=self.blocking)
 
 
     def _visit_Assign(self, expr, **settings):
@@ -2595,7 +2632,7 @@ class SemanticParser(BasicParser):
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
             # to the body of the function
-            body = self.garbage_collector(body)
+            body = self._garbage_collector(body)
 
             results = [self._visit(a) for a in results]
 
@@ -3091,21 +3128,6 @@ class SemanticParser(BasicParser):
         expr = MacroVariable(expr.name, var)
         self.insert_macro(expr)
         return expr
-
-    def _visit_Dlist(self, expr, **settings):
-        # Arguments have been treated in PyccelMul
-
-        val = expr.val
-        length = expr.length
-        if isinstance(val, (TupleVariable, PythonTuple)) and \
-                not isinstance(val, PythonList):
-            if isinstance(length, LiteralInteger):
-                length = length.python_value
-            if isinstance(val, TupleVariable):
-                return PythonTuple(*(val.get_vars()*length))
-            else:
-                return PythonTuple(*(val.args*length))
-        return Dlist(val, length)
 
     def _visit_StarredArguments(self, expr, **settings):
         var = self._visit(expr.args_var)
