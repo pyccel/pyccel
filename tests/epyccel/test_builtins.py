@@ -117,6 +117,52 @@ def test_min_3_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
+            pytest.mark.skip(reason="min not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_min_list(language):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
+        return min([x, y, z])
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="min not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_min_tuple(language):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
+        return min((x, y, z))
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
             pytest.mark.skip(reason="max not implemented in C"),
             pytest.mark.c]
         ),
@@ -151,6 +197,52 @@ def test_max_3_args(language):
     @types('float','float','float')
     def f(x, y, z):
         return min(x, y, z)
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="min not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_max_list(language):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
+        return max([x, y, z])
+
+    epyc_f = epyccel(f, language=language)
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="min not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_max_tuple(language):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
+        return max((x, y, z))
 
     epyc_f = epyccel(f, language=language)
 
