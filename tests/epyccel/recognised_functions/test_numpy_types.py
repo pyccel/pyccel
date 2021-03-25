@@ -991,6 +991,16 @@ def get_complex128(a):
     b = complex128(a)
     return b
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [pytest.mark.c]),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("complex handles types in __new__ so it "
+                "cannot be used in a translated interface in python. See #802")),
+            pytest.mark.python]
+        )
+    )
+)
 @pytest.mark.parametrize( 'get_complex', [get_complex128, get_complex64])
 def test_numpy_complex_scalar(language, get_complex):
 
@@ -1141,7 +1151,7 @@ def get_complex64_arr_2d(arr):
         ),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
+                "cannot be used in a translated interface in python. See #802")),
             pytest.mark.python]
         )
     )
@@ -1186,7 +1196,7 @@ def test_numpy_complex_array_like_1d(language, get_complex):
         ),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("complex handles types in __new__ so it "
-                "cannot be used in a translated interface in python")),
+                "cannot be used in a translated interface in python. See #802")),
             pytest.mark.python]
         )
     )
