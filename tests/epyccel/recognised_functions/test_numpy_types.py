@@ -30,7 +30,7 @@ def test_numpy_bool_scalar(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
+    integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -180,7 +180,7 @@ def test_numpy_int_scalar(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
+    integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -341,7 +341,7 @@ def test_numpy_int_array_like_1d(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -453,7 +453,7 @@ def test_numpy_int_array_like_2d(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -530,7 +530,7 @@ def test_numpy_float_scalar(language, get_float):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
+    integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -656,7 +656,7 @@ def test_numpy_float_array_like_1d(language, get_float):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -730,7 +730,7 @@ def test_numpy_float_array_like_2d(language, get_float):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -771,7 +771,7 @@ def test_numpy_double_scalar(language):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
+    integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -881,7 +881,7 @@ def test_numpy_double_array_like_1d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -939,7 +939,7 @@ def test_numpy_double_array_like_2d(language):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -996,7 +996,7 @@ def test_numpy_complex_scalar(language, get_complex):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
+    integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
@@ -1157,7 +1157,7 @@ def test_numpy_complex_array_like_1d(language, get_complex):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
@@ -1205,7 +1205,7 @@ def test_numpy_complex_array_like_2d(language, get_complex):
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
