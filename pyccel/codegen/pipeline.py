@@ -28,6 +28,7 @@ __all__ = ['execute_pyccel']
 # map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
     "ndarrays" : "ndarrays",
+    "cuda_ndarrays" : "cuda_ndarrays",
     "pyc_math" : "math",
 }
 

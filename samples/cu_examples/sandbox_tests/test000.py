@@ -1,4 +1,5 @@
 import cupy
+import numpy
 # from pyccel.stdlib.internal.cuda import array
 
-a = cupy.array([1, 2, 3])
+a = numpy.array([1, 2, 3])

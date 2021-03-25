@@ -7,7 +7,7 @@
 #$ header metavar ignore_at_import=True
 #$ header metavar save=True
 
-#$ header function cudaMalloc(int, str) results(*)
+// #$ header function cudaMalloc(int, str) results(*)
 #$ header function array(*, *, str) results(*)
 #$ header function deviceSynchronize()
 // #$ header function indexing(str, int)
