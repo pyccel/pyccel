@@ -105,6 +105,12 @@ def tuple_unpacking_2():
     a,b,c = 1,False,3.0
     return a,b,c
 
+def tuple_unpacking_3(x : 'int[:,:]'):
+    x[0,0], x[1,0] = 2, 2
+
+def tuple_unpacking_4(x : 'int[:,:]'):
+    x[:,0], x[0,:] = 2, 3
+
 def tuple_name_clash():
     ai = (1+2j, False, 10.0)
     ai_0 = 44

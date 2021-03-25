@@ -424,6 +424,9 @@ class PythonLen(PyccelInternalFunction):
     def arg(self):
         return self._args[0]
 
+    def __str__(self):
+        return 'len({})'.format(str(self.arg))
+
 #==============================================================================
 class PythonList(PythonTuple):
     """ Represents a call to Python's native list() function.
