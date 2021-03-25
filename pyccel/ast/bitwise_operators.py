@@ -42,6 +42,7 @@ class PyccelInvert(PyccelUnaryOperator):
     _dtype     = NativeInteger()
 
     def _calculate_dtype(self, *_args):
+        _dtype = self._dtype
         a = _args[0]
         if a.dtype not in (NativeInteger(), NativeBool()):
             raise TypeError('unsupported operand type(s): {}'.format(_args))
