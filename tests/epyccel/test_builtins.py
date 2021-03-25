@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
-from numpy.random import randint
+from numpy.random import randint, uniform
 from numpy import isclose, iinfo, finfo
+import numpy as np
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types, template
@@ -74,7 +75,6 @@ def test_abs_c(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
-
     )
 )
 def test_min_2_args(language):
@@ -83,11 +83,13 @@ def test_min_2_args(language):
     def f(x, y):
         return min(x, y)
 
-    a = randint(100)
-    b = randint(100)
     epyc_f = epyccel(f, language=language)
-    assert epyc_f(a,b) == f(a,b)
-    assert epyc_f(float(a),float(b)) == f(float(a),float(b))
+
+    int_args = [randint(min_int, max_int) for _ in range(2)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -104,12 +106,13 @@ def test_min_3_args(language):
     def f(x, y, z):
         return min(x, y, z)
 
-    a = randint(100)
-    b = randint(100)
-    c = randint(100)
     epyc_f = epyccel(f, language=language)
-    assert epyc_f(a,b,c) == f(a,b,c)
-    assert epyc_f(float(a),float(b),float(c)) == f(float(a),float(b),float(c))
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -126,11 +129,13 @@ def test_max_2_args(language):
     def f(x, y):
         return max(x, y)
 
-    a = randint(100)
-    b = randint(100)
     epyc_f = epyccel(f, language=language)
-    assert epyc_f(a,b) == f(a,b)
-    assert epyc_f(float(a),float(b)) == f(float(a),float(b))
+
+    int_args = [randint(min_int, max_int) for _ in range(2)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -147,12 +152,13 @@ def test_max_3_args(language):
     def f(x, y, z):
         return min(x, y, z)
 
-    a = randint(100)
-    b = randint(100)
-    c = randint(100)
     epyc_f = epyccel(f, language=language)
-    assert epyc_f(a,b,c) == f(a,b,c)
-    assert epyc_f(float(a),float(b),float(c)) == f(float(a),float(b),float(c))
+
+    int_args = [randint(min_int, max_int) for _ in range(3)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -169,9 +175,13 @@ def test_sum_matching_types(language):
     def f(x, y):
         return sum([x, y])
 
-    a = randint(100)
-    b = randint(100)
     epyc_f = epyccel(f, language=language)
-    assert epyc_f(a,b) == f(a,b)
-    assert epyc_f(float(a),float(b)) == f(float(a),float(b))
-    assert epyc_f(complex(a),complex(b)) == f(complex(a),complex(b))
+
+    int_args = [randint(min_int, max_int) for _ in range(2)]
+    float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
+    complex_args = [uniform(min_float/2, max_float/2) + 1j*uniform(min_float/2, max_float/2)
+                    for _ in range(2)]
+
+    assert epyc_f(*int_args) == f(*int_args)
+    assert epyc_f(*float_args) == f(*float_args)
+    assert epyc_f(*complex_args) == f(*complex_args)
