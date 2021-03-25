@@ -48,8 +48,8 @@ else:
     RTOL = 1e-14
     ATOL = 1e-15
 
-RTOL32 = 1e-6
-ATOL32 = 1e-7
+RTOL32 = 1e-5
+ATOL32 = 1e-6
 
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise

@@ -404,8 +404,28 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add("complex")
             func = "cabs"
         else:
-            func = "abs"
+            func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
+
+    def _print_PythonMin(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmin({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            return errors.report("min in C is only supported for 2 float arguments", symbol=expr,
+                    severity='fatal')
+
+    def _print_PythonMax(self, expr):
+        arg = expr.args[0]
+        if arg.dtype is NativeReal() and len(arg) == 2:
+            self._additional_imports.add("math")
+            return "fmax({}, {})".format(self._print(arg[0]),
+                                         self._print(arg[1]))
+        else:
+            return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
+                    severity='fatal')
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)

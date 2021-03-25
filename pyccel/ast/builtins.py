@@ -625,9 +625,16 @@ class PythonMax(PyccelInternalFunction):
     _shape = ()
     _order = None
 
-    def __init__(self, x):
-        if not isinstance(x, (list, tuple, PythonTuple, PythonList)):
+    def __init__(self, *x):
+        if len(x)==1:
+            x = x[0]
+
+        if isinstance(x, (list, tuple)):
+            x = PythonTuple(*x)
+        elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
+        if not x.is_homogeneous:
+            raise NotImplementedError("Cannot determine dtype of max call with inhomogeneous arguments : {}".format(x))
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
@@ -643,7 +650,16 @@ class PythonMin(PyccelInternalFunction):
     _rank  = 0
     _shape = ()
     _order = None
-    def __init__(self, x):
+    def __init__(self, *x):
+        if len(x)==1:
+            x = x[0]
+
+        if isinstance(x, (list, tuple)):
+            x = PythonTuple(*x)
+        elif not isinstance(x, (PythonTuple, PythonList)):
+            raise TypeError('Unknown type of  %s.' % type(x))
+        if not x.is_homogeneous:
+            raise NotImplementedError("Cannot determine dtype of min call with inhomogeneous arguments : {}".format(x))
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
