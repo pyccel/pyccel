@@ -80,7 +80,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     # ... backend compiler options
     group = parser.add_argument_group('Backend compiler options')
 
-    group.add_argument('--language', choices=('fortran', 'c', 'python', 'cu'), help='Generated language')
+    group.add_argument('--language', choices=('fortran', 'c', 'python', 'ccuda'), help='Generated language')
 
     group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran', \
             'gcc', 'icc', 'nvcc'), help='Compiler name')

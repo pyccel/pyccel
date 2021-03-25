@@ -29,14 +29,21 @@ __all__ = ['execute_pyccel']
 # map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
     "ndarrays" : "ndarrays",
+    "cuda_ndarrays" : "cuda_ndarrays",
     "pyc_math" : "math",
 }
 
 # map language to its file extension
 lang_ext_dict = {
-    "c" : ".c",
-    "fortran": ".f90",
-    "cu": ".cu"
+    "c"         : ".c",
+    "fortran"   : ".f90",
+    "ccuda"     : ".c",
+}
+
+cuda_flags = {
+    "-fPIC" : "-X-compiler -fPIC",
+    "-Werror" : "-Werror all-warnings",
+    "-Wconversion": "",
 }
 
 #==============================================================================
@@ -197,8 +204,8 @@ def execute_pyccel(fname, *,
             compiler = 'gfortran'
         elif language == 'c':
             compiler = 'gcc'
-        elif language == 'cu':
-            compiler = 'nvcc'
+        elif language == "ccuda":
+            compiler = "nvcc"
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
@@ -225,7 +232,8 @@ def execute_pyccel(fname, *,
                                  includes=())
 
     # Build position-independent code, suited for use in shared library
-    if (language != 'cu'):
+
+    if language != "ccuda":
         fflags = ' {} -fPIC '.format(fflags)
     # ...
 
@@ -405,7 +413,6 @@ def execute_pyccel(fname, *,
         dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
         inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
         # ...
-
         includes += inc_dirs
 
         if codegen.is_program:
@@ -418,14 +425,18 @@ def execute_pyccel(fname, *,
                                 debug=debug,
                                 accelerator=accelerator,
                                 includes=includes)
-
         # Compile Fortran code
         #
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
+        if language == "ccuda":
+            cflags = ' '.join([flag if flag not in cuda_flags  else cuda_flags[flag] for flag in flags.split(' ')])
+        else:
+            cflags = flags
+
         try:
-            compile_files(fname, f90exec, flags,
+            compile_files(fname, f90exec, cflags,
                             binary=None,
                             verbose=verbose,
                             modules=modules,

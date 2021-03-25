@@ -47,30 +47,6 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVA
 
 from .fcode import python_builtin_datatypes
 
-
-known_functions = {
-    "Abs": [(lambda x: not x.is_integer, "fabs")],
-    "gamma": "tgamma",
-    "sin"  : "sin",
-    "cos"  : "cos",
-    "tan"  : "tan",
-    "asin" : "asin",
-    "acos" : "acos",
-    "atan" : "atan",
-    "atan2": "atan2",
-    "exp"  : "exp",
-    "log"  : "log",
-    "erf"  : "erf",
-    "sinh" : "sinh",
-    "cosh" : "cosh",
-    "tanh" : "tanh",
-    "asinh": "asinh",
-    "acosh": "acosh",
-    "atanh": "atanh",
-    "floor": "floor",
-    "ceiling": "ceil",
-}
-
 cuda_Internal_Var = {
     'CudaThreadIdx' : 'threadIdx',
     'CudaBlockDim'  : 'blockDim',
@@ -82,17 +58,8 @@ errors = Errors()
 
 class CuCodePrinter(CCodePrinter):
     """A printer to convert python expressions to strings of c code"""
-    printmethod = "_ccode"
-    language = "C"
-
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'human': True,
-        'precision': 15,
-        'user_functions': {},
-        'dereference': set()
-    }
+    printmethod = "_cucode"
+    language = "cuda"
 
     def __init__(self, parser, **settings):
 
@@ -101,9 +68,12 @@ class CuCodePrinter(CCodePrinter):
 
         prefix_module = settings.pop('prefix_module', None)
         CCodePrinter.__init__(self, parser, **settings)
+<<<<<<< HEAD
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
+=======
+>>>>>>> 222f29b33ba6c502a39a4543ad1c1a99ab1d7cda
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
@@ -216,8 +186,12 @@ class CuCodePrinter(CCodePrinter):
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
+        ######
         if isinstance(expr.rhs, (CudaArray)):
             return self.copy_CudaArray_Data(expr)
+        if isinstance(expr.rhs, (CudaMalloc)):
+            return ''
+        ######
         if isinstance(expr.rhs, (CupyArray)):
             return self.copy_CudaArray_Data(expr)
         if isinstance(expr.rhs, (CupyFull)):
@@ -345,6 +319,28 @@ class CuCodePrinter(CCodePrinter):
             else:
                 code_init += 'cuda_array_fill<<<1,1>>>({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return '{}'.format(code_init)
+
+    def _print_ModuleHeader(self, expr):
+        name = expr.module.name
+        # TODO: Add classes and interfaces
+        funcs = '\n\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
+
+        # Print imports last to be sure that all additional_imports have been collected
+        imports = [*expr.module.imports, *map(Import, self._additional_imports)]
+        imports = '\n'.join(self._print(i) for i in imports)
+
+        return ('#ifndef {name}_H\n'
+                '#define {name}_H\n\n'
+                '{imports}\n\n'
+                '#ifndef ___cplusplus\nextern "C" {{\n#endif\n'
+                #'{classes}\n\n'
+                '{funcs}\n\n'
+                '#ifndef ___cplusplus\n}}\n#endif\n'
+                #'{interfaces}\n\n'
+                '#endif // {name}_H\n').format(
+                        name    = name.upper(),
+                        imports = imports,
+                        funcs   = funcs)
 
 def cucode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code

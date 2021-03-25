@@ -26,29 +26,6 @@ __all__ = (
 
 
 #------------------------------------------------------------------------------
-#==============================================================================
-class CudaMalloc(PyccelAstNode):
-    """Represents a call to  cuda malloc for code generation.
-
-    arg : list , tuple , PythonTuple, List, Variable
-    """
-    def __init__(self, size, alloct, dtype=NativeReal(), precision=4):
-        self._size      = size
-        self._shape     = (1,)
-        self._alloct    = alloct
-        self._rank      = 1
-        self._dtype     = dtype
-        self._precision = precision
-
-    @property
-    def size(self):
-        return self._size
-    @property
-    def dtype(self):
-        return self._dtype
-    @property
-    def precision(self):
-        return self._precision
 
 #==============================================================================
 class CudaMemCopy():
@@ -93,6 +70,33 @@ class CudaNewArray(PyccelInternalFunction):
         if order not in ('C', 'F'):
             raise ValueError('unrecognized order = {}'.format(order))
         return order
+
+#==============================================================================
+class CudaMalloc(CudaNewArray):
+    """Represents a call to  cuda malloc for code generation.
+
+     arg : str
+    """
+    # _attribute_nodes = ('_alloct',)
+    def __init__(self, size, alloct, dtype):
+        # Verify dtype and get precision
+        dtype, prec = process_dtype(dtype)
+        self._shape     = process_shape(size)
+        self._alloct       = alloct
+        self._rank      = len(size)
+        self._dtype     = dtype
+        self._precision = prec
+        super().__init__()
+
+    @property
+    def shape(self):
+        return self._shape
+    @property
+    def dtype(self):
+        return self._dtype
+    @property
+    def precision(self):
+        return self._precision
 
 #==============================================================================
 class CudaArray(CudaNewArray):
