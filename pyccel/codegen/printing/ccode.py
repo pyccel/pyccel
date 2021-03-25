@@ -450,7 +450,9 @@ class CCodePrinter(CodePrinter):
         if var.rank > 0:
             return self._print(var.shape[0])
         else:
-            raise NotImplementedError("PythonLen not implemented for type {}".format(type(expr.arg)))
+            errors.report("PythonLen not implemented for type {}\n".format(type(expr.arg)) +
+                    PYCCEL_RESTRICTION_TODO,
+                    symbol = expr, severity='fatal')
 
     def _print_ModuleHeader(self, expr):
         name = expr.module.name
