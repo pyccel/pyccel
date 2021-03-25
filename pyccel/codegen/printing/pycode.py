@@ -235,7 +235,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         type_name = type(expr).__name__.lower()
-        is_numpy  = type_name[-1].isdigit()
+        is_numpy  = type_name.startswith('numpy')
         precision = str(expr.precision*8) if is_numpy else ''
         name = 'int{}'.format(precision)
         if is_numpy:
@@ -244,7 +244,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         type_name = type(expr).__name__.lower()
-        is_numpy  = type_name[-1].isdigit()
+        is_numpy  = type_name.startswith('numpy')
         precision = str(expr.precision*8) if is_numpy else ''
         name = 'float{}'.format(precision)
         if is_numpy:
