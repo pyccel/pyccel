@@ -40,7 +40,9 @@ __all__ = (
     'CupyOnesLike',
     'CupyZeros',
     'CupyZerosLike',
-    'CupyArange'
+    'CupyArange',
+    # ---
+    'CupyRawKernel'
 )
 
 #==============================================================================
@@ -148,6 +150,7 @@ class CupyArange(CupyNewArray):
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
+        self._order = 'C'
         self._rank = 1
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(self._shape)
@@ -343,7 +346,15 @@ class CupyZerosLike:
         return CupyZeros(shape, dtype, order)
 
 #=======================================================================================
+class CupyRawKernel(PyccelAstNode):
+    """ Represents a call to cupy RawKernel for code generation.
+    """
+    def __init__(self, code, name):
+        pass
+        # super.__init__()
 
+
+#=======================================================================================
 #==============================================================================
 cupy_functions = {
     # ... array creation routines
@@ -356,5 +367,6 @@ cupy_functions = {
     'zeros_like': CupyZerosLike,
     'ones_like' : CupyOnesLike,
     'array'     : CupyArray,
-    'arange'    : CupyArange
+    'arange'    : CupyArange,
+    'RawKernel' : CupyRawKernel
 }

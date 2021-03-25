@@ -100,7 +100,7 @@ class CuCodePrinter(CCodePrinter):
             errors.set_target(parser.filename, 'file')
 
         prefix_module = settings.pop('prefix_module', None)
-        CodePrinter.__init__(self, settings)
+        CCodePrinter.__init__(self, parser, **settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)

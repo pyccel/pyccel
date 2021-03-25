@@ -106,8 +106,8 @@ class Variable(PyccelAstNode):
     """
     __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
             '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order')
+            '_is_ondevice','_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype',
+            '_precision','_rank','_shape','_order')
     _attribute_nodes = ()
 
     def __init__(

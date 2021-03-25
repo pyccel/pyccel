@@ -248,8 +248,8 @@ class Basic:
             # Handle module object
             fst.lineno     = 1
             fst.col_offset = 1
-        if not self._fst:
-            self._fst = []
+        # if not self._fst:
+        #     self._fst = []
         self._fst.append(fst)
 
     @property
