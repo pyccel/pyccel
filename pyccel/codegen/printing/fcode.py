@@ -2339,7 +2339,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
+            args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
         return ' / '.join(self._print(a) for a in args)
@@ -2349,7 +2349,7 @@ class FCodePrinter(CodePrinter):
 
         def correct_type_arg(a):
             if is_real and a.dtype is NativeInteger():
-                return PythonFloat(a)
+                return NumpyFloat(a)
             else:
                 return a
 
@@ -2368,7 +2368,7 @@ class FCodePrinter(CodePrinter):
         for b in expr.args[1:]:
             bdtype    = b.dtype
             if adtype is NativeInteger() and bdtype is NativeInteger():
-                b = PythonFloat(b)
+                b = NumpyFloat(b)
             c = self._print(b)
             adtype = bdtype
             code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr))
@@ -2534,7 +2534,7 @@ class FCodePrinter(CodePrinter):
         # add necessary include
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "ceiling({})".format(code_arg)
@@ -2545,7 +2545,7 @@ class FCodePrinter(CodePrinter):
         # add necessary include
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "isnan({})".format(code_arg)
@@ -2556,7 +2556,7 @@ class FCodePrinter(CodePrinter):
         # add necessary include
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
+            code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
         return "dint({})".format(code_arg)
@@ -2572,7 +2572,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            arg = PythonFloat(arg)
+            arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
