@@ -1675,6 +1675,8 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        print(lhs, '=', rhs)
+        print(type(lhs), '=', type(rhs))
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.get_macro(name)
@@ -1756,7 +1758,6 @@ class SemanticParser(BasicParser):
 
         else:
             rhs = self._visit(rhs, **settings)
-
         if isinstance(rhs, FunctionDef):
 
             # case of lambdify
@@ -1794,7 +1795,6 @@ class SemanticParser(BasicParser):
             return CodeBlock(stmts)
 
         elif isinstance(rhs, FunctionCall):
-
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results
@@ -1852,6 +1852,8 @@ class SemanticParser(BasicParser):
                 d_var_i['rank' ]  = dvar['rank']
 
         else:
+            print('>>', rhs)
+            print(self.code)
             d_var  = self._infere_type(rhs, **settings)
             d_list = d_var if isinstance(d_var, list) else [d_var]
 

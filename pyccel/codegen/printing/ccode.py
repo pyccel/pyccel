@@ -1506,7 +1506,7 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
-        print(">>>>>>>\n", expr.body, ">>>>>>>>>>\n")
+        # print(">>>>>>>\n", expr.body, ">>>>>>>>>>\n")
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
