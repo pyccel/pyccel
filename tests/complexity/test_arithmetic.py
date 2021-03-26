@@ -10,6 +10,7 @@ import os
 from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
 from sympy.abc import n, m, x, b
 from sympy import Function, Symbol
+from sympy import simplify as sp_simplify
 SHAPE = Function('shape')
 FLOOR = Symbol('FLOOR')
 EXP = Symbol('EXP')
@@ -128,7 +129,7 @@ def test_complexity_ex1():
             SHAPE(out, 0) * (SIN+MUL+ADD+DIV)     # numpy_math_expr_real_array_1d
             ]
     for f, c in complexity.costs.items():
-        assert c == comp[i]
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
 
 
@@ -150,7 +151,7 @@ def test_complexity_ex2():
             ]
 
     for f, c in complexity.costs.items():
-        assert c == comp[i]
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
 
 
@@ -170,7 +171,7 @@ def test_complexity_ex_assembly():
             ]
 
     for f, c in complexity.costs.items():
-        assert c == comp[i]
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
 
 
@@ -192,7 +193,7 @@ def test_complexity_mxm():
             ]
 
     for f, c in complexity.costs.items():
-        assert c == comp[i]
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
 
 
@@ -214,11 +215,5 @@ def test_complexity_qr():
             ]
 
     for f, c in complexity.costs.items():
-        print(c == comp[i])
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
-        print('> cost of {} = {}'.format(f, c))
-######################
-if __name__ == '__main__':
-
-#    test_complexity('scripts/mxm.py')
-    test_complexity_qr()

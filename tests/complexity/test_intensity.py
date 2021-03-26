@@ -11,6 +11,7 @@ from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
 import pytest
 from sympy.abc import n,m,x,b
 from sympy import Function, Symbol
+from sympy import simplify as sp_simplify
 SHAPE = Function('shape')
 READ = Symbol('READ')
 WRITE = Symbol('WRITE')
@@ -130,7 +131,7 @@ def test_complexity_ex1():
             ]
 
     for f, c in complexity.costs.items():
-        assert c == comp[i]
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
 
 
@@ -154,7 +155,7 @@ def test_complexity_ex2():
 
 
     for f, c in complexity.costs.items():
-        assert c == comp[i]
+        assert sp_simplify(c - comp[i]) == 0
         i = i + 1
 
 
@@ -177,7 +178,7 @@ def test_complexity_ex_assembly():
 
 
     for f, c in complexity.costs.items():
-            assert c == comp[i]
+            assert sp_simplify(c - comp[i]) == 0
             i = i + 1
 
 
@@ -202,7 +203,7 @@ def test_complexity_mxm():
 
 
     for f, c in complexity.costs.items():
-            assert c == comp[i]
+            assert sp_simplify(c - comp[i]) == 0
             i = i + 1
 
 
@@ -225,5 +226,5 @@ def test_complexity_qr():
 
 
     for f, c in complexity.costs.items():
-            assert c == comp[i]
+            assert sp_simplify(c - comp[i]) == 0
             i = i + 1
