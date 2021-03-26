@@ -68,12 +68,6 @@ class CuCodePrinter(CCodePrinter):
 
         prefix_module = settings.pop('prefix_module', None)
         CCodePrinter.__init__(self, parser, **settings)
-<<<<<<< HEAD
-        self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
-        self.known_functions.update(userfuncs)
-=======
->>>>>>> 222f29b33ba6c502a39a4543ad1c1a99ab1d7cda
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
@@ -196,8 +190,8 @@ class CuCodePrinter(CCodePrinter):
             return self.copy_CudaArray_Data(expr)
         if isinstance(expr.rhs, (CupyFull)):
             return self.Cuda_arrayFill(expr)
-        if isinstance(expr.rhs, CupyArange):
-            return self.fill_CudaArange(expr.rhs, expr.lhs)
+        # if isinstance(expr.rhs, CupyArange):
+        #     return self.Cuda_ArangeFill(expr)
         # if isinstance(expr.rhs, (CudaMalloc)):
         #     return self.CudaMalloc(expr.lhs, expr.rhs)
         if isinstance(expr.rhs, (NumpyArray)):
@@ -241,7 +235,7 @@ class CuCodePrinter(CCodePrinter):
                 cpy_data = "cudaMemcpy({0}.{2}, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
             return '%s\n' % (cpy_data)
         else :
-            if rhs.rank > 1 and isinstance(arg, Va):
+            if rhs.rank > 1 and isinstance(arg, Variable):
                 #flattening the args to use them in C initialization.
                 arg = functools.reduce(operator.concat, arg)
             arg = ', '.join(self._print(i) for i in arg)
@@ -261,6 +255,7 @@ class CuCodePrinter(CCodePrinter):
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
         self._additional_imports.add('ndarrays')
+        self._additional_imports.add('cuda_ndarrays')
         shape = ", ".join(self._print(i) for i in expr.shape)
         dtype = self._print(expr.variable.dtype)
         dummy_shape_name, _ = create_incremented_string(self._parser.used_names, prefix = 'shape_dummy')
