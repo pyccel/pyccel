@@ -115,14 +115,20 @@ class PyccelOperator(PyccelAstNode):
         if self.stage == 'syntactic':
             super().__init__()
             return
-        self._dtype, self._precision = self._calculate_dtype(*self._args)
-        self._shape, self._rank = self._calculate_shape_rank(*self._args)
+        self._set_dtype()
+        self._set_shape_rank()
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
         else:
             self._order = None
         super().__init__()
+
+    def _set_dtype(self):
+        self._dtype, self._precision = self._calculate_dtype(*self._args)
+
+    def _set_shape_rank(self):
+        self._shape, self._rank = self._calculate_shape_rank(*self._args)
 
     @property
     def precedence(self):
