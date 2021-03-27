@@ -36,30 +36,30 @@ omp_f1 = epyccel(openmp_ex1, accelerator='openmp', language='c')
 f1 = epyccel(openmp_ex1, language='c')
 
 start = time.time()
-omp_f1(arr1, 1000)
+omp_f1(arr1, 10000)
 end = time.time()
 omp_time = end - start
 
 start = time.time()
-f1(arr2, 1000)
+f1(arr2, 10000)
 end = time.time()
 c_time = end - start
 
-start = time.time()
-openmp_ex1(arr3, 1000)
-end = time.time()
-py_time = end - start
+#start = time.time()
+#openmp_ex1(arr3, 1000)
+#end = time.time()
+#py_time = end - start
 
 print("Time using OpenMP: ", omp_time)
 print("Time without using OpenMP: ", c_time)
-print("Time using pure Python: ", py_time)
+#print("Time using pure Python: ", py_time)
 
 
 print(np.array_equal(arr1, arr3))
 print(np.array_equal(arr2, arr3))
 img1 = Image.frombytes('1', arr1.shape[::-1], np.packbits(arr1, 1))
-#img1.show(title="C_OpenMP")
+img1.show(title="C_OpenMP")
 
 img2 = Image.frombytes('1', arr2.shape[::-1], np.packbits(arr2, 1))
-#img2.show(title="C")
+img2.show(title="C")
 
