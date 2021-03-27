@@ -510,26 +510,32 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_index','_start','_stop','_size','_shape', '_rank')
+    __slots__ = ('_index','_start','_stop','_num','_shape', '_rank')
     _dtype     = NativeReal()
     _precision = default_precision['real']
     _order     = 'F'
 
-    def __init__(self, start, stop, size):
+    def __init__(self, start, stop, num=None):
 
 
         _valid_args = (Variable, IndexedElement, LiteralFloat,
                        LiteralInteger)
 
-        for arg in (start, stop, size):
-            if not isinstance(arg, _valid_args):
+        if not num:
+            num = LiteralInteger(50)
+        print(start)
+        for arg in (start, stop, num):
+            if not isinstance(arg, PyccelAstNode):
+            #if isinstance(arg, PyccelUnarySub):
+            #    print(arg.args)
+            #if not isinstance(arg, _valid_args):
                 raise TypeError('Expecting valid args')
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
         self._stop  = stop
-        self._size  = size
-        self._shape = (self._size,) + self._start.shape
+        self._num  = num
+        self._shape = (self._num,) + self._start.shape
         self._rank  = len(self._shape)
         super().__init__()
 
@@ -542,8 +548,8 @@ class NumpyLinspace(NumpyNewArray):
         return self._stop
 
     @property
-    def size(self):
-        return self._size
+    def num(self):
+        return self._num
 
     @property
     def index(self):
@@ -551,7 +557,8 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        return (self.stop - self.start) / (self.size - 1)
+        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
+        #return (self.stop - self.start) / (self.size - 1)
 
     def __str__(self):
         code = 'linspace({}, {}, {})'.format(str(self.start),
