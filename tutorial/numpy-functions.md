@@ -1,22 +1,26 @@
 # Supported Numpy function by Pyccel
 
-    In Pyccel we try to support the most used Numpy functions by developers. here is some of them:
+In Pyccel we try to support the most used Numpy functions by developers. here is some of them:
 
 ## [Norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
-    Supported parameters: x: array_like
-                                Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
-                                If both axis and ord are None, the 2-norm of x.ravel will be returned.
-                           axis: {None, int, 2-tuple of ints}, optional.
-                                If axis is an integer, it specifies the axis of x along which to compute the vector norms.
-                                If axis is a 2-tuple, it specifies the axes that hold 2-D matrices, and the matrix norms of
-                                these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
-                                matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
-    Supported languages: Fortran
+- Supported parameters:
+
+    x: array_like
+       Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
+       If both axis and ord are None, the 2-norm of x.ravel will be returned.
+
+    axis: {None, int, 2-tuple of ints}, optional.
+         If axis is an integer, it specifies the axis of x along which to compute the vector norms.
+         If axis is a 2-tuple, it specifies the axes that hold 2-D matrices, and the matrix norms of
+         these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
+         matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
+
+- Supported languages: Fortran
 
 - python code:
 
-        ```python
+    ```python
     from numpy.linalg import norm
     from numpy import array
     arr1 = array([1,2,3,4])
@@ -26,11 +30,11 @@
     arr2 = array([[1,2,3,4],[4,3,2,1]])
     nrm2 = norm(arr2, axis=1)
     print(nrm)
-        ```
+    ```
 
 - fortran equivalent:
 
-        ```fortran
+    ```fortran
     program prog_test_norm
 
     use, intrinsic :: ISO_C_BINDING
@@ -55,11 +59,11 @@
     print *, nrm
 
     end program prog_test_norm
-        ```
+    ```
 
 ## [Real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
 
-    Supported languages: C (scalars only), fortran
+- Supported languages: C (scalars only), fortran
 
 - python code:
 
@@ -149,10 +153,12 @@
 
 ## [Prod](https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
 
-    Supported parameters: a: array_like
-                             Input data.
-    
-    Supported languages: fortran
+- Supported parameters:
+
+    a: array_like
+        Input data.
+
+- Supported languages: fortran
 
 - python code:
 
@@ -186,13 +192,16 @@
 
 ## [mod](https://numpy.org/doc/stable/reference/generated/numpy.mod.html)
 
-    Supported parameters: x1: array_like
-                            Dividend array.
+- Supported parameters:
 
-                            x2: array_like
-                            Divisor array. If x1.shape != x2.shape, they must be
-                            broadcastable to a common shape (which becomes the shape of the output).
-    Supported language: fortran.
+    x1: array_like
+        Dividend array.
+
+    x2: array_like
+        Divisor array. If x1.shape != x2.shape, they must be
+        broadcastable to a common shape (which becomes the shape of the output).
+
+- Supported language: fortran.
 
 - python code:
 
@@ -227,10 +236,13 @@
 
 ## [matmul](https://numpy.org/doc/stable/reference/generated/numpy.matmul.html)
 
-    Supported parameters:   x1, x2array_like:
-                            Input arrays, scalars not allowed.
+- Supported parameters:
 
-    Supported langauges: fortran
+    x1, x2: array_like
+
+    Input arrays, scalars not allowed.
+
+- Supported langauges: fortran
 
 - python code:
 
@@ -266,7 +278,7 @@
 
 ## [Numpy types](https://numpy.org/devdocs/user/basics.types.html)
 
-    Supported types : bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. they can be used as cast functions too.
+- Supported types : bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. they can be used as cast functions too.
 
 ## Other functions
 
