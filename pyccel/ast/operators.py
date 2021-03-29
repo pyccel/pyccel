@@ -106,7 +106,7 @@ class PyccelOperator(PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
-    __slots__ = ('_args','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_args','_order', )
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -204,7 +204,7 @@ class PyccelUnaryOperator(PyccelOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype', '_precision','_shape','_rank',)
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -289,7 +289,7 @@ class PyccelNot(PyccelUnaryOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision','_shape','_rank', )
     _precedence = 6
 
     @staticmethod
@@ -347,7 +347,7 @@ class PyccelBinaryOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision','_shape','_rank',)
 
     def __init__(self, arg1, arg2, simplify = False):
         super().__init__(arg1, arg2)
@@ -511,7 +511,7 @@ class PyccelAdd(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision',)
     _precedence = 12
 
     def __new__(cls, arg1, arg2, simplify = False):
@@ -650,7 +650,7 @@ class PyccelDiv(PyccelArithmeticOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision')
     _precedence = 13
 
     @staticmethod
@@ -724,7 +724,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision',)
     _precedence = 7
     @staticmethod
     def _calculate_dtype(*_args):
@@ -867,7 +867,7 @@ class PyccelBooleanOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision','_shape','_rank',)
     @staticmethod
     def _calculate_dtype(*_args):
         _dtype = NativeBool()
@@ -1010,7 +1010,7 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    __slots__ = ()
+    __slots__ = ('_dtype','_precision','_shape','_rank')
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
