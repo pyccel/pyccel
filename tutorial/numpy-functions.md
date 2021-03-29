@@ -155,7 +155,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here is
 
 - Supported parameters:
 
-    a: array_like
+    a: array_like,
         Input data.
 
 - Supported languages: fortran
@@ -197,7 +197,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here is
     x1: array_like
         Dividend array.
 
-    x2: array_like
+    x2: array_like,
         Divisor array. If x1.shape != x2.shape, they must be
         broadcastable to a common shape (which becomes the shape of the output).
 
@@ -238,8 +238,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here is
 
 - Supported parameters:
 
-    x1, x2: array_like
-
+    x1, x2: array_like,
     Input arrays, scalars not allowed.
 
 - Supported langauges: fortran
