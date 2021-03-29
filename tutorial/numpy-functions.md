@@ -295,5 +295,6 @@ In Pyccel we try to support the most used Numpy functions by developers. here is
 
     NumpyMax, NumpyMin, NumpySum, NumpyRand, NumpyRandint, Shape, NumpyArange, NumpyFloor.
 
-You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/doc/stable/reference/) documentation.
-Please if you face different behaviour between Numpy results and Pyccel results, create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language.
+You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/docstable/reference/) documentation.
+Please if you face different behaviour between Numpy results and Pyccel results, create an issue at
+https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language.
