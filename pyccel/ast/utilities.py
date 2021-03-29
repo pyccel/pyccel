@@ -264,7 +264,9 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
-        if -pos>expr.base.rank or not isinstance(indices[pos], Slice):
+        while -pos<=expr.base.rank and not isinstance(indices[pos], Slice):
+            pos -= 1
+        if -pos>expr.base.rank:
             return expr
 
         # Add index at the required position
