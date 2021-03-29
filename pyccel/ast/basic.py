@@ -244,12 +244,17 @@ class Basic:
         if not isinstance(fst, ast.AST):
             raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
 
-        if not hasattr(fst, 'lineno'):
-            # Handle module object
-            fst.lineno     = 1
-            fst.col_offset = 1
+        if self._fst:
+            if hasattr(fst, 'lineno'):
+                if self.fst.lineno != fst.lineno or self.fst.col_offset != fst.col_offset:
+                    self._fst.append(fst)
+        else:
+            if not hasattr(fst, 'lineno'):
+                # Handle module object
+                fst.lineno     = 1
+                fst.col_offset = 1
 
-        self._fst.append(fst)
+            self._fst.append(fst)
 
     @property
     def fst(self):
