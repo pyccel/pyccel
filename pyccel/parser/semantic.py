@@ -82,6 +82,7 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
 
 from pyccel.ast.numpyext import NumpyZeros
 from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
@@ -1272,6 +1273,13 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
+
+            if func is NumpyWhere:
+                if len(args) <= 1:
+                    errors.report(INVALID_WHERE_ARGUMENT,
+                        symbol=func, blocker=True,
+                        severity='fatal')
+
             expr = func(*args, **kwargs)
 
             return expr
