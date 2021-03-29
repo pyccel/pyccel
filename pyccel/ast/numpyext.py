@@ -25,7 +25,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, conver
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelUnarySub
+from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, IndexedElement, Constant)
 
 
@@ -510,19 +510,21 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_index','_start','_stop','_size','_shape', '_rank')
+    __slots__ = ('_index','_start','_stop','_num','_shape', '_rank')
     _dtype     = NativeReal()
     _precision = default_precision['real']
     _order     = 'F'
 
-    def __init__(self, start, stop, size=None):
+    def __init__(self, start, stop, num=None):
 
 
-        _valid_args = (Variable, IndexedElement, LiteralFloat, LiteralInteger, PyccelUnarySub)
+        _valid_args = (Variable, IndexedElement, LiteralFloat,
+                       LiteralInteger)
 
-        if not size:
-            size = LiteralInteger(50)
-        for arg in (start, stop, size):
+        if not num:
+            num = LiteralInteger(50)
+        print(start)
+        for arg in (start, stop, num):
             if not isinstance(arg, PyccelAstNode):
             #if isinstance(arg, PyccelUnarySub):
             #    print(arg.args)
@@ -532,8 +534,8 @@ class NumpyLinspace(NumpyNewArray):
         self._index = Variable('int', 'linspace_index')
         self._start = start
         self._stop  = stop
-        self._size  = size
-        self._shape = (self._size,) + self._start.shape
+        self._num  = num
+        self._shape = (self._num,) + self._start.shape
         self._rank  = len(self._shape)
         super().__init__()
 
@@ -546,8 +548,8 @@ class NumpyLinspace(NumpyNewArray):
         return self._stop
 
     @property
-    def size(self):
-        return self._size
+    def num(self):
+        return self._num
 
     @property
     def index(self):
@@ -555,7 +557,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.size, LiteralInteger(1)))
+        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
         #return (self.stop - self.start) / (self.size - 1)
 
     def __str__(self):

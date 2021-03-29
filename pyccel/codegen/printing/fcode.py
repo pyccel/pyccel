@@ -680,7 +680,7 @@ class FCodePrinter(CodePrinter):
             step  = self._print(expr.step ),
             index = self._print(expr.index),
             zero  = self._print(LiteralInteger(0)),
-            end   = self._print(PyccelMinus(expr.size, LiteralInteger(1))),
+            end   = self._print(PyccelMinus(expr.num, LiteralInteger(1))),
         )
         code = init_value
 
