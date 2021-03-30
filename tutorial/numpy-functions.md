@@ -1,6 +1,6 @@
 # Supported Numpy function by Pyccel
 
-In Pyccel we try to support the most used Numpy functions by developers. here is some of them:
+In Pyccel we try to support the most used Numpy functions by developers. here are some of them:
 
 ## [Norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
@@ -149,6 +149,46 @@ In Pyccel we try to support the most used Numpy functions by developers. here is
     print *, 'real part for arr1: ' // ' ' , real_part, ACHAR(10) // 'imag part for arr1: ' // ' ' , imag_part
 
     end program prog_test_imag_real
+    ```
+
+- C equivalent:
+
+    ```C
+    #include "ndarrays.h"
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <complex.h>
+    #include <stdint.h>
+    int main()
+    {
+        t_ndarray arr1;
+        t_ndarray real_part;
+        t_ndarray imag_part;
+        int64_t i_0001;
+
+
+        arr1 = array_create(1, (int64_t[]){4}, nd_cdouble);
+        double complex array_dummy_0001[] = {(1.0 + 1.0 * _Complex_I), (2.0 + 1.0 * _Complex_I), (3.0 + 1.0 * _Complex_I), (4.0 + 1.0 * _Complex_I)};
+        memcpy(arr1.nd_cdouble, array_dummy_0001, arr1.buffer_size);
+
+
+        real_part = array_create(1, (int64_t[]){4}, nd_double);
+        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        {
+            real_part.nd_double[get_index(real_part, i_0001)] = creal(arr1.nd_cdouble[get_index(arr1, i_0001)]);
+        }
+
+        imag_part = array_create(1, (int64_t[]){4}, nd_double);
+        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        {
+            imag_part.nd_double[get_index(imag_part, i_0001)] = cimag(arr1.nd_cdouble[get_index(arr1, i_0001)]);
+        }
+        // printf("%s %.12lf %s %.12lf\n", "real part for arr1: ", real_part, "\nimag part for arr1: ", imag_part); print arrays is not supported yet.
+        free_array(arr1);
+        free_array(real_part);
+        free_array(imag_part);
+        return 0;
+    }
     ```
 
 ## [Prod](https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
