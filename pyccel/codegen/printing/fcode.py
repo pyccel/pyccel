@@ -21,7 +21,6 @@ from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
