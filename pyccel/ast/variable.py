@@ -18,7 +18,7 @@ from .datatypes import (datatype, DataType,
                         default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
-from .operators import (PyccelMinus, PyccelDiv,
+from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
 errors = Errors()
