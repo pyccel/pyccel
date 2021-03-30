@@ -915,7 +915,7 @@ class SemanticParser(BasicParser):
 
             return expr
         else:
-            if len(args) > len(func.arguments):
+            if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
@@ -923,7 +923,7 @@ class SemanticParser(BasicParser):
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
-                        severity='fatal')
+                        severity='error')
             return new_expr
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
