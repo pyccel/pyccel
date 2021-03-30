@@ -61,7 +61,11 @@ class PythonCodePrinter(CodePrinter):
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
-        return tab+lines.replace('\n','\n'+tab)
+        if lines == '':
+            return lines
+        else:
+            # lines ends with \n
+            return tab+lines[:-1].replace('\n','\n'+tab)+'\n'
 
     def _format_code(self, lines):
         return lines
@@ -133,13 +137,12 @@ class PythonCodePrinter(CodePrinter):
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
         doc_string = self._indent_codestring(doc_string)
 
+        body = ''.join([doc_string, imports, body])
+
         code = ('def {name}({args}):\n'
-                '{doc_string}\n'
-                '\n{imports}\n{body}\n').format(
+                '{body}\n').format(
                         name=name,
                         args=args,
-                        doc_string=doc_string,
-                        imports=imports,
                         body=body)
         decorators = expr.decorators
         if decorators:
@@ -310,7 +313,7 @@ class PythonCodePrinter(CodePrinter):
             func_name = expr.funcdef.name
         args = ', '.join(self._print(i) for i in expr.args)
         code = '{func}({args})'.format(func=func_name, args=args)
-        if expr.results:
+        if expr.funcdef.results:
             return code
         else:
             return code+'\n'
