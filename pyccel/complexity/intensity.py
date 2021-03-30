@@ -18,6 +18,7 @@ Example
 
 """
 
+import sympy
 from collections import OrderedDict
 
 from sympy import sympify, Symbol
@@ -26,11 +27,28 @@ from sympy import Poly, LT
 from pyccel.complexity.arithmetic import OpComplexity
 from pyccel.complexity.memory import MemComplexity
 
+from sympy.abc import x
 from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
 from pyccel.complexity.memory import READ, WRITE
-
+FLOOR = Symbol('FLOOR')
+EXP = Symbol('EXP')
+LOG = Symbol('LOG')
+SQRT = Symbol('SQRT')
+SIN = Symbol('SIN')
+COS = Symbol('COS')
+TAN = Symbol('TAN')
+ARCSIN = Symbol('ARCSIN')
+ARCCOS = Symbol('ARCCOS')
+ARCTAN = Symbol('ARCTAN')
+SINH = Symbol('SINH')
+COSH = Symbol('COSH')
+TANH = Symbol('TANH')
+ARCSINH = Symbol('ARCSINH')
+ARCCOSH = Symbol('ARCCOSH')
+ARCTANH = Symbol('ARCTANH')
+ARCTAN2 = Symbol('ARCTAN2')
 _cost_symbols = {ADD, SUB, MUL, DIV, IDIV, ABS,
-                 READ, WRITE}
+                 READ, WRITE, SIN, FLOOR, EXP, LOG, SQRT, COS, TAN, ARCSIN, ARCCOS, ARCTAN, SINH, COSH, TANH, ARCSINH, ARCCOSH, ARCTANH, ARCTAN2}
 
 __all__ = ["computational_intensity"]
 
@@ -47,18 +65,47 @@ def _leading_term(expr, *args):
         list of input symbols for univariate/multivariate polynomials
     """
     expr = sympify(str(expr))
-    P = Poly(expr, *args)
-    return LT(P)
+    if expr.atoms(sympy.Function):
+        for shape_expr in expr.atoms(sympy.Function):
+            expr = expr.subs(shape_expr, "shape_" + str(shape_expr.args[0]) + '_' + str(shape_expr.args[1]))
+        P = Poly(expr, *args)
+        lt = LT(P)
+        for var in lt.free_symbols:
+            var = str(var)
+            if "shape" in var:
+                lt = lt.subs(var, "shape(" + var.split("_")[1] + "," + var.split("_")[2] + ")")
+    else:
+        P = Poly(expr, *args)
+        lt = LT(P)
+    return lt
+# ==============================================================================
+def checker(expr, temp = []):
+    if isinstance(expr, sympy.core.power.Pow):
+        if (expr.args[-1] < 0):
+            temp.append(expr)
+    for i in expr.args:
+        checker(i)
+    return temp
 
 # ==============================================================================
 def _intensity(f, m):
     if f * m == 0:
         return 0
-
     f = sympify(str(f))
     m = sympify(str(m))
 
     args = f.free_symbols.union(m.free_symbols) - _cost_symbols
+    if not args:
+        args = {x}
+    multiply_args = sympify("1")
+    for i in checker(f):
+        multiply_args = multiply_args * i.args[0]
+        args = args - {i.args[0]}
+    for i in checker(m):
+        multiply_args = multiply_args * i.args[0]
+        args = args - {i.args[0]}
+    f = f * multiply_args
+    m = m * multiply_args
     args = list(args)
 
     # TODO _leading_term does not retrieve the right output

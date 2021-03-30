@@ -55,12 +55,12 @@ class MemComplexity(Complexity):
             return size * WRITE
 
         ntimes = self._compute_size_lhs(expr)
-        return  self._cost(expr.rhs, **settings) + ntimes * WRITE
+        return  ntimes * ( self._cost( expr.rhs , **settings ) + WRITE )
 
     def _cost_AugAssign(self, expr, **settings):
         ntimes = self._compute_size_lhs(expr)
         # Right? Because x += a should also READ x which is in lrs
-        return  self._cost(expr.rhs, **settings) + ntimes * WRITE + ntimes * READ
+        return  ntimes * (self._cost(expr.rhs, **settings) + WRITE + READ)
 
     def _cost_PyccelAdd(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
