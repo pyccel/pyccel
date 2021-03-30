@@ -8,7 +8,8 @@
 import functools
 import operator
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonEnumerate
+from pyccel.ast.builtins  import PythonZip, PythonMap, PythonLen
 
 from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
@@ -1351,19 +1352,26 @@ class CCodePrinter(CodePrinter):
         counter = self._print(expr.target)
         body  = self._print(expr.body)
         if isinstance(expr.iterable, PythonRange):
-            start = self._print(expr.iterable.start)
-            stop  = self._print(expr.iterable.stop )
-            step  = self._print(expr.iterable.step )
+            iterable = expr.iterable
+        elif isinstance(expr.iterable, PythonEnumerate):
+            iterable = PythonRange(PythonLen(expr.iterable.element))
+        elif isinstance(expr.iterable, PythonZip):
+            iterable = PythonRange(expr.iterable.length)
+        elif isinstance(expr.iterable, PythonMap):
+            iterable = PythonRange(PythonLen(expr.iterable.args[1]))
         else:
-            raise NotImplementedError("Only iterable currently supported is Range")
+            raise NotImplementedError("Only iterables currently supported are Range, Enumerate, Zip and Map")
+        start = self._print(iterable.start)
+        stop  = self._print(iterable.stop )
+        step  = self._print(iterable.step )
 
-        test_step = expr.iterable.step
+        test_step = iterable.step
         if isinstance(test_step, PyccelUnarySub):
-            test_step = expr.iterable.step.args[0]
+            test_step = iterable.step.args[0]
 
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
-            op = '>' if isinstance(expr.iterable.step, PyccelUnarySub) else '<'
+            op = '>' if isinstance(iterable.step, PyccelUnarySub) else '<'
             return ('for ({counter} = {start}; {counter} {op} {stop}; {counter} += '
                         '{step})\n{{\n{body}\n}}').format(counter=counter, start=start, op=op,
                                                           stop=stop, step=step, body=body)
@@ -1372,6 +1380,10 @@ class CCodePrinter(CodePrinter):
                 'for ({counter} = {start}; ({step} > 0) ? ({counter} < {stop}) : ({counter} > {stop}); {counter} += '
                 '{step})\n{{\n{body}\n}}').format(counter=counter, start=start,
                                                   stop=stop, step=step, body=body)
+
+    def _print_FunctionalFor(self, expr):
+        loops = '\n'.join(self._print(i) for i in expr.loops)
+        return loops
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
