@@ -821,7 +821,7 @@ class AugAssign(Assign):
     def to_basic_assign(self):
         return Assign(self.lhs,
                 self._accepted_operators[self._op](self.lhs, self.rhs),
-                status = self.status
+                status = self.status,
                 like   = self.like)
 
 
