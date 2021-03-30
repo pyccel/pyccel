@@ -4,7 +4,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 ## [Norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
-- Supported parameters:
+-   Supported parameters:
 
     x: array_like
        Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
@@ -16,9 +16,9 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
          these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
          matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
 
-- Supported languages: Fortran
+-   Supported languages: Fortran
 
-- python code:
+-   python code:
 
     ```python
     from numpy.linalg import norm
@@ -32,7 +32,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     print(nrm)
     ```
 
-- fortran equivalent:
+-   fortran equivalent:
 
     ```fortran
     program prog_test_norm
@@ -63,9 +63,9 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 ## [Real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
 
-- Supported languages: C (scalars only), fortran
+-   Supported languages: C (scalars only), fortran
 
-- python code:
+-   python code:
 
     ```python
     from numpy import imag, real, array
@@ -75,7 +75,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
-- fortran equivalent:
+-   fortran equivalent:
 
     ```fortran
     program prog_test_imag_real
@@ -96,7 +96,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     end program prog_test_imag_real
     ```
 
-- C equivalent:
+-   C equivalent:
 
     ```C
     #include <complex.h>
@@ -116,7 +116,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     }
     ```
 
-- python code with arrays:
+-   python code with arrays:
 
     ```python
     from numpy import imag, real, array
@@ -126,7 +126,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
-- fortran equivalent:
+-   fortran equivalent:
 
     ```fortran
     program prog_test_imag_real
@@ -151,7 +151,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     end program prog_test_imag_real
     ```
 
-- C equivalent:
+-   C equivalent:
 
     ```C
     #include "ndarrays.h"
@@ -165,6 +165,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
         t_ndarray real_part;
         t_ndarray imag_part;
         int64_t i_0001;
+    ```
 
 
         arr1 = array_create(1, (int64_t[]){4}, nd_cdouble);
@@ -193,14 +194,14 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 ## [Prod](https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
 
-- Supported parameters:
+-   Supported parameters:
 
-    a: array_like,
-        Input data.
+      a: array_like,
+          Input data.
 
-- Supported languages: fortran
+-   Supported languages: fortran
 
-- python code:
+-   python code:
 
     ```python
     from numpy import array, prod
@@ -210,7 +211,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     print("prd: ", prd)
     ```
 
-- fortran equivalent:
+-   fortran equivalent:
 
     ```fortran
     program prog_test_prod
@@ -232,18 +233,18 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 ## [mod](https://numpy.org/doc/stable/reference/generated/numpy.mod.html)
 
-- Supported parameters:
+-   Supported parameters:
 
-    x1: array_like
-        Dividend array.
+      x1: array_like
+          Dividend array.
 
-    x2: array_like,
-        Divisor array. If x1.shape != x2.shape, they must be
-        broadcastable to a common shape (which becomes the shape of the output).
+      x2: array_like,
+          Divisor array. If x1.shape != x2.shape, they must be
+          broadcastable to a common shape (which becomes the shape of the output).
 
-- Supported language: fortran.
+-   Supported language: fortran.
 
-- python code:
+-   python code:
 
     ```python
     from numpy import array, mod
@@ -253,7 +254,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     print("res: ", res)
     ```
 
-- fortran equivalent:
+-   fortran equivalent:
 
     ```fortran
     program prog_test_mod
@@ -276,14 +277,14 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 ## [matmul](https://numpy.org/doc/stable/reference/generated/numpy.matmul.html)
 
-- Supported parameters:
+-   Supported parameters:
 
-    x1, x2: array_like,
-    Input arrays, scalars not allowed.
+      x1, x2: array_like,
+      Input arrays, scalars not allowed.
 
-- Supported langauges: fortran
+-   Supported langauges: fortran
 
-- python code:
+-   python code:
 
     ```python
     from numpy import array, matmul
@@ -293,7 +294,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     print("res: ", res)
     ```
 
-- fortran equivalent:
+-   fortran equivalent:
 
     ```fortran
     program prog_test_matmul
@@ -317,24 +318,24 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 ## [Numpy types](https://numpy.org/devdocs/user/basics.types.html)
 
-- Supported types : bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. they can be used as cast functions too.
+-   Supported types : bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. they can be used as cast functions too.
 
 ## Other functions
 
-- Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html):
+-   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html):
 
-    NumpySqrt, NumpyAbs, NumpySin, NumpyCos, NumpyExp, NumpyLog, NumpyTan, NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2, NumpySinh, NumpyCosh, NumpyTanh, NumpyArcsinh, NumpyArccosh and
-    NumpyArctanh.
+      NumpySqrt, NumpyAbs, NumpySin, NumpyCos, NumpyExp, NumpyLog, NumpyTan, NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2, NumpySinh, NumpyCosh, NumpyTanh, NumpyArcsinh, NumpyArccosh and
+      NumpyArctanh.
 
-- Supported arrays manipulation:
+-   Supported arrays manipulation:
 
-    NumpyEmpty, NumpyEmptyLike, NumpyFull, NumpyFullLike, NumpyOnes,
-    NumpyOnesLike, NumpyZeros and NumpyZerosLike.
+      NumpyEmpty, NumpyEmptyLike, NumpyFull, NumpyFullLike, NumpyOnes,
+      NumpyOnesLike, NumpyZeros and NumpyZerosLike.
 
-- others:
+-   others:
 
-    NumpyMax, NumpyMin, NumpySum, NumpyRand, NumpyRandint, Shape, NumpyArange, NumpyFloor.
+      NumpyMax, NumpyMin, NumpySum, NumpyRand, NumpyRandint, Shape, NumpyArange, NumpyFloor.
 
 You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/docstable/reference/) documentation.
 Please if you face different behaviour between Numpy results and Pyccel results, create an issue at
-https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language.
+<https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
