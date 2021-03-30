@@ -799,6 +799,29 @@ class IndexedElement(PyccelAstNode):
     def __str__(self):
         return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
 
+    def __getitem__(self, *args):
+
+        if len(args) == 1 and isinstance(args[0], (tuple, list)):
+            args = args[0]
+
+        if self.rank < len(args):
+            raise IndexError('Rank mismatch.')
+
+        new_indexes = []
+        j = 0
+        for i in self.indices:
+            if isinstance(i, Slice) and j<len(args):
+                # TODO: Replace with simplify = True in PR 797
+                if j == 0:
+                    i = args[j]
+                elif i.step == 1:
+                    i = PyccelAdd(i.start, args[j])
+                else:
+                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j]))
+                j += 1
+            new_indexes.append(i)
+        return IndexedElement(self.base, *new_indexes)
+
 class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
