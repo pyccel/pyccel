@@ -170,7 +170,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
             # case of else stmt
             if orelse and not elif_orelse and k>0 :
-                expr = logical_and(logical_and(else_no >= comment_lines_no[0], else_no <= comment_lines_no[k-1]), else_no<=previous_stmt_body_last_lineno)
+                expr = logical_and(else_no <= comment_lines_no[k-1], else_no<=previous_stmt_body_last_lineno)
                 if expr.any():
                     k = where(else_no[expr][-1]<=comment_lines_no[:k])[0][0]
 
@@ -225,7 +225,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             k = k+1
 
         if orelse and not elif_orelse and k>0:
-            expr = logical_and(logical_and(else_no >= comment_lines_no[0], else_no <= comment_lines_no[k-1]), else_no<=body_last_lineno)
+            expr = logical_and(else_no <= comment_lines_no[k-1], else_no<=body_last_lineno)
             if expr.any():
                 k = where(else_no[expr][-1]<=comment_lines_no[:k])[0][0]
 
