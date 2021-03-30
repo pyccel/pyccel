@@ -6,12 +6,6 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
-from itertools import chain
-
-from sympy.printing.pycode import _known_functions
-from sympy.printing.pycode import _known_functions_math
-from sympy.printing.pycode import _known_constants_math
-
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
@@ -23,7 +17,7 @@ from pyccel.ast.variable   import DottedName
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -181,7 +175,7 @@ class PythonCodePrinter(CodePrinter):
         headers = expr.headers
         if headers:
             headers = self._print(headers)
-            code = '{header}\n{code}'.format(header=header, code=code)
+            code = '{header}\n{code}'.format(header=headers, code=code)
 
         return code
 
