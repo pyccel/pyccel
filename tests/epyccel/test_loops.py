@@ -144,10 +144,10 @@ def test_enumerate_on_1d_array(language):
 
     assert np.array_equal( f1(z), f2(z) )
 
-def test_zip_prod(lang):
+def test_zip_prod(language):
 
     f1 = loops.zip_prod
-    f2 = epyccel( f1, language = lang )
+    f2 = epyccel( f1, language = language )
 
     assert np.array_equal( f1(10), f2(10) )
 
