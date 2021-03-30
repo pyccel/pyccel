@@ -165,8 +165,6 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
         t_ndarray real_part;
         t_ndarray imag_part;
         int64_t i_0001;
-    ```
-
 
         arr1 = array_create(1, (int64_t[]){4}, nd_cdouble);
         double complex array_dummy_0001[] = {(1.0 + 1.0 * _Complex_I), (2.0 + 1.0 * _Complex_I), (3.0 + 1.0 * _Complex_I), (4.0 + 1.0 * _Complex_I)};
