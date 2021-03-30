@@ -244,7 +244,7 @@ class Basic:
         if not isinstance(fst, ast.AST):
             raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
 
-        if self._fst:
+        if self.fst:
             if hasattr(fst, 'lineno'):
                 if self.fst.lineno != fst.lineno or self.fst.col_offset != fst.col_offset:
                     self._fst.append(fst)
