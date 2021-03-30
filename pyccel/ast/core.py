@@ -819,6 +819,13 @@ class AugAssign(Assign):
         return self._op
 
     def to_basic_assign(self):
+        """
+        Convert the AugAssign to an Assign
+        E.g. convert:
+        a += b
+        to:
+        a = a + b
+        """
         return Assign(self.lhs,
                 self._accepted_operators[self._op](self.lhs, self.rhs),
                 status = self.status,
