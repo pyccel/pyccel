@@ -31,7 +31,7 @@ from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, Argument
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, KernelCall
+from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, KernelCall, CKernelDef
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
@@ -90,6 +90,7 @@ from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 from pyccel.ast.cudext import CudaArray
 
 from pyccel.ast.cupyext import CupyNewArray
+from pyccel.ast.cupyext import CupyRawKernel
 
 
 from pyccel.ast.internals import Slice, PyccelSymbol
@@ -1675,8 +1676,8 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
-        print(lhs, '=', rhs)
-        print(type(lhs), '=', type(rhs))
+        # print(lhs, '=', rhs)
+        # print(type(lhs), '=', type(rhs))
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.get_macro(name)
@@ -1853,8 +1854,14 @@ class SemanticParser(BasicParser):
 
         else:
             print('>>', rhs)
-            print(self.code)
+            if isinstance(rhs, CupyRawKernel):
+                print(rhs.name, rhs.code)
+                func = CKernelDef(rhs.code,rhs.name)
+                self.insert_function(func)
+                return rhs
+            # print(self.code)
             d_var  = self._infere_type(rhs, **settings)
+            print(d_var)
             d_list = d_var if isinstance(d_var, list) else [d_var]
 
             for d in d_list:

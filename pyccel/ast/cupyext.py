@@ -370,6 +370,9 @@ class CupyRawKernel():
     @property
     def code(self):
         return self._code
+    @property
+    def name(self):
+        return self._name
 
 
 #=======================================================================================
