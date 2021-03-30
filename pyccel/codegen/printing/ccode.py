@@ -707,7 +707,17 @@ class CCodePrinter(CodePrinter):
             return "printf({});\n".format(args_code)
 
         for i, f in enumerate(orig_args):
-            if f.rank > 0:
+            if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
+                tmp_list = self.extract_function_call_results(f)
+                tmp_arg_format_list = []
+                for a in tmp_list:
+                    arg_format, arg = self.get_print_format_and_arg(a)
+                    tmp_arg_format_list.append(arg_format)
+                    args.append(arg)
+                args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
+                assign = Assign(tmp_list, f)
+                self._additional_code += self._print(assign) + '\n'
+            elif f.rank > 0:
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -730,16 +740,6 @@ class CCodePrinter(CodePrinter):
                                   PythonPrint([ orig_args[i][max_index], for_end])],
                                  unravelled = True)
                 code += self._print(body)
-            elif isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
-                tmp_list = self.extract_function_call_results(f)
-                tmp_arg_format_list = []
-                for a in tmp_list:
-                    arg_format, arg = self.get_print_format_and_arg(a)
-                    tmp_arg_format_list.append(arg_format)
-                    args.append(arg)
-                args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
-                assign = Assign(tmp_list, f)
-                self._additional_code += self._print(assign) + '\n'
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
