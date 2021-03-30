@@ -194,7 +194,7 @@ class PythonCodePrinter(CodePrinter):
         lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
         expr_return_vars = [a for a in expr.expr if a not in lhs_list]
 
-        return 'return ' + ','.join(self._print(i) for i in expr_return_vars + rhs_list)
+        return 'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
@@ -297,11 +297,11 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
-        return '# {0} '.format(txt)
+        return '# {0} \n'.format(txt)
 
     def _print_CommentBlock(self, expr):
         txt = '\n'.join(self._print(c) for c in expr.comments)
-        return '"""{0}"""'.format(txt)
+        return '"""{0}"""\n'.format(txt)
 
     def _print_EmptyNode(self, expr):
         return ''
@@ -315,7 +315,11 @@ class PythonCodePrinter(CodePrinter):
         else:
             func_name = expr.funcdef.name
         args = ', '.join(self._print(i) for i in expr.args)
-        return'{func}({args})'.format(func=func_name, args=args)
+        code = '{func}({args})'.format(func=func_name, args=args)
+        if expr.results:
+            return code
+        else:
+            return code+'\n'
 
     def _print_Len(self, expr):
         return 'len({})'.format(self._print(expr.arg))
@@ -323,7 +327,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Import(self, expr):
         source = self._print(expr.source)
         if not expr.target:
-            return 'import {source}'.format(source=source)
+            return 'import {source}\n'.format(source=source)
         else:
             if source in import_target_swap:
                 # If the source contains multiple names which reference the same object
@@ -334,13 +338,13 @@ class PythonCodePrinter(CodePrinter):
             else:
                 target = [self._print(i) for i in expr.target]
             target = ', '.join(target)
-            return 'from {source} import {target}'.format(source=source, target=target)
+            return 'from {source} import {target}\n'.format(source=source, target=target)
 
     def _print_CodeBlock(self, expr):
         if len(expr.body)==0:
-            return 'pass'
+            return 'pass\n'
         else:
-            code = '\n'.join(self._print(c) for c in expr.body)
+            code = ''.join(self._print(c) for c in expr.body)
             return code
 
     def _print_For(self, expr):
@@ -352,38 +356,38 @@ class PythonCodePrinter(CodePrinter):
         body   = self._print(expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
-                '{2}\n').format(target,iterable,body)
+                '{2}').format(target,iterable,body)
 
         return code
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
         body = self._indent_codestring(self._print(expr.body))
-        return 'while {cond}:\n{body}\n'.format(
+        return 'while {cond}:\n{body}'.format(
                 cond = cond,
                 body = body)
 
     def _print_Break(self, expr):
-        return 'break'
+        return 'break\n'
 
     def _print_Continue(self, expr):
-        return 'continue'
+        return 'continue\n'
 
     def _print_Assign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        return'{0} = {1}'.format(lhs,rhs)
+        return'{0} = {1}\n'.format(lhs,rhs)
 
     def _print_AliasAssign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        return'{0} = {1}'.format(lhs,rhs)
+        return'{0} = {1}\n'.format(lhs,rhs)
 
     def _print_AugAssign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         op  = self._print(expr.op._symbol)
-        return'{0} {1}= {2}'.format(lhs,op,rhs)
+        return'{0} {1}= {2}\n'.format(lhs,op,rhs)
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
@@ -519,7 +523,7 @@ class PythonCodePrinter(CodePrinter):
         return 'None'
 
     def _print_Pass(self, expr):
-        return 'pass'
+        return 'pass\n'
 
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
@@ -535,20 +539,20 @@ class PythonCodePrinter(CodePrinter):
         lines = []
         for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
-                lines.append("if %s:" % self._print(c))
+                lines.append("if %s:\n" % self._print(c))
 
             elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
-                lines.append("else:")
+                lines.append("else:\n")
 
             else:
-                lines.append("elif %s:" % self._print(c))
+                lines.append("elif %s:\n" % self._print(c))
 
             if isinstance(e, CodeBlock):
                 body = self._indent_codestring(self._print(e))
                 lines.append(body)
             else:
                 lines.append(self._print(e))
-        return "\n".join(lines)
+        return "".join(lines)
 
     def _print_IfTernaryOperator(self, expr):
         cond = self._print(expr.cond)
@@ -558,15 +562,6 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Literal(self, expr):
         return repr(expr.python_value)
-
-    def _print_Shape(self, expr):
-        arg = self._print(expr.arg)
-        if expr.index is None:
-            return '{}.shape'.format(arg)
-
-        else:
-            index = self._print(expr.index)
-            return '{0}.shape[{1}]'.format(arg, index)
 
     def _print_Print(self, expr):
         args = []
@@ -583,22 +578,22 @@ class PythonCodePrinter(CodePrinter):
 
         fs = ', '.join(i for i in args)
 
-        return 'print({0})'.format(fs)
+        return 'print({0})\n'.format(fs)
 
     def _print_Module(self, expr):
         # Print interface functions (one function with multiple decorators describes the problem)
         interfaces = [i.functions[0] for i in expr.interfaces]
         for f,i in zip(interfaces, expr.interfaces):
             f.rename(i.name)
-        interfaces = '\n'.join(self._print(i) for i in interfaces)
+        interfaces = ''.join(self._print(i) for i in interfaces)
         # Collect functions which are not in an interface
         funcs = [f for f in expr.funcs if not any(f in i.functions for i in expr.interfaces)]
-        funcs = '\n'.join(self._print(f) for f in funcs)
-        classes = '\n'.join(self._print(c) for c in expr.classes)
-        body = '\n'.join((interfaces, funcs, classes))
+        funcs = ''.join(self._print(f) for f in funcs)
+        classes = ''.join(self._print(c) for c in expr.classes)
+        body = ''.join((interfaces, funcs, classes))
         imports  = [*expr.imports, *self.get_additional_imports()]
-        imports  = '\n'.join(self._print(i) for i in imports)
-        return ('{imports}\n\n'
+        imports  = ''.join(self._print(i) for i in imports)
+        return ('{imports}\n'
                 '{body}').format(
                         imports = imports,
                         body    = body)
