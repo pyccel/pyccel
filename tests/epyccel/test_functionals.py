@@ -1,43 +1,82 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+import pytest
 from numpy.random import randint
 from numpy import equal
 
 from pyccel.epyccel import epyccel
 from modules import functionals
 
-def compare_epyccel(f, *args):
-    f2 = epyccel(f)
-    out1 = f(*args)
-    out2 = f2(*args)
-    assert equal(out1, out2).all()
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c', marks = pytest.mark.c),
+    pytest.param('python'      , marks = [pytest.mark.python,
+        pytest.mark.skip(message='Functional object not retrievable in python')])
+    ]
+)
+def language(request):
+    return request.param
 
-def test_functional_for_1d_range():
-    compare_epyccel(functionals.functional_for_1d_range)
+#==============================================================================
+class epyccel_test:
+    """
+    Class to pyccelize module then compare different results
+    This avoids the need to pyccelize the file multiple times
+    or write the arguments multiple times
+    """
+    def __init__(self, f, lang='fortran'):
+        self._f  = f
+        self._f2 = epyccel(f, language=lang)
 
-def test_functional_for_1d_var():
+    def compare_epyccel(self, *args):
+        out1 = self._f(*args)
+        out2 = self._f2(*args)
+        assert equal(out1, out2 ).all()
+
+#==============================================================================
+
+def test_functional_for_1d_range(language):
+    test = epyccel_test(functionals.functional_for_1d_range, lang=language)
+    test.compare_epyccel()
+
+def test_functional_for_1d_var(language):
     y = randint(99,size = 4)
-    compare_epyccel(functionals.functional_for_1d_var, y)
+    test = epyccel_test(functionals.functional_for_1d_var, lang=language)
+    test.compare_epyccel(y)
 
-def test_functional_for_2d_range():
-    compare_epyccel(functionals.functional_for_2d_range)
+def test_functional_for_2d_range(language):
+    test = epyccel_test(functionals.functional_for_2d_range, lang=language)
+    test.compare_epyccel()
 
-def test_functional_for_2d_var_range():
+def test_functional_for_2d_var_range(language):
     y = randint(99, size = 3)
-    compare_epyccel(functionals.functional_for_2d_var_range, y)
+    test = epyccel_test(functionals.functional_for_2d_var_range, lang=language)
+    test.compare_epyccel(y)
 
-def test_functional_for_2d_var_var():
+def test_functional_for_2d_var_var(language):
     y = randint(99, size = 3)
     z = randint(99, size = 2)
-    compare_epyccel(functionals.functional_for_2d_var_var, y, z)
+    test = epyccel_test(functionals.functional_for_2d_var_var, lang=language)
+    test.compare_epyccel(y, z)
 
-def test_functional_for_2d_dependant_range():
-    compare_epyccel(functionals.functional_for_2d_dependant_range_1)
-    compare_epyccel(functionals.functional_for_2d_dependant_range_2)
-    compare_epyccel(functionals.functional_for_2d_dependant_range_3)
+def test_functional_for_2d_dependant_range(language):
+    test = epyccel_test(functionals.functional_for_2d_dependant_range_1, lang=language)
+    test.compare_epyccel()
+    test.compare_epyccel()
+    test.compare_epyccel()
 
-def test_functional_for_2d_array_range():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Tuples not implemented in C"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_functional_for_2d_array_range(language):
     idx = randint(28)
-    compare_epyccel(functionals.functional_for_2d_array_range,idx)
+    test = epyccel_test(functionals.functional_for_2d_array_range, lang=language)
+    test.compare_epyccel(idx)
 
-def test_functional_for_3d_range():
-    compare_epyccel(functionals.functional_for_3d_range)
+def test_functional_for_3d_range(language):
+    test = epyccel_test(functionals.functional_for_3d_range, lang=language)
+    test.compare_epyccel()
