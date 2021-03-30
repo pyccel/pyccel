@@ -706,6 +706,9 @@ class CCodePrinter(CodePrinter):
             args_code = ', '.join([args_format, *args])
             return "printf({});\n".format(args_code)
 
+        if len(orig_args) == 0:
+            return formatted_args_to_printf(args_format, args, end)
+
         for i, f in enumerate(orig_args):
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
@@ -746,7 +749,7 @@ class CCodePrinter(CodePrinter):
                 args.append(arg)
         if args_format:
             code += formatted_args_to_printf(args_format, args, end)
-        return code
+        return code[:-1]
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
