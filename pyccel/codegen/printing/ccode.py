@@ -1234,12 +1234,12 @@ class CCodePrinter(CodePrinter):
             variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
             unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
-                code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
+                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
                 return code + '\nreturn {};\n'.format(self._print(last_assign[0].rhs))
             else:
-                code = '\n'+self._print(expr.stmt)
+                code = ''+self._print(expr.stmt)
                 self._additional_declare.append(last_assign[0].lhs)
-        return code + '\nreturn {0};\n'.format(self._print(args[0]))
+        return code + 'return {0};\n'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass\n'
@@ -1366,12 +1366,12 @@ class CCodePrinter(CodePrinter):
         if isinstance(test_step, Literal):
             op = '>' if isinstance(expr.iterable.step, PyccelUnarySub) else '<'
             return ('for ({counter} = {start}; {counter} {op} {stop}; {counter} += '
-                        '{step})\n{{\n{body}\n}}\n').format(counter=counter, start=start, op=op,
+                        '{step})\n{{\n{body}}}\n').format(counter=counter, start=start, op=op,
                                                           stop=stop, step=step, body=body)
         else:
             return (
                 'for ({counter} = {start}; ({step} > 0) ? ({counter} < {stop}) : ({counter} > {stop}); {counter} += '
-                '{step})\n{{\n{body}\n}}\n').format(counter=counter, start=start,
+                '{step})\n{{\n{body}}}\n').format(counter=counter, start=start,
                                                   stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
