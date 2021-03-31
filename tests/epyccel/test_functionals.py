@@ -6,16 +6,6 @@ from numpy import equal
 from pyccel.epyccel import epyccel
 from modules import functionals
 
-@pytest.fixture(params=[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('c', marks = pytest.mark.c),
-    pytest.param('python'      , marks = [pytest.mark.python,
-        pytest.mark.skip(message='Functional object not retrievable in python')])
-    ]
-)
-def language(request):
-    return request.param
-
 #==============================================================================
 class epyccel_test:
     """
@@ -38,6 +28,15 @@ def test_functional_for_1d_range(language):
     test = epyccel_test(functionals.functional_for_1d_range, lang=language)
     test.compare_epyccel()
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason = "Too many expressions introduced for 'for xi in x'")
+        ])
+    )
+)
 def test_functional_for_1d_var(language):
     y = randint(99,size = 4)
     test = epyccel_test(functionals.functional_for_1d_var, lang=language)
@@ -47,11 +46,29 @@ def test_functional_for_2d_range(language):
     test = epyccel_test(functionals.functional_for_2d_range, lang=language)
     test.compare_epyccel()
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason = "Too many expressions introduced for 'for xi in x'")
+        ])
+    )
+)
 def test_functional_for_2d_var_range(language):
     y = randint(99, size = 3)
     test = epyccel_test(functionals.functional_for_2d_var_range, lang=language)
     test.compare_epyccel(y)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason = "Too many expressions introduced for 'for xi in x'")
+        ])
+    )
+)
 def test_functional_for_2d_var_var(language):
     y = randint(99, size = 3)
     z = randint(99, size = 2)
