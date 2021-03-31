@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-from pyccel.epyccel import epyccel
 import numpy as np
+from pyccel.epyccel import epyccel
 
 
 #==============================================================================
