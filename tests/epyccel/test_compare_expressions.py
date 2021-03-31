@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
-from .utilities import epyccel_test
+from utilities import epyccel_test
 
 #==============================================================================
 @types('int, int, int')

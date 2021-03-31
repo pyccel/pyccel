@@ -2,7 +2,7 @@
 import pytest
 
 from modules import base
-from .utilities import epyccel_test
+from utilities import epyccel_test
 
 
 def test_is_false(language):
