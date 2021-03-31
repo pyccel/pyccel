@@ -376,6 +376,9 @@ class Variable(PyccelAstNode):
     def __str__(self):
         return str(self.name)
 
+    def __repr__(self):
+        return 'Variable({}, dtype={})'.format(repr(self.name), repr(self.dtype))
+
     def __eq__(self, other):
         if type(self) is type(other):
             return self._name == other.name
@@ -798,6 +801,9 @@ class IndexedElement(PyccelAstNode):
 
     def __str__(self):
         return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
+
+    def __repr__(self):
+        return '{}[{}]'.format(repr(self.base), ','.join(repr(i) for i in self.indices))
 
     def __getitem__(self, *args):
 

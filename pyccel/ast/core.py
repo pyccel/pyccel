@@ -385,6 +385,9 @@ class Assign(Basic):
     def __str__(self):
         return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
+    def __repr__(self):
+        return '({0} := {1})'.format(repr(self.lhs), repr(self.rhs))
+
     @property
     def lhs(self):
         return self._lhs

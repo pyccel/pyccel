@@ -9,7 +9,7 @@
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall
+from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.variable   import DottedName
@@ -356,6 +356,28 @@ class PythonCodePrinter(CodePrinter):
                 '{2}').format(target,iterable,body)
 
         return code
+
+    def _print_FunctionalFor(self, expr):
+        dummy_var = expr.index
+        iterators = []
+        body = expr.loops[1]
+        while not isinstance(body, Assign):
+            if isinstance(body, CodeBlock):
+                body = body.body
+                if len(body) > 1:
+                    if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
+                        raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
+                body = body[0]
+            elif isinstance(body, For):
+                iterators.append(body.iterable)
+                body = body.body
+            else:
+                raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
+        body = self._print(body.rhs)
+        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+                        for idx, iters in zip(expr.indices, iterators)])
+        lhs = self._print(expr.lhs)
+        return '{} = [{} {}]\n'.format(lhs, body, for_loops)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
