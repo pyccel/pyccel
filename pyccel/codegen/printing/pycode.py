@@ -374,10 +374,8 @@ class PythonCodePrinter(CodePrinter):
             else:
                 raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
         body = self._print(body.rhs)
-        for_loops = []
-        for idx, iters in zip(expr.indices, iterators):
-            for_loops.append('for {} in {}'.format(self._print(idx), self._print(iters)))
-        for_loops = ' '.join(for_loops)
+        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+                        for idx, iters in zip(expr.indices, iterators)])
         lhs = self._print(expr.lhs)
         return '{} = [{} {}]\n'.format(lhs, body, for_loops)
 
