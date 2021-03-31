@@ -1338,7 +1338,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, Variable):
             rhs = VariableAddress(rhs)
 
-        lhs_code = self._print(lhs.name)
+        lhs_code = self._print(VariableAddress(lhs))
         rhs_code = self._print(rhs)
 
         # the below condition handles the case of reassinging a pointer to an array view.
