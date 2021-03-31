@@ -1383,7 +1383,7 @@ class CCodePrinter(CodePrinter):
                                                   stop=stop, step=step, body=body)
 
     def _print_FunctionalFor(self, expr):
-        loops = '\n'.join(self._print(i) for i in expr.loops)
+        loops = ''.join(self._print(i) for i in expr.loops)
         return loops
 
     def _print_CodeBlock(self, expr):

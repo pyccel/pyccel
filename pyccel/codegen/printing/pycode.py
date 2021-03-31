@@ -379,7 +379,7 @@ class PythonCodePrinter(CodePrinter):
             for_loops.append('for {} in {}'.format(self._print(idx), self._print(iters)))
         for_loops = ' '.join(for_loops)
         lhs = self._print(expr.lhs)
-        return '{} = [{} {}]'.format(lhs, body, for_loops)
+        return '{} = [{} {}]\n'.format(lhs, body, for_loops)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
