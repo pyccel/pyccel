@@ -289,7 +289,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 -   Supported parameters:
 
     x1, x2: array_like,
-        Input arrays, scalars not allowed.
+        Input arrays (must be 1d or 2d), scalars not allowed.
 
 -   Supported langauges: fortran
 
