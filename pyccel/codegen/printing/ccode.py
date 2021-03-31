@@ -749,7 +749,7 @@ class CCodePrinter(CodePrinter):
                 args.append(arg)
         if args_format:
             code += formatted_args_to_printf(args_format, args, end)
-        return code[:-1]
+        return code
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
