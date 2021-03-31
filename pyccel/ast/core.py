@@ -36,7 +36,6 @@ errors = Errors()
 
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
-# NOTE: commented-out symbols are never used in Pyccel
 __all__ = (
     'AliasAssign',
     'Allocate',
@@ -811,8 +810,7 @@ class AugAssign(Assign):
         super().__init__(lhs, rhs, status, like)
 
     def __str__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op,
-                str(self.rhs))
+        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
 
     @property
     def op(self):
