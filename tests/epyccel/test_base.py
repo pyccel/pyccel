@@ -8,9 +8,8 @@ from modules import base
 
 class epyccel_test:
     """
-    Class to pyccelize module then compare different results
-    This avoids the need to pyccelize the file multiple times
-    or write the arguments multiple times
+    Class to pyccelize module or function then compare different results
+    This avoids the need to pyccelize the object multiple times
     """
     def __init__(self, f, lang='fortran'):
         self._f  = f
