@@ -405,7 +405,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_AugAssign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        op  = self._print(expr.op._symbol)
+        op  = self._print(expr.op)
         return'{0} {1}= {2}\n'.format(lhs,op,rhs)
 
     def _print_PythonRange(self, expr):

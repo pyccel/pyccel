@@ -27,7 +27,7 @@ from .literals       import LiteralInteger, Nil, convert_to_literal
 from .itertoolsext   import Product
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMul, Relational
+from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable
@@ -36,9 +36,7 @@ errors = Errors()
 
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
-# NOTE: commented-out symbols are never used in Pyccel
 __all__ = (
-    'AddOp',
     'AliasAssign',
     'Allocate',
     'AnnotatedComment',
@@ -57,7 +55,6 @@ __all__ = (
     'Continue',
     'Declare',
     'Del',
-    'DivOp',
     'Dlist',
     'DoConcurrent',
     'EmptyNode',
@@ -69,11 +66,8 @@ __all__ = (
     'If',
     'Import',
     'Interface',
-    'ModOp',
     'Module',
     'ModuleHeader',
-    'MulOp',
-    'NativeOp',
     'ParserResult',
     'Pass',
     'Program',
@@ -81,7 +75,6 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'StarredArguments',
-    'SubOp',
     'SymbolicAssign',
     'SymbolicPrint',
     'SympyFunction',
@@ -93,8 +86,6 @@ __all__ = (
     'get_initial_value',
     'get_iterable_ranges',
     'inline',
-#    'operator',
-#    'op_registry',
     'process_shape',
     'subs'
 )
@@ -757,60 +748,6 @@ class SymbolicAssign(Basic):
         return self._rhs
 
 
-# The following were defined to be sympy approved nodes. If there is something
-# smaller that could be used, that would be preferable. We only use them as
-# tokens.
-
-class NativeOp(metaclass=Singleton):
-
-    """Base type for native operands."""
-    __slots__ = ()
-
-    pass
-
-
-class AddOp(NativeOp):
-    __slots__ = ()
-    _symbol = '+'
-
-
-class SubOp(NativeOp):
-    __slots__ = ()
-    _symbol = '-'
-
-
-class MulOp(NativeOp):
-    __slots__ = ()
-    _symbol = '*'
-
-
-class DivOp(NativeOp):
-    __slots__ = ()
-    _symbol = '/'
-
-
-class ModOp(NativeOp):
-    __slots__ = ()
-    _symbol = '%'
-
-
-op_registry = {
-    '+': AddOp(),
-    '-': SubOp(),
-    '*': MulOp(),
-    '/': DivOp(),
-    '%': ModOp(),
-    }
-
-
-def operator(op):
-    """Returns the operator singleton for the given operator"""
-
-    if op.lower() not in op_registry:
-        raise ValueError('Unrecognized operator ' + op)
-    return op_registry[op]
-
-
 class AugAssign(Assign):
     r"""
     Represents augmented variable assignment for code generation.
@@ -852,6 +789,12 @@ class AugAssign(Assign):
     s += 1 + 2*t
     """
     __slots__ = ('_op',)
+    _accepted_operators = {
+            '+' : PyccelAdd,
+            '-' : PyccelMinus,
+            '*' : PyccelMul,
+            '/' : PyccelDiv,
+            '%' : PyccelMod}
 
     def __init__(
         self,
@@ -862,9 +805,7 @@ class AugAssign(Assign):
         like=None,
         ):
 
-        if isinstance(op, str):
-            op = operator(op)
-        elif op not in list(op_registry.values()):
+        if op not in self._accepted_operators.keys():
             raise TypeError('Unrecognized Operator')
 
         self._op = op
@@ -872,12 +813,24 @@ class AugAssign(Assign):
         super().__init__(lhs, rhs, status, like)
 
     def __str__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op._symbol,
-                str(self.rhs))
+        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
 
     @property
     def op(self):
         return self._op
+
+    def to_basic_assign(self):
+        """
+        Convert the AugAssign to an Assign
+        E.g. convert:
+        a += b
+        to:
+        a = a + b
+        """
+        return Assign(self.lhs,
+                self._accepted_operators[self._op](self.lhs, self.rhs),
+                status = self.status,
+                like   = self.like)
 
 
 class While(Basic):
