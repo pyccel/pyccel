@@ -903,6 +903,19 @@ class SemanticParser(BasicParser):
         return args
 
     def _handle_function(self, expr, func, args, **settings):
+        """
+        Create a FunctionCall or an instance of a PyccelInternalFunction
+        from the function informations and arguments
+
+        Parameters
+        ==========
+        expr : PyccelAstNode
+               The expression where this call is found (used for error output)
+        func : FunctionDef, Interface or PyccelInternalFunction type
+               The function being called
+        args : tuple
+               The arguments passed to the function
+        """
         if not isinstance(func, (FunctionDef, Interface)):
             args, kwargs = split_positional_keyword_arguments(*args)
             for a in args:
@@ -911,9 +924,9 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
-            expr = func(*args, **kwargs)
+            new_expr = func(*args, **kwargs)
 
-            return expr
+            return new_expr
         else:
             if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
                 errors.report("Too many arguments passed in function call",
