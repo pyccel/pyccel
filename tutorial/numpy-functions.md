@@ -194,8 +194,8 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported parameters:
 
-      a: array_like,
-          Input data.
+    a: array_like,
+        Input data.
 
 -   Supported languages: fortran
 
@@ -233,12 +233,12 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported parameters:
 
-      x1: array_like
-          Dividend array.
+    x1: array_like
+        Dividend array.
 
-      x2: array_like,
-          Divisor array. If x1.shape != x2.shape, they must be
-          broadcastable to a common shape (which becomes the shape of the output).
+    x2: array_like,
+        Divisor array. If x1.shape != x2.shape, they must be
+        broadcastable to a common shape (which becomes the shape of the output).
 
 -   Supported language: fortran.
 
@@ -277,8 +277,8 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported parameters:
 
-      x1, x2: array_like,
-      Input arrays, scalars not allowed.
+    x1, x2: array_like,
+        Input arrays, scalars not allowed.
 
 -   Supported langauges: fortran
 
@@ -322,17 +322,17 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html):
 
-      NumpySqrt, NumpyAbs, NumpySin, NumpyCos, NumpyExp, NumpyLog, NumpyTan, NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2, NumpySinh, NumpyCosh, NumpyTanh, NumpyArcsinh, NumpyArccosh and
-      NumpyArctanh.
+    NumpySqrt, NumpyAbs, NumpySin, NumpyCos, NumpyExp, NumpyLog, NumpyTan, NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2, NumpySinh, NumpyCosh, NumpyTanh, NumpyArcsinh, NumpyArccosh and
+    NumpyArctanh.
 
 -   Supported arrays manipulation:
 
-      NumpyEmpty, NumpyEmptyLike, NumpyFull, NumpyFullLike, NumpyOnes,
-      NumpyOnesLike, NumpyZeros and NumpyZerosLike.
+    NumpyEmpty, NumpyEmptyLike, NumpyFull, NumpyFullLike, NumpyOnes,
+    NumpyOnesLike, NumpyZeros and NumpyZerosLike.
 
 -   others:
 
-      NumpyMax, NumpyMin, NumpySum, NumpyRand, NumpyRandint, Shape, NumpyArange, NumpyFloor.
+    NumpyMax, NumpyMin, NumpySum, NumpyRand, NumpyRandint, Shape, NumpyArange, NumpyFloor.
 
 You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/docstable/reference/) documentation.
 Please if you face different behaviour between Numpy results and Pyccel results, create an issue at
