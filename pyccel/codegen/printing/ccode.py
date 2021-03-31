@@ -8,9 +8,10 @@
 import functools
 import operator
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonLen
+from pyccel.ast.builtins  import PythonPrint
 
-from pyccel.ast.core      import Declare
+from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -22,7 +23,8 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
+from pyccel.ast.datatypes import NativeReal, NativeTuple, NativeString
 
 from pyccel.ast.internals import Slice
 
@@ -681,18 +683,34 @@ class CCodePrinter(CodePrinter):
         tmp_list = [self.create_tmp_var(a) for a in expr.funcdef.results]
         return tmp_list
 
-
     def _print_PythonPrint(self, expr):
         self._additional_imports.add("stdio")
-        args_format = []
-        args = []
         end = '\n'
         sep = ' '
-        for f in expr.expr:
+        code = ''
+        empty_end = ValuedVariable(NativeString(), 'end', value='')
+        space_end = ValuedVariable(NativeString(), 'end', value=' ')
+        kwargs = [f for f in expr.expr if isinstance(f, ValuedVariable)]
+        for f in kwargs:
             if isinstance(f, ValuedVariable):
                 if f.name == 'sep'      :   sep = str(f.value)
                 elif f.name == 'end'    :   end = str(f.value)
-            elif isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
+        args_format = []
+        args = []
+        orig_args = [f for f in expr.expr if not isinstance(f, ValuedVariable)]
+
+        def formatted_args_to_printf(args_format, args, end):
+            args_format = sep.join(args_format)
+            args_format += end
+            args_format = self._print(LiteralString(args_format))
+            args_code = ', '.join([args_format, *args])
+            return "printf({});\n".format(args_code)
+
+        if len(orig_args) == 0:
+            return formatted_args_to_printf(args_format, args, end)
+
+        for i, f in enumerate(orig_args):
+            if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
                 tmp_arg_format_list = []
                 for a in tmp_list:
@@ -702,15 +720,36 @@ class CCodePrinter(CodePrinter):
                 args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
+            elif f.rank > 0:
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                for_index = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
+                self._additional_declare.append(for_index)
+                #TODO: Add simplify=True with PR #797
+                max_index = PyccelMinus(PythonLen(orig_args[i]), LiteralInteger(1))
+                for_range = PythonRange(max_index)
+                print_body = [ orig_args[i][for_index] ]
+                if orig_args[i].rank == 1:
+                    print_body.append(space_end)
+
+                for_body  = [PythonPrint(print_body)]
+                for_loop  = For(for_index, for_range, for_body)
+                for_end   = ValuedVariable(NativeString(), 'end', value=']'+end if i == len(orig_args)-1 else ']')
+
+                body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
+                                  for_loop,
+                                  PythonPrint([ orig_args[i][max_index], for_end])],
+                                 unravelled = True)
+                code += self._print(body)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-        args_format = sep.join(args_format)
-        args_format += end
-        args_format = self._print(LiteralString(args_format))
-        code = ', '.join([args_format, *args])
-        return "printf({});\n".format(code)
+        if args_format:
+            code += formatted_args_to_printf(args_format, args, end)
+        return code
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
@@ -1313,7 +1352,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
-        op = expr.op._symbol
+        op = expr.op
         rhs_code = self._print(expr.rhs)
         return "{0} {1}= {2};\n".format(lhs_code, op, rhs_code)
 
