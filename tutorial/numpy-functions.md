@@ -339,11 +339,11 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 -   Supported [routines array-creation](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
     Empty, EmptyLike, Full, FullLike, Ones,
-    OnesLike, Zeros and ZerosLike.
+    OnesLike, Zeros and ZerosLike, Arange, Rand, Randint.
 
 -   others:
 
-    Max, Min, Sum, Rand, Randint, Shape, Arange, Floor.
+    Max, Min, Sum, Shape, Floor
 
 You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/docstable/reference/) documentation.
 Please if you face different behaviour between Numpy results and Pyccel results, create an issue at
