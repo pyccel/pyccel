@@ -905,16 +905,20 @@ class SemanticParser(BasicParser):
     def _handle_function(self, expr, func, args, **settings):
         """
         Create a FunctionCall or an instance of a PyccelInternalFunction
-        from the function informations and arguments
+        from the function information and arguments
 
         Parameters
         ==========
         expr : PyccelAstNode
                The expression where this call is found (used for error output)
-        func : FunctionDef, Interface or PyccelInternalFunction type
+        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
                The function being called
         args : tuple
                The arguments passed to the function
+
+        Returns
+        =======
+        new_expr : FunctionCall or PyccelInternalFunction
         """
         if not isinstance(func, (FunctionDef, Interface)):
             args, kwargs = split_positional_keyword_arguments(*args)
