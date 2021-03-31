@@ -353,18 +353,22 @@ class CupyZerosLike:
 #     def __init__(self, code, name):
 #         self._dtype = None
 
-class CupyRawKernel():
+class CupyRawKernel(PyccelInternalFunction):
     """Represents a call to  cuda malloc for code generation.
 
     arg : list , tuple , PythonTuple, List, Variable
     """
+
+    _attribute_nodes = ('_code', '_name')
+
     def __init__(self, code, name):
         self._shape     = ()
         self._rank      = 0
         self._dtype     = None
         self._precision = None
         self._code      = code
-        self._name      = name
+        self._order     = None
+        self._name = name
         super().__init__()
 
     @property
