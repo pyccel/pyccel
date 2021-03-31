@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment, CommentBlock, Pass
+from pyccel.ast.core import Comment, CommentBlock, Pass, Continue, Break, AnnotatedComment
 
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -1313,8 +1313,20 @@ class SemanticParser(BasicParser):
                                value=value, **d_var)
 
     def _visit_CodeBlock(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr.body]
-        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
+        expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
+                      FunctionCall , For,
+                      While, If, Return, Comment, Pass, Continue,
+                      Break, Allocate, Deallocate, CommentBlock,
+                      AnnotatedComment, Del, With, EmptyNode)
+        visited_body = [self._visit(i, **settings) for i in expr.body]
+        useful_body  = [l for l in visited_body if isinstance(l, expr_types)]
+
+        if len(visited_body) != len(useful_body):
+            removed = [v for v in visited_body if v not in useful_body]
+            for r in removed:
+                errors.report("Expression with no effect has been removed {}".format(type(r)),
+                        symbol=r, severity='warning')
+        ls = [line for l in useful_body for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
