@@ -21,7 +21,6 @@ from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
@@ -1741,26 +1740,8 @@ class FCodePrinter(CodePrinter):
         return 'cycle\n'
 
     def _print_AugAssign(self, expr):
-        lhs    = expr.lhs
-        op     = expr.op
-        rhs    = expr.rhs
-        status = expr.status
-        like   = expr.like
-
-        if isinstance(op, AddOp):
-            rhs = PyccelAdd(lhs, rhs)
-        elif isinstance(op, MulOp):
-            rhs = PyccelMul(lhs, rhs)
-        elif isinstance(op, SubOp):
-            rhs = PyccelMinus(lhs, rhs)
-        # TODO fix bug with division of integers
-        elif isinstance(op, DivOp):
-            rhs = PyccelDiv(lhs, rhs)
-        else:
-            raise ValueError('Unrecognized operation', op)
-
-        stmt = Assign(lhs, rhs, status=status, like=like)
-        return self._print_Assign(stmt)
+        new_expr = expr.to_basic_assign()
+        return self._print(new_expr)
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
