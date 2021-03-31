@@ -53,6 +53,7 @@ __all__ = (
     'CommentBlock',
     'ConstructorCall',
     'Continue',
+    'Deallocate',
     'Declare',
     'Del',
     'Dlist',
