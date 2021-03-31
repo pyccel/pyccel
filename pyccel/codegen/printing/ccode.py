@@ -1335,19 +1335,19 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
+        if isinstance(rhs, Variable):
+            rhs = VariableAddress(rhs)
+
+        lhs_code = self._print(lhs.name)
+        rhs_code = self._print(rhs)
+
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
         if isinstance(lhs, Variable) and lhs.is_ndarray \
                 and isinstance(rhs, Variable) and rhs.is_ndarray:
-            return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            return 'alias_assign(&{}, {});\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
-
-        lhs = self._print(lhs.name)
-        rhs = self._print(rhs)
-
-        return '{} = {};\n'.format(lhs, rhs)
+        return '{} = {};\n'.format(lhs_code, rhs_code)
 
     def _print_For(self, expr):
         counter = self._print(expr.target)
