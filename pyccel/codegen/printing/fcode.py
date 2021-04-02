@@ -1135,11 +1135,11 @@ class FCodePrinter(CodePrinter):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
-                rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                    PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape[::-1])
+                rankstr = ','.join('{0}:{1}'.format(self._print(s),
+                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape[::-1])
             else:
                 rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                     PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
+                                                     self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
         elif (rank > 0) and allocatable and intent:

@@ -66,6 +66,9 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    _dtype = NativeInteger()
+    _shape = 0
+    _rank = ()
     __slots__ = ('_precision')
     def _calculate_dtype(self, *_args):
         """ Sets the dtype and precision
@@ -89,11 +92,8 @@ class PyccelBitOperator(PyccelOperator):
         else:
             raise TypeError('cannot determine the type of {}'.format(_args))
 
-    @staticmethod
-    def _calculate_shape_rank(*_args):
-        _rank = 0
-        _shape = ()
-        return _shape, _rank
+    def _set_shape_rank(self):
+        pass
 
 
     def _handle_integer_type(self, integers):
