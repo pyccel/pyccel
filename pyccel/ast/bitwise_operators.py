@@ -66,7 +66,7 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-
+    __slots__ = ('_precision')
     def _calculate_dtype(self, *_args):
         """ Sets the dtype and precision
 

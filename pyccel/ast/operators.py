@@ -867,18 +867,18 @@ class PyccelBooleanOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ('_dtype','_precision','_shape','_rank','_order')
-    @staticmethod
-    def _calculate_dtype(*_args):
-        _dtype = NativeBool()
-        _precision = default_precision['bool']
-        return _dtype, _precision
+    _dtype = NativeBool()
+    _precision = default_precision['bool']
+    _rank = 0
+    _shape = ()
 
-    @staticmethod
-    def _calculate_shape_rank(*_args):
-        _rank = 0
-        _shape = ()
-        return _shape, _rank
+    __slots__ = ('_order')
+
+    def _set_dtype(self):
+        pass
+
+    def _set_shape_rank(self):
+        pass
 
 #==============================================================================
 

@@ -1128,18 +1128,18 @@ class FCodePrinter(CodePrinter):
         # TODO: improve
         if ((rank == 1) and (isinstance(shape, (int, LiteralInteger, Variable, PyccelAdd))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
+            rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
         elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
-                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                    self._print(i)) for i in shape[::-1])
+                rankstr =  ','.join('{0}:{1}'.format(self._print(s),
+                                                    PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape[::-1])
             else:
-                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                     self._print(i)) for i in shape)
+                rankstr =  ','.join('{0}:{1}'.format(self._print(s),
+                                                     PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
         elif (rank > 0) and allocatable and intent:
