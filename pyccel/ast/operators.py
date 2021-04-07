@@ -118,10 +118,7 @@ class PyccelOperator(PyccelAstNode):
         self._set_dtype()
         self._set_shape_rank()
         # rank is None for lambda functions
-        if self._rank is not None and self._rank > 1:
-            self._set_order()
-        else:
-            self._order = None
+        self._set_order()
         super().__init__()
 
     def _set_dtype(self):
@@ -182,10 +179,13 @@ class PyccelOperator(PyccelAstNode):
         This is chosen to match the arguments if they are in agreement.
         Otherwise it defaults to 'C'
         """
-        if all(a.order == self._args[0].order for a in self._args):
-            self._order = self._args[0].order
+        if self._rank is not None and self._rank > 1:
+            if all(a.order == self._args[0].order for a in self._args):
+                self._order = self._args[0].order
+            else:
+                self._order = 'C'
         else:
-            self._order = 'C'
+            self._order = None
 
     @property
     def args(self):
@@ -871,8 +871,12 @@ class PyccelBooleanOperator(PyccelOperator):
     _precision = default_precision['bool']
     _rank = 0
     _shape = ()
+    _order = None
 
-    __slots__ = ('_order')
+    __slots__ = ()
+
+    def _set_order(self):
+        pass
 
     def _set_dtype(self):
         pass

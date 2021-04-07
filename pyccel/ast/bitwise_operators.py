@@ -68,7 +68,11 @@ class PyccelBitOperator(PyccelOperator):
     """
     _shape = ()
     _rank = 0
-    __slots__ = ('_dtype','_precision','_order')
+    _order = None
+    __slots__ = ('_dtype','_precision')
+
+    def _set_order(self):
+        pass
     def _calculate_dtype(self, *_args):
         """ Sets the dtype and precision
 
