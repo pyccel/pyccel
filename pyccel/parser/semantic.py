@@ -902,7 +902,24 @@ class SemanticParser(BasicParser):
                 args.append(a)
         return args
 
-    def _handle_function(self, func, args, **settings):
+    def _handle_function(self, expr, func, args, **settings):
+        """
+        Create a FunctionCall or an instance of a PyccelInternalFunction
+        from the function information and arguments
+
+        Parameters
+        ==========
+        expr : PyccelAstNode
+               The expression where this call is found (used for error output)
+        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+               The function being called
+        args : tuple
+               The arguments passed to the function
+
+        Returns
+        =======
+        new_expr : FunctionCall or PyccelInternalFunction
+        """
         if not isinstance(func, (FunctionDef, Interface)):
             args, kwargs = split_positional_keyword_arguments(*args)
             for a in args:
@@ -911,12 +928,20 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
-            expr = func(*args, **kwargs)
+            new_expr = func(*args, **kwargs)
 
-            return expr
+            return new_expr
         else:
-            expr = FunctionCall(func, args, self._current_function)
-            return expr
+            if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
+                errors.report("Too many arguments passed in function call",
+                        symbol = expr,
+                        severity='fatal')
+            new_expr = FunctionCall(func, args, self._current_function)
+            if None in new_expr.args:
+                errors.report("Too few arguments passed in function call",
+                        symbol = expr,
+                        severity='error')
+            return new_expr
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
         """
@@ -1471,7 +1496,7 @@ class SemanticParser(BasicParser):
                     if new_name != rhs_name:
                         if hasattr(func, 'clone'):
                             func  = func.clone(new_name)
-                    return self._handle_function(func, args, **settings)
+                    return self._handle_function(expr, func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
@@ -1685,7 +1710,7 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
             else:
-                return self._handle_function(func, args, **settings)
+                return self._handle_function(expr, func, args, **settings)
 
     def _visit_Expr(self, expr, **settings):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
