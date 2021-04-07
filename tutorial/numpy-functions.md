@@ -333,17 +333,17 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):
 
-    Sqrt, Abs, Sin, Cos, Exp, Log, Tan, Arcsin, Arccos, Arctan, Arctan2, Sinh, Cosh, Tanh, Arcsinh, Arccosh and
-    Arctanh.
+    sqrt, abs, sin, cos, exp, log, tan, arcsin, arccos, arctan, arctan2, sinh, cosh, tanh, arcsinh, arccosh and
+    arctanh.
 
 -   Supported [routines array-creation](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
-    Empty, EmptyLike, Full, FullLike, Ones,
-    OnesLike, Zeros and ZerosLike, Arange, Rand, Randint.
+    empty, emptyLike, full, fulllike, ones,
+    oneslike, zeros and zeroslike, arange, rand, randint.
 
 -   others:
 
-    Max, Min, Sum, Shape, Floor
+    max, min, sum, shape, floor
 
 You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/docstable/reference/) documentation.
 Please if you face different behaviour between Numpy results and Pyccel results, create an issue at
