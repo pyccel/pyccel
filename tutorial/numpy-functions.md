@@ -338,8 +338,8 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported [routines array-creation](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
-    empty, emptyLike, full, fulllike, ones,
-    oneslike, zeros and zeroslike, arange, rand, randint.
+    empty, empty_like, full, full_like, ones,
+    ones_like, zeros and zeros_like, arange, rand, randint.
 
 -   others:
 
