@@ -739,7 +739,8 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, PyccelAstNode):
-
+            
+            #print(expr)
             d_var['datatype'   ] = expr.dtype
             d_var['allocatable'] = expr.rank>0
             d_var['shape'      ] = expr.shape
@@ -929,6 +930,13 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
+
+            if func is NumpyWhere:
+                if len(args) != 3:
+                    errors.report(INVALID_WHERE_ARGUMENT,
+                        symbol=func, blocker=True,
+                        severity='fatal')
+
             new_expr = func(*args, **kwargs)
 
             return new_expr
