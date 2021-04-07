@@ -96,3 +96,18 @@ def allow_negative_index(f,*args):
     def identity(f):
         return f
     return identity
+
+
+def task(master = None, **kwargs):
+    """
+    Decorator indicate that the function can be used in multithreading
+
+    Prameters
+    ---------
+    master : string
+        indecate that the current function is responsible or running other
+        task functions
+    """
+    def identity(f):
+        return f
+    return identity
