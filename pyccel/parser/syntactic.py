@@ -795,6 +795,18 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
+        if 'task' in decorators.keys():
+            decorator = decorators['task'][0]
+            decorators['task'] = 'child'
+
+            if isinstance(decorator, ast.Call):
+                if len(decorator.args) > 0:
+                    arg = decorator.args[0]
+                    if arg != "child" or arg != 'master':
+                        pass
+                        #raise and error
+                    decorators['task'] = arg
+
         body = CodeBlock(body)
 
         returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
