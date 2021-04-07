@@ -817,13 +817,12 @@ class IndexedElement(PyccelAstNode):
         j = 0
         for i in self.indices:
             if isinstance(i, Slice) and j<len(args):
-                # TODO: Replace with simplify = True in PR 797
                 if j == 0:
                     i = args[j]
                 elif i.step == 1:
-                    i = PyccelAdd(i.start, args[j])
+                    i = PyccelAdd(i.start, args[j], simplify = True)
                 else:
-                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j]))
+                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j]), simplify = True)
                 j += 1
             new_indexes.append(i)
         return IndexedElement(self.base, *new_indexes)
