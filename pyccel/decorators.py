@@ -20,7 +20,8 @@ __all__ = (
     'private',
     'elemental',
     'stack_array',
-    'allow_negative_index'
+    'allow_negative_index',
+    'task'
 )
 
 def lambdify(f):
