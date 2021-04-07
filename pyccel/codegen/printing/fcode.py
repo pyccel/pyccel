@@ -689,6 +689,7 @@ class FCodePrinter(CodePrinter):
 
         ind   = self._print(expr.index)
         mask  = self._print(expr.mask)
+
         stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
 
         return stmt

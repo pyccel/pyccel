@@ -609,7 +609,7 @@ class NumpyWhere(PyccelInternalFunction):
     def index(self):
         ind = Variable('int','ind1')
 
-        return ind 
+        return ind
 
  #==============================================================================
 class NumpyRand(PyccelInternalFunction):
