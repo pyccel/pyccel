@@ -740,7 +740,6 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, PyccelAstNode):
             
-            #print(expr)
             d_var['datatype'   ] = expr.dtype
             d_var['allocatable'] = expr.rank>0
             d_var['shape'      ] = expr.shape

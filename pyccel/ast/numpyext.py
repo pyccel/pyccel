@@ -585,31 +585,22 @@ class NumpyLinspace(NumpyNewArray):
     @property
     def step(self):
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
-        #return (self.stop - self.start) / (self.size - 1)
 
     def __str__(self):
         code = 'linspace({}, {}, {})'.format(str(self.start),
                                              str(self.stop),
-                                             str(self.size))
+                                             str(self.num))
         return code
 
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
-    __slots__ = ('_dtype', '_rank', '_shape', '_order', '_precision')
+    __slots__ = ()
 
-    def __init__(self, condition, x, y):
-        super().__init__(condition, x, y)
-        print("dtype:",condition._dtype)
-        print("rank:",condition._rank)
-        print("shape:",condition._shape)
-        print(x)
-        print(y)
-        self._dtype = condition._dtype
-        self._rank = condition._rank
-        self._shape = condition._shape
-        self._order = condition._order
-        self._precision = condition._precision
+    def __init__(self, mask):
+        super().__init__(mask)
+
+
     @property
     def mask(self):
         return self._args[0]
@@ -618,15 +609,7 @@ class NumpyWhere(PyccelInternalFunction):
     def index(self):
         ind = Variable('int','ind1')
 
-        return ind
-
-    @property
-    def is_elemental(self):
-        """ Indicates whether the function should be
-        called elementwise for an array argument
-        """
-        return True
- 
+        return ind 
 
  #==============================================================================
 class NumpyRand(PyccelInternalFunction):
