@@ -5351,21 +5351,9 @@ def test_numpy_linspace_scalar(language):
     def get_linspace(start, steps, num):
         from numpy import linspace
         stop = start + steps
-        numberOfSamplesToGenerate = num
-        b = linspace(start, stop, numberOfSamplesToGenerate)
+        b = linspace(start, stop, num)
         x = 0.0
         for i in range(len(b)):
-            x += b[i]
-        return x
-
-    def get_linspace_2(start, steps, num):
-        from numpy import linspace
-        stop = start + steps
-        numberOfSamplesToGenerate = num
-        b = linspace(-start, stop, numberOfSamplesToGenerate)
-        x = 0.0
-        for i in range(len(b)):
-            print(b[i])
             x += b[i]
         return x
 
@@ -5388,16 +5376,26 @@ def test_numpy_linspace_scalar(language):
 
     epyccel_func = epyccel(get_linspace, language=language)
     arr = np.zeros
-    assert np.isclose(epyccel_func(integer8, 200, 100), get_linspace(integer8, 200, 100), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer, 30, 30), get_linspace(integer, 30, 30), rtol=RTOL, atol=ATOL)
-    assert np.isclose(epyccel_func(integer16, 30, 30), get_linspace(integer16, 30, 30), rtol=RTOL, atol=ATOL)
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-   # if sys.platform != 'win32':
-   #     assert epyccel_func(integer64) == get_linspace(integer64)
-   # assert epyccel_func(fl) == get_linspace(fl)
-   # assert epyccel_func(fl32) == get_linspace(fl32)
-   # assert epyccel_func(fl64) == get_linspace(fl64)
-   # assert (epyccel_func(cmplx64) == get_linspace(cmplx64))
+    x = randint(100, 200)
+    if sys.platform != 'win32':
+        assert np.isclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
+
+    print(epyccel_func(cmplx64, 0, 1))
+    print(get_linspace(cmplx64, 0, 1))
+    #assert np.isclose(epyccel_func(cmplx64, 0, 1), get_linspace(cmplx64, 0, 1), rtol=RTOL, atol=ATOL)
    # assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
