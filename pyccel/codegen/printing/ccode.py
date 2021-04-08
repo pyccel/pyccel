@@ -41,6 +41,8 @@ from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 
+from pyccel.ast.sympy_helper import pyccel_to_sympy
+
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -313,15 +315,34 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+
         if lhs.is_stack_array:
-            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-            length = '*'.join(self._print(i) for i in lhs.alloc_shape)
-            buffer_array = "({declare_dtype}[{length}]){{}}".format(declare_dtype = declare_dtype, length=length)
+            symbol_map = {}
+            used_names_tmp = self._parser.used_names.copy()
+            sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
+
+            length = functools.reduce(operator.mul, sympy_shapes)
+            length_code = '*'.join(self._print(i) for i in lhs.alloc_shape)
+
+            if length.is_constant():
+                buffer_array = "({declare_dtype}[{length}]){{}}".format(
+                                        declare_dtype = declare_dtype,
+                                        length=length_code)
+            else:
+                dummy_array_name, _ = create_incremented_string(self._parser.used_names,
+                                                                prefix = lhs.name+'_data')
+                code_init += "{dtype} {name}[{length}];\n".format(
+                        dtype  = declare_dtype,
+                        name   = dummy_array_name,
+                        length = length_code)
+                buffer_array = dummy_array_name
+
             code_init += self._init_stack_array(expr, buffer_array)
+
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
                 code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return code_init
