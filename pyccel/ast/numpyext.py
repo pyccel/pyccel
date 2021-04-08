@@ -584,6 +584,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def num(self):
+        """Represent the number of generated elements by the linspace function."""
         return self._num
 
     @property
