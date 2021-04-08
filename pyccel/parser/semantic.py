@@ -810,7 +810,7 @@ class SemanticParser(BasicParser):
 
         indices = tuple(indices)
 
-        if isinstance(var, TupleVariable) and not var.is_homogeneous:
+        if isinstance(var, InhomogeneousTupleVariable):
 
             arg = indices[0]
 
