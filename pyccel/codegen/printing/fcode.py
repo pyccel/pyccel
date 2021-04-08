@@ -690,6 +690,8 @@ class FCodePrinter(CodePrinter):
         ind   = self._print(expr.index)
         mask  = self._print(expr.mask)
 
+        var = Variable('int', 'ind1')
+        self.add_vars_to_namespace(var)
         stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
 
         return stmt

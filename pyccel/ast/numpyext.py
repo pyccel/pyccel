@@ -604,11 +604,20 @@ class NumpyLinspace(NumpyNewArray):
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
-    __slots__ = ()
+     __slots__ = ('_dtype', '_rank', '_shape', '_order', '_precision')
 
-    def __init__(self, mask):
-        super().__init__(mask)
-
+    def __init__(self, condition, x, y):
+        super().__init__(condition, x, y)
+        print("dtype:",condition._dtype)
+        print("rank:",condition._rank)
+        print("shape:",condition._shape)
+        print(x)
+        print(y)
+        self._dtype = condition._dtype
+        self._rank = condition._rank
+        self._shape = condition._shape
+        self._order = condition._order
+        self._precision = condition._precision
 
     @property
     def mask(self):
@@ -620,7 +629,14 @@ class NumpyWhere(PyccelInternalFunction):
 
         return ind
 
- #==============================================================================
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
+#==============================================================================
 class NumpyRand(PyccelInternalFunction):
 
     """
