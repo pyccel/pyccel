@@ -1634,6 +1634,8 @@ class SemanticParser(BasicParser):
                 def get_vars(a):
                     if isinstance(a, InhomogeneousTupleVariable):
                         return a.get_vars()
+                    elif isinstance(a, PythonTuple):
+                        return a.args
                     elif isinstance(a, HomogeneousTupleVariable):
                         n_vars = len(a)
                         if not isinstance(len(a), (LiteralInteger, int)):
