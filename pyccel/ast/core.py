@@ -286,7 +286,7 @@ class AsName(Basic):
 
 class Dlist(PyccelAstNode):
 
-    """ this is equivalent to the zeros function of numpy arrays for the python list.
+    """ this is equivalent to the * operator for python tuples.
 
     Parameters
     ----------
@@ -316,6 +316,33 @@ class Dlist(PyccelAstNode):
     @property
     def length(self):
         return self._length
+
+class Concatenate(Basic):
+
+    """ this is equivalent to the + operator for python tuples
+
+    Parameters
+    ----------
+    args : PyccelAstNodes
+           The tuples
+    """
+    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
+    _attribute_nodes = ('_args')
+
+    def __init__(self, arg1, arg2):
+        self._dtype     = arg1.dtype
+        self._precision = arg1.precision
+        self._rank      = arg1.rank
+        shape_addition  = arg2.shape[0]
+        self._shape     = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
+        self._order     = arg1.order
+
+        self._args = (arg1, arg2)
+        super().__init__()
+
+    @property
+    def args(self):
+        return self._args
 
 
 class Assign(Basic):
