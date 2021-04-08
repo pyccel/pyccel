@@ -31,7 +31,8 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              If, IfSection)
 
 from pyccel.ast.variable  import (Variable, TupleVariable,
-                             IndexedElement, InhomogeneousTupleVariable,
+                             IndexedElement, HomogeneousTupleVariable,
+                             InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
