@@ -273,7 +273,7 @@ class FCodePrinter(CodePrinter):
 
     def _handle_fortran_specific_a_prioris(self, var_list):
         for v in var_list:
-            if isinstance(v, TupleVariable):
+            if isinstance(v, HomogeneousTupleVariable):
                 if v.is_pointer:
                     v.is_homogeneous = False
 
