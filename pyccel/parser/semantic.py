@@ -703,6 +703,7 @@ class SemanticParser(BasicParser):
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
+            d_var['is_stack_array'] = expr.is_stack_array
             return d_var
 
         elif isinstance(expr, PythonTuple):
@@ -720,11 +721,11 @@ class SemanticParser(BasicParser):
 
             # TODO must check that it is consistent with pyccel's rules
             # TODO improve
-            d_var['datatype'   ] = d['datatype']
-            d_var['rank'       ] = expr.rank
-            d_var['shape'      ] = expr.shape
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = True
+            d_var['datatype'   ]    = d['datatype']
+            d_var['rank'       ]    = expr.rank
+            d_var['shape'      ]    = expr.shape
+            d_var['is_stack_array'] = d['is_stack_array']
+            d_var['is_pointer' ]    = False
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
@@ -882,10 +883,22 @@ class SemanticParser(BasicParser):
         """
         # Arguments have been visited in PyccelMul
 
-        if isinstance(val, (TupleVariable, PythonTuple)) and \
-                not isinstance(val, PythonList):
+        if not isinstance(val, (TupleVariable, PythonTuple)):
+            errors.report("Unexpected Dlist", symbol=Dlist(val, length),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+
+        if val.is_homogeneous:
+            #TODO
+            pass
+        else:
             if isinstance(length, LiteralInteger):
                 length = length.python_value
+            else:
+                errors.report("Cannot create inhomogeneous tuple of unknown size",
+                    symbol=Dlist(val, length),
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal', blocker=True)
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
