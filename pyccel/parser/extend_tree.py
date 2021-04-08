@@ -101,15 +101,12 @@ def get_last_lineno(ast):
             ast = ast.body[-1]
     return ast.lineno
 
-def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_offset = None):
+def insert_comments(ast, comment_lines_no, comments, else_no, attr='body'):
     if len(comments) == 0:
         return
     body        = getattr(ast, attr)
 
-    if attr == 'orelse':
-        assert col_offset is not None
-    else:
-        col_offset = body[0].col_offset
+    col_offset = body[0].col_offset
 
     node_lineno = body[0].lineno
     ind         = 0
@@ -189,7 +186,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 else:
                     k = k+1
 
-                insert_comments(previous_stmt, comment_lines_no[:k], comments[:k], else_no, 'orelse', col_offset)
+                insert_comments(previous_stmt, comment_lines_no[:k], comments[:k], else_no, 'orelse')
                 comment_lines_no = comment_lines_no[k:]
                 comments         = comments[k:]
             #TODO accelerate this part with pyccel
@@ -245,7 +242,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             else:
                 k = k+1
 
-            insert_comments(last_stmt, comment_lines_no[:k], comments[:k], else_no, 'orelse', col_offset)
+            insert_comments(last_stmt, comment_lines_no[:k], comments[:k], else_no, 'orelse')
             comment_lines_no = comment_lines_no[k:]
             comments      = comments[k:]
 
