@@ -5393,10 +5393,8 @@ def test_numpy_linspace_scalar(language):
     x = randint(100, 200)
     assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
 
-    print(epyccel_func(cmplx64, 0, 1))
-    print(get_linspace(cmplx64, 0, 1))
     #assert np.isclose(epyccel_func(cmplx64, 0, 1), get_linspace(cmplx64, 0, 1), rtol=RTOL, atol=ATOL)
-   # assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+    #assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
