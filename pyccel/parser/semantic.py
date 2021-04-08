@@ -39,6 +39,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
+from pyccel.ast.core import Concatenate
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
@@ -1630,11 +1631,20 @@ class SemanticParser(BasicParser):
         if isinstance(args[0], (TupleVariable, PythonTuple)):
             is_homogeneous = all([isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous for a in args])
             if not is_homogeneous:
-                get_vars = lambda a: a.get_vars() if isinstance(a, InhomogeneousTupleVariable) else a.args
+                def get_vars(a):
+                    if isinstance(a, InhomogeneousTupleVariable):
+                        return a.get_vars()
+                    elif isinstance(a, HomogeneousTupleVariable):
+                        n_vars = len(a)
+                        if not isinstance(len(a), (LiteralInteger, int)):
+                            errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
+                                    symbol=expr, severity='fatal')
+                        return [a[i] for i in range(n_vars)]
+                    else:
+                        raise NotImplementedError("Unexpected type {} in tuple addition".format(type(a)))
                 tuple_args = [ai for a in args for ai in get_vars(a)]
                 expr_new = PythonTuple(*tuple_args)
             else:
-                #TODO: Create Concatenate
                 return Concatenate(*args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
