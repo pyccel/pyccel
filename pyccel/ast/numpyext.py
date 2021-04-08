@@ -538,43 +538,34 @@ class NumpyLinspace(NumpyNewArray):
 
     """
     __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_shape', '_rank')
-    #_dtype     = NativeReal()
-    #_precision = default_precision['real']
     _order     = 'F'
 
     def __init__(self, start, stop, num=None):
 
         if not num:
             num = LiteralInteger(50)
-        print(start)
+
         for arg in (start, stop, num):
             if not isinstance(arg, PyccelAstNode):
-            #if isinstance(arg, PyccelUnarySub):
-            #    print(arg.args)
-            #if not isinstance(arg, _valid_args):
                 raise TypeError('Expecting valid args')
 
         args      = (start, stop)
-        integers  = [e for e in args if e.dtype is NativeInteger() or start.dtype is NativeBool()]
+        integers  = [e for e in args if e.dtype is NativeInteger()]
         reals     = [e for e in args if e.dtype is NativeReal()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
-            print("test1")
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
         elif reals:
-            print("test2")
             self._dtype     = NativeReal()
             self._precision = max(e.precision for e in reals)
         elif integers:
-            print("test3")
             self._dtype     = NativeReal()
             self._precision = default_precision['real']
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-        print(self._dtype)
         self._index = Variable('int', 'linspace_index')
         self._start = start
         self._stop  = stop

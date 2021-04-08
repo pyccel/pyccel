@@ -5373,12 +5373,6 @@ def test_numpy_linspace_scalar(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
-
     epyccel_func = epyccel(get_linspace, language=language)
     arr = np.zeros
     x = randint(100, 200)
@@ -5387,7 +5381,7 @@ def test_numpy_linspace_scalar(language):
     assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
-   # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     x = randint(100, 200)
     if sys.platform != 'win32':
         assert np.isclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
@@ -5400,8 +5394,7 @@ def test_numpy_linspace_scalar(language):
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     assert (epyccel_func1(3+6j, 5+1j) == test_linspace(3+6j, 5+1j))
-    #assert np.isclose(epyccel_func(cmplx64, 0, 1), get_linspace(cmplx64, 0, 1), rtol=RTOL, atol=ATOL)
-    #assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+    assert (epyccel_func1(-3+6j, 5-1j) == test_linspace(-3+6j, 5-1j))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
