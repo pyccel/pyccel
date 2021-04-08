@@ -890,8 +890,7 @@ class SemanticParser(BasicParser):
                 severity='fatal', blocker=True)
 
         if val.is_homogeneous:
-            #TODO
-            pass
+            return Dlist(val, length)
         else:
             if isinstance(length, LiteralInteger):
                 length = length.python_value
@@ -904,7 +903,6 @@ class SemanticParser(BasicParser):
                 return PythonTuple(*(val.get_vars()*length))
             else:
                 return PythonTuple(*(val.args*length))
-        return Dlist(val, length)
 
     def _handle_function_args(self, arguments, **settings):
         args  = []
