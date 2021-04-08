@@ -291,7 +291,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
 
--   Supported langauges: fortran
+-   Supported langauges: fortran (2d arrays only)
 
 -   python code:
 
@@ -338,8 +338,11 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   Supported [routines array-creation](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
-    empty, empty_like, full, full_like, ones,
-    ones_like, zeros and zeros_like, arange, rand, randint.
+    -  empty, full, ones, zeros, arange (`like` parameter is not supported).
+
+    -  empty_like, full_like, and zeros_like, ones_like (`subok` parameter is not supported).
+  
+    -  rand, randint.
 
 -   others:
 
