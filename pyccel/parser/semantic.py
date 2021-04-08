@@ -41,7 +41,7 @@ from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
-from pyccel.ast.variable import TupleVariable
+from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.ast.variable import ValuedVariable
@@ -980,13 +980,19 @@ class SemanticParser(BasicParser):
             Dictionary of properties for the new Variable
         """
 
-        if isinstance(rhs, (TupleVariable, PythonTuple, PythonList)):
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)):
             elem_vars = []
+            is_homogeneous = True
+            elem_d_lhs_ref = None
             for i,r in enumerate(rhs):
                 elem_name = self.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
 
                 self._ensure_target( r, elem_d_lhs )
+                if elem_d_lhs_ref is None:
+                    elem_d_lhs_ref = elem_d_lhs.copy()
+                elif elem_d_lhs != elem_d_lhs_ref:
+                    is_homogeneous = False
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
@@ -994,7 +1000,10 @@ class SemanticParser(BasicParser):
                 elem_vars.append(var)
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
+            if is_homogeneous:
+                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs)
+            else:
+                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
             if isinstance(name, PyccelSymbol):
