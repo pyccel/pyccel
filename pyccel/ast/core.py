@@ -327,7 +327,7 @@ class Concatenate(Basic):
            The tuples
     """
     __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
-    _attribute_nodes = ('_args')
+    _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
         self._dtype     = arg1.dtype
