@@ -1164,13 +1164,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
 
-        if isinstance(rhs, Dlist):
-            pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
-            code = pattern.format(lhs=self._print(lhs),
-                                  length=self._print(rhs.length),
-                                  init_value=self._print(rhs.val))
-            return code
-
         # TODO improve
         op = '=>'
         shape_code = ''
