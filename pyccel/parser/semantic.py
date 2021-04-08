@@ -991,6 +991,7 @@ class SemanticParser(BasicParser):
                 self._ensure_target( r, elem_d_lhs )
                 if elem_d_lhs_ref is None:
                     elem_d_lhs_ref = elem_d_lhs.copy()
+                    is_homogeneous = elem_d_lhs['datatype'] is not NativeGeneric()
                 elif elem_d_lhs != elem_d_lhs_ref:
                     is_homogeneous = False
 
@@ -1630,8 +1631,8 @@ class SemanticParser(BasicParser):
             is_homogeneous = all([isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous for a in args])
             if not is_homogeneous:
                 get_vars = lambda a: a.get_vars() if isinstance(a, InhomogeneousTupleVariable) else a.args
-            tuple_args = [ai for a in args for ai in get_vars(a)]
-            expr_new = PythonTuple(*tuple_args)
+                tuple_args = [ai for a in args for ai in get_vars(a)]
+                expr_new = PythonTuple(*tuple_args)
             else:
                 #TODO: Create Concatenate
                 return Concatenate(*args)
