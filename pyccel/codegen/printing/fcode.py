@@ -31,7 +31,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              If, IfSection)
 
 from pyccel.ast.variable  import (Variable, TupleVariable,
-                             IndexedElement,
+                             IndexedElement, InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
@@ -274,7 +274,7 @@ class FCodePrinter(CodePrinter):
     def _handle_fortran_specific_a_prioris(self, var_list):
         for v in var_list:
             if isinstance(v, TupleVariable):
-                if v.is_pointer or v.inconsistent_shape:
+                if v.is_pointer:
                     v.is_homogeneous = False
 
     def print_kind(self, expr):
@@ -1020,7 +1020,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -2623,10 +2623,6 @@ class FCodePrinter(CodePrinter):
         inds = [self._print(i) for i in inds]
 
         return "%s(%s)" % (base_code, ", ".join(inds))
-
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
