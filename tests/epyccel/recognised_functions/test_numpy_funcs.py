@@ -5346,8 +5346,6 @@ def test_numpy_linspace_scalar(language):
     @types('float', 'int', 'int')
     @types('float32', 'int', 'int')
     @types('float64', 'int', 'int')
-    @types('complex64', 'int', 'int')
-    @types('complex128', 'int', 'int')
     def get_linspace(start, steps, num):
         from numpy import linspace
         stop = start + steps
@@ -5356,6 +5354,13 @@ def test_numpy_linspace_scalar(language):
         for i in range(len(b)):
             x += b[i]
         return x
+
+    @types('complex64', 'complex64')
+    @types('complex128', 'complex128')
+    def test_linspace(start, end):
+        from numpy import linspace
+        x = linspace(start, end, 5)
+        return x[0], x[1], x[2], x[3], x[4]
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -5393,6 +5398,8 @@ def test_numpy_linspace_scalar(language):
     x = randint(100, 200)
     assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
 
+    epyccel_func1 = epyccel(test_linspace, language=language)
+    assert (epyccel_func1(3+6j, 5+1j) == test_linspace(3+6j, 5+1j))
     #assert np.isclose(epyccel_func(cmplx64, 0, 1), get_linspace(cmplx64, 0, 1), rtol=RTOL, atol=ATOL)
     #assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
 
