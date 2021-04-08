@@ -604,7 +604,7 @@ class NumpyLinspace(NumpyNewArray):
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
-     __slots__ = ('_dtype', '_rank', '_shape', '_order', '_precision')
+    __slots__ = ('_dtype', '_rank', '_shape', '_order', '_precision')
 
     def __init__(self, condition, x, y):
         super().__init__(condition, x, y)
