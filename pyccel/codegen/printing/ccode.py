@@ -1560,9 +1560,60 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
+    """
+    class Task(Basic):
+    """
+    """
+    __slots__ = ('_stmt','_inputs','_outputs','_preceders', '_should_wait')
+    _attribute_nodes = ('_stmt','_inputs','_preceders')
+    def __init__(self, stmt, inputs = (), outputs = dict(), preceders = ()):
+        self._stmt        = stmt
+        self._inputs      = inputs
+        self._outputs     = outputs
+        self._preceders   = preceders
+        self._should_wait = False
+        super().__init__()
+    @property
+    def stmt(self):
+        return self._stmt
+    @property
+    def inputs(self):
+        return self._inputs
+    @property
+    def outputs(self):
+        return self._outputs
+    @property
+    def preceders(self):
+        return self._preceders
+    @property
+    def should_wait(self):
+        return self._should_wait
+    @should_wait.setter
+    def should_wait(self, value):
+        self._should_wait = value
+    """
+
+    def _print_Task(self, expr):
+        outputs = [','.join(self._print(a)) for a, value in expr.outputs.items() if value is True] if expr.outputs else ''
+        intputs = [','.join(self._print(a)) for a in expr.inputs] if expr.inputs else ''
+
+      # depend_clause = 'depend(out:{})'
+
+        should_wait = '#pragma omp taskwait' if expr.should_wait else ''
+
+        start_task = "#pragma omp task\n{"
+        structured_code_block = self._print(expr.stmt)
+        end_task = "}\n"
+
+        code = should_wait + start_task + structured_code_block + end_task
+        return code
+
+
+
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
+        print(expr)
         clauses = ''
         if expr.combined:
             clauses = ' ' + expr.combined
