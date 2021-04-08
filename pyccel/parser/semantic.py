@@ -1617,10 +1617,15 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
+        if isinstance(args[0], (TupleVariable, PythonTuple)):
+            is_homogeneous = all([isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous for a in args])
+            if not is_homogeneous:
+                get_vars = lambda a: a.get_vars() if isinstance(a, InhomogeneousTupleVariable) else a.args
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
+            else:
+                #TODO: Create Concatenate
+                return Concatenate(*args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
