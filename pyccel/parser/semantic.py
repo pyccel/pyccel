@@ -724,7 +724,8 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ]    = d['datatype']
             d_var['rank'       ]    = expr.rank
             d_var['shape'      ]    = expr.shape
-            d_var['is_stack_array'] = d['is_stack_array']
+            d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
+            d_var['allocatable']    = not d_var['is_stack_array']
             d_var['is_pointer' ]    = False
             return d_var
 
