@@ -1642,9 +1642,12 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple)):
-            is_homogeneous = all([isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous for a in args])
-            if not is_homogeneous:
+        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Dlist)):
+            is_homogeneous = all([(isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous) \
+                                or isinstance(a, (Concatenate, Dlist)) for a in args])
+            if is_homogeneous:
+                return Concatenate(*args)
+            else:
                 def get_vars(a):
                     if isinstance(a, InhomogeneousTupleVariable):
                         return a.get_vars()
@@ -1660,8 +1663,6 @@ class SemanticParser(BasicParser):
                         raise NotImplementedError("Unexpected type {} in tuple addition".format(type(a)))
                 tuple_args = [ai for a in args for ai in get_vars(a)]
                 expr_new = PythonTuple(*tuple_args)
-            else:
-                return Concatenate(*args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
