@@ -1002,16 +1002,18 @@ class SemanticParser(BasicParser):
                 elem_vars.append(var)
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
+            d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
             if is_homogeneous:
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
+            new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
             if isinstance(name, PyccelSymbol):
-                lhs = Variable(dtype, name, **d_lhs, is_temp=name.is_temp)
+                lhs = new_type(dtype, name, **d_lhs, is_temp=name.is_temp)
             else:
-                lhs = Variable(dtype, name, **d_lhs)
+                lhs = new_type(dtype, name, **d_lhs)
 
         return lhs
 
@@ -1022,11 +1024,13 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
 
             rhs.is_target = True
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
 
             rhs.base.is_target = not rhs.base.is_pointer
 
