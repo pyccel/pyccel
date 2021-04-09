@@ -294,7 +294,7 @@ def insert_index(expr, pos, index_var):
 LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'])
 
 #==============================================================================
-def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors = False):
+def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors = False, result = None):
     """
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
@@ -330,12 +330,14 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
     block : list of tuples of lists
             The modified expression
     """
-    result = []
+    if result is None:
+        result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist, Concatenate)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Dlist)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
     for line in block:
+
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
@@ -469,10 +471,42 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             # Save results
             save_spot.append(line)
             current_level = new_level
+
+        elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
+            lhs = line.lhs
+            rhs = line.rhs
+            arg1, arg2 = rhs.args
+            assign1 = Assign(lhs[Slice(LiteralInteger(0), arg1.shape[0])], arg1)
+            assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd(arg1.shape[0], arg2.shape[0]))], arg2)
+            collect_loops([assign1, assign2], indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+
+        elif isinstance(line, Assign) and isinstance(line.rhs, Dlist):
+            lhs = line.lhs
+            rhs = line.rhs
+
+            print(result)
+            if len(indices) == 0:
+                indices.append(Variable('int',new_index_name('i')))
+            idx = indices[0]
+
+            assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx),
+                                      PyccelMul(rhs.val.shape[0], PyccelAdd(idx, LiteralInteger(1))))],
+                            rhs.val)
+            print(assign)
+
+            tmp_indices = indices[1:]
+
+            block = collect_loops([assign], tmp_indices, new_index_name, tmp_vars, language_has_vectors)
+            if len(tmp_indices)>len(indices)-1:
+                indices.extend(tmp_indices[len(indices)-1:])
+
+            result.append(LoopCollection([block[-1]],  rhs.val.shape[0], set([lhs])))
+
         else:
             # Save line in top level (no for loop)
             result.append(line)
             current_level = 0
+
     return result
 
 #==============================================================================
