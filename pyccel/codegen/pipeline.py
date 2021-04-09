@@ -11,6 +11,7 @@ import os
 import sys
 import shutil
 from collections import OrderedDict
+from filelock import FileLock
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
@@ -325,9 +326,9 @@ def execute_pyccel(fname, *,
                     # remove library folder to avoid missing files and copy
                     # new one from pyccel stdlib
                     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-                    if os.path.exists(lib_dest_path):
-                        shutil.rmtree(lib_dest_path)
-                    shutil.copytree(lib_path, lib_dest_path)
+                    with FileLock(lib_dest_path + '.lock'):
+                        if not os.path.exists(lib_dest_path):
+                            shutil.copytree(lib_path, lib_dest_path)
 
                     # stop after copying lib to __pyccel__ directory for
                     # convert only
@@ -335,10 +336,10 @@ def execute_pyccel(fname, *,
                         continue
 
                     # get library source files
-                    source_files = []
-                    for e in os.listdir(lib_dest_path):
-                        if e.endswith(lang_ext_dict[language]):
-                            source_files.append(os.path.join(lib_dest_path, e))
+                    ext = lang_ext_dict[language]
+                    source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
+                                                                if e.endswith(ext)]
+                    internal_modules = [os.path.splitext(f)[0] for f in source_files]
 
                     # compile library source files
                     flags = construct_flags(f90exec,
@@ -346,20 +347,22 @@ def execute_pyccel(fname, *,
                                             debug=debug,
                                             includes=[lib_dest_path])
                     try:
-                        for f in source_files:
-                            compile_files(f, f90exec, flags,
-                                            binary=None,
-                                            verbose=verbose,
-                                            is_module=True,
-                                            output=lib_dest_path,
-                                            language=language)
+                        for f,l in zip(source_files, internal_modules):
+                            with FileLock(l + '.lock'):
+                                compile_files(f, f90exec, flags,
+                                                binary=None,
+                                                verbose=verbose,
+                                                is_module=True,
+                                                output=lib_dest_path,
+                                                language=language)
                     except Exception:
                         handle_error('C {} library compilation'.format(lib))
                         raise
+
                     # Add internal lib to internal_libs_name set
                     internal_libs_name.add(lib)
                     # add source file without extension to internal_libs_files
-                    internal_libs_files.extend(os.path.splitext(f)[0] for f in source_files)
+                    internal_libs_files.extend(internal_modules)
                     # add library path to internal_libs_path
                     internal_libs_path.append(lib_dest_path)
 
