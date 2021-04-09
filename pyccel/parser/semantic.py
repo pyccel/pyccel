@@ -1730,11 +1730,13 @@ class SemanticParser(BasicParser):
         new_expressions = []
         fst = expr.fst
         assert(fst)
-
+        print("testooooo")
         rhs = expr.rhs
         lhs = expr.lhs
+        print(rhs)
 
         if isinstance(rhs, FunctionCall):
+            print("it's here", rhs)
             name = rhs.funcdef
             macro = self.get_macro(name)
             if macro is None:
@@ -1817,7 +1819,7 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs, **settings)
 
         if isinstance(rhs, FunctionDef):
-
+            print("test here ;", rhs)
             # case of lambdify
 
             rhs = rhs.rename(expr.lhs.name)
@@ -1827,6 +1829,7 @@ class SemanticParser(BasicParser):
             return rhs
 
         elif isinstance(rhs, CodeBlock):
+            print("test here 2;", rhs)
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
                 return rhs
 
@@ -1853,7 +1856,7 @@ class SemanticParser(BasicParser):
             return CodeBlock(stmts)
 
         elif isinstance(rhs, FunctionCall):
-
+            print("test here 3;", rhs)
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results

@@ -688,11 +688,14 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyWhere(self, expr):
 
         ind   = self._print(expr.index)
-        mask  = self._print(expr.mask)
+        condition  = self._print(expr.condition)
+        x = self._print(expr.x)
+        y = self._print(expr.y)
 
         var = Variable('int', 'ind1')
         self.add_vars_to_namespace(var)
-        stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
+        stmt = 'merge({true}, {false}, {cond})'.format(true=x,false=y,cond=condition)
+       # stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
 
         return stmt
 

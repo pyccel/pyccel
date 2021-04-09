@@ -1150,6 +1150,9 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionAddress(self, expr):
         return expr.name
 
+    def _print_NumpyWhere(self, expr):
+        print("condition printing: ", expr.condition)
+        return("0/*test*/")
     def _print_Rand(self, expr):
         raise NotImplementedError("Rand not implemented")
 

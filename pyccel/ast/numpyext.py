@@ -25,7 +25,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, conver
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import broadcast, PyccelMinus, PyccelDiv, IfTernaryOperator
 from .variable       import (Variable, IndexedElement, Constant)
 
 
@@ -167,6 +167,7 @@ class NumpyReal(PythonReal):
     __slots__ = ('_rank','_shape','_order')
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
+            print("test")
             return NumpyInt(arg)
         else:
             return super().__new__(cls, arg)
@@ -604,7 +605,10 @@ class NumpyLinspace(NumpyNewArray):
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
-    __slots__ = ('_dtype', '_rank', '_shape', '_order', '_precision')
+    __slots__ = ('_condition', '_x', '_y', '_dtype', '_rank', '_shape', '_order', '_precision')
+
+    #def __new__(cls, condition, x, y):
+    #    return IfTernaryOperator(condition, x, y)
 
     def __init__(self, condition, x, y):
         super().__init__(condition, x, y)
@@ -613,15 +617,42 @@ class NumpyWhere(PyccelInternalFunction):
         print("shape:",condition._shape)
         print(x)
         print(y)
-        self._dtype = condition._dtype
+        self._condition = condition
+        self._x = x
+        self._y = y
+        args      = (x, y)
+        integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
+        reals     = [e for e in args if e.dtype is NativeReal()]
+        complexs  = [e for e in args if e.dtype is NativeComplex()]
+
+        if complexs:
+            self._dtype     = NativeComplex()
+            self._precision = max(e.precision for e in complexs)
+        elif reals:
+            self._dtype     = NativeReal()
+            self._precision = max(e.precision for e in reals)
+        elif integers:
+            self._dtype     = NativeInteger()
+            self._precision = max(e.precision for e in integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
         self._rank = condition._rank
         self._shape = condition._shape
         self._order = condition._order
         self._precision = condition._precision
 
     @property
-    def mask(self):
-        return self._args[0]
+    def condition(self):
+        return self._condition
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
 
     @property
     def index(self):
