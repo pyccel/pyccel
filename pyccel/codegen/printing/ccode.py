@@ -40,6 +40,7 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 
@@ -826,6 +827,9 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});\n'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
+            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
@@ -1022,6 +1026,8 @@ class CCodePrinter(CodePrinter):
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         if expr.variable.is_pointer:
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
