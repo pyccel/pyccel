@@ -484,23 +484,28 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             lhs = line.lhs
             rhs = line.rhs
 
-            print(result)
-            if len(indices) == 0:
-                indices.append(Variable('int',new_index_name('i')))
-            idx = indices[0]
+            if not isinstance(rhs.length, LiteralInteger):
+                if len(indices) == 0:
+                    indices.append(Variable('int',new_index_name('i')))
+                idx = indices[0]
 
-            assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx),
-                                      PyccelMul(rhs.val.shape[0], PyccelAdd(idx, LiteralInteger(1))))],
-                            rhs.val)
-            print(assign)
+                assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx),
+                                          PyccelMul(rhs.val.shape[0], PyccelAdd(idx, LiteralInteger(1))))],
+                                rhs.val)
 
-            tmp_indices = indices[1:]
+                tmp_indices = indices[1:]
 
-            block = collect_loops([assign], tmp_indices, new_index_name, tmp_vars, language_has_vectors)
-            if len(tmp_indices)>len(indices)-1:
-                indices.extend(tmp_indices[len(indices)-1:])
+                block = collect_loops([assign], tmp_indices, new_index_name, tmp_vars, language_has_vectors)
+                if len(tmp_indices)>len(indices)-1:
+                    indices.extend(tmp_indices[len(indices)-1:])
 
-            result.append(LoopCollection([block[-1]],  rhs.val.shape[0], set([lhs])))
+                result.append(LoopCollection([block[-1]],  rhs.val.shape[0], set([lhs])))
+
+            else:
+                assigns = [Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], LiteralInteger(idx)),
+                                          PyccelMul(rhs.val.shape[0], PyccelAdd(LiteralInteger(idx), LiteralInteger(1))))],
+                                rhs.val) for idx in range(rhs.length)]
+                collect_loops(assigns, indices, new_index_name, tmp_vars, language_has_vectors, result = result)
 
         else:
             # Save line in top level (no for loop)
