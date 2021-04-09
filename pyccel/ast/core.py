@@ -317,6 +317,12 @@ class Dlist(PyccelAstNode):
     def length(self):
         return self._length
 
+    def __str__(self):
+        return '{} * {}'.format(str(self.val), str(self.length))
+
+    def __repr__(self):
+        return '{} * {}'.format(repr(self.val), repr(self.length))
+
 class Concatenate(PyccelAstNode):
 
     """ this is equivalent to the + operator for python tuples
