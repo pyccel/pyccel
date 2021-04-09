@@ -377,7 +377,7 @@ class Variable(PyccelAstNode):
         return str(self.name)
 
     def __repr__(self):
-        return 'Variable({}, dtype={})'.format(repr(self.name), repr(self.dtype))
+        return '{}({}, dtype={})'.format(type(self).__name__, repr(self.name), repr(self.dtype))
 
     def __eq__(self, other):
         if type(self) is type(other):

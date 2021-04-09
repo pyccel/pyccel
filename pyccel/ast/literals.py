@@ -52,6 +52,9 @@ class Literal(PyccelAstNode):
     def __str__(self):
         return str(self.python_value)
 
+    def __repr__(self):
+        return "Literal({})".format(repr(self.python_value))
+
     def __eq__(self, other):
         if isinstance(other, PyccelAstNode):
             return isinstance(other, type(self)) and self.python_value == other.python_value
