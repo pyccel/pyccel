@@ -16,7 +16,8 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
-                            Allocate, Dlist, Assign, For, CodeBlock)
+                            Allocate, Dlist, Assign, For, CodeBlock,
+                            Concatenate)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -331,7 +332,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
     """
     result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist, Concatenate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
     for line in block:
