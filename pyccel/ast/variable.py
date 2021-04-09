@@ -8,6 +8,7 @@ different stages of pyccel. Memory block labels are usually either Variables or 
 variables
 """
 import inspect
+from sympy import simplify
 
 from pyccel.errors.errors import Errors
 
@@ -782,6 +783,9 @@ class IndexedElement(PyccelAstNode):
         super().__init__()
 
         # Calculate new shape
+        from .sympy_helper import pyccel_to_sympy, sympy_to_pyccel
+        symbol_map = {}
+        used_names = set(n for s in shape if isinstance(s, PyccelAstNode) for n in s.get_attribute_nodes(Variable))
 
         if shape is not None:
             new_shape = []
@@ -804,7 +808,8 @@ class IndexedElement(PyccelAstNode):
                             step = PyccelUnarySub(step)
 
                         _shape = MathCeil(PyccelDiv(_shape, step))
-                    new_shape.append(_shape)
+                    _shape = simplify(pyccel_to_sympy(_shape, symbol_map, used_names))
+                    new_shape.append(sympy_to_pyccel(_shape, symbol_map))
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
