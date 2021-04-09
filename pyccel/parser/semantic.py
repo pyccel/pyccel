@@ -717,6 +717,16 @@ class SemanticParser(BasicParser):
 
             return d_var
 
+        elif isinstance(expr, Concatenate):
+            d_var['datatype'      ] = expr.dtype
+            d_var['precision']      = expr.precision
+            d_var['shape'         ] = expr.shape
+            d_var['rank'          ] = expr.rank
+            d_var['is_pointer']     = False
+            d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
+
+            return d_var
+
         elif isinstance(expr, Dlist):
             d = self._infere_type(expr.val, **settings)
 

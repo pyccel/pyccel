@@ -317,7 +317,7 @@ class Dlist(PyccelAstNode):
     def length(self):
         return self._length
 
-class Concatenate(Basic):
+class Concatenate(PyccelAstNode):
 
     """ this is equivalent to the + operator for python tuples
 
