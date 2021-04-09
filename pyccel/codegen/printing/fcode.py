@@ -20,6 +20,7 @@ import operator
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
@@ -1142,7 +1143,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, LiteralInteger, Variable, PyccelAdd))) and
+        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
 
