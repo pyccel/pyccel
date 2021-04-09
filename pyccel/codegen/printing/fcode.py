@@ -28,7 +28,7 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
-                             If, IfSection)
+                             If, IfSection, FunctionDef)
 
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement, HomogeneousTupleVariable,
@@ -273,10 +273,24 @@ class FCodePrinter(CodePrinter):
         return ((i, j) for j in range(cols) for i in range(rows))
 
     def _handle_fortran_specific_a_prioris(self, var_list):
+        var_changes = {}
         for v in var_list:
-            if isinstance(v, HomogeneousTupleVariable):
-                if v.is_pointer:
-                    v.is_homogeneous = False
+            if isinstance(v, HomogeneousTupleVariable) and v.is_pointer:
+                n_vars = len(v)
+                if not isinstance(n_vars, (LiteralInteger, int)):
+                    errors.report("Cannot create tuple of pointers with unknown length",
+                            symbol = v, severity='fatal')
+
+                name = v.name+'_'
+                shape = v.shape[1:]
+                rank  = v.rank-1
+
+                elem_vars = [v.clone(self.parser.get_new_name(name+str(i)),
+                                     new_class=Variable,
+                                     rank=rank,
+                                     shape=shape) for i in range(n_vars)]
+                var_changes[v] = v.clone(v.name, InhomogeneousTupleVariable, arg_vars = elem_vars)
+        return var_changes
 
     def print_kind(self, expr):
         """
@@ -289,7 +303,7 @@ class FCodePrinter(CodePrinter):
         return expr
 
     def _print_Module(self, expr):
-        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
+        #var_changes = self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -345,7 +359,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
+        var_changes = self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
         imports += 'use, intrinsic :: ISO_C_BINDING\n'
@@ -355,6 +369,8 @@ class FCodePrinter(CodePrinter):
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.parser.get_variables(self._namespace)
+        if var_changes:
+            variables = [var_changes.get(v, v) for v in variables]
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         # Detect if we are using mpi4py
@@ -1582,9 +1598,13 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
-        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
+        var_changes = self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
                                                 list(expr.arguments)  +
                                                 list(expr.results))
+        if var_changes:
+            expr.substitute(original = list(var_changes.keys()),
+                    replacement = list(var_changes.values()),
+                    excluded_nodes=FunctionDef)
 
         name = self._print(expr.name)
         self.set_current_function(name)
@@ -1615,6 +1635,8 @@ class FCodePrinter(CodePrinter):
             decs[i] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
+        if var_changes:
+            vars_to_print = [var_changes.get(v, v) for v in vars_to_print]
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[v] = Declare(v.dtype,v)
