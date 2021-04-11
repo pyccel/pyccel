@@ -2540,7 +2540,7 @@ def test_amax_phrase(language):
 def test_max_property(language):
     @types('int[:]')
     def max_call(x):
-        return x.max()
+        return x.amax()
 
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
