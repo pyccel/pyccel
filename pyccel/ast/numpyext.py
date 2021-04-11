@@ -70,7 +70,7 @@ __all__ = (
     'NumpyInt64',
     'NumpyLinspace',
     'NumpyMatmul',
-    'NumpyMax',
+    'NumpyAmax',
     'NumpyMin',
     'NumpyMod',
     'NumpyNorm',
@@ -1090,7 +1090,7 @@ class NumpyMin(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
-class NumpyMax(NumpyUfuncUnary):
+class NumpyAmax(NumpyUfuncUnary):
     """Represent a call to the max function in the Numpy library"""
     __slots__ = ()
     def _set_shape_rank(self, x):
@@ -1118,7 +1118,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('min',[],[],body=[],
                 decorators={'numpy_wrapper':NumpyMin}),
             FunctionDef('max',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyMax}),
+                decorators={'numpy_wrapper':NumpyAmax}),
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
             FunctionDef('real',[],[],body=[],
@@ -1160,10 +1160,10 @@ numpy_functions = {
     'complex64' : NumpyComplex64,
     'matmul'    : NumpyMatmul,
     'sum'       : NumpySum,
-    'max'       : NumpyMax,
-    'amax'       : NumpyMax,
+#    'max'       : NumpyAmax,
+    'amax'      : NumpyAmax,
     'min'       : NumpyMin,
-    'amin'       : NumpyMin,
+    'amin'      : NumpyMin,
     'prod'      : NumpyProduct,
     'product'   : NumpyProduct,
     'linspace'  : NumpyLinspace,
