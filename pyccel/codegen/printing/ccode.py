@@ -10,6 +10,7 @@ import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonEnumerate
 from pyccel.ast.builtins  import PythonZip, PythonMap, PythonLen, PythonPrint
+from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
@@ -281,11 +282,11 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg
-        print(arg)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
-            arg = functools.reduce(operator.concat, arg)
-            print(arg.value)
+            flatten_list = lambda irregular_list:[element for item in irregular_list for element in flatten_list(item)] if isinstance(irregular_list, (PythonList, PythonTuple)) else [irregular_list]
+            arg = flatten_list(arg)
+
         if isinstance(arg, Variable):
             arg = self._print(arg)
             if expr.lhs.is_stack_array:
