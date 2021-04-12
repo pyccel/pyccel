@@ -398,6 +398,12 @@ class PythonTuple(PyccelAstNode):
     def __len__(self):
         return len(self._args)
 
+    def __str__(self):
+        return '({})'.format(', '.join(str(a) for a in self))
+
+    def __repr__(self):
+        return 'PythonTuple({})'.format(', '.join(str(a) for a in self))
+
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
