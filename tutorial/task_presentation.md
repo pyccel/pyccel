@@ -10,50 +10,83 @@ parallel with other tasks.
 
 ## Context
 
-A problem can be broken into multiple parts each part can be represented as a task, each
+A problem can be borken into multiple parts each part can be represented as a task, each
 task is a separate unit of work that can be independant or may take some dependencies from other
 tasks. task with dependencies may only start when all antecedents have completed. 
 So in general the dependencies between tasks can be represented as a directed acyclic graph
 where tasks form the vertices edge are the dependencies between task.
-Usage:
-using the decorator task allow pyccel to recognize that the current function will be used
-in task paralism and automaticly calcule its dependencies.
-A task function can only be parallized if the parrent function is a task, this will allow
-pyccel to know when function need to be parallized.
+
+## Usage:
+Using the decorator task allows pyccel to recognize that the current function will
+be used in task parallelism and automatically calculate its dependencies.
+
+```Python
+@task
+def A():
+    # do something
+```
+
+A task function can only run in parallel if the parent function is a task.
+```Python
+@task('master')
+def main():
+    a = A()
+```
+
+```Python
+@task('master')
+def recursive() -> int:
+    a = recursive()
+    # do something
+```
+
+
+A block of tasks that need to run in parallel is by the first occurrence of a task 
+function in (FunctionCall or Assign) until the first non task block of the end of the program.
+So avoid writing a codeblock that depend on a task result between tasks calls.
+
+```Python
+@task('master')
+def main():
+    x, y = # do something
+    
+    # this will run in parallel
+    # ------
+    a = A(x) # first task A
+    b = B(y) # second task B
+    # ------
+
+    c = a + b # first non task block
+
+```
+Explaining dependencies :
 
 ```Python
 @task
 def A(x : int):
     return x
+
 @task
 def B(x : int):
     return x
+
 @task
 def C(x : int, y : int):
     return x + y
-@task 
-def D(x : int):
-    return x
-@task 
-def E(x : int):
-    print(x)
-@task
+
+
+@task('master')
 def main():
     a = A(1)
     b = B(1)
     c = C(a + b)
 ```
-
-- dependencies graph :
-
-`
+dependencies graph :
 A----
-
-        |---- C
+     |---- C
 B----
-`
 
-In this scenario C cannot run until A and B are complets, and A, B will run in parallel.
+In this scenario C cannot run until A and B are completed, and A, B will run in parallel.
 
 ```Python
 @task
@@ -64,16 +97,12 @@ def main():
     d = D(a)
 ```
 
-- dependencies graph:
-`
-A----
-      ------D
-
+dependencies graph:
+A---- ------D
      |------C
 B----
-`
 
-in this scenario A, B will run in parallel, C will wait for them to complet, and D will only wait for A to complete.
+in this scenario A, B will run in parallel, C will wait for then to complets, and D will only wait for A to complete.
 So D can run in parallel with C
 
 ```Python
@@ -84,43 +113,19 @@ def main():
     e = E(1)
 ```
 
-- dependencies graph:
-`
+dependencies graph:
 A -----------> D
-
 E
-`
 
-in this scenario D will wait for A to complet, but E is independant so it can't run in parallel with A or D (depend on available threads)
+
+in this scenario D will wait for A to complet, but E is independant so it can run in parallel with A or D (depend on available threads)
+
+
 Currently complex manipulations of task are not completly supported (in automatic generation) yet like :
-
-- task as if condition
-```if(x > A(2))```
-
-- task as a for loop condition
-```for i in range(A(2))```
-
-- task as function or another task argument
-```A(B(1))```
-
-- task as index
-```arr[A(1)]```
-
-- task in operations
-```a = A(1) + 2```
+- task as if condition                       ```if(x > A(2))```
+- task as a for loop condition               ```for i in range(A(2))```
+- task as function or another task argument  ```A(B(1))```
+- task as index                              ```arr[A(1)]```
+- task in operations                         ```a = A(1) + 2```
 
 so the best practice will be to avoid any undefined behavior by storing the task result in a variable and us it freely.
-
-avoid writing a codeblock that depend on a task result between tasks calls
-
-```Python
-@task
-def main():
-    a = A(1)
-    if a > 0:
-        # do something
-    b = B(1)
-```
-
-in this case parallel is not effective because the if condition should wait for A to finish
-so A and B can't run in parallel.
