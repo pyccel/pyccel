@@ -845,9 +845,9 @@ class FCodePrinter(CodePrinter):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         if expr.low is None:
-            randreal = self._print(PyccelMul(expr.high, NumpyRand()))
+            randreal = self._print(PyccelMul(expr.high, NumpyRand(), simplify = True))
         else:
-            randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low, simplify = True), NumpyRand()), expr.low, simplify = True))
+            randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low, simplify = True), NumpyRand(), simplify=True), expr.low, simplify = True))
 
         prec_code = self.print_kind(expr)
         return 'floor({}, kind={})'.format(randreal, prec_code)

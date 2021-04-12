@@ -575,6 +575,22 @@ class PyccelMul(PyccelArithmeticOperator):
     __slots__ = ()
     _precedence = 13
 
+    def __new__(cls, arg1, arg2, simplify = False):
+        print("######################################")
+        print(arg1)
+        print(arg2)
+        print("######################################")
+        if simplify:
+            if (arg1 == 1):
+                return arg2
+            if (arg2 == 1):
+                return arg1
+            if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1):
+                return PyccelUnarySub(arg2)
+            if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
+                return PyccelUnarySub(arg1)
+        return super().__new__(cls)
+
     def __repr__(self):
         return '{} * {}'.format(self.args[0], self.args[1])
 

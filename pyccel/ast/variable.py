@@ -769,11 +769,11 @@ class IndexedElement(PyccelAstNode):
                     if isinstance(stop, PyccelUnarySub):
                         stop = PyccelAdd(s, stop)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start)
+                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
                     if step is not None:
                         if isinstance(step, PyccelUnarySub):
                             start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop)
+                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
                             step = PyccelUnarySub(step)
 
                         _shape = MathCeil(PyccelDiv(_shape, step))
@@ -822,7 +822,7 @@ class IndexedElement(PyccelAstNode):
                 elif i.step == 1:
                     i = PyccelAdd(i.start, args[j], simplify = True)
                 else:
-                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j]), simplify = True)
+                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j], simplify=True), simplify = True)
                 j += 1
             new_indexes.append(i)
         return IndexedElement(self.base, *new_indexes)
