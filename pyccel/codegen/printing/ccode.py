@@ -274,15 +274,18 @@ class CCodePrinter(CodePrinter):
         """
         rhs = expr.rhs
         lhs = expr.lhs
+        print(lhs, rhs)
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg
+        print(arg)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = functools.reduce(operator.concat, arg)
+            print(arg.value)
         if isinstance(arg, Variable):
             arg = self._print(arg)
             if expr.lhs.is_stack_array:
