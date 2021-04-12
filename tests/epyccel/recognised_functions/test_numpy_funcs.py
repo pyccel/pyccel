@@ -4071,13 +4071,10 @@ def test_numpy_imag_array_like_2d(language):
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+            pytest.mark.skip(reason=("mod has special treatment for bool so it "
                 "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
@@ -4180,12 +4177,9 @@ def test_numpy_mod_scalar(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+            pytest.mark.skip(reason=("mod has special treatment for bool so it "
                 "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
@@ -4240,12 +4234,9 @@ def test_numpy_mod_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+            pytest.mark.skip(reason=("mod has special treatment for bool so it "
                 "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
