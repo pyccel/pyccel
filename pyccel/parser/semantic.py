@@ -651,7 +651,7 @@ class SemanticParser(BasicParser):
     def is_task_function(self, func):
         """
         """
-        return self.is_task_master and 'task' in func.decorators
+        return self.is_task_master() and 'task' in func.decorators
 
     def is_task_master(self):
         """
