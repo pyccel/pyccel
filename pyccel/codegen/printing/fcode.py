@@ -1832,6 +1832,30 @@ class FCodePrinter(CodePrinter):
                 '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
+    def _print_Task(self, expr):
+
+        inouts = []
+        inputs = expr.inputs
+
+        # resolve duplicated variables
+        outputs = [a if a not in inputs else inouts.append(a) for a in expr.outputs.keys()] if expr.outputs.keys() else None
+        inputs = [a for a in inputs if a not in inouts] if inputs else None
+
+        #printing
+        outputs = 'out:{}'.format(','.join(self._print(a) for a in outputs)) if outputs else ''
+        inputs = 'in:{}'.format(','.join(self._print(a) for a in inputs)) if inputs else ''
+        inouts = 'inout:{}'.format(','.join(self._print(a) for a in inouts)) if inouts else ''
+
+        depend = 'depend {}'.format(outputs + inputs + inouts) if inputs or outputs or inouts else ''
+        should_wait = '!$omp taskwait' if expr.should_wait else ''
+
+        start_task = "!$omp task {}\n".format(depend)
+        structured_code_block = self._print(expr.stmt)
+        end_task = "!$omp end task\n"
+
+        code = '{}'.format(should_wait + start_task + structured_code_block + end_task)
+        return code
+
     # .....................................................
     #               Print OpenMP AnnotatedComment
     # .....................................................

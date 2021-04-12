@@ -41,6 +41,8 @@ from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 
+from pyccel.ast.sympy_helper import pyccel_to_sympy
+
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -313,15 +315,34 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+
         if lhs.is_stack_array:
-            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-            length = '*'.join(self._print(i) for i in lhs.shape)
-            buffer_array = "({declare_dtype}[{length}]){{}}".format(declare_dtype = declare_dtype, length=length)
+            symbol_map = {}
+            used_names_tmp = self._parser.used_names.copy()
+            sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
+
+            length = functools.reduce(operator.mul, sympy_shapes)
+            length_code = '*'.join(self._print(i) for i in lhs.alloc_shape)
+
+            if length.is_constant():
+                buffer_array = "({declare_dtype}[{length}]){{}}".format(
+                                        declare_dtype = declare_dtype,
+                                        length=length_code)
+            else:
+                dummy_array_name, _ = create_incremented_string(self._parser.used_names,
+                                                                prefix = lhs.name+'_data')
+                code_init += "{dtype} {name}[{length}];\n".format(
+                        dtype  = declare_dtype,
+                        name   = dummy_array_name,
+                        length = length_code)
+                buffer_array = dummy_array_name
+
             code_init += self._init_stack_array(expr, buffer_array)
+
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
                 code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return code_init
@@ -343,15 +364,15 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        shape = ", ".join(self._print(i) for i in lhs.shape)
+        shape = ", ".join(self._print(i) for i in lhs.alloc_shape)
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
         strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(lhs.shape))
         if isinstance(buffer_array, Variable):
             buffer_array = "{0}.{1}".format(self._print(buffer_array), dtype)
-        cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n '
-        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}}};\n'
+        cpy_data = '{0} = (t_ndarray){{\n.{1}={2},\n .shape={3},\n .strides={4},\n '
+        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}\n}};\n'
         cpy_data = cpy_data.format(self._print(lhs), dtype, buffer_array,
                     shape_init, strides_init, len(lhs.shape), 'false')
         cpy_data += 'stack_array_init(&{});\n'.format(self._print(lhs))
@@ -1561,17 +1582,35 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def _print_Task(self, expr):
-        code = self._print(expr.stmt)
-        return '// task dep (in : {inp}), (out : {out})\n {code}{should_wait}'.format(
-            inp = ', '.join(i.name for i in expr.inputs),
-            out = ', '.join(i.name for i, v in expr.outputs.items() if v is True),
-            code = code,
-            should_wait = '// task wait\n' if expr.should_wait else ''
-        )
+        inouts = []
+        inputs = expr.inputs
+
+        # resolve duplicated variables
+        outputs = [a if a not in inputs else inouts.append(a) for a in expr.outputs.keys()] if expr.outputs.keys() else None
+        inputs = [a for a in inputs if a not in inouts] if inputs else None
+
+        #printing
+        outputs = 'out:{}'.format(','.join(self._print(a) for a in outputs)) if outputs else ''
+        inputs = 'in:{}'.format(','.join(self._print(a) for a in inputs)) if inputs else ''
+        inouts = 'inout:{}'.format(','.join(self._print(a) for a in inouts)) if inouts else ''
+
+        depend = 'depend {}'.format(outputs + inputs + inouts) if inputs or outputs or inouts else ''
+
+        should_wait = '#pragma omp taskwait' if expr.should_wait else ''
+
+        start_task = '#pragma omp task {}'.format(depend) + '{\n'
+        structured_code_block = self._print(expr.stmt)
+        end_task = "}\n"
+
+        code = should_wait + start_task + structured_code_block + end_task
+        return code
+
+
 
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
+        print(expr)
         clauses = ''
         if expr.combined:
             clauses = ' ' + expr.combined
