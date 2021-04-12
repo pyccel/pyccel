@@ -340,7 +340,8 @@ class PythonTuple(PyccelAstNode):
             self._shape = ()
             self._is_homogeneous = False
             return
-        is_homogeneous = all(a.dtype is not NativeGeneric() and \
+        is_homogeneous = args[0].dtype is not NativeGeneric() and \
+                         all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
                              args[0].rank  == a.rank  and \
                              args[0].order == a.order for a in args[1:])
