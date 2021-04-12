@@ -258,6 +258,13 @@ class CCodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    def _flatten_list(self, irregular_list):
+        if isinstance(irregular_list, (PythonList, PythonTuple)):
+            f_list = [element for item in irregular_list for element in self._flatten_list(item)]
+            return f_list
+        else:
+            return [irregular_list]
+
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray
@@ -275,7 +282,6 @@ class CCodePrinter(CodePrinter):
         """
         rhs = expr.rhs
         lhs = expr.lhs
-        print(lhs, rhs)
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
@@ -284,8 +290,7 @@ class CCodePrinter(CodePrinter):
         arg = rhs.arg
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
-            flatten_list = lambda irregular_list:[element for item in irregular_list for element in flatten_list(item)] if isinstance(irregular_list, (PythonList, PythonTuple)) else [irregular_list]
-            arg = flatten_list(arg)
+            arg = self._flatten_list(arg)
 
         if isinstance(arg, Variable):
             arg = self._print(arg)
