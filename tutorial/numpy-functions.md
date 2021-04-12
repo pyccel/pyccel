@@ -1,6 +1,6 @@
 # Supported Numpy function by Pyccel
 
-In Pyccel we try to support the most used Numpy functions by developers. here are some of them:
+In Pyccel we try to support the most used Numpy functions by developers. Here are some of them:
 
 ## [Norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
@@ -16,7 +16,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
          these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
          matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
 
--   Supported languages: Fortran
+-   Supported languages: Fortran (2-norm)
 
 -   python code:
 
@@ -291,7 +291,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
 
--   Supported langauges: fortran (2d arrays only)
+-   Supported langauges: fortran (1d or 2d arrays only, dot product not supported)
 
 -   python code:
 
@@ -344,7 +344,7 @@ In Pyccel we try to support the most used Numpy functions by developers. here ar
 
 -   others:
 
-    max, min, sum, shape, floor
+    amax, amin, sum, shape, floor
 
 You can get more informations about the behaviour of each function in [Numpy](https://numpy.org/docstable/reference/) documentation.
 Please if you face different behaviour between Numpy results and Pyccel results, create an issue at
