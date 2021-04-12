@@ -1,6 +1,6 @@
 # Supported Numpy function by Pyccel
 
-In Pyccel we try to support the most used Numpy functions by developers. Here are some of them:
+In Pyccel we try to support the Numpy functions which developers use the most.. Here are some of them:
 
 ## [Norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 

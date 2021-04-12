@@ -71,7 +71,7 @@ __all__ = (
     'NumpyLinspace',
     'NumpyMatmul',
     'NumpyAmax',
-    'NumpyMin',
+    'NumpyAmin',
     'NumpyMod',
     'NumpyNorm',
     'NumpySum',
@@ -1075,7 +1075,7 @@ class NumpyMod(NumpyUfuncBinary):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-class NumpyMin(NumpyUfuncUnary):
+class NumpyAmin(NumpyUfuncUnary):
     """Represent a call to the min function in the Numpy library"""
     __slots__ = ()
     def _set_shape_rank(self, x):
@@ -1116,8 +1116,8 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('sum',[],[],body=[],
                 decorators={'numpy_wrapper':NumpySum}),
             FunctionDef('min',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyMin}),
-            FunctionDef('amax',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyAmin}),
+            FunctionDef('max',[],[],body=[],
                 decorators={'numpy_wrapper':NumpyAmax}),
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
@@ -1160,10 +1160,10 @@ numpy_functions = {
     'complex64' : NumpyComplex64,
     'matmul'    : NumpyMatmul,
     'sum'       : NumpySum,
-#    'max'       : NumpyAmax,
+    'max'       : NumpyAmax,
     'amax'      : NumpyAmax,
-    'min'       : NumpyMin,
-    'amin'      : NumpyMin,
+    'min'       : NumpyAmin,
+    'amin'      : NumpyAmin,
     'prod'      : NumpyProduct,
     'product'   : NumpyProduct,
     'linspace'  : NumpyLinspace,

@@ -2478,11 +2478,11 @@ def test_min_property(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_amax_int(language):
+def test_max_int(language):
     @types('int[:]')
     def max_call(x):
-        from numpy import amax
-        return amax(x)
+        from numpy import max as np_max
+        return np_max(x)
 
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
@@ -2497,11 +2497,11 @@ def test_amax_int(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_amax_real(language):
+def test_max_real(language):
     @types('real[:]')
     def max_call(x):
-        from numpy import amax
-        return amax(x)
+        from numpy import max as np_max
+        return np_max(x)
 
     f1 = epyccel(max_call, language = language)
     x = rand(10)
@@ -2516,11 +2516,11 @@ def test_amax_real(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_amax_phrase(language):
+def test_max_phrase(language):
     @types('real[:]','real[:]')
     def max_phrase(x,y):
-        from numpy import amax
-        a = amax(x)*amax(y)
+        from numpy import max as np_max
+        a = np_max(x)*np_max(y)
         return a
 
     f2 = epyccel(max_phrase, language = language)
@@ -2540,7 +2540,7 @@ def test_amax_phrase(language):
 def test_max_property(language):
     @types('int[:]')
     def max_call(x):
-        return x.amax()
+        return x.max()
 
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
