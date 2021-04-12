@@ -35,6 +35,7 @@ from pyccel.ast.variable  import (Variable, TupleVariable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
+from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -759,6 +760,9 @@ class FCodePrinter(CodePrinter):
                            shape  = self._print(shape))
 
         return code
+
+    def _print_NumpyMod(self, expr):
+        return self._print(PyccelMod(*expr.args))
 
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
