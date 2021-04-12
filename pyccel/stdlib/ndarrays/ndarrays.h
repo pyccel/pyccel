@@ -122,7 +122,7 @@ int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
 
 #endif

@@ -76,6 +76,7 @@ class CuCodePrinter(CCodePrinter):
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
+        self._additional_imports.add('cuda_ndarrays')
 
     def _print_KernelCall(self, expr):
         func_name = self._print(expr.func.func_name)
@@ -149,7 +150,7 @@ class CuCodePrinter(CCodePrinter):
         indices = []
         for i, ind in enumerate(inds):
             indices.append('{}.strides[{}] * {}'.format(base_name, i, ind))
-        return "%s.%s[%s]" % (base_name, dtype, ", ".join(indices))
+        return "%s.%s[%s]" % (base_name, dtype, "+ ".join(indices))
     
     def function_signature(self, expr):
         # print(expr)
@@ -271,8 +272,9 @@ class CuCodePrinter(CCodePrinter):
 
     def _print_Deallocate(self, expr):
         cuda = ''
+        #used cudamallocManaged for now so we don't need to deal with deallocation
         if expr.variable.is_ondevice:
-            cuda = 'cuda_'
+            return ''
         if expr.variable.is_pointer:
             return '{}free_pointer({});'.format(cuda, self._print(expr.variable))
         return '{}free_array({});'.format(cuda, self._print(expr.variable))
@@ -327,10 +329,10 @@ class CuCodePrinter(CCodePrinter):
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n\n'
-                '#ifndef __cplusplus\nextern "C" {{\n#endif\n'
+                #'#ifndef __cplusplus\nextern "C" {{\n#endif\n'
                 #'{classes}\n\n'
                 '{funcs}\n\n'
-                '#ifndef __cplusplus\n}}\n#endif\n'
+                #'#ifndef __cplusplus\n}}\n#endif\n'
                 #'{interfaces}\n\n'
                 '#endif // {name}_H\n').format(
                         name    = name.upper(),

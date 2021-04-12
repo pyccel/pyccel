@@ -38,7 +38,7 @@ class CudaMemCopy():
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
-    
+
     @property
     def dest(self):
         return self._args[0]
@@ -170,7 +170,7 @@ class CudaInternalVar(PyccelAstNode):
         self._dtype     = dim.dtype
         self._precision = dim.precision
         super().__init__()
-    
+
     @property
     def dim(self):
         return self._dim

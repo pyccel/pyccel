@@ -1,9 +1,6 @@
 #ifndef CUDA_NDARRAYS_H
 # define CUDA_NDARRAYS_H
-extern "C"
-{
-	# include "../ndarrays/ndarrays.h"
-}
+# include "../ndarrays/ndarrays.h"
 __global__
 void cuda_array_arange(t_ndarray arr, int start);
 __global__
