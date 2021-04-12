@@ -67,3 +67,28 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type)
     cudaMallocManaged(&(arr.raw_data), arr.buffer_size);
     return (arr);
 }
+
+int32_t cuda_free_array(t_ndarray arr)
+{
+    if (arr.shape == NULL)
+        return (0);
+    free(arr.raw_data);
+    arr.raw_data = NULL;
+    free(arr.shape);
+    arr.shape = NULL;
+    free(arr.strides);
+    arr.strides = NULL;
+    return (1);
+}
+
+
+int32_t cuda_free_pointer(t_ndarray arr)
+{
+    if (arr.is_view == false || arr.shape == NULL)
+        return (0);
+    free(arr.shape);
+    arr.shape = NULL;
+    free(arr.strides);
+    arr.strides = NULL;
+    return (1);
+}

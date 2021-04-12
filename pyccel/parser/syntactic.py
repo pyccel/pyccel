@@ -1187,5 +1187,5 @@ if __name__ == '__main__':
         raise ValueError('Expecting an argument for filename')
 
     parser = SyntaxParser(filename)
-    print(parser.ast)
+    # print(parser.ast)
 

@@ -809,7 +809,7 @@ class SemanticParser(BasicParser):
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
-            print("<<<<", annotation_method)
+            # print("<<<<", annotation_method)
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr, **settings)
                 if isinstance(obj, Basic) and self._current_fst_node:
@@ -1097,7 +1097,7 @@ class SemanticParser(BasicParser):
                     if new_name != rhs_name:
                         if hasattr(func, 'clone'):
                             func  = func.clone(new_name)
-                    print(func, args)
+                    # print(func, args)
                     return self._handle_function(func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -1483,7 +1483,7 @@ class SemanticParser(BasicParser):
                             d_lhs.update(allows_negative_indexes=True)
 
                 # Create new variable
-                print("rhs >>> ", rhs)
+                # print("rhs >>> ", rhs)
                 lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
                 # Add variable to scope
@@ -1761,7 +1761,7 @@ class SemanticParser(BasicParser):
                         return FunctionCall(master, args, self._current_function)
 
         else:
-            print(">>>>>", rhs)
+            # print(">>>>>", rhs)
             rhs = self._visit(rhs, **settings)
         if isinstance(rhs, FunctionDef):
 
@@ -1857,9 +1857,9 @@ class SemanticParser(BasicParser):
                 d_var_i['rank' ]  = dvar['rank']
 
         else:
-            print('>>', rhs)
+            # print('>>', rhs)
             if isinstance(rhs, CupyRawKernel):
-                print(rhs.name, rhs.code)
+                # print(rhs.name, rhs.code)
                 func = CKernelDef(rhs.code,rhs.name)
                 self.insert_function(func)
                 # return CodeBlock([func])

@@ -327,10 +327,10 @@ class CuCodePrinter(CCodePrinter):
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n\n'
-                '#ifndef ___cplusplus\nextern "C" {{\n#endif\n'
+                '#ifndef __cplusplus\nextern "C" {{\n#endif\n'
                 #'{classes}\n\n'
                 '{funcs}\n\n'
-                '#ifndef ___cplusplus\n}}\n#endif\n'
+                '#ifndef __cplusplus\n}}\n#endif\n'
                 #'{interfaces}\n\n'
                 '#endif // {name}_H\n').format(
                         name    = name.upper(),

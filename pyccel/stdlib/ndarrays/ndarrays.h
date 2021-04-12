@@ -6,6 +6,7 @@
 #ifndef NDARRAYS_H
 # define NDARRAYS_H
 
+
 # include <stdlib.h>
 # include <complex.h>
 # include <string.h>
@@ -13,6 +14,10 @@
 # include <stdarg.h>
 # include <stdbool.h>
 # include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* mapping the function array_fill to the correct type */
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
@@ -52,16 +57,16 @@ enum e_types
 typedef struct  s_ndarray
 {
     /* raw data buffer*/
-    // union {
-    //         char            *raw_data;
-    //         int8_t          *nd_int8;
-    //         int16_t         *nd_int16;
-    //         int32_t         *nd_int32;
-    //         int64_t         *nd_int64;
-    //         float           *nd_float;
-    //         double          *nd_double;
-    //         bool            *nd_bool;
-    //         };
+     union {
+             char            *raw_data;
+             int8_t          *nd_int8;
+             int16_t         *nd_int16;
+             int32_t         *nd_int32;
+             int64_t         *nd_int64;
+             float           *nd_float;
+             double          *nd_double;
+             bool            *nd_bool;
+             };
     /* number of dimensions */
     int32_t                 nd;
     /* shape 'size of each dimension' */
@@ -87,7 +92,6 @@ typedef struct  s_ndarray
 /* allocations */
 void        stack_array_init(t_ndarray *arr);
 t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type);
-t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type);
 void        _array_fill_int8(int8_t c, t_ndarray arr);
 void        _array_fill_int16(int16_t c, t_ndarray arr);
 void        _array_fill_int32(int32_t c, t_ndarray arr);
@@ -108,8 +112,7 @@ void        alias_assign(t_ndarray *dest, t_ndarray src);
 /* free */
 int32_t         free_array(t_ndarray dump);
 int32_t         free_pointer(t_ndarray dump);
-int32_t         cuda_free_array(t_ndarray dump);
-int32_t         cuda_free_pointer(t_ndarray dump);
+
 
 /* indexing */
 int64_t         get_index(t_ndarray arr, ...);
@@ -118,5 +121,8 @@ int64_t         get_index(t_ndarray arr, ...);
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #endif

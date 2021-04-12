@@ -37,7 +37,7 @@ internal_libs = {
 lang_ext_dict = {
     "c"         : ".c",
     "fortran"   : ".f90",
-    "ccuda"     : ".c",
+    "ccuda"     : ".cu",
 }
 
 cuda_flags = {
@@ -351,7 +351,10 @@ def execute_pyccel(fname, *,
                         continue
 
                     # get library source files
-                    ext = lang_ext_dict[language]
+                    if language == 'ccuda':
+                        ext = (lang_ext_dict['c'], lang_ext_dict['ccuda'])
+                    else:
+                        ext = lang_ext_dict[language]
                     source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
                                                                 if e.endswith(ext)]
                     internal_modules = [os.path.splitext(f)[0] for f in source_files]
@@ -380,10 +383,10 @@ def execute_pyccel(fname, *,
                     internal_libs_files.extend(internal_modules)
                     # add library path to internal_libs_path
                     internal_libs_path.append(lib_dest_path)
-
         if convert_only:
             continue
 
+        print(internal_libs_name, internal_libs_path, internal_libs_files)
         # ...
         # Determine all .o files and all folders needed by executable
         def get_module_dependencies(parser, mods=(), folders=()):

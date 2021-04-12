@@ -2324,7 +2324,7 @@ class CKernelDef(Basic):
         Cbody,
         name):
 
-        print(type(name), Cbody)
+        # print(type(name), Cbody)
         if isinstance(name, (str, LiteralString)):
             name = PyccelSymbol(name)
         elif isinstance(name, (tuple, list)):
