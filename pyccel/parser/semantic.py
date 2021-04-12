@@ -2087,10 +2087,12 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not ((isinstance(lhs, PythonTuple) or (isinstance(lhs, TupleVariable) and not lhs.is_homogeneous)) \
-                and isinstance(rhs,(PythonTuple, TupleVariable, list))):
-            lhs = [lhs]
-            rhs = [rhs]
+        lhs = [lhs]
+        rhs = [rhs]
+        while any(isinstance(l, (PythonTuple, InhomogeneousTupleVariable))
+                    and isinstance(rhs,(PythonTuple, TupleVariable, list)) for l,r in zip(lhs,rhs)):
+            lhs = [li for l in lhs for li in (l if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) else [l])]
+            rhs = [ri for r in rhs for ri in (r if isinstance(r, (PythonTuple, InhomogeneousTupleVariable, list)) else [r])]
 
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
