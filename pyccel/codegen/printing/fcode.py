@@ -457,7 +457,7 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonTuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
-            elif isinstance(f, TupleVariable) and not f.is_homogeneous:
+            elif isinstance(f, InhomogeneousTupleVariable):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             elif f.dtype is NativeString() and f != expr.expr[-1]:
@@ -539,12 +539,9 @@ class FCodePrinter(CodePrinter):
     def _print_PythonList(self, expr):
         return self._print_PythonTuple(expr)
 
-    def _print_TupleVariable(self, expr):
-        if expr.is_homogeneous:
-            return self._print_Variable(expr)
-        else:
-            fs = ', '.join(self._print(f) for f in expr)
-            return '[{0}]'.format(fs)
+    def _print_InhomogeneousTupleVariable(self, expr):
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -1080,7 +1077,7 @@ class FCodePrinter(CodePrinter):
         else:
             if isinstance(expr.dtype, NativeTuple):
                 # Non-homogenous NativeTuples must be stored in TupleVariable
-                if not expr.variable.is_homogeneous:
+                if isinstance(expr.variable, InhomogeneousTupleVariable):
                     errors.report(LIST_OF_TUPLES,
                                   symbol=expr.variable, severity='error')
                     expr_dtype = NativeInteger()
@@ -1179,7 +1176,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
+        if isinstance(lhs, InhomogeneousTupleVariable):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
 
         # TODO improve
@@ -2615,7 +2612,7 @@ class FCodePrinter(CodePrinter):
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
-        elif isinstance(base, TupleVariable) and not base.is_homogeneous:
+        elif isinstance(base, InhomogeneousTupleVariable):
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:

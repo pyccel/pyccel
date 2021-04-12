@@ -30,7 +30,7 @@ from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
-                            IndexedElement, TupleVariable, VariableAddress)
+                            IndexedElement, InhomogeneousTupleVariable, VariableAddress)
 
 errors = Errors()
 
@@ -575,8 +575,8 @@ def expand_tuple_assignments(block):
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
     assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, TupleVariable) and not a.lhs.is_homogeneous \
-                and isinstance(a.rhs, (PythonTuple,TupleVariable))]
+                if isinstance(a.lhs, InhomogeneousTupleVariable) \
+                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
     if len(assigns) == 0:
         return
     else:

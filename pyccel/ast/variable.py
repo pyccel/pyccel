@@ -578,15 +578,6 @@ class TupleVariable(Variable):
     """
     __slots__ = ()
 
-    @property
-    def is_homogeneous(self):
-        """ Indicates if all objects in the tuple have the
-        same datatype
-        # TODO: Indicates if all objects in the tuple have the
-        same properties
-        """
-        return self._is_homogeneous
-
 class HomogeneousTupleVariable(TupleVariable):
 
     """Represents a tuple variable in the code.
@@ -606,7 +597,7 @@ class HomogeneousTupleVariable(TupleVariable):
     n
     """
     __slots__ = ()
-    _is_homogeneous = True
+    is_homogeneous = True
 
     def __len__(self):
         return self.shape[0]
@@ -631,7 +622,7 @@ class InhomogeneousTupleVariable(TupleVariable):
     """
     __slots__ = ('_vars',)
     _attribute_nodes = ('_vars',)
-    _is_homogeneous = False
+    is_homogeneous = False
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
