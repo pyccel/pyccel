@@ -2086,14 +2086,27 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
         is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
-        # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        lhs = [lhs]
-        rhs = [rhs]
-        while any(isinstance(l, (PythonTuple, InhomogeneousTupleVariable))
-                    and isinstance(rhs,(PythonTuple, TupleVariable, list)) for l,r in zip(lhs,rhs)):
-            lhs = [li for l in lhs for li in (l if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) else [l])]
-            rhs = [ri for r in rhs for ri in (r if isinstance(r, (PythonTuple, InhomogeneousTupleVariable, list)) else [r])]
+        # Split into multiple Assigns to ensure AliasAssign is used where necessary
+        unravelling = True
+        while unravelling:
+            unravelling = False
+            lhs = [lhs]
+            rhs = [rhs]
+            new_lhs = []
+            new_rhs = []
+            for l,r in zip(lhs, rhs):
+                # Split assign (e.g. for a,b = 1,c)
+                if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
+                        and isinstance(r,(PythonTuple, TupleVariable, list)):
+                    new_lhs.extend(l)
+                    new_rhs.extend(r)
+                    # Repeat step to handle tuples of tuples of etc.
+                    unravelling = True
+                else:
+                    new_lhs.append(l)
+                    new_rhs.append(r)
 
+        # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
 
