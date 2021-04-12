@@ -765,15 +765,15 @@ class IndexedElement(PyccelAstNode):
                     stop  = a.stop if a.stop is not None else s
                     step  = a.step
                     if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start)
+                        start = PyccelAdd(s, start) # cannot simplify
                     if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop)
+                        stop = PyccelAdd(s, stop) # cannot simplify
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                    _shape = stop if start is None else PyccelMinus(stop, start) # cannot simplify
                     if step is not None:
                         if isinstance(step, PyccelUnarySub):
                             start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                            _shape = start if a.stop is None else PyccelMinus(start, stop) # cannot simplify
                             step = PyccelUnarySub(step)
 
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
