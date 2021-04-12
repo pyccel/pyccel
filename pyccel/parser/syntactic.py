@@ -647,6 +647,7 @@ class SyntaxParser(BasicParser):
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
+            print(d)
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
