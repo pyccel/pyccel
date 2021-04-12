@@ -1847,13 +1847,13 @@ class FCodePrinter(CodePrinter):
         inouts = 'inout:{}'.format(','.join(self._print(a) for a in inouts)) if inouts else ''
 
         depend = 'depend {}'.format(outputs + inputs + inouts) if inputs or outputs or inouts else ''
-        should_wait = '!$omp taskwait' if expr.should_wait else ''
+        should_wait = '!$omp taskwait\n' if expr.should_wait else ''
 
         start_task = "!$omp task {}\n".format(depend)
         structured_code_block = self._print(expr.stmt)
         end_task = "!$omp end task\n"
 
-        code = '{}'.format(should_wait + start_task + structured_code_block + end_task)
+        code = '{}'.format(start_task + structured_code_block + end_task + should_wait)
         return code
 
     # .....................................................
@@ -2795,11 +2795,6 @@ class FCodePrinter(CodePrinter):
         else:
             return self._print_not_supported(expr)
 
-    def _print_Task(self, expr):
-        print('[Printer] : Task')
-        print('in :  {}, out : {}, preceders : {}'.format(expr.inputs, [o for o,v in expr.outputs.items() if v == True], expr.preceders))
-
-        return self._print(expr.stmt)
 #=======================================================================================
 
     def _pad_leading_columns(self, lines):
