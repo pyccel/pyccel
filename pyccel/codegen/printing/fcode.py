@@ -1236,12 +1236,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, NumpyEmpty):
             return ''
 
-        if isinstance(rhs, NumpyMod):
-            lhs = self._print(expr.lhs)
-            args = ','.join(self._print(i) for i in rhs.args)
-            rhs  = 'modulo({})'.format(args)
-            return '{0} = {1}\n'.format(lhs, rhs)
-
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
             name = str(func.name)
