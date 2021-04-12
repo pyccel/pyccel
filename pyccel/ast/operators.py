@@ -576,10 +576,6 @@ class PyccelMul(PyccelArithmeticOperator):
     _precedence = 13
 
     def __new__(cls, arg1, arg2, simplify = False):
-        print("######################################")
-        print(arg1)
-        print(arg2)
-        print("######################################")
         if simplify:
             if (arg1 == 1):
                 return arg2
@@ -668,6 +664,12 @@ class PyccelDiv(PyccelArithmeticOperator):
     """
     __slots__ = ()
     _precedence = 13
+
+    def __new__(cls, arg1, arg2, simplify=False):
+        if simplify:
+            if (arg2 == 1):
+                return arg1
+        return super().__new__(cls)
 
     @staticmethod
     def _handle_integer_type(integers):

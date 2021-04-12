@@ -776,7 +776,7 @@ class IndexedElement(PyccelAstNode):
                             _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
                             step = PyccelUnarySub(step)
 
-                        _shape = MathCeil(PyccelDiv(_shape, step))
+                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)

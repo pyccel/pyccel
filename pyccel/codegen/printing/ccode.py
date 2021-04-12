@@ -470,10 +470,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
-            return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit(), simplify = True)))
+            return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
         else:
             return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                            PyccelMul(expr.imag, LiteralImaginaryUnit(), simplify = True))))
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
