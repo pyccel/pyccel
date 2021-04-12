@@ -52,6 +52,7 @@ from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import TaskFunctionCall, Task
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
@@ -166,7 +167,6 @@ class SemanticParser(BasicParser):
 
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
-
         # we use it to detect the current method or function
 
         #
@@ -648,6 +648,48 @@ class SemanticParser(BasicParser):
     def exit_loop_scope(self):
         self._namespace = self._namespace.parent_scope
 
+    def is_task_function(self, func):
+        """
+        """
+        return self.is_task_master and 'task' in func.decorators
+
+    def is_task_master(self):
+        """
+        """
+        return 'task' in self._namespace.decorators \
+            and self._namespace.decorators['task'] == 'master'
+
+    def set_task_wait(self, obj):
+        """
+        """
+        if not isinstance(obj, (PyccelAstNode, Task)) and self._namespace.tasks:
+            self._namespace.tasks[-1].should_wait = True
+
+    def set_task_dependencies(self, expr, taskfunc, outputs):
+        """
+        """
+        inputs    = set()
+        preceders = set()
+        outputs = [outputs] if isinstance(outputs, Variable) else list(outputs)
+        outputs += [a for a, i in zip(taskfunc.args, taskfunc.funcdef.arguments_inout) if i is True]
+        outputs = {i : False for i in outputs}
+
+        for task in self.namespace.tasks:
+            for a in taskfunc.args + tuple(inputs):
+                if a in task.outputs:
+                    task.outputs[a] = True
+                    inputs.add(a)
+                    preceders.add(task)
+
+        inputs    = tuple(inputs)
+        preceders = tuple(preceders)
+
+        if isinstance(expr, Basic) and self._current_fst_node:
+            expr.set_fst(self._current_fst_node)
+
+        task = Task(expr, inputs, outputs, preceders)
+        self._namespace.tasks.append(task)
+        return task
     #=======================================================
     #              Utility functions
     #=======================================================
@@ -936,8 +978,18 @@ class SemanticParser(BasicParser):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
-            new_expr = FunctionCall(func, args, self._current_function)
-            if None in new_expr.args:
+
+            if self.is_task_function(func):
+                new_expr = TaskFunctionCall(func, args, self._current_function)
+                new_args = new_expr.args
+                if len(func.results) == 0 and expr.get_direct_user_nodes(lambda p: isinstance(p, CodeBlock)):
+                    new_expr = self.set_task_dependencies(new_expr, taskfunc = new_expr, outputs = ())
+
+            else:
+                new_expr = FunctionCall(func, args, self._current_function)
+                new_args = new_expr.args
+
+            if None in new_args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
@@ -1280,6 +1332,8 @@ class SemanticParser(BasicParser):
                 obj = getattr(self, annotation_method)(expr, **settings)
                 if isinstance(obj, Basic) and self._current_fst_node:
                     obj.set_fst(self._current_fst_node)
+                    if self.is_task_master:
+                        self.set_task_wait(obj)
                 self._current_fst_node = current_fst
                 return obj
 
@@ -2063,6 +2117,20 @@ class SemanticParser(BasicParser):
                     errors.report(PYCCEL_RESTRICTION_TODO,
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
+
+            if self.is_task_master():
+                if isinstance(r, TaskFunctionCall):
+                    new_expr = self.set_task_dependencies(new_expr, taskfunc = r, outputs = l)
+                else:
+                    tasks = r.get_attribute_nodes(TaskFunctionCall)
+                    l = len(tasks)
+                    if l == 1:
+                        errors.report('Task function result should be saved in a variable before using it in a statement',
+                        symbol=tasks[0], severity='warning')
+                    elif l > 1:
+                        errors.report('Multiple task function in the same statement may result in some undefined behavior',
+                        symbol=', '.join(str(t) for t in tasks), severity='warning')
+
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
@@ -2645,7 +2713,7 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, args, results, [])
+            recursive_func_obj = FunctionDef(name, args, results, [], decorators = decorators)
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions

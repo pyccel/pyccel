@@ -595,12 +595,10 @@ class SyntaxParser(BasicParser):
         return Pass()
 
     def _visit_FunctionDef(self, stmt):
-
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
         name = self._visit(stmt.name)
         name = name.replace("'", '')
-
         arguments    = self._visit(stmt.args)
 
         local_vars   = []
@@ -798,8 +796,7 @@ class SyntaxParser(BasicParser):
         if 'task' in decorators.keys():
             decorator = decorators['task'][0]
             decorators['task'] = 'child'
-
-            if isinstance(decorator, ast.Call):
+            if isinstance(decorator, FunctionCall):
                 if len(decorator.args) > 0:
                     arg = decorator.args[0]
                     if arg != "child" or arg != 'master':

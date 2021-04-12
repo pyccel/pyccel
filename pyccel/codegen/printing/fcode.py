@@ -2771,6 +2771,11 @@ class FCodePrinter(CodePrinter):
         else:
             return self._print_not_supported(expr)
 
+    def _print_Task(self, expr):
+        print('[Printer] : Task')
+        print('in :  {}, out : {}, preceders : {}'.format(expr.inputs, [o for o,v in expr.outputs.items() if v == True], expr.preceders))
+
+        return self._print(expr.stmt)
 #=======================================================================================
 
     def _pad_leading_columns(self, lines):

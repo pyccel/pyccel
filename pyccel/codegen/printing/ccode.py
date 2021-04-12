@@ -1560,6 +1560,15 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
+    def _print_Task(self, expr):
+        code = self._print(expr.stmt)
+        return '// task dep (in : {inp}), (out : {out})\n {code}{should_wait}'.format(
+            inp = ', '.join(i.name for i in expr.inputs),
+            out = ', '.join(i.name for i, v in expr.outputs.items() if v is True),
+            code = code,
+            should_wait = '// task wait\n' if expr.should_wait else ''
+        )
+
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
