@@ -2086,12 +2086,12 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
         is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
+        lhs = [lhs]
+        rhs = [rhs]
         # Split into multiple Assigns to ensure AliasAssign is used where necessary
         unravelling = True
         while unravelling:
             unravelling = False
-            lhs = [lhs]
-            rhs = [rhs]
             new_lhs = []
             new_rhs = []
             for l,r in zip(lhs, rhs):
@@ -2105,6 +2105,8 @@ class SemanticParser(BasicParser):
                 else:
                     new_lhs.append(l)
                     new_rhs.append(r)
+            lhs = new_lhs
+            rhs = new_rhs
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
