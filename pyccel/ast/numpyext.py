@@ -606,12 +606,12 @@ class NumpyLinspace(NumpyNewArray):
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
     __slots__ = ('_condition', '_x', '_y', '_dtype', '_rank', '_shape', '_order', '_precision')
-    _attribute_nodes = ()
+    _attribute_nodes = ('_condition','_x','_y')
     #def __new__(cls, condition, x, y):
     #    return IfTernaryOperator(condition, x, y)
 
     def __init__(self, condition, x, y):
-        super().__init__(condition, x, y)
+        #super().__init__(condition, x, y)
         #print("dtype:",condition._dtype)
         #print("rank:",condition._rank)
         #print("shape:",condition._shape)
@@ -624,6 +624,7 @@ class NumpyWhere(PyccelInternalFunction):
         self._x = x
         self._y = y
         ranks_args = (condition._rank, x._rank, y._rank)
+        shapes_args = (condition._shape, x._shape, y._shape)
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
@@ -642,9 +643,10 @@ class NumpyWhere(PyccelInternalFunction):
             raise TypeError('cannot determine the type of {}'.format(self))
 
         self._rank = max(ranks_args) #if (condition._rank > a._rank and y._rank)
-        self._shape = condition._shape
+        self._shape = x._shape
         self._order = condition._order
         self._precision = condition._precision
+        super().__init__(condition, x, y)
 
     @property
     def condition(self):
