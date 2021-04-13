@@ -1730,13 +1730,11 @@ class SemanticParser(BasicParser):
         new_expressions = []
         fst = expr.fst
         assert(fst)
-        print("testooooo")
         rhs = expr.rhs
         lhs = expr.lhs
         print(rhs)
 
         if isinstance(rhs, FunctionCall):
-            print("it's here", rhs)
             name = rhs.funcdef
             macro = self.get_macro(name)
             if macro is None:

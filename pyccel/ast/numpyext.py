@@ -606,20 +606,24 @@ class NumpyLinspace(NumpyNewArray):
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
     __slots__ = ('_condition', '_x', '_y', '_dtype', '_rank', '_shape', '_order', '_precision')
-
+    _attribute_nodes = ()
     #def __new__(cls, condition, x, y):
     #    return IfTernaryOperator(condition, x, y)
 
     def __init__(self, condition, x, y):
         super().__init__(condition, x, y)
-        print("dtype:",condition._dtype)
-        print("rank:",condition._rank)
-        print("shape:",condition._shape)
-        print(x)
-        print(y)
+        #print("dtype:",condition._dtype)
+        #print("rank:",condition._rank)
+        #print("shape:",condition._shape)
+        #print(x)
+        #print(y)
+        #TODO [NH]: rank of the resulted array depend also on x and y (we need to choose the biggest rank from x, y and condition)
+        #[TEST CASE] rank of x != rank of y (one of x, y have a ran > rank of condition) 
+        #ranks = 
         self._condition = condition
         self._x = x
         self._y = y
+        ranks_args = (condition._rank, x._rank, y._rank)
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
@@ -637,7 +641,7 @@ class NumpyWhere(PyccelInternalFunction):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-        self._rank = condition._rank
+        self._rank = max(ranks_args) #if (condition._rank > a._rank and y._rank)
         self._shape = condition._shape
         self._order = condition._order
         self._precision = condition._precision
