@@ -1324,7 +1324,7 @@ class SemanticParser(BasicParser):
         if len(visited_body) != len(useful_body):
             removed = [v for v in visited_body if v not in useful_body]
             for r in removed:
-                errors.report("Expression with no effect has been removed {}".format(type(r)),
+                errors.report("Expression with no effect has been removed",
                         symbol=r, severity='warning')
         ls = [line for l in useful_body for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
