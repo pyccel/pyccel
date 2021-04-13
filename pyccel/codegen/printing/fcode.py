@@ -82,6 +82,7 @@ numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
     'NumpyFabs'  : 'abs',
     'NumpyMin'  : 'minval',
+    'NumpyAmin'  : 'minval',
     'NumpyAmax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
