@@ -20,7 +20,7 @@ from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
@@ -1178,6 +1178,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyRandint(self, expr):
         raise NotImplementedError("Randint not implemented")
+
+    def _print_NumpyMod(self, expr):
+        return self._print(PyccelMod(*expr.args))
 
     def _print_Interface(self, expr):
         return ""
