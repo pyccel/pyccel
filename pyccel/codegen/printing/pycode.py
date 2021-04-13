@@ -41,6 +41,8 @@ import_target_swap = {
                    'empty_like' : 'empty',
                    'zeros_like' : 'zeros',
                    'ones_like'  : 'ones',
+                   'amax'        : 'max',
+                   'amin'        : 'min',
                    'full_like'  : 'full'},
         'numpy.random' : {'random' : 'rand'}
         }
@@ -322,7 +324,7 @@ class PythonCodePrinter(CodePrinter):
         return 'len({})'.format(self._print(expr.arg))
 
     def _print_Import(self, expr):
-        print(expr)
+
         source = self._print(expr.source)
         if not expr.target:
             return 'import {source}\n'.format(source=source)
