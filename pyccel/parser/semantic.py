@@ -1999,7 +1999,7 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign), **settings) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif isinstance(rhs, HomogeneousTupleVariable):
+            elif isinstance(rhs, InhomogeneousTupleVariable):
                 new_lhs = []
                 d_var = [self._infere_type(v) for v in rhs]
                 new_lhs = [self._assign_lhs_variable(l, d_var[i].copy(), r,
@@ -2007,7 +2007,7 @@ class SemanticParser(BasicParser):
                                                     isinstance(expr, AugAssign),
                                                     **settings) for i,(l,r) in enumerate(zip(lhs,rhs))]
                 lhs = PythonTuple(*new_lhs)
-            elif isinstance(rhs, InhomogeneousTupleVariable):
+            elif isinstance(rhs, HomogeneousTupleVariable):
                 new_lhs = []
                 d_var = self._infere_type(rhs[0])
                 new_rhs = []
