@@ -87,7 +87,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -1314,11 +1314,11 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
-                      FunctionCall , For, PyccelInternalFunction,
+                      FunctionCall , For, Lambda,
                       While, If, Return, Comment, Pass, Continue,
                       Break, Allocate, Deallocate, CommentBlock,
                       AnnotatedComment, OmpAnnotatedComment, Del,
-                      With, EmptyNode, Header)
+                      With, EmptyNode, Header, PythonPrint)
         visited_body = [self._visit(i, **settings) for i in expr.body]
         useful_body  = [l for l in visited_body if isinstance(l, expr_types)]
 
