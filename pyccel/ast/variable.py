@@ -230,7 +230,7 @@ class Variable(PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if self.is_pointer:
+            if self.shape_can_change(i):
                 # Shape of a pointer can change
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
             elif isinstance(s,(LiteralInteger, PyccelArraySize)):
@@ -243,6 +243,12 @@ class Variable(PyccelAstNode):
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
                                 'Variable, Slice, PyccelAstNode, int, Function')
         return tuple(new_shape)
+
+    def shape_can_change(self, i):
+        """
+        Indicates if the shape can change in the i-th dimension
+        """
+        return self.is_pointer
 
     @property
     def name(self):
@@ -601,6 +607,12 @@ class HomogeneousTupleVariable(TupleVariable):
     """
     __slots__ = ()
     is_homogeneous = True
+
+    def shape_can_change(self, i):
+        """
+        Indicates if the shape can change in the i-th dimension
+        """
+        return self.is_pointer and idx == (len(self)-1)
 
     def __len__(self):
         return self.shape[0]
