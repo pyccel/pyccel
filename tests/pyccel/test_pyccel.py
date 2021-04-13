@@ -547,7 +547,6 @@ def test_c_arrays(language):
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xfail(reason = 'issue #847: Shape of pointer is not updated when pointer is reassigned')
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10

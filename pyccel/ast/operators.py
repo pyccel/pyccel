@@ -212,24 +212,24 @@ class PyccelUnaryOperator(PyccelOperator):
         super().__init__(arg)
 
     @staticmethod
-    def _calculate_dtype(*_args):
+    def _calculate_dtype(*args):
         """ Sets the dtype and precision
         They are chosen to match the argument
         """
-        a = _args[0]
-        _dtype = a.dtype
-        _precision = a.precision
-        return _dtype, _precision
+        a = args[0]
+        dtype = a.dtype
+        precision = a.precision
+        return dtype, precision
 
     @staticmethod
-    def _calculate_shape_rank(*_args):
+    def _calculate_shape_rank(*args):
         """ Sets the shape and rank
         They are chosen to match the argument
         """
-        a = _args[0]
-        _rank = a.rank
-        _shape = a.shape
-        return _shape, _rank
+        a = args[0]
+        rank = a.rank
+        shape = a.shape
+        return shape, rank
 
 #==============================================================================
 
@@ -295,24 +295,24 @@ class PyccelNot(PyccelUnaryOperator):
     _precedence = 6
 
     @staticmethod
-    def _calculate_dtype(*_args):
+    def _calculate_dtype(*args):
         """ Sets the dtype and precision
         They are chosen to match the argument unless the class has
         a _dtype or _precision member
         """
-        _dtype = NativeBool()
-        _precision = default_precision['bool']
-        return _dtype, _precision
+        dtype = NativeBool()
+        precision = default_precision['bool']
+        return dtype, precision
 
     @staticmethod
-    def _calculate_shape_rank(*_args):
+    def _calculate_shape_rank(*args):
         """ Sets the shape and rank
         They are chosen to match the argument unless the class has
         a _shape or _rank member
         """
-        _rank = 0
-        _shape = ()
-        return _shape, _rank
+        rank = 0
+        shape = ()
+        return shape, rank
 
     def __repr__(self):
         return 'not {}'.format(repr(self.args[0]))
@@ -355,7 +355,7 @@ class PyccelBinaryOperator(PyccelOperator):
         super().__init__(arg1, arg2)
 
     @classmethod
-    def _calculate_dtype(cls, *_args):
+    def _calculate_dtype(cls, *args):
         """ Sets the dtype and precision
 
         If one argument is a string then all arguments must be strings
@@ -365,10 +365,10 @@ class PyccelBinaryOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-        integers  = [a for a in _args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in _args if a.dtype is NativeReal()]
-        complexes = [a for a in _args if a.dtype is NativeComplex()]
-        strs      = [a for a in _args if a.dtype is NativeString()]
+        integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
+        reals     = [a for a in args if a.dtype is NativeReal()]
+        complexes = [a for a in args if a.dtype is NativeComplex()]
+        strs      = [a for a in args if a.dtype is NativeString()]
 
         if strs:
             return cls._handle_str_type(strs)
@@ -380,7 +380,7 @@ class PyccelBinaryOperator(PyccelOperator):
         elif integers:
             return cls._handle_integer_type(integers)
         else:
-            raise TypeError('cannot determine the type of {}'.format(_args))
+            raise TypeError('cannot determine the type of {}'.format(args))
 
     @staticmethod
     def _handle_str_type(strs):
@@ -394,30 +394,30 @@ class PyccelBinaryOperator(PyccelOperator):
         """
         Set dtype and precision when the result is complex
         """
-        _dtype = NativeComplex()
-        _precision = max(a.precision for a in complexes)
-        return _dtype, _precision
+        dtype = NativeComplex()
+        precision = max(a.precision for a in complexes)
+        return dtype, precision
 
     @staticmethod
     def _handle_real_type(reals):
         """
         Set dtype and precision when the result is real
         """
-        _dtype = NativeReal()
-        _precision = max(a.precision for a in reals)
-        return _dtype, _precision
+        dtype = NativeReal()
+        precision = max(a.precision for a in reals)
+        return dtype, precision
 
     @staticmethod
     def _handle_integer_type(integers):
         """
         Set dtype and precision when the result is integer
         """
-        _dtype = NativeInteger()
-        _precision = max(a.precision for a in integers)
-        return _dtype, _precision
+        dtype = NativeInteger()
+        precision = max(a.precision for a in integers)
+        return dtype, precision
 
     @staticmethod
-    def _calculate_shape_rank(*_args):
+    def _calculate_shape_rank(*args):
         """ Sets the shape and rank
 
         Strings must be scalars.
@@ -425,29 +425,29 @@ class PyccelBinaryOperator(PyccelOperator):
         For numeric types the rank and shape is determined according
         to numpy broadcasting rules where possible
         """
-        strs = [a for a in _args if a.dtype is NativeString()]
+        strs = [a for a in args if a.dtype is NativeString()]
         if strs:
-            other = [a for a in _args if a.dtype in (NativeInteger(), NativeBool(), NativeReal(), NativeComplex())]
+            other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeReal(), NativeComplex())]
             assert len(other) == 0
-            _rank  = 0
-            _shape = ()
+            rank  = 0
+            shape = ()
         else:
-            ranks  = [a.rank for a in  _args]
-            shapes = [a.shape for a in _args]
+            ranks  = [a.rank for a in args]
+            shapes = [a.shape for a in args]
 
             if None in ranks:
-                _rank  = None
-                _shape = None
+                rank  = None
+                shape = None
 
             elif all(sh is not None for tup in shapes for sh in tup):
-                shape = broadcast(_args[0].shape, _args[1].shape)
+                s = broadcast(args[0].shape, args[1].shape)
 
-                _shape = shape
-                _rank  = len(shape)
+                shape = s
+                rank  = len(s)
             else:
-                _rank  = max(a.rank for a in _args)
-                _shape = [None]*_rank
-        return _shape, _rank
+                rank  = max(a.rank for a in args)
+                shape = [None]*rank
+        return shape, rank
 
 #==============================================================================
 
@@ -550,9 +550,9 @@ class PyccelAdd(PyccelArithmeticOperator):
 
     @staticmethod
     def _handle_str_type(strs):
-        _dtype = NativeString()
-        _precision = None
-        return _dtype, _precision
+        dtype = NativeString()
+        precision = None
+        return dtype, precision
 
     def __repr__(self):
         return '{} + {}'.format(self.args[0], self.args[1])
@@ -675,9 +675,9 @@ class PyccelDiv(PyccelArithmeticOperator):
 
     @staticmethod
     def _handle_integer_type(integers):
-        _dtype = NativeReal()
-        _precision = default_precision['real']
-        return _dtype, _precision
+        dtype = NativeReal()
+        precision = default_precision['real']
+        return dtype, precision
 
     def __repr__(self):
         return '{} + {}'.format(self.args[0], self.args[1])
@@ -747,10 +747,10 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     __slots__ = ()
     _precedence = 7
     @staticmethod
-    def _calculate_dtype(*_args):
-        _dtype = NativeBool()
-        _precision = default_precision['bool']
-        return _dtype, _precision
+    def _calculate_dtype(*args):
+        dtype = NativeBool()
+        precision = default_precision['bool']
+        return dtype, precision
 
 #==============================================================================
 
@@ -887,11 +887,11 @@ class PyccelBooleanOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _dtype = NativeBool()
-    _precision = default_precision['bool']
-    _rank = 0
-    _shape = ()
-    _order = None
+    dtype = NativeBool()
+    precision = default_precision['bool']
+    rank = 0
+    shape = ()
+    order = None
 
     __slots__ = ()
 
@@ -1060,24 +1060,24 @@ class IfTernaryOperator(PyccelOperator):
         Sets the dtype and precision for IfTernaryOperator
         """
         if value_true.dtype in NativeNumeric and value_false.dtype in NativeNumeric:
-            _dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)
+            dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)
         else:
-            _dtype = value_true.dtype
+            dtype = value_true.dtype
 
-        _precision = max([value_true.precision, value_false.precision])
-        return _dtype, _precision
+        precision = max([value_true.precision, value_false.precision])
+        return dtype, precision
 
     @staticmethod
     def _calculate_shape_rank(cond, value_true, value_false):
         """
         Sets the shape and rank and the order for IfTernaryOperator
         """
-        _shape = value_true.shape
-        _rank  = value_true.rank
-        if _rank is not None and _rank > 1:
+        shape = value_true.shape
+        rank  = value_true.rank
+        if rank is not None and rank > 1:
             if value_false.order != value_true.order :
                 errors.report('Ternary Operator results should have the same order', severity='fatal')
-        return _shape, _rank
+        return shape, rank
 
     @property
     def cond(self):
