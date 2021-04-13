@@ -20,7 +20,7 @@ from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
@@ -40,6 +40,8 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
+
+from pyccel.ast.sympy_helper import pyccel_to_sympy
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -313,15 +315,36 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+
         if lhs.is_stack_array:
-            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-            length = '*'.join(self._print(i) for i in lhs.shape)
-            buffer_array = "({declare_dtype}[{length}]){{}}".format(declare_dtype = declare_dtype, length=length)
+            symbol_map = {}
+            used_names_tmp = self._parser.used_names.copy()
+            sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
+
+            length = functools.reduce(operator.mul, sympy_shapes)
+            printable_length = functools.reduce(PyccelMul, lhs.alloc_shape)
+
+            length_code = self._print(printable_length)
+
+            if length.is_constant():
+                buffer_array = "({declare_dtype}[{length}]){{}}".format(
+                                        declare_dtype = declare_dtype,
+                                        length=length_code)
+            else:
+                dummy_array_name, _ = create_incremented_string(self._parser.used_names,
+                                                                prefix = lhs.name+'_data')
+                code_init += "{dtype} {name}[{length}];\n".format(
+                        dtype  = declare_dtype,
+                        name   = dummy_array_name,
+                        length = length_code)
+                buffer_array = dummy_array_name
+
             code_init += self._init_stack_array(expr, buffer_array)
+
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
                 code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return code_init
@@ -343,15 +366,15 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        shape = ", ".join(self._print(i) for i in lhs.shape)
+        shape = ", ".join(self._print(i) for i in lhs.alloc_shape)
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
         strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(lhs.shape))
         if isinstance(buffer_array, Variable):
             buffer_array = "{0}.{1}".format(self._print(buffer_array), dtype)
-        cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n '
-        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}}};\n'
+        cpy_data = '{0} = (t_ndarray){{\n.{1}={2},\n .shape={3},\n .strides={4},\n '
+        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}\n}};\n'
         cpy_data = cpy_data.format(self._print(lhs), dtype, buffer_array,
                     shape_init, strides_init, len(lhs.shape), 'false')
         cpy_data += 'stack_array_init(&{});\n'.format(self._print(lhs))
@@ -1155,6 +1178,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyRandint(self, expr):
         raise NotImplementedError("Randint not implemented")
+
+    def _print_NumpyMod(self, expr):
+        return self._print(PyccelMod(*expr.args))
 
     def _print_Interface(self, expr):
         return ""
