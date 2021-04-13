@@ -302,7 +302,7 @@ class Dlist(PyccelAstNode):
         self._dtype     = val.dtype
         self._precision = val.precision
         self._rank      = val.rank
-        self._shape     = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
+        self._shape     = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
         self._order     = val.order
 
         self._val       = val
