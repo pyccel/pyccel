@@ -67,7 +67,7 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast.headers import MacroFunction, MacroVariable
+from pyccel.ast.headers import MacroFunction, MacroVariable, Header
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -1314,10 +1314,11 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
-                      FunctionCall , For,
+                      FunctionCall , For, PyccelInternalFunction,
                       While, If, Return, Comment, Pass, Continue,
                       Break, Allocate, Deallocate, CommentBlock,
-                      AnnotatedComment, Del, With, EmptyNode)
+                      AnnotatedComment, OmpAnnotatedComment, Del,
+                      With, EmptyNode, Header)
         visited_body = [self._visit(i, **settings) for i in expr.body]
         useful_body  = [l for l in visited_body if isinstance(l, expr_types)]
 
