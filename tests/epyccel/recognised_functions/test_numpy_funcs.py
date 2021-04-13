@@ -4259,7 +4259,6 @@ def test_numpy_mod_array_like_2d(language):
     def get_mod(arr):
         from numpy import mod, shape
         a = mod(arr, arr)
-        s = shape(a)
         return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
         # Tuples not implemented yet, once be implemented we can use:
         # s = shape(a)
