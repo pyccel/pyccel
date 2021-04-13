@@ -523,21 +523,9 @@ class PyccelAdd(PyccelArithmeticOperator):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
             elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 dtype, precision = cls._calculate_dtype(arg1, arg2)
-                if dtype is NativeInteger():
-                    result = arg1.python_value + arg2.python_value
-                    if result >= 0:
-                        return LiteralInteger(result, precision=precision)
-                    else:
-                        return PyccelUnarySub(LiteralInteger(-result, precision=precision))
-                if dtype is NativeReal():
-                    result = arg1.python_value + arg2.python_value
-                    if result >= 0:
-                        return LiteralFloat(result, precision=precision)
-                    else:
-                        return PyccelUnarySub(LiteralFloat(-result, precision=precision))
-                if dtype is NativeComplex():
-                    result = arg1.python_value - arg2.python_value
-                    return LiteralComplex(result.real, result.imag, precision=precision)
+                return convert_to_literal(arg1.python_value + arg2.python_value,
+                                          dtype, precision)
+
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
@@ -591,6 +579,10 @@ class PyccelMul(PyccelArithmeticOperator):
                 return PyccelUnarySub(arg2)
             if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
                 return PyccelUnarySub(arg1)
+            if isinstance(arg1, Literal) and isinstance(arg2, Literal):
+                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                return convert_to_literal(arg1.python_value * arg2.python_value,
+                                          dtype, precision)
         return super().__new__(cls)
 
     def __repr__(self):
@@ -622,21 +614,8 @@ class PyccelMinus(PyccelArithmeticOperator):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
             elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 dtype, precision = cls._calculate_dtype(arg1, arg2)
-                if dtype is NativeInteger():
-                    result = arg1.python_value - arg2.python_value
-                    if result >= 0:
-                        return LiteralInteger(result, precision=precision)
-                    else:
-                        return PyccelUnarySub(LiteralInteger(-result, precision=precision))
-                if dtype is NativeReal():
-                    result = arg1.python_value - arg2.python_value
-                    if result >= 0:
-                        return LiteralFloat(result, precision=precision)
-                    else:
-                        return PyccelUnarySub(LiteralFloat(-result, precision=precision))
-                if dtype is NativeComplex():
-                    result = arg1.python_value - arg2.python_value
-                    return LiteralComplex(result.real, result.imag, precision=precision)
+                return convert_to_literal(arg1.python_value - arg2.python_value,
+                                          dtype, precision)
         if isinstance(arg1, LiteralFloat) and \
             isinstance(arg2, LiteralComplex) and \
             arg2.real == LiteralFloat(0):
