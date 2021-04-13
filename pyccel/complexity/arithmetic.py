@@ -17,13 +17,11 @@ Example
 
 """
 
-from collections import OrderedDict
 
 from sympy import count_ops as sympy_count_ops
 from sympy import Symbol
 
 from pyccel.ast.core     import Comment, EmptyNode
-from pyccel.ast.core     import AddOp, SubOp, MulOp, DivOp
 from pyccel.ast.numpyext  import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity

@@ -24,12 +24,10 @@ from collections import OrderedDict
 from sympy import sympify, Symbol
 from sympy import Poly, LT
 
-from pyccel.complexity.arithmetic import OpComplexity
-from pyccel.complexity.memory import MemComplexity
+from pyccel.complexity.arithmetic import OpComplexity, ADD, SUB, MUL, DIV, IDIV, ABS
+from pyccel.complexity.memory import MemComplexity, READ, WRITE
 
 from sympy.abc import x
-from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
-from pyccel.complexity.memory import READ, WRITE
 FLOOR = Symbol('FLOOR')
 EXP = Symbol('EXP')
 LOG = Symbol('LOG')

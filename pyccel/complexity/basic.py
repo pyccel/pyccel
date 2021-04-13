@@ -17,7 +17,7 @@ from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.internals import Slice
 
-
+#koka try deleting visual
 __all__ = ["Complexity"]
 
 SHAPE = Function('shape')
@@ -78,6 +78,13 @@ class Complexity(object):
 
     @property
     def mode(self):
+        """
+        Returns the complexity computation mode.
+
+        possible values are (None, simple)
+
+        complexity in simple mode will only return the number of operations done.
+        """
         return self._mode
 
     @property
@@ -103,6 +110,8 @@ class Complexity(object):
         """
         # ...
         self._visual = visual
+        if mode and mode != 'simple':
+            raise ValueError('not valid value for mode')
         self._mode = mode
         # ...
 
@@ -257,7 +266,7 @@ class Complexity(object):
                     step = i.step.python_value
                 # ...
 
-                if not(step == 1):
+                if step != 1:
                     raise NotImplementedError('only step == 1 is treated')
 
                 # TODO uncomment this

@@ -4,13 +4,13 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from sympy.abc import n, m, x, b
+from sympy import simplify as sp_simplify
+from sympy import Function, Symbol
 from pyccel.complexity.arithmetic import OpComplexity
 import os
 
 from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
-from sympy.abc import n, m, x, b
-from sympy import Function, Symbol
-from sympy import simplify as sp_simplify
 SHAPE = Function('shape')
 FLOOR = Symbol('FLOOR')
 EXP = Symbol('EXP')

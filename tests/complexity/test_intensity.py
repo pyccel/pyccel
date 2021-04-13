@@ -176,8 +176,8 @@ def test_complexity_ex_assembly():
 
 
     for f, c in complexity.costs.items():
-            assert sp_simplify(c - comp[i]) == 0
-            i = i + 1
+        assert sp_simplify(c - comp[i]) == 0
+        i = i + 1
 
 
 
@@ -200,8 +200,8 @@ def test_complexity_mxm():
 
 
     for f, c in complexity.costs.items():
-            assert sp_simplify(c - comp[i]) == 0
-            i = i + 1
+        assert sp_simplify(c - comp[i]) == 0
+        i = i + 1
 
 
 
@@ -222,5 +222,5 @@ def test_complexity_qr():
 
 
     for f, c in complexity.costs.items():
-            assert sp_simplify(c - comp[i]) == 0
-            i = i + 1
+        assert sp_simplify(c - comp[i]) == 0
+        i = i + 1

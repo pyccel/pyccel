@@ -62,27 +62,30 @@ class MemComplexity(Complexity):
         # Right? Because x += a should also READ x which is in lrs
         return  ntimes * (self._cost(expr.rhs, **settings) + WRITE + READ)
 
-    def _cost_PyccelAdd(self, expr, **settings):
+    def _cost_PyccelOperator(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
 
-    def _cost_PyccelMinus(self, expr, **settings):
+    def _cost_PyccelAdd(self, expr, **settings): # delete
         return sum(self._cost(i, **settings) for i in expr.args)
 
-    def _cost_PyccelDiv(self, expr, **settings):
+    def _cost_PyccelMinus(self, expr, **settings):# delete
         return sum(self._cost(i, **settings) for i in expr.args)
 
-    def _cost_PyccelFloorDiv(self, expr, **settings):
+    def _cost_PyccelDiv(self, expr, **settings):# delete
+        return sum(self._cost(i, **settings) for i in expr.args)
+
+    def _cost_PyccelFloorDiv(self, expr, **settings):# delete
         #atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
         #return READ*len(atoms)
         return sum(self._cost(i, **settings) for i in expr.args)
 
-    def _cost_PyccelMul(self, expr, **settings):
+    def _cost_PyccelMul(self, expr, **settings):# delete
         return sum(self._cost(i, **settings) for i in expr.args)
 
-    def _cost_PyccelPow(self, expr, **settings):
+    def _cost_PyccelPow(self, expr, **settings):# delete
         return sum(self._cost(i, **settings) for i in expr.args)
 
-    def _cost_PythonAbs(self, expr, **settings):
+    def _cost_PythonAbs(self, expr, **settings):# delete
         return sum(self._cost(i, **settings) for i in expr.args)
 
     def _cost_Variable(self, expr, **settings):
@@ -98,7 +101,7 @@ class MemComplexity(Complexity):
         for e,i in indices:
             # ...
             start = 0
-            if not i.start == None:
+            if not i.start is None:
                 if isinstance(i.start, Literal):
                     start = i.start.python_value
                 else:
@@ -107,7 +110,7 @@ class MemComplexity(Complexity):
 
             # ...
             stop = SHAPE(expr.base, e)
-            if not i.stop == None:
+            if not i.stop is None:
                 if isinstance(i.stop, Literal):
                     stop = i.stop.python_value
                 else:
