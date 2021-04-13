@@ -2534,7 +2534,10 @@ def test_max_phrase(language):
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Attribute amax not found"),
+            pytest.mark.python]
+        )
     )
 )
 def test_max_property(language):
