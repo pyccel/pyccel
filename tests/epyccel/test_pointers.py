@@ -33,6 +33,7 @@ def compare_python_pyccel( p_output, f_output ):
 
 marks = [f[1] for f in pointers_funcs]
 
+@pytest.mark.xfail(reason = 'issue #847: Shape of pointer is not updated when pointer is reassigned')
 @pytest.mark.parametrize('test_func',marks)
 def test_pointers(test_func, language):
     f1 = test_func
