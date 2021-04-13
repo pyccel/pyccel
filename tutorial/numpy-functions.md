@@ -63,7 +63,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [Real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
 
--   Supported languages: C (scalars only), fortran
+-   Supported languages: C, fortran
 
 -   python code:
 
