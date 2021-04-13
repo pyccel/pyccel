@@ -21,7 +21,7 @@ from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
-from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
@@ -332,7 +332,9 @@ class CCodePrinter(CodePrinter):
             sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
 
             length = functools.reduce(operator.mul, sympy_shapes)
-            length_code = '*'.join(self._print(i) for i in lhs.alloc_shape)
+            printable_length = functools.reduce(PyccelMul, lhs.alloc_shape)
+
+            length_code = self._print(printable_length)
 
             if length.is_constant():
                 buffer_array = "({declare_dtype}[{length}]){{}}".format(
@@ -1185,6 +1187,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyRandint(self, expr):
         raise NotImplementedError("Randint not implemented")
+
+    def _print_NumpyMod(self, expr):
+        return self._print(PyccelMod(*expr.args))
 
     def _print_Interface(self, expr):
         return ""
