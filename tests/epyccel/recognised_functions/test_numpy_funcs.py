@@ -4200,8 +4200,10 @@ def test_numpy_mod_array_like_1d(language):
     def get_mod(arr):
         from numpy import mod, shape
         a = mod(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return shape(a)[0], a[0], a[1]
+        # Tuples not implemented yet, once be implemented we can use:
+        # s = shape(a)
+        # return len(s), s[0], a[0]
 
     size = 5
 
@@ -4258,7 +4260,10 @@ def test_numpy_mod_array_like_2d(language):
         from numpy import mod, shape
         a = mod(arr, arr)
         s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+        return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
+        # Tuples not implemented yet, once be implemented we can use:
+        # s = shape(a)
+        # return len(s), s[0], s[1], a[0,1], a[1,0]
 
     size = (2, 5)
 
