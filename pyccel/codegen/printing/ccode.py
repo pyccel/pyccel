@@ -323,7 +323,9 @@ class CCodePrinter(CodePrinter):
             sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
 
             length = functools.reduce(operator.mul, sympy_shapes)
-            length_code = '*'.join(self._print(i) for i in lhs.alloc_shape)
+            printable_length = functools.reduce(PyccelMul, lhs.alloc_shape)
+
+            length_code = self._print(printable_length)
 
             if length.is_constant():
                 buffer_array = "({declare_dtype}[{length}]){{}}".format(

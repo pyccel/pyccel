@@ -4116,14 +4116,9 @@ def test_numpy_mod_scalar(language):
     f_bl_true_output = epyccel_func(True)
     test_bool_true_output = get_mod(True)
 
-    f_bl_false_output = epyccel_func(False)
-    test_bool_false_output = get_mod(False)
-
     assert f_bl_true_output == test_bool_true_output
-    assert f_bl_false_output == test_bool_false_output
 
     assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer_output = epyccel_func(integer)
     test_int_output  = get_mod(integer)
@@ -4207,7 +4202,7 @@ def test_numpy_mod_array_like_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = np.full(size, True, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4266,7 +4261,7 @@ def test_numpy_mod_array_like_2d(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = np.full(size, True, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
