@@ -612,7 +612,7 @@ class HomogeneousTupleVariable(TupleVariable):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.is_pointer and idx == (len(self)-1)
+        return self.is_pointer and i == (len(self)-1)
 
     def __len__(self):
         return self.shape[0]
