@@ -20,6 +20,7 @@ from .datatypes             import (NativeBool, NativeInteger, NativeReal,
                                     NativeNumeric)
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals              import convert_to_literal
 
 errors = Errors()
 
@@ -583,6 +584,9 @@ class PyccelMul(PyccelArithmeticOperator):
                 return arg2
             if (arg2 == 1):
                 return arg1
+            if (arg1 == 0 or arg2 == 0):
+                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                return convert_to_literal(0, dtype, precision)
             if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1):
                 return PyccelUnarySub(arg2)
             if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
