@@ -10,6 +10,7 @@ import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonEnumerate
 from pyccel.ast.builtins  import PythonZip, PythonMap, PythonLen, PythonPrint
+from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
@@ -257,6 +258,13 @@ class CCodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    def _flatten_list(self, irregular_list):
+        if isinstance(irregular_list, (PythonList, PythonTuple)):
+            f_list = [element for item in irregular_list for element in self._flatten_list(item)]
+            return f_list
+        else:
+            return [irregular_list]
+
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray
@@ -282,7 +290,8 @@ class CCodePrinter(CodePrinter):
         arg = rhs.arg
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
-            arg = functools.reduce(operator.concat, arg)
+            arg = self._flatten_list(arg)
+
         if isinstance(arg, Variable):
             arg = self._print(arg)
             if expr.lhs.is_stack_array:
