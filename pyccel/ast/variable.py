@@ -130,40 +130,6 @@ class Variable(PyccelAstNode):
         ):
         super().__init__()
 
-        # ------------ PyccelAstNode Properties ---------------
-        if isinstance(dtype, str) or str(dtype) == '*':
-
-            dtype = datatype(str(dtype))
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
-        if not isinstance(rank, int):
-            raise TypeError('rank must be an instance of int.')
-
-        if rank == 0:
-            shape = ()
-
-        if shape is None:
-            shape = tuple(None for i in range(rank))
-
-        if not precision:
-            if isinstance(dtype, NativeInteger):
-                precision = default_precision['int']
-            elif isinstance(dtype, NativeReal):
-                precision = default_precision['real']
-            elif isinstance(dtype, NativeComplex):
-                precision = default_precision['complex']
-            elif isinstance(dtype, NativeBool):
-                precision = default_precision['bool']
-        if not isinstance(precision,int) and precision is not None:
-            raise TypeError('precision must be an integer or None.')
-
-        self._alloc_shape = shape
-        self._dtype = dtype
-        self._rank  = rank
-        self._shape = self.process_shape(shape)
-        self._precision = precision
-
         # ------------ Variable Properties ---------------
         # if class attribute
         if isinstance(name, str):
@@ -214,6 +180,40 @@ class Variable(PyccelAstNode):
         self._is_kwonly      = is_kwonly
         self._is_temp        = is_temp
 
+        # ------------ PyccelAstNode Properties ---------------
+        if isinstance(dtype, str) or str(dtype) == '*':
+
+            dtype = datatype(str(dtype))
+        elif not isinstance(dtype, DataType):
+            raise TypeError('datatype must be an instance of DataType.')
+
+        if not isinstance(rank, int):
+            raise TypeError('rank must be an instance of int.')
+
+        if rank == 0:
+            shape = ()
+
+        if shape is None:
+            shape = tuple(None for i in range(rank))
+
+        if not precision:
+            if isinstance(dtype, NativeInteger):
+                precision = default_precision['int']
+            elif isinstance(dtype, NativeReal):
+                precision = default_precision['real']
+            elif isinstance(dtype, NativeComplex):
+                precision = default_precision['complex']
+            elif isinstance(dtype, NativeBool):
+                precision = default_precision['bool']
+        if not isinstance(precision,int) and precision is not None:
+            raise TypeError('precision must be an integer or None.')
+
+        self._alloc_shape = shape
+        self._dtype = dtype
+        self._rank  = rank
+        self._shape = self.process_shape(shape)
+        self._precision = precision
+
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
         has the expected format
@@ -230,7 +230,10 @@ class Variable(PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if isinstance(s,(LiteralInteger, PyccelArraySize)):
+            if self.is_pointer:
+                # Shape of a pointer can change
+                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
+            elif isinstance(s,(LiteralInteger, PyccelArraySize)):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
@@ -783,18 +786,18 @@ class IndexedElement(PyccelAstNode):
                     stop  = a.stop if a.stop is not None else s
                     step  = a.step
                     if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start)
+                        start = PyccelAdd(s, start, simplify=True)
                     if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop)
+                        stop = PyccelAdd(s, stop, simplify=True)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start)
+                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
                     if step is not None:
                         if isinstance(step, PyccelUnarySub):
                             start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop)
+                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
                             step = PyccelUnarySub(step)
 
-                        _shape = MathCeil(PyccelDiv(_shape, step))
+                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
@@ -835,13 +838,12 @@ class IndexedElement(PyccelAstNode):
         j = 0
         for i in self.indices:
             if isinstance(i, Slice) and j<len(args):
-                # TODO: Replace with simplify = True in PR 797
                 if j == 0:
                     i = args[j]
                 elif i.step == 1:
-                    i = PyccelAdd(i.start, args[j])
+                    i = PyccelAdd(i.start, args[j], simplify = True)
                 else:
-                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j]))
+                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j], simplify=True), simplify = True)
                 j += 1
             new_indexes.append(i)
         return IndexedElement(self.base, *new_indexes)
