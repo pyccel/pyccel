@@ -39,9 +39,10 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
+from pyccel.ast.core import Concatenate
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
-from pyccel.ast.variable import TupleVariable
+from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.ast.variable import ValuedVariable
@@ -50,7 +51,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
-from pyccel.ast.core import Dlist
+from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
@@ -703,28 +704,40 @@ class SemanticParser(BasicParser):
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
+            d_var['is_stack_array'] = expr.is_stack_array
             return d_var
 
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = expr.dtype
-            d_var['precision']      = expr.precision
+            d_var['precision'     ] = expr.precision
             d_var['is_stack_array'] = expr.is_homogeneous
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
-            d_var['is_pointer']     = False
+            d_var['is_pointer'    ] = False
 
             return d_var
 
-        elif isinstance(expr, Dlist):
+        elif isinstance(expr, Concatenate):
+            d_var['datatype'      ] = expr.dtype
+            d_var['precision'     ] = expr.precision
+            d_var['shape'         ] = expr.shape
+            d_var['rank'          ] = expr.rank
+            d_var['is_pointer'    ] = False
+            d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
+
+            return d_var
+
+        elif isinstance(expr, Duplicate):
             d = self._infere_type(expr.val, **settings)
 
             # TODO must check that it is consistent with pyccel's rules
             # TODO improve
-            d_var['datatype'   ] = d['datatype']
-            d_var['rank'       ] = expr.rank
-            d_var['shape'      ] = expr.shape
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = True
+            d_var['datatype'   ]    = d['datatype']
+            d_var['rank'       ]    = expr.rank
+            d_var['shape'      ]    = expr.shape
+            d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
+            d_var['allocatable']    = not d_var['is_stack_array']
+            d_var['is_pointer' ]    = False
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
@@ -809,7 +822,7 @@ class SemanticParser(BasicParser):
 
         indices = tuple(indices)
 
-        if isinstance(var, TupleVariable) and not var.is_homogeneous:
+        if isinstance(var, InhomogeneousTupleVariable):
 
             arg = indices[0]
 
@@ -876,21 +889,31 @@ class SemanticParser(BasicParser):
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _create_Dlist(self, val, length):
-        """ Called by _visit_PyccelMul when a Dlist is
+    def _create_Duplicate(self, val, length):
+        """ Called by _visit_PyccelMul when a Duplicate is
         identified
         """
         # Arguments have been visited in PyccelMul
 
-        if isinstance(val, (TupleVariable, PythonTuple)) and \
-                not isinstance(val, PythonList):
+        if not isinstance(val, (TupleVariable, PythonTuple)):
+            errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+
+        if val.is_homogeneous:
+            return Duplicate(val, length)
+        else:
             if isinstance(length, LiteralInteger):
                 length = length.python_value
+            else:
+                errors.report("Cannot create inhomogeneous tuple of unknown size",
+                    symbol=Duplicate(val, length),
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal', blocker=True)
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
                 return PythonTuple(*(val.args*length))
-        return Dlist(val, length)
 
     def _handle_function_args(self, arguments, **settings):
         args  = []
@@ -968,13 +991,20 @@ class SemanticParser(BasicParser):
             Dictionary of properties for the new Variable
         """
 
-        if isinstance(rhs, (TupleVariable, PythonTuple, PythonList)):
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)):
             elem_vars = []
+            is_homogeneous = True
+            elem_d_lhs_ref = None
             for i,r in enumerate(rhs):
                 elem_name = self.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
 
                 self._ensure_target( r, elem_d_lhs )
+                if elem_d_lhs_ref is None:
+                    elem_d_lhs_ref = elem_d_lhs.copy()
+                    is_homogeneous = elem_d_lhs['datatype'] is not NativeGeneric()
+                elif elem_d_lhs != elem_d_lhs_ref:
+                    is_homogeneous = False
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
@@ -982,13 +1012,18 @@ class SemanticParser(BasicParser):
                 elem_vars.append(var)
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
+            d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
+            if is_homogeneous:
+                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs)
+            else:
+                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
+            new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
             if isinstance(name, PyccelSymbol):
-                lhs = Variable(dtype, name, **d_lhs, is_temp=name.is_temp)
+                lhs = new_type(dtype, name, **d_lhs, is_temp=name.is_temp)
             else:
-                lhs = Variable(dtype, name, **d_lhs)
+                lhs = new_type(dtype, name, **d_lhs)
 
         return lhs
 
@@ -999,11 +1034,13 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
 
             rhs.is_target = True
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
 
             rhs.base.is_target = not rhs.base.is_pointer
 
@@ -1618,10 +1655,27 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
-            tuple_args = [ai for a in args for ai in get_vars(a)]
-            expr_new = PythonTuple(*tuple_args)
+        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Duplicate)):
+            is_homogeneous = all((isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous) \
+                                or isinstance(a, (Concatenate, Duplicate)) for a in args)
+            if is_homogeneous:
+                return Concatenate(*args)
+            else:
+                def get_vars(a):
+                    if isinstance(a, InhomogeneousTupleVariable):
+                        return a.get_vars()
+                    elif isinstance(a, PythonTuple):
+                        return a.args
+                    elif isinstance(a, HomogeneousTupleVariable):
+                        n_vars = len(a)
+                        if not isinstance(len(a), (LiteralInteger, int)):
+                            errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
+                                    symbol=expr, severity='fatal')
+                        return [a[i] for i in range(n_vars)]
+                    else:
+                        raise NotImplementedError("Unexpected type {} in tuple addition".format(type(a)))
+                tuple_args = [ai for a in args for ai in get_vars(a)]
+                expr_new = PythonTuple(*tuple_args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
@@ -1629,9 +1683,9 @@ class SemanticParser(BasicParser):
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._create_Dlist(args[0], args[1])
+            expr_new = self._create_Duplicate(args[0], args[1])
         elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._create_Dlist(args[1], args[0])
+            expr_new = self._create_Duplicate(args[1], args[0])
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
@@ -1958,25 +2012,25 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign), **settings) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif isinstance(rhs, TupleVariable):
+            elif isinstance(rhs, InhomogeneousTupleVariable):
                 new_lhs = []
-
-                if rhs.is_homogeneous:
-                    d_var = self._infere_type(rhs[0])
-                    new_rhs = []
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
-                        new_rhs.append(rhs[i])
-                    rhs = PythonTuple(*new_rhs)
-                    d_var = [d_var]
-                else:
-                    d_var = [self._infere_type(v) for v in rhs]
-                    for i,(l,r) in enumerate(zip(lhs,rhs)):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, new_expressions, isinstance(expr, AugAssign), **settings) )
-
+                d_var = [self._infere_type(v) for v in rhs]
+                new_lhs = [self._assign_lhs_variable(l, d_var[i].copy(), r,
+                                                    new_expressions,
+                                                    isinstance(expr, AugAssign),
+                                                    **settings) for i,(l,r) in enumerate(zip(lhs,rhs))]
                 lhs = PythonTuple(*new_lhs)
-
+            elif isinstance(rhs, HomogeneousTupleVariable):
+                new_lhs = []
+                d_var = self._infere_type(rhs[0])
+                new_rhs = []
+                for i,l in enumerate(lhs):
+                    new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
+                        rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
+                    new_rhs.append(rhs[i])
+                rhs = PythonTuple(*new_rhs)
+                d_var = [d_var]
+                lhs = PythonTuple(*new_lhs)
 
             elif isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
@@ -2042,15 +2096,32 @@ class SemanticParser(BasicParser):
             is_pointer = any(l.is_pointer for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
-        is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
+        is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
         is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
-        # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not ((isinstance(lhs, PythonTuple) or (isinstance(lhs, TupleVariable) and not lhs.is_homogeneous)) \
-                and isinstance(rhs,(PythonTuple, TupleVariable, list))):
-            lhs = [lhs]
-            rhs = [rhs]
+        lhs = [lhs]
+        rhs = [rhs]
+        # Split into multiple Assigns to ensure AliasAssign is used where necessary
+        unravelling = True
+        while unravelling:
+            unravelling = False
+            new_lhs = []
+            new_rhs = []
+            for l,r in zip(lhs, rhs):
+                # Split assign (e.g. for a,b = 1,c)
+                if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
+                        and isinstance(r,(PythonTuple, TupleVariable, list)):
+                    new_lhs.extend(l)
+                    new_rhs.extend(r)
+                    # Repeat step to handle tuples of tuples of etc.
+                    unravelling = True
+                else:
+                    new_lhs.append(l)
+                    new_rhs.append(r)
+            lhs = new_lhs
+            rhs = new_rhs
 
+        # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
 
