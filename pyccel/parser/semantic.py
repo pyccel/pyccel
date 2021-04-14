@@ -709,20 +709,20 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = expr.dtype
-            d_var['precision']      = expr.precision
+            d_var['precision'     ] = expr.precision
             d_var['is_stack_array'] = expr.is_homogeneous
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
-            d_var['is_pointer']     = False
+            d_var['is_pointer'    ] = False
 
             return d_var
 
         elif isinstance(expr, Concatenate):
             d_var['datatype'      ] = expr.dtype
-            d_var['precision']      = expr.precision
+            d_var['precision'     ] = expr.precision
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
-            d_var['is_pointer']     = False
+            d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
 
             return d_var
