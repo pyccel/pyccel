@@ -4109,7 +4109,7 @@ def test_numpy_mod_scalar(language):
 
     def test_int(min_int, max_int, dtype):
         integer = randint(min_int, max_int, dtype=dtype)
-        if 0 in integer:
+        if 0 == integer:
             integer += 1
 
         f_integer_output = epyccel_func(integer)
