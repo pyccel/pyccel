@@ -692,6 +692,9 @@ class FCodePrinter(CodePrinter):
         condition  = self._print(expr.condition)
         x = self._print(expr.x)
         y = self._print(expr.y)
+        print(condition)
+        print(x)
+        print(y)
 
         var = Variable('int', 'ind1')
         self.add_vars_to_namespace(var)
