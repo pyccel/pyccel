@@ -4108,9 +4108,7 @@ def test_numpy_mod_scalar(language):
     assert matching_types(f_bl_true_output, test_bool_true_output)
 
     def test_int(min_int, max_int, dtype):
-        integer = randint(min_int, max_int, dtype=dtype)
-        if 0 == integer:
-            integer += 1
+        integer = randint(min_int, max_int, dtype=dtype) or 1
 
         f_integer_output = epyccel_func(integer)
         test_int_output  = get_mod(integer)
@@ -4188,8 +4186,7 @@ def test_numpy_mod_array_like_1d(language):
 
     def test_int(min_int, max_int, dtype):
         integer = randint(min_int, max_int-1, size=size, dtype=dtype)
-        if 0 in integer:
-            integer += 1
+        integer = np.where(integer==0, integer, 1)
         assert epyccel_func(integer) == get_mod(integer)
 
     test_int(min_int8 , max_int8 , np.int8)
@@ -4248,8 +4245,7 @@ def test_numpy_mod_array_like_2d(language):
 
     def test_int(min_int, max_int, dtype):
         integer = randint(min_int, max_int-1, size=size, dtype=dtype)
-        if 0 in integer:
-            integer += 1
+        integer = np.where(integer==0, integer, 1)
         assert epyccel_func(integer) == get_mod(integer)
 
     test_int(min_int8 , max_int8 , np.int8)
