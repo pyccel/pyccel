@@ -275,6 +275,22 @@ class FCodePrinter(CodePrinter):
         return ((i, j) for j in range(cols) for i in range(rows))
 
     def _handle_fortran_specific_a_prioris(self, var_list):
+        """
+        Translate HomogeneousTupleVariables to InhomogeneousTupleVariables
+        if they cannot be handled in an array type. This is the case for:
+        - a tuple of pointers
+
+        Parameters
+        ----------
+        var_list : list of Variables
+                    The list of variables which exist in the current context
+
+        Results
+        -------
+        var_changes : dict
+                      A dictionary mapping the changed Variables to the new
+                      Variables
+        """
         var_changes = {}
         for v in var_list:
             if isinstance(v, HomogeneousTupleVariable) and v.is_pointer:

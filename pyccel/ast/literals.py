@@ -278,7 +278,7 @@ def convert_to_literal(value, dtype = None, precision = None):
                   The python value 'value' expressed as a literal
                   with the specified dtype and precision
     """
-    from .operators import PyccelUnarySub
+    from .operators import PyccelUnarySub # Imported here to avoid circular import
 
     if dtype is None:
         if isinstance(value, int):
