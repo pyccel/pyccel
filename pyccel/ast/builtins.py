@@ -340,12 +340,13 @@ class PythonTuple(PyccelAstNode):
             self._shape = ()
             self._is_homogeneous = False
             return
-        is_homogeneous = args[0].dtype is not NativeGeneric() and \
+        arg0 = args[0]
+        is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
-                             args[0].dtype == a.dtype and \
-                             args[0].rank  == a.rank  and \
-                             args[0].order == a.order for a in args[1:])
-        self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
+                             arg0.dtype == a.dtype and \
+                             arg0.rank  == a.rank  and \
+                             arg0.order == a.order for a in args[1:])
+        self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             integers  = [a for a in args if a.dtype is NativeInteger()]
