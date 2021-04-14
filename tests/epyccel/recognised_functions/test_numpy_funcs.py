@@ -4108,7 +4108,7 @@ def test_numpy_mod_scalar(language):
     assert matching_types(f_bl_true_output, test_bool_true_output)
 
     def test_int(min_int, max_int, dtype):
-        integer = randint(min_int, max_int-1, size=size, dtype=dtype)
+        integer = randint(min_int, max_int, dtype=dtype)
         if 0 in integer:
             integer += 1
 
