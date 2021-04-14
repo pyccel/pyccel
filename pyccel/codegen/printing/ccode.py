@@ -1182,9 +1182,9 @@ class CCodePrinter(CodePrinter):
         return expr.name
 
     def _print_NumpyWhere(self, expr):
-        #expr_1 = self._print(IfTernaryOperator(expr.condition, expr.x, expr.y))
-        print("condition printing: ", expr.condition)
-        return("0")
+        rhs_expr = self._print(IfTernaryOperator(expr.condition, expr.x, expr.y))
+        return(rhs_expr)
+
     def _print_Rand(self, expr):
         raise NotImplementedError("Rand not implemented")
 

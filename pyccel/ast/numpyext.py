@@ -167,7 +167,6 @@ class NumpyReal(PythonReal):
     __slots__ = ('_rank','_shape','_order')
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
-            print("test")
             return NumpyInt(arg)
         else:
             return super().__new__(cls, arg)
@@ -623,8 +622,7 @@ class NumpyWhere(PyccelInternalFunction):
         self._condition = condition
         self._x = x
         self._y = y
-        ranks_args = (condition._rank, x._rank, y._rank)
-        shapes_args = (condition._shape, x._shape, y._shape)
+        all_args = (condition, x, y)
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
@@ -642,9 +640,9 @@ class NumpyWhere(PyccelInternalFunction):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-        self._rank = max(ranks_args) #if (condition._rank > a._rank and y._rank)
+        self._rank = max(e._rank for e in all_args)#if (condition._rank > a._rank and y._rank)
         self._shape = x._shape
-        self._order = condition._order
+        self._order = 'C'
         self._precision = condition._precision
         super().__init__(condition, x, y)
 

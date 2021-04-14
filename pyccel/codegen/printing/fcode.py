@@ -692,10 +692,10 @@ class FCodePrinter(CodePrinter):
         condition  = self._print(expr.condition)
         x = self._print(expr.x)
         y = self._print(expr.y)
-        print(condition)
-        print(x)
-        print(y)
-
+       # print(condition)
+       # print(x)
+       # print(y)
+        # TODO [NH] : fix indexed element for lhs var when rank >= 2
         var = Variable('int', 'ind1')
         self.add_vars_to_namespace(var)
         stmt = 'merge({true}, {false}, {cond})'.format(true=x,false=y,cond=condition)

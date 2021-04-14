@@ -1732,7 +1732,6 @@ class SemanticParser(BasicParser):
         assert(fst)
         rhs = expr.rhs
         lhs = expr.lhs
-        print(rhs)
 
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
