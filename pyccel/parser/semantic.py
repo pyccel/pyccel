@@ -51,7 +51,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
-from pyccel.ast.core import Dlist
+from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
@@ -727,7 +727,7 @@ class SemanticParser(BasicParser):
 
             return d_var
 
-        elif isinstance(expr, Dlist):
+        elif isinstance(expr, Duplicate):
             d = self._infere_type(expr.val, **settings)
 
             # TODO must check that it is consistent with pyccel's rules
@@ -889,25 +889,25 @@ class SemanticParser(BasicParser):
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _create_Dlist(self, val, length):
-        """ Called by _visit_PyccelMul when a Dlist is
+    def _create_Duplicate(self, val, length):
+        """ Called by _visit_PyccelMul when a Duplicate is
         identified
         """
         # Arguments have been visited in PyccelMul
 
         if not isinstance(val, (TupleVariable, PythonTuple)):
-            errors.report("Unexpected Dlist", symbol=Dlist(val, length),
+            errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
 
         if val.is_homogeneous:
-            return Dlist(val, length)
+            return Duplicate(val, length)
         else:
             if isinstance(length, LiteralInteger):
                 length = length.python_value
             else:
                 errors.report("Cannot create inhomogeneous tuple of unknown size",
-                    symbol=Dlist(val, length),
+                    symbol=Duplicate(val, length),
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=True)
             if isinstance(val, TupleVariable):
@@ -1642,9 +1642,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Dlist)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Duplicate)):
             is_homogeneous = all((isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous) \
-                                or isinstance(a, (Concatenate, Dlist)) for a in args)
+                                or isinstance(a, (Concatenate, Duplicate)) for a in args)
             if is_homogeneous:
                 return Concatenate(*args)
             else:
@@ -1670,9 +1670,9 @@ class SemanticParser(BasicParser):
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._create_Dlist(args[0], args[1])
+            expr_new = self._create_Duplicate(args[0], args[1])
         elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
-            expr_new = self._create_Dlist(args[1], args[0])
+            expr_new = self._create_Duplicate(args[1], args[0])
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
@@ -2083,7 +2083,7 @@ class SemanticParser(BasicParser):
             is_pointer = any(l.is_pointer for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
-        is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
+        is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
         is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
         lhs = [lhs]

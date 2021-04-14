@@ -55,7 +55,7 @@ __all__ = (
     'Continue',
     'Declare',
     'Del',
-    'Dlist',
+    'Duplicate',
     'DoConcurrent',
     'EmptyNode',
     'BindCFunctionDef',
@@ -284,7 +284,7 @@ class AsName(Basic):
         return hash(self.target)
 
 
-class Dlist(PyccelAstNode):
+class Duplicate(PyccelAstNode):
 
     """ this is equivalent to the * operator for python tuples.
 
