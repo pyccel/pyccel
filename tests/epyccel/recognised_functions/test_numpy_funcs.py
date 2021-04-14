@@ -4202,29 +4202,30 @@ def test_numpy_mod_array_like_1d(language):
 
     size = 5
 
-    bl = np.full(size, True, dtype= bool)
+    epyccel_func = epyccel(get_mod, language=language)
 
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+    bl = np.full(size, True, dtype= bool)
+    assert epyccel_func(bl) == get_mod(bl)
+
+    def test_int(min_int, max_int, dtype):
+        integer = randint(min_int, max_int-1, size=size, dtype=dtype)
+        if 0 in integer:
+            integer += 1
+        assert epyccel_func(integer) == get_mod(integer)
+
+    test_int(min_int8 , max_int8 , np.int8)
+    test_int(min_int16, max_int16, np.int16)
+    test_int(min_int  , max_int  , int)
+    test_int(min_int32, max_int32, np.int32)
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        test_int(min_int64, max_int64, np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    epyccel_func = epyccel(get_mod, language=language)
-
-    assert epyccel_func(bl) == get_mod(bl)
-    assert epyccel_func(integer8) == get_mod(integer8)
-    assert epyccel_func(integer16) == get_mod(integer16)
-    assert epyccel_func(integer) == get_mod(integer)
-    assert epyccel_func(integer32) == get_mod(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_mod(integer64)
     assert epyccel_func(fl) == get_mod(fl)
     assert epyccel_func(fl32) == get_mod(fl32)
     assert epyccel_func(fl64) == get_mod(fl64)
@@ -4261,29 +4262,30 @@ def test_numpy_mod_array_like_2d(language):
 
     size = (2, 5)
 
-    bl = np.full(size, True, dtype= bool)
+    epyccel_func = epyccel(get_mod, language=language)
 
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+    bl = np.full(size, True, dtype= bool)
+    assert epyccel_func(bl) == get_mod(bl)
+
+    def test_int(min_int, max_int, dtype):
+        integer = randint(min_int, max_int-1, size=size, dtype=dtype)
+        if 0 in integer:
+            integer += 1
+        assert epyccel_func(integer) == get_mod(integer)
+
+    test_int(min_int8 , max_int8 , np.int8)
+    test_int(min_int16, max_int16, np.int16)
+    test_int(min_int  , max_int  , int)
+    test_int(min_int32, max_int32, np.int32)
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        test_int(min_int64, max_int64, np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    epyccel_func = epyccel(get_mod, language=language)
-
-    assert epyccel_func(bl) == get_mod(bl)
-    assert epyccel_func(integer8) == get_mod(integer8)
-    assert epyccel_func(integer16) == get_mod(integer16)
-    assert epyccel_func(integer) == get_mod(integer)
-    assert epyccel_func(integer32) == get_mod(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_mod(integer64)
     assert epyccel_func(fl) == get_mod(fl)
     assert epyccel_func(fl32) == get_mod(fl32)
     assert epyccel_func(fl64) == get_mod(fl64)
