@@ -21,7 +21,8 @@ def create_c_setup(mod_name,
         include = (),
         libs    = (),
         libdirs = (),
-        flags   = () ):
+        flags   = (),
+        extra_objects = ()):
     """
     Create the code for the setup file which uses python setuptools
     to compile a c file and generate the corresponding shared
@@ -60,7 +61,7 @@ def create_c_setup(mod_name,
 
     mod = '"{mod}"'.format(mod=mod_name)
 
-    files       = ("extra_objects = {0}".format(print_list(deps))
+    files       = ("extra_objects = {0}".format(print_list(deps+extra_objects))
                    if deps else None)
 
     if include is None:

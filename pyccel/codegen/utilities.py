@@ -190,8 +190,4 @@ def get_gfortran_library_dir():
                 # Add to sytem path
                 sys.path.insert(0, lib_dir)
             break
-    if sys.platform == "win32":
-        lib = file_name.strip('.lib')
-    else:
-        lib = 'gfortran'
-    return lib, lib_dir
+    return file_location.strip()

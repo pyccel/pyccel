@@ -65,6 +65,7 @@ def create_shared_library(codegen,
     if language in ['c', 'fortran']:
         extra_libs = []
         extra_libdirs = []
+        extra_obj  = []
         if language == 'fortran':
             # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
             new_module_name = 'bind_c_{}'.format(module_name)
@@ -86,9 +87,7 @@ def create_shared_library(codegen,
 
             dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
             if compiler == 'gfortran':
-                lib, libdir = get_gfortran_library_dir()
-                extra_libs.append(lib)
-                extra_libdirs.append(libdir)
+                extra_obj.append(get_gfortran_library_dir())
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
 
@@ -120,7 +119,7 @@ def create_shared_library(codegen,
                 idx += 1
 
         setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
-                dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags)
+                dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags, extra_obj)
         setup_filename = "setup_{}.py".format(module_name)
 
         with open(setup_filename, 'w') as f:
