@@ -625,7 +625,7 @@ class CCodePrinter(CodePrinter):
         second = self._print(expr.args[1])
 
         if expr.dtype is NativeInteger():
-            return "{} % {}".format(first, second)
+            return "((({n} % {base}) + {base}) % {base})".format(n=first, base=second)
 
         if expr.args[0].dtype is NativeInteger():
             first = self._print(NumpyFloat(expr.args[0]))
