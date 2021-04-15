@@ -185,7 +185,7 @@ def get_gfortran_library_dir():
         file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name='+file_name],
                 universal_newlines = True)
         lib_dir = os.path.abspath(os.path.dirname(file_location))
-        if lib_dir:
+        if file_location.strip() != file_name:
             if lib_dir not in sys.path:
                 # Add to sytem path
                 sys.path.insert(0, lib_dir)
