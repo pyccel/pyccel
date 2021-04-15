@@ -20,6 +20,7 @@ import operator
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
@@ -27,11 +28,12 @@ from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
-                             CodeBlock, Dlist, AsName,
-                             If, IfSection)
+                             CodeBlock, AsName,
+                             If, IfSection, FunctionDef)
 
 from pyccel.ast.variable  import (Variable, TupleVariable,
-                             IndexedElement,
+                             IndexedElement, HomogeneousTupleVariable,
+                             InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
@@ -274,10 +276,40 @@ class FCodePrinter(CodePrinter):
         return ((i, j) for j in range(cols) for i in range(rows))
 
     def _handle_fortran_specific_a_prioris(self, var_list):
+        """
+        Translate HomogeneousTupleVariables to InhomogeneousTupleVariables
+        if they cannot be handled in an array type. This is the case for:
+        - a tuple of pointers
+
+        Parameters
+        ----------
+        var_list : list of Variables
+                    The list of variables which exist in the current context
+
+        Results
+        -------
+        var_changes : dict
+                      A dictionary mapping the changed Variables to the new
+                      Variables
+        """
+        var_changes = {}
         for v in var_list:
-            if isinstance(v, TupleVariable):
-                if v.is_pointer or v.inconsistent_shape:
-                    v.is_homogeneous = False
+            if isinstance(v, HomogeneousTupleVariable) and v.is_pointer:
+                n_vars = len(v)
+                if not isinstance(n_vars, (LiteralInteger, int)):
+                    errors.report("Cannot create tuple of pointers with unknown length",
+                            symbol = v, severity='fatal')
+
+                name = v.name+'_'
+                shape = v.shape[1:]
+                rank  = v.rank-1
+
+                elem_vars = [v.clone(self.parser.get_new_name(name+str(i)),
+                                     new_class=Variable,
+                                     rank=rank,
+                                     shape=shape) for i in range(n_vars)]
+                var_changes[v] = v.clone(v.name, InhomogeneousTupleVariable, arg_vars = elem_vars)
+        return var_changes
 
     def print_kind(self, expr):
         """
@@ -290,7 +322,7 @@ class FCodePrinter(CodePrinter):
         return expr
 
     def _print_Module(self, expr):
-        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
+        #var_changes = self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -346,7 +378,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
+        var_changes = self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
         imports += 'use, intrinsic :: ISO_C_BINDING\n'
@@ -356,6 +388,8 @@ class FCodePrinter(CodePrinter):
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.parser.get_variables(self._namespace)
+        if var_changes:
+            variables = [var_changes.get(v, v) for v in variables]
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         # Detect if we are using mpi4py
@@ -441,7 +475,7 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonTuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
-            elif isinstance(f, TupleVariable) and not f.is_homogeneous:
+            elif isinstance(f, InhomogeneousTupleVariable):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             elif f.dtype is NativeString() and f != expr.expr[-1]:
@@ -523,12 +557,9 @@ class FCodePrinter(CodePrinter):
     def _print_PythonList(self, expr):
         return self._print_PythonTuple(expr)
 
-    def _print_TupleVariable(self, expr):
-        if expr.is_homogeneous:
-            return self._print_Variable(expr)
-        else:
-            fs = ', '.join(self._print(f) for f in expr)
-            return '[{0}]'.format(fs)
+    def _print_InhomogeneousTupleVariable(self, expr):
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -680,7 +711,7 @@ class FCodePrinter(CodePrinter):
             step  = self._print(expr.step ),
             index = self._print(expr.index),
             zero  = self._print(LiteralInteger(0)),
-            end   = self._print(PyccelMinus(expr.size, LiteralInteger(1))),
+            end   = self._print(PyccelMinus(expr.size, LiteralInteger(1), simplify = True)),
         )
         code = init_value
 
@@ -747,7 +778,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArange(self, expr):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
-        shape  = PyccelMinus(expr.shape[0], LiteralInteger(1))
+        shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
         index  = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
 
         self.add_vars_to_namespace(index)
@@ -771,10 +802,10 @@ class FCodePrinter(CodePrinter):
         prec = self.print_kind(expr)
 
         if expr.arg.order == 'C':
-            index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index)
+            index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index, simplify = True)
             index = self._print(index)
         else:
-            index = PyccelAdd(expr.index, LiteralInteger(1))
+            index = PyccelAdd(expr.index, LiteralInteger(1), simplify = True)
             index = self._print(index)
 
         if expr.arg.rank == 1:
@@ -850,9 +881,9 @@ class FCodePrinter(CodePrinter):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         if expr.low is None:
-            randreal = self._print(PyccelMul(expr.high, NumpyRand()))
+            randreal = self._print(PyccelMul(expr.high, NumpyRand(), simplify = True))
         else:
-            randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low), NumpyRand()), expr.low))
+            randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low, simplify = True), NumpyRand(), simplify=True), expr.low, simplify = True))
 
         prec_code = self.print_kind(expr)
         return 'floor({}, kind={})'.format(randreal, prec_code)
@@ -989,9 +1020,9 @@ class FCodePrinter(CodePrinter):
                             shape.append(i.stop)
                     elif i.stop is None:
                         if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
-                            shape.append(PyccelMinus(s, i.start))
+                            shape.append(PyccelMinus(s, i.start, simplify = True))
                     else:
-                        shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, LiteralInteger(1))))
+                        shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, LiteralInteger(1), simplify = True), simplify = True))
 
             rank = len(shape)
 
@@ -1025,7 +1056,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -1065,16 +1096,7 @@ class FCodePrinter(CodePrinter):
                 name = alias
             dtype = '{0}({1})'.format(sig, name)
         else:
-            if isinstance(expr.dtype, NativeTuple):
-                # Non-homogenous NativeTuples must be stored in TupleVariable
-                if not expr.variable.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES,
-                                  symbol=expr.variable, severity='error')
-                    expr_dtype = NativeInteger()
-                else:
-                    expr_dtype = expr.variable.homogeneous_dtype
-            else:
-                expr_dtype = expr.dtype
+            expr_dtype = expr.dtype
             dtype = self._print(expr_dtype)
 
         # ...
@@ -1130,20 +1152,20 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, LiteralInteger, Variable, PyccelAdd))) and
+        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
+            rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
         elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
-                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                    self._print(i)) for i in shape[::-1])
+                rankstr = ','.join('{0}:{1}'.format(self._print(s),
+                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape[::-1])
             else:
-                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                     self._print(i)) for i in shape)
+                rankstr =  ','.join('{0}:{1}'.format(self._print(s),
+                                                     self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
         elif (rank > 0) and allocatable and intent:
@@ -1166,15 +1188,8 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
+        if isinstance(lhs, InhomogeneousTupleVariable):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
-
-        if isinstance(rhs, Dlist):
-            pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
-            code = pattern.format(lhs=self._print(lhs),
-                                  length=self._print(rhs.length),
-                                  init_value=self._print(rhs.val))
-            return code
 
         # TODO improve
         op = '=>'
@@ -1332,7 +1347,7 @@ class FCodePrinter(CodePrinter):
 
         var_code = self._print(expr.variable)
         size_code = ', '.join(self._print(i) for i in shape)
-        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1))) for i in shape)
+        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
         code = ''
 
         if expr.status == 'unallocated':
@@ -1587,9 +1602,13 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
-        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
+        var_changes = self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
                                                 list(expr.arguments)  +
                                                 list(expr.results))
+        if var_changes:
+            expr.substitute(original = list(var_changes.keys()),
+                    replacement = list(var_changes.values()),
+                    excluded_nodes=FunctionDef)
 
         name = self._print(expr.name)
         self.set_current_function(name)
@@ -1620,6 +1639,8 @@ class FCodePrinter(CodePrinter):
             decs[i] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
+        if var_changes:
+            vars_to_print = [var_changes.get(v, v) for v in vars_to_print]
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -1753,13 +1774,13 @@ class FCodePrinter(CodePrinter):
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
             if isinstance(expr.step, PyccelUnarySub):
-                stop = PyccelAdd(expr.stop, LiteralInteger(1))
+                stop = PyccelAdd(expr.stop, LiteralInteger(1), simplify = True)
             else:
-                stop = PyccelMinus(expr.stop, LiteralInteger(1))
+                stop = PyccelMinus(expr.stop, LiteralInteger(1), simplify = True)
         else:
             stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
-                                     PyccelMinus(expr.stop, LiteralInteger(1)),
-                                     PyccelAdd(expr.stop, LiteralInteger(1)))
+                                     PyccelMinus(expr.stop, LiteralInteger(1), simplify = True),
+                                     PyccelAdd(expr.stop, LiteralInteger(1), simplify = True))
 
         stop = self._print(stop)
         return '{0}, {1}, {2}'.format(start, stop, step)
@@ -2597,7 +2618,7 @@ class FCodePrinter(CodePrinter):
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
-        elif isinstance(base, TupleVariable) and not base.is_homogeneous:
+        elif isinstance(base, InhomogeneousTupleVariable):
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:
@@ -2617,22 +2638,18 @@ class FCodePrinter(CodePrinter):
             if isinstance(ind, Slice):
                 inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
-                inds[i] = PyccelMinus(_shape, ind.args[0])
+                inds[i] = PyccelMinus(_shape, ind.args[0], simplify = True)
             else:
                 #indices of indexedElement of len==1 shouldn't be a tuple
                 if isinstance(ind, tuple) and len(ind) == 1:
                     inds[i] = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
-                            PyccelAdd(base_shape[i], ind), ind)
+                            PyccelAdd(base_shape[i], ind, simplify = True), ind)
 
         inds = [self._print(i) for i in inds]
 
         return "%s(%s)" % (base_code, ", ".join(inds))
-
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -2656,37 +2673,37 @@ class FCodePrinter(CodePrinter):
 
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(array_size, start.args[0])
+            start = PyccelMinus(array_size, start.args[0], simplify = True)
         elif start is not None and allow_negative_index and not isinstance(start,LiteralInteger):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                        PyccelAdd(array_size, start), start)
+                        PyccelAdd(array_size, start, simplify = True), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(array_size, stop.args[0])
+            stop = PyccelMinus(array_size, stop.args[0], simplify = True)
         elif stop is not None and allow_negative_index and not isinstance(stop, LiteralInteger):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                        PyccelAdd(array_size, stop), stop)
+                        PyccelAdd(array_size, stop, simplify = True), stop)
 
         # negative step in slice
         if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            stop = PyccelAdd(stop, LiteralInteger(1)) if stop is not None else LiteralInteger(0)
-            start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1))
+            stop = PyccelAdd(stop, LiteralInteger(1), simplify = True) if stop is not None else LiteralInteger(0)
+            start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1), simplify = True)
 
         # variable step in slice
         elif step and allow_negative_index and not isinstance(step, LiteralInteger):
             if start is None :
                 start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1)))
+                    LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1), simplify = True))
 
             if stop is None :
                 stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    PyccelMinus(array_size, LiteralInteger(1)), LiteralInteger(0))
+                    PyccelMinus(array_size, LiteralInteger(1), simplify = True), LiteralInteger(0))
             else :
                 stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                    stop, PyccelAdd(stop, LiteralInteger(1)))
+                    stop, PyccelAdd(stop, LiteralInteger(1), simplify = True))
 
         elif stop is not None:
-            stop = PyccelMinus(stop, LiteralInteger(1))
+            stop = PyccelMinus(stop, LiteralInteger(1), simplify = True)
 
         return Slice(start, stop, step)
 
