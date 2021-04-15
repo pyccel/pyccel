@@ -5,26 +5,26 @@ runs:
   steps:
     - name: update the package list
       run:
-        sudo apt-get update
+        sudo apt update
       shell: bash
     - name: Install fortran
       run:
-        sudo apt-get install gfortran
+        sudo apt install gfortran
       shell: bash
     - name: Install LaPack
       run:
-        sudo apt-get install libblas-dev liblapack-dev
+        sudo apt install libblas-dev liblapack-dev
       shell: bash
     - name: Install MPI
       run: |
-        sudo apt-get install libomp5 libopenmpi-dev openmpi-bin
+        sudo apt install libomp5 libopenmpi-dev openmpi-bin
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
     - name: Install OpenMP
       run:
-        sudo apt-get install libomp-dev
+        sudo apt install libomp-dev
       shell: bash
     - name: Install Valgrind
       run:
-        sudo apt-get install valgrind
+        sudo apt install valgrind
       shell: bash
