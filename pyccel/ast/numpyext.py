@@ -606,23 +606,13 @@ class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
     __slots__ = ('_condition', '_x', '_y', '_dtype', '_rank', '_shape', '_order', '_precision')
     _attribute_nodes = ('_condition','_x','_y')
-    #def __new__(cls, condition, x, y):
-    #    return IfTernaryOperator(condition, x, y)
 
     def __init__(self, condition, x, y):
-        #super().__init__(condition, x, y)
-        #print("dtype:",condition._dtype)
-        #print("rank:",condition._rank)
-        #print("shape:",condition._shape)
-        #print(x)
-        #print(y)
-        #TODO [NH]: rank of the resulted array depend also on x and y (we need to choose the biggest rank from x, y and condition)
         #[TEST CASE] rank of x != rank of y (one of x, y have a ran > rank of condition) 
-        #ranks = 
         self._condition = condition
         self._x = x
         self._y = y
-        all_args = (condition, x, y)
+
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
@@ -640,10 +630,12 @@ class NumpyWhere(PyccelInternalFunction):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-        self._rank = max(e._rank for e in all_args)#if (condition._rank > a._rank and y._rank)
-        self._shape = x._shape
+        shape = broadcast(x._shape, y._shape)
+        shape = broadcast(condition._shape, shape)
+        
+        self._rank = len(shape)
+        self._shape = shape
         self._order = 'C'
-        self._precision = condition._precision
         super().__init__(condition, x, y)
 
     @property
