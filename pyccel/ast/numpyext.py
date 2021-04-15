@@ -1076,7 +1076,7 @@ class NumpyMod(NumpyUfuncBinary):
             raise TypeError('cannot determine the type of {}'.format(self))
 
 class NumpyAmin(NumpyUfuncUnary):
-    """Represent a call to the min function in the Numpy library"""
+    """Represent a call to the amin function in the Numpy library"""
     __slots__ = ()
     def _set_shape_rank(self, x):
         self._shape     = ()
@@ -1091,7 +1091,7 @@ class NumpyAmin(NumpyUfuncUnary):
         return False
 
 class NumpyAmax(NumpyUfuncUnary):
-    """Represent a call to the max function in the Numpy library"""
+    """Represent a call to the amax function in the Numpy library"""
     __slots__ = ()
     def _set_shape_rank(self, x):
         self._shape     = ()

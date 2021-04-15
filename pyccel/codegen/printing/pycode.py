@@ -309,6 +309,7 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
+        print(expr)
         if expr.interface:
             func_name = expr.interface_name
         else:
