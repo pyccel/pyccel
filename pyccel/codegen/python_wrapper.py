@@ -87,12 +87,9 @@ def create_shared_library(codegen,
 
             dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
             if compiler == 'gfortran':
-                extra_obj.append(get_gfortran_library_dir())
+                extra_obj.extend(get_gfortran_library_dir())
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
-
-        if sys.platform == 'win32':
-            extra_libs.append('quadmath')
 
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)

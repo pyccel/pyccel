@@ -177,17 +177,21 @@ def get_gfortran_library_dir():
     """Provide the location of the gfortran libraries for linking
     """
     if sys.platform == "win32":
-        file_name_list = ['gfortran.lib', 'libgfortran.a']
+        file_name_list = [('gfortran.lib', 'quadmath.lib'), ('libgfortran.a', 'libquadmath.a')]
     else:
-        file_name_list = ['libgfortran.a']
-    for f in file_name_list:
-        file_name = file_name_list[0]
+        file_name_list = [('libgfortran.a',)]
+    file_name_list = [('gfortran.lib', 'quadmath.lib'), ('libgfortran.a', 'libquadmath.a')]
+
+    target_libs = file_name_list[0]
+    for required_libs in file_name_list:
+        file_name = required_libs[0]
         file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name='+file_name],
                 universal_newlines = True)
         lib_dir = os.path.abspath(os.path.dirname(file_location))
-        if file_location.strip() != file_name:
+        if lib_dir != os.getcwd():
             if lib_dir not in sys.path:
                 # Add to sytem path
                 sys.path.insert(0, lib_dir)
+            target_libs = [os.path.join(lib_dir, l) for l in required_libs]
             break
-    return file_location.strip()
+    return target_libs
