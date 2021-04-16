@@ -693,7 +693,7 @@ class FCodePrinter(CodePrinter):
         if expr.axis:
             axis = expr.axis
             if expr.order != 'F':
-                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis)
+                axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis, simplify=True)
             else:
                 axis = LiteralInteger(expr.axis.python_value + 1)
             code = 'Norm2({},{})'.format(self._print(arg), self._print(axis))

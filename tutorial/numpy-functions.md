@@ -55,7 +55,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
       4_C_INT64_T, 3_C_INT64_T, 2_C_INT64_T, 1_C_INT64_T]], [ &
       4_C_INT64_T, 2_C_INT64_T])
     allocate(nrm2(0:1_C_INT64_T))
-    nrm2 = Norm2(Real(arr2, C_DOUBLE),2_C_INT64_T - 1_C_INT64_T)
+    nrm2 = Norm2(Real(arr2, C_DOUBLE),1_C_INT64_T)
     print *, nrm
 
     end program prog_boo
