@@ -65,7 +65,6 @@ def create_shared_library(codegen,
     if language in ['c', 'fortran']:
         extra_libs = []
         extra_libdirs = []
-        extra_obj  = []
         if language == 'fortran':
             # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
             new_module_name = 'bind_c_{}'.format(module_name)
@@ -87,9 +86,13 @@ def create_shared_library(codegen,
 
             dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
             if compiler == 'gfortran':
-                extra_obj.extend(get_gfortran_library_dir())
+                extra_libs.append('gfortran')
+                extra_libdirs.append(get_gfortran_library_dir())
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
+
+        if sys.platform == 'win32':
+            extra_libs.append('quadmath')
 
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
@@ -116,7 +119,7 @@ def create_shared_library(codegen,
                 idx += 1
 
         setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
-                dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags, extra_obj)
+                dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags)
         setup_filename = "setup_{}.py".format(module_name)
 
         with open(setup_filename, 'w') as f:
@@ -140,7 +143,8 @@ def create_shared_library(codegen,
             print(out)
         if p.returncode != 0:
             err_msg = "Failed to build module"
-            err_msg += "\n" + err
+            if verbose:
+                err_msg += "\n" + err
             raise RuntimeError(err_msg)
         if err:
             warnings.warn(UserWarning(err))
