@@ -538,7 +538,7 @@ class NumpyLinspace(NumpyNewArray):
 
     """
     __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_shape', '_rank')
-    _order     = 'F'
+    _order     = 'C'
 
     def __init__(self, start, stop, num=None):
 
