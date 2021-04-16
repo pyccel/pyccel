@@ -55,6 +55,7 @@ def create_c_setup(mod_name,
     if compiler in ('icc','ifort'):
         code += "import os"
         code += '\nos.environ["CC"]="icc"\n\n'
+        code += '\nos.environ["LDSHARED"]="icc -shared"\n\n'
     else:
         code += "\n"
 
