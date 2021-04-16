@@ -25,7 +25,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, conver
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv, IfTernaryOperator
+from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, IndexedElement, Constant)
 
 
@@ -631,7 +631,7 @@ class NumpyWhere(PyccelInternalFunction):
 
         shape = broadcast(x._shape, y._shape)
         shape = broadcast(condition._shape, shape)
-        
+
         self._rank = len(shape)
         self._shape = shape
         self._order = 'C'
@@ -639,14 +639,17 @@ class NumpyWhere(PyccelInternalFunction):
 
     @property
     def condition(self):
+        """When True, yield x, otherwise yield y."""
         return self._condition
 
     @property
     def x(self):
+        """Choose when the condition if evaluated to True."""
         return self._x
 
     @property
     def y(self):
+        """Choose when the condition if evaluated to False."""
         return self._y
 
     @property

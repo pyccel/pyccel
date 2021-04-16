@@ -1188,7 +1188,6 @@ class CCodePrinter(CodePrinter):
         return expr.name
 
     def _print_NumpyWhere(self, expr):
-      
         cond = self._print(expr.condition)
         value_true = self._print(expr.x)
         value_false = self._print(expr.y)
