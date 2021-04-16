@@ -7,7 +7,11 @@
 # define NDARRAYS_H
 
 #if __STDC_VERSION__ >= 199901L
+#ifdef __STDC_NO_COMPLEX__
 #define USE_C99_COMPLEX !(__STDC_NO_COMPLEX__)
+#else
+#define USE_C99_COMPLEX 1
+#endif
 #else
 #define USE_C99_COMPLEX 0
 #endif
