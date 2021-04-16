@@ -62,7 +62,7 @@ jobs:
       # This is split into many tests as the test raising an error must be the last line in a multi-line powershell command
       - name: Pyccel verbose test
         run: |
-          pyccel generic_functions.py --verbose
+          pyccel Module_6.py --verbose
         working-directory: ./tests/epyccel/modules
       - name: Serial C tests run in parallel
         run: |
