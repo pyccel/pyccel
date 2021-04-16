@@ -718,20 +718,10 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_NumpyWhere(self, expr):
-
-        ind   = self._print(expr.index)
         condition  = self._print(expr.condition)
         x = self._print(expr.x)
         y = self._print(expr.y)
-       # print(condition)
-       # print(x)
-       # print(y)
-        # TODO [NH] : fix indexed element for lhs var when rank >= 2
-        var = Variable('int', 'ind1')
-        self.add_vars_to_namespace(var)
         stmt = 'merge({true}, {false}, {cond})'.format(true=x,false=y,cond=condition)
-       # stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
-
         return stmt
 
     def _print_NumpyArray(self, expr):

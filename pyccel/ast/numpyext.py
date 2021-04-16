@@ -608,7 +608,6 @@ class NumpyWhere(PyccelInternalFunction):
     _attribute_nodes = ('_condition','_x','_y')
 
     def __init__(self, condition, x, y):
-        #[TEST CASE] rank of x != rank of y (one of x, y have a ran > rank of condition) 
         self._condition = condition
         self._x = x
         self._y = y
@@ -649,12 +648,6 @@ class NumpyWhere(PyccelInternalFunction):
     @property
     def y(self):
         return self._y
-
-    @property
-    def index(self):
-        ind = Variable('int','ind1')
-
-        return ind
 
     @property
     def is_elemental(self):
