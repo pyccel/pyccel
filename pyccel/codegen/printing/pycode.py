@@ -309,7 +309,6 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-
         if expr.interface:
             func_name = expr.interface_name
         else:
@@ -325,7 +324,6 @@ class PythonCodePrinter(CodePrinter):
         return 'len({})'.format(self._print(expr.arg))
 
     def _print_Import(self, expr):
-
         source = self._print(expr.source)
         if not expr.target:
             return 'import {source}\n'.format(source=source)
