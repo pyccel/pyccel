@@ -179,7 +179,7 @@ def get_gfortran_library_dir():
     if sys.platform == "win32":
         file_name_list = ['gfortran.lib', 'libgfortran.a']
     else:
-        file_name_list = [('libgfortran.a',)]
+        file_name_list = ['libgfortran.a']
 
     for file_name in file_name_list:
         file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name='+file_name],
