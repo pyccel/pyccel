@@ -6,26 +6,15 @@
 #ifndef NDARRAYS_H
 # define NDARRAYS_H
 
-#if __STDC_VERSION__ >= 199901L
-#ifdef __STDC_NO_COMPLEX__
-#define USE_C99_COMPLEX !(__STDC_NO_COMPLEX__)
-#else
-#define USE_C99_COMPLEX 1
-#endif
-#else
-#define USE_C99_COMPLEX 0
-#endif
-
 # include <stdlib.h>
+# include <complex.h>
 # include <string.h>
 # include <stdio.h>
 # include <stdarg.h>
 # include <stdbool.h>
 # include <stdint.h>
-# include <complex.h>
 
 /* mapping the function array_fill to the correct type */
-#ifdef USE_C99_COMPLEX
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
                                         int32_t : _array_fill_int32,\
                                         int16_t : _array_fill_int16,\
@@ -35,15 +24,6 @@
                                         bool : _array_fill_bool,\
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
-#else
-# define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
-                                        int32_t : _array_fill_int32,\
-                                        int16_t : _array_fill_int16,\
-                                        int8_t : _array_fill_int8,\
-                                        float : _array_fill_float,\
-                                        double : _array_fill_double,\
-                                        bool : _array_fill_bool)(c, arr)
-#endif
 
 typedef struct  s_slice
 {
@@ -81,10 +61,8 @@ typedef struct  s_ndarray
             float           *nd_float;
             double          *nd_double;
             bool            *nd_bool;
-#ifdef USE_C99_COMPLEX
             double complex  *nd_cdouble;
             float  complex  *nd_cfloat;
-#endif
             };
     /* number of dimensions */
     int32_t                 nd;
@@ -116,10 +94,8 @@ void        _array_fill_int64(int64_t c, t_ndarray arr);
 void        _array_fill_float(float c, t_ndarray arr);
 void        _array_fill_double(double c, t_ndarray arr);
 void        _array_fill_bool(bool c, t_ndarray arr);
-#ifndef USE_C99_COMPLEX
 void        _array_fill_cfloat(float complex c, t_ndarray arr);
 void        _array_fill_cdouble(double complex c, t_ndarray arr);
-#endif
 
 /* slicing */
                 /* creating a Slice object */
