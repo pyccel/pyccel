@@ -631,7 +631,7 @@ class CCodePrinter(CodePrinter):
             first = self._print(NumpyFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
             second = self._print(NumpyFloat(expr.args[1]))
-        return "fmod({}, {})".format(first, second)
+        return "(fmod(((fmod({n}, {base})) + {base}), {base}))".format(n=first, base=second)
 
     def _print_PyccelPow(self, expr):
         b = expr.args[0]
