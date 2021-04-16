@@ -187,6 +187,6 @@ def get_gfortran_library_dir():
         lib_dir = os.path.abspath(os.path.dirname(file_location))
         if lib_dir != os.getcwd():
             if lib_dir not in sys.path:
-                # Add to sytem path
+                # Add to system path
                 sys.path.insert(0, lib_dir)
     return lib_dir
