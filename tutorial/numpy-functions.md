@@ -35,7 +35,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_test_norm
+    program prog_boo
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -46,19 +46,19 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     integer(C_INT64_T), allocatable :: arr2(:,:)
     real(C_DOUBLE), allocatable :: nrm2(:)
 
-    allocate(arr1(0:4_C_INT64_T - 1_C_INT64_T))
+    allocate(arr1(0:3_C_INT64_T))
     arr1 = [1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T, 4_C_INT64_T]
     nrm = Norm2(Real(arr1, C_DOUBLE))
     print *, nrm
-    allocate(arr2(0:4_C_INT64_T - 1_C_INT64_T, 0:2_C_INT64_T - 1_C_INT64_T))
+    allocate(arr2(0:3_C_INT64_T, 0:1_C_INT64_T))
     arr2 = reshape([[1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T, 4_C_INT64_T], [ &
-          4_C_INT64_T, 3_C_INT64_T, 2_C_INT64_T, 1_C_INT64_T]], [ &
-          4_C_INT64_T, 2_C_INT64_T])
-    allocate(nrm2(0:2_C_INT64_T - 1_C_INT64_T))
+      4_C_INT64_T, 3_C_INT64_T, 2_C_INT64_T, 1_C_INT64_T]], [ &
+      4_C_INT64_T, 2_C_INT64_T])
+    allocate(nrm2(0:1_C_INT64_T))
     nrm2 = Norm2(Real(arr2, C_DOUBLE),2_C_INT64_T - 1_C_INT64_T)
     print *, nrm
 
-    end program prog_test_norm
+    end program prog_boo
     ```
 
 ## [Real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
@@ -78,40 +78,74 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_test_imag_real
+    program prog_boo
 
     use, intrinsic :: ISO_C_BINDING
 
     implicit none
 
-    complex(C_DOUBLE_COMPLEX) :: n
-    real(C_DOUBLE) :: nreal_part
-    real(C_DOUBLE) :: nimag_part
+    complex(C_DOUBLE_COMPLEX), allocatable :: arr1(:)
+    real(C_DOUBLE), allocatable :: real_part(:)
+    real(C_DOUBLE), allocatable :: imag_part(:)
 
-    n = (3.0_C_DOUBLE, 7.0_C_DOUBLE)
-    nreal_part = Real(n, C_DOUBLE)
-    nimag_part = aimag(n)
-    print *, 'real part for n : ' // ' ' , nreal_part, ACHAR(10) // 'imag part for n: ' // ' ' , nimag_part
+    allocate(arr1(0:3_C_INT64_T))
+    arr1 = [(1.0_C_DOUBLE, 1.0_C_DOUBLE), (2.0_C_DOUBLE, 1.0_C_DOUBLE), ( &
+          3.0_C_DOUBLE, 1.0_C_DOUBLE), (4.0_C_DOUBLE, 1.0_C_DOUBLE)]
+    allocate(real_part(0:3_C_INT64_T))
+    real_part = Real(arr1, C_DOUBLE)
+    allocate(imag_part(0:3_C_INT64_T))
+    imag_part = aimag(arr1)
+    print *, 'real part for arr1: ' // ' ' , real_part, ACHAR(10) // 'imag part for arr1: ' // ' ' , imag_part
 
-    end program prog_test_imag_real
+    end program prog_boo
     ```
 
 -   C equivalent:
 
     ```C
-    #include <complex.h>
+    #include <stdint.h>
     #include <stdlib.h>
     #include <stdio.h>
+    #include "ndarrays.h"
+    #include <complex.h>
     int main()
     {
-        double complex n;
-        double nreal_part;
-        double nimag_part;
-
-        n = (3.0 + 7.0 * _Complex_I);
-        nreal_part = creal(n);
-        nimag_part = cimag(n);
-        printf("%s %.12lf %s %.12lf\n", "real part for n : ", nreal_part, "\nimag part for n: ", nimag_part);
+        t_ndarray arr1;
+        t_ndarray real_part;
+        t_ndarray imag_part;
+        int64_t i_0001;
+        int64_t i;
+        int64_t i_0002;
+        arr1 = array_create(1, (int64_t[]){4}, nd_cdouble);
+        double complex array_dummy_0001[] = {(1.0 + 1.0 * _Complex_I), (2.0 + 1.0 * _Complex_I), (3.0 + 1.0 * _Complex_I), (4.0 + 1.0 * _Complex_I)};
+        memcpy(arr1.nd_cdouble, array_dummy_0001, arr1.buffer_size);
+        real_part = array_create(1, (int64_t[]){4}, nd_double);
+        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        {
+            real_part.nd_double[get_index(real_part, i_0001)] = creal(arr1.nd_cdouble[get_index(arr1, i_0001)]);
+        }
+        imag_part = array_create(1, (int64_t[]){4}, nd_double);
+        for (i_0001 = 0; i_0001 < 4; i_0001 += 1)
+        {
+            imag_part.nd_double[get_index(imag_part, i_0001)] = cimag(arr1.nd_cdouble[get_index(arr1, i_0001)]);
+        }
+        printf("%s ", "real part for arr1: ");
+        printf("%s", "[");
+        for (i = 0; i < 4 - 1; i += 1)
+        {
+            printf("%.12lf ", real_part.nd_double[get_index(real_part, i)]);
+        }
+        printf("%.12lf]", real_part.nd_double[get_index(real_part, 4 - 1)]);
+        printf("%s ", "\nimag part for arr1: ");
+        printf("%s", "[");
+        for (i_0002 = 0; i_0002 < 4 - 1; i_0002 += 1)
+        {
+            printf("%.12lf ", imag_part.nd_double[get_index(imag_part, i_0002)]);
+        }
+        printf("%.12lf]\n", imag_part.nd_double[get_index(imag_part, 4 - 1)]);
+        free_array(arr1);
+        free_array(real_part);
+        free_array(imag_part);
         return 0;
     }
     ```
@@ -129,7 +163,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_test_imag_real
+    program prog_boo
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -139,26 +173,26 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     real(C_DOUBLE), allocatable :: real_part(:)
     real(C_DOUBLE), allocatable :: imag_part(:)
 
-    allocate(arr1(0:4_C_INT64_T - 1_C_INT64_T))
+    allocate(arr1(0:3_C_INT64_T))
     arr1 = [(1.0_C_DOUBLE, 1.0_C_DOUBLE), (2.0_C_DOUBLE, 1.0_C_DOUBLE), ( &
           3.0_C_DOUBLE, 1.0_C_DOUBLE), (4.0_C_DOUBLE, 1.0_C_DOUBLE)]
-    allocate(real_part(0:4_C_INT64_T - 1_C_INT64_T))
+    allocate(real_part(0:3_C_INT64_T))
     real_part = Real(arr1, C_DOUBLE)
-    allocate(imag_part(0:4_C_INT64_T - 1_C_INT64_T))
+    allocate(imag_part(0:3_C_INT64_T))
     imag_part = aimag(arr1)
     print *, 'real part for arr1: ' // ' ' , real_part, ACHAR(10) // 'imag part for arr1: ' // ' ' , imag_part
 
-    end program prog_test_imag_real
+    end program prog_boo
     ```
 
 -   C equivalent:
 
     ```C
-    #include <complex.h>
     #include <stdlib.h>
-    #include <stdint.h>
-    #include "ndarrays.h"
     #include <stdio.h>
+    #include "ndarrays.h"
+    #include <complex.h>
+    #include <stdint.h>
     int main()
     {
         t_ndarray arr1;
@@ -223,7 +257,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_test_prod
+    program prog_boo
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -232,12 +266,12 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     integer(C_INT64_T), allocatable :: arr(:)
     integer(C_INT64_T) :: prd
 
-    allocate(arr(0:4_C_INT64_T - 1_C_INT64_T))
+    allocate(arr(0:3_C_INT64_T))
     arr = [1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T, 4_C_INT64_T]
     prd = product(arr)
     print *, 'prd: ' // ' ' , prd
 
-    end program prog_test_prod
+    end program prog_boo
     ```
 
 ## [mod](https://numpy.org/doc/stable/reference/generated/numpy.mod.html)
@@ -266,7 +300,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_test_mod
+    program prog_boo
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -275,13 +309,13 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     integer(C_INT64_T), allocatable :: arr(:)
     integer(C_INT64_T), allocatable :: res(:)
 
-    allocate(arr(0:4_C_INT64_T - 1_C_INT64_T))
+    allocate(arr(0:3_C_INT64_T))
     arr = [1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T, 4_C_INT64_T]
-    allocate(res(0:4_C_INT64_T - 1_C_INT64_T))
-    res = modulo(arr,arr)
+    allocate(res(0:3_C_INT64_T))
+    res = MODULO(arr,arr)
     print *, 'res: ' // ' ' , res
 
-    end program prog_test_mod
+    end program prog_boo
     ```
 
 ## [matmul](https://numpy.org/doc/stable/reference/generated/numpy.matmul.html)
@@ -306,7 +340,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_test_matmul
+    program prog_boo
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -315,21 +349,21 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     integer(C_INT64_T), allocatable :: arr(:,:)
     integer(C_INT64_T), allocatable :: res(:,:)
 
-    allocate(arr(0:2_C_INT64_T - 1_C_INT64_T, 0:2_C_INT64_T - 1_C_INT64_T))
+    allocate(arr(0:1_C_INT64_T, 0:1_C_INT64_T))
     arr = reshape([[1_C_INT64_T, 2_C_INT64_T], [3_C_INT64_T, 4_C_INT64_T]], &
           [2_C_INT64_T, 2_C_INT64_T])
-    allocate(res(0:2_C_INT64_T - 1_C_INT64_T, 0:2_C_INT64_T - 1_C_INT64_T))
+    allocate(res(0:1_C_INT64_T, 0:1_C_INT64_T))
     res = matmul(arr,arr)
     print *, 'res: ' // ' ' , res
 
-    end program prog_test_matmul
+    end program prog_boo
     ```
 
 ## [Numpy types](https://numpy.org/devdocs/user/basics.types.html)
 
--   Supported types : bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. they can be used as cast functions too.
+-   Supported types: bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. They can be used as cast functions too.
 
-    Note: for np.bool, np.int and np.float are just aliases to the Python native types, and these aliases are considered as a deprecated way to work with Python built-in types in NumPy.
+    Note: np.bool, np.int and np.float are just aliases to the Python native types, and are considered as a deprecated way to work with Python built-in types in NumPy.
 
 ## Other functions
 
