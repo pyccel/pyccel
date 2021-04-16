@@ -140,8 +140,7 @@ def create_shared_library(codegen,
             print(out)
         if p.returncode != 0:
             err_msg = "Failed to build module"
-            if verbose:
-                err_msg += "\n" + err
+            err_msg += "\n" + err
             raise RuntimeError(err_msg)
         if err:
             warnings.warn(UserWarning(err))
