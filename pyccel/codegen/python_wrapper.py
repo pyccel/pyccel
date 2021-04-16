@@ -9,7 +9,6 @@ import subprocess
 import os
 import glob
 import warnings
-from distutils.ccompiler import get_default_compiler
 from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module

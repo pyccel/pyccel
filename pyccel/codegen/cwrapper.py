@@ -21,7 +21,7 @@ def create_c_setup(mod_name,
         include = (),
         libs    = (),
         libdirs = (),
-        flags   = ()):
+        flags   = () ):
     """
     Create the code for the setup file which uses python setuptools
     to compile a c file and generate the corresponding shared
