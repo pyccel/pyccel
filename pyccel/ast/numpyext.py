@@ -540,7 +540,7 @@ class NumpyLinspace(NumpyNewArray):
     __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank')
     _order     = 'C'
 
-    def __init__(self, start, stop, num=None, endpoint=True):
+    def __init__(self, start, stop, num=None, endpoint=True, dtype=None):
 
         if not num:
             num = LiteralInteger(50)
@@ -549,22 +549,25 @@ class NumpyLinspace(NumpyNewArray):
             if not isinstance(arg, PyccelAstNode):
                 raise TypeError('Expecting valid args')
 
-        args      = (start, stop)
-        integers  = [e for e in args if e.dtype is NativeInteger()]
-        reals     = [e for e in args if e.dtype is NativeReal()]
-        complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-        if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max(e.precision for e in complexs)
-        elif reals:
-            self._dtype     = NativeReal()
-            self._precision = max(e.precision for e in reals)
-        elif integers:
-            self._dtype     = NativeReal()
-            self._precision = default_precision['real']
+        if dtype:
+            self._dtype, self._precision = dtype_registry[dtype]
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            args      = (start, stop)
+            integers  = [e for e in args if e.dtype is NativeInteger()]
+            reals     = [e for e in args if e.dtype is NativeReal()]
+            complexs  = [e for e in args if e.dtype is NativeComplex()]
+
+            if complexs:
+                self._dtype     = NativeComplex()
+                self._precision = max(e.precision for e in complexs)
+            elif reals:
+                self._dtype     = NativeReal()
+                self._precision = max(e.precision for e in reals)
+            elif integers:
+                self._dtype     = NativeReal()
+                self._precision = default_precision['real']
+            else:
+                raise TypeError('cannot determine the type of {}'.format(self))
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
@@ -594,7 +597,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        if self._endpoint == False:
+        if self._endpoint is False:
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
 
