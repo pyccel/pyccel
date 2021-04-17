@@ -644,12 +644,12 @@ class NumpyWhere(PyccelInternalFunction):
 
     @property
     def x(self):
-        """Choose when the condition if evaluated to True."""
+        """Choose when the condition is evaluated to True."""
         return self._x
 
     @property
     def y(self):
-        """Choose when the condition if evaluated to False."""
+        """Choose when the condition is evaluated to False."""
         return self._y
 
     @property
