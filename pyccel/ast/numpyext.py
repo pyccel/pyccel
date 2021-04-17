@@ -537,10 +537,10 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_shape', '_rank')
+    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank')
     _order     = 'C'
 
-    def __init__(self, start, stop, num=None):
+    def __init__(self, start, stop, num=None, endpoint=True):
 
         if not num:
             num = LiteralInteger(50)
@@ -570,6 +570,7 @@ class NumpyLinspace(NumpyNewArray):
         self._start = start
         self._stop  = stop
         self._num  = num
+        self._endpoint = endpoint
         self._shape = (self._num,) + self._start.shape
         self._rank  = len(self._shape)
         super().__init__()
@@ -593,6 +594,8 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
+        if self._endpoint == False:
+            return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
 
     def __str__(self):
