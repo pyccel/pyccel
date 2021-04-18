@@ -31,6 +31,7 @@ from .numpyext      import (numpy_functions, numpy_linalg_functions,
 from .cupyext       import cupy_functions
 
 from .cudext        import cuda_functions
+from .numbaext      import numba_functions
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, TupleVariable, VariableAddress)
@@ -84,6 +85,9 @@ builtin_import_registery = {'numpy': {
                             'cupy': cupy_functions,
                             'numpy.linalg': numpy_linalg_functions,
                             'numpy.random': numpy_random_functions,
+                            'numba': {
+                                      'cuda':numba_functions
+                                      },
                             'pyccel.stdlib.internal.cuda' : cuda_functions,
                             'scipy.constants': scipy_constants,
                             'itertools': {'product': Product},

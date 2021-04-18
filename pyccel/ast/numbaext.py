@@ -16,45 +16,23 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .variable       import (Variable, IndexedElement, Constant)
 
-from .numpyext       import process_dtype
+from .numpyext       import process_dtype, NumpyNewArray, NumpyArray
 
+from .cudext         import CudaInternalVar, CudaNewArray
+from .cudext         import CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
 #==============================================================================
 __all__ = (
-    'CudaArray',
-    'CudaMalloc'
+    'NumbaThreadIdx',
+    'NumbaBlockDim',
+    'NumbaBlockIdx',
+    'Shape'
+    'NumbaGridDim'
 )
 
 
 #------------------------------------------------------------------------------
 
-#==============================================================================
-class CudaMemCopy():
-    """Represents a call to  cuda malloc for code generation.
-
-    arg : list , tuple , PythonTuple, List, Variable
-    """
-    def __init__(self, x, size):
-        self._shape     = ()
-        self._rank      = 0
-        self._dtype     = x.dtype
-        self._precision = x.precision
-
-    @property
-    def dest(self):
-        return self._args[0]
-    @property
-    def src(self):
-        return self._args[1]
-    @property
-    def size(self):
-        return self._args[2]
-    @property
-    def copy_mode(self):
-        return self._args[3]
-
-
-#==============================================================================
-class CudaNewArray(PyccelInternalFunction):
+class NumbaNewArray(PyccelInternalFunction):
     """ Class from which all Cuda functions which imply a call to Allocate
     inherit
     """
@@ -70,45 +48,17 @@ class CudaNewArray(PyccelInternalFunction):
         if order not in ('C', 'F'):
             raise ValueError('unrecognized order = {}'.format(order))
         return order
-
 #==============================================================================
-class CudaMalloc(CudaNewArray):
-    """Represents a call to  cuda malloc for code generation.
-
-     arg : str
+class NumbaToDevice(NumbaNewArray):
     """
-    # _attribute_nodes = ('_alloct',)
-    def __init__(self, size, alloct, dtype):
-        # Verify dtype and get precision
-        dtype, prec = process_dtype(dtype)
-        self._shape     = process_shape(size)
-        self._alloct       = alloct
-        self._rank      = len(size)
-        self._dtype     = dtype
-        self._precision = prec
-        super().__init__()
+    Represents a call to  numba.cuda.to_device for code generation.
 
-    @property
-    def shape(self):
-        return self._shape
-    @property
-    def dtype(self):
-        return self._dtype
-    @property
-    def precision(self):
-        return self._precision
-
-#==============================================================================
-class CudaArray(CudaNewArray):
-    """
-    Represents a call to  Cuda.array for code generation.
-
-    arg : list, tuple, PythonList
+    obj : list, tuple, PythonList, Variable
 
     """
     _attribute_nodes = ('_arg',)
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='C', copy_mode = 'device'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -140,6 +90,7 @@ class CudaArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        self._copy_mode = copy_mode
         super().__init__()
 
     def __str__(self):
@@ -149,43 +100,49 @@ class CudaArray(CudaNewArray):
     def arg(self):
         return self._arg
 
-class CudaDeviceSynchronize(PyccelAstNode):
-    "Represents a call to  Cuda.deviceSynchronize for code generation."
-    _attribute_nodes = ()
-    pass
+def NumbaCopyToHost(arg):
+    """
+    Represents a call to  numba.cuda.to_device for code generation.
 
-class CudaInternalVar(PyccelAstNode):
-    _attribute_nodes = ('_dim',)
+    obj : list, tuple, PythonList, Variable
 
-    def __init__(self, dim=None):
-        if not isinstance(dim, LiteralInteger):
-            raise TypeError("dimension need to be an integer")
-        if dim not in (0, 1, 2):
-            raise ValueError("dimension need to be 0, 1 or 2")
-        #...
-        self._dim       = dim
-        self._shape     = ()
-        self._rank      = 0
-        self._dtype     = dim.dtype
-        self._precision = dim.precision
-        self._order     = None
-        super().__init__()
+    """
+    _attribute_nodes = ('_arg',)
 
-    @property
-    def dim(self):
-        return self._dim
+    print(arg)
+    if not isinstance(arg, Variable):
+        raise TypeError('Unknown type of  %s.' % type(arg))
 
-class CudaThreadIdx(CudaInternalVar) : pass
-class CudaBlockDim(CudaInternalVar)  : pass
-class CudaBlockIdx(CudaInternalVar)  : pass
-class CudaGridDim(CudaInternalVar)   : pass
+    if isinstance(arg, Variable) and not arg.is_ndarray and not arg.is_stack_array and not arg.is_ondevice:
+            raise TypeError('we only accept device ndarrays')
+    return NumpyArray(arg)
 
-cuda_functions = {
-    'cudaMalloc'        : CudaMalloc,
-    'deviceSynchronize' : CudaDeviceSynchronize,
-    'array'             : CudaArray,
+def Shape(arg):
+    if isinstance(arg.shape, PythonTuple):
+        return arg.shape
+    else:
+        return PythonTuple(*arg.shape)
+#==============================================================================
+# class NumbaThreadIdx(CudaInternalVar) : pass
+# class NumbaBlockDim(CudaInternalVar)  : pass
+# class NumbaBlockIdx(CudaInternalVar)  : pass
+# class NumbaGridDim(CudaInternalVar)   : pass
+
+#=======================================================================================
+NumbaArrayClass = ClassDef('numba.cuda.cudadrv.devicearray.DeviceNDArray',
+        methods=[
+            FunctionDef('shape',[],[],body=[],
+                decorators={'property':'property', 'numba_wrapper':Shape}),
+            FunctionDef('copy_to_host',[],[],body=[],
+                decorators={'numba_wrapper':NumbaCopyToHost})])
+#=======================================================================================
+
+numba_functions = {
+    'to_device'         : NumbaToDevice,
     'threadIdx'         : CudaThreadIdx,
     'blockDim'          : CudaBlockDim,
     'blockIdx'          : CudaBlockIdx,
+    'shape'             : Shape,
+    'copy_to_host'      : NumbaCopyToHost,
     'gridDim'           : CudaGridDim
 }

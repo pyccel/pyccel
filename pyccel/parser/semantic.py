@@ -87,7 +87,11 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.cudext import CudaArray
+
+from pyccel.ast.cudext import CudaNewArray
+
+from pyccel.ast.cudext import CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
+from pyccel.ast.numbaext import NumbaNewArray, NumbaArrayClass
 
 from pyccel.ast.cupyext import CupyNewArray
 from pyccel.ast.cupyext import CupyRawKernel
@@ -719,6 +723,16 @@ class SemanticParser(BasicParser):
             d_var['is_pointer' ] = True
             return d_var
 
+        elif isinstance(expr, NumbaNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = NumbaArrayClass
+            return d_var
+        
         elif isinstance(expr, NumpyNewArray):
             d_var['datatype'   ] = expr.dtype
             d_var['allocatable'] = expr.rank>0
@@ -1070,10 +1084,8 @@ class SemanticParser(BasicParser):
             first = results[0]
         rhs_name = _get_name(rhs)
         attr_name = []
-
         # Handle case of imported module
         if isinstance(first, dict):
-
             if rhs_name in first:
                 imp = self.get_import(_get_name(lhs))
 
@@ -1114,11 +1126,16 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 
+        if (first in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim)):
+            dim = {'x':0, 'y':1, 'z':2}
+            return first(LiteralInteger(dim[rhs_name]))
+
         if not hasattr(first, 'cls_base') or first.cls_base is None:
             errors.report('Attribute {} not found'.format(rhs_name),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
 
+        print("o")
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]
 
@@ -1150,6 +1167,10 @@ class SemanticParser(BasicParser):
                         self.insert_import('numpy', rhs_name)
                         func = i.decorators['numpy_wrapper']
                         return func(visited_lhs, *args)
+                    elif 'numba_wrapper' in i.decorators.keys():
+                        self.insert_import('numba', rhs_name)
+                        func = i.decorators['numba_wrapper']
+                        return func(visited_lhs, *args)
                     else:
                         return DottedFunctionCall(i, args, prefix = visited_lhs,
                                     current_function = self._current_function)
@@ -1177,6 +1198,10 @@ class SemanticParser(BasicParser):
                     if i.name == rhs and \
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
+                            func = i.decorators['numpy_wrapper']
+                            self.insert_import('numpy', rhs)
+                            return func(visited_lhs)
+                        elif 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
                             self.insert_import('numpy', rhs)
                             return func(visited_lhs)
@@ -1504,7 +1529,7 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     # Create Allocate node
-                    if isinstance(rhs, (CudaArray, CupyNewArray)):
+                    if isinstance(rhs, (CudaNewArray, CupyNewArray, NumbaNewArray)):
                         lhs.is_ondevice = True
                     new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
@@ -1800,6 +1825,7 @@ class SemanticParser(BasicParser):
             return CodeBlock(stmts)
 
         elif isinstance(rhs, FunctionCall):
+            print(rhs.funcdef)
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results
@@ -2438,7 +2464,7 @@ class SemanticParser(BasicParser):
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
         headers = []
 
-        not_used = [d for d in decorators if d not in def_decorators.__all__]
+        not_used = [d for d in decorators if str(d) not in def_decorators.__all__]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 

@@ -31,6 +31,8 @@ from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.cudext import CudaMalloc, CudaArray
+from pyccel.ast.numbaext import NumbaToDevice
+
 from pyccel.ast.cupyext import CupyArray, CupyFull, CupyArange
 
 
@@ -86,6 +88,7 @@ class CuCodePrinter(CCodePrinter):
         return kcall
 
     def _print_FunctionDef(self, expr):
+
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
         body  = self._print(expr.body)
@@ -112,7 +115,7 @@ class CuCodePrinter(CCodePrinter):
                  sep]
 
         return '\n'.join(p for p in parts if p)
-    
+
     def _print_IndexedElement(self, expr):
         base = expr.base
         inds = list(expr.indices)
@@ -169,7 +172,8 @@ class CuCodePrinter(CCodePrinter):
             arg_code = ', '.join('{}'.format(self.function_signature(i))
                         if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
                         for i in args)
-        decorator = '__global__' if 'cuda' in expr.decorators else ''
+        
+        decorator = '__global__' if 'cuda' or 'cuda.jit' in expr.decorators else ''
 
         if isinstance(expr, FunctionAddress):
             return '{0}\n{1}(*{2})({3})'.format(decorator, ret_type, name, arg_code)
@@ -182,11 +186,7 @@ class CuCodePrinter(CCodePrinter):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         ######
-        if isinstance(expr.rhs, (CudaArray)):
-            return self.copy_CudaArray_Data(expr)
-        if isinstance(expr.rhs, (CudaMalloc)):
-            return ''
-        if isinstance(expr.rhs, (CupyArray)):
+        if isinstance(expr.rhs, (CupyArray, CudaArray, NumbaToDevice)):
             return self.copy_CudaArray_Data(expr)
         if isinstance(expr.rhs, (CupyFull)):
             return self.Cuda_arrayFill(expr)
@@ -204,6 +204,51 @@ class CuCodePrinter(CCodePrinter):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
+
+    def copy_NumpyArray_Data(self, expr):
+        """ print the assignment of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains the declaration of a dummy data_buffer
+                       and a call to an operator which copies it to an NdArray struct
+                if the ndarray is a stack_array the str will contain the initialization
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        if rhs.rank == 0:
+            raise NotImplementedError(str(expr))
+        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        arg = rhs.arg
+        if rhs.rank > 1:
+            # flattening the args to use them in C initialization.
+            arg = functools.reduce(operator.concat, arg)
+
+        print(arg.is_ondevice)
+        if isinstance(arg, Variable):
+            arg = self._print(arg)
+            if expr.lhs.is_stack_array:
+                cpy_data = self._init_stack_array(expr, rhs.arg)
+            elif rhs.arg.is_ondevice:
+                cpy_data = "cudaMemcpy({0}.{2}, {1}.{2}, {0}.buffer_size, cudaMemcpyDeviceToHost);".format(lhs, arg, dtype)
+            else:
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+            return '%s\n' % (cpy_data)
+        else :
+            arg = ', '.join(self._print(i) for i in arg)
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+            if expr.lhs.is_stack_array:
+                cpy_data = self._init_stack_array(expr, dummy_array_name)
+            else:
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(self._print(lhs), dummy_array_name, dtype)
+            return  '%s%s\n' % (dummy_array, cpy_data)
 
     def copy_CudaArray_Data(self, expr):
         """ print the assignment of a NdArray
@@ -329,10 +374,10 @@ class CuCodePrinter(CCodePrinter):
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n\n'
-                #'#ifndef __cplusplus\nextern "C" {{\n#endif\n'
+                '#ifndef __cplusplus\nextern "C" {{\n#endif\n'
                 #'{classes}\n\n'
                 '{funcs}\n\n'
-                #'#ifndef __cplusplus\n}}\n#endif\n'
+                '#ifndef __cplusplus\n}}\n#endif\n'
                 #'{interfaces}\n\n'
                 '#endif // {name}_H\n').format(
                         name    = name.upper(),

@@ -21,6 +21,7 @@ __all__ = (
     'elemental',
     'stack_array',
     'cuda',
+    'cuda.jit',
     'allow_negative_index'
 )
 
