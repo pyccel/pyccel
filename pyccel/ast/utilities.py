@@ -27,7 +27,7 @@ from .mathext       import math_functions, math_constants
 from .literals      import LiteralString, LiteralInteger, Literal, Nil
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants)
+                            numpy_random_functions, numpy_constants, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, InhomogeneousTupleVariable, VariableAddress)
@@ -441,9 +441,13 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 if rank+index >= len(indices):
                     indices.append(Variable('int',new_index_name('i')))
                 index_var = indices[rank+index]
+                print(indices[rank+index])
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
                 if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
                     break
+
+            if isinstance(line.rhs, NumpyLinspace):
+                line.rhs.ind = indices[-1]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
@@ -515,7 +519,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             # Save line in top level (no for loop)
             result.append(line)
             current_level = 0
-
+    #print(result)
     return result
 
 #==============================================================================

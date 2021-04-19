@@ -537,7 +537,7 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank')
+    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind')
     _order     = 'C'
 
     def __init__(self, start, stop, num=None, endpoint=True, dtype=None):
@@ -547,7 +547,7 @@ class NumpyLinspace(NumpyNewArray):
 
         for arg in (start, stop, num):
             if not isinstance(arg, PyccelAstNode):
-                raise TypeError('Expecting valid args')
+                raise TypeError('Expecting valid args.')
 
         if dtype:
             self._dtype, self._precision = dtype_registry[dtype]
@@ -574,8 +574,10 @@ class NumpyLinspace(NumpyNewArray):
         self._stop  = stop
         self._num  = num
         self._endpoint = endpoint
-        self._shape = (self._num,) + self._start.shape
+        shape = broadcast(self._start.shape, self._stop.shape)
+        self._shape = (self._num,) + shape
         self._rank  = len(self._shape)
+        self._ind = ''
         super().__init__()
 
     @property
@@ -597,15 +599,30 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
+        #div = (num - 1) if self._endpoint else num
         if self._endpoint is False:
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
+    
+    @property
+    def ind(self):
+        """Used to check if the construct has a nowait clause."""
+        return self._ind
+
+    @ind.setter
+    def ind(self, value):
+        """Used to set the _has_nowait var."""
+        self._ind = value
 
     def __str__(self):
         code = 'linspace({}, {}, {})'.format(str(self.start),
                                              str(self.stop),
                                              str(self.num))
         return code
+
+    @property
+    def is_elemental(self):
+        return True
 
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):

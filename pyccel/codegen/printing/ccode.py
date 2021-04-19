@@ -1196,6 +1196,17 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpyLinspace(self, expr):
+        template = '({start} + {index}*{step})'
+        init_value = template.format(
+            start = self._print(expr.start),
+            step  = self._print(expr.step ),
+            index = self._print(expr.ind),
+        )
+        code = init_value
+
+        return code
+
     def _print_Interface(self, expr):
         return ""
 
