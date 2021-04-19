@@ -103,11 +103,11 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   C equivalent:
 
     ```C
-    #include <stdint.h>
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include "ndarrays.h"
     #include <complex.h>
+    #include <stdlib.h>
+    #include "ndarrays.h"
+    #include <stdio.h>
+    #include <stdint.h>
     int main()
     {
         t_ndarray arr1;
@@ -131,18 +131,18 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         }
         printf("%s ", "real part for arr1: ");
         printf("%s", "[");
-        for (i = 0; i < 4 - 1; i += 1)
+        for (i = 0; i < 3; i += 1)
         {
             printf("%.12lf ", real_part.nd_double[get_index(real_part, i)]);
         }
-        printf("%.12lf]", real_part.nd_double[get_index(real_part, 4 - 1)]);
+        printf("%.12lf]", real_part.nd_double[get_index(real_part, 3)]);
         printf("%s ", "\nimag part for arr1: ");
         printf("%s", "[");
-        for (i_0002 = 0; i_0002 < 4 - 1; i_0002 += 1)
+        for (i_0002 = 0; i_0002 < 3; i_0002 += 1)
         {
             printf("%.12lf ", imag_part.nd_double[get_index(imag_part, i_0002)]);
         }
-        printf("%.12lf]\n", imag_part.nd_double[get_index(imag_part, 4 - 1)]);
+        printf("%.12lf]\n", imag_part.nd_double[get_index(imag_part, 3)]);
         free_array(arr1);
         free_array(real_part);
         free_array(imag_part);
