@@ -326,3 +326,30 @@ Some examples:
 
         end program prog_ex
         ```
+
+## Numpy functions progress in Pyccel
+
+-   Supported [types](https://numpy.org/devdocs/user/basics.types.html): bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. They can be used as cast functions too.
+
+    Note: np.bool, np.int and np.float are just aliases to the Python native types, and are considered as a deprecated way to work with Python built-in types in NumPy.
+
+-   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):
+
+    sqrt, abs, sin, cos, exp, log, tan, arcsin, arccos, arctan, arctan2, sinh, cosh, tanh, arcsinh, arccosh and
+    arctanh.
+
+-   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html):
+
+    -   empty, full, ones, zeros, arange (`like` parameter is not supported).
+    -   empty_like, full_like, and zeros_like, ones_like (`subok` parameter is not supported).
+    -   rand, randint.
+
+- Supported [linear algebra](https://numpy.org/devdocs/reference/routines.linalg.html#linear-algebra-numpy-linalg) routines:
+
+    norm, mod, matmul, prod.
+
+-   Helpers routines:
+
+    amax, amin, sum, shape, floor,  where, linspace, real and imag.
+
+    Note: amax and amin can be used as properties.

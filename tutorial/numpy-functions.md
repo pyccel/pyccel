@@ -2,7 +2,7 @@
 
 In Pyccel we try to support the Numpy functions which developers use the most.. Here are some of them:
 
-## [Norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
+## [norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
 -   Supported parameters:
 
@@ -35,7 +35,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_boo
+    program prog_test_norm
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -58,10 +58,10 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     nrm2 = Norm2(Real(arr2, C_DOUBLE),1_C_INT64_T)
     print *, nrm
 
-    end program prog_boo
+    end program prog_test_norm
     ```
 
-## [Real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
+## [real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
 
 -   Supported languages: C, fortran
 
@@ -78,7 +78,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_boo
+    program prog_test_imag_real
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -97,7 +97,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     imag_part = aimag(arr1)
     print *, 'real part for arr1: ' // ' ' , real_part, ACHAR(10) // 'imag part for arr1: ' // ' ' , imag_part
 
-    end program prog_boo
+    end program prog_test_imag_real
     ```
 
 -   C equivalent:
@@ -163,7 +163,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_boo
+    program prog_test_imag_real
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -182,7 +182,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     imag_part = aimag(arr1)
     print *, 'real part for arr1: ' // ' ' , real_part, ACHAR(10) // 'imag part for arr1: ' // ' ' , imag_part
 
-    end program prog_boo
+    end program prog_test_imag_real
     ```
 
 -   C equivalent:
@@ -235,7 +235,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     }
     ```
 
-## [Prod](https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
+## [prod](https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
 
 -   Supported parameters:
 
@@ -257,7 +257,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_boo
+    program prog_test_prod
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -271,7 +271,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     prd = product(arr)
     print *, 'prd: ' // ' ' , prd
 
-    end program prog_boo
+    end program prog_test_prod
     ```
 
 ## [mod](https://numpy.org/doc/stable/reference/generated/numpy.mod.html)
@@ -300,7 +300,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_boo
+    program prog_test_mod
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -315,7 +315,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     res = MODULO(arr,arr)
     print *, 'res: ' // ' ' , res
 
-    end program prog_boo
+    end program prog_test_prod
     ```
 
 ## [matmul](https://numpy.org/doc/stable/reference/generated/numpy.matmul.html)
@@ -340,7 +340,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   fortran equivalent:
 
     ```fortran
-    program prog_boo
+    program prog_test_matmul
 
     use, intrinsic :: ISO_C_BINDING
 
@@ -356,30 +356,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     res = matmul(arr,arr)
     print *, 'res: ' // ' ' , res
 
-    end program prog_boo
+    end program prog_test_matmul
     ```
-
-## [Numpy types](https://numpy.org/devdocs/user/basics.types.html)
-
--   Supported types: bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. They can be used as cast functions too.
-
-    Note: np.bool, np.int and np.float are just aliases to the Python native types, and are considered as a deprecated way to work with Python built-in types in NumPy.
-
-## Other functions
-
--   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):
-
-    sqrt, abs, sin, cos, exp, log, tan, arcsin, arccos, arctan, arctan2, sinh, cosh, tanh, arcsinh, arccosh and
-    arctanh.
-
--   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
-
-    -   empty, full, ones, zeros, arange (`like` parameter is not supported).
-    -   empty_like, full_like, and zeros_like, ones_like (`subok` parameter is not supported).
-    -   rand, randint.
-
--   others:
-
-    amax, amin, sum, shape, floor
 
 If discrepancies beyond round-off error are found between [Numpy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
