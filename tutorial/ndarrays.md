@@ -311,7 +311,7 @@ Some examples:
         end program prog_ex
         ```
 
-## Numpy functions progress in Pyccel
+## Numpy functions progress in Pyccel ##
 
 -   Supported [types](https://numpy.org/devdocs/user/basics.types.html): bool, int, int8, int16, int32, int64, float, float32, float64, complex64 and complex128. They can be used as cast functions too.
 
@@ -330,10 +330,10 @@ Some examples:
 
 - Supported [linear algebra](https://numpy.org/devdocs/reference/routines.linalg.html#linear-algebra-numpy-linalg) routines:
 
-    norm, mod, matmul, prod.
+    -   norm, mod, matmul, prod.
 
 -   Helpers routines:
 
-    amax, amin, sum, shape, floor,  where, linspace, real and imag.
+    -   amax, amin, sum, shape, floor,  where, linspace, real and imag.
 
     Note: amax and amin can be used as properties.
