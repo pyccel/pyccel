@@ -11,7 +11,7 @@ def test_modulo_int_int(language):
         return x % y
 
     f = epyccel(modulo_i_i, language=language)
-    x = randint(1e6)
+    x = randint(-1e6, 1e6)
     y = randint(low=1, high=100) # low=1 for avoid zero-division error
 
     assert f(x, y) == modulo_i_i(x, y)
@@ -23,7 +23,7 @@ def test_modulo_real_real(language):
         return x % y
 
     f = epyccel(modulo_r_r, language=language)
-    x = uniform(high=1e6)
+    x = uniform(low=-1e6, high=1e6)
     y = uniform(low=1, high=1e2) # low=1 for avoid zero-division error
 
     assert(isclose(f(x, y), modulo_r_r(x, y), rtol=1e-15, atol=1e-15))
@@ -35,7 +35,7 @@ def test_modulo_real_int(language):
         return x % y
 
     f = epyccel(modulo_r_i, language=language)
-    x = uniform(high=1e6)
+    x = uniform(low=-1e6, high=1e6)
     y = randint(low=1, high=100) # low=1 for avoid zero-division error
 
     assert(isclose(f(x, y), modulo_r_i(x, y), rtol=1e-15, atol=1e-15))
@@ -47,7 +47,7 @@ def test_modulo_int_real(language):
         return x % y
 
     f = epyccel(modulo_i_r, language=language)
-    x = randint(1e6)
+    x = randint(-1e6, 1e6)
     y = uniform(low=1, high=1e2) # low=1 for avoid zero-division error
 
     assert(isclose(f(x, y), modulo_i_r(x, y), rtol=1e-15, atol=1e-15))
