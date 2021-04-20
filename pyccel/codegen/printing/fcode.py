@@ -703,7 +703,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        if expr._rank > 1:
+        if expr.rank > 1:
             template = '[({start} + {index}*{step})]'
         else:
             template = '[({start} + {index}*{step},{index} = {zero},{end})]'
@@ -713,7 +713,7 @@ class FCodePrinter(CodePrinter):
         init_value = template.format(
             start = self._print(expr.start),
             step  = self._print(expr.step ),
-            index = self._print(expr.index) if expr._rank == 1 else expr.ind,
+            index = self._print(expr.index) if expr.rank == 1 else expr.ind,
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )

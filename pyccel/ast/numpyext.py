@@ -538,7 +538,7 @@ class NumpyLinspace(NumpyNewArray):
 
     Parameters
       ----------
-      start           : list , tuple , PythonTuple, PythonList, Variable, Literals 
+      start           : list , tuple , PythonTuple, PythonList, Variable, Literals
                         Represents the starting value of the sequence.
       stop            : list , tuple , PythonTuple, PythonList, Variable, Literals
                         Represents the ending value of the sequence (if endpoint is set to False).
@@ -546,7 +546,7 @@ class NumpyLinspace(NumpyNewArray):
                         Number of samples to generate. Default is 50. Must be non-negative.
       endpoint        : bool, optional
                         If True, stop is the last sample. Otherwise, it is not included. Default is True.
-      dtype           : dtype, optional
+      dtype           : str, DataType
                         The type of the output array. If dtype is not given, the data type is calculated
                         from start and stop, the calculated dtype will never be an integer.
     """
@@ -616,11 +616,15 @@ class NumpyLinspace(NumpyNewArray):
         return self._index
 
     @property
+    def rank(self):
+        return self._rank
+
+    @property
     def step(self):
         if self._endpoint is False:
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
-    
+
     @property
     def ind(self):
         """Used to check if the construct has a nowait clause."""
