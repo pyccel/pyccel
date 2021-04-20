@@ -703,13 +703,17 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        template = '[({start} + {index}*{step},{index} = {zero},{end})]'
-        var = Variable('int', 'linspace_index')
-        self.add_vars_to_namespace(var)
+        if expr._rank > 1:
+            template = '[({start} + {index}*{step})]'
+        else:
+            template = '[({start} + {index}*{step},{index} = {zero},{end})]'
+            var = Variable('int', 'linspace_index')
+            self.add_vars_to_namespace(var)
+
         init_value = template.format(
             start = self._print(expr.start),
             step  = self._print(expr.step ),
-            index = self._print(expr.index),
+            index = self._print(expr.index) if expr._rank == 1 else expr.ind,
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )

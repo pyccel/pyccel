@@ -538,6 +538,7 @@ class NumpyLinspace(NumpyNewArray):
 
     """
     __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind')
+    _attribute_nodes = ('_start','_stop')
     _order     = 'C'
 
     def __init__(self, start, stop, num=None, endpoint=True, dtype=None):
@@ -599,7 +600,6 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        #div = (num - 1) if self._endpoint else num
         if self._endpoint is False:
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))

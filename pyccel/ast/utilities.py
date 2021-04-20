@@ -441,13 +441,12 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 if rank+index >= len(indices):
                     indices.append(Variable('int',new_index_name('i')))
                 index_var = indices[rank+index]
-                print(indices[rank+index])
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
                 if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
                     break
 
             if isinstance(line.rhs, NumpyLinspace):
-                line.rhs.ind = indices[-1]
+                line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))

@@ -1200,7 +1200,7 @@ class CCodePrinter(CodePrinter):
         template = '({start} + {index}*{step})'
         init_value = template.format(
             start = self._print(expr.start),
-            step  = self._print(expr.step ),
+            step  = self._print(expr.step),
             index = self._print(expr.ind),
         )
         code = init_value
