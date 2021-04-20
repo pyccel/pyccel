@@ -1600,41 +1600,7 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    """
-    class Task(Basic):
-    """
-    """
-    __slots__ = ('_stmt','_inputs','_outputs','_preceders', '_should_wait')
-    _attribute_nodes = ('_stmt','_inputs','_preceders')
-    def __init__(self, stmt, inputs = (), outputs = dict(), preceders = ()):
-        self._stmt        = stmt
-        self._inputs      = inputs
-        self._outputs     = outputs
-        self._preceders   = preceders
-        self._should_wait = False
-        super().__init__()
-    @property
-    def stmt(self):
-        return self._stmt
-    @property
-    def inputs(self):
-        return self._inputs
-    @property
-    def outputs(self):
-        return self._outputs
-    @property
-    def preceders(self):
-        return self._preceders
-    @property
-    def should_wait(self):
-        return self._should_wait
-    @should_wait.setter
-    def should_wait(self, value):
-        self._should_wait = value
-    """
-
     def _print_Task(self, expr):
-
         inouts = []
         inputs = expr.inputs
 

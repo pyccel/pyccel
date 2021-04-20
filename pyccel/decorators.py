@@ -20,7 +20,8 @@ __all__ = (
     'private',
     'elemental',
     'stack_array',
-    'allow_negative_index'
+    'allow_negative_index',
+    'task'
 )
 
 def lambdify(f):
@@ -92,6 +93,21 @@ def allow_negative_index(f,*args):
     args : list of str
         A list containing the names of all arrays which can be accessed
         with non-constant negative indexes
+    """
+    def identity(f):
+        return f
+    return identity
+
+
+def task(master = None, **kwargs):
+    """
+    Decorator indicate that the function can be used in multithreading
+
+    Prameters
+    ---------
+    master : string
+        indecate that the current function is responsible or running other
+        task functions
     """
     def identity(f):
         return f
