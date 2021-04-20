@@ -374,6 +374,6 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 -   others:
 
-    amax, amin, sum, shape, floor
+    -   amax, amin, sum, shape, floor
 
 If discrepancies beyond round-off error are found between [Numpy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
