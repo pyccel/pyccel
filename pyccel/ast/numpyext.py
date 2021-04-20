@@ -534,9 +534,23 @@ def Shape(arg):
 class NumpyLinspace(NumpyNewArray):
 
     """
-    Represents numpy.linspace.
+    Represents numpy.linspace which returns num evenly spaced samples, calculated over the interval [start, stop].
 
+    Parameters
+      ----------
+      start           : list , tuple , PythonTuple, PythonList, Variable, Literals 
+                        Represents the starting value of the sequence.
+      stop            : list , tuple , PythonTuple, PythonList, Variable, Literals
+                        Represents the ending value of the sequence (if endpoint is set to False).
+      num             : int, optional
+                        Number of samples to generate. Default is 50. Must be non-negative.
+      endpoint        : bool, optional
+                        If True, stop is the last sample. Otherwise, it is not included. Default is True.
+      dtype           : dtype, optional
+                        The type of the output array. If dtype is not given, the data type is calculated
+                        from start and stop, the calculated dtype will never be an integer.
     """
+
     __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind')
     _attribute_nodes = ('_start','_stop')
     _order     = 'C'
@@ -545,6 +559,9 @@ class NumpyLinspace(NumpyNewArray):
 
         if not num:
             num = LiteralInteger(50)
+
+        if num.rank != 0:
+            raise TypeError('Expecting positive integer num argument.')
 
         for arg in (start, stop, num):
             if not isinstance(arg, PyccelAstNode):
