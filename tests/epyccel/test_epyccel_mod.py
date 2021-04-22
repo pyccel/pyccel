@@ -12,7 +12,8 @@ def test_modulo_int_int(language):
 
     f = epyccel(modulo_i_i, language=language)
     x = randint(-1e6, 1e6)
-    y = randint(low=1, high=100) # low=1 for avoid zero-division error
+    y = randint(low=-100, high=100)
+    y = 1 if y == 0 else y
 
     assert f(x, y) == modulo_i_i(x, y)
     assert isinstance(f(x, y), type(modulo_i_i(x, y)))
@@ -24,7 +25,8 @@ def test_modulo_real_real(language):
 
     f = epyccel(modulo_r_r, language=language)
     x = uniform(low=-1e6, high=1e6)
-    y = uniform(low=1, high=1e2) # low=1 for avoid zero-division error
+    y = uniform(low=-1e2, high=1e2)
+    y = 1 if y == 0 else y
 
     assert(isclose(f(x, y), modulo_r_r(x, y), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y), type(modulo_r_r(x, y)))
@@ -36,7 +38,8 @@ def test_modulo_real_int(language):
 
     f = epyccel(modulo_r_i, language=language)
     x = uniform(low=-1e6, high=1e6)
-    y = randint(low=1, high=100) # low=1 for avoid zero-division error
+    y = randint(low=-100, high=100)
+    y = 1 if y == 0 else y
 
     assert(isclose(f(x, y), modulo_r_i(x, y), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y), type(modulo_r_i(x, y)))
@@ -48,7 +51,8 @@ def test_modulo_int_real(language):
 
     f = epyccel(modulo_i_r, language=language)
     x = randint(-1e6, 1e6)
-    y = uniform(low=1, high=1e2) # low=1 for avoid zero-division error
+    y = uniform(low=-1e2, high=1e2)
+    y = 1 if y == 0 else y
 
     assert(isclose(f(x, y), modulo_i_r(x, y), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y), type(modulo_i_r(x, y)))
