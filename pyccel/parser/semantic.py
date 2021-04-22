@@ -52,7 +52,7 @@ from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import TaskFunctionCall, Task
+from pyccel.ast.core import TaskFunctionCall, Task, TaskMaster
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
@@ -168,7 +168,7 @@ class SemanticParser(BasicParser):
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
         # we use it to detect the current method or function
-
+        self._task_count = 0
         #
         self._code = parser._code
         # ...
@@ -302,7 +302,6 @@ class SemanticParser(BasicParser):
         Search for a Variable object with the given name in the current namespace,
         defined by the local and global Python scopes. Return None if not found.
         """
-
         if self.current_class:
             for i in self._current_class.attributes:
                 if i.name == name:
@@ -651,44 +650,63 @@ class SemanticParser(BasicParser):
     def is_task_function(self, func):
         """
         """
-        return self.is_task_master() and 'task' in func.decorators
+        if 'task' in self._namespace.decorators:
+            return self._namespace.decorators['task']['type'] == 'master' and 'task' in func.decorators
+        
+        elif not 'task' in self._namespace.decorators:
+            return 'task' in func.decorators and func.decorators['task']['type'] == 'master'
 
-    def is_task_master(self):
-        """
-        """
-        return 'task' in self._namespace.decorators \
-            and self._namespace.decorators['task'] == 'master'
+        return False
 
     def set_task_wait(self, obj):
         """
         """
+        if not self._namespace.decorators['task']['type'] == 'master':
+            return
         if not isinstance(obj, (PyccelAstNode, Task)) and self._namespace.tasks:
             self._namespace.tasks[-1].should_wait = True
 
-    def set_task_dependencies(self, expr, taskfunc, outputs):
+    def set_task_dependencies(self, expr, func, inputs, outputs):
         """
         """
-        inputs    = set()
-        preceders = set()
+        if func.decorators['task']['type'] == 'master' and not 'task' in self._namespace.decorators:  
+            if isinstance(expr, Basic) and self._current_fst_node:
+                expr.set_fst(self._current_fst_node)
+
+            return TaskMaster(func.decorators['task']['threads_num'], expr)
+
+        self._task_count = 0
+        new_inputs = set()
+        preceders  = set()
         outputs = [outputs] if isinstance(outputs, Variable) else list(outputs)
-        outputs += [a for a, i in zip(taskfunc.args, taskfunc.funcdef.arguments_inout) if i is True]
+        shareds = [i for i, arg in zip(inputs, func.arguments_inout) if arg is True]
+        shareds += outputs
         outputs = {i : False for i in outputs}
+        shareds = set(shareds)
 
         for task in self.namespace.tasks:
-            for a in taskfunc.args + tuple(inputs):
+            for a in inputs:
                 if a in task.outputs:
                     task.outputs[a] = True
-                    inputs.add(a)
+                    task.shareds.add(a)
+                    new_inputs.add(a)
                     preceders.add(task)
+                
+                if a in task.shareds:
+                    task.shareds.add(a)
+                    shareds.add(a)
 
-        inputs    = tuple(inputs)
-        preceders = tuple(preceders)
+        new_inputs = tuple(new_inputs)
+        preceders  = tuple(preceders)
 
         if isinstance(expr, Basic) and self._current_fst_node:
             expr.set_fst(self._current_fst_node)
 
-        task = Task(expr, inputs, outputs, preceders)
+        task = Task(expr, new_inputs, outputs, shareds, preceders)
+        task.should_wait = True
         self._namespace.tasks.append(task)
+        if len(self._namespace.tasks) >= 2:
+            self._namespace.tasks[-2].should_wait = False
         return task
     #=======================================================
     #              Utility functions
@@ -978,12 +996,12 @@ class SemanticParser(BasicParser):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
-
             if self.is_task_function(func):
                 new_expr = TaskFunctionCall(func, args, self._current_function)
+                self._task_count += 1
                 new_args = new_expr.args
-                if len(func.results) == 0 and expr.get_direct_user_nodes(lambda p: isinstance(p, CodeBlock)):
-                    new_expr = self.set_task_dependencies(new_expr, taskfunc = new_expr, outputs = ())
+                if len(func.results) == 0:
+                    new_expr = self.set_task_dependencies(new_expr, func, inputs = new_expr.args, outputs = ())
 
             else:
                 new_expr = FunctionCall(func, args, self._current_function)
@@ -1332,8 +1350,6 @@ class SemanticParser(BasicParser):
                 obj = getattr(self, annotation_method)(expr, **settings)
                 if isinstance(obj, Basic) and self._current_fst_node:
                     obj.set_fst(self._current_fst_node)
-                    if self.is_task_master:
-                        self.set_task_wait(obj)
                 self._current_fst_node = current_fst
                 return obj
 
@@ -1483,7 +1499,6 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelSymbol(self, expr, **settings):
         name = expr
-
         var = self.check_for_variable(name)
 
         if var is None:
@@ -1499,7 +1514,6 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=True)
         return var
-
 
     def _visit_DottedName(self, expr, **settings):
 
@@ -2118,18 +2132,17 @@ class SemanticParser(BasicParser):
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
 
-            if self.is_task_master():
-                if isinstance(r, TaskFunctionCall):
-                    new_expr = self.set_task_dependencies(new_expr, taskfunc = r, outputs = l)
-                else:
-                    tasks = r.get_attribute_nodes(TaskFunctionCall)
-                    l = len(tasks)
-                    if l == 1:
-                        errors.report('Task function result should be saved in a variable before using it in a statement',
-                        symbol=tasks[0], severity='warning')
-                    elif l > 1:
-                        errors.report('Multiple task function in the same statement may result in some undefined behavior',
-                        symbol=', '.join(str(t) for t in tasks), severity='warning')
+            if isinstance(r, TaskFunctionCall):
+                new_expr = self.set_task_dependencies(new_expr, func, inputs = r.args, outputs = l)
+            else:
+                tasks = r.get_attribute_nodes(TaskFunctionCall)
+                l = len(tasks)
+                if l == 1:
+                    errors.report('Task function result should be saved in a variable before using it in a statement',
+                    symbol=tasks[0], severity='warning')
+                elif l > 1:
+                    errors.report('Multiple task function in the same statement may result in some undefined behavior',
+                    symbol=', '.join(str(t) for t in tasks), severity='warning')
 
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
