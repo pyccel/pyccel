@@ -34,7 +34,7 @@ def test_modulo_real_real(language):
         return x % y
 
     f = epyccel(modulo_r_r, language=language)
-    x = uniform(low=0 high=1e6)
+    x = uniform(low=0, high=1e6)
     nx = uniform(low=-1e6, high=-1)
     y = uniform(low=-1e2, high=1e2)
     y = 1 if y == 0 else y
@@ -80,12 +80,21 @@ def test_modulo_int_real(language):
         return x % y
 
     f = epyccel(modulo_i_r, language=language)
-    x = randint(-1e6, 1e6)
+    x = randint(0, 1e6)
+    nx = randint(-1e6, -1)
     y = uniform(low=-1e2, high=1e2)
     y = 1 if y == 0 else y
 
-    assert(isclose(f(x, y), modulo_i_r(x, y), rtol=1e-15, atol=1e-15))
-    assert isinstance(f(x, y), type(modulo_i_r(x, y)))
+    f_output = f(x, y)
+    modulo_i_r_output = modulo_i_r(x, y)
+    assert(isclose(f_output, modulo_i_r_output, rtol=1e-15, atol=1e-15))
+    assert isinstance(f_output, type(modulo_i_r_output))
+
+    # test negative x
+    f_output = f(nx, y)
+    modulo_i_r_output = modulo_i_r(nx, y)
+    assert(isclose(f_output, modulo_i_r_output, rtol=1e-15, atol=1e-15))
+    assert isinstance(f_output, type(modulo_i_r_output))
 
 def test_modulo_multiple(language):
     @types('int', 'real', 'int')
