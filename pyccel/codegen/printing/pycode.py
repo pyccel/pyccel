@@ -65,7 +65,7 @@ class PythonCodePrinter(CodePrinter):
             return lines
         else:
             # lines ends with \n
-            return tab+lines[:-1].replace('\n','\n'+tab)+'\n'
+            return tab+lines.strip('\n').replace('\n','\n'+tab)+'\n'
 
     def _format_code(self, lines):
         return lines
@@ -285,7 +285,7 @@ class PythonCodePrinter(CodePrinter):
         return '({}).imag'.format(self._print(expr.internal_var))
 
     def _print_PythonPrint(self, expr):
-        return 'print({})'.format(', '.join(self._print(a) for a in expr.expr))
+        return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
