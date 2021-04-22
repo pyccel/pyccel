@@ -19,7 +19,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall, Task
 from pyccel.ast.core import ParserResult
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
@@ -626,7 +626,6 @@ class SyntaxParser(BasicParser):
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='error')
             return container
-
         decorators = {}
 
         # add the decorator @types if the arguments are annotated
@@ -750,6 +749,23 @@ class SyntaxParser(BasicParser):
                     header = header.to_static()
                 headers += [header]
 
+        if 'task' in decorators.keys():
+            self._namespace.task_functions.append(name)
+            decorator = decorators['task'][0]
+            task = dict()
+            task['type'] = 'child'
+            task['threads_num'] = None
+            if isinstance(decorator, FunctionCall):
+                args = decorator.args
+                if len(args) >= 1:
+                    if args[0] != "child" or args[0] != 'master':
+                        pass
+                        #raise and error
+                    task['type'] = args[0]
+                    if len(args) == 2:
+                        task['threads_num'] = args[1]
+            decorators['task'] = task
+
         body = stmt.body
 
         if 'sympy' in decorators.keys():
@@ -792,17 +808,6 @@ class SyntaxParser(BasicParser):
 
         if 'private' in decorators.keys():
             is_private = True
-
-        if 'task' in decorators.keys():
-            decorator = decorators['task'][0]
-            decorators['task'] = 'child'
-            if isinstance(decorator, FunctionCall):
-                if len(decorator.args) > 0:
-                    arg = decorator.args[0]
-                    if arg != "child" or arg != 'master':
-                        pass
-                        #raise and error
-                    decorators['task'] = arg
 
         body = CodeBlock(body)
 
@@ -906,7 +911,6 @@ class SyntaxParser(BasicParser):
             args = ()
 
         func = self._visit(stmt.func)
-
         if isinstance(func, PyccelSymbol):
             if func == "print":
                 func = PythonPrint(PythonTuple(*args))
@@ -917,7 +921,6 @@ class SyntaxParser(BasicParser):
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
-
         return func
 
     def _visit_keyword(self, stmt):
