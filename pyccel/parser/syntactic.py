@@ -750,7 +750,6 @@ class SyntaxParser(BasicParser):
                 headers += [header]
 
         if 'task' in decorators.keys():
-            self._namespace.task_functions.append(name)
             decorator = decorators['task'][0]
             task = dict()
             task['type'] = 'child'
