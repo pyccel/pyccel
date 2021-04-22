@@ -704,7 +704,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyLinspace(self, expr):
 
         if expr.rank > 1:
-            template = '[({start} + {index}*{step})]'
+            template = '({start} + {index}*{step})'
         else:
             template = '[({start} + {index}*{step},{index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')

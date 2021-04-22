@@ -5290,19 +5290,6 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
     assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_linspace_scalar(language):
 
     @types('int', 'int', 'int')
@@ -5364,8 +5351,7 @@ def test_numpy_linspace_scalar(language):
     assert (epyccel_func1(-3+6j, 5-1j) == test_linspace(-3+6j, 5-1j))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #771")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
@@ -5378,7 +5364,6 @@ def test_numpy_linspace_scalar(language):
 
 def test_numpy_linspace_array_like_1d(language):
 
-    @types('bool[:]')
     @types('int[:]')
     @types('int8[:]')
     @types('int16[:]')
