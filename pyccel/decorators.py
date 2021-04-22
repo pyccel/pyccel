@@ -99,15 +99,17 @@ def allow_negative_index(f,*args):
     return identity
 
 
-def task(master = None, **kwargs):
+def task(type = 'child', threads_num = None):
     """
     Decorator indicate that the function can be used in multithreading
 
     Prameters
     ---------
-    master : string
-        indecate that the current function is responsible or running other
-        task functions
+    type : string
+        indecate that the current function is responsible of running other
+        task functions ('master') or a task function ('child' / None)
+    threads_num : integer
+        number of threads reserved for this parallel region
     """
     def identity(f):
         return f
