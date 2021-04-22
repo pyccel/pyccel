@@ -1024,6 +1024,8 @@ class SemanticParser(BasicParser):
                 self._task_count += 1
                 new_args = new_expr.args
                 if len(func.results) == 0:
+                    if expr.get_user_nodes(Assign):
+                        raise NotImplementedError("Cannot assign result of a function without a return")
                     new_expr = self.set_task_dependencies(new_expr, func, inputs = new_expr.args, outputs = ())
 
             else:
@@ -1425,7 +1427,7 @@ class SemanticParser(BasicParser):
                       While, If, Return, Comment, Pass, Continue,
                       Break, Allocate, Deallocate, CommentBlock,
                       AnnotatedComment, OmpAnnotatedComment, Del,
-                      With, EmptyNode, Header, PythonPrint)
+                      With, EmptyNode, Header, PythonPrint, Task)
         visited_body = [self._visit(i, **settings) for i in expr.body]
         useful_body  = [l for l in visited_body if isinstance(l, expr_types)]
 
