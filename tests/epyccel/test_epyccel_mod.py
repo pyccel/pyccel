@@ -11,12 +11,22 @@ def test_modulo_int_int(language):
         return x % y
 
     f = epyccel(modulo_i_i, language=language)
-    x = randint(-1e6, 1e6)
+    x = randint(0, 1e6)
+    nx = randint(-1e6, -1)
     y = randint(low=-100, high=100)
     y = 1 if y == 0 else y
 
-    assert f(x, y) == modulo_i_i(x, y)
-    assert isinstance(f(x, y), type(modulo_i_i(x, y)))
+
+    f_output = f(x, y)
+    modulo_i_i_output = modulo_i_i(x, y)
+    assert modulo_i_i_output == f_output
+    assert isinstance(f_output, type(modulo_i_i_output))
+
+    #test negative x
+    f_output = f(nx, y)
+    modulo_i_i_output = modulo_i_i(nx, y)
+    assert modulo_i_i_output == f_output
+    assert isinstance(f_output, type(modulo_i_i_output))
 
 def test_modulo_real_real(language):
     @types('real', 'real')
@@ -24,12 +34,21 @@ def test_modulo_real_real(language):
         return x % y
 
     f = epyccel(modulo_r_r, language=language)
-    x = uniform(low=-1e6, high=1e6)
+    x = uniform(low=0 high=1e6)
+    nx = uniform(low=-1e6, high=-1)
     y = uniform(low=-1e2, high=1e2)
     y = 1 if y == 0 else y
 
-    assert(isclose(f(x, y), modulo_r_r(x, y), rtol=1e-15, atol=1e-15))
-    assert isinstance(f(x, y), type(modulo_r_r(x, y)))
+    f_output = f(x, y)
+    modulo_r_r_output = modulo_r_r(x, y)
+    assert(isclose(f_output, modulo_r_r_output, rtol=1e-15, atol=1e-15))
+    assert isinstance(f_output, type(modulo_r_r_output))
+
+    # test negative x
+    f_output = f(nx, y)
+    modulo_r_r_output = modulo_r_r(nx, y)
+    assert(isclose(f_output, modulo_r_r_output, rtol=1e-15, atol=1e-15))
+    assert isinstance(f_output, type(modulo_r_r_output))
 
 def test_modulo_real_int(language):
     @types('real', 'int')
@@ -37,12 +56,23 @@ def test_modulo_real_int(language):
         return x % y
 
     f = epyccel(modulo_r_i, language=language)
-    x = uniform(low=-1e6, high=1e6)
+    x = uniform(low=0, high=1e6)
+    nx = uniform(low=-1e6, high=-1)
     y = randint(low=-100, high=100)
     y = 1 if y == 0 else y
 
-    assert(isclose(f(x, y), modulo_r_i(x, y), rtol=1e-15, atol=1e-15))
-    assert isinstance(f(x, y), type(modulo_r_i(x, y)))
+
+    f_output = f(x, y)
+    modulo_r_i_output = modulo_r_i(x, y)
+    assert(isclose(f_output, modulo_r_i_output, rtol=1e-15, atol=1e-15))
+    assert isinstance(f_output, type(modulo_r_i_output))
+
+    # test negative x
+    f_output = f(nx, y)
+    modulo_r_i_output = modulo_r_i(nx, y)
+    assert(isclose(f_output, modulo_r_i_output, rtol=1e-15, atol=1e-15))
+    assert isinstance(f_output, type(modulo_r_i_output))
+
 
 def test_modulo_int_real(language):
     @types('int', 'real')
