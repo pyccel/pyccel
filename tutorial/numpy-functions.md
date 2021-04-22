@@ -320,16 +320,14 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [matmul](https://numpy.org/doc/stable/reference/generated/numpy.matmul.html)
 
--   Supported parameters:
+-  Supported parameters:
 
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
 
--   Supported languages:
+-  Supported languages: fortran (1d or 2d arrays only, dot product not supported)
 
-    fortran (1d or 2d arrays only, dot product not supported)
-
--   python code:
+-  python code:
 
     ```python
     from numpy import array, matmul
@@ -339,7 +337,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("res: ", res)
     ```
 
--   fortran equivalent:
+-  fortran equivalent:
 
     ```fortran
     program prog_test_matmul
