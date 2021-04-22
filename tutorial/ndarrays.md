@@ -325,4 +325,4 @@ Some examples:
 
 -   Methods:
 
-    - sum
+    -   sum
