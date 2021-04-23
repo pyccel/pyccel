@@ -12,8 +12,9 @@ import numpy as np
 #==============================================================================
 
 @pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c)
+        #pytest.param("fortran", marks = pytest.mark.fortran),
+        #pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
     ],
     scope='module'
 )
@@ -27,7 +28,7 @@ def get_abs_path(relative_path):
     return os.path.join(base_dir, relative_path)
 
 #------------------------------------------------------------------------------
-def get_exe(filename):
+def get_exe(filename, language=None):
     exefile = os.path.splitext(filename)[0]
     if sys.platform == "win32":
         exefile = exefile + ".exe"
@@ -38,6 +39,14 @@ def get_exe(filename):
         if sys.platform == "win32":
             exefile = exefile + ".exe"
         assert(os.path.isfile(exefile))
+
+    if language == 'python':
+        result = exefile.split('/')
+        result.insert(-1, "py")
+        exefile = "/".join(result)
+        exefile += '.py'
+        os.system('chmod 777 '+exefile)
+    #os.chmod(exefile+".py", 777)
     return exefile
 
 #------------------------------------------------------------------------------
@@ -59,6 +68,8 @@ def get_python_output(abs_path, cwd = None):
 #------------------------------------------------------------------------------
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
+        if "python" in options:
+            options += " --output py"
         options = options.strip().split(' ')
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
     else:
@@ -120,8 +131,12 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
     p.wait()
 
 #------------------------------------------------------------------------------
-def get_lang_output(abs_path):
-    p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+def get_lang_output(abs_path, language=None):
+    print(abs_path)
+    if language == 'python':
+        p = subprocess.Popen(["python3", abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+    else:
+        p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
     return out
@@ -207,6 +222,8 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     if language:
         pyccel_commands += " --language="+language
+        if language == "python":
+            pyccel_commands += " --output py"
     else:
         language='fortran'
 
@@ -229,10 +246,10 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
             dependencies = []
         if language=='fortran':
             compile_fortran(cwd, test_file, dependencies)
-        else:
+        elif language == 'c':
             compile_c(cwd, test_file, dependencies)
 
-    lang_out = get_lang_output(get_exe(test_file))
+    lang_out = get_lang_output(get_exe(test_file, language), language)
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
 #==============================================================================
