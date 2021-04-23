@@ -313,11 +313,14 @@ def test_imports_compile(language):
 @pytest.mark.xdist_incompatible
 def test_imports_in_folder(language):
     if language == 'python':
-        current_folder = os.path.abspath(__file__)
-        result = current_folder.split('/')
-        result = result[:-1]
-        current_folder = "/".join(result)
-        shutil.copytree(current_folder+"/scripts/folder1", current_folder+"/scripts/py/folder1")
+        try:
+            current_folder = os.path.abspath(__file__)
+            result = current_folder.split('/')
+            result = result[:-1]
+            current_folder = "/".join(result)
+            shutil.copytree(current_folder+"/scripts/folder1", current_folder+"/scripts/py/folder1")
+        except:
+            print("An exception occurred")
     pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
             compile_with_pyccel = False, language = language)
 
