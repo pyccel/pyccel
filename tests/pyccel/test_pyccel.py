@@ -46,7 +46,6 @@ def get_exe(filename, language=None):
         exefile = "/".join(result)
         exefile += '.py'
         os.system('chmod 777 '+exefile)
-    #os.chmod(exefile+".py", 777)
     return exefile
 
 #------------------------------------------------------------------------------
@@ -132,7 +131,6 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
 
 #------------------------------------------------------------------------------
 def get_lang_output(abs_path, language=None):
-    print(abs_path)
     if language == 'python':
         p = subprocess.Popen(["python3", abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     else:
@@ -314,6 +312,12 @@ def test_imports_compile(language):
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 def test_imports_in_folder(language):
+    if language == 'python':
+        current_folder = os.path.abspath(__file__)
+        result = current_folder.split('/')
+        result = result[:-1]
+        current_folder = "/".join(result)
+        shutil.copytree(current_folder+"/scripts/folder1", current_folder+"/scripts/py/folder1")
     pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
             compile_with_pyccel = False, language = language)
 
