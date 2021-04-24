@@ -30,15 +30,6 @@ def get_abs_path(relative_path):
 #------------------------------------------------------------------------------
 def get_exe(filename, language=None):
     exefile = os.path.splitext(filename)[0]
-    if sys.platform == "win32":
-        exefile = exefile + ".exe"
-    if not os.path.isfile(exefile):
-        dirname = os.path.dirname(filename)
-        basename = "prog_"+os.path.basename(filename)
-        exefile = os.path.join(dirname, os.path.splitext(basename)[0])
-        if sys.platform == "win32":
-            exefile = exefile + ".exe"
-        assert(os.path.isfile(exefile))
 
     if language == 'python':
         result = exefile.split('/')
@@ -46,6 +37,17 @@ def get_exe(filename, language=None):
         exefile = "/".join(result)
         exefile += '.py'
         os.system('chmod 777 '+exefile)
+    else:
+        if sys.platform == "win32":
+            exefile = exefile + ".exe"
+        if not os.path.isfile(exefile):
+            dirname = os.path.dirname(filename)
+            basename = "prog_"+os.path.basename(filename)
+            exefile = os.path.join(dirname, os.path.splitext(basename)[0])
+            if sys.platform == "win32":
+                exefile = exefile + ".exe"
+            assert(os.path.isfile(exefile))
+
     return exefile
 
 #------------------------------------------------------------------------------
