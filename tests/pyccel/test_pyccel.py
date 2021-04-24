@@ -12,8 +12,8 @@ import numpy as np
 #==============================================================================
 
 @pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
+        #pytest.param("fortran", marks = pytest.mark.fortran),
+        #pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope='module'
@@ -138,11 +138,8 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
     p.wait()
 
 #------------------------------------------------------------------------------
-def get_lang_output(abs_path, language=None):
-    if language == 'python':
-        p = subprocess.Popen(["python3", abs_path], stdout=subprocess.PIPE, universal_newlines=True)
-    else:
-        p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+def get_lang_output(abs_path):
+    p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
     return out
@@ -255,7 +252,10 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         elif language == 'c':
             compile_c(cwd, test_file, dependencies)
 
-    lang_out = get_lang_output(get_exe(test_file, language), language)
+    if language == "python":
+        lang_out = get_python_output(get_exe(test_file, language))
+    else:
+        lang_out = get_lang_output(get_exe(test_file, language))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
 #==============================================================================
@@ -560,6 +560,9 @@ def test_print_strings(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="sep and end params not working in python : https://github.com/pyccel/pyccel/issues/874"),
+            pytest.mark.python]),
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="formated string not implemented in fortran"),
             pytest.mark.fortran]
