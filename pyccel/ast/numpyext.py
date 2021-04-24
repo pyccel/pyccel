@@ -497,16 +497,21 @@ class NumpyMatmul(PyccelInternalFunction):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-        if a.rank == 1 or b.rank == 1:
-            self._rank = 1
-        else:
-            self._rank = 2
-
         if not (a.shape is None or b.shape is None):
 
             m = 1 if a.rank < 2 else a.shape[0]
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
+
+        if a.rank == 1 and b.rank == 1:
+            self._rank = 0
+            self._shape = ()
+        elif a.rank == 1 or b.rank == 1:
+            self._rank = 1
+        else:
+            self._rank = 2
+
+
 
         if a.order == b.order:
             self._order = a.order
