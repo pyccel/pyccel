@@ -32,9 +32,15 @@ def get_exe(filename, language=None):
     exefile = os.path.splitext(filename)[0]
 
     if language == 'python':
-        result = exefile.split('/')
-        result.insert(-1, "py")
-        exefile = "/".join(result)
+        result = ''
+        if sys.platform == "win32":
+            result = exefile.split('\\')
+            result.insert(-1, "py")
+            exefile = "\\".join(result)
+        else:
+            result = exefile.split('/')
+            result.insert(-1, "py")
+            exefile = "/".join(result)
         exefile += '.py'
         os.system('chmod 777 '+exefile)
     else:
