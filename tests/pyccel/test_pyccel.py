@@ -12,8 +12,8 @@ import numpy as np
 #==============================================================================
 
 @pytest.fixture( params=[
-        #pytest.param("fortran", marks = pytest.mark.fortran),
-        #pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope='module'
@@ -28,7 +28,7 @@ def get_abs_path(relative_path):
     return os.path.join(base_dir, relative_path)
 
 #------------------------------------------------------------------------------
-def get_exe(filename, language=None):
+def get_exe(filename, language=None, prog=False):
     exefile = os.path.splitext(filename)[0]
 
     if language == 'python':
@@ -36,13 +36,18 @@ def get_exe(filename, language=None):
         if sys.platform == "win32":
             result = exefile.split('\\')
             result.insert(-1, "py")
+            if prog == True:
+                result[-1] = "prog_"+result[-1]
             exefile = "\\".join(result)
         else:
             result = exefile.split('/')
             result.insert(-1, "py")
+            if prog == True:
+                result[-1] = "prog_"+result[-1]
             exefile = "/".join(result)
         exefile += '.py'
-        os.system('chmod 777 '+exefile)
+        exefile = os.path.normpath(exefile)
+        #os.system('chmod 777 '+exefile)
     else:
         if sys.platform == "win32":
             exefile = exefile + ".exe"
@@ -589,11 +594,17 @@ def test_arrays_view(language):
 
 #------------------------------------------------------------------------------
 def test_headers(language):
+    if language == "python":
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        full_path = os.path.join(base_dir, os.path.normpath("scripts/py"))
+        if os.path.exists(full_path) == False:
+            os.mkdir(full_path)
+
     test_file = "scripts/runtest_headers.py"
     test_file = os.path.normpath(test_file)
     test_file = get_abs_path(test_file)
 
-    header_file = 'scripts/headers.pyh'
+    header_file = 'scripts/py/headers.pyh' if language == "python" else 'scripts/headers.pyh'
     header_file = os.path.normpath(header_file)
     header_file = get_abs_path(header_file)
 
@@ -621,8 +632,11 @@ def test_headers(language):
     compile_pyccel(cwd, test_file, pyccel_commands)
 
 
-    lang_out = get_lang_output(get_exe(test_file))
-    assert int(lang_out)
+    if language == "python":
+        lang_out = get_python_output(get_exe(test_file, language, prog=True)) 
+    else:
+        lang_out = get_lang_output(get_exe(test_file, language))
+    assert int(lang_out) == 1
 
     with open(test_file, 'w') as f:
         code = ("from headers import f\n"
@@ -636,12 +650,15 @@ def test_headers(language):
     with open(header_file, 'w') as f:
         code =("#$ header metavar ignore_at_import=True\n"
                "#$ header function f(float)")
-
+    
         f.write(code)
 
     compile_pyccel(cwd, test_file, pyccel_commands)
 
-    lang_out = get_lang_output(get_exe(test_file))
+    if language == "python":
+        lang_out = get_python_output(get_exe(test_file, language, prog=True))
+    else:
+        lang_out = get_lang_output(get_exe(test_file, language))
     assert float(lang_out) == 1.5
 
     with open(test_file, 'w') as f:
