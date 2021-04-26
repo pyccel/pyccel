@@ -2404,8 +2404,8 @@ def test_sum_property(language):
 def test_min_int(language):
     @types('int[:]')
     def min_call(x):
-        from numpy import min as np_min
-        return np_min(x)
+        from numpy import amin
+        return amin(x)
 
     f1 = epyccel(min_call, language = language)
     x = randint(99,size=10)
@@ -2423,8 +2423,8 @@ def test_min_int(language):
 def test_min_real(language):
     @types('real[:]')
     def min_call(x):
-        from numpy import min as np_min
-        return np_min(x)
+        from numpy import amin
+        return amin(x)
 
     f1 = epyccel(min_call, language = language)
     x = rand(10)
@@ -2442,8 +2442,8 @@ def test_min_real(language):
 def test_min_phrase(language):
     @types('real[:]','real[:]')
     def min_phrase(x,y):
-        from numpy import min as np_min
-        a = np_min(x)*np_min(y)
+        from numpy import amin
+        a = amin(x)*amin(y)
         return a
 
     f2 = epyccel(min_phrase, language = language)
@@ -2481,8 +2481,8 @@ def test_min_property(language):
 def test_max_int(language):
     @types('int[:]')
     def max_call(x):
-        from numpy import max as np_max
-        return np_max(x)
+        from numpy import amax
+        return amax(x)
 
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
@@ -2500,8 +2500,8 @@ def test_max_int(language):
 def test_max_real(language):
     @types('real[:]')
     def max_call(x):
-        from numpy import max as np_max
-        return np_max(x)
+        from numpy import amax
+        return amax(x)
 
     f1 = epyccel(max_call, language = language)
     x = rand(10)
@@ -2519,14 +2519,15 @@ def test_max_real(language):
 def test_max_phrase(language):
     @types('real[:]','real[:]')
     def max_phrase(x,y):
-        from numpy import max as np_max
-        a = np_max(x)*np_max(y)
+        from numpy import amax
+        a = amax(x)*amax(y)
         return a
 
     f2 = epyccel(max_phrase, language = language)
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
+
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
