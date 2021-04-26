@@ -967,7 +967,7 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 matching_types = all(input_arg.dtype is func_arg.dtype \
                         and input_arg.precision == func_arg.precision \
-                        and input_arg.rank == func_arg.rank \
+                        and (input_arg.rank == func_arg.rank or func.is_elemental) \
                         for input_arg, func_arg in zip(new_expr.args, func.arguments) \
                             if input_arg is not Nil() and \
                                 not isinstance(func_arg, FunctionAddress))
