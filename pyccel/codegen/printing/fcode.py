@@ -168,15 +168,14 @@ python_builtin_datatypes = {
 
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b',
-               r'(recursive )?(pure )?(elemental )?subroutine\b',
-               r'(recursive )?(pure )?(elemental )?function\b',
+               r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
                r'interface\b',r'module\b')
-inc_regex = re.compile('\\s*({})'.format('|'.join('({})'.format(i) for i in inc_keyword)))
+inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
                'subroutine', 'interface','module')
-end_regex_str = 'end ?({})'.format('|'.join('({})'.format(k) for k in end_keyword))
-dec_regex = re.compile('\\s*(({})|(else))'.format(end_regex_str))
+end_regex_str = '(end ?({}))|(else)'.format('|'.join('({})'.format(k) for k in end_keyword))
+dec_regex = re.compile(end_regex_str)
 
 errors = Errors()
 
