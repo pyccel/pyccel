@@ -5098,19 +5098,19 @@ def test_numpy_matmul_array_like_1d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert epyccel_func(bl) == get_matmul(bl)
-    assert epyccel_func(integer8) == get_matmul(integer8)
-    assert epyccel_func(integer16) == get_matmul(integer16)
-    assert epyccel_func(integer) == get_matmul(integer)
-    assert epyccel_func(integer32) == get_matmul(integer32)
+    assert isclose(epyccel_func(bl), get_matmul(bl), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(integer8),get_matmul(integer8), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(integer16),get_matmul(integer16), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(integer),get_matmul(integer), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(integer32),get_matmul(integer32), rtol=RTOL, atol=ATOL)
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_matmul(integer64)
-    assert epyccel_func(fl) == get_matmul(fl)
-    assert epyccel_func(fl32) == get_matmul(fl32)
-    assert epyccel_func(fl64) == get_matmul(fl64)
-    assert (epyccel_func(cmplx64) == get_matmul(cmplx64))
-    assert (epyccel_func(cmplx128) == get_matmul(cmplx128))
+        assert isclose(epyccel_func(integer64),get_matmul(integer64), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(fl),get_matmul(fl), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(fl32),get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
+    assert isclose(epyccel_func(fl64),get_matmul(fl64), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(cmplx64),get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert isclose(epyccel_func(cmplx128),get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
