@@ -964,13 +964,15 @@ class SemanticParser(BasicParser):
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
-            if isinstance(func, FunctionDef):
-                matching_types = all(input_arg.dtype is func_arg.dtype \
-                        and input_arg.precision == func_arg.precision \
-                        and (input_arg.rank == func_arg.rank or func.is_elemental) \
+            elif isinstance(func, FunctionDef):
+                matching_types = all(
+                         input_arg.dtype     is func_arg.dtype and \
+                         input_arg.precision == func_arg.precision and \
+                        (input_arg.rank      == func_arg.rank     or func.is_elemental) \
                         for input_arg, func_arg in zip(new_expr.args, func.arguments) \
                             if input_arg is not Nil() and \
-                                not isinstance(func_arg, FunctionAddress))
+                                not isinstance(func_arg, FunctionAddress) and \
+                                func_arg.dtype is not NativeGeneric())
                 if not matching_types:
                     errors.report(INCOMPATIBLE_ARGUMENT,
                             symbol = expr,
