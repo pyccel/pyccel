@@ -47,7 +47,6 @@ def get_exe(filename, language=None, prog=False):
             exefile = "/".join(result)
         exefile += '.py'
         exefile = os.path.normpath(exefile)
-        #os.system('chmod 777 '+exefile)
     else:
         if sys.platform == "win32":
             exefile = exefile + ".exe"
