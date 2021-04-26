@@ -217,7 +217,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
-        language = None):
+        language = None, prog=False):
     test_file = os.path.normpath(test_file)
 
     if (cwd is None):
@@ -258,7 +258,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
             compile_c(cwd, test_file, dependencies)
 
     if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language))
+        lang_out = get_python_output(get_exe(test_file, language, prog=prog))
     else:
         lang_out = get_lang_output(get_exe(test_file, language))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
@@ -412,8 +412,12 @@ def test_expressions(language):
             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-    pyccel_test("scripts/expressions.py", language=language,
-                output_dtype = types)
+    if language == "python":
+        pyccel_test("scripts/expressions.py", language=language,
+            output_dtype = str)
+    else:
+        pyccel_test("scripts/expressions.py", language=language,
+            output_dtype = types)
 
 #------------------------------------------------------------------------------
 # See issue #756 for c problem
@@ -445,7 +449,10 @@ def test_pyccel_calling_directory(language):
     language_opt = '--language={}'.format(language)
     compile_pyccel(cwd, test_file, language_opt)
 
-    fort_out = get_lang_output(get_exe(test_file))
+    if language == "python":
+        fort_out = get_python_output(get_exe(test_file, language))
+    else:
+        fort_out = get_lang_output(get_exe(test_file))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
@@ -551,7 +558,7 @@ def test_multiple_results(language):
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
                 float,float,float,float,float,float
-                ,float,float,float,float], language=language)
+                ,float,float,float,float], language=language, prog=True)
 
 #------------------------------------------------------------------------------
 def test_elemental(language):
@@ -590,7 +597,7 @@ def test_c_arrays(language):
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10
-    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
+    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types, prog=True)
 
 #------------------------------------------------------------------------------
 def test_headers(language):
