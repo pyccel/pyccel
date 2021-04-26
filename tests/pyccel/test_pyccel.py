@@ -12,8 +12,8 @@ import numpy as np
 #==============================================================================
 
 @pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
+        #pytest.param("fortran", marks = pytest.mark.fortran),
+        #pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope='module'
@@ -32,20 +32,12 @@ def get_exe(filename, language=None, prog=False):
     exefile = os.path.splitext(filename)[0]
 
     if language == 'python':
-        result = ''
-        if sys.platform == "win32":
-            result = exefile.split('\\')
-            result.insert(-1, "py")
-            if prog is True:
-                result[-1] = "prog_"+result[-1]
-            exefile = "\\".join(result)
-        else:
-            result = exefile.split('/')
-            result.insert(-1, "py")
-            if prog is True:
-                result[-1] = "prog_"+result[-1]
-            exefile = "/".join(result)
-        exefile += '.py'
+        exefile = os.path.normpath(filename)
+        base = os.path.basename(exefile)
+        if prog is True:
+            base = "prog_"+base
+        dir_path = os.path.dirname(exefile)
+        exefile = os.path.join(dir_path, 'py', base)
         exefile = os.path.normpath(exefile)
     else:
         if sys.platform == "win32":
@@ -598,12 +590,6 @@ def test_arrays_view(language):
 
 #------------------------------------------------------------------------------
 def test_headers(language):
-    if language == "python":
-        base_dir = os.path.dirname(os.path.realpath(__file__))
-        full_path = os.path.join(base_dir, os.path.normpath("scripts/py"))
-        if os.path.exists(full_path) is False:
-            os.mkdir(full_path)
-
     test_file = "scripts/runtest_headers.py"
     test_file = os.path.normpath(test_file)
     test_file = get_abs_path(test_file)
