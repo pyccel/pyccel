@@ -680,7 +680,7 @@ class SemanticParser(BasicParser):
         new_inputs = set()
         preceders  = set()
         outputs = [outputs] if isinstance(outputs, Variable) else list(outputs)
-        shareds = [i for i, arg in zip(inputs, func.arguments_inout) if arg is True]
+        shareds = [arg for arg in inputs if arg.rank > 0]
         shareds += outputs
         outputs = {i : False for i in outputs}
         shareds = set(shareds)
