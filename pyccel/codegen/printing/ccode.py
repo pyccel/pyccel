@@ -809,8 +809,9 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if expr.is_ndarray:
                 self._additional_imports.add('ndarrays')
-                return 't_ndarray '
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+                dtype = 't_ndarray'
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
@@ -922,7 +923,7 @@ class CCodePrinter(CodePrinter):
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
-        base_name = self._print(base.name)
+        base_name = self._print(base)
         if base.is_ndarray:
             if expr.rank > 0:
                 #managing the Slice input
