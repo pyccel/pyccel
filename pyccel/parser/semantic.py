@@ -3230,7 +3230,9 @@ class SemanticParser(BasicParser):
         return macro
 
     def _visit_MacroShape(self, expr, **settings):
-        return expr
+        arg = self._visit(expr.argument)
+        index = self._visit(expr.index)
+        return MacroShape(arg, index)
 
     def _visit_MacroVariable(self, expr, **settings):
 
