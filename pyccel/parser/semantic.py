@@ -969,7 +969,8 @@ class SemanticParser(BasicParser):
                         and input_arg.precision == func_arg.precision \
                         and input_arg.rank == func_arg.rank \
                         for input_arg, func_arg in zip(new_expr.args, func.arguments) \
-                            if input_arg is not Nil())
+                            if input_arg is not Nil() and \
+                                not isinstance(func_arg, FunctionAddress))
                 if not matching_types:
                     errors.report(INCOMPATIBLE_ARGUMENT,
                             symbol = expr,
