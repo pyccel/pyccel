@@ -11,6 +11,7 @@ www.fortran90.org as much as possible."""
 
 
 import string
+import re
 from itertools import chain
 from collections import OrderedDict
 
@@ -1538,7 +1539,7 @@ class FCodePrinter(CodePrinter):
         args_decs = OrderedDict()
 
         func_end  = ''
-        rec = 'recursive' if expr.is_recursive else ''
+        rec = 'recursive ' if expr.is_recursive else ''
         if len(expr.results) != 1:
             func_type = 'subroutine'
             out_args = list(expr.results)
@@ -1579,7 +1580,7 @@ class FCodePrinter(CodePrinter):
                 out_args.remove(i)
 
         # treate case of pure function
-        sig = '{0} {1} {2}'.format(rec, func_type, name)
+        sig = '{0}{1} {2}'.format(rec, func_type, name)
         if is_pure:
             sig = 'pure {}'.format(sig)
 
@@ -2862,18 +2863,23 @@ class FCodePrinter(CodePrinter):
 
         code = [line.lstrip(' \t') for line in code]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n',
-                       'else', 'type', 'subroutine', 'function',
-                       'interface')
-        dec_keyword = ('end do', 'enddo', 'end if', 'endif',
-                       'else', 'endtype', 'end type',
-                       'endfunction', 'end function',
-                       'endsubroutine', 'end subroutine',
-                       'endinterface', 'end interface')
+        inc_keyword = (r'do\b', r'if\b',
+                       r'else\b', r'type\b',
+                       r'(recursive )?(pure )?(elemental )?subroutine\b',
+                       r'(recursive )?(pure )?(elemental )?function\b',
+                       r'interface\b',r'module\b')
+        inc_regex = '^\\s*({})'.format('|'.join('({})'.format(i) for i in inc_keyword))
+        inc_regex = re.compile(inc_regex)
 
-        increase = [int(any(map(line.startswith, inc_keyword)))
+        end_keyword = ('do', 'if', 'type', 'function',
+                       'subroutine', 'interface','module')
+        end_regex = 'end ?({})'.format('|'.join('({})'.format(k) for k in end_keyword))
+        dec_regex = '^\\s*(({})|(else))'.format(end_regex)
+        dec_regex = re.compile(dec_regex)
+
+        increase = [int(inc_regex.match(line) is not None)
                      for line in code]
-        decrease = [int(any(map(line.startswith, dec_keyword)))
+        decrease = [int(dec_regex.match(line) is not None)
                      for line in code]
         continuation = [int(any(map(line.endswith, ['&', '&\n'])))
                          for line in code]
