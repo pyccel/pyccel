@@ -710,6 +710,24 @@ class PythonCodePrinter(CodePrinter):
     def _print_PyccelSymbol(self, expr):
         return expr
 
+    #------------------OmpAnnotatedComment Printer------------------
+
+    def _print_OmpAnnotatedComment(self, expr):
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + combined
+
+        omp_expr = '#$omp {}'.format(expr.name)
+        clauses += str(expr.txt)
+        omp_expr = '{}{}\n'.format(omp_expr, clauses)
+
+        return omp_expr
+
+    def _print_Omp_End_Clause(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#$omp {}\n'.format(omp_expr)
+        return omp_expr
+
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
     """ Converts an expr to a string of Python code

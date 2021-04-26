@@ -36,7 +36,7 @@ def get_exe(filename, language=None, prog=False):
         if sys.platform == "win32":
             result = exefile.split('\\')
             result.insert(-1, "py")
-            if prog == True:
+            if prog is True:
                 result[-1] = "prog_"+result[-1]
             exefile = "\\".join(result)
         else:
@@ -326,14 +326,12 @@ def test_imports_compile(language):
 @pytest.mark.xdist_incompatible
 def test_imports_in_folder(language):
     if language == 'python':
-        try:
-            current_folder = os.path.abspath(__file__)
-            result = current_folder.split('/')
-            result = result[:-1]
-            current_folder = "/".join(result)
+        current_folder = os.path.abspath(__file__)
+        result = current_folder.split('/')
+        result = result[:-1]
+        current_folder = "/".join(result)
+        if os.path.exists(current_folder+"/scripts/py/folder1") == False:
             shutil.copytree(current_folder+"/scripts/folder1", current_folder+"/scripts/py/folder1")
-        except:
-            print("An exception occurred")
     pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
             compile_with_pyccel = False, language = language)
 
@@ -604,7 +602,7 @@ def test_headers(language):
     if language == "python":
         base_dir = os.path.dirname(os.path.realpath(__file__))
         full_path = os.path.join(base_dir, os.path.normpath("scripts/py"))
-        if os.path.exists(full_path) == False:
+        if os.path.exists(full_path) is False:
             os.mkdir(full_path)
 
     test_file = "scripts/runtest_headers.py"
@@ -638,9 +636,8 @@ def test_headers(language):
 
     compile_pyccel(cwd, test_file, pyccel_commands)
 
-
     if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language, prog=True)) 
+        lang_out = get_python_output(get_exe(test_file, language, prog=True))
     else:
         lang_out = get_lang_output(get_exe(test_file, language))
     assert int(lang_out) == 1
@@ -657,7 +654,7 @@ def test_headers(language):
     with open(header_file, 'w') as f:
         code =("#$ header metavar ignore_at_import=True\n"
                "#$ header function f(float)")
-    
+
         f.write(code)
 
     compile_pyccel(cwd, test_file, pyccel_commands)
