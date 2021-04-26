@@ -12,8 +12,8 @@ import numpy as np
 #==============================================================================
 
 @pytest.fixture( params=[
-        #pytest.param("fortran", marks = pytest.mark.fortran),
-        #pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope='module'
