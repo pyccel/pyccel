@@ -170,12 +170,12 @@ inc_keyword = (r'do\b', r'if\b',
                r'(recursive )?(pure )?(elemental )?subroutine\b',
                r'(recursive )?(pure )?(elemental )?function\b',
                r'interface\b',r'module\b')
-inc_regex = re.compile('^\\s*({})'.format('|'.join('({})'.format(i) for i in inc_keyword)))
+inc_regex = re.compile('\\s*({})'.format('|'.join('({})'.format(i) for i in inc_keyword)))
 
 end_keyword = ('do', 'if', 'type', 'function',
                'subroutine', 'interface','module')
 end_regex_str = 'end ?({})'.format('|'.join('({})'.format(k) for k in end_keyword))
-dec_regex = re.compile('^\\s*(({})|(else))'.format(end_regex_str))
+dec_regex = re.compile('\\s*(({})|(else))'.format(end_regex_str))
 
 errors = Errors()
 
