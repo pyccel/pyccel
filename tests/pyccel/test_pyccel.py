@@ -42,7 +42,7 @@ def get_exe(filename, language=None, prog=False):
         else:
             result = exefile.split('/')
             result.insert(-1, "py")
-            if prog == True:
+            if prog is True:
                 result[-1] = "prog_"+result[-1]
             exefile = "/".join(result)
         exefile += '.py'
@@ -330,7 +330,7 @@ def test_imports_in_folder(language):
         result = current_folder.split('/')
         result = result[:-1]
         current_folder = "/".join(result)
-        if os.path.exists(current_folder+"/scripts/py/folder1") == False:
+        if os.path.exists(current_folder+"/scripts/py/folder1") is False:
             shutil.copytree(current_folder+"/scripts/folder1", current_folder+"/scripts/py/folder1")
     pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
             compile_with_pyccel = False, language = language)

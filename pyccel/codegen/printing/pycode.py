@@ -715,7 +715,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_OmpAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:
-            clauses = ' ' + combined
+            clauses = ' ' + expr.combined
 
         omp_expr = '#$omp {}'.format(expr.name)
         clauses += str(expr.txt)
