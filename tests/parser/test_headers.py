@@ -2,6 +2,9 @@
 # coding: utf-8
 
 from pyccel.parser.syntax.headers import parse
+from pyccel.ast.basic import PyccelAstNode
+
+PyccelAstNode.stage = 'syntactic'
 
 def test_variable():
     print (parse(stmts='#$ header variable x :: int'))
