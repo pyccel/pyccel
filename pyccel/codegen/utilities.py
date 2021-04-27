@@ -67,7 +67,7 @@ def construct_flags(compiler,
         if sys.platform == "win32":
             mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
             mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
-            flags += ['-D', 'USE_MPI_MODULE', '-I', mpiinc, '-L', mpilib]
+            flags.extend(['-D', 'USE_MPI_MODULE', '-I', mpiinc, '-L', mpilib])
 
     if accelerator is not None:
         if accelerator == "openmp":
