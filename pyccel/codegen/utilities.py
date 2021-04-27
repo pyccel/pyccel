@@ -121,9 +121,9 @@ def compile_files(filename, compiler, flags,
         flags.append('-c')
         if (len(output)>0) and language == "fortran":
             if compiler == "ifort":
-                j_code = ['-module','{folder}'.format(folder=output)]
+                j_code = ['-module', output]
             else:
-                j_code = ['-J',"{folder}".format(folder=output)]
+                j_code = ['-J', output]
 
     m_code = ['{}.o'.format(m) for m in modules]
     if is_module:
@@ -132,9 +132,9 @@ def compile_files(filename, compiler, flags,
         flags.extend(f for i in libdirs for f in ('-L', i))
         libs_flags = ['-l{}'.format(i) for i in libs]
 
-        #if sys.platform == "win32" and compiler == "mpif90":
-        #    compiler = "gfortran"
-        #    filename += ' "{}"'.format(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
+    if sys.platform == "win32" and compiler == "mpif90":
+        compiler = "gfortran"
+        m_code.append(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
 
     cmd = [compiler] + flags + m_code + [filename, o_code, binary] + libs_flags + j_code
 
