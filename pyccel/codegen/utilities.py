@@ -53,10 +53,10 @@ def construct_flags(compiler,
         raise ValueError("Only {0} are available.".format(_avail_compilers))
 
     if not fflags:
-        fflags = ['-O3']
+        flags = ['-O3']
+    else:
+        flags = list(fflags)
 
-    # make sure there are spaces
-    flags = list(fflags)
     if compiler == "gfortran":
         if debug:
             flags.append("-fcheck=bounds")
@@ -67,7 +67,7 @@ def construct_flags(compiler,
         if sys.platform == "win32":
             mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
             mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
-            flags += ['-D USE_MPI_MODULE', '-I"{}"'.format(mpiinc), '-L"{}"'.format(mpilib)]
+            flags += ['-D', 'USE_MPI_MODULE', '-I', mpiinc, '-L', mpilib]
 
     if accelerator is not None:
         if accelerator == "openmp":
