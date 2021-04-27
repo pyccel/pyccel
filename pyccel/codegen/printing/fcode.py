@@ -167,13 +167,13 @@ python_builtin_datatypes = {
 }
 
 inc_keyword = (r'do\b', r'if\b',
-               r'else\b', r'type\b',
+               r'else\b', r'type\b\s*[^\(]',
                r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
-               r'interface\b',r'module\b')
+               r'interface\b',r'module\b',r'program\b')
 inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
-               'subroutine', 'interface','module')
+               'subroutine', 'interface','module','program')
 end_regex_str = '(end ?({}))|(else)'.format('|'.join('({})'.format(k) for k in end_keyword))
 dec_regex = re.compile(end_regex_str)
 
