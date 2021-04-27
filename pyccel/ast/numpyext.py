@@ -481,7 +481,8 @@ class NumpyMatmul(PyccelInternalFunction):
         super().__init__(a, b)
 
         args      = (a, b)
-        integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
+        integers  = [e for e in args if e.dtype is NativeInteger()]
+        booleans  = [e for e in args if e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
@@ -494,6 +495,9 @@ class NumpyMatmul(PyccelInternalFunction):
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(e.precision for e in integers)
+        elif booleans:
+            self._dtype     = NativeBool()
+            self._precision = max(e.precision for e in booleans)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -508,6 +512,7 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = ()
         elif a.rank == 1 or b.rank == 1:
             self._rank = 1
+            self._shape = (1,)
         else:
             self._rank = 2
 
