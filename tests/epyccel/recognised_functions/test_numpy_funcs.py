@@ -5363,9 +5363,9 @@ def test_numpy_linspace_scalar(language):
 def test_numpy_linspace_array_like_1d(language):
     from numpy import linspace
 
-    #@types('int[:]','int', 'float[:,:]')
-    #@types('int8[:]','int', 'float[:,:]')
-    #@types('int16[:]','int', 'float[:,:]')
+    @types('int[:]','int', 'float[:,:]')
+    @types('int8[:]','int', 'float[:,:]')
+    @types('int16[:]','int', 'float[:,:]')
     @types('int32[:]','int', 'float[:,:]')
     #@types('int64[:]','int64', 'float64[:,:]')
     #@types('float[:]','int', 'float[:,:]')
@@ -5373,14 +5373,13 @@ def test_numpy_linspace_array_like_1d(language):
     #@types('float64[:]','float64', 'float64[:,:]')
     #@types('complex64[:]','complex64', 'complex64[:,:]')
     #@types('complex128[:]','complex128', 'complex128[:,:]')
-    def get_linspace(start, stop, result):
+    def get_linspace(start, stop, out):
         from numpy import linspace, shape, ones
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate)
-        for i in range(len(result)):
-            for j in range(len(result[i])):
-                result[i][j] = a[i][j]
-
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                out[i][j] = a[i][j]
     size = 5
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
@@ -5402,27 +5401,22 @@ def test_numpy_linspace_array_like_1d(language):
 
     epyccel_func = epyccel(get_linspace, language=language)
    
-    #arr = linspace(integer, 5, 7)
-    #out = np.empty_like(arr)
-    #epyccel_func(integer, 5, out)
-    #assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
-    #arr = linspace(integer8, 5, 7)
-    #out = np.empty_like(arr)
-    #epyccel_func(integer8, 5, out)
-    #assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
-    #arr = linspace(integer16, 5, 7)
-    #out = np.empty_like(arr)
-    #epyccel_func(integer16, 5, out)
-    #assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
+    arr = linspace(integer, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer, 5, out)
+    assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
+    arr = linspace(integer8, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer8, 5, out)
+    assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
+    arr = linspace(integer16, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer16, 5, out)
+    assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
     arr = linspace(integer32, 5, 7)
     out = np.empty_like(arr)
     epyccel_func(integer32, 5, out)
     assert np.allclose(arr, out, rtol=RTOL, atol=ATOL)
-    #assert epyccel_func(integer, 20, out) == get_linspace(integer, 20, arr)
-    #assert epyccel_func(integer8) == get_linspace(integer8)
-    #assert epyccel_func(integer16) == get_linspace(integer16)
-    #assert epyccel_func(integer) == get_linspace(integer)
-    #assert epyccel_func(integer32) == get_linspace(integer32)
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     #if sys.platform != 'win32':
     #    assert epyccel_func(integer64) == get_linspace(integer64)
