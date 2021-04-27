@@ -54,7 +54,7 @@ def execute_pyccel(fname, *,
                    language      = None,
                    compiler      = None,
                    mpi_compiler  = None,
-                   fflags        = (),
+                   fflags        = None,
                    includes      = (),
                    libdirs       = (),
                    modules       = (),
@@ -110,7 +110,7 @@ def execute_pyccel(fname, *,
                     This value must be provided to compile with mpi
                     Default : None (compile with 'compiler')
 
-    fflags        : list
+    fflags        : str
                     The flags passed to the compiler
                     Default : provided by codegen.utilities.construct_flags
 
@@ -220,7 +220,7 @@ def execute_pyccel(fname, *,
                                  accelerator=accelerator,
                                  includes=())
     else:
-        fflags = list(fflags)
+        fflags = fflags.strip().split(' ')
 
     # Build position-independent code, suited for use in shared library
     fflags.append('-fPIC')
