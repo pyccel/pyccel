@@ -640,7 +640,6 @@ class FCodePrinter(CodePrinter):
         a_code = self._print(expr.a)
         b_code = self._print(expr.b)
 
-        print(expr.precision)
         if expr.rank == 0:
             if isinstance(expr.a.dtype, NativeBool):
                 a_code = self._print(PythonInt(expr.a))
