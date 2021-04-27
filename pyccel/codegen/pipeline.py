@@ -219,8 +219,10 @@ def execute_pyccel(fname, *,
                                  debug=debug,
                                  accelerator=accelerator,
                                  includes=())
-    else:
+    elif fflags is not None:
         fflags = fflags.strip().split(' ')
+    else:
+        fflags = [] # Used for python
 
     # Build position-independent code, suited for use in shared library
     fflags.append('-fPIC')
