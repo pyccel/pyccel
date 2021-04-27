@@ -12,8 +12,8 @@ import numpy as np
 #==============================================================================
 
 @pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
+        #pytest.param("fortran", marks = pytest.mark.fortran),
+        #pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     ],
     scope='module'
@@ -28,17 +28,17 @@ def get_abs_path(relative_path):
     return os.path.join(base_dir, relative_path)
 
 #------------------------------------------------------------------------------
-def get_exe(filename, language=None, prog=False):
+def get_exe(filename, language=None):
     exefile = os.path.splitext(filename)[0]
 
     if language == 'python':
         exefile = os.path.normpath(filename)
         base = os.path.basename(exefile)
-        if prog is True:
-            base = "prog_"+base
         dir_path = os.path.dirname(exefile)
-        exefile = os.path.join(dir_path, 'py', base)
-        exefile = os.path.normpath(exefile)
+        if os.path.isfile(os.path.join(dir_path, 'py', "prog_"+base)):
+            base = "prog_"+base
+        exefile  = os.path.join(dir_path, 'py', base)
+        exefile  = os.path.normpath(exefile)
     else:
         if sys.platform == "win32":
             exefile = exefile + ".exe"
@@ -208,7 +208,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
-        language = None, prog=False):
+        language = None):
     test_file = os.path.normpath(test_file)
 
     if (cwd is None):
@@ -249,7 +249,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
             compile_c(cwd, test_file, dependencies)
 
     if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language, prog=prog))
+        lang_out = get_python_output(get_exe(test_file, language))
     else:
         lang_out = get_lang_output(get_exe(test_file, language))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
@@ -547,9 +547,17 @@ def test_multiple_results(language):
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
                 float,float,float,float,float,float
-                ,float,float,float,float], language=language, prog=True)
+                ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Imports not working well in python : https://github.com/pyccel/pyccel/issues/873"),
+            pytest.mark.python]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
 def test_elemental(language):
     pyccel_test("scripts/decorators_elemental.py", language = language)
 
@@ -586,7 +594,7 @@ def test_c_arrays(language):
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
             [int] * 6 + [int] * 10
-    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types, prog=True)
+    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_headers(language):
@@ -622,7 +630,7 @@ def test_headers(language):
     compile_pyccel(cwd, test_file, pyccel_commands)
 
     if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language, prog=True))
+        lang_out = get_python_output(get_exe(test_file, language))
     else:
         lang_out = get_lang_output(get_exe(test_file, language))
     assert int(lang_out) == 1
@@ -645,7 +653,7 @@ def test_headers(language):
     compile_pyccel(cwd, test_file, pyccel_commands)
 
     if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language, prog=True))
+        lang_out = get_python_output(get_exe(test_file, language))
     else:
         lang_out = get_lang_output(get_exe(test_file, language))
     assert float(lang_out) == 1.5
