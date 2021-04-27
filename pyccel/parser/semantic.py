@@ -925,6 +925,65 @@ class SemanticParser(BasicParser):
                 args.append(a)
         return args
 
+    def get_type_description(self, var, include_rank = True):
+        """
+        Provides a text description of the type of a variable
+        (useful for error messages)
+        Parameters
+        ----------
+        var          : Variable
+                       The variable to describe
+        include_rank : bool
+                       Indicates whether rank information should be included
+                       Default : True
+        """
+        descr = '{dtype}(kind={precision})'.format(
+                        dtype     = var.dtype,
+                        precision = var.precision)
+        if include_rank and var.rank>0:
+            descr += '[{}]'.format(','.join(':'*var.rank))
+        return descr
+
+    def _check_argument_compatibility(self, input_args, func_args, expr, elemental):
+        """
+        Check that the provided arguments match the expected types
+
+        Parameters
+        ----------
+        input_args : list
+                     The arguments provided to the function
+        func_args  : list
+                     The arguments expected by the function
+        expr       : PyccelAstNode
+                     The expression where this call is found (used for error output)
+        elemental  : bool
+                     Indicates if the function is elemental
+        """
+        if elemental:
+            incompatible = lambda i_arg, f_arg: \
+                        (i_arg.dtype is not f_arg.dtype or \
+                        i_arg.precision != f_arg.precision)
+        else:
+            incompatible = lambda i_arg, f_arg: \
+                        (i_arg.dtype is not f_arg.dtype or \
+                        i_arg.precision != f_arg.precision or
+                        i_arg.rank != f_arg.rank)
+
+        for i_arg, f_arg in zip(input_args, func_args):
+            # Ignore types which cannot be compared
+            if (i_arg is Nil()
+                    or isinstance(f_arg, FunctionAddress)
+                    or f_arg.dtype is NativeGeneric()):
+                continue
+            # Check for compatibility
+            if incompatible(i_arg, f_arg):
+                expected = self.get_type_description(f_arg, not elemental)
+                received = '{} ({})'.format(i_arg, self.get_type_description(i_arg, not elemental))
+
+                errors.report(INCOMPATIBLE_ARGUMENT.format(received, expected),
+                        symbol = expr,
+                        severity='error')
+
     def _handle_function(self, expr, func, args, **settings):
         """
         Create a FunctionCall or an instance of a PyccelInternalFunction
@@ -964,6 +1023,9 @@ class SemanticParser(BasicParser):
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
+            elif isinstance(func, FunctionDef):
+                self._check_argument_compatibility(new_expr.args, func.arguments,
+                        expr, func.is_elemental)
             return new_expr
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
