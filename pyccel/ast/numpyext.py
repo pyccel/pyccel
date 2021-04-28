@@ -512,7 +512,7 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = ()
         elif a.rank == 1 or b.rank == 1:
             self._rank = 1
-            self._shape = (1,)
+            self._shape = b.shape[1] if a.rank == 1 else a.shape[0]
         else:
             self._rank = 2
 
