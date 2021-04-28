@@ -136,7 +136,7 @@ def compile_files(filename, compiler, flags,
         compiler = "gfortran"
         m_code.append(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
 
-    cmd = [compiler] + flags + m_code + [filename, o_code, binary] + libs_flags + j_code
+    cmd = [compiler, *flags, *m_code, filename, o_code, binary, *libs_flags, *j_code]
 
     if verbose:
         print(' '.join(cmd))
