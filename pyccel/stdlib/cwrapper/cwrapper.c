@@ -42,7 +42,7 @@ float complex PyComplex_to_Complex64(PyObject *object)
 
 	// https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
 	// https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
-	if (PyArray_IsScalar(o, Complex64))
+	if (PyArray_IsScalar(object, Complex64))
 		PyArray_ScalarAsCtype(object, &c);
 
 	else
