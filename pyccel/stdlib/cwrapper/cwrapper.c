@@ -16,13 +16,13 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
  * All functions listed down are based on C/python api
  * with more tolerance to different precision
  * Convert python type object to the desired C type
- * 	Parameters :
- *		o	: the python object
- *	Returns    :
- * 		The desired C type, an error may be raised by c/python converter
- *      so one should call PyErr_Occurred() to check for errors after the
- *		calling a cast function
- * reference of the used c python api function
+ * Parameters :
+ *     object : the python object
+ * Returns    :
+ *     The desired C type, an error may be raised by c/python converter
+ *     so one should call PyErr_Occurred() to check for errors after the
+ *	   calling a cast function
+ * Reference of the used c python api function
  * --------------------------------------------
  * https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
  * https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
@@ -31,115 +31,118 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
  * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
  */
 
-float complex PyComplex_to_Complex64(PyObject *o)
+float complex PyComplex_to_Complex64(PyObject *object)
 {
 	float complex	c;
-	float			real_part;
-	float			imag_part;
+	float	real_part;
+	float	imag_part;
 
-	//https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
-	//https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
+	real_part = 0.0;
+	imag_part = 0.0;
+
+	// https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
+	// https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
 	if (PyArray_IsScalar(o, Complex64))
-		PyArray_ScalarAsCtype(o, &c);
+		PyArray_ScalarAsCtype(object, &c);
 
 	else
 	{
-		real_part = (float)PyComplex_RealAsDouble(o);
-		imag_part = (float)PyComplex_ImagAsDouble(o);
+		real_part = (float)PyComplex_RealAsDouble(object);
+		imag_part = (float)PyComplex_ImagAsDouble(object);
 
 		c = CMPLXF(real_part, imag_part);
 	}
 	return	c;
 }
 //-----------------------------------------------------//
-double complex	PyComplex_to_Complex128(PyObject *o)
+double complex	PyComplex_to_Complex128(PyObject *object)
 {
 	double complex	c;
-	double			real_part;
-	double			imag_part;
+	double	real_part;
+	double	imag_part;
 
-	real_part = PyComplex_RealAsDouble(o);
-	imag_part = PyComplex_ImagAsDouble(o);
+	real_part = PyComplex_RealAsDouble(object);
+	imag_part = PyComplex_ImagAsDouble(object);
 
 	c = CMPLX(real_part, imag_part);
 
 	return	c;
 }
 //-----------------------------------------------------//
-int64_t	PyInt64_to_Int64(PyObject *o)
+int64_t	PyInt64_to_Int64(PyObject *object)
 {
 	int64_t		i;
 	long long	out;
 
-	out = PyLong_AsLongLong(o);
+	out = PyLong_AsLongLong(object);
 
 	i = (int64_t)out;
 
 	return	i;
 }
 //-----------------------------------------------------//
-int32_t	PyInt32_to_Int32(PyObject *o)
+int32_t	PyInt32_to_Int32(PyObject *object)
 {
 	int32_t	i;
 	long	out;
 
-	out = PyLong_AsLong(o);
+	out = PyLong_AsLong(object);
 
 	i = (int32_t)out;
 
 	return	i;
 }
 //-----------------------------------------------------//
-int16_t	PyInt16_to_Int16(PyObject *o)
+int16_t	PyInt16_to_Int16(PyObject *object)
 {
 	int16_t	i;
 	long	out;
 
-	out = PyLong_AsLong(o);
+	out = PyLong_AsLong(object);
 
 	i = (int16_t)out;
 
 	return	i;
 }
 //-----------------------------------------------------//
-int8_t	PyInt8_to_Int8(PyObject *o)
+int8_t	PyInt8_to_Int8(PyObject *object)
 {
 	int8_t	i;
 	long	out;
 
-	out = PyLong_AsLong(o);
+	out = PyLong_AsLong(object);
 
 	i = (int8_t)out;
 
 	return	i;
 }
 //-----------------------------------------------------//
-bool	PyBool_to_Bool(PyObject *o)
+bool	PyBool_to_Bool(PyObject *object)
 {
 	bool	b;
 
-	b = o == Py_True;
+	b = object == Py_True;
 
 	return	b;
 }
 //-----------------------------------------------------//
-float	PyFloat_to_Float(PyObject *o)
+float	PyFloat_to_Float(PyObject *object)
 {
 	float	f;
 	double	out;
 
-	out = PyFloat_AsDouble(o);
+	out = PyFloat_AsDouble(object);
 
 	f = (float)out;
 
 	return	f;
 }
 //-----------------------------------------------------//
-double	PyDouble_to_Double(PyObject *o)
+double	PyDouble_to_Double(PyObject *object)
 {
 	double	d;
 
-	d = PyFloat_AsDouble(o);
+	d = PyFloat_AsDouble(object);
 
 	return	d;
 }
@@ -150,45 +153,43 @@ double	PyDouble_to_Double(PyObject *o)
  * ---------------------------
  * Some of the function used below are based on C/python api
  * with more tolerance to different precisions and complex type.
- *	Parameterss	:
- *		o	        : the python object
- *		hard_check  : boolean
- *			true if we need to check the exact precision otherwise false
- *	Returns     :
- *		boolean : logic statement responsible for checking python data type
+ * Collect the python object from the C object
+ * Parameters :
+ *     object : the C object
+ *
+ * Returns    :
+ *     boolean : python object
  * reference of the used c/python api function
  * ---------------------------------------------------
- * https://docs.python.org/3/c-api/long.html#c.PyLong_Check
- * https://docs.python.org/3/c-api/complex.html#c.PyComplex_Check
- * https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
- * https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
- * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
  */
 
 PyObject	*Complex128_to_PyComplex(double complex *c)
 {
 	double		real_part;
 	double		imag_part;
-	PyObject	*o;
+	PyObject	*object;
 
 	real_part = creal(*c);
 	imag_part = cimag(*c);
-	o = PyComplex_FromDoubles(real_part, imag_part);
+	object = PyComplex_FromDoubles(real_part, imag_part);
 
-	return o;
+	return object;
 }
 //-----------------------------------------------------//
 PyObject	*Complex64_to_PyComplex(float complex *c)
 {
 	float		real_part;
 	float		imag_part;
-	PyObject	*o;
+	PyObject	*object;
 
 	real_part = crealf(*c);
 	imag_part = cimagf(*c);
-	o = PyComplex_FromDoubles((double) real_part, (double) imag_part);
+	object = PyComplex_FromDoubles((double) real_part, (double) imag_part);
 
-	return o;
+	return object;
 }
 //-----------------------------------------------------//
 PyObject	*Bool_to_PyBool(bool *b)
@@ -198,78 +199,78 @@ PyObject	*Bool_to_PyBool(bool *b)
 //-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
 {
-	PyObject	*o;
+	PyObject	*object;
 
-	o = PyLong_FromLongLong((long long) *i);
+	object = PyLong_FromLongLong((long long) *i);
 
-	return o;
+	return object;
 }
 //-----------------------------------------------------//
 PyObject	*Int32_to_PyLong(int32_t *i)
 {
-	PyObject	*o;
+	PyObject	*object;
 
-	o = PyLong_FromLongLong((long long) *i);
+	object = PyLong_FromLongLong((long long) *i);
 
-	return o;
+	return object;
 }
 //-----------------------------------------------------//
 PyObject	*Int16_to_PyLong(int16_t *i)
 {
-	PyObject	*o;
+	PyObject	*object;
 
-	o = PyLong_FromLongLong((long long) *i);
+	object = PyLong_FromLongLong((long long) *i);
 
-	return o;
+	return object;
 }
 //--------------------------------------------------------//
 PyObject	*Int8_to_PyLong(int8_t *i)
 {
-	PyObject	*o;
+	PyObject	*object;
 
-	o = PyLong_FromLongLong((long long) *i);
+	object = PyLong_FromLongLong((long long) *i);
 
-	return o;
+	return object;
 }
 //--------------------------------------------------------//
 PyObject	*Double_to_PyDouble(double *d)
 {
-	PyObject	*o;
+	PyObject	*object;
 
-	o = PyFloat_FromDouble(*d);
+	object = PyFloat_FromDouble(*d);
 
-	return o;
+	return object;
 }
 //--------------------------------------------------------//
 PyObject	*Float_to_PyDouble(float *d)
 {
-	PyObject	*o;
+	PyObject	*object;
 
-	o = PyFloat_FromDouble((double)*d);
+	object = PyFloat_FromDouble((double)*d);
 
-	return o;
+	return object;
 }
 
-
 /*
- * Functions : Check type functions
+ * Functions : Cast functions
  * ---------------------------
- * Some of the function used below are based on C/python api
- * and numpy/c api with more tolerance to different precisions,
- * different system architectures and complex type.
- *	Parameterss	:
- *		C object
- *	Returns     :
- *		o  : python object
- * reference of the used c/python api function
+ * Some of the function used below are based on C/python api and numpy/c api with
+ * more tolerance to different precisions, different system architectures and complex type.
+ * Check the C data type ob a python object
+ * Parameters :
+ *     object     : the python object
+ *     hard_check : boolean true if intensive precision check is needed
+ *
+ * Returns    :
+ *     boolean : logic statement responsible for checking python data type
+ * Reference of the used c/python api function
  * ---------------------------------------------------
- * https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
- * https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
- * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_Check
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_Check
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
+ * https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
+ * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
  */
-
-
-
 
 bool    PyIs_Int8(PyObject *o, bool hard_check)
 {
@@ -349,24 +350,23 @@ bool    PyIs_Complex64(PyObject *o, bool hard_check)
 }
 
 
-
-
-
-
 /*
  * Function: _check_pyarray_dtype
  * --------------------
  * Check Python Object DataType:
  *
- * 	Parameters	:
- *		a 	  : python array object
- *      dtype : desired data type enum
- * 	Returns		:
+ * Parameters :
+ *     a 	 : python array object
+ *     dtype : desired data type enum
+ *
+ * Returns	  :
  *		return true if no error occurred otherwise it will return false
  *      and raise TypeError exception
- * reference of the used c/python api function
+ *
+ * Reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_TYPE
+ * https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Format
  */
 bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
@@ -393,15 +393,17 @@ bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
  * --------------------
  * Check Python Object Rank:
  *
- * 	Parameters	:
- *		a 	  : python array object
- *      rank  : desired rank
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise TypeError exception
+ * Parameters :
+ *     a 	  : python array object
+ *     rank  : desired rank
+ * Returns    :
+ *     return true if no error occurred otherwise it will return false
+ *     and raise TypeError exception
+ *
  * reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_NDIM
+ * https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Format
  */
 static bool _check_pyarray_rank(PyArrayObject *a, int rank)
 {
@@ -424,15 +426,17 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  * --------------------
  * Check Python Object Order:
  *
- * 	Parameters	:
- *		a 	  : python array object
- *      flag  : desired order
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise NotImplementedError exception
+ * Parameters	:
+ *     a 	  : python array object
+ *     flag  : desired order
+ * Returns		:
+ *     return true if no error occurred otherwise it will return false
+ *     and raise NotImplementedError exception
  * reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_CHKFLAGS
+ * https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Format
+
  */
 static bool _check_pyarray_order(PyArrayObject *a, int flag)
 {
@@ -458,15 +462,16 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
  * --------------------
  * Check if Python Object is ArrayType:
  *
- * 	Parameters	:
- *		a 	  : python array object
+ * Parameters :
+ *     a : python array object
  *
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise TypeError exception
- * reference of the used c/python api function
+ * Returns   :
+ *     return true if no error occurred otherwise it will return false
+ *     and raise TypeError exception
+ * Reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_Check
+ * https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Format
  */
 static bool _check_pyarray_type(PyObject *a)
 {
@@ -482,11 +487,19 @@ static bool _check_pyarray_type(PyObject *a)
 }
 
 
-
 /*
-** convert numpy strides to nd_array strides, and return it in a new array, to
-** avoid the problem of different implementations of strides in numpy and ndarray.
-*/
+ * Function : _numpy_to_ndarray_strides
+ * --------------------
+ * Convert numpy strides to nd_array strides, and return it in a new array, to
+ * avoid the problem of different implementations of strides in numpy and ndarray.
+ * Parameters :
+ *     np_strides : npy_intp array
+ *     type_size  : data type enum
+ *     nd : size of the array
+ *
+ * Returns    :
+ *     ndarray_strides : a new array with new strides values
+ */
 static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
@@ -500,9 +513,17 @@ static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, 
 
 
 /*
-** copy numpy shape to nd_array shape, and return it in a new array, to
-** avoid the problem of variation of system architecture because numpy shape
-** is not saved in fixed length type.
+ * Function : _numpy_to_ndarray_shape
+ * --------------------
+ * Copy numpy shape to nd_array shape, and return it in a new array, to
+ * avoid the problem of variation of system architecture because numpy shape
+ * is not saved in fixed length type.
+ * Parameters :
+ *     np_shape : npy_intp array
+ *     nd : size of the array
+ *
+ * Returns    :
+ *     ndarray_strides : new array
 */
 static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
 {
@@ -521,10 +542,11 @@ static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
  * A Cast function that convert numpy array variable into ndarray variable,
  * by copying its information and data to a new variable of type ndarray struct
  * and return this variable to be used inside c code.
- * 	Parameters	:
- *		o 	  : python array object
- * 	Returns		:
- *    array   :  c ndarray
+ * Parameters :
+ *     o : python array object
+ *
+ * Returns    :
+ *     array : c ndarray
  *
  * reference of the used c/numpy api function
  * -------------------------------------------
@@ -549,43 +571,18 @@ t_ndarray	pyarray_to_c_ndarray(PyArrayObject *a)
 }
 
 /*
- * Function: pyarray_to_f_ndarray
- * ----------------------------
- * A Cast function that convert numpy array variable into ndarray variable,
- * by copying its information and data to a new variable of type ndarray struct
- * and return this variable to be used inside fortran code.
- * 	Parameters	:
- *		o 	  : python array object
- * 	Returns		:
- *    array   :  c ndarray
- *
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
- */
-t_ndarray	pyarray_to_f_ndarray(PyArrayObject *a)
-{
-	t_ndarray	array;
-
-	array.data	= PyArray_DATA(a);
-	array.shape = PyArray_SHAPE(a);
-
-	return array;
-}
-
-
-/*
  * Function: pyarray_check
  * --------------------
  * Check Python Object (DataType, Rank, Order):
  *
- * 	Parameters	:
- *		a 	  : python array object
- *      dtype : desired data type enum
- *		rank  : desired rank
- *		flag  : desired order flag
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
+ * Parameters :
+ *     a 	 : python array object
+ *     dtype : desired data type enum
+ *     rank  : desired rank
+ *     flag  : desired order flag
+ *
+ * Returns	  :
+ *     return true if no error occurred otherwise it will return false
  */
 bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
 {
@@ -599,50 +596,4 @@ bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
 	if(rank > 1 && !_check_pyarray_order(o, flag)) return false;
 
 	return true;
-}
-
-
-/*
- * Function: nd_ndim
- * --------------------
- * Return the shape in the n dimension.
- *
- * 	Parameters	:
- *		a 	  : python array object
- *      index : dimension index
- * 	Returns		:
- *		return 0 if object is NULL or shape at indexed dimension
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
- */
-int     nd_ndim(t_ndarray *a, int n)
-{
-	if (a == NULL)
-		return 0;
-	
-	return a->shape[n];
-}
-
-
-/*
- * Function: nd_data
- * --------------------
- * Return data pointed by array
- *
- * 	Parameters	:
- *		a 	  : python array object
- *      index : dimension index
- * 	Returns		:
- *		return NULL if object is NULL or the data of the array
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
- */
-void    *nd_data(t_ndarray *a)
-{
-	if (a == NULL)
-		return NULL;
-	
-	return a->data;
 }

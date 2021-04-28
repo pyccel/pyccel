@@ -16,17 +16,11 @@
 # define NO_ORDER_CHECK -1
 
 
-
+/* converting numpy array to c nd array*/
 t_ndarray	pyarray_to_c_ndarray(PyArrayObject *o);
-t_ndarray	pyarray_to_f_ndarray(PyArrayObject *o);
 
-
-/* arrays checkers and helpers */
+/* arrays check*/
 bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
-
-void    *nd_data(t_ndarray *a);
-int     nd_ndim(t_ndarray *a, int n);
-
 
 /* casting python object to c type */
 float complex	PyComplex_to_Complex64(PyObject *o) ;
@@ -57,6 +51,7 @@ PyObject	*Int8_to_PyLong(int8_t *i);
 PyObject	*Double_to_PyDouble(double *d);
 PyObject	*Float_to_PyDouble(float *d);
 
+/* Chech functions*/
 bool    PyIs_Int8(PyObject *o, bool hard_check);
 bool    PyIs_Int16(PyObject *o, bool hard_check);
 bool    PyIs_Int32(PyObject *o, bool hard_check);
