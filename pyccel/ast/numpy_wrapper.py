@@ -39,6 +39,8 @@ __all__ = (
     'numpy_get_dim',
     'numpy_get_ndims',
     'numpy_get_data',
+    #-------OTHERS--------
+    'get_numpy_max_acceptable_version'
 )
 
 
