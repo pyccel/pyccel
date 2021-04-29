@@ -1044,18 +1044,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
-        imports += [Import('Python')]
         imports += [Import('numpy/arrayobject')]
+        imports += [Import('cwrapper')]
         imports  = ''.join(self._print(i) for i in imports)
 
-        numpy_max_acceptable_version = [1, 19]
-        numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
-        numpy_api_macro = '#define NPY_NO_DEPRECATED_API NPY_{}_{}_API_VERSION\n'.format(
-                min(numpy_max_acceptable_version[0], numpy_current_version[0]),
-                min(numpy_max_acceptable_version[1], numpy_current_version[1]))
-
-        return ('#define PY_SSIZE_T_CLEAN\n'
-                '{numpy_api_macro}'
+        return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
                 '{imports}\n'
                 '{function_signatures}\n'
                 '{sep}\n'
@@ -1067,7 +1060,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{module_def}\n'
                 '{sep}\n'
                 '{init_func}'.format(
-                    numpy_api_macro = numpy_api_macro,
                     imports = imports,
                     function_signatures = function_signatures,
                     sep = sep,
