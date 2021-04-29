@@ -240,7 +240,16 @@ def array_checker(py_variable, c_variable, type_check_needed, language):
 
     return check
 
-def NumpyType_Check(py_variable, c_variable):
+def array_type_check(py_variable, c_variable):
+    """
+    """
+    type_ref = find_in_numpy_dtype_registry(c_variable)
+
+    return PyccelEq(FunctionCall(numpy_get_type, [py_variable]), type_ref)
+
+
+
+def scalar_type_check(py_variable, c_variable):
     """
     Create FunctionCall responsible of checking numpy argument data type
     Parameters:
