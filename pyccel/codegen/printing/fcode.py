@@ -36,7 +36,7 @@ from pyccel.ast.variable  import (Variable, TupleVariable,
                              InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot, PyccelEq, PyccelAnd
 from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
@@ -704,17 +704,28 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        if expr.rank > 1:
-            template = '({start} + {index}*{step})'
+        if expr.stop.dtype != expr.dtype:
+            if isinstance(expr.dtype, NativeComplex):
+                v = 'cmplx({0}, {1})'.format(self._print(expr.stop), self.print_kind(expr))
+            else:
+                v = 'Real({0}, {1})'.format(self._print(expr.stop), self.print_kind(expr))
         else:
-            template = '[({start} + {index}*{step},{index} = {zero},{end})]'
+            v = self._print(expr.stop)
+        if expr.rank > 1:
+            template = '(merge({stop}, ({start} + {index}*{step}), ({cond})))'
+            var = Variable('int', str(expr.ind))
+        else:
+            template = '[(merge({stop}, ({start} + {index}*{step}), ({cond})),{index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
             self.add_vars_to_namespace(var)
 
+        cond = PyccelAnd(PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
         init_value = template.format(
+            stop  = v,
             start = self._print(expr.start),
             step  = self._print(expr.step ),
-            index = self._print(expr.index) if expr.rank == 1 else expr.ind,
+            index = self._print(var),
+            cond  = self._print(cond),
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )

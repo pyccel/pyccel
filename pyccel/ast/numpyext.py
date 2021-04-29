@@ -591,12 +591,24 @@ class NumpyLinspace(NumpyNewArray):
         self._start = start
         self._stop  = stop
         self._num  = num
-        self._endpoint = endpoint
+        if endpoint == True:
+            self._endpoint = LiteralTrue()
+        elif endpoint == False:
+            self._endpoint = LiteralFalse()
+        else:
+            if not isinstance(endpoint.dtype, NativeBool):
+                raise TypeError('endpoint argument must be boolean')
+            self._endpoint = endpoint
+
         shape = broadcast(self._start.shape, self._stop.shape)
         self._shape = (self._num,) + shape
         self._rank  = len(self._shape)
         self._ind = ''
         super().__init__()
+
+    @property
+    def endpoint(self):
+        return self._endpoint
 
     @property
     def start(self):
@@ -621,7 +633,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        if self._endpoint is False:
+        if isinstance(self._endpoint, LiteralFalse):
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
 

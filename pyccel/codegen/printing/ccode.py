@@ -20,7 +20,7 @@ from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt, PyccelAnd, PyccelEq
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
@@ -1197,8 +1197,21 @@ class CCodePrinter(CodePrinter):
         return self._print(PyccelMod(*expr.args))
 
     def _print_NumpyLinspace(self, expr):
-        template = '({start} + {index}*{step})'
+        template = '({cond}) ? {stop} : ({start} + {index}*{step})'
+
+        if expr.stop.dtype != expr.dtype:
+            if isinstance(expr.dtype, NativeComplex):
+                type_name = self.find_in_dtype_registry('complex', expr.precision)
+            else:
+                type_name = self.find_in_dtype_registry('real', expr.precision)
+            v = '({cast}){var}'.format(cast=self._print(type_name), var=self._print(expr.stop))
+        else:
+            v = self._print(expr.stop)
+
+        cond = PyccelAnd(PyccelEq(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
         init_value = template.format(
+            cond  = self._print(cond),
+            stop  = v,
             start = self._print(expr.start),
             step  = self._print(expr.step),
             index = self._print(expr.ind),
