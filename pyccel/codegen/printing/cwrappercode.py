@@ -32,10 +32,12 @@ from pyccel.ast.cwrapper import Py_None, flags_registry
 from pyccel.ast.cwrapper import PyErr_SetString, PythonType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyType_Check
-from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
-from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
-from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_flag_f_contig
 from pyccel.ast.cwrapper import PyArray_CheckScalar, PyArray_ScalarAsCtype
+
+from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
+from pyccel.ast.numpy_wrapper   import pyarray_to_c_ndarray
+from pyccel.ast.numpy_wrapper   import numpy_get_data, numpy_get_dim
+from pyccel.ast.numpy_wrapper   import find_in_numpy_dtype_registry
 
 from pyccel.ast.bind_c   import as_static_function_call
 
@@ -116,18 +118,6 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
-    def find_in_numpy_dtype_registry(self, var):
-        """ Find the numpy dtype key for a given variable
-        """
-        dtype = self._print(var.dtype)
-        prec  = var.precision
-        try :
-            return numpy_dtype_registry[(dtype, prec)]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = "{}[kind = {}]".format(dtype, prec),
-                    severity='fatal')
-
     def get_default_assign(self, arg, func_arg):
         if arg.rank > 0 :
             return AliasAssign(arg, Nil())
@@ -172,8 +162,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _get_check_type_statement(self, variable, collect_var):
 
         if variable.rank > 0 :
-            numpy_dtype = self.find_in_numpy_dtype_registry(variable)
-            check = PyccelEq(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
+            check = array_type_check(collect_var, variable)
 
         else :
             python_check = PythonType_Check(variable, collect_var)
@@ -227,7 +216,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if variable.rank > 0 :
             if self._target_language == 'c':
-                return self.get_cast_function_call('pyarray_to_ndarray', collect_var)
+                return FunctionCall(pyarray_to_c_ndarray, [collect_var])
             return FunctionCall(numpy_get_data,[collect_var])
         if isinstance(variable.dtype, NativeComplex):
             return self.get_cast_function_call('pycomplex_to_complex', collect_var)
@@ -289,34 +278,6 @@ class CWrapperCodePrinter(CCodePrinter):
                         precision = precision,
                         dtype     = self._print(variable.dtype))
         return message
-
-    def _get_array_type_check(self, variable, collect_var):
-        """
-        Responsible for collecting array type check and creating the
-        corresponding error code
-
-        Parameters:
-        ----------
-        variable     : Variable
-            The optional variable
-        collect_var  : Variable
-            variable which holds the value collected with PyArg_Parsetuple
-
-        Returns:
-        -------
-        check : FunctionCall
-            functionCall responsible for checking the data type
-        error : FunctionCall
-            function call that raise TypeError
-        """
-
-        numpy_dtype = self.find_in_numpy_dtype_registry(variable)
-        arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
-
-        check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
-        error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
-
-        return check, error
 
     def _get_scalar_type_check(self, variable, collect_var, error_check = False):
         """
@@ -455,18 +416,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
-                if (rank check == False){
-                    print TypeError Wrong rank
-                    return Null
-                }else if(Type Check == False){
-                    Print TypeError Wrong type
-                    return Null
-                }else if (order check == False){ #check for order for rank > 1
-                    Print NotImplementedError Wrong Order
-                    return Null
-                }
-                collect the value from PyArrayObject
-
         Parameters:
         ----------
         Variable : Variable
@@ -482,28 +431,13 @@ class CWrapperCodePrinter(CCodePrinter):
             A list of statements
         """
         body = []
-        #TODO create and extern rank and order check function
         #check optional :
         if variable.is_optional :
             check = PyccelNot(VariableAddress(collect_var))
             body += [IfSection(check, [Assign(VariableAddress(variable), Nil())])]
 
-        #rank check :
-        check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
-        error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
-        body  += [IfSection(check, [error, Return([Nil()])])]
-        if check_type : #Type check
-            check, error = self._get_array_type_check(variable, collect_var)
-            body += [IfSection(check, [error, Return([Nil()])])]
-
-        if collect_var.rank > 1 and self._target_language == 'fortran' :#Order check
-            if collect_var.order == 'F':
-                check = FunctionCall(numpy_check_flag,[collect_var, numpy_flag_f_contig])
-            else:
-                check = FunctionCall(numpy_check_flag,[collect_var, numpy_flag_c_contig])
-                error = PyErr_SetString('PyExc_NotImplementedError',
-                        '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
-                body += [IfSection(PyccelNot(check), [error, Return([Nil()])])]
+        check = array_checker(collect_var, variable, check_type, self._target_language)
+        body += [IfSection(check, [Return([Nil()])])]
 
         body += [IfSection(LiteralTrue(), [Assign(VariableAddress(variable),
                             self.get_collect_function_call(variable, collect_var))])]
