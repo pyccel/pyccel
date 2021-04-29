@@ -41,9 +41,18 @@ __all__ = (
     'numpy_get_data',
 )
 
-#-------------------------------------------------------------------
-#                      Numpy functions
-#-------------------------------------------------------------------
+
+def get_numpy_max_acceptable_version():
+    """
+    #TODO
+    """
+    numpy_max_acceptable_version = [1, 19]
+    numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
+    numpy_api_macro = '(r\'NPY_NO_DEPRECATED_API\', r\'NPY_{}_{}_API_VERSION\')'.format(
+        min(numpy_max_acceptable_version[0], numpy_current_version[0]),
+	    min(numpy_max_acceptable_version[1], numpy_current_version[1]))
+
+    return numpy_api_macro
 
 # https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE
 numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
