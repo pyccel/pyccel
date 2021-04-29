@@ -5378,7 +5378,7 @@ def test_numpy_linspace_array_like_1d(language):
     integer32 = randint(min_int32 / 2, max_int32 / 2, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    arr_fl = np.array([1.5, 2.2, 3.3, 4.4, 5.5], dtype=np.float32)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int64, max_int, size = size)
@@ -5407,10 +5407,16 @@ def test_numpy_linspace_array_like_1d(language):
     out = np.empty_like(arr)
     epyccel_func(integer32, 5, out)
     assert np.allclose(arr, out)
-    arr = linspace(integer64, 5, 7)
-    out = np.empty_like(arr)
-    epyccel_func(integer64, 5, out)
-    assert np.allclose(arr, out)
+    if sys.platform != 'win32':
+        arr = linspace(integer64, 5, 7)
+        out = np.empty_like(arr)
+        epyccel_func(integer64, 5, out)
+        assert np.allclose(arr, out)
+
+    #arr = linspace(arr_fl, 5, 7)
+    #out = np.empty_like(arr)
+    #epyccel_func(arr_fl, 5, out)
+    #assert np.allclose(arr, out)
 
     #assert epyccel_func(fl) == get_linspace(fl)
     #assert epyccel_func(fl32) == get_linspace(fl32)
