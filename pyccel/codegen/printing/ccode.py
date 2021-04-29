@@ -937,7 +937,10 @@ class CCodePrinter(CodePrinter):
             inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
         else:
             raise NotImplementedError(expr)
-        return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
+        indices = []
+        for i, ind in enumerate(inds):
+            indices.append('{}.strides[{}] * ({})'.format(base_name, i, ind))
+        return "%s.%s[%s]" % (base_name, dtype, "+ ".join(indices))
 
     def _cast_to(self, expr, dtype, precision):
         """ add cast to an expression when needed
