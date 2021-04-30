@@ -220,7 +220,7 @@ def execute_pyccel(fname, *,
                                  accelerator=accelerator,
                                  includes=())
     elif fflags is not None:
-        fflags = fflags.strip().split(' ')
+        fflags = fflags.split()
     else:
         fflags = [] # Used for python
 
