@@ -519,7 +519,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             # Save line in top level (no for loop)
             result.append(line)
             current_level = 0
-    #print(result)
+
     return result
 
 #==============================================================================
