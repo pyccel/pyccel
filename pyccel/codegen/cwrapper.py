@@ -88,7 +88,10 @@ def create_c_setup(mod_name,
     linker_flags_str   = ('extra_link_args = {0}'.format(print_list(linker_flags))
                    if flags else None)
 
-    define_macros = ('define_macros = [{0}]').format(get_numpy_max_acceptable_version())
+    macros = [get_numpy_max_acceptable_version()]
+    if any(ext_lib.endswith('ndarrays') for ext_lib in include):
+        macros.append('(r\'NDARRAYS\',  None)')
+    define_macros = ('define_macros = [{0}]').format(', '.join(macros))
 
     args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str,
                 flags_str, linker_flags_str, define_macros]

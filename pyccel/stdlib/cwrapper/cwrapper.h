@@ -6,7 +6,6 @@
 # include <complex.h>
 # include <stdint.h>
 # include <stdbool.h>
-# include "ndarrays.h"
 
 # define NO_IMPORT_ARRAY
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
@@ -16,11 +15,14 @@
 # define NO_ORDER_CHECK -1
 
 
+# ifdef NDARRAYS
+# include "ndarrays.h"
 /* converting numpy array to c nd array*/
 t_ndarray	pyarray_to_c_ndarray(PyArrayObject *o);
+# endif
 
 /* arrays check*/
-bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
+bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag);
 
 /* casting python object to c type */
 float complex	PyComplex_to_Complex64(PyObject *o) ;

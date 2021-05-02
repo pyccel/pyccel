@@ -349,7 +349,6 @@ bool    PyIs_Complex64(PyObject *o, bool hard_check)
 	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
 }
 
-
 /*
  * Function: _check_pyarray_dtype
  * --------------------
@@ -486,6 +485,7 @@ static bool _check_pyarray_type(PyObject *a)
 	return true;
 }
 
+#ifdef NDARRAYS
 
 /*
  * Function : _numpy_to_ndarray_strides
@@ -569,9 +569,10 @@ t_ndarray	pyarray_to_c_ndarray(PyArrayObject *a)
 
 	return array;
 }
+# endif
 
 /*
- * Function: pyarray_check
+ * Function: pyarray_checker
  * --------------------
  * Check Python Object (DataType, Rank, Order):
  *
@@ -584,7 +585,7 @@ t_ndarray	pyarray_to_c_ndarray(PyArrayObject *a)
  * Returns	  :
  *     return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
+bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag)
 {
 	if (!_check_pyarray_type((PyObject *)o)) return false;
 
