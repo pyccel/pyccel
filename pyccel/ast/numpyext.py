@@ -601,9 +601,9 @@ class NumpyLinspace(NumpyNewArray):
         self._start = start
         self._stop  = stop
         self._num  = num
-        if endpoint == True:
+        if endpoint is True:
             self._endpoint = LiteralTrue()
-        elif endpoint == False:
+        elif endpoint is False:
             self._endpoint = LiteralFalse()
         else:
             if not isinstance(endpoint.dtype, NativeBool):
@@ -618,6 +618,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def endpoint(self):
+        """Tells if the stop must be included or not."""
         return self._endpoint
 
     @property
