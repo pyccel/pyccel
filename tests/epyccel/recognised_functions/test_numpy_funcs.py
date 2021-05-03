@@ -5354,19 +5354,21 @@ def test_numpy_linspace_scalar(language):
 def test_numpy_linspace_array_like_1d(language):
     from numpy import linspace
 
-    @types('int[:]','int', 'float[:,:]')
-    @types('int8[:]','int', 'float[:,:]')
-    @types('int16[:]','int', 'float[:,:]')
-    @types('int32[:]','int', 'float[:,:]')
-    @types('float[:]','int', 'float[:,:]')
-    @types('float32[:]','float32', 'float32[:,:]')
-    #@types('float64[:]','float64', 'float64[:,:]')
-    #@types('complex64[:]','complex64', 'complex64[:,:]')
-    #@types('complex128[:]','complex128', 'complex128[:,:]')
-    def test_linspace(start, stop, out):
-        from numpy import linspace, shape, ones
+    @types('int[:]', 'int', 'float[:,:]', 'bool')
+    @types('int8[:]', 'int', 'float[:,:]', 'bool')
+    @types('int16[:]', 'int', 'float[:,:]', 'bool')
+    @types('int32[:]', 'int', 'float[:,:]', 'bool')
+    @types('float[:]', 'int', 'float[:,:]', 'bool')
+    @types('float32[:]', 'int', 'float32[:,:]', 'bool')
+    @types('float64[:]', 'int', 'float64[:,:]', 'bool')
+    @types('complex128[:]', 'int', 'complex128[:,:]', 'bool')
+    def test_linspace(start, stop, out, endpoint):
+        from numpy import linspace
         numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate)
+        if endpoint is True:
+            a = linspace(start, stop, numberOfSamplesToGenerate)
+        else:
+            a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=False)
         for i in range(len(out)):
             for j in range(len(out[i])):
                 out[i][j] = a[i][j]
@@ -5378,91 +5380,123 @@ def test_numpy_linspace_array_like_1d(language):
     integer32 = randint(min_int32 / 2, max_int32 / 2, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    arr_fl = np.array([1.5, 2.2, 3.3, 4.4, 5.5], dtype=np.float32)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int64, max_int, size = size)
-
-    cmplx128_from_float32 = uniform(low=min_float32 / 10, high=max_float32 / 10, size=size) + uniform(low=min_float32 / 10, high=max_float32 / 10, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 10, high=max_float64 / 10, size=size) + uniform(low=min_float64 / 10, high=max_float64 / 10, size=size) * 1j
+    fl32 = np.array([1.5, 2.2, 3.3, 4.4, 5.5], dtype=np.float32)
 
     epyccel_func = epyccel(test_linspace, language=language)
-   
+
     arr = linspace(integer, 5, 7)
     out = np.empty_like(arr)
-    epyccel_func(integer, 5, out)
+    epyccel_func(integer, 5, out, True)
     assert np.allclose(arr, out)
+    arr = linspace(integer, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer, 5, out, False)
+    assert np.allclose(arr, out)
+
     arr = linspace(integer8, 5, 7)
     out = np.empty_like(arr)
-    epyccel_func(integer8, 5, out)
+    epyccel_func(integer8, 5, out, True)
     assert np.allclose(arr, out)
+    arr = linspace(integer8, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer8, 5, out, False)
+    assert np.allclose(arr, out)
+
     arr = linspace(integer16, 5, 7)
     out = np.empty_like(arr)
-    epyccel_func(integer16, 5, out)
+    epyccel_func(integer16, 5, out, True)
     assert np.allclose(arr, out)
+    arr = linspace(integer16, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer16, 5, out, False)
+    assert np.allclose(arr, out)
+
     arr = linspace(integer32, 5, 7)
     out = np.empty_like(arr)
-    epyccel_func(integer32, 5, out)
+    epyccel_func(integer32, 5, out, True)
     assert np.allclose(arr, out)
+    arr = linspace(integer32, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer32, 5, out, False)
+    assert np.allclose(arr, out)
+    
     if sys.platform != 'win32':
         arr = linspace(integer64, 5, 7)
         out = np.empty_like(arr)
-        epyccel_func(integer64, 5, out)
+        epyccel_func(integer64, 5, out, True)
+        assert np.allclose(arr, out)
+        arr = linspace(integer64, 5, 7, endpoint=False)
+        out = np.empty_like(arr)
+        epyccel_func(integer64, 5, out, False)
         assert np.allclose(arr, out)
 
-    #arr = linspace(arr_fl, 5, 7)
-    #out = np.empty_like(arr)
-    #epyccel_func(arr_fl, 5, out)
-    #assert np.allclose(arr, out)
 
-    #assert epyccel_func(fl) == get_linspace(fl)
-    #assert epyccel_func(fl32) == get_linspace(fl32)
-    #assert epyccel_func(fl64) == get_linspace(fl64)
-    #assert (epyccel_func(cmplx64) == get_linspace(cmplx64))
-    #assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+    arr = linspace(fl32, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(fl32, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(fl32, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(fl32, 5, out, False)
+    assert np.allclose(arr, out)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #771")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
+    rng = np.random.default_rng()
+    fl64 = rng.random((5,), dtype=np.float64)
+    arr = linspace(fl64, 2, 7)
+    out = np.empty_like(arr)
+    epyccel_func(fl64, 2, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(fl64, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(fl64, 5, out, False)
+    assert np.allclose(arr, out)
+
+    cmplx = (np.random.random(5)*75) + (np.random.random(5)*50) * 1j
+    arr = linspace(cmplx, 0, 7)
+    out = np.empty_like(arr)
+    epyccel_func(cmplx, 0, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(cmplx, 0, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(cmplx, 0, out, False)
+    assert np.allclose(arr, out)
+
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = [pytest.mark.fortran,
+#            pytest.mark.skip(reason="Still under maintenance, See #771")]),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = [
+#            pytest.mark.python]
+#        )
+#    )
+#)
 
 def test_numpy_linspace_array_like_2d(language):
 
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    @types('complex64[:,:]')
-    @types('complex128[:,:]')
-    def get_linspace(arr):
-        from numpy import linspace, shape, ones
-        numberOfSamplesToGenerate = 7
-        start = ones((2,5))
-        stop = arr
-        a = linspace(start, stop, numberOfSamplesToGenerate)
-        s = shape(a)
-        return len(s), s[0], s[1], s[2], a[0, 0, 0], a[0, 1, 0], a[1, 0, 0], a[1, 1, 0], \
-                                         a[0, 0, 4], a[0, 1, 4], a[1, 0, 4], a[1, 1, 4]
+    @types('int[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('int8[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('int16[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('int32[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('float[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('float32[:,:]', 'int', 'float32[:,:,:]', 'bool')
+    @types('float64[:,:]', 'int', 'float64[:,:,:]', 'bool')
+    @types('complex128[:,:]', 'int', 'complex128[:,:,:]', 'bool')
+    def test_linspace(start, stop, out, endpoint):
+        from numpy import linspace
+        numberOfSamplesToGenerate = 3
+        if endpoint is True:
+            a = linspace(start, stop, numberOfSamplesToGenerate)
+        else:
+            a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=False)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                for k in range(len(out[i][j])):
+                    out[i][j][k] = a[i][j][k]
 
     size = (2, 5)
-
-    bl = randint(0, 1, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -5481,18 +5515,4 @@ def test_numpy_linspace_array_like_2d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
 
-    epyccel_func = epyccel(get_linspace, language=language)
-
-    assert epyccel_func(bl) == get_linspace(bl)
-    assert epyccel_func(integer8) == get_linspace(integer8)
-    assert epyccel_func(integer16) == get_linspace(integer16)
-    assert epyccel_func(integer) == get_linspace(integer)
-    assert epyccel_func(integer32) == get_linspace(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_linspace(integer64)
-    assert epyccel_func(fl) == get_linspace(fl)
-    assert epyccel_func(fl32) == get_linspace(fl32)
-    assert epyccel_func(fl64) == get_linspace(fl64)
-    assert (epyccel_func(cmplx64) == get_linspace(cmplx64))
-    assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+    epyccel_func = epyccel(test_linspace, language=language)

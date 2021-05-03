@@ -706,7 +706,8 @@ class FCodePrinter(CodePrinter):
 
         if expr.stop.dtype != expr.dtype:
             if isinstance(expr.dtype, NativeComplex):
-                v = 'cmplx({0}, {1})'.format(self._print(expr.stop), self.print_kind(expr))
+                st = PythonComplex(expr.stop)
+                v = self._print(st)
             else:
                 v = 'Real({0}, {1})'.format(self._print(expr.stop), self.print_kind(expr))
         else:

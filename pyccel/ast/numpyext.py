@@ -633,25 +633,19 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        if isinstance(self._endpoint, LiteralFalse):
+        if isinstance(self.endpoint, LiteralFalse):
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
         return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
 
     @property
     def ind(self):
-        """Used to check if the construct has a nowait clause."""
+        """Used to store the indice needed for the linspace function."""
         return self._ind
 
     @ind.setter
     def ind(self, value):
-        """Used to set the _has_nowait var."""
+        """Used to set the _ind var."""
         self._ind = value
-
-    def __str__(self):
-        code = 'linspace({}, {}, {})'.format(str(self.start),
-                                             str(self.stop),
-                                             str(self.num))
-        return code
 
     @property
     def is_elemental(self):
