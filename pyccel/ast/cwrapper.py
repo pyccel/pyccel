@@ -15,11 +15,10 @@ from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
 
-from .builtins  import PythonBool, PythonComplex
-
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
+from .datatypes import NativeBool, NativeString, NativeGeneric
+from .literals  import LiteralFalse, LiteralTrue
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 from .core      import AliasAssign, Assign, Return, If, DottedVariable

@@ -15,7 +15,7 @@ from .datatypes         import (NativeInteger, NativeReal, NativeComplex,
 from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
 
 from .core              import FunctionDef, FunctionCall
-from .operators         import PyccelNot
+from .operators         import PyccelNot, PyccelEq
 
 
 from .literals          import LiteralInteger

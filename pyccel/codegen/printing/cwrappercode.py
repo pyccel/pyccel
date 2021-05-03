@@ -26,12 +26,13 @@ from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelOr, Pycce
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
 
-from pyccel.ast.cwrapper import PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords
-from pyccel.ast.cwrapper import Py_None, Py_DECREF, flags_registry
-from pyccel.ast.cwrapper import generate_datatype_error, scalar_object_check
-from pyccel.ast.cwrapper import PyccelPyArrayObject, PyccelPyObject
-from pyccel.ast.cwrapper import C_to_Python, Python_to_C
+from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
+from pyccel.ast.cwrapper    import PyArgKeywords
+from pyccel.ast.cwrapper    import Py_None, Py_DECREF
+from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
+from pyccel.ast.cwrapper    import scalar_object_check, flags_registry
+from pyccel.ast.cwrapper    import PyccelPyArrayObject, PyccelPyObject
+from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_c_ndarray
@@ -163,12 +164,7 @@ class CWrapperCodePrinter(CCodePrinter):
             check = array_type_check(collect_var, variable)
 
         else :
-            python_check = PythonType_Check(variable, collect_var)
-            numpy_check = NumpyType_Check(variable, collect_var)
-            if variable.precision == default_precision[str_dtype(variable.dtype)] :
-                check = PyccelOr(python_check, numpy_check)
-            else :
-                check = PyccelAssociativeParenthesis(PyccelAnd(PyccelNot(python_check), numpy_check))
+            check = scalar_object_check(collect_var, variable, hard_check = True)
 
         if isinstance(variable, ValuedVariable):
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
@@ -243,12 +239,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting value and managing error and create the body
         of arguments in format:
-            if collect_var is numpy_type:
-                collect_value from numpy type
-            elif collect_var is python_type: #When needed
-                collect value from python type
-            else
-                raise an error
+
         Parameters:
         ----------
         variable    : Variable
@@ -268,7 +259,6 @@ class CWrapperCodePrinter(CCodePrinter):
         var      = tmp_variable if tmp_variable else variable
         sections = []
 
-        check_type    = scalar_object_check(collect_var, var, error_check)
         collect_value = [Assign(var, FunctionCall(Python_to_C(var), [collect_var]))]
 
         if isinstance(variable, ValuedVariable):
@@ -277,11 +267,14 @@ class CWrapperCodePrinter(CCodePrinter):
             if variable.is_optional:
                 collect_value.append(optional_collect)
 
-        sections.append(IfSection(check_type, collect_value))
-
         if error_check:
+            check_type = scalar_object_check(collect_var, var, hard_check = False)
+            sections.append(IfSection(check_type, collect_value))
             error = generate_datatype_error(var)
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
+        else:
+            sections.append(IfSection(LiteralTrue(), collect_value))
+
 
         return If(*sections)
 
