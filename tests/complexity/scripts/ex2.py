@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # ===================================================
 def f1(L: 'double[:,:]',
        b: 'double[:,:]',

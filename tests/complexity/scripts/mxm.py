@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # ===================================================
 def mxm(x: 'double[:,:]',
         y: 'double[:,:]',
