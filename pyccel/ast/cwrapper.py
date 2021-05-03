@@ -450,7 +450,7 @@ def scalar_object_check(py_object, c_object, precision_check = False):
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
-    hard_check = LiteralTrue() if hard_check else LiteralFalse()
+    precision_check = LiteralTrue() if precision_check else LiteralFalse()
 
     check_func = FunctionDef(name = check_type,
                     body      = [],
@@ -458,7 +458,7 @@ def scalar_object_check(py_object, c_object, precision_check = False):
                                  Variable(dtype = NativeBool(), name = 'hard_check')],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
-    return FunctionCall(check_func, [py_object, hard_check])
+    return FunctionCall(check_func, [py_object, precision_check])
 
 # This registry is used for interface management,
 # mapping each data type to a given flag
