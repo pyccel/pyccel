@@ -1020,6 +1020,9 @@ class CCodePrinter(CodePrinter):
         return '{}.shape[{}]'.format(expr.arg, expr.index)
 
     def _print_Allocate(self, expr):
+        if expr.variable.rank > 15:
+            errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
+
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
