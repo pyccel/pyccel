@@ -251,7 +251,7 @@ class Complexity(object):
                 # ...
 
                 # ...
-                stop = SHAPE(expr.lhs.base, e)
+                stop = SHAPE(pyccel_to_sympy(expr.lhs.base, self._symbol_map, self._used_names), e)
                 if not i.stop == None:
                     stop = i.stop.python_value
 

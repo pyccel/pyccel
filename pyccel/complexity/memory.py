@@ -109,7 +109,7 @@ class MemComplexity(Complexity):
             # ...
 
             # ...
-            stop = SHAPE(expr.base, e)
+            stop = SHAPE(pyccel_to_sympy(expr.base, self._symbol_map, self._used_names), e)
             if not i.stop is None:
                 if isinstance(i.stop, Literal):
                     stop = i.stop.python_value
