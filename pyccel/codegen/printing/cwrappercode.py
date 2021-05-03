@@ -286,7 +286,7 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_body      = []
 
         if variable.is_optional:
-            collect_body  = AliasAssign(variable, tmp_variable)
+            collect_body  = [AliasAssign(variable, tmp_variable)]
             section       = IfSection(valued_var_check, [AliasAssign(variable, Nil())])
 
         else:
