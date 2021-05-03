@@ -635,7 +635,9 @@ class NumpyLinspace(NumpyNewArray):
     def step(self):
         if isinstance(self.endpoint, LiteralFalse):
             return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
-        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
+        elif isinstance(self.endpoint, LiteralTrue):
+            PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
+        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
 
     @property
     def ind(self):

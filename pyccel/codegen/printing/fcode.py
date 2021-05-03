@@ -58,7 +58,7 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
-from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpyext import NumpyEmpty
@@ -712,15 +712,25 @@ class FCodePrinter(CodePrinter):
                 v = 'Real({0}, {1})'.format(self._print(expr.stop), self.print_kind(expr))
         else:
             v = self._print(expr.stop)
+
         if expr.rank > 1:
-            template = '(merge({stop}, ({start} + {index}*{step}), ({cond})))'
+            if isinstance(expr.endpoint, LiteralFalse):
+                template = '({start} + {index}*{step})'
+            else:
+                template = '(merge({stop}, ({start} + {index}*{step}), ({cond})))'
             var = Variable('int', str(expr.ind))
         else:
-            template = '[(merge({stop}, ({start} + {index}*{step}), ({cond})),{index} = {zero},{end})]'
+            if isinstance(expr.endpoint, LiteralFalse):
+                template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
+            else:
+                template = '[(merge({stop}, ({start} + {index}*{step}), ({cond})),{index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
             self.add_vars_to_namespace(var)
 
-        cond = PyccelAnd(PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
+        if isinstance(expr.endpoint, LiteralTrue):
+            cond = PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+        else:
+            cond = PyccelAnd(PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
         init_value = template.format(
             stop  = v,
             start = self._print(expr.start),

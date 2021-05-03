@@ -29,7 +29,7 @@ from pyccel.ast.datatypes import NativeReal, NativeTuple, NativeString
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
@@ -1197,7 +1197,10 @@ class CCodePrinter(CodePrinter):
         return self._print(PyccelMod(*expr.args))
 
     def _print_NumpyLinspace(self, expr):
-        template = '({cond}) ? {stop} : ({start} + {index}*{step})'
+        if isinstance(expr.endpoint, LiteralFalse):
+            template = '({start} + {index}*{step})'
+        else:
+            template = '{cond} ? {stop} : ({start} + {index}*{step})'
 
         if expr.stop.dtype != expr.dtype:
             if isinstance(expr.dtype, NativeComplex):
@@ -1207,8 +1210,10 @@ class CCodePrinter(CodePrinter):
             v = '({cast}){var}'.format(cast=self._print(type_name), var=self._print(expr.stop))
         else:
             v = self._print(expr.stop)
-
-        cond = PyccelAnd(PyccelEq(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
+        if isinstance(expr.endpoint, LiteralFalse):
+            cond = PyccelEq(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+        else:
+            cond = PyccelAnd(PyccelEq(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
         init_value = template.format(
             cond  = self._print(cond),
             stop  = v,
