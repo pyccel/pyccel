@@ -22,7 +22,7 @@ from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import Import
 from pyccel.ast.core import AugAssign
 
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
 
@@ -36,7 +36,6 @@ from pyccel.ast.cwrapper import C_to_Python, Python_to_C
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_c_ndarray
 from pyccel.ast.numpy_wrapper   import numpy_get_data, numpy_get_dim
-from pyccel.ast.numpy_wrapper   import find_in_numpy_dtype_registry
 
 from pyccel.ast.bind_c   import as_static_function_call
 
@@ -231,7 +230,7 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_body      = []
 
         if variable.is_optional:
-            collect_body  = [AliasAssign(variable, tmp_variable)]
+            collect_body  = AliasAssign(variable, tmp_variable)
             section       = IfSection(valued_var_check, [AliasAssign(variable, Nil())])
 
         else:
@@ -269,15 +268,14 @@ class CWrapperCodePrinter(CCodePrinter):
         var      = tmp_variable if tmp_variable else variable
         sections = []
 
-        check_type = scalar_object_check(collect_var, var, error_check)
-        collect_value  =[Assign(var, FunctionCall(Python_to_C(var), [collect_var]))]
+        check_type    = scalar_object_check(collect_var, var, error_check)
+        collect_value = [Assign(var, FunctionCall(Python_to_C(var), [collect_var]))]
 
         if isinstance(variable, ValuedVariable):
             section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable)
             sections.append(section)
             if variable.is_optional:
-                collect_value.append(AliasAssign(variable, tmp_variable))
-
+                collect_value.append(optional_collect)
 
         sections.append(IfSection(check_type, collect_value))
 
