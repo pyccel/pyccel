@@ -429,7 +429,7 @@ check_type_registry = {
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
-def scalar_object_check(py_object, c_object, hard_check = False):
+def scalar_object_check(py_object, c_object, precision_check = False):
     """
     Create FunctionCall responsible for checking python argument data type
     Parameters:
@@ -438,7 +438,7 @@ def scalar_object_check(py_object, c_object, hard_check = False):
         The python argument of the check function
     c_object   : Variable
         The variable needed for the generation of the type check
-    hard_check : boolean
+    precision_check : Boolean
         True if checking the exact precision is needed
     Returns
     -------

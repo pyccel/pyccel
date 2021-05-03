@@ -224,7 +224,7 @@ class CWrapperCodePrinter(CCodePrinter):
             check = array_type_check(collect_var, variable)
 
         else :
-            check = scalar_object_check(collect_var, variable, hard_check = True)
+            check = scalar_object_check(collect_var, variable, precision_check = True)
 
         if isinstance(variable, ValuedVariable):
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
@@ -328,7 +328,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 collect_value.append(optional_collect)
 
         if error_check:
-            check_type = scalar_object_check(collect_var, var, hard_check = False)
+            check_type = scalar_object_check(collect_var, var, precision_check = False)
             sections.append(IfSection(check_type, collect_value))
             error = generate_datatype_error(var)
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
