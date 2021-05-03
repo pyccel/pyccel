@@ -808,6 +808,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
+                if expr.rank > 15:
+                    errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
                 self._additional_imports.add('ndarrays')
                 return 't_ndarray '
             errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
@@ -1020,9 +1022,6 @@ class CCodePrinter(CodePrinter):
         return '{}.shape[{}]'.format(expr.arg, expr.index)
 
     def _print_Allocate(self, expr):
-        if expr.variable.rank > 15:
-            errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
-
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
