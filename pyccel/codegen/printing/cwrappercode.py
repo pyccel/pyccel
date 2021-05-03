@@ -324,8 +324,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if isinstance(variable, ValuedVariable):
             section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable)
             sections.append(section)
-            if variable.is_optional:
-                collect_value.append(optional_collect)
+            collect_value += optional_collect
 
         if error_check:
             check_type = scalar_object_check(collect_var, var, precision_check = False)
