@@ -160,8 +160,7 @@ class Complexity(object):
             if hasattr(self, method):
                 obj = getattr(self, method)(expr, **settings)
                 return obj
-            else:
-                raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
+        raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
 
     def _cost_CodeBlock(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.body)
