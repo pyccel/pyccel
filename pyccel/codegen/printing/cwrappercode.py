@@ -70,6 +70,15 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
 
     def stored_in_c_pointer(self, a):
+        """
+        Return True if variable is pointer or stored in a pointer
+        Parameters:
+        -----------
+        a      : Variable
+            Variable holding information needed (is_pointer, is_optional)
+        Returns: Boolean
+        --------
+        """
         stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
         if self._target_language == 'fortran':
             return stored_in_c or (isinstance(a, Variable) and a.rank>0)
@@ -77,6 +86,21 @@ class CWrapperCodePrinter(CCodePrinter):
             return stored_in_c
 
     def get_new_name(self, used_names, requested_name):
+        """
+        Generate a new name, return the requested_name if it's not in
+        used_names set  or generate new one based on the requested_name.
+        The generated name is appended to the used_names set
+
+        Parameters
+        ----------
+        used_names     : set of strings
+            Set of variable and function names to avoid name collisions
+        requested_name : String
+            The desired name
+        Returns
+        ----------
+        name  : String
+        """
         if requested_name not in used_names:
             used_names.add(requested_name)
             return requested_name
@@ -94,6 +118,15 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.function_signature(self, expr)
 
     def get_declare_type(self, expr):
+        """
+        Get the declaration type of a variable
+        Parameters:
+        -----------
+        variable : Variable
+            Variable holding information needed to choose the declaration type
+        Returns: String
+        --------
+        """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if self._target_language == 'c' and dtype != "pyarrayobject":
@@ -107,11 +140,38 @@ class CWrapperCodePrinter(CCodePrinter):
             return '{0} '.format(dtype)
 
     def get_new_PyObject(self, name, used_names):
+        """
+        Create new PyccelPyObject Variable with the desired name
+        Parameters:
+        -----------
+        name       : String
+            The desired name
+        used_names : Set of strings
+            Set of variable and function names to avoid name collisions
+
+        Returns: Variable
+        -------
+        """
         return Variable(dtype=PyccelPyObject(),
                         name=self.get_new_name(used_names, name),
                         is_pointer=True)
 
     def find_in_dtype_registry(self, dtype, prec):
+        """
+        Find the corresponding C dtype in the dtype_registry
+        raise PYCCEL_RESTRICTION_TODO if not found
+
+        Parameters:
+        -----------
+        dtype : String
+            expression data type
+
+        prec  : Integer
+            expression precision
+
+        Returns: String
+        --------
+        """
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
@@ -407,21 +467,13 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_func_stmts : functionCall
             call to cast function responsible for the conversion of one data type into another
         """
-        collect_var = variable
-        cast_function = None
 
-        if variable.dtype is NativeBool():
-            collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('bool_to_pyobj', variable)
+        cast_function = FunctionCall(C_to_Python(variable), [VariableAddress(variable)])
 
-        if variable.dtype is NativeComplex():
-            collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
-            self._to_free_PyObject_list.append(collect_var)
+        collect_type = PyccelPyObject()
+        collect_var = Variable(dtype=collect_type, is_pointer=True,
+            name = self.get_new_name(used_names, variable.name+"_tmp"))
+        self._to_free_PyObject_list.append(collect_var) #TODO remove in next PR
 
         return collect_var, cast_function
 
