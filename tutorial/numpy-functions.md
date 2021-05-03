@@ -325,7 +325,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
 
--   Supported languages: fortran (1d or 2d arrays only, dot product not supported).
+-   Supported languages: fortran (1d or 2d arrays only).
 
 -   python code:
 

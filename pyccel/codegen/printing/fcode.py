@@ -685,6 +685,12 @@ class FCodePrinter(CodePrinter):
         a_code = self._print(expr.a)
         b_code = self._print(expr.b)
 
+        if expr.rank == 0:
+            if isinstance(expr.a.dtype, NativeBool):
+                a_code = self._print(PythonInt(expr.a))
+            if isinstance(expr.b.dtype, NativeBool):
+                b_code = self._print(PythonInt(expr.b))
+            return 'sum({}*{})'.format(a_code, b_code)
         if expr.a.order and expr.b.order:
             if expr.a.order != expr.b.order:
                 raise NotImplementedError("Mixed order matmul not supported.")
