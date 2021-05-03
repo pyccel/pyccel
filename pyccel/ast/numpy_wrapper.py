@@ -62,7 +62,7 @@ numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                              arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                              results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
-# numpy array to fortran ndarray : function definition in pyccel/stdlib/cwrapper.c
+# numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper.c
 pyarray_to_c_ndarray = FunctionDef(
                 name      = 'pyarray_to_c_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
@@ -101,11 +101,14 @@ numpy_get_dim   = FunctionDef(name      = 'PyArray_DIM',
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
 # Basic Array Flags
+# https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
+# https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_C_CONTIGUOUS
 numpy_flag_c_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
+# https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_F_CONTIGUOUS
 numpy_flag_f_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
 
-# Custom Array Flags
+# Custom Array Flags defined in pyccel/stdlib/cwrapper/cwrapper.h
 no_type_check           = Variable(dtype=NativeInteger(),  name = 'NO_TYPE_CHECK')
 no_order_check          = Variable(dtype=NativeInteger(),  name = 'NO_ORDER_CHECK')
 
