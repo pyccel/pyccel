@@ -268,6 +268,7 @@ Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 # Python.h object representing None
 Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
+# https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
@@ -362,7 +363,7 @@ def PyErr_SetString(exception, message):
     """
     Generate function Call of c/python api PyErr_SetString
     https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
-    used to set the error indicator.
+    with a defined error message used to set the error indicator.
 
     Parameters:
     ----------
@@ -410,12 +411,6 @@ def generate_datatype_error(variable):
             dtype     = variable.dtype)
     return PyErr_SetString('PyExc_TypeError', message)
 
-
-# All functions used for type are from c python api :
-# https://docs.python.org/3/c-api/long.html#c.PyLong_Check
-# https://docs.python.org/3/c-api/complex.html#c.PyComplex_Check
-# https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
-# https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
