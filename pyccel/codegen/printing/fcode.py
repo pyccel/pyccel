@@ -11,6 +11,7 @@ www.fortran90.org as much as possible."""
 
 
 import string
+import re
 from itertools import chain
 from collections import OrderedDict
 
@@ -164,6 +165,17 @@ python_builtin_datatypes = {
     'bool'    : PythonBool,
     'complex' : PythonComplex
 }
+
+inc_keyword = (r'do\b', r'if\b',
+               r'else\b', r'type\b\s*[^\(]',
+               r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
+               r'interface\b',r'module\b',r'program\b')
+inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
+
+end_keyword = ('do', 'if', 'type', 'function',
+               'subroutine', 'interface','module','program')
+end_regex_str = '(end ?({}))|(else)'.format('|'.join('({})'.format(k) for k in end_keyword))
+dec_regex = re.compile(end_regex_str)
 
 errors = Errors()
 
@@ -673,6 +685,12 @@ class FCodePrinter(CodePrinter):
         a_code = self._print(expr.a)
         b_code = self._print(expr.b)
 
+        if expr.rank == 0:
+            if isinstance(expr.a.dtype, NativeBool):
+                a_code = self._print(PythonInt(expr.a))
+            if isinstance(expr.b.dtype, NativeBool):
+                b_code = self._print(PythonInt(expr.b))
+            return 'sum({}*{})'.format(a_code, b_code)
         if expr.a.order and expr.b.order:
             if expr.a.order != expr.b.order:
                 raise NotImplementedError("Mixed order matmul not supported.")
@@ -1566,7 +1584,7 @@ class FCodePrinter(CodePrinter):
         args_decs = OrderedDict()
 
         func_end  = ''
-        rec = 'recursive' if expr.is_recursive else ''
+        rec = 'recursive ' if expr.is_recursive else ''
         if len(expr.results) != 1:
             func_type = 'subroutine'
             out_args = list(expr.results)
@@ -1607,7 +1625,7 @@ class FCodePrinter(CodePrinter):
                 out_args.remove(i)
 
         # treate case of pure function
-        sig = '{0} {1} {2}'.format(rec, func_type, name)
+        sig = '{0}{1} {2}'.format(rec, func_type, name)
         if is_pure:
             sig = 'pure {}'.format(sig)
 
@@ -2890,18 +2908,9 @@ class FCodePrinter(CodePrinter):
 
         code = [line.lstrip(' \t') for line in code]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n',
-                       'else', 'type', 'subroutine', 'function',
-                       'interface')
-        dec_keyword = ('end do', 'enddo', 'end if', 'endif',
-                       'else', 'endtype', 'end type',
-                       'endfunction', 'end function',
-                       'endsubroutine', 'end subroutine',
-                       'endinterface', 'end interface')
-
-        increase = [int(any(map(line.startswith, inc_keyword)))
+        increase = [int(inc_regex.match(line) is not None)
                      for line in code]
-        decrease = [int(any(map(line.startswith, dec_keyword)))
+        decrease = [int(dec_regex.match(line) is not None)
                      for line in code]
         continuation = [int(any(map(line.endswith, ['&', '&\n'])))
                          for line in code]
