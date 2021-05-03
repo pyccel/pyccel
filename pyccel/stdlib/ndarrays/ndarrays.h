@@ -32,6 +32,34 @@ typedef struct  s_slice
     int32_t step;
 }               t_slice;
 
+#define GET_INDEX_EXP1(t, arr,ndim, a) t(arr,ndim, a)
+#define GET_INDEX_EXP2(t, arr,ndim, a, b) GET_INDEX_EXP1(t, arr,ndim - 1, a) + t(arr,ndim, b)
+#define GET_INDEX_EXP3(t, arr,ndim, a, b, c) GET_INDEX_EXP2(t, arr,ndim - 1, a, b) + t(arr,ndim, c)
+#define GET_INDEX_EXP4(t, arr,ndim, a, b, c, d) GET_INDEX_EXP3(t, arr,ndim - 1, a, b, c) + t(arr,ndim, d)
+#define GET_INDEX_EXP5(t, arr,ndim, a, b, c, d, e) GET_INDEX_EXP4(t, arr,ndim - 1, a, b, c, d) + t(arr,ndim, e)
+#define GET_INDEX_EXP6(t, arr,ndim, a, b, c, d, e, f) GET_INDEX_EXP5(t, arr,ndim - 1, a, b, c, d, e) + t(arr,ndim, f)
+#define GET_INDEX_EXP7(t, arr,ndim, a, b, c, d, e, f, g) GET_INDEX_EXP6(t, arr,ndim - 1, a, b, c, d, e, f) + t(arr,ndim, g)
+#define GET_INDEX_EXP8(t, arr,ndim, a, b, c, d, e, f, g, h) GET_INDEX_EXP7(t, arr,ndim - 1, a, b, c, d, e, f, g) + t(arr,ndim, h)
+#define GET_INDEX_EXP9(t, arr,ndim, a, b, c, d, e, f, g, h, i) GET_INDEX_EXP8(t, arr,ndim - 1, a, b, c, d, e, f, g, h) + t(arr,ndim, i)
+#define GET_INDEX_EXP10(t, arr,ndim, a, b, c, d, e, f, g, h, i, j) GET_INDEX_EXP9(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i) + t(arr,ndim, j)
+#define GET_INDEX_EXP11(t, arr,ndim, a, b, c, d, e, f, g, h, i, j, k) GET_INDEX_EXP10(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i, j) + t(arr,ndim, k)
+#define GET_INDEX_EXP12(t, arr,ndim, a, b, c, d, e, f, g, h, i, j, k, l) GET_INDEX_EXP11(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i, j, k) + t(arr,ndim, l)
+#define GET_INDEX_EXP13(t, arr,ndim, a, b, c, d, e, f, g, h, i, j, k, l, m) GET_INDEX_EXP12(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i, j, k, l) + t(arr,ndim, m)
+#define GET_INDEX_EXP14(t, arr,ndim, a, b, c, d, e, f, g, h, i, j, k, l, m, n) GET_INDEX_EXP13(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i, j, k, l, m) + t(arr,ndim,n)
+#define GET_INDEX_EXP15(t, arr,ndim, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) GET_INDEX_EXP14(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i, j, k, l, m, n) + t(arr,ndim,o)
+#define GET_INDEX_EXP16(t, arr,ndim, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) GET_INDEX_EXP15(t, arr,ndim - 1, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) + t(arr,ndim,p)
+
+
+#define NUM_ARGS_H1(dummy, x16, x15, x14, x13, x12, x11, x10, x9, x8, x7, x6, x5, x4, x3, x2, x1, x0, ...) x0
+#define NUM_ARGS(...) NUM_ARGS_H1(dummy, __VA_ARGS__, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+#define GET_INDEX_FUNC_H3(t, arr, ndim, ...) GET_INDEX_EXP##ndim(t, arr, ndim - 1, __VA_ARGS__)
+#define GET_INDEX_FUNC_H2(t, arr, ndim, ...) GET_INDEX_FUNC_H3(t, arr, ndim, __VA_ARGS__)
+#define GET_INDEX_FUNC(t, arr, ...) GET_INDEX_FUNC_H2(t, arr, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
+
+#define GET_INDEX(arr, ...) GET_INDEX_FUNC(INDEX, arr, __VA_ARGS__)
+#define INDEX(arr, dim, a) (arr.strides[dim] * (a))
+#define GET_ELEMENT(arr, type, ...) arr.type[GET_INDEX(arr, __VA_ARGS__)]
+
 /*
 ** Map e_types enum to numpy NPY_TYPES enum
 ** ref: numpy_repo: numpy/numpy/core/include/numpy/ndarraytypes.h
