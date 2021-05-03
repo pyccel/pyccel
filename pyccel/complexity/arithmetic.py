@@ -37,11 +37,11 @@ IDIV = Symbol('IDIV')
 ABS = Symbol('ABS')
 
 op_registry = {
-    AddOp(): ADD,
-    SubOp(): SUB,
-    MulOp(): MUL,
-    DivOp(): DIV,
-#    ModOp: MOD,
+    '+': ADD,
+    '-': SUB,
+    '*': MUL,
+    '/': DIV,
+#    '%': MOD,
     }
 # ...
 
