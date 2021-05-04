@@ -15,7 +15,7 @@ def test_assign_vars_return(language):
         c = a+b
         d = a-b
         return c+d
-    epyc_assign_vars_return = epyccel(assign_vars_return, language=language, fflags="-Werror -Wunused-variable")
+    epyc_assign_vars_return = epyccel(assign_vars_return, language=language, fflags="-Werror  -Wunused-variable")
     assert (epyc_assign_vars_return(3, 4) == assign_vars_return(3, 4))
 
 
