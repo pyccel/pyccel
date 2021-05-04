@@ -12,7 +12,7 @@ import pytest
 from sympy.abc import n,m,x,b
 from sympy import Function, Symbol
 from sympy import simplify as sp_simplify
-SHAPE = Function('shape')
+SHAPE = Function('SHAPE')
 READ = Symbol('READ')
 WRITE = Symbol('WRITE')
 FLOOR = Symbol('FLOOR')

@@ -11,7 +11,7 @@ from sympy import Function, Symbol
 from pyccel.complexity.memory import MemComplexity
 import os
 
-SHAPE = Function('shape')
+SHAPE = Function('SHAPE')
 READ = Symbol('READ')
 WRITE = Symbol('WRITE')
 out = Symbol('out')

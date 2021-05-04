@@ -20,7 +20,7 @@ from pyccel.ast.internals import Slice
 #koka try deleting visual
 __all__ = ["Complexity"]
 
-SHAPE = Function('shape')
+SHAPE = Function('SHAPE')
 
 # ==============================================================================
 class Complexity(object):

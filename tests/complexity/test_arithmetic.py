@@ -11,7 +11,7 @@ from pyccel.complexity.arithmetic import OpComplexity
 import os
 
 from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
-SHAPE = Function('shape')
+SHAPE = Function('SHAPE')
 FLOOR = Symbol('FLOOR')
 EXP = Symbol('EXP')
 LOG = Symbol('LOG')
