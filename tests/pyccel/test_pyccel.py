@@ -317,14 +317,20 @@ def test_imports_compile(language):
 @pytest.mark.xdist_incompatible
 def test_imports_in_folder(language):
     if language == 'python':
-        current_folder = os.path.abspath(__file__)
-        result = current_folder.split('/')
-        result = result[:-1]
-        current_folder = "/".join(result)
+        pyccel_commands = " --language="+language
+        pyccel_commands += " --output py"
+        dependencies = get_abs_path(os.path.normpath("scripts/folder1/folder1_funcs.py"))
+        compile_pyccel(os.path.dirname(dependencies), dependencies, pyccel_commands)
+        current_folder = os.path.dirname(os.path.realpath(__file__))
         if os.path.exists(current_folder+"/scripts/py/folder1") is False:
-            shutil.copytree(current_folder+"/scripts/folder1", current_folder+"/scripts/py/folder1")
-    pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
-            compile_with_pyccel = False, language = language)
+            os.mkdir(os.path.join(current_folder, os.path.normpath("scripts/py/folder1")))
+        src = os.path.join(current_folder,os.path.normpath("scripts/folder1/py/folder1_funcs.py"))
+        dest = os.path.join(current_folder, os.path.normpath("scripts/py/folder1/folder1_funcs.py"))
+        shutil.copyfile(src, dest)
+        pyccel_test("scripts/runtest_folder_imports.py", language = language)
+    else:
+        pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
+                compile_with_pyccel = False, language = language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
