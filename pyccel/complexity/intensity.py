@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+# pylint: disable=R0201, missing-function-docstring
 
 # TODO - use SHAPE(...) as args for Poly => ex1.py breaks down for a function
 #        like array_int32_1d_scalar_add

@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+# pylint: disable=R0201, missing-function-docstring
 
 """
 This module provides us with functions and objects that allow us to compute
@@ -109,7 +110,7 @@ class MemComplexity(Complexity):
             # ...
 
             # ...
-            stop = SHAPE(expr.base, e)
+            stop = SHAPE(pyccel_to_sympy(expr.base, self._symbol_map, self._used_names), e)
             if not i.stop is None:
                 if isinstance(i.stop, Literal):
                     stop = i.stop.python_value

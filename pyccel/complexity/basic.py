@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+# pylint: disable=R0201, missing-function-docstring
 
 from collections import OrderedDict
 
@@ -160,8 +161,7 @@ class Complexity(object):
             if hasattr(self, method):
                 obj = getattr(self, method)(expr, **settings)
                 return obj
-            else:
-                raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
+        raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
 
     def _cost_CodeBlock(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.body)
@@ -252,7 +252,7 @@ class Complexity(object):
                 # ...
 
                 # ...
-                stop = SHAPE(expr.lhs.base, e)
+                stop = SHAPE(pyccel_to_sympy(expr.lhs.base, self._symbol_map, self._used_names), e)
                 if not i.stop == None:
                     stop = i.stop.python_value
 

@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # ...
 def add( x: 'int', y: 'int' ):
     return x+y

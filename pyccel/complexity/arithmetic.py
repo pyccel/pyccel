@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+# pylint: disable=R0201, missing-function-docstring
 
 # TODO: - Pow
 #       - If
@@ -37,11 +38,11 @@ IDIV = Symbol('IDIV')
 ABS = Symbol('ABS')
 
 op_registry = {
-    AddOp(): ADD,
-    SubOp(): SUB,
-    MulOp(): MUL,
-    DivOp(): DIV,
-#    ModOp: MOD,
+    '+': ADD,
+    '-': SUB,
+    '*': MUL,
+    '/': DIV,
+#    '%': MOD,
     }
 # ...
 

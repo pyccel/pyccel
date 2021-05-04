@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 #==============================================================================
 def assemble_matrix_ex01(ne1: 'int', ne2: 'int',
                         p1:  'int', p2:  'int',

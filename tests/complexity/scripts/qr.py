@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # ===================================================
 def qr(A: 'double[:,:]',
        L: 'double[:,:]'):

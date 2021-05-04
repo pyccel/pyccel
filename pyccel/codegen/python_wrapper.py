@@ -108,7 +108,7 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         c_flags = [fortran_c_flag_equivalence[f] if f in fortran_c_flag_equivalence \
-                else f for f in flags.strip().split(' ') if f != '']
+                else f for f in flags]
 
         if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
             idx = 0
@@ -127,6 +127,8 @@ def create_shared_library(codegen,
 
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
         cmd = [sys.executable, setup_filename, "build"]
+        if sys.platform == 'win32' and compiler in ('gfortran','gcc','ifort','icc'):
+            cmd += ['--compiler=mingw32']
 
         if verbose:
             print(' '.join(cmd))
@@ -143,8 +145,7 @@ def create_shared_library(codegen,
             print(out)
         if p.returncode != 0:
             err_msg = "Failed to build module"
-            if verbose:
-                err_msg += "\n" + err
+            err_msg += "\n" + err
             raise RuntimeError(err_msg)
         if err:
             warnings.warn(UserWarning(err))
