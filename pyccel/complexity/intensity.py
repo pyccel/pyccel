@@ -49,7 +49,7 @@ ARCTAN2 = Symbol('ARCTAN2')
 _cost_symbols = {ADD, SUB, MUL, DIV, IDIV, ABS,
                  READ, WRITE, SIN, FLOOR, EXP, LOG, SQRT, COS, TAN, ARCSIN, ARCCOS, ARCTAN, SINH, COSH, TANH, ARCSINH, ARCCOSH, ARCTANH, ARCTAN2}
 
-__all__ = ["computational_intensity"]
+__all__ = ["ComputationalIntensity"]
 
 
 # ==============================================================================
