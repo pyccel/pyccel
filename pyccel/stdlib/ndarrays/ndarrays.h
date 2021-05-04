@@ -48,8 +48,8 @@ typedef struct  s_slice
 #define GET_INDEX_EXP14(t, arr, a, b, c, d, e, f, g, h, i, j, k, l, m, n) GET_INDEX_EXP13(t, arr, a, b, c, d, e, f, g, h, i, j, k, l, m) + t(arr, 13, n)
 #define GET_INDEX_EXP15(t, arr, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) GET_INDEX_EXP14(t, arr, a, b, c, d, e, f, g, h, i, j, k, l, m, n) + t(arr, 14, o)
 
-#define NUM_ARGS_H1(dummy, x16, x15, x14, x13, x12, x11, x10, x9, x8, x7, x6, x5, x4, x3, x2, x1, x0, ...) x0
-#define NUM_ARGS(...) NUM_ARGS_H1(dummy, __VA_ARGS__, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+#define NUM_ARGS_H1(dummy, x15, x14, x13, x12, x11, x10, x9, x8, x7, x6, x5, x4, x3, x2, x1, x0, ...) x0
+#define NUM_ARGS(...) NUM_ARGS_H1(dummy, __VA_ARGS__, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 #define GET_INDEX_FUNC_H2(t, arr, ndim, ...) GET_INDEX_EXP##ndim(t, arr, __VA_ARGS__)
 #define GET_INDEX_FUNC(t, arr, ndim, ...) GET_INDEX_FUNC_H2(t, arr, ndim, __VA_ARGS__)
 
