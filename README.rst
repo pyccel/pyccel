@@ -49,7 +49,7 @@ For Fortran it supports
 
 For C it supports
 
--   Gcc <https://gcc.gnu.org/>
+-   GCC <https://gcc.gnu.org/>
 -   Intel® Compiler <https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html>
 -   PGI <https://www.pgroup.com/index.htm>
 
@@ -64,7 +64,7 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 - MPICH <https://www.mpich.org/>
 - Intel® MPI Library <https://software.intel.com/en-us/mpi-library>
 
-We recommend using GFortran/Gcc and Open-MPI.
+We recommend using GFortran/GCC and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
 
