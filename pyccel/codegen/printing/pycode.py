@@ -8,7 +8,6 @@
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
-from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
