@@ -72,7 +72,7 @@ def _leading_term(expr, *args):
         for var in lt.free_symbols:
             var = str(var)
             if "shape" in var:
-                lt = lt.subs(var, "shape(" + var.split("_")[1] + "," + var.split("_")[2] + ")")
+                lt = lt.subs(var, "SHAPE(" + var.split("_")[1] + "," + var.split("_")[2] + ")")
     else:
         P = Poly(expr, *args)
         lt = LT(P)
