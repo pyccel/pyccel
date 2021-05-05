@@ -299,9 +299,15 @@ def test_rel_imports_python_accessible_folder(language):
     language_opt = '--language={}'.format(language)
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"), language_opt)
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), language_opt)
-
-    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_rel_imports"],
+    if language == 'python':
+        src  = os.path.join(path_dir, os.path.normpath("folder2/py/folder2_funcs.py"))
+        dest = os.path.join(path_dir, os.path.normpath("py/folder2_funcs.py"))
+        shutil.copyfile(src, dest)
+        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.py.runtest_rel_imports"],
             stdout=subprocess.PIPE, universal_newlines=True)
+    else:
+        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_rel_imports"],
+                    stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
 
