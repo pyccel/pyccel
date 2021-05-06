@@ -52,6 +52,7 @@ from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
+from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
@@ -533,6 +534,9 @@ class SyntaxParser(BasicParser):
 
         elif isinstance(stmt.op, ast.BitAnd):
             return PyccelBitAnd(first, second)
+
+        elif isinstance(stmt.op, ast.MatMult):
+            return NumpyMatmul(first, second)
 
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
