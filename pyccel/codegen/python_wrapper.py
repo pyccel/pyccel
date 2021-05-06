@@ -153,7 +153,7 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
-        locks = [FileLock(d+'.lock') for d in dep_mods]
+        locks = [FileLock(d+'.lock') for d in [*dep_mods, 'cwrapper']]
         for l in locks:
             l.acquire()
         try:
