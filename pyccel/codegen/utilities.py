@@ -61,6 +61,9 @@ def construct_flags(compiler,
         if debug:
             flags.append("-fcheck=bounds")
 
+    if compiler in ["gcc", "icc"]:
+        flags.append("-std=c99")
+
     if compiler == "mpif90":
         if debug:
             flags.append("-fcheck=bounds")
