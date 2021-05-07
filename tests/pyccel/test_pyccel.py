@@ -361,8 +361,25 @@ def test_folder_imports_python_accessible_folder(language):
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"),
             language_opt)
 
-    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
+    if language == 'python':
+        if os.path.exists(os.path.join(path_dir, os.path.normpath("py/py"))) is False:
+            os.makedirs(os.path.join(path_dir, os.path.normpath("py/py")))
+
+        src  = os.path.join(path_dir, os.path.normpath("py/runtest_imports2.py"))
+        dest = os.path.join(path_dir, os.path.normpath("py/py/runtest_imports2.py"))
+        shutil.copyfile(src, dest)
+
+        if os.path.exists(os.path.join(path_dir, os.path.normpath("py/folder1"))) is False:
+            os.makedirs(os.path.join(path_dir, os.path.normpath("py/folder1")))
+
+        src  = os.path.join(path_dir, os.path.normpath("folder1/py/folder1_funcs.py"))
+        dest = os.path.join(path_dir, os.path.normpath("py/folder1/folder1_funcs.py"))
+        shutil.copyfile(src, dest)
+        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.py.py.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
+    else:
+        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
+                stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
 
@@ -386,6 +403,8 @@ def test_folder_imports(language):
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"),
             language_opt)
 
+    #if language == 'python':
+    #    os.makedirs(os.path.join(path_dir,os.path.normpath('py/py/folder1')))
     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
