@@ -8,14 +8,13 @@
 
 #include <stdint.h>
 
-#define MOD_PYC1(N, M) (((N % M) + M) % M)
-#define FMOD_PYC1(N, M) (fmod(fmod(N, M) + M, M))
+/*
+** (((N % M) + M) % M) and fmod(fmod(N, M) + M, M)) are used to handle the negative
+** operands of modulo operator.
+*/
 
-#define MOD_PYC2(N, M) (N < 0 ? (N % M) + M : (N % M))
-#define FMOD_PYC2(N, M) (N < 0 ? fmod(N, M) + M : fmod(N, M))
-
-#define MOD_PYC3(N, M) ((N % M) >= 0 ? N % M : (N % M) + M)
-#define FMOD_PYC3(N, M) (fmod(N, M) >= 0 ? fmod(N, M) : fmod(N, M) + M)
+#define MOD_PYC(N, M) ((N < 0 || M < 0) ? (((N % M) + M) % M) : (N % M))
+#define FMOD_PYC(N, M) ((N < 0 || M < 0) ? fmod(fmod(N, M) + M, M) : fmod(N, M))
 
 int64_t         pyc_factorial(int64_t n);
 int64_t         pyc_gcd (int64_t a, int64_t b);

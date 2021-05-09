@@ -29,6 +29,7 @@ def test_modulo_int_int(language):
 
     f_output = f(x, y)
     modulo_i_i_output = modulo_i_i(x, y)
+    assert modulo_i_i(x, y)== f(x, y)
     assert modulo_i_i_output == f_output
     assert isinstance(f_output, type(modulo_i_i_output))
 
