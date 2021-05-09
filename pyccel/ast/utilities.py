@@ -35,7 +35,6 @@ from .variable      import (Constant, Variable, ValuedVariable,
 errors = Errors()
 
 __all__ = (
-    'build_types_decorator',
     'builtin_function',
     'builtin_import',
     'builtin_import_registery',
@@ -140,32 +139,6 @@ def get_function_from_ast(ast, func_name):
         print('> could not find {}'.format(func_name))
 
     return node
-
-#==============================================================================
-# TODO: must add a Node Decorator in core
-def build_types_decorator(args, order=None):
-    """
-    builds a types decorator from a list of arguments (of FunctionDef)
-    """
-    types = []
-    for a in args:
-        if isinstance(a, Variable):
-            dtype = a.dtype.name.lower()
-
-        else:
-            raise TypeError('unepected type for {}'.format(a))
-
-        if a.rank > 0:
-            shape = [':' for i in range(0, a.rank)]
-            shape = ','.join(i for i in shape)
-            dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
-            if order and a.rank > 1:
-                dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
-
-        dtype = LiteralString(dtype)
-        types.append(dtype)
-
-    return types
 
 #==============================================================================
 def split_positional_keyword_arguments(*args):
