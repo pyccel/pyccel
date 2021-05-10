@@ -19,16 +19,16 @@ Example
 
 """
 
-import sympy
 from collections import OrderedDict
 
+import sympy
 from sympy import sympify, Symbol
 from sympy import Poly, LT
+from sympy.abc import x
 
 from pyccel.complexity.arithmetic import OpComplexity, ADD, SUB, MUL, DIV, IDIV, ABS
 from pyccel.complexity.memory import MemComplexity, READ, WRITE
 
-from sympy.abc import x
 FLOOR = Symbol('FLOOR')
 EXP = Symbol('EXP')
 LOG = Symbol('LOG')
@@ -78,7 +78,7 @@ def _leading_term(expr, *args):
         lt = LT(P)
     return lt
 # ==============================================================================
-def checker(expr, temp = []):
+def checker(expr, temp = ()):
     if isinstance(expr, sympy.core.power.Pow):
         if (expr.args[-1] < 0):
             temp.append(expr)
