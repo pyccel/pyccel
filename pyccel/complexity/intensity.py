@@ -78,13 +78,14 @@ def _leading_term(expr, *args):
         lt = LT(P)
     return lt
 # ==============================================================================
-def checker(expr, temp = ()):
-    temp = list(temp)
+def checker(expr, temp = None):
+    if temp is None:
+        temp = []
     if isinstance(expr, sympy.core.power.Pow):
         if (expr.args[-1] < 0):
             temp.append(expr)
     for i in expr.args:
-        checker(i)
+        checker(i, temp)
     return temp
 
 # ==============================================================================
