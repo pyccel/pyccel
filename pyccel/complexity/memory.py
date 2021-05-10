@@ -13,8 +13,7 @@ Example
 -------
 """
 
-from sympy import sympify, Symbol
-from sympy import summation
+from sympy import Symbol
 
 from pyccel.ast.basic        import Basic
 from pyccel.ast.builtins     import PythonTuple
@@ -102,7 +101,7 @@ class MemComplexity(Complexity):
         for e,i in indices:
             # ...
             start = 0
-            if not i.start is None:
+            if i.start is not None:
                 if isinstance(i.start, Literal):
                     start = i.start.python_value
                 else:
@@ -111,7 +110,7 @@ class MemComplexity(Complexity):
 
             # ...
             stop = SHAPE(pyccel_to_sympy(expr.base, self._symbol_map, self._used_names), e)
-            if not i.stop is None:
+            if i.stop is not None:
                 if isinstance(i.stop, Literal):
                     stop = i.stop.python_value
                 else:
@@ -120,14 +119,14 @@ class MemComplexity(Complexity):
 
             # ...
             step = 1
-            if not i.step == None:
+            if i.step is not None:
                 if isinstance(i.step, Literal):
                     step = i.step.python_value
                 else:
                     step = pyccel_to_sympy(i.step, self._symbol_map, self._used_names)
             # ...
 
-            if not(step == 1):
+            if step != 1:
                 raise NotImplementedError('only step == 1 is treated')
 
             # TODO uncomment this
