@@ -79,6 +79,7 @@ def _leading_term(expr, *args):
     return lt
 # ==============================================================================
 def checker(expr, temp = ()):
+    temp = list(temp)
     if isinstance(expr, sympy.core.power.Pow):
         if (expr.args[-1] < 0):
             temp.append(expr)
