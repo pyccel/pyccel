@@ -304,12 +304,12 @@ bool    PyIs_Int64(PyObject *o, bool hard_check)
 {
 	#ifndef _WIN32
 		return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
+    #else
+        if (hard_check == true)
+            return PyArray_IsScalar(o, Int64);
+
+        return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
 	#endif
-
-	if (hard_check == true)
-		return PyArray_IsScalar(o, Int64);
-
-	return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
 }
 //--------------------------------------------------------//
 bool    PyIs_Float(PyObject *o, bool hard_check)
