@@ -10,7 +10,7 @@ from collections import OrderedDict
 from sympy import summation
 from sympy import Function
 from sympy import Symbol
-from sympy import Poly, LT
+from sympy import LT
 from sympy import simplify as sp_simplify
 
 from pyccel.parser.parser import Parser
@@ -226,7 +226,7 @@ class Complexity(object):
         return self.costs[fname]
 
     def _cost_PyccelAssociativeParenthesis(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr._args)
+        return sum(self._cost(i, **settings) for i in expr.args)
 
     def _cost_Return(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in [expr.stmt, expr.expr])
@@ -247,22 +247,22 @@ class Complexity(object):
             for e,i in indices:
                 # ...
                 start = 0
-                if not i.start == None:
+                if i.start is not None:
                     start = i.start.python_value
                 # ...
 
                 # ...
                 stop = SHAPE(pyccel_to_sympy(expr.lhs.base, self._symbol_map, self._used_names), e)
-                if not i.stop == None:
+                if i.stop is not None:
                     stop = i.stop.python_value
 
                 elif not(shape is None):
-                        stop = shape[e]
+                    stop = shape[e]
                 # ...
 
                 # ...
                 step = 1
-                if not i.step == None:
+                if i.step is not None:
                     step = i.step.python_value
                 # ...
 
