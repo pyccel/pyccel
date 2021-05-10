@@ -19,7 +19,6 @@ Example
 """
 
 
-from sympy import count_ops as sympy_count_ops
 from sympy import Symbol
 
 from pyccel.ast.core     import Comment, EmptyNode

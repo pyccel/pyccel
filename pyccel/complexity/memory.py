@@ -15,10 +15,6 @@ Example
 
 from sympy import Symbol
 
-from pyccel.ast.basic        import Basic
-from pyccel.ast.builtins     import PythonTuple
-from pyccel.ast.core         import For, Assign, CodeBlock, FunctionDef
-from pyccel.ast.internals    import PyccelSymbol
 from pyccel.ast.internals    import Slice
 from pyccel.ast.literals     import Literal
 from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
