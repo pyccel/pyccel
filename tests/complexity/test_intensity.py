@@ -5,14 +5,14 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.complexity.intensity import ComputationalIntensity
 import os
-
-from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
 import pytest
 from sympy.abc import n,m,x,b
 from sympy import Function, Symbol
 from sympy import simplify as sp_simplify
+from pyccel.complexity.intensity import ComputationalIntensity
+
+from pyccel.complexity.arithmetic import ADD, SUB, MUL, DIV, IDIV, ABS
 SHAPE = Function('SHAPE')
 READ = Symbol('READ')
 WRITE = Symbol('WRITE')

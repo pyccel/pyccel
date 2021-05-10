@@ -5,12 +5,12 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+import os
 from sympy.abc import n,m,x,b
 from sympy import simplify as sp_simplify
 from sympy import Function, Symbol
 
 from pyccel.complexity.memory import MemComplexity
-import os
 
 SHAPE = Function('SHAPE')
 READ = Symbol('READ')
