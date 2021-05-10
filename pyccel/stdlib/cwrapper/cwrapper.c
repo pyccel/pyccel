@@ -292,12 +292,12 @@ bool    PyIs_Int32(PyObject *o, bool hard_check)
 {
 	#ifdef _WIN32
 		return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
+    #else
+        if (hard_check == true)
+            return PyArray_IsScalar(o, Int32);
+
+        return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
 	#endif
-
-	if (hard_check == true)
-		return PyArray_IsScalar(o, Int32);
-
-	return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
 }
 //--------------------------------------------------------//
 bool    PyIs_Int64(PyObject *o, bool hard_check)
