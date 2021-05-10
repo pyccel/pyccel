@@ -25,14 +25,14 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 #==============================================================================
 # TODO add opt flags, etc... look at f2py interface in numpy
 def construct_flags(compiler,
-                    fflags=None,
+                    fflags=(),
                     debug=False,
                     accelerator=None,
                     includes=()):
     """
     Constructs compiling flags for a given compiler.
 
-    fflags: str
+    fflags: list
         Fortran compiler flags. Default is `-O3`
 
     compiler: str
@@ -47,47 +47,47 @@ def construct_flags(compiler,
 
     includes: list
         list of include directories paths
-
-    libdirs: list
-        list of lib directories paths
     """
 
     if not(compiler in _avail_compilers):
         raise ValueError("Only {0} are available.".format(_avail_compilers))
 
     if not fflags:
-        fflags = '-O3'
+        flags = ['-O3']
+    else:
+        flags = list(fflags)
 
-    # make sure there are spaces
-    flags = str(fflags)
     if compiler == "gfortran":
         if debug:
-            flags += " -fcheck=bounds"
+            flags.append("-fcheck=bounds")
+
+    if compiler == "icc":
+        flags.append("-std=c99")
 
     if compiler == "mpif90":
         if debug:
-            flags += " -fcheck=bounds"
+            flags.append("-fcheck=bounds")
         if sys.platform == "win32":
             mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
             mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
-            flags += ' -D USE_MPI_MODULE -I"{}" -L"{}"'.format(mpiinc, mpilib)
+            flags.extend(['-D', 'USE_MPI_MODULE', '-I', mpiinc, '-L', mpilib])
 
     if accelerator is not None:
         if accelerator == "openmp":
             if sys.platform == "darwin" and compiler == "gcc":
-                flags += " -Xpreprocessor"
+                flags.append("-Xpreprocessor")
 
-            flags += " -fopenmp"
+            flags.append("-fopenmp")
             if compiler == 'ifort':
-                flags   += ' -nostandard-realloc-lhs '
+                flags.append('-nostandard-realloc-lhs')
 
         elif accelerator == "openacc":
-            flags += " -ta=multicore -Minfo=accel"
+            flags.extend(["-ta=multicore", "-Minfo=accel"])
         else:
             raise ValueError("Only openmp and openacc are available")
 
     # Construct flags
-    flags += ''.join(' -I"{0}"'.format(i) for i in includes)
+    flags.extend(f for i in includes for f in ('-I', i))
 
     return flags
 
@@ -107,6 +107,7 @@ def compile_files(filename, compiler, flags,
     verbose: bool
         talk more
     """
+    flags=list(flags)
 
     if binary is None:
         if not is_module:
@@ -118,40 +119,42 @@ def compile_files(filename, compiler, flags,
 #                                binary=os.path.splitext(os.path.basename(filename))[0])
 
     o_code = '-o'
-    j_code = ''
+    j_code = []
     if is_module:
-        flags += ' -c '
+        flags.append('-c')
         if (len(output)>0) and language == "fortran":
             if compiler == "ifort":
-                j_code = '-module "{folder}"'.format(folder=output)
+                j_code = ['-module', output]
             else:
-                j_code = '-J"{folder}"'.format(folder=output)
+                j_code = ['-J', output]
 
-    m_code = ' '.join('{}.o'.format(m) for m in modules)
+    m_code = ['{}.o'.format(m) for m in modules]
     if is_module:
-        libs_flags = ''
+        libs_flags = []
     else:
-        flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
-        libs_flags = ' '.join('-l{}'.format(i) for i in libs)
-
-    filename = '"{}"'.format(filename)  # in case of spaces in path
-    binary = '"{}"'.format(binary)
+        flags.extend(f for i in libdirs for f in ('-L', i))
+        libs_flags = ['-l{}'.format(i) for i in libs]
 
     if sys.platform == "win32" and compiler == "mpif90":
         compiler = "gfortran"
-        filename += ' "{}"'.format(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
+        m_code.append(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
 
-    cmd = '{0} {1} {2} {3} {4} {5} {6} {7}'.format( \
-        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code)
+    cmd = [compiler, *flags, *m_code, filename, o_code, binary, *libs_flags, *j_code]
 
     if verbose:
-        print(cmd)
+        print(' '.join(cmd))
 
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    out, err = p.communicate()
 
-    if output:
-        output = output.decode("utf-8")
-        warnings.warn(UserWarning(output))
+    if verbose and out:
+        print(out)
+    if p.returncode != 0:
+        err_msg = "Failed to build module"
+        err_msg += "\n" + err
+        raise RuntimeError(err_msg)
+    if err:
+        warnings.warn(UserWarning(err))
 
     # TODO shall we uncomment this?
 #    # write and save a log file in .pyccel/'filename'.log

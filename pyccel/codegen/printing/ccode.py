@@ -50,7 +50,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT )
+                                    PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
 
 errors = Errors()
@@ -808,6 +808,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
+                if expr.rank > 15:
+                    errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
                 self._additional_imports.add('ndarrays')
                 dtype = 't_ndarray'
             else:
@@ -938,7 +940,8 @@ class CCodePrinter(CodePrinter):
             inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
         else:
             raise NotImplementedError(expr)
-        return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
+        return "GET_ELEMENT(%s, %s, %s)" % (base_name, dtype, ", ".join(inds))
+
 
     def _cast_to(self, expr, dtype, precision):
         """ add cast to an expression when needed

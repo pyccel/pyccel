@@ -474,14 +474,18 @@ class NumpyMatmul(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
 
     def __init__(self, a ,b):
+        super().__init__(a, b)
+        if PyccelAstNode.stage == 'syntactic':
+            return
+
         if not isinstance(a, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
         if not isinstance(b, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
-        super().__init__(a, b)
 
         args      = (a, b)
-        integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
+        integers  = [e for e in args if e.dtype is NativeInteger()]
+        booleans  = [e for e in args if e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
@@ -494,19 +498,28 @@ class NumpyMatmul(PyccelInternalFunction):
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(e.precision for e in integers)
+        elif booleans:
+            self._dtype     = NativeBool()
+            self._precision = max(e.precision for e in booleans)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
-
-        if a.rank == 1 or b.rank == 1:
-            self._rank = 1
-        else:
-            self._rank = 2
 
         if not (a.shape is None or b.shape is None):
 
             m = 1 if a.rank < 2 else a.shape[0]
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
+
+        if a.rank == 1 and b.rank == 1:
+            self._rank = 0
+            self._shape = ()
+        elif a.rank == 1 or b.rank == 1:
+            self._rank = 1
+            self._shape = b.shape[1] if a.rank == 1 else a.shape[0]
+        else:
+            self._rank = 2
+
+
 
         if a.order == b.order:
             self._order = a.order

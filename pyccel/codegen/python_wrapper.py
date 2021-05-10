@@ -108,7 +108,7 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         c_flags = [fortran_c_flag_equivalence[f] if f in fortran_c_flag_equivalence \
-                else f for f in flags.strip().split(' ') if f != '']
+                else f for f in flags]
 
         if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
             idx = 0
