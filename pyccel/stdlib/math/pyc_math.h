@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 /*
-** (((N % M) + M) % M) and fmod(fmod(N, M) + M, M)) are used to handle the negative
+** ((N % M) + M) and fmod(N, M) + M, M) are used to handle the negative
 ** operands of modulo operator.
 */
 
