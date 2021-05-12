@@ -5472,10 +5472,7 @@ def test_numpy_linspace_array_like_2d(language):
     def test_linspace(start, stop, out, endpoint):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
-        if endpoint is True:
-            a = linspace(start, stop, numberOfSamplesToGenerate)
-        else:
-            a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=False)
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
         for i in range(len(out)):
             for j in range(len(out[i])):
                 for k in range(len(out[i][j])):
@@ -5486,10 +5483,7 @@ def test_numpy_linspace_array_like_2d(language):
     def test_linspace2(start, stop, out, endpoint):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
-        if endpoint is True:
-            a = linspace(start, stop, numberOfSamplesToGenerate)
-        else:
-            a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=False)
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
         for i in range(len(out)):
             for j in range(len(out[i])):
                 for k in range(len(out[i][j])):
