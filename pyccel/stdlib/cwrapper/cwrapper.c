@@ -50,7 +50,7 @@ float complex PyComplex_to_Complex64(PyObject *object)
 		real_part = (float)PyComplex_RealAsDouble(object);
 		imag_part = (float)PyComplex_ImagAsDouble(object);
 
-		c = CMPLXF(real_part, imag_part);
+		c = real_part + imag_part * _Complex_I;
 	}
 	return	c;
 }
@@ -64,7 +64,7 @@ double complex	PyComplex_to_Complex128(PyObject *object)
 	real_part = PyComplex_RealAsDouble(object);
 	imag_part = PyComplex_ImagAsDouble(object);
 
-	c = CMPLX(real_part, imag_part);
+	c = real_part + imag_part * _Complex_I;
 
 	return	c;
 }
