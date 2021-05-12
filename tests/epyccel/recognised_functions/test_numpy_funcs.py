@@ -5320,33 +5320,45 @@ def test_numpy_linspace_scalar(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 100 + 100, max_float / 100 - 100)
-    fl32 = uniform(min_float32 / 100 + 100, max_float32 / 100 - 100)
+    fl = uniform(min_float / 200, max_float / 200)
+    fl32 = uniform(min_float32 / 200, max_float32 / 200)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 100 + 100, max_float64 / 100 - 100)
+    fl64 = uniform(min_float64 / 200, max_float64 / 200)
 
     epyccel_func = epyccel(get_linspace, language=language)
     arr = np.zeros
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer, x, 100), get_linspace(integer, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer16, x, 100), get_linspace(integer16, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer32, x, 30), get_linspace(integer32, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer32, x, 100), get_linspace(integer32, x, 100))
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     x = randint(100, 200)
     if sys.platform != 'win32':
         assert np.isclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
+        assert matching_types(epyccel_func(integer64, x, 100), get_linspace(integer64, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl, x, 100), get_linspace(fl, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl32, x, 100), get_linspace(fl32, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl64, x, 100), get_linspace(fl64, x, 100))
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     assert (epyccel_func1(3+6j, 5+1j) == test_linspace(3+6j, 5+1j))
     assert (epyccel_func1(-3+6j, 5-1j) == test_linspace(-3+6j, 5-1j))
+    for pyc, pyt in zip(epyccel_func1(3+6j, 5+1j), test_linspace(3+6j, 5+1j)):
+        assert matching_types(pyc, pyt)
 
 def test_numpy_linspace_array_like_1d(language):
     from numpy import linspace
