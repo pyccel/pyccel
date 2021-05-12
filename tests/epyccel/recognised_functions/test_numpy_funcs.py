@@ -5303,8 +5303,8 @@ def test_numpy_linspace_scalar(language):
         stop = start + steps
         b = linspace(start, stop, num)
         x = 0.0
-        for i in range(len(b)):
-            x += b[i]
+        for bi in b:
+            x += bi
         return x
 
     @types('complex64', 'complex64')
