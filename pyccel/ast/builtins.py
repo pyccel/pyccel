@@ -82,6 +82,7 @@ class PythonReal(PythonComplexProperty):
     arg : Variable, Literal
     """
     __slots__ = ()
+    name = 'real'
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
             return PythonInt(arg)
@@ -102,6 +103,7 @@ class PythonImag(PythonComplexProperty):
     arg : Variable, Literal
     """
     __slots__ = ()
+    name = 'imag'
     def __new__(cls, arg):
         if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
@@ -428,6 +430,7 @@ class PythonLen(PyccelInternalFunction):
     """
 
     __slots__ = ()
+    name      = 'len'
     _dtype     = NativeInteger()
     _precision = default_precision['int']
     _rank      = 0
@@ -558,6 +561,7 @@ class PythonZip(PyccelInternalFunction):
     """
     __slots__ = ('_length','_args')
     _attribute_nodes = ('_args',)
+    name = 'zip'
 
     def __init__(self, *args):
         if not isinstance(args, (tuple, list)):
@@ -588,6 +592,7 @@ class PythonAbs(PyccelInternalFunction):
     arg : Variable
     """
     __slots__ = ('_dtype','_precision','_rank','_shape','_order')
+    name = 'abs'
     def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
@@ -607,6 +612,7 @@ class PythonSum(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, List, Variable
     """
     __slots__ = ('_dtype','_precision')
+    name   = 'sum'
     _rank  = 0
     _shape = ()
     _order = None
@@ -629,6 +635,7 @@ class PythonMax(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, List
     """
     __slots__ = ('_dtype','_precision')
+    name   = 'max'
     _rank  = 0
     _shape = ()
     _order = None
@@ -655,6 +662,7 @@ class PythonMin(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, List, Variable
     """
     __slots__ = ('_dtype','_precision')
+    name   = 'min'
     _rank  = 0
     _shape = ()
     _order = None
