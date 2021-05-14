@@ -73,8 +73,6 @@ def test_parse(f):
     cn = len(copy_lines)
     oi = 0
     ci = 0
-    extra_o_indent = 0
-    extra_c_indent = 0
     while oi<on and ci<cn:
         o = orig_lines[oi]
         c = copy_lines[ci]
