@@ -15,10 +15,10 @@ class Unparser(astunparse.Unparser):
     """Unparser the AST"""
 
     def _CommentLine(self, node):
-        self.write('\n' + ' '*node.col_offset + node.s)
+        self.fill(node.s)
 
     def _CommentMultiLine(self, node):
-        self.write('\n' + ' '*node.col_offset + node.s)
+        self.fill(node.s)
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -48,8 +48,8 @@ def test_parse(f):
     with open('out.py') as infile:
         copy = infile.read().strip()
 
-    orig_lines = orig.expandtabs(4).split('\n')
-    copy_lines = copy.expandtabs(4).split('\n')
+    orig_lines = [l for l in orig.expandtabs(4).split('\n') if l!= '']
+    copy_lines = [l for l in copy.expandtabs(4).split('\n') if l!= '']
 
     for o,c in zip(orig_lines,copy_lines):
         # Check for the same indentation
