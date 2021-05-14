@@ -15,13 +15,15 @@ files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize( "f", files)
 def test_syntax(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
 
     pyccel = Parser(f)
     pyccel.parse()
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+    # Assert syntactic success
+    assert(not errors.has_errors())
 
 ######################
 if __name__ == '__main__':
