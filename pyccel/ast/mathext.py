@@ -260,6 +260,7 @@ class MathFactorial(MathFunctionInt):
 class MathGcd      (MathFunctionInt):
     """Represent a call to the gcd function in the Math library"""
     __slots__ = ()
+    name = 'gcd'
 class MathLcm      (MathFunctionInt):
     """Represent a call to the lcm function in the Math library"""
     __slots__ = ()
