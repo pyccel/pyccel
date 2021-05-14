@@ -20,6 +20,8 @@ def f(a: int):
     # 9
     return c
 
+# example header1
+# example header2
 def g(b : int):
     # 10
     while b:
