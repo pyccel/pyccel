@@ -29,8 +29,8 @@ jobs:
         uses: ./.github/actions/pip_installation
       #- name: Coverage install
       #  uses: ./.github/actions/coverage_install
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
+      #- name: Fortran/C tests with pytest
+      #  uses: ./.github/actions/pytest_run
       - name: Test
         run: |
           python -m pytest parser -xvs
