@@ -49,7 +49,7 @@ For Fortran it supports
 
 For C it supports
 
--   Gcc <https://gcc.gnu.org/>
+-   GCC <https://gcc.gnu.org/>
 -   Intel® Compiler <https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html>
 -   PGI <https://www.pgroup.com/index.htm>
 
@@ -64,7 +64,7 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 - MPICH <https://www.mpich.org/>
 - Intel® MPI Library <https://software.intel.com/en-us/mpi-library>
 
-We recommend using GFortran/Gcc and Open-MPI.
+We recommend using GFortran/GCC and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
 
@@ -119,10 +119,6 @@ In an Administrator prompt install git-bash (if needed), a Python3 Anaconda dist
   choco install git
   choco install anaconda3
   choco install mingw
-
-Open git-bash as Administrator. Change default C compiler from M$ to mingw in Anaconda::
-
-  echo -e "[build]\ncompiler = mingw32" > /c/tools/Anaconda3/Lib/distutils/distutils.cfg
 
 Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/::
 

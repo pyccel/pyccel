@@ -70,8 +70,8 @@ __all__ = (
     'NumpyInt64',
     'NumpyLinspace',
     'NumpyMatmul',
-    'NumpyMax',
-    'NumpyMin',
+    'NumpyAmax',
+    'NumpyAmin',
     'NumpyMod',
     'NumpyNorm',
     'NumpySum',
@@ -474,14 +474,18 @@ class NumpyMatmul(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
 
     def __init__(self, a ,b):
+        super().__init__(a, b)
+        if PyccelAstNode.stage == 'syntactic':
+            return
+
         if not isinstance(a, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
         if not isinstance(b, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
-        super().__init__(a, b)
 
         args      = (a, b)
-        integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
+        integers  = [e for e in args if e.dtype is NativeInteger()]
+        booleans  = [e for e in args if e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
@@ -494,19 +498,28 @@ class NumpyMatmul(PyccelInternalFunction):
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(e.precision for e in integers)
+        elif booleans:
+            self._dtype     = NativeBool()
+            self._precision = max(e.precision for e in booleans)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
-
-        if a.rank == 1 or b.rank == 1:
-            self._rank = 1
-        else:
-            self._rank = 2
 
         if not (a.shape is None or b.shape is None):
 
             m = 1 if a.rank < 2 else a.shape[0]
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
+
+        if a.rank == 1 and b.rank == 1:
+            self._rank = 0
+            self._shape = ()
+        elif a.rank == 1 or b.rank == 1:
+            self._rank = 1
+            self._shape = b.shape[1] if a.rank == 1 else a.shape[0]
+        else:
+            self._rank = 2
+
+
 
         if a.order == b.order:
             self._order = a.order
@@ -1075,8 +1088,8 @@ class NumpyMod(NumpyUfuncBinary):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-class NumpyMin(NumpyUfuncUnary):
-    """Represent a call to the min function in the Numpy library"""
+class NumpyAmin(NumpyUfuncUnary):
+    """Represent a call to the amin function in the Numpy library"""
     __slots__ = ()
     def _set_shape_rank(self, x):
         self._shape     = ()
@@ -1090,8 +1103,8 @@ class NumpyMin(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
-class NumpyMax(NumpyUfuncUnary):
-    """Represent a call to the max function in the Numpy library"""
+class NumpyAmax(NumpyUfuncUnary):
+    """Represent a call to the amax function in the Numpy library"""
     __slots__ = ()
     def _set_shape_rank(self, x):
         self._shape     = ()
@@ -1116,9 +1129,9 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('sum',[],[],body=[],
                 decorators={'numpy_wrapper':NumpySum}),
             FunctionDef('min',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyMin}),
+                decorators={'numpy_wrapper':NumpyAmin}),
             FunctionDef('max',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyMax}),
+                decorators={'numpy_wrapper':NumpyAmax}),
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
             FunctionDef('real',[],[],body=[],
@@ -1160,8 +1173,10 @@ numpy_functions = {
     'complex64' : NumpyComplex64,
     'matmul'    : NumpyMatmul,
     'sum'       : NumpySum,
-    'max'       : NumpyMax,
-    'min'       : NumpyMin,
+    'max'       : NumpyAmax,
+    'amax'      : NumpyAmax,
+    'min'       : NumpyAmin,
+    'amin'      : NumpyAmin,
     'prod'      : NumpyProduct,
     'product'   : NumpyProduct,
     'linspace'  : NumpyLinspace,

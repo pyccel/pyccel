@@ -219,9 +219,13 @@ def execute_pyccel(fname, *,
                                  debug=debug,
                                  accelerator=accelerator,
                                  includes=())
+    elif fflags is not None:
+        fflags = fflags.split()
+    else:
+        fflags = [] # Used for python
 
     # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
+    fflags.append('-fPIC')
     # ...
 
     # Parse Python file
