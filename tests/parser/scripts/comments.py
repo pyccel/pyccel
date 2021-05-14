@@ -50,3 +50,21 @@ def g(b : int):
     # 24
 #25
 
+
+def h(a: int):
+    # 26
+    if a:
+        # 27
+        b = (a + 2)
+        # 28
+    else:
+        if (a + 1):
+            # 29
+            b = (a + 1)
+            # 30
+        else:
+            # 31
+            b = a
+            # 32
+    # 33
+    return b
