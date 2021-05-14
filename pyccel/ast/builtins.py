@@ -116,6 +116,7 @@ class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     __slots__ = ('_arg',)
+    name = 'bool'
     _dtype = NativeBool()
     _precision = default_precision['bool']
     _rank = 0
@@ -147,6 +148,7 @@ class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
+    name = 'complex'
 
     _dtype = NativeComplex()
     _precision = default_precision['complex']
@@ -252,6 +254,7 @@ class PythonEnumerate(Basic):
     """
     __slots__ = ('_element',)
     _attribute_nodes = ('_element',)
+    name = 'enumerate'
 
     def __init__(self, arg):
         if PyccelAstNode.stage != "syntactic" and \
@@ -269,6 +272,7 @@ class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
     __slots__ = ('_arg')
+    name = 'float'
     _dtype = NativeReal()
     _precision = default_precision['real']
     _rank = 0
@@ -300,6 +304,7 @@ class PythonInt(PyccelAstNode):
     """
 
     __slots__ = ('_arg')
+    name = 'int'
     _dtype = NativeInteger()
     _precision = default_precision['integer']
     _rank = 0
@@ -459,6 +464,7 @@ class PythonMap(Basic):
     """
     __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
+    name = 'map'
 
     def __init__(self, *args):
         if len(args)<2:
@@ -490,6 +496,7 @@ class PythonPrint(Basic):
     """
     __slots__ = ('_expr')
     _attribute_nodes = ('_expr',)
+    name = 'print'
 
     def __init__(self, expr):
         self._expr = expr
@@ -500,7 +507,7 @@ class PythonPrint(Basic):
         return self._expr
 
 #==============================================================================
-class PythonRange(Basic):
+class PythonRange(PyccelInternalFunction):
 
     """
     Represents a range.
@@ -517,6 +524,7 @@ class PythonRange(Basic):
     """
     __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start', '_stop', '_step')
+    name = 'range'
 
     def __init__(self, *args):
         # Define default values
