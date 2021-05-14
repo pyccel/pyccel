@@ -29,7 +29,7 @@ errors = Errors()
 # are the names used in pyccel
 import_target_swap = {
         'numpy' : {'double'     : 'float64',
-                   'product'    : 'prod',
+                   'prod'       : 'product',
                    'empty_like' : 'empty',
                    'zeros_like' : 'zeros',
                    'ones_like'  : 'ones',
@@ -216,6 +216,9 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(i) for i in expr.args)
         return '['+args+']'
 
+    def _print_PythonBool(self, expr):
+        return 'bool({})'.format(self._print(expr.arg))
+
     def _print_PythonInt(self, expr):
         type_name = type(expr).__name__.lower()
         is_numpy  = type_name.startswith('numpy')
@@ -310,11 +313,12 @@ class PythonCodePrinter(CodePrinter):
                 # check if the target is referred to by another name in pyccel.
                 # Print the name used by pyccel (either the value from import_target_swap
                 # or the original name from the import
-                target = [import_target_swap[source].get(i,i) for i in expr.target]
+                target = [AsName(import_target_swap[source].get(i.name,i.name), i.target) if isinstance(i, AsName) else \
+                        import_target_swap[source].get(i,i) for i in expr.target]
             else:
                 target = expr.target
             self._aliases.update([(t.name, t.target) for t in target if isinstance(t, AsName)])
-            target = [self._print(i) for i in expr.target]
+            target = [self._print(i) for i in target]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
 
