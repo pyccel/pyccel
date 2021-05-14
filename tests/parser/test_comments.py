@@ -17,6 +17,9 @@ class Unparser(astunparse.Unparser):
     def _CommentLine(self, node):
         self.write('\n' + ' '*node.col_offset + node.s)
 
+    def _CommentMultiLine(self, node):
+        self.write('\n' + ' '*node.col_offset + node.s)
+
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
@@ -40,7 +43,7 @@ def test_parse(f):
 
     pyccel = SyntaxParser(f)
     with open('out.py','w') as outfile:
-        u = Unparser(pyccel.fst, file=outfile)
+        Unparser(pyccel.fst, file=outfile)
 
     with open('out.py') as infile:
         copy = infile.read().strip()

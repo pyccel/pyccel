@@ -1,3 +1,4 @@
+# coding: utf-8
 
 def f(a: int):
     # 1
@@ -27,11 +28,11 @@ def g(b : int):
     # 13
     for i in range(10):
         # 14
-        for j in range(5):
+        for _ in range(5):
             # 15
             print(i)
             # 16
-            if i == 4:
+            if (i == 4):
                 # 17
                 k = 3
                 # 18
