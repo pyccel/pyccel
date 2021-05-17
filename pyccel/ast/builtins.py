@@ -507,7 +507,7 @@ class PythonPrint(Basic):
         return self._expr
 
 #==============================================================================
-class PythonRange(PyccelInternalFunction):
+class PythonRange(Basic):
 
     """
     Represents a range.
