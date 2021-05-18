@@ -148,7 +148,7 @@ def get_value(string, regex, conversion):
     string = string[match.span()[1]:]
     return value, string
 
-def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
+def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=None):
 
     if dtype is str:
         p_list = [e.strip() for e in re.split('\n', p_output)]
@@ -160,11 +160,16 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
         if p.imag == 0:
             p2, p_output = get_value(p_output, rx, complex)
             p = p+p2
-
-        rx = re.compile('[-0-9.eE]+')
-        f, f_output  = get_value(f_output, rx, float)
-        f2, f_output = get_value(f_output, rx, float)
-        f = f+f2*1j
+        if language == 'python':
+            f, f_output = get_value(f_output, rx, complex)
+            if f.imag == 0:
+                f2, f_output = get_value(f_output, rx, complex)
+                f = f+f2
+        else:
+            rx = re.compile('[-0-9.eE]+')
+            f, f_output  = get_value(f_output, rx, float)
+            f2, f_output = get_value(f_output, rx, float)
+            f = f+f2*1j
         assert(np.isclose(p,f))
     elif dtype is bool:
         rx = re.compile('TRUE|True|true|1|T|t|FALSE|False|false|F|f|0')
@@ -189,14 +194,14 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
     return p_output,f_output
 
 #------------------------------------------------------------------------------
-def compare_pyth_fort_output( p_output, f_output, dtype=float ):
+def compare_pyth_fort_output( p_output, f_output, dtype=float, language=None):
 
     if isinstance(dtype,list):
         for d in dtype:
-            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,d)
+            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,d,language=language)
     elif dtype is complex:
         while len(p_output)>0 and len(f_output)>0:
-            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex)
+            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex, language=language)
     elif dtype is str:
         compare_pyth_fort_output_by_type(p_output,f_output,dtype)
     else:
@@ -252,7 +257,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         lang_out = get_python_output(get_exe(test_file, language))
     else:
         lang_out = get_lang_output(get_exe(test_file, language))
-    compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
+    compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
 
 #==============================================================================
 # UNIT TESTS
@@ -432,12 +437,7 @@ def test_expressions(language):
             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-    if language == "python":
-        pyccel_test("scripts/expressions.py", language=language,
-            output_dtype = str)
-    else:
-        pyccel_test("scripts/expressions.py", language=language,
-            output_dtype = types)
+    pyccel_test("scripts/expressions.py", language=language, output_dtype = types)
 
 #------------------------------------------------------------------------------
 # See issue #756 for c problem
