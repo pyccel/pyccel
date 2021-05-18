@@ -55,6 +55,8 @@ def get_python_output(abs_path, cwd = None):
 
 #------------------------------------------------------------------------------
 def compile_pyccel(path_dir,test_file, options = ""):
+    if "python" in options and "--output" not in options:
+        options += " --output=__pyccel__"
     if options != "":
         options = options.strip().split(' ')
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
@@ -64,44 +66,33 @@ def compile_pyccel(path_dir,test_file, options = ""):
     assert(p.returncode==0)
 
 #------------------------------------------------------------------------------
-def compile_c(path_dir,test_file,dependencies):
-    root = insert_pyccel_folder(test_file)[:-3]
-
-    assert(os.path.isfile(root+".c"))
-
-    command = [shutil.which("gcc"), "-O3", "%s.c" % root]
-    deps = [dependencies] if isinstance(dependencies, str) else dependencies
-    for d in deps:
-        d = insert_pyccel_folder(d)
-        command.append(d[:-3]+".o")
-        command.append("-I"+os.path.dirname(d))
-
-    command.append("-o")
-    command.append("%s" % test_file[:-3])
-
-    p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
-    p.wait()
+def compile_c(path_dir,test_file,dependencies,is_mod=False):
+    compile_fortran_or_c('gcc', '.c', path_dir,test_file,dependencies,is_mod)
 
 #------------------------------------------------------------------------------
 def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
+    compile_fortran_or_c('gfortran', '.f90', path_dir,test_file,dependencies,is_mod)
+
+#------------------------------------------------------------------------------
+def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_mod=False):
     root = insert_pyccel_folder(test_file)[:-3]
 
-    assert(os.path.isfile(root+".f90"))
+    assert(os.path.isfile(root+extension))
 
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
     if not is_mod:
         base_dir = os.path.dirname(root)
         base_name = os.path.basename(root)
         prog_root = os.path.join(base_dir, "prog_"+base_name)
-        if os.path.isfile(prog_root+".f90"):
+        if os.path.isfile(prog_root+extension):
             compile_fortran(path_dir, test_file, dependencies, is_mod = True)
             dependencies.append(test_file)
             root = prog_root
 
     if is_mod:
-        command = [shutil.which("gfortran"), "-c", "%s.f90" % root]
+        command = [shutil.which(compiler), "-c", root+extension]
     else:
-        command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
+        command = [shutil.which(compiler), "-O3", root+extension]
 
     for d in deps:
         d = insert_pyccel_folder(d)
