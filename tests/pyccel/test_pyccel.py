@@ -421,7 +421,8 @@ def test_expressions(language):
             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-    pyccel_test("scripts/expressions.py", language=language, output_dtype = types)
+    pyccel_test("scripts/expressions.py", language=language,
+            output_dtype = types)
 
 #------------------------------------------------------------------------------
 # See issue #756 for c problem
