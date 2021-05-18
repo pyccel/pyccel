@@ -314,7 +314,7 @@ def test_absolute_imports_in_project(language):
 
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "project_abs_imports")
-    files = ['project_abs_imports/project/folder1/mod1.py',
+    dependencies = ['project_abs_imports/project/folder1/mod1.py',
              'project_abs_imports/project/folder2/mod2.py',
              'project_abs_imports/project/folder2/mod3.py']
     pyccel_test("project_abs_imports/runtest.py", dependencies,
