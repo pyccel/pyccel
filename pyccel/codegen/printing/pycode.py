@@ -8,7 +8,6 @@
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
-from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
@@ -20,13 +19,6 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
-
-#==============================================================================
-def _construct_header(func_name, args):
-    args = build_types_decorator(args, order='F')
-    args = ','.join("{}".format(i) for i in args)
-    pattern = '#$ header function static {name}({args})'
-    return pattern.format(name=func_name, args=args)
 
 #==============================================================================
 

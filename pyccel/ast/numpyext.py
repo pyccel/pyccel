@@ -474,11 +474,14 @@ class NumpyMatmul(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
 
     def __init__(self, a ,b):
+        super().__init__(a, b)
+        if PyccelAstNode.stage == 'syntactic':
+            return
+
         if not isinstance(a, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
         if not isinstance(b, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
-        super().__init__(a, b)
 
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger()]

@@ -81,7 +81,7 @@ from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
-from pyccel.ast.numpyext import NumpyZeros
+from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
 from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
@@ -3312,6 +3312,12 @@ class SemanticParser(BasicParser):
         assert(var.rank==1)
         size = var.shape[0]
         return StarredArguments([var[i] for i in range(size)])
+
+    def _visit_NumpyMatmul(self, expr, **settings):
+        self.insert_import('numpy', 'matmul')
+        a = self._visit(expr.a)
+        b = self._visit(expr.b)
+        return NumpyMatmul(a, b)
 
 #==============================================================================
 

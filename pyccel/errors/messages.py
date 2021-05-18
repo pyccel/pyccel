@@ -27,6 +27,7 @@ STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if 
 INCOMPATIBLE_ARGUMENT = 'Incompatible argument {} passed to function (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)'
 
 UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
+UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
