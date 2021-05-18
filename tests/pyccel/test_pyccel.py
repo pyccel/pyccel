@@ -613,12 +613,18 @@ def test_arrays_view(language):
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+        # Test does not make sense in pure python
+    )
+)
 def test_headers(language):
     test_file = "scripts/runtest_headers.py"
     test_file = os.path.normpath(test_file)
     test_file = get_abs_path(test_file)
 
-    header_file = 'scripts/py/headers.pyh' if language == "python" else 'scripts/headers.pyh'
+    header_file = 'scripts/headers.pyh'
     header_file = os.path.normpath(header_file)
     header_file = get_abs_path(header_file)
 
