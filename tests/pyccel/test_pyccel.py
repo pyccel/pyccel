@@ -11,15 +11,6 @@ import numpy as np
 # UTILITIES
 #==============================================================================
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python)
-    ],
-    scope='module'
-)
-def language(request):
-    return request.param
 #------------------------------------------------------------------------------
 
 def get_abs_path(relative_path):
@@ -260,6 +251,19 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         lang_out = get_lang_output(get_exe(test_file, language))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
 
+def construct_test_folder(files, path_dir, base_dir):
+    tmp_dir = os.path.join(base_dir, '__pyccel__')
+    for f in files:
+        input_dir = os.path.dirname(f)
+        output_dir = os.path.join(tmp_dir, input_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            src  = os.path.join(path_dir, input_dir, '__init__.py')
+            if os.path.exists(src):
+                dest = os.path.join(output_dir, '__init__.py')
+                shutil.copyfile(src, dest)
+    return tmp_dir
+
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
@@ -268,11 +272,26 @@ def test_relative_imports_in_project(language):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "project_rel_imports")
     pyth_out = get_python_output('runtest.py', cwd=path_dir)
+    files = ['project/folder1/mod1.py','project/folder2/mod2.py','project/folder2/mod3.py']
 
     language_opt = '--language={}'.format(language)
-    compile_pyccel(path_dir, 'project/folder1/mod1.py', language_opt)
-    compile_pyccel(path_dir, 'project/folder2/mod2.py', language_opt)
-    compile_pyccel(path_dir, 'project/folder2/mod3.py', language_opt)
+    pyccel_options = language_opt
+    if language=='python':
+        tmp_dir = construct_test_folder(files, path_dir, base_dir)
+
+    for f in files:
+        if language=='python':
+            input_dir = os.path.dirname(f)
+            output_dir = os.path.join(tmp_dir,input_dir)
+            pyccel_options = language_opt + ' --output=' + output_dir
+
+        compile_pyccel(path_dir, f, pyccel_options)
+
+    if language=="python":
+        src  = os.path.join(path_dir, 'runtest.py')
+        dest = os.path.join(base_dir, '__pyccel__', 'runtest.py')
+        shutil.copyfile(src, dest)
+        path_dir = os.path.join(base_dir, '__pyccel__')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -283,11 +302,26 @@ def test_absolute_imports_in_project(language):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "project_abs_imports")
     pyth_out = get_python_output('runtest.py', cwd=path_dir)
+    files = ['project/folder1/mod1.py','project/folder2/mod2.py','project/folder2/mod3.py']
 
     language_opt = '--language={}'.format(language)
-    compile_pyccel(path_dir, 'project/folder1/mod1.py', language_opt)
-    compile_pyccel(path_dir, 'project/folder2/mod2.py', language_opt)
-    compile_pyccel(path_dir, 'project/folder2/mod3.py', language_opt)
+    pyccel_options = language_opt
+    if language=='python':
+        tmp_dir = construct_test_folder(files, path_dir, base_dir)
+
+    for f in files:
+        if language=='python':
+            input_dir = os.path.dirname(f)
+            output_dir = os.path.join(tmp_dir,input_dir)
+            pyccel_options = language_opt + ' --output=' + output_dir
+
+        compile_pyccel(path_dir, f, pyccel_options)
+
+    if language=="python":
+        src  = os.path.join(path_dir, 'runtest.py')
+        dest = os.path.join(base_dir, '__pyccel__', 'runtest.py')
+        shutil.copyfile(src, dest)
+        path_dir = os.path.join(base_dir, '__pyccel__')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -300,20 +334,22 @@ def test_rel_imports_python_accessible_folder(language):
     path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.runtest_rel_imports import test_func
 
+    files = ["folder2/folder2_funcs.py", "folder2/runtest_rel_imports.py"]
+    tmp_dir = construct_test_folder(files, path_dir, base_dir)
+
     pyth_out = str(test_func())
 
-    language_opt = '--language={}'.format(language)
-    compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"), language_opt)
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), language_opt)
+    pyccel_opt = '--language={}'.format(language)
     if language == 'python':
-        src  = os.path.join(path_dir, os.path.normpath("folder2/py/folder2_funcs.py"))
-        dest = os.path.join(path_dir, os.path.normpath("py/folder2_funcs.py"))
-        shutil.copyfile(src, dest)
-        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.py.runtest_rel_imports"],
-            stdout=subprocess.PIPE, universal_newlines=True)
+        pyccel_opt += '--output={}'.format(os.path.join(tmp_dir,"folder2"))
+    compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"), pyccel_opt)
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), pyccel_opt)
+    if language == 'python':
+        test_location = "__pyccel__.folder2.runtest_rel_imports"
     else:
-        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_rel_imports"],
-                    stdout=subprocess.PIPE, universal_newlines=True)
+        test_location = "scripts.folder2.runtest_rel_imports"
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), test_location],
+                stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
 
