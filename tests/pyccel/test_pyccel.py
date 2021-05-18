@@ -380,6 +380,7 @@ def test_folder_imports(language):
     pyth_out = str(test_func())
 
     language_opt = '--language={}'.format(language)
+    pyccel_opt = language_opt
     if language == 'python':
         pyccel_opt = language_opt+' --output={}'.format(os.path.join(tmp_dir,"folder1"))
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
