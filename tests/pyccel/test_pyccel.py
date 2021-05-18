@@ -21,21 +21,22 @@ def get_abs_path(relative_path):
 #------------------------------------------------------------------------------
 def get_exe(filename, language=None):
     if language!="python":
-        exefile = os.path.splitext(filename)[0]
+        exefile1 = os.path.splitext(filename)[0]
     else:
-        exefile = filename
+        exefile1 = filename
 
     if sys.platform == "win32" and language!="python":
-        exefile = exefile + ".exe"
-    if not os.path.isfile(exefile):
-        dirname = os.path.dirname(filename)
-        basename = "prog_"+os.path.basename(filename)
-        exefile = os.path.join(dirname, os.path.splitext(basename)[0])
-        if sys.platform == "win32" and language!="python":
-            exefile = exefile + ".exe"
-        assert(os.path.isfile(exefile))
+        exefile1 += ".exe"
 
-    return exefile
+    dirname = os.path.dirname(filename)
+    basename = "prog_"+os.path.basename(exefile1)
+    exefile2 = os.path.join(dirname, basename)
+
+    if os.path.isfile(exefile2):
+        return exefile2
+    else:
+        assert(os.path.isfile(exefile1))
+        return exefile1
 
 #------------------------------------------------------------------------------
 def insert_pyccel_folder(abs_path):
