@@ -108,11 +108,15 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
     p.wait()
 
 #------------------------------------------------------------------------------
-def get_lang_output(abs_path):
-    p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
-    out, _ = p.communicate()
-    assert(p.returncode==0)
-    return out
+def get_lang_output(abs_path, language):
+    abs_path = get_exe(abs_path, language)
+    if language=="python":
+        return get_python_output(abs_path)
+    else:
+        p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+        out, _ = p.communicate()
+        assert(p.returncode==0)
+        return out
 
 #------------------------------------------------------------------------------
 def get_value(string, regex, conversion):
@@ -288,10 +292,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         elif language == 'c':
             compile_c(cwd, output_test_file, dependencies)
 
-    if language == "python":
-        lang_out = get_python_output(get_exe(output_test_file, language))
-    else:
-        lang_out = get_lang_output(get_exe(output_test_file, language))
+    lang_out = get_lang_output(output_test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
 
 #==============================================================================
@@ -457,9 +458,7 @@ def test_pyccel_calling_directory(language):
     if language == "python":
         test_file = get_abs_path(os.path.join('__pyccel__',
                                 os.path.basename(test_file)))
-        fort_out = get_python_output(get_exe(test_file, language))
-    else:
-        fort_out = get_lang_output(get_exe(test_file))
+    fort_out = get_lang_output(test_file, language)
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
@@ -653,10 +652,7 @@ def test_headers(language):
 
     compile_pyccel(cwd, test_file, pyccel_commands)
 
-    if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language))
-    else:
-        lang_out = get_lang_output(get_exe(test_file, language))
+    lang_out = get_lang_output(test_file, language)
     assert int(lang_out) == 1
 
     with open(test_file, 'w') as f:
@@ -676,10 +672,7 @@ def test_headers(language):
 
     compile_pyccel(cwd, test_file, pyccel_commands)
 
-    if language == "python":
-        lang_out = get_python_output(get_exe(test_file, language))
-    else:
-        lang_out = get_lang_output(get_exe(test_file, language))
+    lang_out = get_lang_output(test_file, language)
     assert float(lang_out) == 1.5
 
     with open(test_file, 'w') as f:
