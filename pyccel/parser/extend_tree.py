@@ -108,7 +108,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
     # Fix necessary for python <= 3.6
     if attr=='orelse' and isinstance(body[0], IfNode):
-        assert(col_offset is not None)
+        assert col_offset is not None
     else:
         col_offset = body[0].col_offset
 

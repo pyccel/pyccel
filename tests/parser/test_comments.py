@@ -102,7 +102,7 @@ def test_parse(f):
                 copy_indents[i]-=diff
                 i+=1
         # Check lines
-        assert(o==c)
+        assert o==c
         oi += 1
         ci += 1
 

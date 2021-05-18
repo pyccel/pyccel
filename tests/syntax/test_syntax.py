@@ -23,7 +23,7 @@ def test_syntax(f):
     pyccel.parse()
 
     # Assert syntactic success
-    assert(not errors.has_errors())
+    assert not errors.has_errors()
 
 ######################
 if __name__ == '__main__':
