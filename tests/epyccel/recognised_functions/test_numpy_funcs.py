@@ -2404,8 +2404,8 @@ def test_sum_property(language):
 def test_min_int(language):
     @types('int[:]')
     def min_call(x):
-        from numpy import min as np_min
-        return np_min(x)
+        from numpy import amin
+        return amin(x)
 
     f1 = epyccel(min_call, language = language)
     x = randint(99,size=10)
@@ -2423,8 +2423,8 @@ def test_min_int(language):
 def test_min_real(language):
     @types('real[:]')
     def min_call(x):
-        from numpy import min as np_min
-        return np_min(x)
+        from numpy import amin
+        return amin(x)
 
     f1 = epyccel(min_call, language = language)
     x = rand(10)
@@ -2442,8 +2442,8 @@ def test_min_real(language):
 def test_min_phrase(language):
     @types('real[:]','real[:]')
     def min_phrase(x,y):
-        from numpy import min as np_min
-        a = np_min(x)*np_min(y)
+        from numpy import amin
+        a = amin(x)*amin(y)
         return a
 
     f2 = epyccel(min_phrase, language = language)
@@ -2481,8 +2481,8 @@ def test_min_property(language):
 def test_max_int(language):
     @types('int[:]')
     def max_call(x):
-        from numpy import max as np_max
-        return np_max(x)
+        from numpy import amax
+        return amax(x)
 
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
@@ -2500,8 +2500,8 @@ def test_max_int(language):
 def test_max_real(language):
     @types('real[:]')
     def max_call(x):
-        from numpy import max as np_max
-        return np_max(x)
+        from numpy import amax
+        return amax(x)
 
     f1 = epyccel(max_call, language = language)
     x = rand(10)
@@ -2519,14 +2519,15 @@ def test_max_real(language):
 def test_max_phrase(language):
     @types('real[:]','real[:]')
     def max_phrase(x,y):
-        from numpy import max as np_max
-        a = np_max(x)*np_max(y)
+        from numpy import amax
+        a = amax(x)*amax(y)
         return a
 
     f2 = epyccel(max_phrase, language = language)
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
+
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -5014,16 +5015,13 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
     assert np.allclose(epyccel_func(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation' (semantic.py), see https://github.com/pyccel/pyccel/issues/767")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation' (semantic.py), see https://github.com/pyccel/pyccel/issues/767")]
-        )
+            pytest.mark.python])
     )
 )
 
@@ -5055,16 +5053,16 @@ def test_numpy_matmul_array_like_1d(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(-((max_float / size)**(1/2)), (max_float / size)**(1/2), size = size)
+    fl32 = uniform(-((max_float32 / size)**(1/2)), (max_float32 / size)**(1/2), size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(-((max_float64 / size)**(1/2)), (max_float64 / size)**(1/2), size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((max_float32 / (size * 2))**(1/2)), high=(max_float32 / (size * 2))**(1/2), size=size) + uniform(low=-((max_float32 / (size * 2))**(1/2)), high=(max_float32 / (size * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+    cmplx128 = uniform(low=-((max_float64 / (size * 2))**(1/2)), high=(max_float64 / (size * 2))**(1/2), size=size) + uniform(low=-((max_float64 / (size * 2))**(1/2)), high=(max_float64 / (size * 2))**(1/2), size=size) * 1j
 
     epyccel_func = epyccel(get_matmul, language=language)
 
@@ -5076,11 +5074,11 @@ def test_numpy_matmul_array_like_1d(language):
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         assert epyccel_func(integer64) == get_matmul(integer64)
-    assert epyccel_func(fl) == get_matmul(fl)
-    assert epyccel_func(fl32) == get_matmul(fl32)
-    assert epyccel_func(fl64) == get_matmul(fl64)
-    assert (epyccel_func(cmplx64) == get_matmul(cmplx64))
-    assert (epyccel_func(cmplx128) == get_matmul(cmplx128))
+    assert isclose(epyccel_func(fl),get_matmul(fl), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(fl32),get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
+    assert isclose(epyccel_func(fl64),get_matmul(fl64), rtol=RTOL, atol=ATOL)
+    assert isclose(epyccel_func(cmplx64),get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert isclose(epyccel_func(cmplx128),get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
