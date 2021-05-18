@@ -328,8 +328,7 @@ def test_rel_imports_python_accessible_folder(language):
     path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.runtest_rel_imports import test_func
 
-    files = ["folder2/folder2_funcs.py", "folder2/runtest_rel_imports.py"]
-    tmp_dir = construct_test_folder(files, path_dir, base_dir)
+    tmp_dir = os.path.join(base_dir, '__pyccel__')
 
     pyth_out = str(test_func())
 
@@ -375,18 +374,25 @@ def test_folder_imports(language):
     # From this folder python doesn't understand relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.runtest_imports2 import test_func
+    tmp_dir = os.path.join(base_dir, '__pyccel__')
 
+    from scripts.folder2.runtest_imports2 import test_func
     pyth_out = str(test_func())
 
     language_opt = '--language={}'.format(language)
+    if language == 'python':
+        pyccel_opt = language_opt+' --output={}'.format(os.path.join(tmp_dir,"folder1"))
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
-            language_opt)
+            pyccel_opt)
+    if language == 'python':
+        pyccel_opt = language_opt+' --output={}'.format(os.path.join(tmp_dir,"folder2"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"),
-            language_opt)
+            pyccel_opt)
 
-    #if language == 'python':
-    #    os.makedirs(os.path.join(path_dir,os.path.normpath('py/py/folder1')))
+    if language == 'python':
+        test_location = "__pyccel__.folder2.runtest_imports2"
+    else:
+        test_location = "scripts.folder2.runtest_imports2"
     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
@@ -447,6 +453,8 @@ def test_pyccel_calling_directory(language):
     compile_pyccel(cwd, test_file, language_opt)
 
     if language == "python":
+        test_file = get_abs_path(os.path.join('__pyccel__',
+                                os.path.basename(test_file)))
         fort_out = get_python_output(get_exe(test_file, language))
     else:
         fort_out = get_lang_output(get_exe(test_file))
