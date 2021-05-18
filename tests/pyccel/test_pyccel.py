@@ -391,47 +391,6 @@ def test_imports(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-def test_folder_imports_python_accessible_folder(language):
-    # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts folder
-    # From this folder python understands relative imports
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.runtest_imports2 import test_func
-
-    pyth_out = str(test_func())
-
-    language_opt = '--language={}'.format(language)
-    compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
-            language_opt)
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"),
-            language_opt)
-
-    if language == 'python':
-        if os.path.exists(os.path.join(path_dir, os.path.normpath("py/py"))) is False:
-            os.makedirs(os.path.join(path_dir, os.path.normpath("py/py")))
-
-        src  = os.path.join(path_dir, os.path.normpath("py/runtest_imports2.py"))
-        dest = os.path.join(path_dir, os.path.normpath("py/py/runtest_imports2.py"))
-        shutil.copyfile(src, dest)
-
-        if os.path.exists(os.path.join(path_dir, os.path.normpath("py/folder1"))) is False:
-            os.makedirs(os.path.join(path_dir, os.path.normpath("py/folder1")))
-
-        src  = os.path.join(path_dir, os.path.normpath("folder1/py/folder1_funcs.py"))
-        dest = os.path.join(path_dir, os.path.normpath("py/folder1/folder1_funcs.py"))
-        shutil.copyfile(src, dest)
-        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.py.py.runtest_imports2"],
-            stdout=subprocess.PIPE, universal_newlines=True)
-    else:
-        p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
-                stdout=subprocess.PIPE, universal_newlines=True)
-    fort_out, _ = p.communicate()
-    assert(p.returncode==0)
-
-    compare_pyth_fort_output(pyth_out, fort_out)
-
-#------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 def test_folder_imports(language):
     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
