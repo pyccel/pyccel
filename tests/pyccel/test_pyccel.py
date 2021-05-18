@@ -294,19 +294,6 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         lang_out = get_lang_output(get_exe(output_test_file, language))
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
 
-def construct_test_folder(files, path_dir, base_dir):
-    tmp_dir = os.path.join(base_dir, '__pyccel__')
-    for f in files:
-        input_dir = os.path.dirname(f)
-        output_dir = os.path.join(tmp_dir, input_dir)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-            src  = os.path.join(path_dir, input_dir, '__init__.py')
-            if os.path.exists(src):
-                dest = os.path.join(output_dir, '__init__.py')
-                shutil.copyfile(src, dest)
-    return tmp_dir
-
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
