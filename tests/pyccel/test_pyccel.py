@@ -334,7 +334,7 @@ def test_rel_imports_python_accessible_folder(language):
 
     pyccel_opt = '--language={}'.format(language)
     if language == 'python':
-        pyccel_opt += '--output={}'.format(os.path.join(tmp_dir,"folder2"))
+        pyccel_opt += ' --output={}'.format(os.path.join(tmp_dir,"folder2"))
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"), pyccel_opt)
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), pyccel_opt)
     if language == 'python':
