@@ -58,11 +58,10 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir,test_file, options = ""):
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
+    cmd = [shutil.which("pyccel"), "%s" % test_file]
     if options != "":
-        options = options.strip().split(' ')
-        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
-    else:
-        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
+        cmd += options.strip().split(' ')
+    p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
 
@@ -270,7 +269,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
                 elif language == 'c':
                     compile_c(cwd, dependencies[i], [], is_mod = True)
             else:
-                compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyc_command)
+                compile_pyccel(cwd, dependencies[i], pyc_command)
 
     if output_dir:
         pyccel_commands += " --output "+output_dir
