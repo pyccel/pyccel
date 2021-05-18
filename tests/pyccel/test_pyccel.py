@@ -34,10 +34,10 @@ def get_exe(filename, language=None):
     if language == 'python':
         exefile = os.path.normpath(filename)
         base = os.path.basename(exefile)
-        dir_path = os.path.dirname(exefile)
-        if os.path.isfile(os.path.join(dir_path, 'py', "prog_"+base)):
+        dir_path = os.path.join(os.path.dirname(exefile), '__pyccel__')
+        if os.path.isfile(os.path.join(dir_path, "prog_"+base)):
             base = "prog_"+base
-        exefile  = os.path.join(dir_path, 'py', base)
+        exefile  = os.path.join(dir_path, base)
         exefile  = os.path.normpath(exefile)
     else:
         if sys.platform == "win32":
@@ -71,8 +71,6 @@ def get_python_output(abs_path, cwd = None):
 #------------------------------------------------------------------------------
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
-        if "python" in options:
-            options += " --output py"
         options = options.strip().split(' ')
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
     else:
@@ -213,7 +211,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float, language=None):
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
-        language = None):
+        language = None, output_dir = None):
     test_file = os.path.normpath(test_file)
 
     if (cwd is None):
@@ -226,10 +224,13 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     if language:
         pyccel_commands += " --language="+language
-        if language == "python":
-            pyccel_commands += " --output py"
     else:
         language='fortran'
+
+    if output_dir:
+        pyccel_commands += " --output "+output_dir
+    elif language=="python":
+        pyccel_commands += " --output __pyccel__"
 
     if dependencies:
         if isinstance(dependencies, str):
