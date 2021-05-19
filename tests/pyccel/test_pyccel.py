@@ -395,7 +395,7 @@ def test_folder_imports(language):
         test_location = "__pyccel__.folder2.runtest_imports2"
     else:
         test_location = "scripts.folder2.runtest_imports2"
-    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), test_location],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
