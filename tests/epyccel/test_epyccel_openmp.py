@@ -327,7 +327,7 @@ def test_omp_master(language):
 
 @pytest.mark.parametrize( 'language', [
             pytest.param("python", marks = [
-            pytest.mark.xfail(reason="This test depend on thread for the result we, so in python we get different result because we don't use threads."),
+            pytest.mark.xfail(reason="The result of this test depend on threads, so in python we get different result because we don't use threads."),
             pytest.mark.python]),
             pytest.param("fortran", marks = pytest.mark.fortran),
             pytest.param("c", marks = pytest.mark.c)
