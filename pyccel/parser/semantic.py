@@ -117,6 +117,8 @@ errors = Errors()
 def _get_name(var):
     """."""
 
+    if isinstance(var, str):
+        return var
     if isinstance(var, (PyccelSymbol, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement)):
