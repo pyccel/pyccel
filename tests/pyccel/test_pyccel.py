@@ -525,7 +525,6 @@ def test_hope_benchmarks_c( test_file ):
                                         "scripts/import_syntax/collisions.py",
                                         "scripts/import_syntax/collisions3.py",
                                         "scripts/import_syntax/collisions5.py",
-                                        "scripts/import_syntax/collisions6.py",
                                         ] )
 @pytest.mark.parametrize( "language", (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -602,14 +601,6 @@ def test_multiple_results(language):
                 ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="Imports not working well in python : https://github.com/pyccel/pyccel/issues/873"),
-            pytest.mark.python]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    )
-)
 def test_elemental(language):
     pyccel_test("scripts/decorators_elemental.py", language = language)
 
