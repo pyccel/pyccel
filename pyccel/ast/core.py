@@ -2824,7 +2824,10 @@ class Import(Basic):
                     target=target)
 
     def define_target(self, new_target):
-        self._target.add(new_target)
+        if iterable(new_target):
+            self._target.update(new_target)
+        else:
+            self._target.add(new_target)
 
     def find_module_target(self, new_target):
         for t in self._target:

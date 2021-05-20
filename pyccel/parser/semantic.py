@@ -3146,7 +3146,7 @@ class SemanticParser(BasicParser):
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
-            _insert_obj('imports', source_target, Import(source, expr.target, True))
+            self.insert_import(source_target, expr.target)
 
         else:
 
