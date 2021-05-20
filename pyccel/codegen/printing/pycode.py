@@ -70,11 +70,14 @@ class PythonCodePrinter(CodePrinter):
         imports = [i for tup in self._additional_imports.values() for i in tup[1]]
         return imports
 
-    def insert_new_import(self, import_obj):
+    def insert_new_import(self, source, target, alias = None):
         """ Add an import of an object which may have been
         added by pyccel and therefore may not have been imported
         """
-        source = str(import_obj.source)
+        if alias and alias!=target:
+            target = AsName(target, alias)
+        import_obj = Import(source, target)
+        source = str(source)
         src_info = self._additional_imports.setdefault(source, (set(), []))
         src_info[0].update(import_obj.target)
         src_info[1].append(import_obj)
@@ -148,7 +151,7 @@ class PythonCodePrinter(CodePrinter):
                 expr.decorators.pop('template')
             for n,f in decorators.items():
                 if n in pyccel_decorators:
-                    self.insert_new_import(Import(DottedName('pyccel.decorators'), n))
+                    self.insert_new_import(DottedName('pyccel.decorators'), n)
                 # TODO - All decorators must be stored in a list
                 if not isinstance(f, list):
                     f = [f]
@@ -225,7 +228,7 @@ class PythonCodePrinter(CodePrinter):
         precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(expr.name, expr.name)
         if is_numpy:
-            self.insert_new_import(Import('numpy',name))
+            self.insert_new_import('numpy',expr.name,name)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
@@ -234,7 +237,7 @@ class PythonCodePrinter(CodePrinter):
         precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(expr.name, expr.name)
         if is_numpy:
-            self.insert_new_import(Import('numpy',name))
+            self.insert_new_import('numpy',expr.name,name)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
@@ -247,7 +250,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyComplex(self, expr):
         precision = str(expr.precision*16)
         name = self._aliases.get(expr.name, expr.name)
-        self.insert_new_import(Import('numpy',name))
+        self.insert_new_import('numpy',expr.name,name)
         if expr.is_cast:
             return '{}({})'.format(name, self._print(expr.internal_var))
         else:
