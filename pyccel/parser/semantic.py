@@ -3126,6 +3126,8 @@ class SemanticParser(BasicParser):
 
             def _insert_obj(location, target, obj):
                 F = self.check_for_variable(target)
+                if F is None:
+                    F = self.get_function(target)
 
                 if obj is F:
                     errors.report(FOUND_DUPLICATED_IMPORT,
