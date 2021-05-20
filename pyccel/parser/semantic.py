@@ -1589,7 +1589,6 @@ class SemanticParser(BasicParser):
                 imp = self.get_import(_get_name(lhs))
 
                 new_name = rhs_name
-                # If pyccelized file
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
@@ -3146,7 +3145,7 @@ class SemanticParser(BasicParser):
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
-            self.insert_import(source_target, expr.target)
+            self.insert_import(expr.source, expr.target)
 
         else:
 
