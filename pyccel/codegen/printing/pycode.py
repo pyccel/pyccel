@@ -121,12 +121,12 @@ class PythonCodePrinter(CodePrinter):
         return '{base}[{indices}]'.format(base=base, indices=indices)
 
     def _print_FunctionDef(self, expr):
-        name = self._print(expr.name)
-        body = self._print(expr.body)
-        body = self._indent_codestring(body)
-        args = ', '.join(self._print(i) for i in expr.arguments)
-
+        name    = self._print(expr.name)
         imports = '\n'.join(self._print(i) for i in expr.imports)
+        body    = self._print(expr.body)
+        body    = self._indent_codestring(body)
+        args    = ', '.join(self._print(i) for i in expr.arguments)
+
         imports = self._indent_codestring(imports)
 
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
@@ -304,10 +304,15 @@ class PythonCodePrinter(CodePrinter):
             return code+'\n'
 
     def _print_Import(self, expr):
-        source = self._print(expr.source)
         if not expr.target:
+            source = self._print(expr.source)
             return 'import {source}\n'.format(source=source)
         else:
+            if isinstance(expr.source, AsName):
+                source = self._print(expr.source.name)
+            else:
+                source = self._print(expr.source)
+
             if source in import_target_swap:
                 # If the source contains multiple names which reference the same object
                 # check if the target is referred to by another name in pyccel.
