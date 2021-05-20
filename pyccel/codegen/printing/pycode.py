@@ -295,7 +295,6 @@ class PythonCodePrinter(CodePrinter):
             func_name = expr.interface_name
         else:
             func_name = expr.funcdef.name
-        func_name = self._aliases.get(func_name, func_name)
         args = ', '.join(self._print(i) for i in expr.args)
         code = '{func}({args})'.format(func=func_name, args=args)
         if expr.funcdef.results:
