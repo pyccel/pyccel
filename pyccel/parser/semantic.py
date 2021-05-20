@@ -513,13 +513,14 @@ class SemanticParser(BasicParser):
             Create and insert a new import in namespace if it's not defined
             otherwise append target to existing import.
         """
-        imp = self.get_import(name)
+        str_name = _get_name(name)
+        imp = self.get_import(str_name)
 
         if imp is not None:
             imp.define_target(target)
         else:
             container = self.namespace.imports
-            container['imports'][name] = Import(name, target, True)
+            container['imports'][str_name] = Import(name, target, True)
 
     def insert_macro(self, macro):
         """."""
