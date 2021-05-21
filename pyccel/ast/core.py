@@ -2824,6 +2824,20 @@ class Import(Basic):
                     target=target)
 
     def define_target(self, new_target):
+        """
+        Add an addtional target to the imports
+        I.e. if imp is and Import defined as:
+        >>> from numpy import ones
+
+        and we call imp.define_target('cos')
+        then it becomes:
+        >>> from numpy import ones, cos
+
+        Parameter
+        ---------
+        new_target: str/AsName/iterable of str/AsName
+                    The new import target
+        """
         if iterable(new_target):
             self._target.update(new_target)
         else:
