@@ -228,7 +228,7 @@ class PythonCodePrinter(CodePrinter):
         is_numpy  = type_name.startswith('numpy')
         precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(type(expr), expr.name)
-        if is_numpy and name != expr.name:
+        if is_numpy and name == expr.name:
             self.insert_new_import(
                     source = 'numpy',
                     target = expr.name)
@@ -239,7 +239,7 @@ class PythonCodePrinter(CodePrinter):
         is_numpy  = type_name.startswith('numpy')
         precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(type(expr), expr.name)
-        if is_numpy and name != expr.name:
+        if is_numpy and name == expr.name:
             self.insert_new_import(
                     source = 'numpy',
                     target = expr.name)
@@ -255,7 +255,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyComplex(self, expr):
         precision = str(expr.precision*16)
         name = self._aliases.get(type(expr), expr.name)
-        if name != expr.name:
+        if name == expr.name:
             self.insert_new_import(
                     source = 'numpy',
                     target = expr.name)
