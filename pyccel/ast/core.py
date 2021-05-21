@@ -2825,8 +2825,8 @@ class Import(Basic):
 
     def define_target(self, new_target):
         """
-        Add an addtional target to the imports
-        I.e. if imp is and Import defined as:
+        Add an additional target to the imports
+        I.e. if imp is an Import defined as:
         >>> from numpy import ones
 
         and we call imp.define_target('cos')
