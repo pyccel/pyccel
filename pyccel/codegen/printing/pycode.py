@@ -228,11 +228,10 @@ class PythonCodePrinter(CodePrinter):
         is_numpy  = type_name.startswith('numpy')
         precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(type(expr), expr.name)
-        if is_numpy:
+        if is_numpy and name != expr.name:
             self.insert_new_import(
                     source = 'numpy',
-                    target = expr.name,
-                    alias  = name)
+                    target = expr.name)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
@@ -240,11 +239,10 @@ class PythonCodePrinter(CodePrinter):
         is_numpy  = type_name.startswith('numpy')
         precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(type(expr), expr.name)
-        if is_numpy:
+        if is_numpy and name != expr.name:
             self.insert_new_import(
                     source = 'numpy',
-                    target = expr.name,
-                    alias  = name)
+                    target = expr.name)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
@@ -257,10 +255,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyComplex(self, expr):
         precision = str(expr.precision*16)
         name = self._aliases.get(type(expr), expr.name)
-        self.insert_new_import(
-                source = 'numpy',
-                target = expr.name,
-                alias  = name)
+        if name != expr.name:
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = expr.name)
         if expr.is_cast:
             return '{}({})'.format(name, self._print(expr.internal_var))
         else:
