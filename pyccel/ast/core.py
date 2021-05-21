@@ -2747,7 +2747,9 @@ class Import(Basic):
 
     Parameters
     ----------
-    target : str, list, tuple
+    source : str, DottedName, AsName
+        the module from which we import
+    target : str, AsName, list, tuple
         targets to import
 
     Examples
@@ -2761,8 +2763,8 @@ class Import(Basic):
     >>> Import(abc)
     import foo.bar.baz
 
-    >>> Import(['foo', abc])
-    import foo, foo.bar.baz
+    >>> Import('foo', 'bar')
+    from foo import bar
     """
     __slots__ = ('_source','_target','_ignore_at_print')
     _attribute_nodes = ()
