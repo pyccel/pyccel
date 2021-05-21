@@ -11,6 +11,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
+from pyccel.ast.numpyext   import Shape as NumpyShape
 from pyccel.ast.variable   import DottedName
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -284,7 +285,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
-        name = self._aliases.get(type(expr), expr.name)
+        name = self._aliases.get(NumpyShape, expr.name)
         return '{0}({1})[{2}]'.format(name, arg, index)
 
     def _print_Comment(self, expr):
