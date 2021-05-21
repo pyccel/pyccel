@@ -125,7 +125,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         name    = self._print(expr.name)
-        imports = '\n'.join(self._print(i) for i in expr.imports)
+        imports = ''.join(self._print(i) for i in expr.imports)
         body    = self._print(expr.body)
         body    = self._indent_codestring(body)
         args    = ', '.join(self._print(i) for i in expr.arguments)
@@ -192,10 +192,10 @@ class PythonCodePrinter(CodePrinter):
         return 'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
-        imports  = '\n'.join(self._print(i) for i in expr.imports)
-        body  = self._print(expr.body)
-        body = self._indent_codestring(body)
-        imports += '\n'.join(self._print(i) for i in self.get_additional_imports())
+        imports  = ''.join(self._print(i) for i in expr.imports)
+        body     = self._print(expr.body)
+        body     = self._indent_codestring(body)
+        imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
         return ('{imports}\n'
                 'if __name__ == "__main__":\n'
