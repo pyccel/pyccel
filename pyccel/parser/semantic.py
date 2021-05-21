@@ -516,10 +516,18 @@ class SemanticParser(BasicParser):
             otherwise append target to existing import.
         """
         str_name = _get_name(name)
+        source = name.name if isinstance(name, AsName) else str_name
         imp = self.get_import(str_name)
 
         if imp is not None:
-            imp.define_target(target)
+            imp_source = imp.source.name if isinstance(imp.source, AsName) else str_name
+            if imp_source == source:
+                imp.define_target(target)
+            else:
+                errors.report(IMPORTING_EXISTING_IDENTIFIED,
+                              symbol=name,
+                              bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                              severity='fatal')
         else:
             container = self.namespace.imports
             container['imports'][str_name] = Import(name, target, True)
