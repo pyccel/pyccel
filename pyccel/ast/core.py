@@ -2747,7 +2747,9 @@ class Import(Basic):
 
     Parameters
     ----------
-    target : str, list, tuple
+    source : str, DottedName, AsName
+        the module from which we import
+    target : str, AsName, list, tuple
         targets to import
 
     Examples
@@ -2761,8 +2763,8 @@ class Import(Basic):
     >>> Import(abc)
     import foo.bar.baz
 
-    >>> Import(['foo', abc])
-    import foo, foo.bar.baz
+    >>> Import('foo', 'bar')
+    from foo import bar
     """
     __slots__ = ('_source','_target','_ignore_at_print')
     _attribute_nodes = ()
@@ -2824,7 +2826,24 @@ class Import(Basic):
                     target=target)
 
     def define_target(self, new_target):
-        self._target.add(new_target)
+        """
+        Add an additional target to the imports
+        I.e. if imp is an Import defined as:
+        >>> from numpy import ones
+
+        and we call imp.define_target('cos')
+        then it becomes:
+        >>> from numpy import ones, cos
+
+        Parameter
+        ---------
+        new_target: str/AsName/iterable of str/AsName
+                    The new import target
+        """
+        if iterable(new_target):
+            self._target.update(new_target)
+        else:
+            self._target.add(new_target)
 
     def find_module_target(self, new_target):
         for t in self._target:
