@@ -594,10 +594,11 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if not isinstance(results, (list, PythonTuple, PythonList)):
+        if results is Nil():
+            results = []
+        elif not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
-        expr = Return(results)
-        return expr
+        return Return(results)
 
     def _visit_Pass(self, stmt):
         return Pass()
