@@ -3157,7 +3157,7 @@ class SemanticParser(BasicParser):
             if expr.target:
                 for t in expr.target:
                     if t not in pyccel_builtin_import_registery[source]:
-                        errors.report("Function {} from module {} is not yet implemented in pyccel".format(t, source),
+                        errors.report("Function '{}' from module '{}' is not currently supported by pyccel".format(t, source),
                                 symbol=expr,
                                 severity='error')
                 for (name, atom) in imports:
@@ -3171,7 +3171,7 @@ class SemanticParser(BasicParser):
             self.insert_import(expr.source, expr.target)
 
         elif source in python_builtin_libs:
-            errors.report("Module {} is not yet supported by pyccel".format(source),
+            errors.report("Module {} is not currently supported by pyccel".format(source),
                     symbol=expr,
                     severity='error')
         else:
