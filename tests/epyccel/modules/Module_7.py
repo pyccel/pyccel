@@ -25,7 +25,7 @@ def fill_b( r: float, a: 'int[:]' ):
     if ( r == 0.0 ):
         return 0, 1.0
 
-    for i in range ( len(a) ):
+    for i, ai in enumerate(a):
         a[i] = 1.0 / r
 
     return 1, 1.0/r
