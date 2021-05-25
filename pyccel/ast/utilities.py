@@ -90,7 +90,7 @@ builtin_import_registery = {'numpy': {
                             'math': {**math_functions, ** math_constants},
                             'pyccel.decorators': pyccel_decorators.__all__}
 if sys.version_info < (3, 10):
-    python_builtin_libs = [s[1:] if s[0]=='_' else s for s in sys.builtin_module_names]
+    python_builtin_libs = [s[1:] if s[0]=='_' else s for s in sys.builtin_module_names] # pylint: disable=no-member
 else:
     python_builtin_libs = list(sys.stdlib_module_names)
 
