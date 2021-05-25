@@ -6,7 +6,7 @@ def fill_a( r: float, a: 'int[:]' ):
     if ( r == 0.0 ):
         return 0
 
-    for i in range ( len(a) ):
+    for i in range(len(a)):#pylint: disable=consider-using-enumerate
         a[i] = 1.0 / r
 
     return 1
@@ -25,7 +25,7 @@ def fill_b( r: float, a: 'int[:]' ):
     if ( r == 0.0 ):
         return 0, 1.0
 
-    for i, ai in enumerate(a):
+    for i in range(len(a)):#pylint: disable=consider-using-enumerate
         a[i] = 1.0 / r
 
     return 1, 1.0/r
