@@ -102,3 +102,10 @@ def test_cast_complex_2(language):
     a = np.complex128(complex(randint(100), randint(100)))
     assert f_epyc(a) == f(a)
 
+def test_cast_float_complex(language):
+    f = mod.cast_float_complex
+    f_epyc = epyccel(f, language = language)
+
+    a = rand()*100
+    b = complex(randint(100), randint(100))
+    assert f_epyc(a,b) == f(a,b)
