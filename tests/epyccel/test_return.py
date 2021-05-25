@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
+import numpy as np
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
@@ -134,3 +135,23 @@ def test_multi_allocs(language):
         return ((4 + 5)/(d[0] + e[2]) * c[0])%(b[2] + a[1]) - 4
     epyc_multi_allocs = epyccel(multi_allocs, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_multi_allocs(7) == multi_allocs(7))
+
+def test_return_nothing(language):
+    def divide_by(a : 'float[:]', b : 'float'):
+        if abs(b)<0.1:
+            return
+        for i,ai in enumerate(a):
+            a[i] = ai/b
+
+    epyc_divide_by = epyccel(divide_by, language=language, fflags="-Werror -Wunused-variable")
+    x = np.ones(5)
+    x_copy = x.copy()
+    b = 0.01
+    divide_by(x,b)
+    divide_by(x_copy,b)
+    assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
+    b = 4
+    divide_by(x,b)
+    divide_by(x_copy,b)
+    assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
+
