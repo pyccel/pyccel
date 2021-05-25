@@ -3156,7 +3156,8 @@ class SemanticParser(BasicParser):
 
             if expr.target:
                 for t in expr.target:
-                    if t not in pyccel_builtin_import_registery[source]:
+                    t_name = t.name if isinstance(t, AsName) else t
+                    if t_name not in pyccel_builtin_import_registery[source]:
                         errors.report("Function '{}' from module '{}' is not currently supported by pyccel".format(t, source),
                                 symbol=expr,
                                 severity='error')
