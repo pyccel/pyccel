@@ -1624,6 +1624,14 @@ class FunctionCallArgument(Basic):
         self._keyword = keyword
         super().__init__()
 
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def keyword(self):
+        return self._keyword
+
 class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.

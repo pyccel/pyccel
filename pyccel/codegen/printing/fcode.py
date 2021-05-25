@@ -582,6 +582,12 @@ class FCodePrinter(CodePrinter):
         else:
             return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
 
+    def _print_FunctionCallArgument(self, expr):
+        if expr.keyword:
+            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+        else:
+            return '{}'.format(self._print(expr.value))
+
     def _print_Constant(self, expr):
         val = LiteralFloat(expr.value)
         return self._print(val)

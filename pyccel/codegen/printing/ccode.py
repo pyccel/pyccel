@@ -1572,6 +1572,9 @@ class CCodePrinter(CodePrinter):
         else:
             return expr.name
 
+    def _print_FunctionCallArgument(self, expr):
+        return self._print(expr.value)
+
     def _print_VariableAddress(self, expr):
         if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)

@@ -31,7 +31,7 @@ from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, Argument
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
+from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
@@ -981,6 +981,7 @@ class SemanticParser(BasicParser):
                         i_arg.rank != f_arg.rank)
 
         for i_arg, f_arg in zip(input_args, func_args):
+            i_arg = i_arg.value
             # Ignore types which cannot be compared
             if (i_arg is Nil()
                     or isinstance(f_arg, FunctionAddress)
@@ -1414,6 +1415,10 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
         return expr
+
+    def _visit_FunctionCallArgument(self, expr, **settings):
+        value = self._visit(expr.value, **settings)
+        return FunctionCallArgument(value, expr.keyword)
 
     def _visit_ValuedArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
