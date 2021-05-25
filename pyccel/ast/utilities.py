@@ -88,7 +88,7 @@ builtin_import_registery = {'numpy': {
                             'scipy.constants': scipy_constants,
                             'itertools': {'product': Product},
                             'math': {**math_functions, ** math_constants},
-                            'pyccel.decorators': None}
+                            'pyccel.decorators': pyccel_decorators.__all__}
 if sys.version_info < (3, 10):
     python_builtin_libs = [s[1:] if s[0]=='_' else s for s in sys.builtin_module_names]
 else:
