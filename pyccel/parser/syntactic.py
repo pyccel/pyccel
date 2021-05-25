@@ -589,11 +589,13 @@ class SyntaxParser(BasicParser):
                       severity='fatal')
 
     def _visit_Return(self, stmt):
-        results = self._visit(stmt.value)
-        if not isinstance(results, (list, PythonTuple, PythonList)):
-            results = [results]
-        expr = Return(results)
-        return expr
+        if stmt.value is None:
+            return Return([])
+        else:
+            results = self._visit(stmt.value)
+            if not isinstance(results, (list, PythonTuple, PythonList)):
+                results = [results]
+            return Return(results)
 
     def _visit_Pass(self, stmt):
         return Pass()
