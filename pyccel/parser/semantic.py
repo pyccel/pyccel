@@ -1877,6 +1877,8 @@ class SemanticParser(BasicParser):
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
+            elif lhs.is_temp:
+                return self._visit(rhs, **settings)
             else:
 
                 # TODO check types from FunctionDef
