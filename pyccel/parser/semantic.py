@@ -2019,11 +2019,10 @@ class SemanticParser(BasicParser):
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                     if not all(same_ranks):
                         assert(len(c_ranks) == 1)
-                        for d in d_var:
-                            d['shape'      ] = call_args[0].shape
-                            d['rank'       ] = call_args[0].rank
-                            d['allocatable'] = call_args[0].allocatable
-                            d['order'      ] = call_args[0].order
+                        d_var['shape'      ] = call_args[0].shape
+                        d_var['rank'       ] = call_args[0].rank
+                        d_var['allocatable'] = call_args[0].allocatable
+                        d_var['order'      ] = call_args[0].order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
