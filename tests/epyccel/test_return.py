@@ -155,3 +155,22 @@ def test_return_nothing(language):
     divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
 
+def test_return_None(language):
+    def divide_by(a : 'float[:]', b : 'float'):
+        if abs(b)<0.1:
+            return None
+        for i,ai in enumerate(a):
+            a[i] = ai/b
+
+    epyc_divide_by = epyccel(divide_by, language=language)
+    x = np.ones(5)
+    x_copy = x.copy()
+    b = 0.01
+    divide_by(x,b)
+    divide_by(x_copy,b)
+    assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
+    b = 4
+    divide_by(x,b)
+    divide_by(x_copy,b)
+    assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
+
