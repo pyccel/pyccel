@@ -2087,21 +2087,17 @@ class SemanticParser(BasicParser):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
-            if isinstance(rhs, PythonTuple):
+            if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
+                if isinstance(rhs, FunctionCall):
+                    r_iter = rhs.funcdef.results
+                else:
+                    r_iter = rhs
                 new_lhs = []
-                for i,(l,r) in enumerate(zip(lhs,rhs)):
+                for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     d = self._infere_type(r, **settings)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign), **settings) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif isinstance(rhs, InhomogeneousTupleVariable):
-                new_lhs = []
-                d_var = [self._infere_type(v) for v in rhs]
-                new_lhs = [self._assign_lhs_variable(l, d_var[i].copy(), r,
-                                                    new_expressions,
-                                                    isinstance(expr, AugAssign),
-                                                    **settings) for i,(l,r) in enumerate(zip(lhs,rhs))]
-                lhs = PythonTuple(*new_lhs)
             elif isinstance(rhs, HomogeneousTupleVariable):
                 new_lhs = []
                 d_var = self._infere_type(rhs[0])
