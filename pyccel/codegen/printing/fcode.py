@@ -1301,7 +1301,8 @@ class FCodePrinter(CodePrinter):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)):
+            if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)) \
+                    or (isinstance(expr.lhs, HomogeneousTupleVariable) and expr.lhs.is_stack_array):
 
                 rhs_code = rhs.funcdef.name
                 args = rhs.args
