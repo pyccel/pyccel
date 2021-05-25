@@ -862,7 +862,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
-            code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
+            var = self._print(expr.internal_var)
+            code = 'cmplx({0}, kind={1})'.format(var,
                                 self.print_kind(expr))
         else:
             real = self._print(expr.real)
