@@ -273,6 +273,12 @@ class PythonCodePrinter(CodePrinter):
                 stop  = self._print(expr.stop ),
                 step  = self._print(expr.step ))
 
+    def _print_PythonEnumerate(self, expr):
+        name = self._aliases.get(type(expr), expr.name)
+        return '{name}({elem})'.format(
+                name = name,
+                elem = self._print(expr.element))
+
     def _print_PythonReal(self, expr):
         return '({}).real'.format(self._print(expr.internal_var))
 
