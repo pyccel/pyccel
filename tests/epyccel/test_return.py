@@ -143,7 +143,7 @@ def test_return_nothing(language):
         for i,ai in enumerate(a):
             a[i] = ai/b
 
-    epyc_divide_by = epyccel(divide_by, language=language, fflags="-Werror -Wunused-variable")
+    epyc_divide_by = epyccel(divide_by, language=language)
     x = np.ones(5)
     x_copy = x.copy()
     b = 0.01
