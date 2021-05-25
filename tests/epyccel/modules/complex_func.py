@@ -38,6 +38,10 @@ def create_complex_literal__complex_complex():
     a = complex(2.8+7j,-1.5-22j)
     return a
 
+def cast_complex_literal():
+    a = complex(2.8+7j)
+    return a
+
 @types('int','int')
 def create_complex_var__int_int(a,b):
     return complex(a,b)

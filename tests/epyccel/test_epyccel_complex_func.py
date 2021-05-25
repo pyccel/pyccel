@@ -15,7 +15,8 @@ from pyccel.epyccel import epyccel
                            mod.create_complex_literal__float_complex,
                            mod.create_complex_literal__complex_int,
                            mod.create_complex_literal__complex_float,
-                           mod.create_complex_literal__complex_complex] )
+                           mod.create_complex_literal__complex_complex,
+                           mod.cast_complex_literal] )
 def test_create_complex_literal(f, language):
     f_epyc = epyccel(f, language = language)
     assert f_epyc() == f()
