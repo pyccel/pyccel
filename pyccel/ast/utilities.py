@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import inspect
+import sys
 from itertools import chain
 from collections import namedtuple
 
@@ -83,6 +84,12 @@ builtin_import_registery = {'numpy': {
                             'itertools': {'product': Product},
                             'math': {**math_functions, ** math_constants},
                             'pyccel.decorators': None}
+if sys.version_info < (3, 10):
+    python_builtin_libs = [s[1:] if s[0]=='_' else s for s in sys.builtin_module_names]
+else:
+    python_builtin_libs = list(sys.stdlib_module_names)
+
+recognised_libs = python_builtin_libs + list(builtin_import_registery.keys())
 
 #==============================================================================
 def collect_relevant_imports(func_dictionary, targets):
