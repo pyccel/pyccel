@@ -30,7 +30,7 @@ from .functionalexpr import FunctionalFor
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 
 from .variable import DottedName, DottedVariable, IndexedElement
-from .variable import ValuedVariable, Variable
+from .variable import Variable
 
 errors = Errors()
 
@@ -1577,7 +1577,7 @@ class ValuedArgument(Basic):
 
         if isinstance(expr, Argument):
             self._name = expr.name
-        elif isinstance(expr, str):
+        elif isinstance(expr, (str, Variable)):
             self._name = expr
         else:
             raise TypeError('Expecting an argument')
@@ -1676,10 +1676,12 @@ class FunctionCall(PyccelAstNode):
         if func.cls_name:
             f_args = f_args[1:]
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
+            f_args_dict = OrderedDict((a.name,FunctionCallArgument(a.value, a.name))
+                                    if isinstance(a, ValuedArgument) else (a.name, None)
+                                    for a in f_args)
             keyword_args = []
             for i,a in enumerate(args):
-                if not isinstance(a, (ValuedVariable, ValuedFunctionAddress)):
+                if a.keyword is None:
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
@@ -1688,9 +1690,10 @@ class FunctionCall(PyccelAstNode):
             for a in keyword_args:
                 f_args_dict[a.name] = a.value
 
-            args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
+            args = [FunctionCallArgument(a.value, a.name) if isinstance(a, ValuedArgument) else a for a in f_args_dict.values()]
 
-        args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
+        args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), a.name)
+                if isinstance(a.value, FunctionDef) else a for a in args]
 
         if current_function == func.name:
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
@@ -3506,7 +3509,7 @@ def get_initial_value(expr, var):
 
     # ...
 
-    if isinstance(expr, ValuedVariable):
+    if isinstance(expr, ValuedArgument):
         if expr.variable.name in var:
             return expr.value
     elif isinstance(expr, Variable):

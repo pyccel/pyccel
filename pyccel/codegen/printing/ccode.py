@@ -13,7 +13,7 @@ from pyccel.ast.builtins  import PythonZip, PythonMap, PythonLen, PythonPrint
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
@@ -38,7 +38,6 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable
@@ -722,16 +721,15 @@ class CCodePrinter(CodePrinter):
         end = '\n'
         sep = ' '
         code = ''
-        empty_end = ValuedVariable(NativeString(), 'end', value='')
-        space_end = ValuedVariable(NativeString(), 'end', value=' ')
-        kwargs = [f for f in expr.expr if isinstance(f, ValuedVariable)]
+        empty_end = FunctionCallArgument(LiteralString(''), 'end')
+        space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        kwargs = [f for f in expr.expr if f.keyword]
         for f in kwargs:
-            if isinstance(f, ValuedVariable):
-                if f.name == 'sep'      :   sep = str(f.value)
-                elif f.name == 'end'    :   end = str(f.value)
+            if f.keyword == 'sep'      :   sep = str(f.value)
+            elif f.keyword == 'end'    :   end = str(f.value)
         args_format = []
         args = []
-        orig_args = [f for f in expr.expr if not isinstance(f, ValuedVariable)]
+        orig_args = [f for f in expr.expr if not f.keyword]
 
         def formatted_args_to_printf(args_format, args, end):
             args_format = sep.join(args_format)
@@ -769,7 +767,7 @@ class CCodePrinter(CodePrinter):
 
                 for_body  = [PythonPrint(print_body)]
                 for_loop  = For(for_index, for_range, for_body)
-                for_end   = ValuedVariable(NativeString(), 'end', value=']'+end if i == len(orig_args)-1 else ']')
+                for_end   = FunctionCallArgument(LiteralString(value=']'+end if i == len(orig_args)-1 else ']'), 'end')
 
                 body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
                                   for_loop,
@@ -1571,6 +1569,9 @@ class CCodePrinter(CodePrinter):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
+
+    def _print_Argument(self, expr):
+        return self._print(expr.name)
 
     def _print_FunctionCallArgument(self, expr):
         return self._print(expr.value)

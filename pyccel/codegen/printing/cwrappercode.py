@@ -19,7 +19,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import Import
+from pyccel.ast.core import Import, ValuedArgument
 from pyccel.ast.core import AugAssign
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
@@ -39,7 +39,7 @@ from pyccel.ast.cwrapper import PyArray_CheckScalar, PyArray_ScalarAsCtype
 
 from pyccel.ast.bind_c   import as_static_function_call
 
-from pyccel.ast.variable  import VariableAddress, Variable, ValuedVariable
+from pyccel.ast.variable  import VariableAddress, Variable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
@@ -183,7 +183,7 @@ class CWrapperCodePrinter(CCodePrinter):
             else :
                 check = PyccelAssociativeParenthesis(PyccelAnd(PyccelNot(python_check), numpy_check))
 
-        if isinstance(variable, ValuedVariable):
+        if isinstance(variable, ValuedArgument):
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
@@ -436,7 +436,7 @@ class CWrapperCodePrinter(CCodePrinter):
         python_collect  = [Assign(var, self.get_collect_function_call(variable, collect_var))]
         numpy_collect   = [FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])]
 
-        if isinstance(variable, ValuedVariable):
+        if isinstance(variable, ValuedArgument):
             section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable)
             sections.append(section)
             python_collect += optional_collect
@@ -694,7 +694,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body_translations.extend(body)
 
                 # Write default values
-                if isinstance(f_arg, ValuedVariable):
+                if isinstance(f_arg, ValuedArgument):
                     wrapper_body.append(self.get_default_assign(parse_args[-1], f_arg))
 
                 flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
@@ -872,8 +872,8 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name])
 
         # update ndarray local variables properties
-        local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
-                          if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
+        local_arg_vars = [a.name.clone(a.name.name, is_pointer=True, allocatable=False)
+                          if isinstance(a.name, Variable) and a.name.rank > 0 else a.name for a in expr.arguments]
         # update optional variable properties
         local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_arg_vars]
 
@@ -935,7 +935,7 @@ class CWrapperCodePrinter(CCodePrinter):
             parse_args.append(collect_var)
 
             # Write default values
-            if isinstance(arg, ValuedVariable):
+            if isinstance(arg, ValuedArgument):
                 wrapper_body.append(self.get_default_assign(parse_args[-1], arg))
 
         # Parse arguments

@@ -17,7 +17,7 @@ from pyccel.errors.errors import Errors
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate)
+                            Concatenate, ValuedArgument)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -29,7 +29,7 @@ from .literals      import LiteralString, LiteralInteger, Literal, Nil
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
-from .variable      import (Constant, Variable, ValuedVariable,
+from .variable      import (Constant, Variable,
                             IndexedElement, InhomogeneousTupleVariable, VariableAddress)
 
 errors = Errors()
@@ -148,7 +148,7 @@ def split_positional_keyword_arguments(*args):
     # Distinguish between positional and keyword arguments
     val_args = ()
     for i, a in enumerate(args):
-        if isinstance(a, ValuedVariable):
+        if isinstance(a, ValuedArgument):
             args, val_args = args[:i], args[i:]
             break
 
@@ -313,7 +313,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedArgument)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable

@@ -103,6 +103,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_Argument(self, expr):
+        return self._print(expr.name)
+
     def _print_ValuedArgument(self, expr):
         return '{} = {}'.format(self._print(expr.argument), self._print(expr.value))
 
@@ -110,7 +113,7 @@ class PythonCodePrinter(CodePrinter):
         if expr.keyword:
             return '{} = {}'.format(expr.keyword, self._print(expr.value))
         else:
-            return '{}'.format(self._print(expr.value))
+            return self._print(expr.value)
 
     def _print_Idx(self, expr):
         return self._print(expr.name)

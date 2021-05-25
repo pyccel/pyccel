@@ -28,7 +28,6 @@ __all__ = (
     'DottedVariable',
     'IndexedElement',
     'TupleVariable',
-    'ValuedVariable',
     'Variable',
     'VariableAddress'
 )
@@ -529,44 +528,6 @@ class DottedName(Basic):
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
 
-class ValuedVariable(Variable):
-
-    """Represents a valued variable in the code.
-
-    Parameters
-    ----------
-    variable: Variable
-        A single variable
-    value: Variable, or instance of Native types
-        value associated to the variable
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import ValuedVariable
-    >>> n  = ValuedVariable('int', 'n', value=4)
-    >>> n
-    n := 4
-    """
-    __slots__ = ('_value',)
-    _attribute_nodes = ('_value',)
-
-    def __init__(self, *args, **kwargs):
-
-        # if value is not given, we set it to Nil
-        self._value = kwargs.pop('value', Nil())
-        super().__init__(*args, **kwargs)
-
-    @property
-    def value(self):
-        """ Default value of the variable
-        """
-        return self._value
-
-    def __str__(self):
-        name = str(self.name)
-        value = str(self.value)
-        return '{0}={1}'.format(name, value)
-
 class TupleVariable(Variable):
 
     """Represents a tuple variable in the code.
@@ -719,7 +680,7 @@ class InhomogeneousTupleVariable(TupleVariable):
         for var in self._vars:
             var.is_target = is_target
 
-class Constant(ValuedVariable):
+class Constant(Variable):
 
     """
 
@@ -727,9 +688,26 @@ class Constant(ValuedVariable):
     --------
 
     """
-    __slots__ = ()
+    __slots__ = ('_value',)
     # The value of a constant is not a translated object
     _attribute_nodes = ()
+
+    def __init__(self, *args, **kwargs):
+
+        # if value is not given, we set it to Nil
+        self._value = kwargs.pop('value', Nil())
+        super().__init__(*args, **kwargs)
+
+    @property
+    def value(self):
+        """ Default value of the variable
+        """
+        return self._value
+
+    def __str__(self):
+        name = str(self.name)
+        value = str(self.value)
+        return '{0}={1}'.format(name, value)
 
 
 

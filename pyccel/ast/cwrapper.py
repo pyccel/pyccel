@@ -23,7 +23,7 @@ from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 from .core      import AliasAssign, Assign, Return, If, DottedVariable
-from .core      import IfSection
+from .core      import IfSection, ValuedArgument
 
 from .literals  import LiteralTrue
 
@@ -31,7 +31,7 @@ from .numpyext  import NumpyReal, NumpyImag
 
 from .operators import PyccelEq
 
-from .variable  import Variable, ValuedVariable, VariableAddress
+from .variable  import Variable, VariableAddress
 
 
 errors = Errors()
@@ -177,7 +177,7 @@ class PyArg_ParseTupleNode(Basic):
         self._flags      = ''
         i = 0
 
-        while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
+        while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedArgument):
             self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):

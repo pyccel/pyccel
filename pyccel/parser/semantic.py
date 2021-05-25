@@ -45,7 +45,6 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
-from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
@@ -982,6 +981,7 @@ class SemanticParser(BasicParser):
 
         for i_arg, f_arg in zip(input_args, func_args):
             i_arg = i_arg.value
+            f_arg = f_arg.name
             # Ignore types which cannot be compared
             if (i_arg is Nil()
                     or isinstance(f_arg, FunctionAddress)
@@ -1424,8 +1424,8 @@ class SemanticParser(BasicParser):
         value = self._visit(expr.value, **settings)
         d_var      = self._infere_type(value, **settings)
         dtype      = d_var.pop('datatype')
-        return ValuedVariable(dtype, expr.name,
-                               value=value, **d_var)
+        return ValuedArgument(Variable(dtype, expr.name, **d_var),
+                value=value)
 
     def _visit_CodeBlock(self, expr, **settings):
         expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
@@ -2777,10 +2777,10 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
 
-                            a_new = ValuedVariable(dtype, a.name,
-                                        value=a.value, **d_var)
+                            a_new = ValuedArgument(Variable(dtype, a.name,
+                                        **d_var), value=a.value)
                         else:
-                            a_new = Variable(dtype, a.name, **d_var)
+                            a_new = Argument(Variable(dtype, a.name, **d_var))
 
                     if additional_args:
                         args += additional_args
@@ -2789,7 +2789,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.insert_variable(a_new, name=a_new.name)
+                        self.insert_variable(a_new.name, name=a_new.name.name)
             results = expr.results
             if header_results:
                 new_results = []

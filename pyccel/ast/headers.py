@@ -15,7 +15,6 @@ from .internals         import PyccelSymbol
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
-from .variable          import ValuedVariable
 
 __all__ = (
     'ClassHeader',
@@ -646,12 +645,12 @@ class MacroFunction(Header):
             if j>0:
                 unsorted_args = args[j:]
                 for i in unsorted_args:
-                    if not isinstance(i, ValuedVariable):
-                        raise ValueError('variable not allowed after an optional argument')
+                    if not isinstance(i, ValuedArgument):
+                        raise ValueError('positional argument not allowed after an optional argument')
 
             for i in self.arguments[len(sorted_args):]:
-                if not isinstance(i, ValuedVariable):
-                    raise ValueError('variable not allowed after an optional argument')
+                if not isinstance(i, ValuedArgument):
+                    raise ValueError('positional argument not allowed after an optional argument')
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 if not isinstance(arg, tuple):
@@ -664,7 +663,7 @@ class MacroFunction(Header):
                         raise ValueError('length mismatch of argument and its value ')
                     elif len(val)<len(arg):
                         for val_ in arg[len(val):]:
-                            if isinstance(val_, ValuedVariable):
+                            if isinstance(val_, ValuedArgument):
                                 val +=tuple(val_.value,)
                             else:
                                 val +=tuple(val_)

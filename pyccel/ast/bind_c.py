@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.ast.core import FunctionCall, Module
+from pyccel.ast.core import FunctionCall, Module, FunctionCallArgument
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Assign
@@ -23,8 +23,8 @@ __all__ = (
 def sanitize_arguments(args):
     _args = []
     for a in args:
-        if isinstance(a, (Variable, FunctionAddress)):
-            _args.append(a)
+        if isinstance(a.name, (Variable, FunctionAddress)):
+            _args.append(FunctionCallArgument(a.name))
 
         else:
             raise NotImplementedError('TODO for {}'.format(type(a)))
@@ -61,6 +61,7 @@ def as_static_function(func, name=None):
     _arguments_inout = []
 
     for i_a, a in enumerate(args):
+        a = a.value
         if not isinstance(a, (Variable, FunctionAddress)):
             raise TypeError('Expecting a Variable or FunctionAddress type for {}'.format(a))
         if not isinstance(a, FunctionAddress) and a.rank > 0:
