@@ -1067,11 +1067,10 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
             if isinstance(rhs, FunctionCall):
                 iterable = rhs.funcdef.results
-                is_homogeneous = False
             else:
                 iterable = rhs
-                is_homogeneous = True
             elem_vars = []
+            is_homogeneous = True
             elem_d_lhs_ref = None
             for i,r in enumerate(iterable):
                 elem_name = self.get_new_name( name + '_' + str(i) )
@@ -1092,9 +1091,9 @@ class SemanticParser(BasicParser):
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
             if is_homogeneous:
-                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs)
+                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=name.is_temp)
             else:
-                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs)
+                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=name.is_temp)
 
         else:
             new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
