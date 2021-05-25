@@ -1877,7 +1877,7 @@ class SemanticParser(BasicParser):
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
-            elif isinstance(lhs, Variable) and lhs.is_temp:
+            elif isinstance(lhs, PyccelSymbol) and lhs.is_temp:
                 return self._visit(rhs, **settings)
             else:
 
