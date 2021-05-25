@@ -14,7 +14,7 @@ from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
@@ -60,7 +60,12 @@ def builtin_function(expr, args=None):
     dic = builtin_functions_dict
 
     if name in dic.keys() :
-        return dic[name](*args)
+        try:
+            return dic[name](*args)
+        except PyccelError as e:
+            errors.report(e,
+                    symbol=expr,
+                    severity='fatal')
 
     if name == 'map':
         return PythonMap(expr.args[0], *args[1:])
@@ -125,7 +130,6 @@ def builtin_import(expr):
         for target in expr.target:
             search_target = target.name if isinstance(target, AsName) else target
             if search_target not in funcs:
-                errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
 

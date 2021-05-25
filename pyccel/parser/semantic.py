@@ -1022,7 +1022,12 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
-            new_expr = func(*args, **kwargs)
+            try:
+                new_expr = func(*args, **kwargs)
+            except TypeError:
+                errors.report(UNRECOGNISED_FUNCTION_CALL,
+                        symbol = expr,
+                        severity = 'fatal')
 
             return new_expr
         else:
@@ -1230,8 +1235,8 @@ class SemanticParser(BasicParser):
 
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                            symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
+                            symbol='{}={}'.forma(name, str(rhs)),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
@@ -1260,12 +1265,11 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Deallocate(var))
 
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
-                    txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=var.dtype, new=dtype)
 
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                    symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error', blocker=False)
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.dtype, dtype),
+                        symbol='{}={}'.format(name, str(rhs)),
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error', blocker=False)
 
                 elif not is_augassign:
 
