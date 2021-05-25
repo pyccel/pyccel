@@ -1236,7 +1236,7 @@ class SemanticParser(BasicParser):
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
-                            symbol='{}={}'.forma(name, str(rhs)),
+                            symbol='{}={}'.format(name, str(rhs)),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
