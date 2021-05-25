@@ -1063,6 +1063,10 @@ class SemanticParser(BasicParser):
         d_lhs : dict
             Dictionary of properties for the new Variable
         """
+        if isinstance(name, PyccelSymbol):
+            is_temp = name.is_temp
+        else:
+            is_temp = False
 
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
             if isinstance(rhs, FunctionCall):
@@ -1091,16 +1095,13 @@ class SemanticParser(BasicParser):
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
             if is_homogeneous:
-                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=name.is_temp)
+                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
-                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=name.is_temp)
+                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
 
         else:
             new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
-            if isinstance(name, PyccelSymbol):
-                lhs = new_type(dtype, name, **d_lhs, is_temp=name.is_temp)
-            else:
-                lhs = new_type(dtype, name, **d_lhs)
+            lhs = new_type(dtype, name, **d_lhs, is_temp=is_temp)
 
         return lhs
 
