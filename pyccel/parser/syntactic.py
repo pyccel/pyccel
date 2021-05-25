@@ -19,7 +19,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall, FunctionCallArgument
 from pyccel.ast.core import ParserResult
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
@@ -894,7 +894,7 @@ class SyntaxParser(BasicParser):
 
         args = []
         if stmt.args:
-            args += self._visit(stmt.args)
+            args += [FunctionCallArgument(self._visit(a)) for a in stmt.args]
         if stmt.keywords:
             args += self._visit(stmt.keywords)
 
@@ -920,7 +920,7 @@ class SyntaxParser(BasicParser):
 
         target = stmt.arg
         val = self._visit(stmt.value)
-        return ValuedArgument(target, val)
+        return FunctionCallArgument(val, keyword=target)
 
     def _visit_For(self, stmt):
 

@@ -1616,6 +1616,14 @@ class ValuedArgument(Basic):
         value = str(self.value)
         return '{0}={1}'.format(argument, value)
 
+class FunctionCallArgument(Basic):
+    __slots__ = ('_value', '_keyword')
+    _attribute_nodes = ('_value',)
+    def __init__(self, value, keyword = None):
+        self._value = value
+        self._keyword = keyword
+        super().__init__()
+
 class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
