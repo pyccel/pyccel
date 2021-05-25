@@ -1064,11 +1064,16 @@ class SemanticParser(BasicParser):
             Dictionary of properties for the new Variable
         """
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)):
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
+            if isinstance(rhs, FunctionCall):
+                iterable = rhs.funcdef.results
+                is_homogeneous = False
+            else:
+                iterable = rhs
+                is_homogeneous = True
             elem_vars = []
-            is_homogeneous = True
             elem_d_lhs_ref = None
-            for i,r in enumerate(rhs):
+            for i,r in enumerate(iterable):
                 elem_name = self.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
 
@@ -1990,8 +1995,12 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 results = func.results
                 if results:
-                    d_var = [self._infere_type(i, **settings)
-                                 for i in results]
+                    if len(results)==1:
+                        d_var = self._infere_type(results[0], **settings)
+                    else:
+                        d_var = self._infere_type(PythonTuple(*results), **settings)
+                elif expr.lhs.is_temp:
+                    return rhs
                 else:
                     raise NotImplementedError("Cannot assign result of a function without a return")
 
