@@ -97,3 +97,7 @@ def test_module_5(language):
     max_pyt = mod.get_sum()
     max_pyc = modnew.get_sum()
     assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+
+    max_pyt = mod.get_sum2()
+    max_pyc = modnew.get_sum2()
+    assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
