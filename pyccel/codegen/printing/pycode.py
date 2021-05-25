@@ -267,7 +267,6 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
-                name  = expr.name,
                 start = self._print(expr.start),
                 stop  = self._print(expr.stop ),
                 step  = self._print(expr.step ))
