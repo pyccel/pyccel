@@ -158,7 +158,7 @@ def test_return_nothing(language):
 def test_return_None(language):
     def divide_by(a : 'float[:]', b : 'float'):
         if abs(b)<0.1:
-            return None
+            return None # pylint: disable=inconsistent-return-statements
         for i,ai in enumerate(a):
             a[i] = ai/b
 
