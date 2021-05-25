@@ -156,9 +156,9 @@ def test_return_nothing(language):
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
 
 def test_return_None(language):
-    def divide_by(a : 'float[:]', b : 'float'):
+    def divide_by(a : 'float[:]', b : 'float'): # pylint: disable=inconsistent-return-statements
         if abs(b)<0.1:
-            return None # pylint: disable=inconsistent-return-statements
+            return None
         for i,ai in enumerate(a):
             a[i] = ai/b
 
