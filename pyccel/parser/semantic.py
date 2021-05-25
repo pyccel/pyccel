@@ -71,6 +71,7 @@ from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable, Header
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
+from pyccel.ast.utilities import python_builtin_libs
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -3150,6 +3151,11 @@ class SemanticParser(BasicParser):
                                   severity='fatal')
 
             if expr.target:
+                for t in expr.target:
+                    if t not in pyccel_builtin_import_registery[source]:
+                        errors.report("Function {} from module {} is not yet implemented in pyccel".format(t, source),
+                                symbol=expr,
+                                severity='error')
                 for (name, atom) in imports:
                     if not name is None:
                         if isinstance(atom, Constant):
@@ -3160,6 +3166,10 @@ class SemanticParser(BasicParser):
                 _insert_obj('variables', source_target, imports)
             self.insert_import(expr.source, expr.target)
 
+        elif source in python_builtin_libs:
+            errors.report("Module {} is not yet supported by pyccel".format(source),
+                    symbol=expr,
+                    severity='error')
         else:
 
             # in some cases (blas, lapack, openmp and openacc level-0)
