@@ -1068,7 +1068,8 @@ class SemanticParser(BasicParser):
         else:
             is_temp = False
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)) or \
+                (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = rhs.funcdef.results
             else:
