@@ -2823,9 +2823,11 @@ class SemanticParser(BasicParser):
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [var] + args
 
+            arg_vars = [a.var for a in args]
+
             # Determine local and global variables
-            local_vars  = [v for v in self.get_variables(self.namespace)              if v not in args + results]
-            global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in args + results + local_vars]
+            local_vars  = [v for v in self.get_variables(self.namespace)              if v not in arg_vars + results]
+            global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in arg_vars + results + local_vars]
 
             # get the imports
             imports   = self.namespace.imports['imports'].values()
