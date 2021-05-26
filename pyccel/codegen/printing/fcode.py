@@ -583,9 +583,6 @@ class FCodePrinter(CodePrinter):
     def _print_Argument(self, expr):
         return self._print(expr.name)
 
-    def _print_ValuedArgument(self, expr):
-        return self._print(expr.name)
-
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
             return '{} = {}'.format(expr.keyword, self._print(expr.value))
@@ -1523,6 +1520,7 @@ class FCodePrinter(CodePrinter):
             else:
                 intent='in'
 
+            arg = arg.var
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
             args_decs[arg] = dec
 
