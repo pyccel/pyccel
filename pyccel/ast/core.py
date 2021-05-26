@@ -3021,6 +3021,8 @@ class Declare(Basic):
         """
         return self._passed_from_dotted
 
+    def __repr__(self):
+        return 'Declare({})'.format(repr(self.variable))
 
 class Break(Basic):
 
