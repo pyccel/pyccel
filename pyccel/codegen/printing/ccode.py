@@ -1235,6 +1235,14 @@ class CCodePrinter(CodePrinter):
         return ''.join(p for p in parts if p)
 
     def stored_in_c_pointer(self, a):
+        """
+        Indicates whether the Variable a needs to be stored in a pointer
+        in c code
+
+        Parameters
+        ----------
+        a : Variable
+        """
         if not isinstance(a, Variable):
             return False
         return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
