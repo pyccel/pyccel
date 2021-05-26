@@ -611,9 +611,7 @@ def test_print_strings(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="sep and end params not working in python : https://github.com/pyccel/pyccel/issues/874"),
-            pytest.mark.python]),
+        pytest.param("python", marks = pytest.mark.python),
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="formated string not implemented in fortran"),
             pytest.mark.fortran]
