@@ -19,7 +19,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import Import, ValuedArgument
+from pyccel.ast.core import Import, Argument
 from pyccel.ast.core import AugAssign
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
@@ -129,6 +129,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     severity='fatal')
 
     def get_default_assign(self, arg, func_arg):
+        assert(isinstance(func_arg, Argument))
         if arg.rank > 0 :
             return AliasAssign(arg, Nil())
         elif func_arg.is_optional:
@@ -170,6 +171,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return static_function, static_args, additional_body
 
     def _get_check_type_statement(self, variable, collect_var):
+        assert(isinstance(variable, Argument))
 
         if variable.rank > 0 :
             numpy_dtype = self.find_in_numpy_dtype_registry(variable)
@@ -183,7 +185,7 @@ class CWrapperCodePrinter(CCodePrinter):
             else :
                 check = PyccelAssociativeParenthesis(PyccelAnd(PyccelNot(python_check), numpy_check))
 
-        if isinstance(variable, ValuedArgument):
+        if variable.has_default:
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
@@ -414,7 +416,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 raise an error
         Parameters:
         ----------
-        variable    : Variable
+        variable    : Argument
             the variable needed to collect
         collect_var : Variable
             variable which holds the value collected with PyArg_Parsetuple
@@ -427,16 +429,17 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         body : If block
         """
+        assert(isinstance(variable, Argument))
 
-        var      = tmp_variable if tmp_variable else variable
+        var      = tmp_variable if tmp_variable else variable.var
         sections = []
 
         numpy_check, python_check, error = self._get_scalar_type_check(variable, collect_var, error_check)
 
-        python_collect  = [Assign(var, self.get_collect_function_call(variable, collect_var))]
+        python_collect  = [Assign(var, self.get_collect_function_call(variable.var, collect_var))]
         numpy_collect   = [FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])]
 
-        if isinstance(variable, ValuedArgument):
+        if variable.has_default:
             section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable)
             sections.append(section)
             python_collect += optional_collect
