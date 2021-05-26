@@ -2773,17 +2773,17 @@ class SemanticParser(BasicParser):
                             value = a.value
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    a_new = Argument(a_new, value=a.value, kwonly=a.is_kwonly,
+                    arg_new = Argument(a_new, value=a.value, kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
                     if additional_args:
                         args += additional_args
 
-                    args.append(a_new)
+                    args.append(arg_new)
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.insert_variable(a_new.var, name=a_new.name)
+                        self.insert_variable(a_new, name=a_new.name)
             results = expr.results
             if header_results:
                 new_results = []
