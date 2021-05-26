@@ -649,7 +649,7 @@ class SyntaxParser(BasicParser):
 
         if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
-                returns = Argument(PyccelSymbol('results'), value = self._visit(stmt.returns))
+                returns = FunctionCallArgument(self._visit(stmt.returns), keyword='results')
                 annotated_args.append(returns)
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
