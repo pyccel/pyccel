@@ -151,14 +151,14 @@ def split_positional_keyword_arguments(*args):
     # Distinguish between positional and keyword arguments
     val_args = ()
     for i, a in enumerate(args):
-        if isinstance(a, ValuedArgument):
+        if a.has_keyword:
             args, val_args = args[:i], args[i:]
             break
 
     # Convert list of keyword arguments into dictionary
     kwargs = {}
     for v in val_args:
-        key   = str(v.name)
+        key   = str(v.keyword)
         value = v.value
         kwargs[key] = value
 
