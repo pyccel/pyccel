@@ -2742,10 +2742,16 @@ class SemanticParser(BasicParser):
                 for (a, ah) in zip(arguments, m.arguments):
                     ah = ah.var
                     additional_args = []
+                    value = None
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
                         d_var['is_pointer'] = True
+                        if a.has_default:
+                            # optional argument only if the value is None
+                            if isinstance(a.value, Nil):
+                                d_var['is_optional'] = True
+                            value = a.value
                         a_new = FunctionAddress(a.name, ah.arguments, ah.results, [],
                                         **d_var)
                     else:
@@ -2760,18 +2766,15 @@ class SemanticParser(BasicParser):
                         if 'allow_negative_index' in self._namespace.decorators:
                             if a.name in decorators['allow_negative_index']:
                                 d_var.update(allows_negative_indexes=True)
+                        if a.has_default:
+                            # optional argument only if the value is None
+                            if isinstance(a.value, Nil):
+                                d_var['is_optional'] = True
+                            value = a.value
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    if a.has_default:
-                        # optional argument only if the value is None
-                        if isinstance(a.value, Nil):
-                            d_var['is_optional'] = True
-
-                        a_new = Argument(a_new, value=a.value, kwonly=a.is_kwonly,
-                                    annotation=a.annotation)
-                    else:
-                        a_new = Argument(a_new, kwonly=a.is_kwonly,
-                                    annotation=a.annotation)
+                    a_new = Argument(a_new, value=a.value, kwonly=a.is_kwonly,
+                                annotation=a.annotation)
 
                     if additional_args:
                         args += additional_args
