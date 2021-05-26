@@ -90,11 +90,11 @@ builtin_import_registery = {'numpy': {
                             'math': {**math_functions, ** math_constants},
                             'pyccel.decorators': pyccel_decorators.__all__}
 if sys.version_info < (3, 10):
-    python_builtin_libs = [s[1:] if s[0]=='_' else s for s in sys.builtin_module_names]
+    from .builtin_imports import python_builtin_libs
 else:
-    python_builtin_libs = list(sys.stdlib_module_names) # pylint: disable=no-member
+    python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
 
-recognised_libs = python_builtin_libs + list(builtin_import_registery.keys())
+recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 #==============================================================================
 def collect_relevant_imports(func_dictionary, targets):
