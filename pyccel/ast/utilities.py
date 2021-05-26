@@ -155,12 +155,10 @@ def split_positional_keyword_arguments(*args):
             args, val_args = args[:i], args[i:]
             break
 
+    # Collect values from args
+    args = [a.value for a in args]
     # Convert list of keyword arguments into dictionary
-    kwargs = {}
-    for v in val_args:
-        key   = str(v.keyword)
-        value = v.value
-        kwargs[key] = value
+    kwargs = {a.keyword: a.value for a in val_args}
 
     return args, kwargs
 
