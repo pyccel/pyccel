@@ -7,7 +7,6 @@
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
-from .core              import ValuedArgument
 from .core              import FunctionDef, Interface, FunctionAddress
 from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
@@ -637,7 +636,7 @@ class MacroFunction(Header):
             unsorted_args = []
             j = -1
             for ind, i in enumerate(args):
-                if not isinstance(i, ValuedArgument):
+                if i.has_keyword:
                     sorted_args.append(i)
                 else:
                     j=ind
@@ -645,11 +644,11 @@ class MacroFunction(Header):
             if j>0:
                 unsorted_args = args[j:]
                 for i in unsorted_args:
-                    if not isinstance(i, ValuedArgument):
+                    if not i.has_keyword:
                         raise ValueError('positional argument not allowed after an optional argument')
 
             for i in self.arguments[len(sorted_args):]:
-                if not isinstance(i, ValuedArgument):
+                if not i.has_keyword:
                     raise ValueError('positional argument not allowed after an optional argument')
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
@@ -663,21 +662,18 @@ class MacroFunction(Header):
                         raise ValueError('length mismatch of argument and its value ')
                     elif len(val)<len(arg):
                         for val_ in arg[len(val):]:
-                            if isinstance(val_, ValuedArgument):
-                                val +=tuple(val_.value,)
-                            else:
-                                val +=tuple(val_)
+                            val +=tuple(val_.value,)
 
                     for arg_,val_ in zip(arg,val):
-                        d_arguments[arg_.name] = val_
+                        d_arguments[arg_.keyword] = val_.value
 
             d_unsorted_args = {}
             for arg in self.arguments[len(sorted_args):]:
-                d_unsorted_args[arg.name] = arg.value
+                d_unsorted_args[arg.keyword] = arg.value
 
             for arg in unsorted_args:
                 if arg.name in d_unsorted_args.keys():
-                    d_unsorted_args[arg.name] = arg.value
+                    d_unsorted_args[arg.keyword] = arg.value
                 else:
                     raise ValueError('Unknown valued argument')
             d_arguments.update(d_unsorted_args)
