@@ -17,7 +17,7 @@ from pyccel.errors.errors import Errors
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, ValuedArgument)
+                            Concatenate)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -57,6 +57,9 @@ def builtin_function(expr, args=None):
         raise TypeError('expr must be of type str or FunctionCall')
 
     dic = builtin_functions_dict
+
+    # Unpack FunctionCallArguments
+    args = [a.value for a in args]
 
     if name in dic.keys() :
         return dic[name](*args)
@@ -313,7 +316,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedArgument)) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (FunctionDef)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable
