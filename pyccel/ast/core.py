@@ -1523,99 +1523,6 @@ class ConstructorCall(Basic):
         else:
             return self.func
 
-class Argument(PyccelAstNode):
-
-    """An abstract Argument data structure.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Argument
-    >>> n = Argument('n')
-    >>> n
-    n
-    """
-    __slots__ = ('_name','_kwonly','_annotation')
-    _attribute_nodes = ()
-
-    def __init__(self, name, *, kwonly=False, annotation=None):
-        self._name       = name
-        self._kwonly     = kwonly
-        self._annotation = annotation
-        super().__init__()
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def is_kwonly(self):
-        return self._kwonly
-
-    @property
-    def annotation(self):
-        return self._annotation
-
-    def __str__(self):
-        return str(self.name)
-
-class ValuedArgument(Basic):
-
-    """Represents a valued argument in the code.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import ValuedArgument
-    >>> n = ValuedArgument('n', 4)
-    >>> n
-    n=4
-    """
-    __slots__ = ('_name','_expr','_value','_kwonly')
-    _attribute_nodes = ()
-
-    def __init__(self, expr, value, *, kwonly = False):
-        # TODO should we turn back to Argument
-
-        if isinstance(expr, Argument):
-            self._name = expr.name
-        elif isinstance(expr, (str, Variable)):
-            self._name = expr
-        else:
-            raise TypeError('Expecting an argument')
-
-        if isinstance(value, (bool, int, float, complex, str)) and not isinstance(value, PyccelSymbol):
-            value = convert_to_literal(value)
-        elif not isinstance(value, (Basic, PyccelSymbol)):
-            raise TypeError("Expecting a pyccel object not {}".format(type(value)))
-
-        if not isinstance(kwonly, bool):
-            raise TypeError("kwonly must be a bool")
-
-        self._expr   = expr
-        self._value  = value
-        self._kwonly = kwonly
-        super().__init__()
-
-    @property
-    def argument(self):
-        return self._expr
-
-    @property
-    def value(self):
-        return self._value
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def is_kwonly(self):
-        return self._kwonly
-
-    def __str__(self):
-        argument = str(self.argument)
-        value = str(self.value)
-        return '{0}={1}'.format(argument, value)
-
 class FunctionCallArgument(Basic):
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
@@ -1632,6 +1539,74 @@ class FunctionCallArgument(Basic):
     def keyword(self):
         return self._keyword
 
+    @property
+    def has_keyword(self):
+        return self._keyword is not None
+
+class Argument(PyccelAstNode):
+
+    """An abstract Argument data structure.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Argument
+    >>> n = Argument('n')
+    >>> n
+    n
+    """
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value')
+    _attribute_nodes = ('_value',)
+
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None):
+        if isinstance(name, Variable):
+            self._var  = name
+            self._name = name.name
+        elif isinstance(name, PyccelSymbol):
+            self._var  = name
+            self._name = name
+        else:
+            raise TypeError("Name must be a PyccelSymbol or Variable")
+        self._value      = value
+        self._kwonly     = kwonly
+        self._annotation = annotation
+        super().__init__()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def var(self):
+        return self._var
+
+    @property
+    def is_kwonly(self):
+        return self._kwonly
+
+    @property
+    def annotation(self):
+        return self._annotation
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def default_call_arg(self):
+        return FunctionCallArgument(self.value, keyword=self.name)
+
+    @property
+    def has_default(self):
+        return self._value is not None
+
+    def __str__(self):
+        if self.has_default:
+            argument = str(self.name)
+            value = str(self.value)
+            return '{0}={1}'.format(argument, value)
+        else:
+            return str(self.name)
+
 class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
@@ -1641,6 +1616,8 @@ class FunctionCall(PyccelAstNode):
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
+
+        args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
         if self.stage == "syntactic":
             self._interface = None
@@ -1676,8 +1653,8 @@ class FunctionCall(PyccelAstNode):
         if func.cls_name:
             f_args = f_args[1:]
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,FunctionCallArgument(a.value, a.name))
-                                    if isinstance(a, ValuedArgument) else (a.name, None)
+            f_args_dict = OrderedDict((a.name, a.default_call_arg)
+                                    if a.has_default else (a.name, None)
                                     for a in f_args)
             keyword_args = []
             for i,a in enumerate(args):
@@ -1688,11 +1665,9 @@ class FunctionCall(PyccelAstNode):
                     break
 
             for a in keyword_args:
-                f_args_dict[a.name] = a.value
+                f_args_dict[a.keyword] = a
 
-            args = [FunctionCallArgument(a.value, a.name) if isinstance(a, ValuedArgument) else a for a in f_args_dict.values()]
-
-        args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), a.name)
+        args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), keyword=a.name)
                 if isinstance(a.value, FunctionDef) else a for a in args]
 
         if current_function == func.name:
@@ -1868,13 +1843,13 @@ class FunctionDef(Basic):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
 
-    One can also use parametrized argument, using ValuedArgument
+    One can also use parametrized argument, using Argument
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Assign
     >>> from pyccel.ast.core import FunctionDef
-    >>> from pyccel.ast.core import ValuedArgument
-    >>> n = ValuedArgument('n', 4)
+    >>> from pyccel.ast.core import Argument
+    >>> n = Argument('n', value=4)
     >>> x = Variable('real', 'x')
     >>> y = Variable('real', 'y')
     >>> args        = [x, n]
@@ -1933,11 +1908,7 @@ class FunctionDef(Basic):
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
 
-        # TODO improve and uncomment
-#        if not all(isinstance(a, Argument) for a in arguments):
-#            raise TypeError("All arguments must be of type Argument")
-
-        arguments = tuple(arguments)
+        arguments = tuple([a if isinstance(a, Argument) else Argument(a) for a in arguments])
 
         # body
 
@@ -2327,12 +2298,14 @@ class Interface(Basic):
             j += 1
             found = True
             for (x, y) in enumerate(args):
-                dtype1 = str_dtype(y.dtype)
-                dtype2 = str_dtype(i[x].dtype)
+                func_arg = i[x].var
+                call_arg = y.value
+                dtype1 = str_dtype(call_arg.dtype)
+                dtype2 = str_dtype(func_arg.dtype)
                 found = found and (dtype1 in dtype2
                                 or dtype2 in dtype1)
-                found = found and y.rank \
-                                == i[x].rank
+                found = found and call_arg.rank \
+                                == func_arg.rank
             if found:
                 break
 
