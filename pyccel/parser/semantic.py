@@ -45,7 +45,6 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
-from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With
@@ -981,7 +980,7 @@ class SemanticParser(BasicParser):
 
         for i_arg, f_arg in zip(input_args, func_args):
             i_arg = i_arg.value
-            f_arg = f_arg.name
+            f_arg = f_arg.var
             # Ignore types which cannot be compared
             if (i_arg is Nil()
                     or isinstance(f_arg, FunctionAddress)
@@ -1420,12 +1419,12 @@ class SemanticParser(BasicParser):
         value = self._visit(expr.value, **settings)
         return FunctionCallArgument(value, expr.keyword)
 
-    def _visit_ValuedArgument(self, expr, **settings):
+    def _visit_Argument(self, expr, **settings):
+        var   = self._visit(expr.var, **settings)
         value = self._visit(expr.value, **settings)
-        d_var      = self._infere_type(value, **settings)
-        dtype      = d_var.pop('datatype')
-        return ValuedArgument(Variable(dtype, expr.name, **d_var),
-                value=value)
+        return Argument(var, value=value,
+                annotation=expr.annotation,
+                kwonly=expr.kwonly)
 
     def _visit_CodeBlock(self, expr, **settings):
         expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
@@ -1770,7 +1769,7 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument), excluded_nodes = FunctionDef)))
+        expr_names = set([a.var for a in expr.expr.get_attribute_nodes(Argument, excluded_nodes = FunctionDef)])
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -2741,27 +2740,18 @@ class SemanticParser(BasicParser):
 
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
+                    ah = ah.var
                     additional_args = []
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
                         d_var['is_pointer'] = True
-                        d_var['is_kwonly'] = a.is_kwonly
-                        if isinstance(a, ValuedArgument):
-
-                            # optional argument only if the value is None
-                            if isinstance(a.value, Nil):
-                                d_var['is_optional'] = True
-
-                            a_new = ValuedFunctionAddress(a.name, ah.arguments, ah.results, [],
-                                        value=a.value, **d_var)
-                        else:
-                            a_new = FunctionAddress(a.name, ah.arguments, ah.results, [], **d_var)
+                        a_new = FunctionAddress(a.name, ah.arguments, ah.results, [],
+                                        **d_var)
                     else:
                         d_var = self._infere_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
                         d_var['is_argument'] = True
-                        d_var['is_kwonly'] = a.is_kwonly
                         d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
                         if d_var['rank']>0:
@@ -2770,17 +2760,18 @@ class SemanticParser(BasicParser):
                         if 'allow_negative_index' in self._namespace.decorators:
                             if a.name in decorators['allow_negative_index']:
                                 d_var.update(allows_negative_indexes=True)
-                        # this is needed for the static case
-                        if isinstance(a, ValuedArgument):
+                        a_new = Variable(dtype, a.name, **d_var)
 
-                            # optional argument only if the value is None
-                            if isinstance(a.value, Nil):
-                                d_var['is_optional'] = True
+                    if a.has_default:
+                        # optional argument only if the value is None
+                        if isinstance(a.value, Nil):
+                            d_var['is_optional'] = True
 
-                            a_new = ValuedArgument(Variable(dtype, a.name,
-                                        **d_var), value=a.value)
-                        else:
-                            a_new = Argument(Variable(dtype, a.name, **d_var))
+                        a_new = Argument(a_new, value=a.value, kwonly=a.is_kwonly,
+                                    annotation=a.annotation)
+                    else:
+                        a_new = Argument(a_new, kwonly=a.is_kwonly,
+                                    annotation=a.annotation)
 
                     if additional_args:
                         args += additional_args
@@ -2789,7 +2780,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.insert_variable(a_new.name, name=a_new.name.name)
+                        self.insert_variable(a_new.var, name=a_new.name)
             results = expr.results
             if header_results:
                 new_results = []
@@ -3284,9 +3275,9 @@ class SemanticParser(BasicParser):
             func = interfaces[0]
 
         name = expr.name
-        args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
+        args = [self._visit(a, **settings) if a.has_default
                 else a for a in expr.arguments]
-        master_args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
+        master_args = [self._visit(a, **settings) if a.has_default
                 else a for a in expr.master_arguments]
         results = expr.results
         macro   = MacroFunction(name, args, func, master_args,
