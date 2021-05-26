@@ -35,7 +35,7 @@ from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Argument, ValuedArgument
+from pyccel.ast.core import Argument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -361,19 +361,22 @@ class SyntaxParser(BasicParser):
         arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            positional_args        = [Argument(a.arg, annotation=self._visit(a.annotation)) for a in stmt.args[:n_expl]]
-            valued_arguments       = [ValuedArgument(Argument(a.arg, annotation=self._visit(a.annotation)),\
-                                      self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+            positional_args        = [Argument(PyccelSymbol(a.arg),
+                                            annotation=self._visit(a.annotation))
+                                        for a in stmt.args[:n_expl]]
+            valued_arguments       = [Argument(PyccelSymbol(a.arg),
+                                            annotation=self._visit(a.annotation),
+                                            value = self._visit(d))
+                                        for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
                 annotation = self._visit(a.annotation)
-                if d is not None:
-                    arg = Argument(a.arg, annotation=annotation)
-                    arg = ValuedArgument(arg, self._visit(d), kwonly=True)
-                else:
-                    arg = Argument(a.arg, kwonly=True, annotation=annotation)
+                val = self._visit(d) if d is not None else d
+                arg = Argument(PyccelSymbol(a.arg),
+                            annotation=annotation,
+                            value=val, kwonly=True)
 
                 arguments.append(arg)
 
@@ -621,6 +624,9 @@ class SyntaxParser(BasicParser):
         def fill_types(ls):
             container = []
             for arg in ls:
+                if isinstance(arg, FunctionCallArgument):
+                    arg = arg.value
+
                 if isinstance(arg, PyccelSymbol):
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
@@ -639,14 +645,11 @@ class SyntaxParser(BasicParser):
         # add the decorator @types if the arguments are annotated
         annotated_args = []
         for a in arguments:
-            if isinstance(a, Argument):
-                annotated_args.append(a.annotation)
-            elif isinstance(a, ValuedArgument):
-                annotated_args.append(a.argument.annotation)
+            annotated_args.append(a.annotation)
 
         if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
-                returns = ValuedArgument(PyccelSymbol('results'),self._visit(stmt.returns))
+                returns = Argument(PyccelSymbol('results'), value = self._visit(stmt.returns))
                 annotated_args.append(returns)
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
@@ -680,21 +683,19 @@ class SyntaxParser(BasicParser):
                                     severity='error')
 
                 for i in comb_types.args:
-                    if isinstance(i, ValuedArgument) and not i.name in ('name',
-                            'types'):
+                    if i.has_keyword and i.keyword not in ('name', 'types'):
                         msg = 'Argument provided to the template decorator is not valid'
                         errors.report(msg,
                                         symbol = comb_types,
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
-                if all(isinstance(i, ValuedArgument) for i in comb_types.args):
+                if all(i.has_keyword for i in comb_types.args):
                     tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
-                            comb_types.args[0].name == 'name' else\
+                            comb_types.args[0].keyword == 'name' else\
                             (comb_types.args[1].value, comb_types.args[0].value)
                 else:
-                    tp_name = comb_types.args[0]
-                    ls = comb_types.args[1]
-                    ls = ls.value if isinstance(ls, ValuedArgument) else ls
+                    tp_name = comb_types.args[0].value
+                    ls = comb_types.args[1].value
                 try:
                     tp_name = str(tp_name)
                     ls = ls if isinstance(ls, PythonTuple) else list(ls)
@@ -730,8 +731,8 @@ class SyntaxParser(BasicParser):
                 results = []
                 ls = comb_types.args
 
-                if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
-                    arg_name = ls[-1].name
+                if len(ls) > 0 and ls[-1].has_keyword:
+                    arg_name = ls[-1].keyword
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
