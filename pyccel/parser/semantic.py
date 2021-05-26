@@ -117,6 +117,8 @@ errors = Errors()
 def _get_name(var):
     """."""
 
+    if isinstance(var, str):
+        return var
     if isinstance(var, (PyccelSymbol, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement)):
@@ -513,13 +515,22 @@ class SemanticParser(BasicParser):
             Create and insert a new import in namespace if it's not defined
             otherwise append target to existing import.
         """
-        imp = self.get_import(name)
+        str_name = _get_name(name)
+        source = name.name if isinstance(name, AsName) else str_name
+        imp = self.get_import(str_name)
 
         if imp is not None:
-            imp.define_target(target)
+            imp_source = imp.source.name if isinstance(imp.source, AsName) else str_name
+            if imp_source == source:
+                imp.define_target(target)
+            else:
+                errors.report(IMPORTING_EXISTING_IDENTIFIED,
+                              symbol=name,
+                              bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                              severity='fatal')
         else:
             container = self.namespace.imports
-            container['imports'][name] = Import(name, target, True)
+            container['imports'][str_name] = Import(name, target, True)
 
     def insert_macro(self, macro):
         """."""
@@ -1589,7 +1600,6 @@ class SemanticParser(BasicParser):
                 imp = self.get_import(_get_name(lhs))
 
                 new_name = rhs_name
-                # If pyccelized file
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
@@ -3126,6 +3136,8 @@ class SemanticParser(BasicParser):
 
             def _insert_obj(location, target, obj):
                 F = self.check_for_variable(target)
+                if F is None:
+                    F = self.get_function(target)
 
                 if obj is F:
                     errors.report(FOUND_DUPLICATED_IMPORT,
@@ -3146,7 +3158,7 @@ class SemanticParser(BasicParser):
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
-            _insert_obj('imports', source_target, Import(source, expr.target, True))
+            self.insert_import(expr.source, expr.target)
 
         else:
 
