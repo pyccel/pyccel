@@ -15,7 +15,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
-from pyccel.ast.core      import FunctionAddress
+from pyccel.ast.core      import FunctionAddress, Argument
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
@@ -888,7 +888,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += [Argument(a.clone(name = a.name, is_pointer =True)) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -896,8 +896,8 @@ class CCodePrinter(CodePrinter):
             arg_code = 'void'
         else:
             arg_code = ', '.join('{}'.format(self.function_signature(i, False))
-                        if isinstance(i, FunctionAddress)
-                        else '{0}'.format(self.get_declare_type(i)) + (i.name if print_arg_names else '')
+                        if isinstance(i.var, FunctionAddress)
+                        else '{0}'.format(self.get_declare_type(i.var)) + (i.name if print_arg_names else '')
                         for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
