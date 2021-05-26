@@ -664,11 +664,11 @@ class SyntaxParser(BasicParser):
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            decorators['stack_array'] = tuple(str(b) for a in decorators['stack_array']
+            decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
                 for b in a.args)
 
         if 'allow_negative_index' in decorators:
-            decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
+            decorators['allow_negative_index'] = tuple(str(b.value) for a in decorators['allow_negative_index'] for b in a.args)
         template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
