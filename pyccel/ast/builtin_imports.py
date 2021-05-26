@@ -1,3 +1,7 @@
+"""
+File containing a set of all python standard libraries from python 3.6 - 3.9 (from python 3.10 there is a function in sys for this purpose)
+"""
+
 python_builtin_libs = {
     "_dummy_thread",
     "_thread",
