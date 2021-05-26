@@ -1667,7 +1667,7 @@ class FunctionCall(PyccelAstNode):
             for a in keyword_args:
                 f_args_dict[a.keyword] = a
 
-        args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), keyword=a.name)
+        args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), keyword=a.keyword)
                 if isinstance(a.value, FunctionDef) else a for a in args]
 
         if current_function == func.name:
