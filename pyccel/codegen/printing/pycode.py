@@ -104,10 +104,10 @@ class PythonCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_Argument(self, expr):
-        return self._print(expr.name)
-
-    def _print_ValuedArgument(self, expr):
-        return '{} = {}'.format(self._print(expr.argument), self._print(expr.value))
+        if expr.has_default:
+            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+        else:
+            return self._print(expr.name)
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
