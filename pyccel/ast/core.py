@@ -1558,7 +1558,7 @@ class Argument(PyccelAstNode):
     _attribute_nodes = ('_value',)
 
     def __init__(self, name, *, value = None, kwonly=False, annotation=None):
-        if isinstance(name, Variable):
+        if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
         elif isinstance(name, PyccelSymbol):
