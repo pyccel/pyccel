@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment, CommentBlock, Pass, Continue, Break, AnnotatedComment
+from pyccel.ast.core import Comment, CommentBlock, Pass
 
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -68,7 +68,7 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast.headers import MacroFunction, MacroVariable, Header
+from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -94,7 +94,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct, OmpAnnotatedComment)
+                            OMP_Single_Construct)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -1429,21 +1429,8 @@ class SemanticParser(BasicParser):
                                value=value, **d_var)
 
     def _visit_CodeBlock(self, expr, **settings):
-        expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
-                      FunctionCall , For, Lambda,
-                      While, If, Return, Comment, Pass, Continue,
-                      Break, Allocate, Deallocate, CommentBlock,
-                      AnnotatedComment, OmpAnnotatedComment, Del,
-                      With, EmptyNode, Header, PythonPrint)
-        visited_body = [self._visit(i, **settings) for i in expr.body]
-        useful_body  = [l for l in visited_body if isinstance(l, expr_types)]
-
-        if len(visited_body) != len(useful_body):
-            removed = [v for v in visited_body if v not in useful_body]
-            for r in removed:
-                errors.report("Expression with no effect has been removed",
-                        symbol=r, severity='warning')
-        ls = [line for l in useful_body for line in (l.body if isinstance(l, CodeBlock) else [l])]
+        ls = [self._visit(i, **settings) for i in expr.body]
+        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):

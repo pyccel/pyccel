@@ -261,11 +261,10 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        # Collect any results of standalone function calls
+        # Collect any results of standalone expressions
         # into a variable to avoid errors in C/Fortran
-        if isinstance(val, FunctionCall):
-            tmp_var,_ = create_variable(self._used_names)
-            val = Assign(tmp_var, val)
+        tmp_var,_ = create_variable(self._used_names)
+        val = Assign(tmp_var, val)
         return val
 
     def _visit_Tuple(self, stmt):
