@@ -261,7 +261,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
-        if not isinstance(val, (CommentBlock,Omp)):
+        if not isinstance(val, (CommentBlock, PythonPrint)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
             tmp_var,_ = create_variable(self._used_names)
