@@ -10,6 +10,7 @@ always available.
 In this module we implement some of them in alphabetical order.
 
 """
+from pyccel.errors.errors import PyccelError
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
@@ -657,7 +658,9 @@ class PythonMax(PyccelInternalFunction):
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
         if not x.is_homogeneous:
-            raise NotImplementedError("Cannot determine dtype of max call with inhomogeneous arguments : {}".format(x))
+            types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
+            raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
+                             "types ({}). Please cast arguments to the desired dtype".format(types))
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
@@ -683,7 +686,9 @@ class PythonMin(PyccelInternalFunction):
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
         if not x.is_homogeneous:
-            raise NotImplementedError("Cannot determine dtype of min call with inhomogeneous arguments : {}".format(x))
+            types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
+            raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
+                              "types ({}). Please cast arguments to the desired dtype".format(types))
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
