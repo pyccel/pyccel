@@ -52,6 +52,7 @@ __all__ = [
         'tuples_add_mixed_homogeneous_variables',
         'tuples_add_mixed_homogeneous_with_variables',
         'tuples_2d_sum',
+        'tuples_func'
         ]
 
 def homogenous_tuple_int():
@@ -347,3 +348,9 @@ def tuples_2d_sum():
     a = ((1,2), (3,4))
     b = a + ((5,6),)
     return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1]
+
+def tuples_func():
+    def my_tup():
+        return 1, 2
+    c = my_tup()
+    return c[0], c[1]
