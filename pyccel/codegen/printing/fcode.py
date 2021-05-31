@@ -861,7 +861,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
-            code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
+            var = self._print(expr.internal_var)
+            code = 'cmplx({0}, kind={1})'.format(var,
                                 self.print_kind(expr))
         else:
             real = self._print(expr.real)
@@ -1299,7 +1300,8 @@ class FCodePrinter(CodePrinter):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, PythonTuple)):
+            if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)) \
+                    or (isinstance(expr.lhs, HomogeneousTupleVariable) and expr.lhs.is_stack_array):
 
                 rhs_code = rhs.funcdef.name
                 args = rhs.args

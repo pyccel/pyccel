@@ -266,12 +266,14 @@ class PythonCodePrinter(CodePrinter):
             return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
     def _print_PythonRange(self, expr):
-        name = self._aliases.get(type(expr), expr.name)
-        return '{name}({start}, {stop}, {step})'.format(
-                name  = name,
+        return 'range({start}, {stop}, {step})'.format(
                 start = self._print(expr.start),
                 stop  = self._print(expr.stop ),
                 step  = self._print(expr.step ))
+
+    def _print_PythonEnumerate(self, expr):
+        return 'enumerate({elem})'.format(
+                elem = self._print(expr.element))
 
     def _print_PythonReal(self, expr):
         return '({}).real'.format(self._print(expr.internal_var))

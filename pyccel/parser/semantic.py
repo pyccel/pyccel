@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment, CommentBlock, Pass, Continue, Break, AnnotatedComment
+from pyccel.ast.core import Comment, CommentBlock, Pass
 
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -68,9 +68,10 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast.headers import MacroFunction, MacroVariable, Header
+from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
+from pyccel.ast.utilities import python_builtin_libs
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -95,7 +96,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct, OmpAnnotatedComment)
+                            OMP_Single_Construct)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -1029,7 +1030,12 @@ class SemanticParser(BasicParser):
                         symbol=func, blocker=True,
                         severity='fatal')
 
-            new_expr = func(*args, **kwargs)
+            try:
+                new_expr = func(*args, **kwargs)
+            except TypeError:
+                errors.report(UNRECOGNISED_FUNCTION_CALL,
+                        symbol = expr,
+                        severity = 'fatal')
 
             return new_expr
         else:
@@ -1071,12 +1077,21 @@ class SemanticParser(BasicParser):
         d_lhs : dict
             Dictionary of properties for the new Variable
         """
+        if isinstance(name, PyccelSymbol):
+            is_temp = name.is_temp
+        else:
+            is_temp = False
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)):
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)) or \
+                (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
+            if isinstance(rhs, FunctionCall):
+                iterable = rhs.funcdef.results
+            else:
+                iterable = rhs
             elem_vars = []
             is_homogeneous = True
             elem_d_lhs_ref = None
-            for i,r in enumerate(rhs):
+            for i,r in enumerate(iterable):
                 elem_name = self.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
 
@@ -1095,16 +1110,13 @@ class SemanticParser(BasicParser):
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
             if is_homogeneous:
-                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs)
+                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
-                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs)
+                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
 
         else:
             new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
-            if isinstance(name, PyccelSymbol):
-                lhs = new_type(dtype, name, **d_lhs, is_temp=name.is_temp)
-            else:
-                lhs = new_type(dtype, name, **d_lhs)
+            lhs = new_type(dtype, name, **d_lhs, is_temp=is_temp)
 
         return lhs
 
@@ -1237,8 +1249,8 @@ class SemanticParser(BasicParser):
 
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                            symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
+                            symbol='{}={}'.format(name, str(rhs)),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
@@ -1267,12 +1279,11 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Deallocate(var))
 
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
-                    txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=var.dtype, new=dtype)
 
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                    symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error', blocker=False)
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.dtype, dtype),
+                        symbol='{}={}'.format(name, str(rhs)),
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error', blocker=False)
 
                 elif not is_augassign:
 
@@ -1430,21 +1441,8 @@ class SemanticParser(BasicParser):
                                value=value, **d_var)
 
     def _visit_CodeBlock(self, expr, **settings):
-        expr_types = (CodeBlock, Assign, AliasAssign, SymbolicAssign,
-                      FunctionCall , For, Lambda,
-                      While, If, Return, Comment, Pass, Continue,
-                      Break, Allocate, Deallocate, CommentBlock,
-                      AnnotatedComment, OmpAnnotatedComment, Del,
-                      With, EmptyNode, Header, PythonPrint)
-        visited_body = [self._visit(i, **settings) for i in expr.body]
-        useful_body  = [l for l in visited_body if isinstance(l, expr_types)]
-
-        if len(visited_body) != len(useful_body):
-            removed = [v for v in visited_body if v not in useful_body]
-            for r in removed:
-                errors.report("Expression with no effect has been removed",
-                        symbol=r, severity='warning')
-        ls = [line for l in useful_body for line in (l.body if isinstance(l, CodeBlock) else [l])]
+        ls = [self._visit(i, **settings) for i in expr.body]
+        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
@@ -1877,6 +1875,8 @@ class SemanticParser(BasicParser):
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
+            elif isinstance(lhs, PyccelSymbol) and lhs.is_temp:
+                return self._visit(rhs, **settings)
             else:
 
                 # TODO check types from FunctionDef
@@ -1997,8 +1997,12 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 results = func.results
                 if results:
-                    d_var = [self._infere_type(i, **settings)
-                                 for i in results]
+                    if len(results)==1:
+                        d_var = self._infere_type(results[0], **settings)
+                    else:
+                        d_var = self._infere_type(PythonTuple(*results), **settings)
+                elif expr.lhs.is_temp:
+                    return rhs
                 else:
                     raise NotImplementedError("Cannot assign result of a function without a return")
 
@@ -2016,11 +2020,10 @@ class SemanticParser(BasicParser):
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                     if not all(same_ranks):
                         assert(len(c_ranks) == 1)
-                        for d in d_var:
-                            d['shape'      ] = call_args[0].shape
-                            d['rank'       ] = call_args[0].rank
-                            d['allocatable'] = call_args[0].allocatable
-                            d['order'      ] = call_args[0].order
+                        d_var['shape'      ] = call_args[0].shape
+                        d_var['rank'       ] = call_args[0].rank
+                        d_var['allocatable'] = call_args[0].allocatable
+                        d_var['order'      ] = call_args[0].order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -2084,21 +2087,17 @@ class SemanticParser(BasicParser):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
-            if isinstance(rhs, PythonTuple):
+            if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
+                if isinstance(rhs, FunctionCall):
+                    r_iter = rhs.funcdef.results
+                else:
+                    r_iter = rhs
                 new_lhs = []
-                for i,(l,r) in enumerate(zip(lhs,rhs)):
+                for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     d = self._infere_type(r, **settings)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign), **settings) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif isinstance(rhs, InhomogeneousTupleVariable):
-                new_lhs = []
-                d_var = [self._infere_type(v) for v in rhs]
-                new_lhs = [self._assign_lhs_variable(l, d_var[i].copy(), r,
-                                                    new_expressions,
-                                                    isinstance(expr, AugAssign),
-                                                    **settings) for i,(l,r) in enumerate(zip(lhs,rhs))]
-                lhs = PythonTuple(*new_lhs)
             elif isinstance(rhs, HomogeneousTupleVariable):
                 new_lhs = []
                 d_var = self._infere_type(rhs[0])
@@ -3157,6 +3156,12 @@ class SemanticParser(BasicParser):
                                   severity='fatal')
 
             if expr.target:
+                for t in expr.target:
+                    t_name = t.name if isinstance(t, AsName) else t
+                    if t_name not in pyccel_builtin_import_registery[source]:
+                        errors.report("Function '{}' from module '{}' is not currently supported by pyccel".format(t, source),
+                                symbol=expr,
+                                severity='error')
                 for (name, atom) in imports:
                     if not name is None:
                         if isinstance(atom, Constant):
@@ -3167,6 +3172,10 @@ class SemanticParser(BasicParser):
                 _insert_obj('variables', source_target, imports)
             self.insert_import(expr.source, expr.target)
 
+        elif source in python_builtin_libs:
+            errors.report("Module {} is not currently supported by pyccel".format(source),
+                    symbol=expr,
+                    severity='error')
         else:
 
             # in some cases (blas, lapack, openmp and openacc level-0)
