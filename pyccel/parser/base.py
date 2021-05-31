@@ -24,7 +24,7 @@ from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
 from pyccel.ast.core import create_incremented_string, create_variable
 
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import recognised_libs
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
@@ -516,11 +516,11 @@ class BasicParser(object):
                 name   = str(expr.source)
                 source = name
 
-            if not source in pyccel_builtin_import_registery:
+            if source not in recognised_libs:
                 container[name] = []
         else:
             source = str(expr.source)
-            if source not in pyccel_builtin_import_registery:
+            if source not in recognised_libs:
                 if not source in container.keys():
                     container[source] = []
                 container[source] += expr.target
