@@ -203,7 +203,7 @@ def test_optional_2d_F(language):
 def test_f14(language):
     @types('int', 'int')
     def f14(x = None , y = None):
-        if x is not None :
+        if x is None :
             x = 3
         if y is not None :
             y = 4
