@@ -484,8 +484,13 @@ def test_in_specified(language):
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
 
                                         ] )
-def test_hope_benchmarks( test_file ):
-    pyccel_test(test_file)
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
+def test_hope_benchmarks( test_file, language ):
+    pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.c
@@ -517,22 +522,31 @@ def test_hope_benchmarks_c( test_file ):
                                         "scripts/import_syntax/from_mod_import_as_func.py",
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
-                                        "scripts/import_syntax/collisions.py",
                                         "scripts/import_syntax/collisions3.py",
                                         "scripts/import_syntax/collisions5.py",
-                                        "scripts/import_syntax/collisions6.py",
                                         ] )
-def test_import_syntax( test_file ):
-    pyccel_test(test_file)
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
+def test_import_syntax( test_file, language ):
+    pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
                                         "scripts/import_syntax/from_mod_import_as_user.py",
                                         "scripts/import_syntax/collisions2.py"
                                         ] )
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
 @pytest.mark.xdist_incompatible
-def test_import_syntax_user_as( test_file ):
-    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
+def test_import_syntax_user_as( test_file, language ):
+    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py",
+            language = language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
@@ -542,21 +556,40 @@ def test_import_syntax_user_as( test_file ):
                                         "scripts/import_syntax/import_mod_user_func.py",
                                         "scripts/import_syntax/import_mod_as_user_func.py",
                                         ] )
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
 @pytest.mark.xdist_incompatible
 def test_import_syntax_user( test_file, language ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
 @pytest.mark.xdist_incompatible
-def test_import_collisions():
+def test_import_collisions(language):
     pyccel_test("scripts/import_syntax/collisions4.py",
-            dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"])
+            dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"],
+            language=language)
 
 #------------------------------------------------------------------------------
 # Numpy sum required
-def test_numpy_kernels_compile():
+@pytest.mark.parametrize( "language", (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+    )
+)
+def test_numpy_kernels_compile(language):
+    pyccel_opt = '--language={}'.format(language)
     cwd = get_abs_path(".")
-    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
+    compile_pyccel(os.path.join(cwd, "scripts/numpy/"),
+            "numpy_kernels.py",
+            pyccel_opt)
 
 #------------------------------------------------------------------------------
 def test_multiple_results(language):
@@ -567,14 +600,6 @@ def test_multiple_results(language):
                 ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="Imports not working well in python : https://github.com/pyccel/pyccel/issues/873"),
-            pytest.mark.python]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    )
-)
 def test_elemental(language):
     pyccel_test("scripts/decorators_elemental.py", language = language)
 
@@ -678,6 +703,12 @@ def test_headers(language):
     with open(test_file, 'w') as f:
         code = ("")
         f.write(code)
+
+#------------------------------------------------------------------------------
+def test_basic_header():
+    filename='scripts/basic_header.pyh'
+    cwd = get_abs_path('.')
+    compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",

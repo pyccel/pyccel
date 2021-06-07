@@ -1296,6 +1296,9 @@ class CCodePrinter(CodePrinter):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
 
+        if len(args) == 0:
+            return 'return;\n'
+
         if len(args) > 1:
             if expr.stmt:
                 return self._print(expr.stmt)+'\n'+'return 0;\n'
