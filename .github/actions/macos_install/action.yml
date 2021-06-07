@@ -10,6 +10,7 @@ runs:
         if [[ ! -f "/usr/local/bin/gfortran" ]]; then
           echo "No gfortran!"
           ln -s /usr/local/bin/gfortran-8 /usr/local/bin/gfortran
+          ls /usr/local/bin/gfortran
         else
           echo "Found gfortran!"
           ls /usr/local/bin/gfortran
