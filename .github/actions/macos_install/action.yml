@@ -17,4 +17,5 @@ runs:
         #  ls /usr/local/bin/gfortran
         #fi
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
+        echo "${PATH}"
       shell: bash
