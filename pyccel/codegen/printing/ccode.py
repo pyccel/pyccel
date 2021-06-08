@@ -241,6 +241,10 @@ class CCodePrinter(CodePrinter):
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
+        # Dictionary linking optional variables to their
+        # temporary counterparts which provide allocated
+        # memory
+        # Key is optional variable
         self._optional_partners = {}
 
     def get_additional_imports(self):
@@ -1410,12 +1414,18 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         if isinstance(lhs, Variable) and lhs.is_optional:
             if lhs in self._optional_partners:
+                # Collect temporary variable which provides
+                # allocated memory space for this optional variable
                 tmp_var = self._optional_partners[lhs]
             else:
+                # Create temporary variable to provide allocated
+                # memory space before assigning to the pointer value
+                # (may be NULL)
                 tmp_var_name = self._parser.get_new_name()
                 tmp_var = lhs.clone(tmp_var_name, is_optional=False)
                 self._additional_declare.append(tmp_var)
                 self._optional_partners[lhs] = tmp_var
+            # Point optional variable at an allocated memory space
             prefix_code = self._print(AliasAssign(lhs, tmp_var))
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in lhs]
