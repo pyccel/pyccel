@@ -22,8 +22,14 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment, CommentBlock, Pass
+from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import python_builtin_datatype
+from pyccel.ast.builtins import PythonList
+from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
+                                 PythonMap, PythonTuple, Lambda)
 
+from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -40,47 +46,31 @@ from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Concatenate
-from pyccel.ast.variable import Constant
-from pyccel.ast.variable import Variable
-from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
-from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import DottedName, DottedVariable
-from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With
-from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
-from pyccel.ast.itertoolsext import Product
-
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
+from pyccel.ast.datatypes import (NativeInteger, NativeBool,
+                                  NativeReal, NativeString,
+                                  NativeGeneric, NativeComplex)
 
-from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat
-from pyccel.ast.literals import Nil
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
-from pyccel.ast.utilities import python_builtin_libs
-from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast.utilities import split_positional_keyword_arguments
+from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.itertoolsext import Product
 
-from pyccel.ast.builtins import PythonPrint
-from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
-from pyccel.ast.builtins import python_builtin_datatype
-from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonMap, PythonTuple, Lambda)
+from pyccel.ast.literals import LiteralTrue, LiteralFalse
+from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
@@ -89,13 +79,26 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice, PyccelSymbol
-
-from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
-
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
+
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
+
+from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
+
+from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
+from pyccel.ast.utilities import python_builtin_libs
+from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import split_positional_keyword_arguments
+
+from pyccel.ast.variable import Constant
+from pyccel.ast.variable import Variable
+from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
+from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import DottedName, DottedVariable
+from pyccel.ast.variable import ValuedVariable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
