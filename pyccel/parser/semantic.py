@@ -53,8 +53,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 
-from pyccel.ast.class_defs import (NumpyArrayClass, literal_classes,
-                                   TupleClass, get_cls_base)
+from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
