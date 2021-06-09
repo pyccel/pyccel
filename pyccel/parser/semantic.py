@@ -53,6 +53,9 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 
+from pyccel.ast.class_defs import (NumpyArrayClass, literal_classes,
+                                   TupleClass, get_cls_base)
+
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
@@ -77,7 +80,7 @@ from pyccel.ast.numpyext import NumpyBool
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
-from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
+from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -729,7 +732,7 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['is_pointer'    ] = False
-
+            d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -739,7 +742,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-
+            d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, Duplicate):
@@ -747,12 +750,13 @@ class SemanticParser(BasicParser):
 
             # TODO must check that it is consistent with pyccel's rules
             # TODO improve
-            d_var['datatype'   ]    = d['datatype']
-            d_var['rank'       ]    = expr.rank
-            d_var['shape'      ]    = expr.shape
+            d_var['datatype'      ] = d['datatype']
+            d_var['rank'          ] = expr.rank
+            d_var['shape'         ] = expr.shape
             d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
-            d_var['allocatable']    = not d_var['is_stack_array']
-            d_var['is_pointer' ]    = False
+            d_var['allocatable'   ] = not d_var['is_stack_array']
+            d_var['is_pointer'    ] = False
+            d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
@@ -773,6 +777,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.rank)
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
