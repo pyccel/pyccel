@@ -1640,17 +1640,20 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 
-        if not hasattr(first, 'cls_base') or first.cls_base is None:
+        d_var = self._infere_type(first)
+        if d_var.get('cls_base', None) is None:
             errors.report('Attribute {} not found'.format(rhs_name),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
 
-        if first.cls_base:
-            attr_name = [i.name for i in first.cls_base.attributes]
+        cls_base = d_var['cls_base']
+
+        if cls_base:
+            attr_name = [i.name for i in cls_base.attributes]
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            methods = list(cls_base.methods) + list(cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
                     errors.report('Generic methods are not supported yet',
@@ -1681,8 +1684,8 @@ class SemanticParser(BasicParser):
                                     current_function = self._current_function)
 
         # look for a class attribute / property
-        elif isinstance(rhs, PyccelSymbol) and first.cls_base:
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+        elif isinstance(rhs, PyccelSymbol) and cls_base:
+            methods = list(cls_base.methods) + list(cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
                     errors.report('Generic methods are not supported yet',
@@ -1692,7 +1695,7 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             # standard class attribute
             if rhs in attr_name:
-                self._current_class = first.cls_base
+                self._current_class = cls_base
                 second = self._visit(rhs, **settings)
                 self._current_class = None
                 return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
