@@ -199,3 +199,23 @@ def test_optional_2d_F(language):
     # ...
     assert np.array_equal(x1, x2)
 #------------------------------------------------------------------------------
+
+def test_f14(language):
+    @types('int', 'int')
+    def f14(x = None , y = None):
+        if x is None :
+            x = 3
+        if y is not None :
+            y = 4
+        else:
+            y = 5
+        return x + y
+
+    f = epyccel(f14, language = language)
+
+    # ...
+    assert f(2,7) == f14(2,7)
+    assert f() == f14()
+    assert f(6) == f14(6)
+    assert f(y=0) == f14(y=0)
+    # ...
