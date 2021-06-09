@@ -9,7 +9,9 @@ __all__ = ('BooleanClass',
         'IntegerClass',
         'RealClass',
         'ComplexClass',
+        'StringClass',
         'NumpyArrayClass',
+        'TupleClass',
         'literal_classes',
         'get_cls_base')
 
@@ -155,13 +157,3 @@ def get_cls_base(dtype, rank):
     else:
         return NumpyArrayClass
 
-#=======================================================================================
-
-def determine_class(*class_defs):
-    result_def = None
-    for c1 in class_defs:
-        compatible=all(c1.compatible(c2) for c2 in class_defs)
-        if compatible:
-            result_def = c1
-            break
-    return result_def
