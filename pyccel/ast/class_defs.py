@@ -1,3 +1,10 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+This module contains all types which define a python class which is automatically recognised by pyccel
+"""
 from .builtins  import PythonImag, PythonReal
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeReal,
@@ -152,6 +159,9 @@ literal_classes = {
 #=======================================================================================
 
 def get_cls_base(dtype, rank):
+    """
+    From the dtype and rank, determine the base class of an object
+    """
     if rank == 0:
         return literal_classes[dtype]
     else:
