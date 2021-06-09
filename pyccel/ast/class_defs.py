@@ -52,9 +52,7 @@ IntegerClass = ClassDef('integer',
             #conjugate
             #denominator
             #from_bytes
-            #imag
             #numerator
-            #real
             #to_bytes
             ])
 
