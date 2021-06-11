@@ -1959,7 +1959,7 @@ class FunctionDef(Basic):
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
 
-        arguments = tuple([a if isinstance(a, Argument) else Argument(a) for a in arguments])
+        arguments = tuple(a if isinstance(a, Argument) else Argument(a) for a in arguments)
 
         # body
 
