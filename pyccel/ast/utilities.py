@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import inspect
+import sys
 from itertools import chain
 from collections import namedtuple
 
@@ -13,7 +14,7 @@ from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
@@ -62,7 +63,12 @@ def builtin_function(expr, args=None):
     args = [a.value for a in args]
 
     if name in dic.keys() :
-        return dic[name](*args)
+        try:
+            return dic[name](*args)
+        except PyccelError as e:
+            errors.report(e,
+                    symbol=expr,
+                    severity='fatal')
 
     if name == 'map':
         return PythonMap(expr.args[0], *args[1:])
@@ -85,7 +91,13 @@ builtin_import_registery = {'numpy': {
                             'scipy.constants': scipy_constants,
                             'itertools': {'product': Product},
                             'math': {**math_functions, ** math_constants},
-                            'pyccel.decorators': None}
+                            'pyccel.decorators': pyccel_decorators.__all__}
+if sys.version_info < (3, 10):
+    from .builtin_imports import python_builtin_libs
+else:
+    python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
+
+recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 #==============================================================================
 def collect_relevant_imports(func_dictionary, targets):
@@ -121,7 +133,6 @@ def builtin_import(expr):
         for target in expr.target:
             search_target = target.name if isinstance(target, AsName) else target
             if search_target not in funcs:
-                errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
 

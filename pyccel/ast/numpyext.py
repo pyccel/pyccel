@@ -11,8 +11,7 @@ from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonAbs, PythonImag, PythonList)
 
-from .core           import (ClassDef, FunctionDef,
-                            process_shape)
+from .core           import process_shape
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -30,7 +29,6 @@ from .variable       import (Variable, IndexedElement, Constant)
 
 
 __all__ = (
-    'NumpyArrayClass',
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -1172,25 +1170,6 @@ class NumpyAmax(NumpyUfuncUnary):
     @property
     def is_elemental(self):
         return False
-
-
-#=======================================================================================
-
-
-NumpyArrayClass = ClassDef('numpy.ndarray',
-        methods=[
-            FunctionDef('shape',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Shape}),
-            FunctionDef('sum',[],[],body=[],
-                decorators={'numpy_wrapper':NumpySum}),
-            FunctionDef('min',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyAmin}),
-            FunctionDef('max',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyAmax}),
-            FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
-            FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following

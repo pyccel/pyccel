@@ -703,6 +703,12 @@ def test_headers(language):
         f.write(code)
 
 #------------------------------------------------------------------------------
+def test_basic_header():
+    filename='scripts/basic_header.pyh'
+    cwd = get_abs_path('.')
+    compile_pyccel(cwd, filename)
+
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_5.py",

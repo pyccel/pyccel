@@ -260,7 +260,13 @@ class SyntaxParser(BasicParser):
         return code
 
     def _visit_Expr(self, stmt):
-        return self._visit(stmt.value)
+        val = self._visit(stmt.value)
+        if not isinstance(val, (CommentBlock, PythonPrint)):
+            # Collect any results of standalone expressions
+            # into a variable to avoid errors in C/Fortran
+            tmp_var,_ = create_variable(self._used_names)
+            val = Assign(tmp_var, val)
+        return val
 
     def _visit_Tuple(self, stmt):
         return PythonTuple(*self._treat_iterable(stmt.elts))
