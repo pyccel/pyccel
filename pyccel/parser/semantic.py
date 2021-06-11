@@ -2828,7 +2828,7 @@ class SemanticParser(BasicParser):
                 dt       = self.get_class_construct(cls_name)()
                 cls_base = self.get_class(cls_name)
                 var      = Variable(dt, 'self', cls_base=cls_base)
-                args     = [var] + args
+                args     = [Argument(var)] + args
 
             arg_vars = [a.var for a in args]
 
