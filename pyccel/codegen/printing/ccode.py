@@ -747,6 +747,7 @@ class CCodePrinter(CodePrinter):
             return formatted_args_to_printf(args_format, args, end)
 
         for i, f in enumerate(orig_args):
+            f = f.value
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
                 tmp_arg_format_list = []
@@ -1263,6 +1264,8 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
+            a = a.value
+            f = f.var
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
