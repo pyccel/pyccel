@@ -663,7 +663,7 @@ class CodeBlock(Basic):
     def insert2body(self, obj):
         self._body = tuple(self.body + (obj,))
 
-    def __str__(self):
+    def __repr__(self):
         return 'CodeBlock({})'.format(self.body)
 
     def __reduce_ex__(self, i):
@@ -1571,7 +1571,7 @@ class Argument(PyccelAstNode):
     n
     """
     __slots__ = ('_name','_var','_kwonly','_annotation','_value')
-    _attribute_nodes = ('_value',)
+    _attribute_nodes = ('_value','_var')
 
     def __init__(self, name, *, value = None, kwonly=False, annotation=None):
         if isinstance(name, (Variable, FunctionAddress)):
