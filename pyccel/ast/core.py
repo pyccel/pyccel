@@ -79,7 +79,6 @@ __all__ = (
     'SymbolicAssign',
     'SymbolicPrint',
     'SympyFunction',
-    'ValuedArgument',
     'While',
     'With',
     'create_variable',
@@ -1524,6 +1523,17 @@ class ConstructorCall(Basic):
             return self.func
 
 class FunctionCallArgument(Basic):
+    """
+    An argument passed in a function call
+
+    Parameters
+    ---------
+    value   : PyccelAstNode
+              The expression passed as an argument
+    keyword : str
+              If the argument is passed by keyword then this
+              is that keyword
+    """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
     def __init__(self, value, keyword = None):
@@ -1533,19 +1543,25 @@ class FunctionCallArgument(Basic):
 
     @property
     def value(self):
+        """ The value passed as argument
+        """
         return self._value
 
     @property
     def keyword(self):
+        """ The keyword used to pass the argument
+        """
         return self._keyword
 
     @property
     def has_keyword(self):
+        """ Indicates whether the argument was passed by keyword
+        """
         return self._keyword is not None
 
 class Argument(PyccelAstNode):
 
-    """An abstract Argument data structure.
+    """A FunctionDef Argument
 
     Examples
     --------
@@ -1573,30 +1589,49 @@ class Argument(PyccelAstNode):
 
     @property
     def name(self):
+        """ The name of the argument
+        """
         return self._name
 
     @property
     def var(self):
+        """ The variable representing the argument
+        (available after the semantic treatment)
+        """
         return self._var
 
     @property
     def is_kwonly(self):
+        """ Indicates if the argument must be passed
+        by keyword
+        """
         return self._kwonly
 
     @property
     def annotation(self):
+        """ The argument annotation providing dtype information
+        """
         return self._annotation
 
     @property
     def value(self):
+        """ The default value of the argument
+        """
         return self._value
 
     @property
     def default_call_arg(self):
-        return FunctionCallArgument(self.value, keyword=self.name)
+        """ The FunctionCallArgument which is passed to FunctionCall
+        if no value is provided for this argument
+        """
+        return FunctionCallArgument(self.value, keyword=self.name) \
+                if self.has_default else None
 
     @property
     def has_default(self):
+        """ Indicates whether the argument has a default value
+        (if not then it must be provided)
+        """
         return self._value is not None
 
     def __str__(self):
@@ -1617,6 +1652,7 @@ class FunctionCall(PyccelAstNode):
 
     def __init__(self, func, args, current_function=None):
 
+        # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
         if self.stage == "syntactic":
@@ -1653,20 +1689,24 @@ class FunctionCall(PyccelAstNode):
         if func.cls_name:
             f_args = f_args[1:]
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name, a.default_call_arg)
+            # Collect dict of keywords and values (initialised as default)
+            f_args_dict = {a.name: a.default_call_arg
                                     if a.has_default else (a.name, None)
-                                    for a in f_args)
+                                    for a in f_args}
             keyword_args = []
             for i,a in enumerate(args):
                 if a.keyword is None:
+                    # Replace default positional arguments with provided arguments
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
                     break
 
             for a in keyword_args:
+                # Replace default arguments with provided keyword arguments
                 f_args_dict[a.keyword] = a
 
+        # Handle function as argument
         args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), keyword=a.keyword)
                 if isinstance(a.value, FunctionDef) else a for a in args]
 
@@ -1686,22 +1726,33 @@ class FunctionCall(PyccelAstNode):
 
     @property
     def args(self):
+        """ List of FunctionCallArguments provided to the function call
+        (contains default values after semantic stage)
+        """
         return self._arguments
 
     @property
     def funcdef(self):
+        """ The function called by this function call
+        """
         return self._funcdef
 
     @property
     def interface(self):
+        """ The interface called by this function call
+        """
         return self._interface
 
     @property
     def func_name(self):
+        """ The name of the function called by this function call
+        """
         return self._func_name
 
     @property
     def interface_name(self):
+        """ The name of the interface called by this function call
+        """
         return self._interface_name
 
     def __repr__(self):
@@ -3485,7 +3536,7 @@ def get_initial_value(expr, var):
     # ...
 
     if isinstance(expr, ValuedArgument):
-        if expr.variable.name in var:
+        if expr.has_default and expr.name in var:
             return expr.value
     elif isinstance(expr, Variable):
 
