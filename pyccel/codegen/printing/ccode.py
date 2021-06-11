@@ -772,7 +772,7 @@ class CCodePrinter(CodePrinter):
 
                 for_body  = [PythonPrint(print_body)]
                 for_loop  = For(for_index, for_range, for_body)
-                for_end   = FunctionCallArgument(LiteralString(value=']'+end if i == len(orig_args)-1 else ']'), 'end')
+                for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
                                   for_loop,
