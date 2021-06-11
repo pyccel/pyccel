@@ -99,7 +99,6 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
-from pyccel.ast.variable import ValuedVariable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
