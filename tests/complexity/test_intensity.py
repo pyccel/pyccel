@@ -6,8 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import os
-import pytest
-from sympy.abc import n,m,x,b
+from sympy.abc import n,x,b
 from sympy import Function, Symbol
 from sympy import simplify as sp_simplify
 from pyccel.complexity.intensity import ComputationalIntensity

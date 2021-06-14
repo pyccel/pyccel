@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # ===================================================
+from numpy import zeros
+
 def f1(L: 'double[:,:]',
        b: 'double[:,:]',
        x: 'double[:,:]'):
@@ -50,7 +52,6 @@ def f3(A: 'double[:,:]',
             L[i,j] = L[i,j] / L[j,j]
 
 # ===================================================
-from numpy import zeros
 
 n = 5
 

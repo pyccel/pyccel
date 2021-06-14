@@ -117,6 +117,11 @@ def _intensity(f, m):
 
 # ==============================================================================
 class ComputationalIntensity(object):
+    """
+    Class for computational complexity.
+    This class uses the arithmetic and memory complexity computation.
+    """
+
     def __init__(self, filename_or_text):
         self._arithmetic = OpComplexity(filename_or_text)
         self._memory     = MemComplexity(filename_or_text)
