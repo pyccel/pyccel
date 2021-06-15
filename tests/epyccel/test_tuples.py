@@ -56,9 +56,9 @@ homog_marks = [f[1] if f[0] not in failing_tests else
         pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) for f in homogeneous_funcs]
 
 @pytest.mark.parametrize('test_func',homog_marks)
-def test_homogeneous_tuples(test_func):
+def test_homogeneous_tuples(test_func, language):
     f1 = test_func
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language=language )
 
     python_out = f1()
     pyccel_out = f2()
