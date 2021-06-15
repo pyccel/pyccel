@@ -536,7 +536,7 @@ def insert_fors(blocks, indices, level = 0):
         return [For(indices[level], PythonRange(0,blocks.length), body)]
 
 #==============================================================================
-def expand_tuple_creation(block):
+def expand_tuple_creation(block, language_has_vectors = False):
     """
     Ensure that tuple expressions which will be unravelled contain allocation statements
 
@@ -559,6 +559,9 @@ def expand_tuple_creation(block):
     >>> expand_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
+    if language_has_vectors:
+        return
+
     allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
                 if isinstance(a.lhs, HomogeneousTupleVariable) \
                 and isinstance(a.rhs, (Duplicate, Concatenate))]
@@ -570,7 +573,40 @@ def expand_tuple_creation(block):
     block.substitute(allocs_to_unravel, new_allocs)
 
 #==============================================================================
-def expand_tuple_assignments(block):
+def expand_inhomog_tuple_assignments(block):
+    """
+    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
+
+    Parameters
+    ==========
+    block      : CodeBlock
+                The expression to be modified
+
+    Examples
+    --------
+    >>> from pyccel.ast.builtins  import PythonTuple
+    >>> from pyccel.ast.core      import Assign, CodeBlock
+    >>> from pyccel.ast.literals  import LiteralInteger
+    >>> from pyccel.ast.utilities import expand_to_loops
+    >>> from pyccel.ast.variable  import Variable
+    >>> a = Variable('int', 'a', shape=(,), rank=0)
+    >>> b = Variable('int', 'b', shape=(,), rank=0)
+    >>> c = Variable('int', 'c', shape=(,), rank=0)
+    >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
+    >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
+    [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
+    """
+
+    assigns = [a for a in block.get_attribute_nodes(Assign) \
+                if isinstance(a.lhs, InhomogeneousTupleVariable) \
+                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
+    if len(assigns) != 0:
+        new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
+        block.substitute(assigns, new_assigns)
+        expand_inhomog_tuple_assignments(block)
+
+#==============================================================================
+def expand_tuple_slice_assignments(block, language_has_vectors = False):
     """
     Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
 
@@ -595,12 +631,14 @@ def expand_tuple_assignments(block):
     """
 
     assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, InhomogeneousTupleVariable) \
-                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
-    if len(assigns) != 0:
-        new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
+                if isinstance(a.lhs, IndexedElement) \
+                and isinstance(a.rhs, PythonTuple)]
+    if not (len(assigns) == 0 or language_has_vectors):
+        new_assigns = [[Assign(insert_index(a.lhs,-1,LiteralInteger(j)),rj) for j, rj in enumerate(a.rhs)] for a in assigns]
         block.substitute(assigns, new_assigns)
-        expand_tuple_assignments(block)
+        return expand_tuple_slice_assignments(block, language_has_vectors)
+    else:
+        return block
 
 #==============================================================================
 def expand_to_loops(block, new_index_name, language_has_vectors = False):
@@ -637,16 +675,14 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
-    if not language_has_vectors:
-        expand_tuple_creation(block)
-
-    expand_tuple_assignments(block)
+    expand_tuple_creation(block, language_has_vectors)
+    expand_inhomog_tuple_assignments(block)
 
     indices = []
     tmp_vars = []
     res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
 
     body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
-    body = [bi for b in body for bi in b]
+    body = [expand_tuple_slice_assignments(bi, language_has_vectors) for b in body for bi in b]
 
     return body, indices+tmp_vars
