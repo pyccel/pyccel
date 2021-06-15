@@ -915,7 +915,7 @@ class CCodePrinter(CodePrinter):
         base = expr.base
         inds = list(expr.indices)
         base_shape = base.shape
-        allow_negative_indexes = base.allows_negative_indexes
+        allow_negative_indexes = True if isinstance(base, PythonTuple) else base.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
@@ -930,7 +930,7 @@ class CCodePrinter(CodePrinter):
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
-        base_name = self._print(base.name)
+        base_name = self._print(base)
         if base.is_ndarray:
             if expr.rank > 0:
                 #managing the Slice input
