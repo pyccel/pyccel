@@ -273,7 +273,7 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
-        """ print the assignment of a NdArray
+        """ print the assignment of a NdArray or a homogeneous tuple
 
         parameters
         ----------
@@ -293,7 +293,7 @@ class CCodePrinter(CodePrinter):
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        arg = rhs.arg
+        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
@@ -1430,7 +1430,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
-        if isinstance(rhs, (NumpyArray)):
+        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+        if isinstance(rhs, (NumpyArray, PythonTuple)):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
