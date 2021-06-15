@@ -1114,7 +1114,9 @@ class SemanticParser(BasicParser):
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
 
         else:
-            new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
+            new_type = HomogeneousTupleVariable \
+                    if isinstance(rhs, (HomogeneousTupleVariable, Concatenate, Duplicate)) \
+                    else Variable
             lhs = new_type(dtype, name, **d_lhs, is_temp=is_temp)
 
         return lhs
