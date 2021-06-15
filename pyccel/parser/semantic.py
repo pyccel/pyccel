@@ -1108,7 +1108,7 @@ class SemanticParser(BasicParser):
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
-            if is_homogeneous:
+            if is_homogeneous and not (d_lhs['is_pointer'] and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
