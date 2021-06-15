@@ -486,7 +486,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 if len(tmp_indices)>len(indices)-1:
                     indices.extend(tmp_indices[len(indices)-1:])
 
-                result.append(LoopCollection([block[-1]],  rhs.val.shape[0], set([lhs])))
+                result.append(LoopCollection([block[-1]], rhs.length, set([lhs])))
 
             else:
                 assigns = [Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], LiteralInteger(idx), simplify=True),
