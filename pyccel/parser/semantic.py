@@ -741,6 +741,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
+            d_var['is_stack_array'] = not d_var['allocatable'   ]
             d_var['cls_base'      ] = TupleClass
             return d_var
 
