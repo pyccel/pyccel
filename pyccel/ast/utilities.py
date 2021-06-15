@@ -536,44 +536,7 @@ def insert_fors(blocks, indices, level = 0):
         return [For(indices[level], PythonRange(0,blocks.length), body)]
 
 #==============================================================================
-def expand_tuple_creation(block, language_has_vectors = False):
-    """
-    Ensure that tuple expressions which will be unravelled contain allocation statements
-
-    Parameters
-    ==========
-    block      : CodeBlock
-                The expression to be modified
-
-    Examples
-    --------
-    >>> from pyccel.ast.builtins  import PythonTuple
-    >>> from pyccel.ast.core      import Assign, CodeBlock
-    >>> from pyccel.ast.literals  import LiteralInteger
-    >>> from pyccel.ast.utilities import expand_to_loops
-    >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable('int', 'a', shape=(,), rank=0)
-    >>> b = Variable('int', 'b', shape=(,), rank=0)
-    >>> c = Variable('int', 'c', shape=(,), rank=0)
-    >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
-    >>> expand_tuple_assignments(CodeBlock(expr))
-    [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
-    """
-    if language_has_vectors:
-        return
-
-    allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, HomogeneousTupleVariable) \
-                and isinstance(a.rhs, (Duplicate, Concatenate))]
-    new_allocs = [(
-        Assign(a.lhs, NumpyEmpty(a.lhs.shape,
-                                 dtype=a.lhs.dtype,
-                                 order=a.lhs.order)
-        ), a) for a in allocs_to_unravel]
-    block.substitute(allocs_to_unravel, new_allocs)
-
-#==============================================================================
-def expand_inhomog_tuple_assignments(block):
+def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     """
     Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
 
@@ -596,6 +559,16 @@ def expand_inhomog_tuple_assignments(block):
     >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
+    if not language_has_vectors:
+        allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
+                    if isinstance(a.lhs, HomogeneousTupleVariable) \
+                    and isinstance(a.rhs, (HomogeneousTupleVariable, Duplicate, Concatenate))]
+        new_allocs = [(
+            Assign(a.lhs, NumpyEmpty(a.lhs.shape,
+                                     dtype=a.lhs.dtype,
+                                     order=a.lhs.order)
+            ), a) for a in allocs_to_unravel]
+        block.substitute(allocs_to_unravel, new_allocs)
 
     assigns = [a for a in block.get_attribute_nodes(Assign) \
                 if isinstance(a.lhs, InhomogeneousTupleVariable) \
@@ -675,7 +648,6 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
-    expand_tuple_creation(block, language_has_vectors)
     expand_inhomog_tuple_assignments(block)
 
     indices = []
