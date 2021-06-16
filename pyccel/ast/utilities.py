@@ -505,7 +505,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
 #==============================================================================
 
-def insert_fors(blocks, indices, level = 0):
+def insert_fors(blocks, indices, language_has_vectors = False, level = 0):
     """
     Run through the output of collect_loops and create For loops of the
     requested sizes
@@ -525,8 +525,10 @@ def insert_fors(blocks, indices, level = 0):
     """
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
+        body = [bi for b in body for bi in expand_tuple_slice_assignments(b, language_has_vectors)]
     else:
-        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) else [b] \
+        body = [insert_fors(b, indices, language_has_vectors, level+1) if isinstance(b, LoopCollection) \
+                else expand_tuple_slice_assignments(b, language_has_vectors) \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
     if blocks.length == 1:
@@ -567,6 +569,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
                     ), a) if a.lhs.is_stack_array
+                    else (a) if a.lhs.allocatable
                     else (Allocate(a.lhs,
                             shape=a.lhs.shape,
                             order = a.lhs.order,
@@ -606,16 +609,12 @@ def expand_tuple_slice_assignments(block, language_has_vectors = False):
     >>> expand_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
+    if isinstance(block, Assign) and isinstance(block.lhs, IndexedElement) \
+            and isinstance(block.rhs, PythonTuple):
+        new_assign = [Assign(insert_index(block.lhs,-1,LiteralInteger(j)),rj) for j, rj in enumerate(block.rhs)]
+        return [ai for a in new_assign for ai in expand_tuple_slice_assignments(a, language_has_vectors)]
 
-    assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, IndexedElement) \
-                and isinstance(a.rhs, PythonTuple)]
-    if not (len(assigns) == 0 or language_has_vectors):
-        new_assigns = [[Assign(insert_index(a.lhs,-1,LiteralInteger(j)),rj) for j, rj in enumerate(a.rhs)] for a in assigns]
-        block.substitute(assigns, new_assigns)
-        return expand_tuple_slice_assignments(block, language_has_vectors)
-    else:
-        return block
+    return [block]
 
 #==============================================================================
 def expand_to_loops(block, new_index_name, language_has_vectors = False):
@@ -658,7 +657,8 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     tmp_vars = []
     res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
 
-    body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
-    body = [expand_tuple_slice_assignments(bi, language_has_vectors) for b in body for bi in b]
+    body = [insert_fors(b, indices, language_has_vectors) if isinstance(b, tuple) \
+            else expand_tuple_slice_assignments(b, language_has_vectors) for b in res]
+    body = [bi for b in body for bi in b]
 
     return body, indices+tmp_vars
