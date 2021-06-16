@@ -457,6 +457,22 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             save_spot.append(line)
             current_level = new_level
 
+        elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
+                and isinstance(line.rhs, PythonTuple):
+
+            lhs = line.lhs
+            rhs = line.rhs
+
+            lhs_rank = lhs.rank
+
+            new_assigns = [Assign(
+                            insert_index(expr=lhs,
+                                pos       = -lhs_rank,
+                                index_var = LiteralInteger(j)),
+                            rj) # lhs[j] = rhs[j]
+                          for j, rj in enumerate(rhs)]
+            collect_loops(new_assigns, indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
             lhs = line.lhs
             rhs = line.rhs
@@ -505,7 +521,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
 #==============================================================================
 
-def insert_fors(blocks, indices, language_has_vectors = False, level = 0):
+def insert_fors(blocks, indices, level = 0):
     """
     Run through the output of collect_loops and create For loops of the
     requested sizes
@@ -525,10 +541,9 @@ def insert_fors(blocks, indices, language_has_vectors = False, level = 0):
     """
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
-        body = [bi for b in body for bi in expand_tuple_slice_assignments(b, language_has_vectors)]
     else:
-        body = [insert_fors(b, indices, language_has_vectors, level+1) if isinstance(b, LoopCollection) \
-                else expand_tuple_slice_assignments(b, language_has_vectors) \
+        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) \
+                else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
     if blocks.length == 1:
@@ -586,37 +601,6 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         expand_inhomog_tuple_assignments(block)
 
 #==============================================================================
-def expand_tuple_slice_assignments(block, language_has_vectors = False):
-    """
-    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
-
-    Parameters
-    ==========
-    block      : CodeBlock
-                The expression to be modified
-
-    Examples
-    --------
-    >>> from pyccel.ast.builtins  import PythonTuple
-    >>> from pyccel.ast.core      import Assign, CodeBlock
-    >>> from pyccel.ast.literals  import LiteralInteger
-    >>> from pyccel.ast.utilities import expand_to_loops
-    >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable('int', 'a', shape=(,), rank=0)
-    >>> b = Variable('int', 'b', shape=(,), rank=0)
-    >>> c = Variable('int', 'c', shape=(,), rank=0)
-    >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
-    >>> expand_tuple_assignments(CodeBlock(expr))
-    [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
-    """
-    if isinstance(block, Assign) and isinstance(block.lhs, IndexedElement) \
-            and isinstance(block.rhs, PythonTuple):
-        new_assign = [Assign(insert_index(block.lhs,-1,LiteralInteger(j)),rj) for j, rj in enumerate(block.rhs)]
-        return [ai for a in new_assign for ai in expand_tuple_slice_assignments(a, language_has_vectors)]
-
-    return [block]
-
-#==============================================================================
 def expand_to_loops(block, new_index_name, language_has_vectors = False):
     """
     Re-write a list of expressions to include explicit loops where necessary
@@ -657,8 +641,8 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     tmp_vars = []
     res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
 
-    body = [insert_fors(b, indices, language_has_vectors) if isinstance(b, tuple) \
-            else expand_tuple_slice_assignments(b, language_has_vectors) for b in res]
+    body = [insert_fors(b, indices) if isinstance(b, tuple) \
+            else [b] for b in res]
     body = [bi for b in body for bi in b]
 
     return body, indices+tmp_vars
