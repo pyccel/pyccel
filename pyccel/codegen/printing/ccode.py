@@ -38,7 +38,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import ValuedVariable
+from pyccel.ast.variable import ValuedVariable, IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable
@@ -1597,7 +1597,9 @@ class CCodePrinter(CodePrinter):
             return expr.name
 
     def _print_VariableAddress(self, expr):
-        if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
+        if isinstance(expr.variable, IndexedElement):
+            return '&{}'.format(self._print(expr.variable))
+        elif self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)
         else:
             return '&{}'.format(expr.variable.name)
