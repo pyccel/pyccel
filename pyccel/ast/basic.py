@@ -193,8 +193,6 @@ class Basic:
         def prepare_sub(found_node):
             idx = original.index(found_node)
             rep = replacement[idx]
-            if not self.ignore(found_node):
-                found_node.remove_user_node(self)
             if iterable(rep):
                 for r in rep:
                     if not self.ignore(r):
@@ -202,6 +200,8 @@ class Basic:
             else:
                 if not self.ignore(rep):
                     rep.set_current_user_node(self)
+            if not self.ignore(found_node):
+                found_node.remove_user_node(self)
             return rep
 
         for n in self._my_attribute_nodes:
@@ -280,6 +280,9 @@ class Basic:
         """ Inform the class about the most recent user of the node
         """
         self._user_nodes.append(user_nodes)
+
+    def clear_user_nodes(self):
+        self._user_nodes = []
 
     def remove_user_node(self, user_node):
         """ Indicate that the current node is no longer used

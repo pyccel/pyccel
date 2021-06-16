@@ -1449,21 +1449,29 @@ class SemanticParser(BasicParser):
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_EmptyNode(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_Break(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_Continue(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_Comment(self, expr, **settings):
         return expr
+        expr.clear_user_nodes()
     def _visit_CommentBlock(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
+        expr.clear_user_nodes()
         code = expr._user_nodes
         code = code[-1]
         index = code.body.index(expr)
@@ -1501,10 +1509,13 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Literal(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_PythonComplex(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_Pass(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_Variable(self, expr, **settings):
@@ -2593,15 +2604,18 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
+        expr.clear_user_nodes()
         self.insert_header(expr)
         return expr
 
     def _visit_Template(self, expr, **settings):
+        expr.clear_user_nodes()
         self.insert_template(expr)
         return expr
 
     def _visit_ClassHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
+        expr.clear_user_nodes()
         self.insert_header(expr)
         return expr
 
@@ -3313,6 +3327,7 @@ class SemanticParser(BasicParser):
         return macro
 
     def _visit_MacroShape(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_MacroVariable(self, expr, **settings):
