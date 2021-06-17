@@ -1921,6 +1921,15 @@ def test_array(language):
     assert(f2_val()   == create_array_tuple_val())
     assert matching_types(f2_val(), create_array_tuple_val())
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="rand not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_rand_basic(language):
     def create_val():
         from numpy.random import rand # pylint: disable=reimported
@@ -1933,6 +1942,15 @@ def test_rand_basic(language):
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="rand not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_rand_args(language):
     @types('int')
     def create_array_size_1d(n):
@@ -1991,6 +2009,15 @@ def test_rand_args(language):
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="rand not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_rand_expr(language):
     def create_val():
         from numpy.random import rand # pylint: disable=reimported
@@ -2099,6 +2126,15 @@ def test_randint_expr(language):
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_sum_int(language):
     @types('int[:]')
     def sum_call(x):
@@ -2109,6 +2145,15 @@ def test_sum_int(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_sum_real(language):
     @types('real[:]')
     def sum_call(x):
@@ -2119,6 +2164,15 @@ def test_sum_real(language):
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_sum_phrase(language):
     @types('real[:]','real[:]')
     def sum_phrase(x,y):
@@ -2131,6 +2185,15 @@ def test_sum_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), sum_phrase(x,y), rtol=RTOL, atol=ATOL))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="sum not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_sum_property(language):
     @types('int[:]')
     def sum_call(x):
@@ -2140,6 +2203,15 @@ def test_sum_property(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amin not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_min_int(language):
     @types('int[:]')
     def min_call(x):
@@ -2150,6 +2222,15 @@ def test_min_int(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amin not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_min_real(language):
     @types('real[:]')
     def min_call(x):
@@ -2160,6 +2241,15 @@ def test_min_real(language):
     x = rand(10)
     assert(isclose(f1(x), min_call(x), rtol=RTOL, atol=ATOL))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amin not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_min_phrase(language):
     @types('real[:]','real[:]')
     def min_phrase(x,y):
@@ -2172,6 +2262,15 @@ def test_min_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), min_phrase(x,y), rtol=RTOL, atol=ATOL))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amin not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_min_property(language):
     @types('int[:]')
     def min_call(x):
@@ -2181,6 +2280,15 @@ def test_min_property(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amax not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_max_int(language):
     @types('int[:]')
     def max_call(x):
@@ -2191,6 +2299,15 @@ def test_max_int(language):
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amax not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_max_real(language):
     @types('real[:]')
     def max_call(x):
@@ -2201,6 +2318,15 @@ def test_max_real(language):
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amax not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_max_phrase(language):
     @types('real[:]','real[:]')
     def max_phrase(x,y):
@@ -2214,6 +2340,15 @@ def test_max_phrase(language):
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="amax not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_max_property(language):
     @types('int[:]')
     def max_call(x):
