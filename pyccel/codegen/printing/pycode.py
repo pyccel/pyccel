@@ -5,7 +5,6 @@
 #------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
-from itertools import chain
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
