@@ -66,7 +66,7 @@ def test_tuples(test_func, language):
     pyccel_out = f2()
     compare_python_pyccel(python_out, pyccel_out)
 
-c_marks = [f[1] for f in failing_c_tests]
+c_marks = [f[1] for f in tuple_funcs if f[0] in failing_c_tests]
 @pytest.mark.parametrize('test_func', c_marks)
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
