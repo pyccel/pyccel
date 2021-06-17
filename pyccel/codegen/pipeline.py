@@ -138,6 +138,10 @@ def execute_pyccel(fname, *,
                     Name of the generated module
                     Default : Same name as the file which was translated
     """
+    if fname.endswith('.pyh'):
+        syntax_only = True
+        if verbose:
+            print("Header file recognised, stopping after syntactic stage")
 
     # Reset Errors singleton before parsing a new file
     errors = Errors()
@@ -182,7 +186,8 @@ def execute_pyccel(fname, *,
 
     # Create new directories if not existing
     os.makedirs(folder, exist_ok=True)
-    os.makedirs(pyccel_dirpath, exist_ok=True)
+    if not (syntax_only or semantic_only):
+        os.makedirs(pyccel_dirpath, exist_ok=True)
 
     # Change working directory to 'folder'
     os.chdir(folder)
