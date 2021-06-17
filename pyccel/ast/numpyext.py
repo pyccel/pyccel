@@ -11,8 +11,7 @@ from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonAbs, PythonImag, PythonList)
 
-from .core           import (ClassDef, FunctionDef,
-                            process_shape, ValuedArgument)
+from .core           import process_shape, ValuedArgument
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -30,7 +29,6 @@ from .variable       import (Variable, IndexedElement, Constant)
 
 
 __all__ = (
-    'NumpyArrayClass',
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -93,6 +91,7 @@ class NumpyFloat(PythonFloat):
     """ Represents a call to numpy.float() function.
     """
     __slots__ = ('_rank','_shape','_order')
+    name = 'float'
     def __init__(self, arg):
         self._shape = arg.shape
         self._rank  = arg.rank
@@ -104,18 +103,21 @@ class NumpyFloat32(NumpyFloat):
     """
     __slots__ = ()
     _precision = dtype_registry['float32'][1]
+    name = 'float32'
 
 class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
     __slots__ = ()
     _precision = dtype_registry['float64'][1]
+    name = 'float64'
 
 #=======================================================================================
 class NumpyBool(PythonBool):
     """ Represents a call to numpy.bool() function.
     """
     __slots__ = ('_shape','_rank','_order')
+    name = 'bool'
     def __init__(self, arg):
         self._shape = arg.shape
         self._rank  = arg.rank
@@ -128,6 +130,7 @@ class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
     __slots__ = ('_shape','_rank','_order')
+    name = 'int'
     def __init__(self, arg=None, base=10):
         self._shape = arg.shape
         self._rank  = arg.rank
@@ -138,23 +141,27 @@ class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
     """
     _precision = dtype_registry['int8'][1]
+    name = 'int8'
 
 class NumpyInt16(NumpyInt):
     """ Represents a call to numpy.int16() function.
     """
     _precision = dtype_registry['int16'][1]
+    name = 'int16'
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
     __slots__ = ()
     _precision = dtype_registry['int32'][1]
+    name = 'int32'
 
 class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
     __slots__ = ()
     _precision = dtype_registry['int64'][1]
+    name = 'int64'
 
 #==============================================================================
 class NumpyReal(PythonReal):
@@ -165,6 +172,7 @@ class NumpyReal(PythonReal):
     1.0
     """
     __slots__ = ('_rank','_shape','_order')
+    name = 'real'
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
             return NumpyInt(arg)
@@ -195,6 +203,7 @@ class NumpyImag(PythonImag):
     2.0
     """
     __slots__ = ('_rank','_shape','_order')
+    name = 'imag'
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
             dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
@@ -224,6 +233,7 @@ class NumpyComplex(PythonComplex):
     _real_cast = NumpyReal
     _imag_cast = NumpyImag
     __slots__ = ('_rank','_shape','_order')
+    name = 'complex'
     def __init__(self, arg0, arg1 = None):
         if arg1 is not None:
             raise NotImplementedError("Use builtin complex function not deprecated np.complex")
@@ -237,12 +247,14 @@ class NumpyComplex64(NumpyComplex):
     """
     __slots__ = ()
     _precision = dtype_registry['complex64'][1]
+    name = 'complex64'
 
 class NumpyComplex128(NumpyComplex):
     """ Represents a call to numpy.complex128() function.
     """
     __slots__ = ()
     _precision = dtype_registry['complex128'][1]
+    name = 'complex128'
 
 DtypePrecisionToCastFunction = {
     'Int' : {
@@ -313,6 +325,7 @@ class NumpyArray(NumpyNewArray):
     """
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_arg',)
+    name = 'array'
 
     def __init__(self, arg, dtype=None, order='C'):
 
@@ -379,6 +392,7 @@ class NumpyArange(NumpyNewArray):
     _attribute_nodes = ('_start','_step','_stop')
     _rank = 1
     _order = None
+    name = 'arange'
 
     def __init__(self, start, stop = None, step = None, dtype = None):
 
@@ -424,6 +438,7 @@ class NumpySum(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, PythonList, Variable
     """
     __slots__ = ('_dtype','_precision')
+    name = 'sum'
     _rank  = 0
     _shape = ()
     _order = None
@@ -446,6 +461,7 @@ class NumpyProduct(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, PythonList, Variable
     """
     __slots__ = ('_arg','_dtype','_precision')
+    name = 'product'
     _rank  = 0
     _shape = ()
     _order = None
@@ -472,6 +488,7 @@ class NumpyMatmul(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, PythonList, Variable
     """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
+    name = 'matmul'
 
     def __init__(self, a ,b):
         super().__init__(a, b)
@@ -551,6 +568,7 @@ class NumpyLinspace(NumpyNewArray):
 
     """
     __slots__ = ('_index','_start','_stop','_size','_shape', '_rank')
+    name = 'linspace'
     _dtype     = NativeReal()
     _precision = default_precision['real']
     _order     = 'F'
@@ -603,6 +621,7 @@ class NumpyLinspace(NumpyNewArray):
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
     __slots__ = ()
+    name = 'where'
 
     def __init__(self, mask):
         super().__init__(mask)
@@ -626,6 +645,7 @@ class NumpyRand(PyccelInternalFunction):
 
     """
     __slots__ = ('_shape','_rank')
+    name = 'rand'
     _dtype = NativeReal()
     _precision = default_precision['real']
     _order = 'C'
@@ -643,6 +663,7 @@ class NumpyRandint(PyccelInternalFunction):
 
     """
     __slots__ = ('_rand','_low','_high','_shape','_rank')
+    name = 'randint'
     _dtype     = NativeInteger()
     _precision = default_precision['integer']
     _order     = 'C'
@@ -702,6 +723,7 @@ class NumpyFull(NumpyNewArray):
 
     """
     __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order')
+    name = 'full'
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
 
@@ -754,6 +776,7 @@ class NumpyEmpty(NumpyAutoFill):
     """ Represents a call to numpy.empty for code generation.
     """
     __slots__ = ()
+    name = 'empty'
     @property
     def fill_value(self):
         return None
@@ -764,6 +787,7 @@ class NumpyZeros(NumpyAutoFill):
     """ Represents a call to numpy.zeros for code generation.
     """
     __slots__ = ()
+    name = 'zeros'
     @property
     def fill_value(self):
         dtype = self.dtype
@@ -784,6 +808,7 @@ class NumpyOnes(NumpyAutoFill):
     """ Represents a call to numpy.ones for code generation.
     """
     __slots__ = ()
+    name = 'ones'
     @property
     def fill_value(self):
         dtype = self.dtype
@@ -804,6 +829,7 @@ class NumpyFullLike:
     """ Represents a call to numpy.full_like for code generation.
     """
     __slots__ = ()
+    name = 'full_like'
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
@@ -817,6 +843,7 @@ class NumpyEmptyLike:
     """ Represents a call to numpy.empty_like for code generation.
     """
     __slots__ = ()
+    name = 'empty_like'
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
@@ -831,6 +858,7 @@ class NumpyOnesLike:
     """ Represents a call to numpy.ones_like for code generation.
     """
     __slots__ = ()
+    name = 'ones_like'
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
@@ -845,6 +873,7 @@ class NumpyZerosLike:
     """ Represents a call to numpy.zeros_like for code generation.
     """
     __slots__ = ()
+    name = 'zeros_like'
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
@@ -859,6 +888,7 @@ class NumpyZerosLike:
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     __slots__ = ('_shape','_rank','_order','_arg','_precision')
+    name = 'norm'
     _dtype = NativeReal()
 
     def __init__(self, arg, axis=None):
@@ -964,15 +994,19 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 class NumpyFabs    (NumpyUfuncUnary):
     """Represent a call to the fabs function in the Numpy library"""
     __slots__ = ()
+    name = 'fabs'
 class NumpyExp     (NumpyUfuncUnary):
     """Represent a call to the exp function in the Numpy library"""
     __slots__ = ()
+    name = 'exp'
 class NumpyLog     (NumpyUfuncUnary):
     """Represent a call to the log function in the Numpy library"""
     __slots__ = ()
+    name = 'log'
 class NumpySqrt    (NumpyUfuncUnary):
     """Represent a call to the sqrt function in the Numpy library"""
     __slots__ = ()
+    name = 'sqrt'
 
 #------------------------------------------------------------------------------
 # Trigonometric functions
@@ -980,57 +1014,74 @@ class NumpySqrt    (NumpyUfuncUnary):
 class NumpySin    (NumpyUfuncUnary):
     """Represent a call to the sin function in the Numpy library"""
     __slots__ = ()
+    name = 'sin'
 class NumpyCos    (NumpyUfuncUnary):
     """Represent a call to the cos function in the Numpy library"""
     __slots__ = ()
+    name = 'cos'
 class NumpyTan    (NumpyUfuncUnary):
     """Represent a call to the tan function in the Numpy library"""
     __slots__ = ()
+    name = 'tan'
 class NumpyArcsin (NumpyUfuncUnary):
     """Represent a call to the arcsin function in the Numpy library"""
     __slots__ = ()
+    name = 'arcsin'
 class NumpyArccos (NumpyUfuncUnary):
     """Represent a call to the arccos function in the Numpy library"""
     __slots__ = ()
+    name = 'arccos'
 class NumpyArctan (NumpyUfuncUnary):
     """Represent a call to the arctan function in the Numpy library"""
     __slots__ = ()
+    name = 'arctan'
 class NumpyArctan2(NumpyUfuncBinary):
     """Represent a call to the arctan2 function in the Numpy library"""
     __slots__ = ()
+    name = 'arctan2'
 class NumpyHypot  (NumpyUfuncBinary):
     """Represent a call to the hypot function in the Numpy library"""
     __slots__ = ()
+    name = 'hypot'
 class NumpySinh   (NumpyUfuncUnary):
     """Represent a call to the sinh function in the Numpy library"""
     __slots__ = ()
+    name = 'sinh'
 class NumpyCosh   (NumpyUfuncUnary):
     """Represent a call to the cosh function in the Numpy library"""
     __slots__ = ()
+    name = 'cosh'
 class NumpyTanh   (NumpyUfuncUnary):
     """Represent a call to the tanh function in the Numpy library"""
     __slots__ = ()
+    name = 'tanh'
 class NumpyArcsinh(NumpyUfuncUnary):
     """Represent a call to the arcsinh function in the Numpy library"""
     __slots__ = ()
+    name = 'arcsinh'
 class NumpyArccosh(NumpyUfuncUnary):
     """Represent a call to the arccosh function in the Numpy library"""
     __slots__ = ()
+    name = 'arccosh'
 class NumpyArctanh(NumpyUfuncUnary):
     """Represent a call to the arctanh function in the Numpy library"""
     __slots__ = ()
+    name = 'arctanh'
 #class NumpyDeg2rad(NumpyUfuncUnary):
 #    """Represent a call to the numpydeg2rad function in the Numpy library"""
 #    __slots__ = ()
+#    name = 'deg2rad'
 #class NumpyRad2deg(NumpyUfuncUnary):
 #    """Represent a call to the numpyrad2deg function in the Numpy library"""
 #     __slots__ = ()
+#     name = 'rad2deg'
 
 #=======================================================================================
 
 class NumpyAbs(NumpyUfuncUnary):
     """Represent a call to the abs function in the Numpy library"""
     __slots__ = ()
+    name = 'abs'
     def _set_dtype_precision(self, x):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
@@ -1038,6 +1089,7 @@ class NumpyAbs(NumpyUfuncUnary):
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
     __slots__ = ()
+    name = 'floor'
     def _set_dtype_precision(self, x):
         self._dtype     = NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
@@ -1045,6 +1097,7 @@ class NumpyFloor(NumpyUfuncUnary):
 class NumpyMod(NumpyUfuncBinary):
     """Represent a call to the mod function in the Numpy library"""
     __slots__ = ()
+    name = 'mod'
 
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
@@ -1091,6 +1144,7 @@ class NumpyMod(NumpyUfuncBinary):
 class NumpyAmin(NumpyUfuncUnary):
     """Represent a call to the amin function in the Numpy library"""
     __slots__ = ()
+    name = 'amin'
     def _set_shape_rank(self, x):
         self._shape     = ()
         self._rank      = 0
@@ -1106,6 +1160,7 @@ class NumpyAmin(NumpyUfuncUnary):
 class NumpyAmax(NumpyUfuncUnary):
     """Represent a call to the amax function in the Numpy library"""
     __slots__ = ()
+    name = 'amax'
     def _set_shape_rank(self, x):
         self._shape     = ()
         self._rank      = 0
@@ -1117,25 +1172,6 @@ class NumpyAmax(NumpyUfuncUnary):
     @property
     def is_elemental(self):
         return False
-
-
-#=======================================================================================
-
-
-NumpyArrayClass = ClassDef('numpy.ndarray',
-        methods=[
-            FunctionDef('shape',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Shape}),
-            FunctionDef('sum',[],[],body=[],
-                decorators={'numpy_wrapper':NumpySum}),
-            FunctionDef('min',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyAmin}),
-            FunctionDef('max',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyAmax}),
-            FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
-            FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
