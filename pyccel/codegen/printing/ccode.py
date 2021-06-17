@@ -16,7 +16,7 @@ from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Assign, datatype, Import, AugAssign
+from pyccel.ast.core      import Assign, datatype, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -241,6 +241,11 @@ class CCodePrinter(CodePrinter):
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
+        # Dictionary linking optional variables to their
+        # temporary counterparts which provide allocated
+        # memory
+        # Key is optional variable
+        self._optional_partners = {}
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
@@ -1325,6 +1330,9 @@ class CCodePrinter(CodePrinter):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
 
+        if len(args) == 0:
+            return 'return;\n'
+
         if len(args) > 1:
             if expr.stmt:
                 return self._print(expr.stmt)+'\n'+'return 0;\n'
@@ -1430,18 +1438,36 @@ class CCodePrinter(CodePrinter):
         return "{0} {1}= {2};\n".format(lhs_code, op, rhs_code)
 
     def _print_Assign(self, expr):
-        if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
-            self._temporary_args = [VariableAddress(a) for a in expr.lhs]
-            return '{};\n'.format(self._print(expr.rhs))
-        if isinstance(expr.rhs, (NumpyArray)):
-            return self.copy_NumpyArray_Data(expr)
-        if isinstance(expr.rhs, (NumpyFull)):
-            return self.arrayFill(expr)
-        if isinstance(expr.rhs, NumpyArange):
-            return self.fill_NumpyArange(expr.rhs, expr.lhs)
+        prefix_code = ''
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(lhs, Variable) and lhs.is_optional:
+            if lhs in self._optional_partners:
+                # Collect temporary variable which provides
+                # allocated memory space for this optional variable
+                tmp_var = self._optional_partners[lhs]
+            else:
+                # Create temporary variable to provide allocated
+                # memory space before assigning to the pointer value
+                # (may be NULL)
+                tmp_var_name = self._parser.get_new_name()
+                tmp_var = lhs.clone(tmp_var_name, is_optional=False)
+                self._additional_declare.append(tmp_var)
+                self._optional_partners[lhs] = tmp_var
+            # Point optional variable at an allocated memory space
+            prefix_code = self._print(AliasAssign(lhs, tmp_var))
+        if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
+            self._temporary_args = [VariableAddress(a) for a in lhs]
+            return prefix_code+'{};\n'.format(self._print(rhs))
+        if isinstance(rhs, (NumpyArray)):
+            return prefix_code+self.copy_NumpyArray_Data(expr)
+        if isinstance(rhs, (NumpyFull)):
+            return prefix_code+self.arrayFill(expr)
+        if isinstance(rhs, NumpyArange):
+            return prefix_code+self.fill_NumpyArange(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        return '{} = {};\n'.format(lhs, rhs)
+        return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs

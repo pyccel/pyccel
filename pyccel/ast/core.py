@@ -1790,6 +1790,9 @@ class Return(Basic):
         args = (self.expr, self.stmt)
         return args
 
+    def __repr__(self):
+        return "Return({})".format(','.join([repr(e) for e in self.expr]))
+
 class FunctionDef(Basic):
 
     """Represents a function definition.
