@@ -1461,8 +1461,8 @@ class SemanticParser(BasicParser):
         expr.clear_user_nodes()
         return expr
     def _visit_Comment(self, expr, **settings):
-        return expr
         expr.clear_user_nodes()
+        return expr
     def _visit_CommentBlock(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
