@@ -542,8 +542,7 @@ def insert_fors(blocks, indices, level = 0):
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
     else:
-        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) \
-                else [b] \
+        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
     if blocks.length == 1:
@@ -641,8 +640,7 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     tmp_vars = []
     res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
 
-    body = [insert_fors(b, indices) if isinstance(b, tuple) \
-            else [b] for b in res]
+    body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
 
     return body, indices+tmp_vars
