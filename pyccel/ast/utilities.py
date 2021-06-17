@@ -458,7 +458,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             current_level = new_level
 
         elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, PythonTuple):
+                and isinstance(line.rhs, PythonTuple) and not language_has_vectors:
 
             lhs = line.lhs
             rhs = line.rhs
