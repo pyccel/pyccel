@@ -1471,7 +1471,6 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
-        expr.clear_user_nodes()
         code = expr._user_nodes
         code = code[-1]
         index = code.body.index(expr)
@@ -1506,6 +1505,7 @@ class SemanticParser(BasicParser):
                 errors.report(msg, symbol=type(code.body[index]).__name__,
                     severity='fatal', blocker=self.blocking)
 
+        expr.clear_user_nodes()
         return expr
 
     def _visit_Literal(self, expr, **settings):
