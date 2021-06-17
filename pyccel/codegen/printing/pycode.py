@@ -146,8 +146,9 @@ class PythonCodePrinter(CodePrinter):
         body    = self._indent_codestring(body)
         args    = ', '.join(self._print(i) for i in expr.arguments)
 
-        imports   = self._indent_codestring(imports)
-        functions = self._indent_codestring(functions)
+        imports    = self._indent_codestring(imports)
+        functions  = self._indent_codestring(functions)
+        interfaces = self._indent_codestring(interfaces)
 
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
         doc_string = self._indent_codestring(doc_string)
