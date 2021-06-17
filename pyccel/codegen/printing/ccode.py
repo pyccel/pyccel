@@ -1244,7 +1244,8 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
+        return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+                any(a is bi for b in self._additional_args for bi in b)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
