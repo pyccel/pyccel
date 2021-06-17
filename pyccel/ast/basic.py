@@ -282,6 +282,10 @@ class Basic:
         self._user_nodes.append(user_nodes)
 
     def clear_user_nodes(self):
+        """ Delete all information about user nodes. This is useful
+        if the same node is used for the syntactic and semantic
+        stages, and it should only have 1 user.
+        """
         self._user_nodes = []
 
     def remove_user_node(self, user_node):
