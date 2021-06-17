@@ -28,7 +28,7 @@ from .mathext       import math_functions, math_constants
 from .literals      import LiteralString, LiteralInteger, Literal, Nil
 
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants)
+                            numpy_random_functions, numpy_constants, NumpyArray)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, InhomogeneousTupleVariable, VariableAddress,
@@ -458,10 +458,12 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             current_level = new_level
 
         elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, PythonTuple) and not language_has_vectors:
+                and isinstance(line.rhs, (PythonTuple, NumpyArray)) and not language_has_vectors:
 
             lhs = line.lhs
             rhs = line.rhs
+            if isinstance(rhs, NumpyArray):
+                rhs = rhs.arg
 
             lhs_rank = lhs.rank
 
