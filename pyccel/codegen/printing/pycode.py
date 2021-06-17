@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
+from itertools import chain
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
@@ -12,7 +13,7 @@ from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, 
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
-from pyccel.ast.variable   import DottedName
+from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -117,7 +118,10 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            indices = ','.join(i for i in indices)
+            if isinstance(expr.base, HomogeneousTupleVariable):
+                indices = ']['.join(i for i in indices)
+            else:
+                indices = ','.join(i for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -126,18 +130,20 @@ class PythonCodePrinter(CodePrinter):
         return '{base}[{indices}]'.format(base=base, indices=indices)
 
     def _print_FunctionDef(self, expr):
-        name    = self._print(expr.name)
-        imports = ''.join(self._print(i) for i in expr.imports)
+        name       = self._print(expr.name)
+        imports    = ''.join(self._print(i) for i in expr.imports)
+        functions  = '\n'.join(self._print(f) for f in chain(expr.functions,expr.interfaces))
         body    = self._print(expr.body)
         body    = self._indent_codestring(body)
         args    = ', '.join(self._print(i) for i in expr.arguments)
 
-        imports = self._indent_codestring(imports)
+        imports   = self._indent_codestring(imports)
+        functions = self._indent_codestring(functions)
 
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
         doc_string = self._indent_codestring(doc_string)
 
-        body = ''.join([doc_string, imports, body])
+        body = ''.join([doc_string, functions, imports, body])
 
         code = ('def {name}({args}):\n'
                 '{body}\n').format(
@@ -692,6 +698,12 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PyccelBitAnd(self, expr):
         return '{} & {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_Duplicate(self, expr):
+        return '{} * {}'.format(self._print(expr.val), self._print(expr.length))
+
+    def _print_Concatenate(self, expr):
+        return ' + '.join([self._print(a) for a in expr.args])
 
     def _print_PyccelSymbol(self, expr):
         return expr
