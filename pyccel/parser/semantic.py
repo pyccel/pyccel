@@ -1459,7 +1459,7 @@ class SemanticParser(BasicParser):
     def _visit_Break(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
-    
+
     def _visit_Continue(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
