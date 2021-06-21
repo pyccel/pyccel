@@ -1451,21 +1451,27 @@ class SemanticParser(BasicParser):
     def _visit_Nil(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
+
     def _visit_EmptyNode(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
+
     def _visit_Break(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
+    
     def _visit_Continue(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
+
     def _visit_Comment(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
+
     def _visit_CommentBlock(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
+
     def _visit_AnnotatedComment(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
