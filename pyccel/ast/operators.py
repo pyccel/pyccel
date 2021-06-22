@@ -521,10 +521,16 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+            dtype, precision = cls._calculate_dtype(arg1, arg2)
+            if isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 return convert_to_literal(arg1.python_value + arg2.python_value,
                                           dtype, precision)
+            if dtype == arg2.dtype and precision == arg2.precision and \
+                    isinstance(arg1, Literal) and arg1.python_value == 0:
+                return arg2
+            if dtype == arg1.dtype and precision == arg1.precision and \
+                    isinstance(arg2, Literal) and arg2.python_value == 0:
+                return arg1
 
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
             isinstance(arg2, LiteralComplex) and \

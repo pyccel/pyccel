@@ -16,7 +16,7 @@ from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Assign, datatype, Import, AugAssign
+from pyccel.ast.core      import Assign, datatype, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -38,7 +38,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import ValuedVariable
+from pyccel.ast.variable import ValuedVariable, IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable
@@ -241,6 +241,11 @@ class CCodePrinter(CodePrinter):
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
+        # Dictionary linking optional variables to their
+        # temporary counterparts which provide allocated
+        # memory
+        # Key is optional variable
+        self._optional_partners = {}
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
@@ -268,7 +273,7 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
-        """ print the assignment of a NdArray
+        """ print the assignment of a NdArray or a homogeneous tuple
 
         parameters
         ----------
@@ -288,7 +293,7 @@ class CCodePrinter(CodePrinter):
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        arg = rhs.arg
+        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
@@ -910,7 +915,7 @@ class CCodePrinter(CodePrinter):
         base = expr.base
         inds = list(expr.indices)
         base_shape = base.shape
-        allow_negative_indexes = base.allows_negative_indexes
+        allow_negative_indexes = True if isinstance(base, PythonTuple) else base.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
@@ -925,7 +930,7 @@ class CCodePrinter(CodePrinter):
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
-        base_name = self._print(base.name)
+        base_name = self._print(base)
         if base.is_ndarray:
             if expr.rank > 0:
                 #managing the Slice input
@@ -1246,7 +1251,8 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
+        return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+                any(a is bi for b in self._additional_args for bi in b)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
@@ -1411,18 +1417,37 @@ class CCodePrinter(CodePrinter):
         return "{0} {1}= {2};\n".format(lhs_code, op, rhs_code)
 
     def _print_Assign(self, expr):
-        if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
-            self._temporary_args = [VariableAddress(a) for a in expr.lhs]
-            return '{};\n'.format(self._print(expr.rhs))
-        if isinstance(expr.rhs, (NumpyArray)):
-            return self.copy_NumpyArray_Data(expr)
-        if isinstance(expr.rhs, (NumpyFull)):
-            return self.arrayFill(expr)
-        if isinstance(expr.rhs, NumpyArange):
-            return self.fill_NumpyArange(expr.rhs, expr.lhs)
+        prefix_code = ''
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(lhs, Variable) and lhs.is_optional:
+            if lhs in self._optional_partners:
+                # Collect temporary variable which provides
+                # allocated memory space for this optional variable
+                tmp_var = self._optional_partners[lhs]
+            else:
+                # Create temporary variable to provide allocated
+                # memory space before assigning to the pointer value
+                # (may be NULL)
+                tmp_var_name = self._parser.get_new_name()
+                tmp_var = lhs.clone(tmp_var_name, is_optional=False)
+                self._additional_declare.append(tmp_var)
+                self._optional_partners[lhs] = tmp_var
+            # Point optional variable at an allocated memory space
+            prefix_code = self._print(AliasAssign(lhs, tmp_var))
+        if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
+            self._temporary_args = [VariableAddress(a) for a in lhs]
+            return prefix_code+'{};\n'.format(self._print(rhs))
+        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+        if isinstance(rhs, (NumpyArray, PythonTuple)):
+            return prefix_code+self.copy_NumpyArray_Data(expr)
+        if isinstance(rhs, (NumpyFull)):
+            return prefix_code+self.arrayFill(expr)
+        if isinstance(rhs, NumpyArange):
+            return prefix_code+self.fill_NumpyArange(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        return '{} = {};\n'.format(lhs, rhs)
+        return prefix_code+'{} = {};\n'.format(lhs, rhs)
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs
@@ -1580,7 +1605,9 @@ class CCodePrinter(CodePrinter):
             return expr.name
 
     def _print_VariableAddress(self, expr):
-        if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
+        if isinstance(expr.variable, IndexedElement):
+            return '&{}'.format(self._print(expr.variable))
+        elif self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)
         else:
             return '&{}'.format(expr.variable.name)

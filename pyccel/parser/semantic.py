@@ -22,8 +22,14 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment, CommentBlock, Pass
+from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import python_builtin_datatype
+from pyccel.ast.builtins import PythonList
+from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
+                                 PythonMap, PythonTuple, Lambda)
 
+from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -40,47 +46,33 @@ from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Concatenate
-from pyccel.ast.variable import Constant
-from pyccel.ast.variable import Variable
-from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
-from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import DottedName, DottedVariable
-from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With
-from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
-from pyccel.ast.itertoolsext import Product
 
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
+from pyccel.ast.datatypes import (NativeInteger, NativeBool,
+                                  NativeReal, NativeString,
+                                  NativeGeneric, NativeComplex)
 
-from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat
-from pyccel.ast.literals import Nil
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
-from pyccel.ast.utilities import python_builtin_libs
-from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast.utilities import split_positional_keyword_arguments
+from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.itertoolsext import Product
 
-from pyccel.ast.builtins import PythonPrint
-from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
-from pyccel.ast.builtins import python_builtin_datatype
-from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonMap, PythonTuple, Lambda)
+from pyccel.ast.literals import LiteralTrue, LiteralFalse
+from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
@@ -88,15 +80,28 @@ from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
-from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
-
-from pyccel.ast.internals import Slice, PyccelSymbol
-
-from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
+from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
+
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
+
+from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
+
+from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
+from pyccel.ast.utilities import python_builtin_libs
+from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import split_positional_keyword_arguments
+
+from pyccel.ast.variable import Constant
+from pyccel.ast.variable import Variable
+from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
+from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import DottedName, DottedVariable
+from pyccel.ast.variable import ValuedVariable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -727,7 +732,7 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['is_pointer'    ] = False
-
+            d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -737,7 +742,8 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-
+            d_var['is_stack_array'] = not d_var['allocatable'   ]
+            d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, Duplicate):
@@ -745,12 +751,13 @@ class SemanticParser(BasicParser):
 
             # TODO must check that it is consistent with pyccel's rules
             # TODO improve
-            d_var['datatype'   ]    = d['datatype']
-            d_var['rank'       ]    = expr.rank
-            d_var['shape'      ]    = expr.shape
+            d_var['datatype'      ] = d['datatype']
+            d_var['rank'          ] = expr.rank
+            d_var['shape'         ] = expr.shape
             d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
-            d_var['allocatable']    = not d_var['is_stack_array']
-            d_var['is_pointer' ]    = False
+            d_var['allocatable'   ] = not d_var['is_stack_array']
+            d_var['is_pointer'    ] = False
+            d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
@@ -771,6 +778,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.rank)
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
@@ -1109,13 +1117,15 @@ class SemanticParser(BasicParser):
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
-            if is_homogeneous:
+            if is_homogeneous and not (d_lhs['is_pointer'] and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
 
         else:
-            new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
+            new_type = HomogeneousTupleVariable \
+                    if isinstance(rhs, (HomogeneousTupleVariable, Concatenate, Duplicate)) \
+                    else Variable
             lhs = new_type(dtype, name, **d_lhs, is_temp=is_temp)
 
         return lhs
@@ -1446,18 +1456,31 @@ class SemanticParser(BasicParser):
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_EmptyNode(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_Break(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_Continue(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_Comment(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_CommentBlock(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_AnnotatedComment(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
@@ -1495,13 +1518,17 @@ class SemanticParser(BasicParser):
                 errors.report(msg, symbol=type(code.body[index]).__name__,
                     severity='fatal', blocker=self.blocking)
 
+        expr.clear_user_nodes()
         return expr
 
     def _visit_Literal(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_PythonComplex(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_Pass(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_Variable(self, expr, **settings):
@@ -1639,17 +1666,20 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 
-        if not hasattr(first, 'cls_base') or first.cls_base is None:
+        d_var = self._infere_type(first)
+        if d_var.get('cls_base', None) is None:
             errors.report('Attribute {} not found'.format(rhs_name),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
 
-        if first.cls_base:
-            attr_name = [i.name for i in first.cls_base.attributes]
+        cls_base = d_var['cls_base']
+
+        if cls_base:
+            attr_name = [i.name for i in cls_base.attributes]
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            methods = list(cls_base.methods) + list(cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
                     errors.report('Generic methods are not supported yet',
@@ -1680,8 +1710,8 @@ class SemanticParser(BasicParser):
                                     current_function = self._current_function)
 
         # look for a class attribute / property
-        elif isinstance(rhs, PyccelSymbol) and first.cls_base:
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+        elif isinstance(rhs, PyccelSymbol) and cls_base:
+            methods = list(cls_base.methods) + list(cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
                     errors.report('Generic methods are not supported yet',
@@ -1691,7 +1721,7 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             # standard class attribute
             if rhs in attr_name:
-                self._current_class = first.cls_base
+                self._current_class = cls_base
                 second = self._visit(rhs, **settings)
                 self._current_class = None
                 return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
@@ -2587,15 +2617,18 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
+        expr.clear_user_nodes()
         self.insert_header(expr)
         return expr
 
     def _visit_Template(self, expr, **settings):
+        expr.clear_user_nodes()
         self.insert_template(expr)
         return expr
 
     def _visit_ClassHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
+        expr.clear_user_nodes()
         self.insert_header(expr)
         return expr
 
@@ -3307,6 +3340,7 @@ class SemanticParser(BasicParser):
         return macro
 
     def _visit_MacroShape(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_MacroVariable(self, expr, **settings):

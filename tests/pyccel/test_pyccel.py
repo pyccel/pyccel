@@ -597,7 +597,7 @@ def test_multiple_results(language):
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
                 float,float,float,float,float,float
-                ,float,float,float,float], language=language)
+                ,float,float,float,float,int,int], language=language)
 
 #------------------------------------------------------------------------------
 def test_elemental(language):
@@ -703,6 +703,12 @@ def test_headers(language):
     with open(test_file, 'w') as f:
         code = ("")
         f.write(code)
+
+#------------------------------------------------------------------------------
+def test_basic_header():
+    filename='scripts/basic_header.pyh'
+    cwd = get_abs_path('.')
+    compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
