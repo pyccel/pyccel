@@ -160,7 +160,7 @@ def test_complexity_ex_assembly():
 
     print('----------------------')
     i = 0
-    comp = [2*READ + WRITE*k1*k2 + WRITE*(p1 + 1)*(p2 + 1) + 2*WRITE + ne1*(READ + WRITE + ne2*(READ + WRITE*k1*k2 + WRITE + (p1 + 1)**2*(p2 + 1)**2*(14*READ + 6*WRITE + k1*k2*(22*READ + 9*WRITE)) + (p1 + 1)*(p2 + 1)*(READ*(p1 + 1)*(p2 + 1) + WRITE) + (p1 + 1)*(p2 + 1)*(READ + WRITE + k1*(READ + WRITE + k2*(5*READ + 2*WRITE)))))]
+    comp = [2*READ + WRITE*k1*k2 + WRITE*(p1 + 1)*(p2 + 1) + 2*WRITE + ne1*(READ + WRITE + ne2*(READ + WRITE*k1*k2 + WRITE + (p1 + 1)**2*(p2 + 1)**2*(14*READ + 6*WRITE + k1*k2*(18*READ + 7*WRITE)) + (p1 + 1)*(p2 + 1)*(READ*(p1 + 1)*(p2 + 1) + WRITE) + (p1 + 1)*(p2 + 1)*(READ + WRITE + k1*(READ + WRITE + k2*(5*READ + 2*WRITE)))))]
 
 
     for f, c in complexity.costs.items():

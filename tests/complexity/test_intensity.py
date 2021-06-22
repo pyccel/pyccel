@@ -171,7 +171,7 @@ def test_complexity_ex_assembly():
 
     print('----------------------')
     i = 0
-    comp = [(3 * (4 * MUL + ADD))/(22*READ + 9*WRITE)
+    comp = [(10 * MUL + 3 * ADD)/(18*READ + 7*WRITE)
             ]
 
 

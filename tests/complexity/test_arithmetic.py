@@ -168,7 +168,7 @@ def test_complexity_ex_assembly():
 
     print('----------------------')
     i = 0
-    comp = [ne1 * ne2 * (p1+1) * (p2+1) * (k1*k2*(ADD + 2*MUL) + (p1+1) * (p2+1) * (5*ADD + 4*SUB + 3 * k1 * k2 * (4 * MUL + ADD))) # assemble_matrix_ex01
+    comp = [ne1 * ne2 * (p1+1) * (p2+1) * (k1*k2*(ADD + 2*MUL) + (p1+1) * (p2+1) * (5*ADD + 4*SUB + k1 * k2 * (10 * MUL + 3 * ADD))) # assemble_matrix_ex01
             ]
 
     for f, c in complexity.costs.items():
