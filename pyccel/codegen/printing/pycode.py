@@ -281,6 +281,9 @@ class PythonCodePrinter(CodePrinter):
         else:
             return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
+    def _print_Iterable(self, expr):
+        return self._print(expr.iterable)
+
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
                 start = self._print(expr.start),
@@ -290,6 +293,11 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonEnumerate(self, expr):
         return 'enumerate({elem})'.format(
                 elem = self._print(expr.element))
+
+    def _print_PythonMap(self, expr):
+        return 'map({func}, {args})'.format(
+                func = self._print(expr.func.name),
+                args = self._print(expr.func_args))
 
     def _print_PythonReal(self, expr):
         return '({}).real'.format(self._print(expr.internal_var))
