@@ -1314,12 +1314,16 @@ class Program(Basic):
 
 #==============================================================================
 class Iterable(Basic):
+    indexless_types = (PythonRange, PythonEnumerate)
     acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
+    __slots__ = ('_iterable','_indices','_num_indices_required')
+    _attribute_nodes = ('_iterable','_indices')
+
     def __init__(self, iterable):
         self._iterable = iterable
         self._indices  = None
 
-        if isinstance(iterable, PythonRange):
+        if isinstance(iterable, self.indexless_types):
             self._num_indices_required =  0
         elif isinstance(iterable, Product):
             self._num_indices_required = len(iterable.elements)
@@ -1328,6 +1332,8 @@ class Iterable(Basic):
         else:
             raise TypeError("Unknown iterator type")
 
+        super().__init__()
+
     @property
     def num_indices_required(self):
         return self._num_indices_required
@@ -1335,16 +1341,48 @@ class Iterable(Basic):
     def set_indices(self, *indices):
         self._indices = indices
 
+    def get_assigns(self, target):
+        iterable = self._iterable
+        if isinstance(iterable, PythonRange):
+            return []
+        ranges = self.get_target_from_range()
+        if isinstance(iterable, PythonEnumerate):
+            target = target[1:]
+            ranges = ranges[1:]
+        if isinstance(target, (tuple, list)):
+            return [Assign(t, r) for t,r in zip(target, self.get_target_from_range())]
+        else:
+            return [Assign(target, ranges)]
+
     def get_target_from_range(self):
-        range_base = self._iterable.__getitem__(*self._indices)
+        idx = self._indices[0] if len(self._indices)==1 else self._indices
+        range_base = self._iterable[idx]
         if isinstance(self._iterable, PythonMap):
-            return FunctionCall(range_base[0], *range_base[1])
+            return FunctionCall(range_base[0], [range_base[1]])
         else:
             return range_base
+
+    def get_range(self):
+        if isinstance(self._iterable, PythonRange):
+            return self._iterable
+        elif isinstance(self._iterable, Product):
+            prod = self._iterable
+            lengths = [getattr(e, '__len__',
+                    getattr(e, 'length', PythonLen(e))) for e in prod.elements]
+            return [PythonRange(l) for l in lengths]
+        else:
+            length = getattr(self._iterable, '__len__',
+                    getattr(self._iterable, 'length', PythonLen(self._iterable)))
+            return PythonRange(length)
 
     @property
     def iterable(self):
         return self._iterable
+
+    @property
+    def indices(self):
+        return self._indices
+
 #==============================================================================
 
 class For(Basic):
@@ -1384,8 +1422,10 @@ class For(Basic):
         body,
         local_vars = (),
         ):
-        if PyccelAstNode.stage == "semantic":
-            if not isinstance(iter_obj, Iterable):
+        if PyccelAstNode.stage != "syntactic":
+            if isinstance(iter_obj, Iterable.indexless_types):
+                iter_obj = Iterable(iter_obj)
+            elif not isinstance(iter_obj, Iterable):
                 raise TypeError('iter_obj must be an iterable')
 
         if iterable(body):
