@@ -5,7 +5,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
 __all__ = (
     'FunctionalFor',
@@ -16,10 +16,11 @@ __all__ = (
 )
 
 #==============================================================================
-class FunctionalFor(Basic):
+class FunctionalFor(PyccelAstNode):
 
     """."""
-    __slots__ = ('_loops','_expr', '_lhs', '_indices', '_index')
+    __slots__ = ('_loops','_expr', '_lhs', '_indices', '_index',
+            '_dtype','_precision','_rank','_shape','_order')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices', '_index')
 
     def __init__(
@@ -30,12 +31,19 @@ class FunctionalFor(Basic):
         indices=None,
         index=None,
         ):
-        self._loops   = loops
+        self._loops    = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
         self._index   = index
         super().__init__()
+
+        if PyccelAstNode.stage != 'syntactic':
+            self._dtype     = lhs.dtype
+            self._precision = lhs.precision
+            self._rank      = lhs.rank
+            self._shape     = lhs.shape
+            self._order     = lhs.order
 
     @property
     def loops(self):
@@ -62,6 +70,9 @@ class GeneratorComprehension(FunctionalFor):
     """ Super class for all functions which reduce generator expressions to scalars
     """
     __slots__ = ()
+
+    def __repr__(self):
+        return '{}([{}]  {}'.format(self.name, self.loops, self.indices)
 
 #==============================================================================
 class FunctionalSum(GeneratorComprehension):
