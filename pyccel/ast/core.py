@@ -25,7 +25,6 @@ from .internals      import Slice, PyccelSymbol
 
 from .literals       import LiteralInteger, Nil, convert_to_literal
 from .itertoolsext   import Product
-from .functionalexpr import FunctionalFor
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 
@@ -846,7 +845,7 @@ class AugAssign(Assign):
 
         super().__init__(lhs, rhs, status, like)
 
-    def __str__(self):
+    def __repr__(self):
         return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
 
     @property
