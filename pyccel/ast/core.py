@@ -1312,6 +1312,41 @@ class Program(Basic):
         return [Declare(i.dtype, i) for i in self.variables]
 
 
+#==============================================================================
+class Iterable(Basic):
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
+    def __init__(self, iterable):
+        self._iterable = iterable
+        self._indices  = None
+
+        if isinstance(iterable, PythonRange):
+            self._num_indices_required =  0
+        elif isinstance(iterable, Product):
+            self._num_indices_required = len(iterable.elements)
+        elif isinstance(iterable, self.acceptable_iterator_types):
+            self._num_indices_required = 1
+        else:
+            raise TypeError("Unknown iterator type")
+
+    @property
+    def num_indices_required(self):
+        return self._num_indices_required
+
+    def set_indices(self, *indices):
+        self._indices = indices
+
+    def get_target_from_range(self):
+        range_base = self._iterable.__getitem__(*self._indices)
+        if isinstance(self._iterable, PythonMap):
+            return FunctionCall(range_base[0], *range_base[1])
+        else:
+            return range_base
+
+    @property
+    def iterable(self):
+        return self._iterable
+#==============================================================================
+
 class For(Basic):
 
     """Represents a 'for-loop' in the code.
@@ -1350,14 +1385,7 @@ class For(Basic):
         local_vars = (),
         ):
         if PyccelAstNode.stage == "semantic":
-            cond_iter = iterable(iter_obj)
-            cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
-                    PythonEnumerate, PythonZip, PythonMap))
-            cond_iter = cond_iter or isinstance(iter_obj, Variable) \
-                and is_iterable_datatype(iter_obj.dtype)
-          #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
-          #      and is_iterable_datatype(iter_obj.arguments[0].dtype)
-            if not cond_iter:
+            if not isinstance(iter_obj, Iterable):
                 raise TypeError('iter_obj must be an iterable')
 
         if iterable(body):

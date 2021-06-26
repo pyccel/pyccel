@@ -268,6 +268,9 @@ class PythonEnumerate(Basic):
     def element(self):
         return self._element
 
+    def __getitem__(self, index):
+        return [index, self.element[index]]
+
 #==============================================================================
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
@@ -463,21 +466,37 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
-    __slots__ = ('_args',)
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_args','_func')
+    _attribute_nodes = ('_args','_func')
     name = 'map'
 
     def __init__(self, *args):
         if len(args)<2:
             raise TypeError('wrong number of arguments')
-        self._args = args
+        self._func = args[0]
+        self._func_args = args[1:]
         super().__init__()
+
+    @property
+    def func(self):
+        """ Arguments of the map
+        """
+        return self._func
+
+    @property
+    def func_args(self):
+        """ Arguments of the function
+        """
+        return self._func_args
 
     @property
     def args(self):
         """ Arguments of the map
         """
-        return self._args
+        return [self.func, *self._func_args]
+
+    def __getitem__(self, index):
+        return self.func, self.func_args[index]
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -560,6 +579,9 @@ class PythonRange(Basic):
     def step(self):
         return self._step
 
+    def __getitem__(self, index):
+        return index
+
 
 #==============================================================================
 class PythonZip(PyccelInternalFunction):
@@ -593,6 +615,9 @@ class PythonZip(PyccelInternalFunction):
         """ Length of the shortest zip argument
         """
         return self._length
+
+    def __getitem__(self, index):
+        return [a[index] for a in self.args]
 
 #==============================================================================
 class PythonAbs(PyccelInternalFunction):
