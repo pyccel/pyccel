@@ -51,6 +51,7 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import Iterable
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -2322,90 +2323,61 @@ class SemanticParser(BasicParser):
         self.create_new_loop_scope()
 
         # treatment of the index/indices
-        iterable = self._visit(expr.iterable, **settings)
+        iterable = Iterable(self._visit(expr.iterable, **settings))
         body     = list(expr.body.body)
         iterator = expr.target
 
-        PyccelAstNode.stage = 'syntactic'
+        if iterable.num_indices_required:
+            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_indices_required)]
+            iterable.set_indices(*indices)
+        else:
+            if isinstance(iterable.iterable, PythonEnumerate):
+                iterator = iterator[0]
+            index = self.check_for_variable(iterator)
+            if index is None:
+                index = Variable('int', iterator, is_temp = iterator.is_temp)
+                self.insert_variable(index)
+            iterable.set_indices(index)
 
-        if isinstance(iterable, Variable):
-            indx   = self.get_new_variable()
-            assign = Assign(iterator, IndexedElement(iterable, indx))
-            assign.set_fst(expr.fst)
-            iterator = indx
-            body     = [assign] + body
+        new_expr = []
 
-        elif isinstance(iterable, PythonMap):
-            indx   = self.get_new_variable()
-            func   = iterable.args[0]
-            args   = [IndexedElement(arg, indx) for arg in iterable.args[1:]]
-            assign = Assign(iterator, FunctionCall(func, args))
-            assign.set_fst(expr.fst)
-            iterator = indx
-            body     = [assign] + body
-
-        elif isinstance(iterable, PythonZip):
-            args = iterable.args
-            indx = self.get_new_variable()
-            for i, arg in enumerate(args):
-                assign = Assign(iterator[i], IndexedElement(arg, indx))
-                assign.set_fst(expr.fst)
-                body = [assign] + body
-            iterator = indx
-
-        elif isinstance(iterable, PythonEnumerate):
-            indx   = iterator.args[0]
-            var    = iterator.args[1]
-            assign = Assign(var, IndexedElement(iterable.element, indx))
-            assign.set_fst(expr.fst)
-            iterator = indx
-            body     = [assign] + body
-
-        elif isinstance(iterable, Product):
-            args     = iterable.elements
-            iterator = list(iterator)
-            for i,arg in enumerate(args):
-                if not isinstance(arg, PythonRange):
-                    indx   = self.get_new_variable()
-                    assign = Assign(iterator[i], IndexedElement(arg, indx))
-
-                    assign.set_fst(expr.fst)
-                    body        = [assign] + body
-                    iterator[i] = indx
+        iterator = expr.target
 
         if isinstance(iterator, PyccelSymbol):
-            name   = iterator
-            var    = self.check_for_variable(name)
-            target = var
-            if var is None:
-                target = Variable('int', name, rank=0)
-                self.insert_variable(target)
+            iterator_rhs = iterable.get_target_from_range()
+            iterator_d_var = self._infere_type(iterator_rhs)
+            target = self._assign_lhs_variable(iterator, iterator_d_var,
+                            rhs=iterator_rhs, new_expressions=new_expr,
+                            is_augassign=False, **settings)
 
-        elif isinstance(iterator, list):
-            target = []
-            for name in iterator:
-                var  = Variable('int', name, rank=0)
-                self.insert_variable(var)
-                target.append(var)
+        elif isinstance(iterator, PythonTuple):
+            iterator_rhs = iterable.get_target_from_range()
+            target = [self._assign_lhs_variable(it, self._infere_type(rhs),
+                                rhs=rhs, new_expressions=new_expr,
+                                is_augassign=False, **settings)
+                        for it, rhs in zip(iterator, iterator_rhs)]
         else:
-
-            # TODO ERROR not tested yet
 
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
-        PyccelAstNode.stage = 'semantic'
+
 
         body = [self._visit(i, **settings) for i in body]
 
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
 
-        if isinstance(iterable, Variable):
-            return ForIterator(target, iterable, body)
-
-        for_expr = For(target, iterable, body, local_vars=local_vars)
-        for_expr.nowait_expr = expr.nowait_expr
+        if isinstance(iterable.iterable, Product):
+            for_expr = body
+            for t, r in zip(target, iterable.get_range()):
+                for_expr = For(t, r, for_expr, local_vars=local_vars)
+                for_expr.nowait_expr = expr.nowait_expr
+                for_expr = [for_expr]
+            for_expr = for_expr[0]
+        else:
+            for_expr = For(target, iterable, body, local_vars=local_vars)
+            for_expr.nowait_expr = expr.nowait_expr
         return for_expr
 
 
