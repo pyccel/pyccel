@@ -1461,18 +1461,26 @@ class CCodePrinter(CodePrinter):
         return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
-        counter = self._print(expr.target)
-        body  = self._print(expr.body)
-        if isinstance(expr.iterable, PythonRange):
-            iterable = expr.iterable
-        elif isinstance(expr.iterable, PythonEnumerate):
-            iterable = PythonRange(PythonLen(expr.iterable.element))
-        elif isinstance(expr.iterable, PythonZip):
-            iterable = PythonRange(expr.iterable.length)
-        elif isinstance(expr.iterable, PythonMap):
-            iterable = PythonRange(PythonLen(expr.iterable.args[1]))
-        else:
-            raise NotImplementedError("Only iterables currently supported are Range, Enumerate, Zip and Map")
+
+        indices = expr.iterable.indices
+        index = indices[0] if indices else expr.target
+        if expr.iterable.num_indices_required:
+            self._additional_declare.append(index)
+
+        target   = index
+        iterable = expr.iterable.get_range()
+
+        if not isinstance(iterable, PythonRange):
+            # Only iterable currently supported is PythonRange
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal')
+
+        counter    = self._print(target)
+        body       = self._print(expr.body)
+
+        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+        body = self._print(additional_assign) + body
+
         start = self._print(iterable.start)
         stop  = self._print(iterable.stop )
         step  = self._print(iterable.step )
