@@ -1780,39 +1780,14 @@ class FCodePrinter(CodePrinter):
             return prolog, epilog
         # ...
 
-        if not isinstance(expr.iterable, (PythonRange, Product , PythonZip,
-                            PythonEnumerate, PythonMap)):
-            # Only iterable currently supported are PythonRange or Product
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
-
-        if isinstance(expr.iterable, PythonRange):
-            prolog, epilog = _do_range(expr.target, expr.iterable, \
-                                       prolog, epilog)
-
-        elif isinstance(expr.iterable, Product):
-            for i, a in zip(expr.target, expr.iterable.elements):
-                if isinstance(a, PythonRange):
-                    itr_ = a
-                else:
-                    itr_ = PythonRange(a.shape[0])
-                prolog, epilog = _do_range(i, itr_, \
-                                           prolog, epilog)
-
-        elif isinstance(expr.iterable, PythonZip):
-            itr_ = PythonRange(expr.iterable.length)
-            prolog, epilog = _do_range(expr.target, itr_, \
-                                       prolog, epilog)
-
-        elif isinstance(expr.iterable, PythonEnumerate):
-            itr_ = PythonRange(PythonLen(expr.iterable.element))
-            prolog, epilog = _do_range(expr.target, itr_, \
-                                       prolog, epilog)
-
-        elif isinstance(expr.iterable, PythonMap):
-            itr_ = PythonRange(PythonLen(expr.iterable.args[1]))
-            prolog, epilog = _do_range(expr.target, itr_, \
-                                       prolog, epilog)
+        indices = expr.iterable.indices
+        index = indices[0] if indices else expr.target
+        if expr.iterable.num_indices_required:
+            self.add_vars_to_namespace(index)
+        prolog, epilog = _do_range(index, expr.iterable.get_range(), \
+                                   prolog, epilog)
+        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+        prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
 
