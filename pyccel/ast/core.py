@@ -1373,6 +1373,8 @@ class Iterable(Basic):
         else:
             length = getattr(self._iterable, '__len__',
                     getattr(self._iterable, 'length', PythonLen(self._iterable)))
+            if callable(length):
+                length = length()
             return PythonRange(length)
 
     @property
