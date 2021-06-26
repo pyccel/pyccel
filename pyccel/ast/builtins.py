@@ -21,6 +21,7 @@ from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+from .variable  import IndexedElement
 
 __all__ = (
     'PythonReal',
@@ -271,6 +272,10 @@ class PythonEnumerate(Basic):
     def __getitem__(self, index):
         return [index, self.element[index]]
 
+    @property
+    def length(self):
+        return PythonLen(self.element)
+
 #==============================================================================
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
@@ -466,15 +471,13 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
-    __slots__ = ('_args','_func')
-    _attribute_nodes = ('_args','_func')
+    __slots__ = ('_func','_func_args')
+    _attribute_nodes = ('_func','_func_args')
     name = 'map'
 
-    def __init__(self, *args):
-        if len(args)<2:
-            raise TypeError('wrong number of arguments')
-        self._func = args[0]
-        self._func_args = args[1:]
+    def __init__(self, func, func_args):
+        self._func = func
+        self._func_args = func_args
         super().__init__()
 
     @property
@@ -493,10 +496,14 @@ class PythonMap(Basic):
     def args(self):
         """ Arguments of the map
         """
-        return [self.func, *self._func_args]
+        return [self.func, self._func_args]
 
     def __getitem__(self, index):
-        return self.func, self.func_args[index]
+        return self.func, IndexedElement(self.func_args, index)
+
+    @property
+    def length(self):
+        return PythonLen(self.func_args)
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -799,4 +806,5 @@ builtin_functions_dict = {
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
+    'map'      : PythonMap
 }
