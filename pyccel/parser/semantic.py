@@ -1497,8 +1497,24 @@ class SemanticParser(BasicParser):
                                value=value, **d_var)
 
     def _visit_CodeBlock(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr.body]
-        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
+        ls = []
+        for b in expr.body:
+            # Collect generator expressions in statements
+            gen_exp = b.get_attribute_nodes(GeneratorComprehension,
+                                     excluded_nodes = (FunctionDef,))
+            # Assign generator expressions to temporaries
+            gen_exp = [self._visit(Assign(g.lhs,g, fst=g.fst)) \
+                            for g in gen_exp if g.get_direct_user_nodes(
+                                lambda x: not isinstance(x, (GeneratorComprehension, Assign)))]
+
+            # Save parsed code
+            ls.extend(gen_exp)
+            line = self._visit(b, **settings)
+            if isinstance(line, CodeBlock):
+                ls.extend(line.body)
+            else:
+                ls.append(line)
+
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
@@ -2548,14 +2564,7 @@ class SemanticParser(BasicParser):
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_GeneratorComprehension(self, expr, **settings):
-        var = self.check_for_variable(expr.lhs)
-        if var is not None:
-            return var
-        else:
-            assign = Assign(expr.lhs, expr)
-            assign.set_fst(expr.fst)
-            additional_expr = self._visit(assign)
-            return additional_expr
+        return self.get_variable(expr.lhs)
 
     def _visit_While(self, expr, **settings):
 
