@@ -68,9 +68,6 @@ def builtin_function(expr, args=None):
                     symbol=expr,
                     severity='fatal')
 
-    if name == 'map':
-        return PythonMap(expr.func, *args[1:])
-
     if name == 'lambdify':
         return lambdify(expr, args)
 
