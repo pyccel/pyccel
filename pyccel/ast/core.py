@@ -664,8 +664,12 @@ class CodeBlock(Basic):
     def lhs(self):
         return self.body[-1].lhs
 
-    def insert2body(self, obj):
-        self._body = tuple(self.body + (obj,))
+    def insert2body(self, obj, back=True):
+        obj.set_current_user_node(self)
+        if back:
+            self._body = tuple(self.body + (obj,))
+        else:
+            self._body = tuple((obj,) + self.body)
 
     def __str__(self):
         return 'CodeBlock({})'.format(self.body)
@@ -840,6 +844,8 @@ class AugAssign(Assign):
         rhs,
         status=None,
         like=None,
+        *,
+        fst = None
         ):
 
         if op not in self._accepted_operators.keys():
@@ -847,9 +853,12 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like)
+        super().__init__(lhs, rhs, status, like, fst=fst)
 
     def __repr__(self):
+        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
+
+    def __str__(self):
         return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
 
     @property
