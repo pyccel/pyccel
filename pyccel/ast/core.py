@@ -404,6 +404,8 @@ class Assign(Basic):
         rhs,
         status=None,
         like=None,
+        *,
+        fst = None
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
@@ -414,6 +416,8 @@ class Assign(Basic):
         self._status = status
         self._like = like
         super().__init__()
+        if fst is not None:
+            self.set_fst(fst)
 
     def __str__(self):
         return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
