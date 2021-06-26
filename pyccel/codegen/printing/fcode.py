@@ -18,9 +18,6 @@ from collections import OrderedDict
 import functools
 import operator
 
-from sympy.core.numbers import NegativeInfinity as NINF
-from sympy.core.numbers import Infinity as INF
-
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import SeparatorComment, Comment
@@ -35,7 +32,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement, HomogeneousTupleVariable,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize)
+                             DottedName, PyccelArraySize, Constant)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
 from pyccel.ast.operators      import PyccelMod
@@ -61,6 +58,8 @@ from pyccel.ast.internals import Slice
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.literals  import Nil
+
+from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
@@ -153,6 +152,8 @@ math_function_to_fortran = {
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
 }
+
+INF = math_constants['inf']
 
 _default_methods = {
     '__init__': 'create',
@@ -1218,11 +1219,11 @@ class FCodePrinter(CodePrinter):
         rhs = expr.rhs
         # we don't print Range
         # TODO treat the case of iterable classes
-        if isinstance(rhs, NINF):
+        if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, INF):
+        if rhs == INF:
             rhs_code = 'Huge({0})'.format(lhs_code)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
