@@ -1760,32 +1760,26 @@ class FCodePrinter(CodePrinter):
         return loops
 
     def _print_For(self, expr):
-        prolog = ''
-        epilog = ''
-
-        # ...
-
-        def _do_range(target, iterable, prolog, epilog):
-            if not isinstance(iterable, PythonRange):
-                # Only iterable currently supported is PythonRange
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-
-            tar        = self._print(target)
-            range_code = self._print(iterable)
-
-            prolog += 'do {0} = {1}\n'.format(tar, range_code)
-            epilog = 'end do\n' + epilog
-
-            return prolog, epilog
-        # ...
 
         indices = expr.iterable.indices
         index = indices[0] if indices else expr.target
         if expr.iterable.num_indices_required:
             self.add_vars_to_namespace(index)
-        prolog, epilog = _do_range(index, expr.iterable.get_range(), \
-                                   prolog, epilog)
+
+        target   = index
+        my_range = expr.iterable.get_range()
+
+        if not isinstance(my_range, PythonRange):
+            # Only iterable currently supported is PythonRange
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal')
+
+        tar        = self._print(target)
+        range_code = self._print(iterable)
+
+        prolog = 'do {0} = {1}\n'.format(tar, range_code)
+        epilog = 'end do\n'
+
         additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
         prolog += self._print(additional_assign)
 
