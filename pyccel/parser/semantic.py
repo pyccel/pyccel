@@ -1391,25 +1391,67 @@ class SemanticParser(BasicParser):
         lhs_name = _get_name(expr.lhs)
         lhs  = self.check_for_variable(lhs_name)
 
-        if lhs is None:
-            tmp_lhs  = Variable('int', lhs_name)
-            self.insert_variable(tmp_lhs)
-        else:
-            tmp_lhs = None
+        loop = expr.loops
+        loops = expr.loops
+        nlevels = 0
+        index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
+        new_expr = []
+        while isinstance(loop, For):
+            nlevels+=1
+            iterable = Iterable(self._visit(loop.iterable, **settings))
+            n_index = max(1, iterable.num_indices_required)
+            iterable.set_indices(*[index]*n_index)
 
-        loops  = [self._visit(expr.loops, **settings)]
+            iterator = loop.target
+
+            if isinstance(iterator, PyccelSymbol):
+                iterator_rhs = iterable.get_target_from_range()
+                iterator_d_var = self._infere_type(iterator_rhs)
+                target = self._assign_lhs_variable(iterator, iterator_d_var,
+                                rhs=iterator_rhs, new_expressions=new_expr,
+                                is_augassign=False, **settings)
+
+            elif isinstance(iterator, PythonTuple):
+                iterator_rhs = iterable.get_target_from_range()
+                target = [self._assign_lhs_variable(it, self._infere_type(rhs),
+                                    rhs=rhs, new_expressions=new_expr,
+                                    is_augassign=False, **settings)
+                            for it, rhs in zip(iterator, iterator_rhs)]
+            else:
+
+                errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
+                       bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                       severity='error', blocker=self.blocking)
+
+
+            loop_elem = loop.body.body[0]
+
+            if isinstance(loop_elem, Assign):
+                gens = set(loop_elem.get_attribute_nodes(GeneratorComprehension))
+                if len(gens)==1:
+                    gen = gens.pop()
+                    assign = self._visit(Assign(gen.lhs, gen, fst=gen.fst))
+                    new_expr.append(assign)
+                    loop.substitute(gen, assign.lhs)
+                    loop_elem = loop.body.body[0]
+            loop = loop_elem
+
         result = self._visit(result, **settings)
         if isinstance(result, CodeBlock):
             result = result.body[-1]
 
-
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
+        lhs = Variable(dtype, lhs_name, **d_var)
+        self.insert_variable(lhs)
 
-        if tmp_lhs is not None:
-            self.remove_variable(tmp_lhs)
-            lhs = Variable(dtype, lhs_name, **d_var)
-            self.insert_variable(lhs)
+        loops  = [self._visit(expr.loops, **settings)]
+
+        if new_expr:
+            loop = loops[0]
+            for _ in range(nlevels-1):
+                loop = loop.body.body[0]
+            [loop.body.insert2body(e, back=False) for e in new_expr]
 
 
         if isinstance(expr, FunctionalSum):
