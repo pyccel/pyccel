@@ -15,7 +15,6 @@ from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
-from sympy import oo  as INF
 from sympy.core import cache
 
 #==============================================================================
@@ -40,7 +39,7 @@ from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For, FunctionalFor, ForIterator
+from pyccel.ast.core import For, ForIterator
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
@@ -62,7 +61,7 @@ from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeReal, NativeString,
                                   NativeGeneric, NativeComplex)
 
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -73,6 +72,8 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil
+
+from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
@@ -85,7 +86,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -817,6 +818,9 @@ class SemanticParser(BasicParser):
             d_var['cls_base'      ] = cls
             return d_var
 
+        elif isinstance(expr, GeneratorComprehension):
+            return self._infere_type(expr.lhs)
+
         else:
             msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
             errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
@@ -1380,6 +1384,54 @@ class SemanticParser(BasicParser):
 
         return lhs
 
+    def _assign_GeneratorComprehension(self, expr, **settings):
+
+        result   = expr.expr
+        lhs_name = _get_name(expr.lhs)
+        lhs  = self.check_for_variable(lhs_name)
+
+        if lhs is None:
+            tmp_lhs  = Variable('int', lhs_name)
+            self.insert_variable(tmp_lhs)
+        else:
+            tmp_lhs = None
+
+        loops  = [self._visit(expr.loops, **settings)]
+        result = self._visit(result, **settings)
+        if isinstance(result, CodeBlock):
+            result = result.body[-1]
+
+
+        d_var = self._infere_type(result, **settings)
+        dtype = d_var.pop('datatype')
+
+        if tmp_lhs is not None:
+            self.remove_variable(tmp_lhs)
+            lhs = Variable(dtype, lhs_name, **d_var)
+            self.insert_variable(lhs)
+
+
+        if isinstance(expr, FunctionalSum):
+            val = LiteralInteger(0)
+            if str_dtype(dtype) in ['real', 'complex']:
+                val = LiteralFloat(0.0)
+        elif isinstance(expr, FunctionalMin):
+            val = math_constants['inf']
+        elif isinstance(expr, FunctionalMax):
+            val = PyccelUnarySub(math_constants['inf'])
+
+        stmt = Assign(lhs, val)
+        stmt.set_fst(expr.fst)
+        loops.insert(0, stmt)
+
+        if isinstance(expr, FunctionalSum):
+            expr_new = FunctionalSum(loops, lhs=lhs)
+        elif isinstance(expr, FunctionalMin):
+            expr_new = FunctionalMin(loops, lhs=lhs)
+        elif isinstance(expr, FunctionalMax):
+            expr_new = FunctionalMax(loops, lhs=lhs)
+        expr_new.set_fst(expr.fst)
+        return expr_new
 
     #====================================================
     #                 _visit functions
@@ -1894,6 +1946,14 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        if isinstance(rhs, GeneratorComprehension):
+            genexp = self._assign_GeneratorComprehension(rhs, **settings)
+            if isinstance(expr, AugAssign):
+                new_expressions.append(genexp)
+                rhs = genexp.lhs
+            else:
+                return genexp
+
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.get_macro(name)
@@ -2349,60 +2409,6 @@ class SemanticParser(BasicParser):
         return for_expr
 
 
-    def _visit_GeneratorComprehension(self, expr, **settings):
-        msg = "Generator expressions as args are not currently correctly implemented\n"
-        msg += "See issue #272 at https://github.com/pyccel/pyccel/issues"
-        errors.report(msg, symbol = expr,
-                  bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                  severity='fatal')
-
-        result   = expr.expr
-        lhs_name = _get_name(expr.lhs)
-        lhs  = self.check_for_variable(lhs_name)
-
-        if lhs is None:
-            tmp_lhs  = Variable('int', lhs_name)
-            self.insert_variable(tmp_lhs)
-        else:
-            tmp_lhs = None
-
-        loops  = [self._visit(i, **settings) for i in expr.loops]
-        result = self._visit(result, **settings)
-        if isinstance(result, CodeBlock):
-            result = result.body[-1]
-
-
-        d_var = self._infere_type(result, **settings)
-        dtype = d_var.pop('datatype')
-
-        if tmp_lhs is not None:
-            self.remove_variable(tmp_lhs)
-            lhs = Variable(dtype, lhs_name, **d_var)
-            self.insert_variable(lhs)
-
-
-        if isinstance(expr, FunctionalSum):
-            val = LiteralInteger(0)
-            if str_dtype(dtype) in ['real', 'complex']:
-                val = LiteralFloat(0.0)
-        elif isinstance(expr, FunctionalMin):
-            val = INF
-        elif isinstance(expr, FunctionalMax):
-            val = -INF
-
-        stmt = Assign(expr.lhs, val)
-        stmt.set_fst(expr.fst)
-        loops.insert(0, stmt)
-
-        if isinstance(expr, FunctionalSum):
-            expr_new = FunctionalSum(loops, lhs=lhs)
-        elif isinstance(expr, FunctionalMin):
-            expr_new = FunctionalMin(loops, lhs=lhs)
-        elif isinstance(expr, FunctionalMax):
-            expr_new = FunctionalMax(loops, lhs=lhs)
-        expr_new.set_fst(expr.fst)
-        return expr_new
-
     def _visit_FunctionalFor(self, expr, **settings):
 
         target  = expr.expr
@@ -2568,6 +2574,16 @@ class SemanticParser(BasicParser):
         index = self._visit(index, **settings)
 
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
+
+    def _visit_GeneratorComprehension(self, expr, **settings):
+        var = self.check_for_variable(expr.lhs)
+        if var is not None:
+            return var
+        else:
+            assign = Assign(expr.lhs, expr)
+            assign.set_fst(expr.fst)
+            additional_expr = self._visit(assign)
+            return additional_expr
 
     def _visit_While(self, expr, **settings):
 
