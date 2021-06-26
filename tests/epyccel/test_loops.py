@@ -76,19 +76,6 @@ def test_double_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="product iterable is not implemented yet\
-                in C language"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Cannot handle partially unpacked iterables. See #736")
-        ])
-    )
-)
 def test_product_loop_on_2d_array_C(language):
 
     f1 = loops.product_loop_on_2d_array_C
@@ -101,19 +88,6 @@ def test_product_loop_on_2d_array_C(language):
     f2( y )
     assert np.array_equal( x, y )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="product iterable is not implemented yet\
-                in C language"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Cannot handle partially unpacked iterables. See #736")
-        ])
-    )
-)
 def test_product_loop_on_2d_array_F(language):
 
     f1 = loops.product_loop_on_2d_array_F
@@ -132,10 +106,7 @@ def test_product_loop_on_2d_array_F(language):
             pytest.mark.xfail(reason="Function in function not implemented in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Cannot handle partially unpacked iterables. See #736")
-        ])
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_map_on_1d_array(language):
@@ -147,15 +118,6 @@ def test_map_on_1d_array(language):
 
     assert np.array_equal( f1(z), f2(z) )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Cannot handle partially unpacked iterables. See #736")
-        ])
-    )
-)
 def test_enumerate_on_1d_array(language):
 
     f1 = loops.enumerate_on_1d_array
@@ -165,15 +127,6 @@ def test_enumerate_on_1d_array(language):
 
     assert np.array_equal( f1(z), f2(z) )
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Cannot handle partially unpacked iterables. See #736")
-        ])
-    )
-)
 def test_zip_prod(language):
 
     f1 = loops.zip_prod
