@@ -1775,7 +1775,7 @@ class FCodePrinter(CodePrinter):
                 severity='fatal')
 
         tar        = self._print(target)
-        range_code = self._print(iterable)
+        range_code = self._print(my_range)
 
         prolog = 'do {0} = {1}\n'.format(tar, range_code)
         epilog = 'end do\n'
