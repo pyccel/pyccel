@@ -28,7 +28,7 @@ from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For, FunctionalFor
+from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
@@ -60,7 +60,7 @@ from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
@@ -170,7 +170,7 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._scope.append(stmt)
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, Basic) and isinstance(stmt, ast.AST):
+            if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
                 result.set_fst(stmt)
             self._scope.pop()
             return result
@@ -330,6 +330,7 @@ class SyntaxParser(BasicParser):
             lhs = PythonTuple(*lhs)
 
         rhs = self._visit(stmt.value)
+
         expr = Assign(lhs, rhs)
 
         # we set the fst to keep track of needed information for errors
@@ -907,6 +908,9 @@ class SyntaxParser(BasicParser):
         if len(args) == 0:
             args = ()
 
+        if len(args) == 1 and isinstance(args[0], GeneratorComprehension):
+            return args[0]
+
         func = self._visit(stmt.func)
 
         if isinstance(func, PyccelSymbol):
@@ -984,7 +988,6 @@ class SyntaxParser(BasicParser):
 
     def _visit_GeneratorExp(self, stmt):
 
-
         result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
@@ -992,7 +995,7 @@ class SyntaxParser(BasicParser):
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
-        name = str(self._visit(parent.func))
+        name = self._visit(parent.func)
 
         grandparent = self._scope[-4]
         if isinstance(grandparent, ast.Assign):
@@ -1017,7 +1020,6 @@ class SyntaxParser(BasicParser):
             generators[-1].insert2body(body)
             body = generators.pop()
         indices = indices[::-1]
-        body = [body]
         if name == 'sum':
             expr = FunctionalSum(body, result, lhs, indices, None)
         elif name == 'min':
@@ -1029,6 +1031,8 @@ class SyntaxParser(BasicParser):
                           symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
+
+        expr.set_fst(parent)
 
         return expr
 
