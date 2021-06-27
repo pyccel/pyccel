@@ -87,9 +87,6 @@ class GeneratorComprehension(FunctionalFor):
     """
     __slots__ = ()
 
-    def __repr__(self):
-        return '{}([{}]  {}'.format(self.name, self.loops, self.indices)
-
 #==============================================================================
 class FunctionalSum(GeneratorComprehension):
     """ Represents a call to sum for a list argument
