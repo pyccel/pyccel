@@ -665,6 +665,10 @@ class CodeBlock(Basic):
         return self.body[-1].lhs
 
     def insert2body(self, obj, back=True):
+        """ Insert an object to the body of the codeblock
+        The object is inserted at the back by default but
+        can be inserted at the front by setting back to False
+        """
         obj.set_current_user_node(self)
         if back:
             self._body = tuple(self.body + (obj,))

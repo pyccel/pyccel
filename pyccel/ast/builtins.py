@@ -505,6 +505,8 @@ class PythonMap(Basic):
 
     @property
     def length(self):
+        """ Return the length of the resulting object
+        """
         return PythonLen(self.func_args)
 
 #==============================================================================
