@@ -39,7 +39,7 @@ from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For, ForIterator
+from pyccel.ast.core import For
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
@@ -1407,13 +1407,13 @@ class SemanticParser(BasicParser):
             if isinstance(iterator, PyccelSymbol):
                 iterator_rhs = iterable.get_target_from_range()
                 iterator_d_var = self._infere_type(iterator_rhs)
-                target = self._assign_lhs_variable(iterator, iterator_d_var,
+                self._assign_lhs_variable(iterator, iterator_d_var,
                                 rhs=iterator_rhs, new_expressions=new_expr,
                                 is_augassign=False, **settings)
 
             elif isinstance(iterator, PythonTuple):
                 iterator_rhs = iterable.get_target_from_range()
-                target = [self._assign_lhs_variable(it, self._infere_type(rhs),
+                _ = [self._assign_lhs_variable(it, self._infere_type(rhs),
                                     rhs=rhs, new_expressions=new_expr,
                                     is_augassign=False, **settings)
                             for it, rhs in zip(iterator, iterator_rhs)]
@@ -1451,7 +1451,7 @@ class SemanticParser(BasicParser):
             loop = loops[0]
             for _ in range(nlevels-1):
                 loop = loop.body.body[0]
-            [loop.body.insert2body(e, back=False) for e in new_expr]
+            _ = [loop.body.insert2body(e, back=False) for e in new_expr]
 
 
         if isinstance(expr, FunctionalSum):
