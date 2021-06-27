@@ -274,6 +274,8 @@ class PythonEnumerate(Basic):
 
     @property
     def length(self):
+        """ Return the length of the enumerated object
+        """
         return PythonLen(self.element)
 
 #==============================================================================
