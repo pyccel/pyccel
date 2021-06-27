@@ -18,7 +18,23 @@ __all__ = (
 #==============================================================================
 class FunctionalFor(PyccelAstNode):
 
-    """."""
+    """
+    Represents any generator expression e.g:
+    a = [i for i in range(10)]
+
+    Parameters
+    ----------
+    loops   : CodeBlock/For
+              The loops contained in the expression
+    expr    : Basic
+              The expression at the origin of the expression
+              E.g. 'i' for '[i for i in range(10)]'
+    lhs     : Variable
+              The variable to which the result is assigned
+    indices : list of Variable
+              All iterator targets for the for loops
+    index : ?
+    """
     __slots__ = ('_loops','_expr', '_lhs', '_indices', '_index',
             '_dtype','_precision','_rank','_shape','_order')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices', '_index')
