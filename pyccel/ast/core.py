@@ -1414,6 +1414,7 @@ class Iterable(Basic):
             prod = self._iterable
             lengths = [getattr(e, '__len__',
                     getattr(e, 'length', PythonLen(e))) for e in prod.elements]
+            lengths = [l() if callable(l) else l for l in lengths]
             return [PythonRange(l) for l in lengths]
         else:
             length = getattr(self._iterable, '__len__',
