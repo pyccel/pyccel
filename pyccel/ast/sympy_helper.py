@@ -183,6 +183,9 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         symbol_map[sym] = expr
         return sym
 
+    elif isinstance(expr, Iterable):
+        return pyccel_to_sympy(expr.iterable, symbol_map, used_names)
+
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)
         stop  = pyccel_to_sympy(expr.stop , symbol_map, used_names)
