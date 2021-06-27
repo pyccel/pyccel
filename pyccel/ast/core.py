@@ -1394,9 +1394,9 @@ class Iterable(Basic):
             target = target[1:]
             ranges = ranges[1:]
         if isinstance(target, (tuple, list)):
-            return [Assign(t, r) for t,r in zip(target, ranges)]
+            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, ranges)]
         else:
-            return [Assign(target, ranges)]
+            return [AliasAssign(target, ranges) if target.is_pointer else Assign(target, ranges)]
 
     def get_target_from_range(self):
         """ Returns an element of the range (useful for get_assigns and to
