@@ -1395,6 +1395,7 @@ class SemanticParser(BasicParser):
         loops = expr.loops
         nlevels = 0
         index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
+        self.insert_variable(index)
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
@@ -1404,25 +1405,8 @@ class SemanticParser(BasicParser):
 
             iterator = loop.target
 
-            if isinstance(iterator, PyccelSymbol):
-                iterator_rhs = iterable.get_target_from_range()
-                iterator_d_var = self._infere_type(iterator_rhs)
-                self._assign_lhs_variable(iterator, iterator_d_var,
-                                rhs=iterator_rhs, new_expressions=new_expr,
-                                is_augassign=False, **settings)
-
-            elif isinstance(iterator, PythonTuple):
-                iterator_rhs = iterable.get_target_from_range()
-                _ = [self._assign_lhs_variable(it, self._infere_type(rhs),
-                                    rhs=rhs, new_expressions=new_expr,
-                                    is_augassign=False, **settings)
-                            for it, rhs in zip(iterator, iterator_rhs)]
-            else:
-
-                errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
-                       bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                       severity='error', blocker=self.blocking)
-
+            iterator_rhs = iterable.get_target_from_range()
+            tmp = self._visit(Assign(iterator, iterator_rhs, fst=expr.fst))
 
             loop_elem = loop.body.body[0]
 
@@ -1435,6 +1419,7 @@ class SemanticParser(BasicParser):
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
             loop = loop_elem
+        self.remove_variable(index)
 
         result = self._visit(result, **settings)
         if isinstance(result, CodeBlock):
