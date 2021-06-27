@@ -10,6 +10,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.datatypes  import default_precision
+from pyccel.ast.functionalexpr  import GeneratorComprehension
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable
@@ -84,6 +85,30 @@ class PythonCodePrinter(CodePrinter):
         if any(i not in src_info[0] for i in import_obj.target):
             src_info[0].update(import_obj.target)
             src_info[1].append(import_obj)
+
+    def _find_functional_rhs(self, expr):
+        dummy_var = expr.index
+        iterators = []
+        body = expr.loops[1]
+        while not isinstance(body, Assign):
+            if isinstance(body, CodeBlock):
+                body = body.body
+                if len(body) > 1:
+                    if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
+                        raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
+                body = body[0]
+            elif isinstance(body, For):
+                iterators.append(body.iterable)
+                body = body.body
+            else:
+                raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
+        body = self._print(body.rhs)
+        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+                        for idx, iters in zip(expr.indices, iterators)])
+
+        return '{} {}'.format(body, for_loops)
+
+    #----------------------------------------------------------------------
 
     def _print_tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -203,11 +228,16 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
 
-        rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
-        lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
+        if expr.stmt:
+            rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)]
+            lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)]
+        else:
+            rhs_list = []
+            lhs_list = []
+        remaining_stmts = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
         expr_return_vars = [a for a in expr.expr if a not in lhs_list]
 
-        return 'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
+        return remaining_stmts+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
         imports  = ''.join(self._print(i) for i in expr.imports)
@@ -386,26 +416,15 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
-        dummy_var = expr.index
-        iterators = []
-        body = expr.loops[1]
-        while not isinstance(body, Assign):
-            if isinstance(body, CodeBlock):
-                body = body.body
-                if len(body) > 1:
-                    if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
-                        raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
-                body = body[0]
-            elif isinstance(body, For):
-                iterators.append(body.iterable)
-                body = body.body
-            else:
-                raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
-        body = self._print(body.rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
+        generator = self._find_functional_rhs(expr)
         lhs = self._print(expr.lhs)
-        return '{} = [{} {}]\n'.format(lhs, body, for_loops)
+        return '{} = [{}]\n'.format(lhs, generator)
+
+    def _print_GeneratorComprehension(self, expr):
+        generator = self._find_functional_rhs(expr)
+        lhs = self._print(expr.lhs)
+
+        return '{} = {}({})\n'.format(lhs, expr.name, generator)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)

@@ -1322,15 +1322,15 @@ class CCodePrinter(CodePrinter):
                 return 'return {0};\n'.format(self._print(args[0]))
 
             # make sure that stmt contains one assign node.
-            assert(len(last_assign)==1)
-            variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+            last_assign = last_assign[-1]
+            variables = last_assign.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
             unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
-                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
-                return code + '\nreturn {};\n'.format(self._print(last_assign[0].rhs))
+                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                return code + '\nreturn {};\n'.format(self._print(last_assign.rhs))
             else:
                 code = ''+self._print(expr.stmt)
-                self._additional_declare.append(last_assign[0].lhs)
+                self._additional_declare.append(last_assign.lhs)
         return code + 'return {0};\n'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):

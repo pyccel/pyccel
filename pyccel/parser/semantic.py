@@ -1467,12 +1467,14 @@ class SemanticParser(BasicParser):
         stmt.set_fst(expr.fst)
         loops.insert(0, stmt)
 
+        indices = [self._visit(i) for i in expr.indices]
+
         if isinstance(expr, FunctionalSum):
-            expr_new = FunctionalSum(loops, lhs=lhs)
+            expr_new = FunctionalSum(loops, lhs=lhs, indices = indices)
         elif isinstance(expr, FunctionalMin):
-            expr_new = FunctionalMin(loops, lhs=lhs)
+            expr_new = FunctionalMin(loops, lhs=lhs, indices = indices)
         elif isinstance(expr, FunctionalMax):
-            expr_new = FunctionalMax(loops, lhs=lhs)
+            expr_new = FunctionalMax(loops, lhs=lhs, indices = indices)
         expr_new.set_fst(expr.fst)
         return expr_new
 
@@ -2007,13 +2009,15 @@ class SemanticParser(BasicParser):
         lhs = expr.lhs
 
         if isinstance(rhs, GeneratorComprehension):
+            genexp = self._assign_GeneratorComprehension(rhs, **settings)
             if isinstance(expr, AugAssign):
-                genexp = self._assign_GeneratorComprehension(rhs, **settings)
                 new_expressions.append(genexp)
                 rhs = genexp.lhs
+            elif rhs.lhs == lhs:
+                return genexp
             else:
-                rhs.set_lhs(lhs)
-                return self._assign_GeneratorComprehension(rhs, **settings)
+                new_expressions.append(genexp)
+                rhs = genexp.lhs
 
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
