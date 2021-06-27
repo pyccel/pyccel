@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import create_incremented_string
+from .core      import create_incremented_string, Iterable
 
 from .builtins  import PythonRange, PythonTuple
 
