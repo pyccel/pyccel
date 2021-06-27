@@ -1327,6 +1327,15 @@ class Program(Basic):
 
 #==============================================================================
 class Iterable(Basic):
+    """
+    Wrapper around iterable types helping to convert between those
+    types and a range (necessary in low level languages, e.g. C and Fortran)
+
+    Paramaters
+    ----------
+    iterable : acceptable_iterator_type
+                The iterator being wrapped
+    """
     indexless_types = (PythonRange, PythonEnumerate)
     acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
     __slots__ = ('_iterable','_indices','_num_indices_required')
@@ -1349,12 +1358,30 @@ class Iterable(Basic):
 
     @property
     def num_indices_required(self):
+        """ Number of indices which must be generated in order to
+        convert this iteratable to a range
+        """
         return self._num_indices_required
 
     def set_indices(self, *indices):
+        """ Set the indices used to define the iterator/target from the range
+        """
         self._indices = indices
 
     def get_assigns(self, target):
+        """ Returns a list containing any assigns necessary to initialise
+        the loop iterators/targets when using a range iterable
+
+        Parameters
+        ----------
+        target : Variable or list of Variables
+                 The index(es) over which the loop iterates
+
+        Results
+        -------
+        assigns : list of Assign
+                  The assignments necessary to define target
+        """
         iterable = self._iterable
         if isinstance(iterable, PythonRange):
             return []
@@ -1368,6 +1395,9 @@ class Iterable(Basic):
             return [Assign(target, ranges)]
 
     def get_target_from_range(self):
+        """ Returns an element of the range (useful for get_assigns and to
+        determine the dtype etc of the loop iterator)
+        """
         idx = self._indices[0] if len(self._indices)==1 else self._indices
         range_base = self._iterable[idx]
         if isinstance(self._iterable, PythonMap):
@@ -1376,6 +1406,8 @@ class Iterable(Basic):
             return range_base
 
     def get_range(self):
+        """ Returns the range required for this iteratable
+        """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
         elif isinstance(self._iterable, Product):
@@ -1392,10 +1424,14 @@ class Iterable(Basic):
 
     @property
     def iterable(self):
+        """ Returns the iteratable being wrapped
+        """
         return self._iterable
 
     @property
     def indices(self):
+        """ Returns the indices used to define the iterator/target from the range
+        """
         return self._indices
 
 #==============================================================================
