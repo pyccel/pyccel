@@ -1543,11 +1543,12 @@ class SemanticParser(BasicParser):
         for b in expr.body:
             # Collect generator expressions in statements
             gen_exp = b.get_attribute_nodes(GeneratorComprehension,
-                                     excluded_nodes = (FunctionDef,))
+                                     excluded_nodes = (FunctionDef,)) \
+                        if not isinstance(b, FunctionDef) else []
             # Assign generator expressions to temporaries
             gen_exp = [self._visit(Assign(g.lhs,g, fst=g.fst)) \
                             for g in gen_exp if g.get_direct_user_nodes(
-                                lambda x: not isinstance(x, (GeneratorComprehension, Assign)))]
+                                lambda x: not isinstance(x, (GeneratorComprehension, Assign, Return)))]
 
             # Save parsed code
             ls.extend(gen_exp)
@@ -2006,12 +2007,13 @@ class SemanticParser(BasicParser):
         lhs = expr.lhs
 
         if isinstance(rhs, GeneratorComprehension):
-            genexp = self._assign_GeneratorComprehension(rhs, **settings)
             if isinstance(expr, AugAssign):
+                genexp = self._assign_GeneratorComprehension(rhs, **settings)
                 new_expressions.append(genexp)
                 rhs = genexp.lhs
             else:
-                return genexp
+                rhs.set_lhs(lhs)
+                return self._assign_GeneratorComprehension(rhs, **settings)
 
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
