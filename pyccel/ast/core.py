@@ -1390,7 +1390,7 @@ class Iterable(Basic):
             target = target[1:]
             ranges = ranges[1:]
         if isinstance(target, (tuple, list)):
-            return [Assign(t, r) for t,r in zip(target, self.get_target_from_range())]
+            return [Assign(t, r) for t,r in zip(target, ranges)]
         else:
             return [Assign(target, ranges)]
 
