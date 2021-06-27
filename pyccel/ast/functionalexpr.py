@@ -81,6 +81,9 @@ class FunctionalFor(PyccelAstNode):
     def index(self):
         return self._index
 
+    def set_lhs(self, lhs):
+        self._lhs = lhs
+
 #==============================================================================
 class GeneratorComprehension(FunctionalFor):
     """ Super class for all functions which reduce generator expressions to scalars
