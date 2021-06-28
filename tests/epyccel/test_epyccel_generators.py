@@ -91,7 +91,7 @@ def test_expression1(language):
         n = b.shape[0]
         return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
 
-    n = randint(1,50)
+    n = randint(1,10)
     x = randint(100,size=n)
 
     f_epyc = epyccel(f, language = language)
