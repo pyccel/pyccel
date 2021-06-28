@@ -504,12 +504,14 @@ class PythonCodePrinter(CodePrinter):
             factor = 16 if dtype == 'complex' else 8
             dtype += str(expr.precision*factor)
 
-        name = self._aliases.get(type(expr), expr.name)
-        return "{name}({arg}, dtype={dtype}, order='{order}')".format(
+        name  = self._aliases.get(type(expr), expr.name)
+        arg   = self._print(expr.arg)
+        dtype = "dtype={}".format(dtype)
+        order = "order='{}'".format(expr.order) if expr.order else ''
+        args  = [arg, dtype, order]
+        return "{name}({args})".format(
                 name  = name,
-                arg   = self._print(expr.arg),
-                dtype = dtype,
-                order = expr.order)
+                args  = ', '.join(a for a in args if a))
 
     def _print_NumpyAutoFill(self, expr):
         func_name = self._aliases.get(type(expr), expr.name)
@@ -519,11 +521,13 @@ class PythonCodePrinter(CodePrinter):
             factor = 16 if dtype == 'complex' else 8
             dtype += str(expr.precision*factor)
 
-        return "{func_name}({shape}, dtype={dtype}, order='{order}')".format(
+        shape = self._print(expr.shape)
+        dtype = "dtype={}".format(dtype)
+        order = "order='{}'".format(expr.order) if expr.order else ''
+        args  = [shape, dtype, order]
+        return "{func_name}({args})".format(
                 func_name = func_name,
-                shape = self._print(expr.shape),
-                dtype = dtype,
-                order = expr.order)
+                args  = ', '.join(a for a in args if a))
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
@@ -548,12 +552,14 @@ class PythonCodePrinter(CodePrinter):
             factor = 16 if dtype == 'complex' else 8
             dtype += str(expr.precision*factor)
 
-        return "{name}({shape}, {fill_value}, dtype={dtype}, order='{order}')".format(
+        shape      = self._print(expr.shape)
+        fill_value = self._print(expr.fill_value)
+        dtype      = "dtype={}".format(dtype)
+        order      = "order='{}'".format(expr.order) if expr.order else ''
+        args       = [shape, fill_value, dtype, order]
+        return "{name}({args})".format(
                 name  = name,
-                shape = self._print(expr.shape),
-                fill_value = self._print(expr.fill_value),
-                dtype = dtype,
-                order = expr.order)
+                args  = ', '.join(a for a in args if a))
 
     def _print_NumpyArange(self, expr):
         name = self._aliases.get(type(expr), expr.name)
