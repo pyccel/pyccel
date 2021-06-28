@@ -115,7 +115,7 @@ def test_expression2(language):
         n = b.shape[0]
         return 5+incr(2+incr(6+sum(b[i] for i in range(n))))
 
-    n = randint(1,50)
+    n = randint(1,10)
     x = randint(100,size=n)
 
     f_epyc = epyccel(f, language = language)
@@ -126,7 +126,7 @@ def nested_generators1(language):
     def f(a : 'float[:,:,:,:]'):
         return sum(sum(sum(a[i,k,o,2] for i in range(5)) for k in range(5)) for o in range(5))
 
-    x = randint(100,size=(5,5,5,5))
+    x = randint(50,size=(5,5,5,5))
 
     f_epyc = epyccel(f, language = language)
 
@@ -136,7 +136,7 @@ def nested_generators2(language):
     def f(a : 'float[:,:,:,:]'):
         return min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
 
-    x = randint(100,size=(5,5,5,5))
+    x = randint(50,size=(5,5,5,5))
 
     f_epyc = epyccel(f, language = language)
 
@@ -146,7 +146,7 @@ def nested_generators3(language):
     def f(a : 'float[:,:,:,:]'):
         return sum(sum(a[i,k,4,2] for i in range(5)) for k in range(5))**2
 
-    x = randint(100,size=(5,5,5,5))
+    x = randint(10,size=(5,5,5,5))
 
     f_epyc = epyccel(f, language = language)
 
