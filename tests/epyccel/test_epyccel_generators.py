@@ -8,7 +8,7 @@ def test_sum_range(language):
     def f(a0 : 'int[:]'):
         return sum(a0[i] for i in range(len(a0)))
 
-    n = randint(50)
+    n = randint(1,50)
     x = randint(100,size=n)
 
     f_epyc = epyccel(f, language = language)
@@ -19,7 +19,7 @@ def test_sum_var(language):
     def f(a : 'int[:]'):
         return sum(ai for ai in a)
 
-    n = randint(50)
+    n = randint(1,50)
     x = randint(100,size=n)
 
     f_epyc = epyccel(f, language = language)
@@ -91,7 +91,7 @@ def test_expression1(language):
         n = b.shape[0]
         return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
 
-    n = randint(50)
+    n = randint(1,50)
     x = randint(100,size=n)
 
     f_epyc = epyccel(f, language = language)
@@ -115,7 +115,7 @@ def test_expression2(language):
         n = b.shape[0]
         return 5+incr(2+incr(6+sum(b[i] for i in range(n))))
 
-    n = randint(50)
+    n = randint(1,50)
     x = randint(100,size=n)
 
     f_epyc = epyccel(f, language = language)
