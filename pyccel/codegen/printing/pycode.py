@@ -8,6 +8,7 @@
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
+from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
@@ -85,7 +86,7 @@ class PythonCodePrinter(CodePrinter):
             src_info[0].update(import_obj.target)
             src_info[1].append(import_obj)
 
-    def _find_functional_rhs(self, expr):
+    def _find_functional_body(self, expr):
         dummy_var = expr.index
         iterators = []
         body = expr.loops[1]
@@ -101,11 +102,7 @@ class PythonCodePrinter(CodePrinter):
                 body = body.body
             else:
                 raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
-        body = self._print(body.rhs)
-        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
-                        for idx, iters in zip(expr.indices, iterators)])
-
-        return '{} {}'.format(body, for_loops)
+        return body, iterators
 
     #----------------------------------------------------------------------
 
@@ -416,15 +413,33 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
-        generator = self._find_functional_rhs(expr)
+        body, iterators = self._find_functional_body(expr)
         lhs = self._print(expr.lhs)
-        return '{} = [{}]\n'.format(lhs, generator)
+        body = self._print(body.rhs)
+        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+                        for idx, iters in zip(expr.indices, iterators)])
+
+        return '{} = [{} {}]\n'.format(lhs, body, for_loops)
 
     def _print_GeneratorComprehension(self, expr):
-        generator = self._find_functional_rhs(expr)
-        lhs = self._print(expr.lhs)
+        body, iterators = self._find_functional_body(expr)
 
-        return '{} = {}({})\n'.format(lhs, expr.name, generator)
+        rhs = body.rhs
+        if isinstance(rhs, (PythonMax, PythonMin)):
+            args = rhs.args[0]
+            if body.lhs in args:
+                args = [a for a in args if a != body.lhs]
+                if len(args)==1:
+                    rhs = args[0]
+                else:
+                    rhs = type(body.rhs)(*args)
+
+        lhs = self._print(expr.lhs)
+        body = self._print(rhs)
+        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+                        for idx, iters in zip(expr.indices, iterators)])
+
+        return '{} = {}({} {})\n'.format(lhs, expr.name, body, for_loops)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
