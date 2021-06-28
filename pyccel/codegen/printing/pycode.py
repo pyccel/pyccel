@@ -86,9 +86,24 @@ class PythonCodePrinter(CodePrinter):
             src_info[0].update(import_obj.target)
             src_info[1].append(import_obj)
 
-    def _find_functional_body(self, expr):
+    def _find_functional_expr_and_iterables(self, expr):
+        """
+        Traverse through the loop representing a FunctionalFor or GeneratorComprehension
+        to extract the central expression and the different iterable objects
+
+        Parameters
+        ----------
+        expr : FunctionalFor
+
+        Returns
+        -------
+        body      : PyccelAstNode
+                    The expression inside the for loops
+        iterables : list of Iterables
+                    The iterables over which the for loops iterate
+        """
         dummy_var = expr.index
-        iterators = []
+        iterables = []
         body = expr.loops[1]
         while not isinstance(body, Assign):
             if isinstance(body, CodeBlock):
@@ -98,11 +113,11 @@ class PythonCodePrinter(CodePrinter):
                         raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
                 body = body[0]
             elif isinstance(body, For):
-                iterators.append(body.iterable)
+                iterables.append(body.iterable)
                 body = body.body
             else:
                 raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
-        return body, iterators
+        return body, iterables
 
     #----------------------------------------------------------------------
 
@@ -413,7 +428,7 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
-        body, iterators = self._find_functional_body(expr)
+        body, iterators = self._find_functional_expr_and_iterables(expr)
         lhs = self._print(expr.lhs)
         body = self._print(body.rhs)
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
@@ -422,7 +437,7 @@ class PythonCodePrinter(CodePrinter):
         return '{} = [{} {}]\n'.format(lhs, body, for_loops)
 
     def _print_GeneratorComprehension(self, expr):
-        body, iterators = self._find_functional_body(expr)
+        body, iterators = self._find_functional_expr_and_iterables(expr)
 
         rhs = body.rhs
         if isinstance(rhs, (PythonMax, PythonMin)):
