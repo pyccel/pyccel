@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
+import numpy as np
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
@@ -87,12 +88,12 @@ def test_min(language):
     assert f() == f_epyc()
 
 def test_expression1(language):
-    def f(b : 'int[:]'):
+    def f(b : 'float[:]'):
         n = b.shape[0]
         return (2*sum(b[i] for i in range(n))**5+5)*min(j+1. for j in b)**4+9
 
     n = randint(1,10)
-    x = randint(100,size=n)
+    x = np.array(randint(100,size=n), dtype=float)
 
     f_epyc = epyccel(f, language = language)
 
