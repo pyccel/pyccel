@@ -33,6 +33,8 @@ from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
+from pyccel.ast.mathext  import math_constants
+
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
@@ -1598,6 +1600,19 @@ class CCodePrinter(CodePrinter):
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
+
+    def _print_Constant(self, expr):
+        if expr == math_constants['inf']:
+            self._additional_imports.add("math")
+            return 'HUGE_VAL'
+        elif expr == math_constants['pi']:
+            self._additional_imports.add("math")
+            return 'M_PI'
+        elif expr == math_constants['e']:
+            self._additional_imports.add("math")
+            return 'M_E'
+        else:
+            raise NotImplementedError("Constant not implemented")
 
     def _print_Variable(self, expr):
         if self.stored_in_c_pointer(expr):
