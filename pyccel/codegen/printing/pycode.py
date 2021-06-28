@@ -231,13 +231,14 @@ class PythonCodePrinter(CodePrinter):
         if expr.stmt:
             rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)]
             lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)]
+            prelude  = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
         else:
             rhs_list = []
             lhs_list = []
-        remaining_stmts = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
+            prelude  = ''
         expr_return_vars = [a for a in expr.expr if a not in lhs_list]
 
-        return remaining_stmts+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
+        return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
         imports  = ''.join(self._print(i) for i in expr.imports)
