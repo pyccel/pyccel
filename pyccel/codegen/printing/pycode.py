@@ -10,7 +10,6 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.datatypes  import default_precision
-from pyccel.ast.functionalexpr  import GeneratorComprehension
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable

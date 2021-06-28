@@ -1406,7 +1406,7 @@ class SemanticParser(BasicParser):
             iterator = loop.target
 
             iterator_rhs = iterable.get_target_from_range()
-            tmp = self._visit(Assign(iterator, iterator_rhs, fst=expr.fst))
+            self._visit(Assign(iterator, iterator_rhs, fst=expr.fst))
 
             loop_elem = loop.body.body[0]
 
