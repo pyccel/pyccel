@@ -72,3 +72,14 @@ while (k<3):
     print(f4(i,j))
 
 print(i,j)
+
+def print_func(x : int, y : int):
+    print(x,y)
+
+def test_issue910():
+    x = 0
+    y = 1
+    print_func(x,y)
+    return x,y
+
+l,m = test_issue910()
