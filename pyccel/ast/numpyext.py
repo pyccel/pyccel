@@ -591,7 +591,7 @@ class NumpyLinspace(NumpyNewArray):
         if not num:
             num = LiteralInteger(50)
 
-        if num.rank != 0:
+        if num.rank != 0 or not isinstance(num.dtype, NativeInteger):
             raise TypeError('Expecting positive integer num argument.')
 
         for arg in (start, stop, num):
