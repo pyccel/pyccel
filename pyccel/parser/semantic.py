@@ -739,6 +739,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
+            d_var['is_stack_array'] = not d_var['allocatable'   ]
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -1108,13 +1109,15 @@ class SemanticParser(BasicParser):
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
-            if is_homogeneous:
+            if is_homogeneous and not (d_lhs['is_pointer'] and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
 
         else:
-            new_type = HomogeneousTupleVariable if isinstance(rhs, HomogeneousTupleVariable) else Variable
+            new_type = HomogeneousTupleVariable \
+                    if isinstance(rhs, (HomogeneousTupleVariable, Concatenate, Duplicate)) \
+                    else Variable
             lhs = new_type(dtype, name, **d_lhs, is_temp=is_temp)
 
         return lhs
@@ -1450,18 +1453,31 @@ class SemanticParser(BasicParser):
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_EmptyNode(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_Break(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_Continue(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_Comment(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_CommentBlock(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
+
     def _visit_AnnotatedComment(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
@@ -1499,13 +1515,17 @@ class SemanticParser(BasicParser):
                 errors.report(msg, symbol=type(code.body[index]).__name__,
                     severity='fatal', blocker=self.blocking)
 
+        expr.clear_user_nodes()
         return expr
 
     def _visit_Literal(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_PythonComplex(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
     def _visit_Pass(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_Variable(self, expr, **settings):
@@ -2595,15 +2615,18 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
+        expr.clear_user_nodes()
         self.insert_header(expr)
         return expr
 
     def _visit_Template(self, expr, **settings):
+        expr.clear_user_nodes()
         self.insert_template(expr)
         return expr
 
     def _visit_ClassHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
+        expr.clear_user_nodes()
         self.insert_header(expr)
         return expr
 
@@ -3309,6 +3332,7 @@ class SemanticParser(BasicParser):
         return macro
 
     def _visit_MacroShape(self, expr, **settings):
+        expr.clear_user_nodes()
         return expr
 
     def _visit_MacroVariable(self, expr, **settings):
