@@ -81,7 +81,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Warning test
         run: |
-          python -m pytest -rx -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays -vs tests/epyccel/test_array_as_func_args.py
+          python -m pytest -rx --ignore=symbolic --ignore=ndarrays -vs tests/epyccel/test_array_as_func_args.py
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
