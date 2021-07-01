@@ -277,9 +277,6 @@ class FCodePrinter(CodePrinter):
     def _get_statement(self, codestring):
         return codestring
 
-    def _get_comment(self, text):
-        return "! {0}".format(text)
-
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
 
@@ -566,39 +563,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
-
-#    # TODO this is not used anymore since, we are calling printer inside
-#    #      numpyext. must be improved!!
-#    def _print_ZerosLike(self, expr):
-#        lhs = self._print(expr.lhs)
-#        rhs = self._print(expr.rhs)
-#        if isinstance(expr.rhs, IndexedElement):
-#            shape = []
-#            for i in expr.rhs.indices:
-#                if isinstance(i, Slice):
-#                    shape.append(i)
-#            rank = len(shape)
-#        else:
-#            rank = expr.rhs.rank
-#        rs = []
-#        for i in range(1, rank+1):
-#            l = 'lbound({0},{1})'.format(rhs, str(i))
-#            u = 'ubound({0},{1})'.format(rhs, str(i))
-#            r = '{0}:{1}'.format(l, u)
-#            rs.append(r)
-#        shape = ', '.join(self._print(i) for i in rs)
-#        init_value = self._print(expr.init_value)
-#
-#        code  = ('allocate({lhs}({shape}))\n'
-#                 '{lhs} = {init_value}').format(lhs=lhs,
-#                                                shape=shape,
-#                                                init_value=init_value)
-#
-#        return self._get_statement(code)
-
-
-    def _print_SumFunction(self, expr):
-        return str(expr)
 
     def _print_PythonLen(self, expr):
         var = expr.arg
@@ -892,20 +856,6 @@ class FCodePrinter(CodePrinter):
             code = ','.join(self._print(arg) for arg in args)
             code = 'max('+code+')'
         return self._get_statement(code)
-
-    def _print_Dot(self, expr):
-        return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l), self._print(expr.expr_r)))
-
-    def _print_Ceil(self, expr):
-        return self._get_statement('ceiling(%s)'%(self._print(expr.rhs)))
-
-    def _print_Mod(self, expr):
-        args = ','.join(self._print(i) for i in expr.args)
-        return 'modulo({})'.format(args)
-
-    def _print_Sign(self, expr):
-        # TODO use the appropriate precision from rhs
-        return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
 
     # ... MACROS
     def _print_MacroShape(self, expr):
@@ -2300,8 +2250,6 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelMinus(self, expr):
         args = [self._print(a) for a in expr.args]
 
-        if len(args) == 1:
-            return '-{}'.format(args[0])
         return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
@@ -2758,15 +2706,6 @@ class FCodePrinter(CodePrinter):
             return self._print_not_supported(expr)
 
 #=======================================================================================
-
-    def _pad_leading_columns(self, lines):
-        result = []
-        for line in lines:
-            if line.startswith('!'):
-                result.append("! " + line[1:].lstrip())
-            else:
-                result.append(line)
-        return result
 
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines
