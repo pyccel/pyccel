@@ -8,11 +8,11 @@
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
-from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName
+from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
-from pyccel.ast.variable   import DottedName
+from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -81,8 +81,9 @@ class PythonCodePrinter(CodePrinter):
         import_obj = Import(source, target)
         source = str(source)
         src_info = self._additional_imports.setdefault(source, (set(), []))
-        src_info[0].update(import_obj.target)
-        src_info[1].append(import_obj)
+        if any(i not in src_info[0] for i in import_obj.target):
+            src_info[0].update(import_obj.target)
+            src_info[1].append(import_obj)
 
     def _print_tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -117,7 +118,10 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            indices = ','.join(i for i in indices)
+            if isinstance(expr.base, HomogeneousTupleVariable):
+                indices = ']['.join(i for i in indices)
+            else:
+                indices = ','.join(i for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
@@ -125,19 +129,31 @@ class PythonCodePrinter(CodePrinter):
         base = self._print(expr.base)
         return '{base}[{indices}]'.format(base=base, indices=indices)
 
+    def _print_Interface(self, expr):
+        # TODO: Improve. See #885
+        func = expr.functions[0]
+        if not isinstance(func, FunctionAddress):
+            func.rename(expr.name)
+        return self._print(func)
+
     def _print_FunctionDef(self, expr):
-        name    = self._print(expr.name)
-        imports = ''.join(self._print(i) for i in expr.imports)
+        name       = self._print(expr.name)
+        imports    = ''.join(self._print(i) for i in expr.imports)
+        interfaces = ''.join(self._print(i) for i in expr.interfaces if not i.is_argument)
+        functions  = [f for f in expr.functions if not any(f in i.functions for i in expr.interfaces)]
+        functions  = ''.join(self._print(f) for f in functions)
         body    = self._print(expr.body)
         body    = self._indent_codestring(body)
         args    = ', '.join(self._print(i) for i in expr.arguments)
 
-        imports = self._indent_codestring(imports)
+        imports    = self._indent_codestring(imports)
+        functions  = self._indent_codestring(functions)
+        interfaces = self._indent_codestring(interfaces)
 
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
         doc_string = self._indent_codestring(doc_string)
 
-        body = ''.join([doc_string, imports, body])
+        body = ''.join([doc_string, functions, interfaces, imports, body])
 
         code = ('def {name}({args}):\n'
                 '{body}\n').format(
@@ -589,10 +605,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         # Print interface functions (one function with multiple decorators describes the problem)
         imports  = ''.join(self._print(i) for i in expr.imports)
-        interfaces = [i.functions[0] for i in expr.interfaces]
-        for f,i in zip(interfaces, expr.interfaces):
-            f.rename(i.name)
-        interfaces = ''.join(self._print(i) for i in interfaces)
+        interfaces = ''.join(self._print(i) for i in expr.interfaces)
         # Collect functions which are not in an interface
         funcs = [f for f in expr.funcs if not any(f in i.functions for i in expr.interfaces)]
         funcs = ''.join(self._print(f) for f in funcs)
@@ -693,6 +706,12 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PyccelBitAnd(self, expr):
         return '{} & {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_Duplicate(self, expr):
+        return '{} * {}'.format(self._print(expr.val), self._print(expr.length))
+
+    def _print_Concatenate(self, expr):
+        return ' + '.join([self._print(a) for a in expr.args])
 
     def _print_PyccelSymbol(self, expr):
         return expr

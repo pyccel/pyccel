@@ -27,11 +27,12 @@ from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants
 from .literals      import LiteralString, LiteralInteger, Literal, Nil
 
-from .numpyext      import (numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants, NumpyLinspace)
+from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
+                            numpy_random_functions, numpy_constants, NumpyArray, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
-                            IndexedElement, InhomogeneousTupleVariable, VariableAddress)
+                            IndexedElement, InhomogeneousTupleVariable, VariableAddress,
+                            HomogeneousTupleVariable )
 
 errors = Errors()
 
@@ -460,6 +461,24 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             save_spot.append(line)
             current_level = new_level
 
+        elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
+                and isinstance(line.rhs, (PythonTuple, NumpyArray)) and not language_has_vectors:
+
+            lhs = line.lhs
+            rhs = line.rhs
+            if isinstance(rhs, NumpyArray):
+                rhs = rhs.arg
+
+            lhs_rank = lhs.rank
+
+            new_assigns = [Assign(
+                            insert_index(expr=lhs,
+                                pos       = -lhs_rank,
+                                index_var = LiteralInteger(j)),
+                            rj) # lhs[j] = rhs[j]
+                          for j, rj in enumerate(rhs)]
+            collect_loops(new_assigns, indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
             lhs = line.lhs
             rhs = line.rhs
@@ -489,7 +508,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 if len(tmp_indices)>len(indices)-1:
                     indices.extend(tmp_indices[len(indices)-1:])
 
-                result.append(LoopCollection([block[-1]],  rhs.val.shape[0], set([lhs])))
+                result.append(LoopCollection(block, rhs.length, set([lhs])))
 
             else:
                 assigns = [Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], LiteralInteger(idx), simplify=True),
@@ -539,7 +558,7 @@ def insert_fors(blocks, indices, level = 0):
         return [For(indices[level], PythonRange(0,blocks.length), body)]
 
 #==============================================================================
-def expand_tuple_assignments(block):
+def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     """
     Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
 
@@ -547,10 +566,6 @@ def expand_tuple_assignments(block):
     ==========
     block      : CodeBlock
                 The expression to be modified
-
-    Results
-    =======
-    list : The contents of a replacement CodeBlock
 
     Examples
     --------
@@ -563,18 +578,32 @@ def expand_tuple_assignments(block):
     >>> b = Variable('int', 'b', shape=(,), rank=0)
     >>> c = Variable('int', 'c', shape=(,), rank=0)
     >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
-    >>> expand_tuple_assignments(CodeBlock(expr))
+    >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
+    if not language_has_vectors:
+        allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
+                    if isinstance(a.lhs, HomogeneousTupleVariable) \
+                    and isinstance(a.rhs, (HomogeneousTupleVariable, Duplicate, Concatenate))]
+        new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
+                                     dtype=a.lhs.dtype,
+                                     order=a.lhs.order)
+                    ), a) if a.lhs.is_stack_array
+                    else (a) if a.lhs.allocatable
+                    else (Allocate(a.lhs,
+                            shape=a.lhs.shape,
+                            order = a.lhs.order,
+                            status="unknown"), a)
+                    for a in allocs_to_unravel]
+        block.substitute(allocs_to_unravel, new_allocs)
+
     assigns = [a for a in block.get_attribute_nodes(Assign) \
                 if isinstance(a.lhs, InhomogeneousTupleVariable) \
                 and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
-    if len(assigns) == 0:
-        return
-    else:
+    if len(assigns) != 0:
         new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
         block.substitute(assigns, new_assigns)
-        expand_tuple_assignments(block)
+        expand_inhomog_tuple_assignments(block)
 
 #==============================================================================
 def expand_to_loops(block, new_index_name, language_has_vectors = False):
@@ -611,7 +640,8 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
-    expand_tuple_assignments(block)
+    expand_inhomog_tuple_assignments(block)
+
     indices = []
     tmp_vars = []
     res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
