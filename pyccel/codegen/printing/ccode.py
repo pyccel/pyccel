@@ -38,7 +38,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import ValuedVariable
+from pyccel.ast.variable import ValuedVariable, IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable
@@ -273,7 +273,7 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
-        """ print the assignment of a NdArray
+        """ print the assignment of a NdArray or a homogeneous tuple
 
         parameters
         ----------
@@ -293,7 +293,7 @@ class CCodePrinter(CodePrinter):
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        arg = rhs.arg
+        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
@@ -916,7 +916,7 @@ class CCodePrinter(CodePrinter):
         base = expr.base
         inds = list(expr.indices)
         base_shape = base.shape
-        allow_negative_indexes = base.allows_negative_indexes
+        allow_negative_indexes = True if isinstance(base, PythonTuple) else base.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0], simplify = True)
@@ -1245,7 +1245,8 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
+        return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+                any(a is bi for b in self._additional_args for bi in b)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
@@ -1431,7 +1432,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
-        if isinstance(rhs, (NumpyArray)):
+        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+        if isinstance(rhs, (NumpyArray, PythonTuple)):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
@@ -1597,7 +1599,9 @@ class CCodePrinter(CodePrinter):
             return expr.name
 
     def _print_VariableAddress(self, expr):
-        if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
+        if isinstance(expr.variable, IndexedElement):
+            return '&{}'.format(self._print(expr.variable))
+        elif self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)
         else:
             return '&{}'.format(expr.variable.name)
