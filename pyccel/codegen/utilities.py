@@ -62,7 +62,7 @@ def construct_flags(compiler,
     print("mac_target : ",mac_target)
     if mac_target:
         #flags.append("-mmacosx-version-min="+mac_target)
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = target
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
     if compiler == "gfortran":
         if debug:
