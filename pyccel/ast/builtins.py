@@ -494,12 +494,6 @@ class PythonMap(Basic):
         """
         return self._func_args
 
-    @property
-    def args(self):
-        """ Arguments of the map
-        """
-        return [self.func, self._func_args]
-
     def __getitem__(self, index):
         return self.func, IndexedElement(self.func_args, index)
 
