@@ -1389,14 +1389,14 @@ class Iterable(Basic):
         iterable = self._iterable
         if isinstance(iterable, PythonRange):
             return []
-        ranges = self.get_target_from_range()
+        range_element = self.get_target_from_range()
         if isinstance(iterable, PythonEnumerate):
             target = target[1:]
-            ranges = ranges[1:]
+            range_element = range_element[1:]
         if isinstance(target, (tuple, list)):
-            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, ranges)]
+            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
         else:
-            return [AliasAssign(target, ranges) if target.is_pointer else Assign(target, ranges)]
+            return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
 
     def get_target_from_range(self):
         """ Returns an element of the range (useful for get_assigns and to
