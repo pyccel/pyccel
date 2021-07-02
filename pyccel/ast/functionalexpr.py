@@ -35,23 +35,21 @@ class FunctionalFor(PyccelAstNode):
               All iterator targets for the for loops
     index : ?
     """
-    __slots__ = ('_loops','_expr', '_lhs', '_indices', '_index',
+    __slots__ = ('_loops','_expr', '_lhs', '_indices',
             '_dtype','_precision','_rank','_shape','_order')
-    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices', '_index')
+    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices')
 
     def __init__(
         self,
         loops,
         expr=None,
         lhs=None,
-        indices=None,
-        index=None,
+        indices=None
         ):
         self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
-        self._index   = index
         super().__init__()
 
         if PyccelAstNode.stage != 'syntactic':
@@ -76,10 +74,6 @@ class FunctionalFor(PyccelAstNode):
     @property
     def indices(self):
         return self._indices
-
-    @property
-    def index(self):
-        return self._index
 
 #==============================================================================
 class GeneratorComprehension(FunctionalFor):
