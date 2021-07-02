@@ -47,7 +47,7 @@ class FunctionalFor(PyccelAstNode):
         indices=None,
         index=None,
         ):
-        self._loops    = loops
+        self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
