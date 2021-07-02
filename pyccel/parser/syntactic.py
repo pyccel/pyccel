@@ -1021,11 +1021,11 @@ class SyntaxParser(BasicParser):
             body = generators.pop()
         indices = indices[::-1]
         if name == 'sum':
-            expr = FunctionalSum(body, result, lhs, indices, None)
+            expr = FunctionalSum(body, result, lhs, indices)
         elif name == 'min':
-            expr = FunctionalMin(body, result, lhs, indices, None)
+            expr = FunctionalMin(body, result, lhs, indices)
         elif name == 'max':
-            expr = FunctionalMax(body, result, lhs, indices, None)
+            expr = FunctionalMax(body, result, lhs, indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
                           symbol = name,
