@@ -1363,7 +1363,7 @@ class Iterable(Basic):
     @property
     def num_indices_required(self):
         """ Number of indices which must be generated in order to
-        convert this iteratable to a range
+        convert this iterable to a range
         """
         return self._num_indices_required
 
@@ -1410,7 +1410,7 @@ class Iterable(Basic):
             return range_base
 
     def get_range(self):
-        """ Returns the range required for this iteratable
+        """ Returns the range required for this iterable
         """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
@@ -1429,7 +1429,7 @@ class Iterable(Basic):
 
     @property
     def iterable(self):
-        """ Returns the iteratable being wrapped
+        """ Returns the iterable being wrapped
         """
         return self._iterable
 
