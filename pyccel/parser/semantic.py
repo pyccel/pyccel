@@ -1386,6 +1386,19 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _assign_GeneratorComprehension(self, expr, **settings):
+        """
+        Visit the GeneratorComprehension node creating all necessary expressions
+        for its definition
+
+        Parameters
+        ----------
+        expr : GeneratorComprehension
+
+        Results
+        -------
+        new_expr : CodeBlock
+                   CodeBlock containing the semantic version of the GeneratorComprehension node
+        """
 
         result   = expr.expr
         lhs_name = _get_name(expr.lhs)
@@ -1394,6 +1407,7 @@ class SemanticParser(BasicParser):
         loop = expr.loops
         loops = expr.loops
         nlevels = 0
+        # Create throw-away variable to help obtain result type
         index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
         self.insert_variable(index)
         new_expr = []
@@ -1401,16 +1415,24 @@ class SemanticParser(BasicParser):
             nlevels+=1
             iterable = Iterable(self._visit(loop.iterable, **settings))
             n_index = max(1, iterable.num_indices_required)
+            # Set dummy indices to iterable object in order to be able to
+            # obtain a target with a deducable dtype
             iterable.set_indices(*[index]*n_index)
 
             iterator = loop.target
 
+            # Collect a target with a deducable dtype
             iterator_rhs = iterable.get_target_from_range()
+            # Use _visit_Assign to create the requested iterator with the correct type
+            # The result of this operation is not stored, it is just used to declare
+            # iterator with the correct dtype to allow correct dtype deductions later
             self._visit(Assign(iterator, iterator_rhs, fst=expr.fst))
 
             loop_elem = loop.body.body[0]
 
             if isinstance(loop_elem, Assign):
+                # If the result contains a GeneratorComprehension, treat it and replace
+                # it with it's lhs variable before continuing
                 gens = set(loop_elem.get_attribute_nodes(GeneratorComprehension))
                 if len(gens)==1:
                     gen = gens.pop()
@@ -1419,19 +1441,28 @@ class SemanticParser(BasicParser):
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
             loop = loop_elem
+        # Remove the throw-away variable from the namespace
         self.remove_variable(index)
 
+        # Visit result expression (correctly defined as iterator
+        # objects exist in the scope despite not being defined)
         result = self._visit(result, **settings)
         if isinstance(result, CodeBlock):
             result = result.body[-1]
 
+        # Infer the final dtype of the expression
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
         lhs = Variable(dtype, lhs_name, **d_var)
         self.insert_variable(lhs)
 
+        # Iterate over the loops
+        # This provides the definitions of iterators as well
+        # as the central expression
         loops  = [self._visit(expr.loops, **settings)]
 
+        # If necessary add additional expressions corresponding
+        # to nested GeneratorComprehensions
         if new_expr:
             loop = loops[0]
             for _ in range(nlevels-1):
@@ -1448,6 +1479,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, FunctionalMax):
             val = PyccelUnarySub(math_constants['inf'])
 
+        # Initialise result with correct initial value
         stmt = Assign(lhs, val)
         stmt.set_fst(expr.fst)
         loops.insert(0, stmt)
