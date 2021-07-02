@@ -9,7 +9,7 @@ import functools
 import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonLen, PythonPrint
+from pyccel.ast.builtins  import PythonPrint
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
