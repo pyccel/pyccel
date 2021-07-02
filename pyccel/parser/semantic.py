@@ -1416,12 +1416,12 @@ class SemanticParser(BasicParser):
             iterable = Iterable(self._visit(loop.iterable, **settings))
             n_index = max(1, iterable.num_indices_required)
             # Set dummy indices to iterable object in order to be able to
-            # obtain a target with a deducable dtype
+            # obtain a target with a deducible dtype
             iterable.set_indices(*[index]*n_index)
 
             iterator = loop.target
 
-            # Collect a target with a deducable dtype
+            # Collect a target with a deducible dtype
             iterator_rhs = iterable.get_target_from_range()
             # Use _visit_Assign to create the requested iterator with the correct type
             # The result of this operation is not stored, it is just used to declare
