@@ -41,9 +41,9 @@ from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTern
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
-from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
-                                  PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonFloat, PythonTuple)
+from pyccel.ast.builtins  import (PythonInt,
+                                  PythonPrint, PythonRange,
+                                  PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
