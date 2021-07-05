@@ -1476,7 +1476,7 @@ class CCodePrinter(CodePrinter):
         counter    = self._print(target)
         body       = self._print(expr.body)
 
-        additional_assign = CodeBlock(expr.iterable.get_assigns(*expr.target))
+        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
         body = self._print(additional_assign) + body
 
         start = self._print(iterable.start)
