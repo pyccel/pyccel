@@ -582,7 +582,7 @@ class NumpyLinspace(NumpyNewArray):
     """
 
     __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind')
-    _attribute_nodes = ('_start','_stop')
+    _attribute_nodes = ('_start', '_stop', '_index')
     name = 'linspace'
     _order     = 'C'
 
