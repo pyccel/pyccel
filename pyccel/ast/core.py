@@ -1376,7 +1376,7 @@ class Iterable(Basic):
         """
         self._indices = indices
 
-    def get_assigns(self, *target):
+    def get_assigns(self, target):
         """ Returns a list containing any assigns necessary to initialise
         the loop iterators/targets when using a range iterable
 
@@ -1391,13 +1391,16 @@ class Iterable(Basic):
                   The assignments necessary to define target
         """
         iterable = self._iterable
+        if isinstance(iterable, PythonRange):
+            return []
         range_element = self.get_target_from_range()
-        if not isinstance(range_element, (list, tuple)):
-            range_element = (range_element,)
-        if self._num_indices_required==0:
+        if self.num_generated_iterators_required == 0:
             target = target[1:]
             range_element = range_element[1:]
-        return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
+        if isinstance(target, (tuple, list)):
+            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
+        else:
+            return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
 
     def get_target_from_range(self):
         """ Returns an element of the range indexed with the iterators
