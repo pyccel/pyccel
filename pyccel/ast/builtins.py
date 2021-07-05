@@ -272,6 +272,8 @@ class PythonEnumerate(Basic):
 
     @property
     def start(self):
+        """ Returns the value from which the indexing starts
+        """
         return self._start
 
     def __getitem__(self, index):
@@ -592,18 +594,6 @@ class PythonRange(Basic):
 
     def __getitem__(self, index):
         return index
-
-    @property
-    def length(self):
-        return PyccelFloorDiv(
-                    PyccelAdd(PyccelMinus(self.stop,
-                                self.start,
-                                simplify=True),
-                              PyccelMinus(self.step,
-                                LiteralInteger(1),
-                                simplify=True),
-                              simplify=True),
-                    self.step, simplify=True)
 
 
 #==============================================================================
