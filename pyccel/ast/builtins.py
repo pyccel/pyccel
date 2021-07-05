@@ -20,7 +20,7 @@ from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
-from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+from .operators import PyccelMinus, PyccelUnarySub, PyccelNot, PyccelFloorDiv
 from .variable  import IndexedElement
 
 __all__ = (
@@ -254,23 +254,29 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
-    __slots__ = ('_element',)
-    _attribute_nodes = ('_element',)
+    __slots__ = ('_element','_start')
+    _attribute_nodes = ('_element','_start')
     name = 'enumerate'
 
-    def __init__(self, arg):
+    def __init__(self, arg, start = None):
         if PyccelAstNode.stage != "syntactic" and \
                 not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
+        self._start   = start or LiteralInteger(0)
         super().__init__()
 
     @property
     def element(self):
         return self._element
 
+    @property
+    def start(self):
+        return self._start
+
     def __getitem__(self, index):
-        return [index, self.element[index]]
+        return [PyccelAdd(index, self.start, simplify=True),
+                self.element[index]]
 
     @property
     def length(self):
@@ -586,6 +592,14 @@ class PythonRange(Basic):
 
     def __getitem__(self, index):
         return index
+
+    @property
+    def length(self):
+        return PyccelFloorDiv(
+                    PyccelMinus(self.stop,
+                                self.start,
+                                simplify=True),
+                    self.step, simplify=True)
 
 
 #==============================================================================
