@@ -33,23 +33,38 @@ class FunctionalFor(PyccelAstNode):
               The variable to which the result is assigned
     indices : list of Variable
               All iterator targets for the for loops
-    index : ?
+    index   : Variable
+              Index of result in rhs
+              E.g.:
+              ```
+              a = [i in range(1,10,2)]
+              ```
+              is translated to:
+              ```
+              Dummy_0 = 0
+              for i in range(1,10,2):
+                  a[Dummy_0]=i
+                  Dummy_0 += 1
+              ```
+              Index is `Dummy_0`
     """
-    __slots__ = ('_loops','_expr', '_lhs', '_indices',
+    __slots__ = ('_loops','_expr', '_lhs', '_indices','_index',
             '_dtype','_precision','_rank','_shape','_order')
-    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices')
+    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices','_index')
 
     def __init__(
         self,
         loops,
         expr=None,
         lhs=None,
-        indices=None
+        indices=None,
+        index=None
         ):
         self._loops   = loops
         self._expr    = expr
         self._lhs     = lhs
         self._indices = indices
+        self._index   = index
         super().__init__()
 
         if PyccelAstNode.stage != 'syntactic':
@@ -74,6 +89,10 @@ class FunctionalFor(PyccelAstNode):
     @property
     def indices(self):
         return self._indices
+
+    @property
+    def index(self):
+        return self._index
 
 #==============================================================================
 class GeneratorComprehension(FunctionalFor):
