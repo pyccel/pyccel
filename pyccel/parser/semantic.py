@@ -1414,10 +1414,10 @@ class SemanticParser(BasicParser):
         while isinstance(loop, For):
             nlevels+=1
             iterable = Iterable(self._visit(loop.iterable, **settings))
-            n_index = max(1, iterable.num_generated_iterators_required)
+            n_index = max(1, iterable.num_loop_counters_required)
             # Set dummy indices to iterable object in order to be able to
             # obtain a target with a deducible dtype
-            iterable.set_range_iterator(*[index]*n_index)
+            iterable.set_loop_counter(*[index]*n_index)
 
             iterator = loop.target
 
@@ -2408,9 +2408,9 @@ class SemanticParser(BasicParser):
         body     = list(expr.body.body)
         iterator = expr.target
 
-        if iterable.num_generated_iterators_required:
-            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_generated_iterators_required)]
-            iterable.set_range_iterator(*indices)
+        if iterable.num_loop_counters_required:
+            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
+            iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
                 iterator = iterator[0]
@@ -2418,7 +2418,7 @@ class SemanticParser(BasicParser):
             if index is None:
                 index = Variable('int', iterator, is_temp = iterator.is_temp)
                 self.insert_variable(index)
-            iterable.set_range_iterator(index)
+            iterable.set_loop_counter(index)
 
         new_expr = []
 

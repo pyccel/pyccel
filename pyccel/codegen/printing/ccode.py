@@ -1460,9 +1460,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_For(self, expr):
 
-        indices = expr.iterable.range_iterators
+        indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
-        if expr.iterable.num_generated_iterators_required:
+        if expr.iterable.num_loop_counters_required:
             self._additional_declare.append(index)
 
         target   = index

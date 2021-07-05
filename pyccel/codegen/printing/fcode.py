@@ -1708,9 +1708,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_For(self, expr):
 
-        indices = expr.iterable.range_iterators
+        indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
-        if expr.iterable.num_generated_iterators_required:
+        if expr.iterable.num_loop_counters_required:
             self.add_vars_to_namespace(index)
 
         target   = index
