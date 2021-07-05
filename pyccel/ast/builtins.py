@@ -596,9 +596,13 @@ class PythonRange(Basic):
     @property
     def length(self):
         return PyccelFloorDiv(
-                    PyccelMinus(self.stop,
+                    PyccelAdd(PyccelMinus(self.stop,
                                 self.start,
                                 simplify=True),
+                              PyccelMinus(self.step,
+                                LiteralInteger(1),
+                                simplify=True),
+                              simplify=True),
                     self.step, simplify=True)
 
 
