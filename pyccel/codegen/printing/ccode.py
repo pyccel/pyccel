@@ -262,10 +262,6 @@ class CCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for i in range(rows) for j in range(cols))
-
     def _flatten_list(self, irregular_list):
         if isinstance(irregular_list, (PythonList, PythonTuple)):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
@@ -1464,9 +1460,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_For(self, expr):
 
-        indices = expr.iterable.indices
+        indices = expr.iterable.range_iterators
         index = indices[0] if indices else expr.target
-        if expr.iterable.num_indices_required:
+        if expr.iterable.num_generated_iterators_required:
             self._additional_declare.append(index)
 
         target   = index

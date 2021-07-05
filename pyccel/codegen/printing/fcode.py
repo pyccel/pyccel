@@ -281,10 +281,6 @@ class FCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
 
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for j in range(cols) for i in range(rows))
-
     def print_kind(self, expr):
         """
         Prints the kind(precision) of a literal value
@@ -1712,9 +1708,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_For(self, expr):
 
-        indices = expr.iterable.indices
+        indices = expr.iterable.range_iterators
         index = indices[0] if indices else expr.target
-        if expr.iterable.num_indices_required:
+        if expr.iterable.num_generated_iterators_required:
             self.add_vars_to_namespace(index)
 
         target   = index
