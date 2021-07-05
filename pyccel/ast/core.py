@@ -1341,23 +1341,27 @@ class Iterable(Basic):
                 The iterator being wrapped
     """
     # Types for which an extra index does not need to be provided
-    types_with_range_iterator = (PythonRange, PythonEnumerate)
     acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
-    def __init__(self, iterable):
+    def __init__(self, iterable, array_creation = False):
         self._iterable = iterable
         self._indices  = None
 
-        if isinstance(iterable, self.types_with_range_iterator):
-            self._num_indices_required =  0
+        if isinstance(iterable, PythonRange):
+            if array_creation:
+                self._num_indices_required = int(iterable.start != 0 or iterable.step != 1)
+            else:
+                self._num_indices_required = 0
+        elif isinstance(iterable, PythonEnumerate):
+            self._num_indices_required = int(iterable.start != 0)
         elif isinstance(iterable, Product):
             self._num_indices_required = len(iterable.elements)
         elif isinstance(iterable, self.acceptable_iterator_types):
             self._num_indices_required = 1
         else:
-            raise TypeError("Unknown iterator type")
+            raise TypeError("Unknown iterator type {}".format(type(iterable)))
 
         super().__init__()
 
@@ -1375,7 +1379,7 @@ class Iterable(Basic):
         """
         self._indices = indices
 
-    def get_assigns(self, target):
+    def get_assigns(self, *target):
         """ Returns a list containing any assigns necessary to initialise
         the loop iterators/targets when using a range iterable
 
@@ -1390,16 +1394,13 @@ class Iterable(Basic):
                   The assignments necessary to define target
         """
         iterable = self._iterable
-        if isinstance(iterable, PythonRange):
-            return []
         range_element = self.get_target_from_range()
-        if isinstance(iterable, PythonEnumerate):
+        if not isinstance(range_element, (list, tuple)):
+            range_element = (range_element,)
+        if self._num_indices_required==0:
             target = target[1:]
             range_element = range_element[1:]
-        if isinstance(target, (tuple, list)):
-            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
-        else:
-            return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
+        return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
 
     def get_target_from_range(self):
         """ Returns an element of the range indexed with the iterators
@@ -1417,9 +1418,7 @@ class Iterable(Basic):
     def get_range(self):
         """ Returns the range required for this iterable
         """
-        if isinstance(self._iterable, PythonRange):
-            return self._iterable
-        elif isinstance(self._iterable, Product):
+        if isinstance(self._iterable, Product):
             prod = self._iterable
             lengths = [getattr(e, '__len__',
                     getattr(e, 'length', PythonLen(e))) for e in prod.elements]
@@ -1484,10 +1483,10 @@ class For(Basic):
         local_vars = (),
         ):
         if PyccelAstNode.stage != "syntactic":
-            if isinstance(iter_obj, Iterable.types_with_range_iterator):
+            if not isinstance(iter_obj, Iterable):
                 iter_obj = Iterable(iter_obj)
-            elif not isinstance(iter_obj, Iterable):
-                raise TypeError('iter_obj must be an iterable')
+                if iter_obj.num_generated_iterators_required!=0:
+                    raise TypeError('iter_obj must be an iterable')
 
         if iterable(body):
             body = CodeBlock(body)

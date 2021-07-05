@@ -1727,7 +1727,7 @@ class FCodePrinter(CodePrinter):
         prolog = 'do {0} = {1}\n'.format(tar, range_code)
         epilog = 'end do\n'
 
-        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+        additional_assign = CodeBlock(expr.iterable.get_assigns(*expr.target))
         prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
