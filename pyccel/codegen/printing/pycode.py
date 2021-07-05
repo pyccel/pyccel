@@ -333,8 +333,13 @@ class PythonCodePrinter(CodePrinter):
                 step  = self._print(expr.step ))
 
     def _print_PythonEnumerate(self, expr):
-        return 'enumerate({elem})'.format(
-                elem = self._print(expr.element))
+        if expr.start == 0:
+            return 'enumerate({elem})'.format(
+                    elem = self._print(expr.element))
+        else:
+            return 'enumerate({elem},{start})'.format(
+                    elem = self._print(expr.element),
+                    start = self._print(expr.start))
 
     def _print_PythonMap(self, expr):
         return 'map({func}, {args})'.format(
