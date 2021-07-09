@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import sys
+import sysconfig
 import warnings
 
 __all__ = ['construct_flags', 'compile_files', 'get_gfortran_library_dir']
@@ -56,6 +57,10 @@ def construct_flags(compiler,
         flags = ['-O3']
     else:
         flags = list(fflags)
+
+    mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
+    if mac_target:
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
     if compiler == "gfortran":
         if debug:

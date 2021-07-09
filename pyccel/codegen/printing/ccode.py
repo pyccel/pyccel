@@ -8,8 +8,8 @@
 import functools
 import operator
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonEnumerate
-from pyccel.ast.builtins  import PythonZip, PythonMap, PythonLen, PythonPrint
+from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonPrint
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -32,6 +32,8 @@ from pyccel.ast.internals import Slice
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
+
+from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
@@ -259,10 +261,6 @@ class CCodePrinter(CodePrinter):
 
     def _format_code(self, lines):
         return self.indent_code(lines)
-
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _flatten_list(self, irregular_list):
         if isinstance(irregular_list, (PythonList, PythonTuple)):
@@ -1322,15 +1320,15 @@ class CCodePrinter(CodePrinter):
                 return 'return {0};\n'.format(self._print(args[0]))
 
             # make sure that stmt contains one assign node.
-            assert(len(last_assign)==1)
-            variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+            last_assign = last_assign[-1]
+            variables = last_assign.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
             unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
-                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
-                return code + '\nreturn {};\n'.format(self._print(last_assign[0].rhs))
+                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                return code + '\nreturn {};\n'.format(self._print(last_assign.rhs))
             else:
                 code = ''+self._print(expr.stmt)
-                self._additional_declare.append(last_assign[0].lhs)
+                self._additional_declare.append(last_assign.lhs)
         return code + 'return {0};\n'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
@@ -1461,18 +1459,26 @@ class CCodePrinter(CodePrinter):
         return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
-        counter = self._print(expr.target)
-        body  = self._print(expr.body)
-        if isinstance(expr.iterable, PythonRange):
-            iterable = expr.iterable
-        elif isinstance(expr.iterable, PythonEnumerate):
-            iterable = PythonRange(PythonLen(expr.iterable.element))
-        elif isinstance(expr.iterable, PythonZip):
-            iterable = PythonRange(expr.iterable.length)
-        elif isinstance(expr.iterable, PythonMap):
-            iterable = PythonRange(PythonLen(expr.iterable.args[1]))
-        else:
-            raise NotImplementedError("Only iterables currently supported are Range, Enumerate, Zip and Map")
+
+        indices = expr.iterable.loop_counters
+        index = indices[0] if indices else expr.target
+        if expr.iterable.num_loop_counters_required:
+            self._additional_declare.append(index)
+
+        target   = index
+        iterable = expr.iterable.get_range()
+
+        if not isinstance(iterable, PythonRange):
+            # Only iterable currently supported is PythonRange
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal')
+
+        counter    = self._print(target)
+        body       = self._print(expr.body)
+
+        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+        body = self._print(additional_assign) + body
+
         start = self._print(iterable.start)
         stop  = self._print(iterable.stop )
         step  = self._print(iterable.step )
@@ -1590,6 +1596,19 @@ class CCodePrinter(CodePrinter):
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
+
+    def _print_Constant(self, expr):
+        if expr == math_constants['inf']:
+            self._additional_imports.add("math")
+            return 'HUGE_VAL'
+        elif expr == math_constants['pi']:
+            self._additional_imports.add("math")
+            return 'M_PI'
+        elif expr == math_constants['e']:
+            self._additional_imports.add("math")
+            return 'M_E'
+        else:
+            raise NotImplementedError("Constant not implemented")
 
     def _print_Variable(self, expr):
         if self.stored_in_c_pointer(expr):
