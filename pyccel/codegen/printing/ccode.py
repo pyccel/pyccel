@@ -240,6 +240,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
+        self._additional_declaration_code = []
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
@@ -306,11 +307,12 @@ class CCodePrinter(CodePrinter):
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+            self._additional_declaration_code[-1] += dummy_array
             if expr.lhs.is_stack_array:
                 cpy_data = self._init_stack_array(expr, dummy_array_name)
             else:
                 cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
-            return  '%s%s' % (dummy_array, cpy_data)
+            return  cpy_data
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -1210,7 +1212,11 @@ class CCodePrinter(CodePrinter):
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
+
+        self._additional_declaration_code.append('')
         body  = self._print(expr.body)
+        dec_code = self._additional_declaration_code.pop()
+
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             for i in expr.results:
@@ -1219,7 +1225,7 @@ class CCodePrinter(CodePrinter):
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
-        decs  = ''.join(self._print(i) for i in decs)
+        decs  = dec_code+''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
         sep = self._print(SeparatorComment(40))
