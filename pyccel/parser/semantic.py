@@ -1317,6 +1317,7 @@ class SemanticParser(BasicParser):
                                     self._current_fst_node.col_offset))
 
                         else:
+                            var.set_changeable_shape()
                             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
                             if not previous_allocations:
                                 errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
@@ -2648,6 +2649,16 @@ class SemanticParser(BasicParser):
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
+        allocations = [a for arg in args for a in arg.get_attribute_nodes(Allocate)]
+        var_shapes = dict()
+        for a in allocations:
+            if a.variable in var_shapes:
+                var_shapes[a.variable].append(a.shape)
+            else:
+                var_shapes[a.variable] = [a.shape]
+        for v,s in var_shapes.items():
+            if len(s)!=1 and any(si!=s[0] for si in s[1:]):
+                v.set_changeable_shape()
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
