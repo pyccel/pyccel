@@ -596,6 +596,10 @@ class TupleVariable(Variable):
     """
     __slots__ = ()
 
+    @property
+    def is_ndarray(self):
+        return False
+
 class HomogeneousTupleVariable(TupleVariable):
 
     """Represents a tuple variable in the code.
