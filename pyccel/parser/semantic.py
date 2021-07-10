@@ -732,6 +732,7 @@ class SemanticParser(BasicParser):
             d_var['precision'     ] = expr.precision
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
+            d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
@@ -741,6 +742,7 @@ class SemanticParser(BasicParser):
             d_var['precision'     ] = expr.precision
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
+            d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
@@ -753,6 +755,7 @@ class SemanticParser(BasicParser):
             d_var['datatype'      ] = d['datatype']
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
+            d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
@@ -777,9 +780,7 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
-            d_var = self._infere_type(expr.args[0][1].body[0])
-            d_var['stack_array'] = False
-            return d_var
+            return self._infere_type(expr.args[0][1].body[0])
 
         elif isinstance(expr, PythonRange):
 
@@ -1340,7 +1341,7 @@ class SemanticParser(BasicParser):
                             status = previous_allocations[-1].status
 
                             new_expressions.append(Allocate(var,
-                                shape=d_var['shape'], order=d_var.get('order',None),
+                                shape=d_var['shape'], order=d_var['order'],
                                 status=status))
 
                 # in the case of elemental, lhs is not of the same dtype as
