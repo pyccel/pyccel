@@ -1238,16 +1238,13 @@ class SemanticParser(BasicParser):
                                 else:
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, order=a.order, status=status))
+                                    # Add memory deallocation for array variables
+                                    self._allocs[-1].append(a)
                             args = new_args
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
-                # ...
-
-                # ...
-                # Add memory deallocation for array variables
-                if lhs.is_ndarray and not lhs.is_stack_array:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
+                        # Add memory deallocation for array variables
+                        self._allocs[-1].append(lhs)
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
