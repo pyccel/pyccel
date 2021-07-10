@@ -128,22 +128,15 @@ def test_f6(language):
     # ...
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Lists are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_f7(language):
     @types('int')
     def f7(x):
-        a = [1,2,3] if x < 5 else [1.5,6.5,7.5]
+        a = [1.,2.,3.] if x < 5 else [1.5,6.5,7.5]
         return a[0]
 
     @types('int')
     def f7wp(x):
-        a = [1,2,3] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8])
+        a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8])
         return a[0]
 
     f = epyccel(f7, language = language)
@@ -158,22 +151,15 @@ def test_f7(language):
     # ...
 #------------------------------------------------------------------------------
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Tuples are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_f8(language):
     @types('int')
     def f8(x):
-        a = (1, 2) if x < 5 else (complex(5, 1), complex(2, 2))
+        a = (1+0j, 2+0j) if x < 5 else (complex(5, 1), complex(2, 2))
         return a[0]
 
     @types('int')
     def f8wp(x):
-        a = (1, 2) if x < 5 else ((complex(5, 1), complex(2, 2)) if x > 5 else (complex(7, 2), complex(3, 3)) )
+        a = (1+0j, 2+0j) if x < 5 else ((complex(5, 1), complex(2, 2)) if x > 5 else (complex(7, 2), complex(3, 3)) )
         return a[0]
 
     f = epyccel(f8, language = language)
