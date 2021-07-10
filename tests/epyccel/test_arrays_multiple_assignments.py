@@ -222,6 +222,39 @@ def test_Assign_Between_Allocatables():
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================
+
+def test_Assign_after_If():
+
+    def f(b : bool):
+        import numpy as np
+        if b:
+            x = np.zeros(3, dtype=int)
+        else:
+            x = np.zeros(4, dtype=int)
+        n = x.shape[0]
+        x = np.ones(3, dtype=int)
+        m = x.shape[0]
+        return n,m
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    f2 = epyccel(f)
+
+    # Check that we got exactly 1 Pyccel warning
+    assert errors.has_warnings()
+    assert errors.num_messages() == 1
+
+    # Check that the warning is correct
+    warning_info = [*errors.error_info_map.values()][0][0]
+    assert warning_info.symbol  == 'x'
+    assert warning_info.message == ARRAY_REALLOCATION
+
+    assert f(True) == f2(True)
+    assert f(False) == f2(False)
+
+#==============================================================================
 if __name__ == '__main__':
 
     for l in ['fortran']:
