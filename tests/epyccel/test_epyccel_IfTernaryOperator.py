@@ -248,3 +248,25 @@ def test_f11(language):
     assert f(-4) == f11(-4)
     # ...
 #------------------------------------------------------------------------------
+
+def test_f12(language):
+    @types('int')
+    def f12(x):
+        a = [1.,2.,3.,4.] if x < 5 else [1.5,6.5,7.5]
+        return a[0]
+
+    @types('int')
+    def f12wp(x):
+        a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8,2.9])
+        return a[0]
+
+    f = epyccel(f12, language = language)
+    fwp = epyccel(f12wp, language = language)
+
+    # ...
+    assert f(6) == f12(6)
+    assert f(4) == f12(4)
+
+    assert fwp(6) == f12wp(6)
+    assert fwp(4) == f12wp(4)
+    # ...
