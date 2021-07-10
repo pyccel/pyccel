@@ -717,7 +717,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
-            d_var['allocatable'   ] = expr.allocatable
+            d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
@@ -731,12 +731,12 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = expr.dtype
             d_var['precision'     ] = expr.precision
+            d_var['allocatable'   ] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
-            d_var['allocatable'   ] = not isinstance(expr.dtype, NativeGeneric)
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -746,7 +746,8 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
-            d_var['allocatable'   ] = True
+            d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
+            d_var['is_stack_array'] = not d_var['allocatable'   ]
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -759,7 +760,8 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
             d_var['order'         ] = expr.order
-            d_var['allocatable'   ] = True
+            d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
+            d_var['allocatable'   ] = not d_var['is_stack_array']
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
@@ -791,6 +793,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
+            d_var['allocatable'] = False
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
@@ -799,6 +802,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
+            d_var['allocatable'] = False
             d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
             return d_var
@@ -810,6 +814,7 @@ class SemanticParser(BasicParser):
             dtype = self.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
+            d_var['allocatable'] = False
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
@@ -1131,13 +1136,13 @@ class SemanticParser(BasicParser):
         """ Function using data about the new lhs to determine
         whether the lhs is a pointer and the rhs is a target
         """
-        if isinstance(rhs, Variable) and rhs.allocatable:
+        if isinstance(rhs, Variable) and rhs.is_ndarray:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
             d_lhs['is_stack_array'] = False
 
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.is_ndarray or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
             d_lhs['is_stack_array'] = False
@@ -1223,7 +1228,19 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     # Create Allocate node
-                    new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+                    if isinstance(lhs, InhomogeneousTupleVariable):
+                        args = [v for v in lhs.get_vars() if v.rank>0]
+                        new_args = []
+                        while len(args)>0:
+                            for a in args:
+                                if isinstance(a, InhomogeneousTupleVariable):
+                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
+                                else:
+                                    new_expressions.append(Allocate(a,
+                                        shape=a.alloc_shape, order=a.order, status=status))
+                            args = new_args
+                    else:
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
                 # ...
