@@ -199,8 +199,7 @@ c_library_headers = (
     "tgmath",
 )
 
-dtype_registry = {('real',16)   : 'long double',
-                  ('real',8)    : 'double',
+dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
@@ -210,8 +209,7 @@ dtype_registry = {('real',16)   : 'long double',
                   ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
 
-ndarray_type_registry = {('real',16)    : 'nd_ldouble',
-                  ('real',8)    : 'nd_double',
+ndarray_type_registry = {('real',8)    : 'nd_double',
                   ('real',4)    : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',

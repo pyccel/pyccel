@@ -98,13 +98,6 @@ class NumpyFloat(PythonFloat):
         self._order = arg.order
         super().__init__(arg)
 
-class NumpyFloat16(NumpyFloat):
-    """ Represents a call to numpy.float16() function.
-    """
-    __slots__ = ()
-    _precision = dtype_registry['float16'][1]
-    name = 'float16'
-
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
@@ -118,13 +111,6 @@ class NumpyFloat64(NumpyFloat):
     __slots__ = ()
     _precision = dtype_registry['float64'][1]
     name = 'float64'
-
-class NumpyFloat128(NumpyFloat):
-    """ Represents a call to numpy.float128() function.
-    """
-    __slots__ = ()
-    _precision = dtype_registry['float128'][1]
-    name = 'float128'
 
 #=======================================================================================
 class NumpyBool(PythonBool):
@@ -277,10 +263,8 @@ DtypePrecisionToCastFunction = {
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Real' : {
-        2 : NumpyFloat16,
         4 : NumpyFloat32,
-        8 : NumpyFloat64,
-        16 : NumpyFloat128},
+        8 : NumpyFloat64},
     'Complex' : {
         4 : NumpyComplex64,
         8 : NumpyComplex,
@@ -299,7 +283,7 @@ def process_dtype(dtype):
         # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
     elif dtype  in (NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
-				  NumpyComplex128, NumpyComplex64, NumpyFloat128, NumpyFloat64, NumpyFloat32, NumpyFloat16):
+				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
     else:
@@ -1213,10 +1197,8 @@ numpy_functions = {
     'float'     : NumpyFloat,
     'double'    : NumpyFloat64,
     'mod'       : NumpyMod,
-    'float16'   : NumpyFloat16,
     'float32'   : NumpyFloat32,
     'float64'   : NumpyFloat64,
-    'float128'  : NumpyFloat128,
     'bool'      : NumpyBool,
     'int8'      : NumpyInt8,
     'int16'     : NumpyInt16,

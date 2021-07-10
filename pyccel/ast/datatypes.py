@@ -92,10 +92,8 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'double':('real',default_precision['float']),
                                  'float':('real',default_precision['float']),
                                  'pythonfloat':('real',default_precision['float']), # built-in float
-                                 'float16':('real',2),
                                  'float32':('real',4),
                                  'float64':('real',8),
-                                 'float128':('real',16),
                                  'pythoncomplex':('complex',default_precision['complex']),
                                  'complex':('complex',default_precision['complex']),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
