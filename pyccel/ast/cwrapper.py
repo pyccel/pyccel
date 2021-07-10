@@ -668,6 +668,7 @@ Numpy_Int32_ref = Variable(dtype=NativeVoid(),  name = 'Int32')
 Numpy_Int64_ref = Variable(dtype=NativeVoid(),  name = 'Int64')
 Numpy_Float_ref = Variable(dtype=NativeVoid(),  name = 'Float32')
 Numpy_Double_ref = Variable(dtype=NativeVoid(),  name = 'Float64')
+Numpy_LDouble_ref = Variable(dtype=NativeVoid(),  name = 'Float128')
 Numpy_Complex64_ref = Variable(dtype=NativeVoid(),  name = 'Complex64')
 Numpy_Complex128_ref = Variable(dtype=NativeVoid(),  name = 'Complex128')
 
@@ -676,6 +677,7 @@ numpy_type_check_registry = {
     (NativeInteger(), 8)       : Numpy_Int64_ref,
     (NativeInteger(), 2)       : Numpy_Int16_ref,
     (NativeInteger(), 1)       : Numpy_Int8_ref,
+    (NativeReal(), 16)         : Numpy_LDouble_ref,
     (NativeReal(), 8)          : Numpy_Double_ref,
     (NativeReal(), 4)          : Numpy_Float_ref,
     (NativeComplex(), 4)       : Numpy_Complex64_ref,
@@ -684,14 +686,16 @@ numpy_type_check_registry = {
 }
 
 flags_registry = {
-    (NativeInteger(), 4)       : 1,
-    (NativeInteger(), 8)       : 2,
-    (NativeInteger(), 2)       : 3,
-    (NativeInteger(), 1)       : 4,
-    (NativeReal(), 8)          : 5,
-    (NativeReal(), 4)          : 6,
-    (NativeComplex(), 4)       : 7,
-    (NativeComplex(), 8)       : 8,
-    (NativeBool(), 4)          : 9,
-    (NativeString(), 0)        : 10
+    (NativeInteger(), 4)       :  1,
+    (NativeInteger(), 8)       :  2,
+    (NativeInteger(), 2)       :  3,
+    (NativeInteger(), 1)       :  4,
+    (NativeReal(), 16)         :  5,
+    (NativeReal(), 8)          :  6,
+    (NativeReal(), 4)          :  7,
+    (NativeReal(), 2)          :  8,
+    (NativeComplex(), 4)       :  9,
+    (NativeComplex(), 8)       : 10,
+    (NativeBool(), 4)          : 11,
+    (NativeString(), 0)        : 12
 }
