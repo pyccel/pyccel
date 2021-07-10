@@ -178,6 +178,8 @@ class SemanticParser(BasicParser):
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
 
+        # used to store code split into multiple lines to be reinserted in the CodeBlock
+        self._additional_exprs = []
         # we use it to detect the current method or function
 
         #
@@ -783,7 +785,9 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1].body[0])
+            d_var = self._infere_type(expr.args[0][1].body[0])
+            d_var['stack_array'] = False
+            return d_var
 
         elif isinstance(expr, PythonRange):
 
@@ -1559,23 +1563,18 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = []
+        self._additional_exprs.append([])
         for b in expr.body:
-            # Collect generator expressions in statements
-            gen_exp = b.get_attribute_nodes(GeneratorComprehension,
-                                     excluded_nodes = (FunctionDef,)) \
-                        if not isinstance(b, FunctionDef) else []
-            # Assign generator expressions to temporaries
-            gen_exp = [self._visit(Assign(g.lhs,g, fst=g.fst)) \
-                            for g in gen_exp if g.get_direct_user_nodes(
-                                lambda x: not isinstance(x, (GeneratorComprehension, Assign, Return)))]
 
             # Save parsed code
-            ls.extend(gen_exp)
             line = self._visit(b, **settings)
+            ls.extend(self._additional_exprs[-1])
+            self._additional_exprs[-1] = []
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
             else:
                 ls.append(line)
+        self._additional_exprs.pop()
 
         return CodeBlock(ls)
 
@@ -2025,6 +2024,7 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
             genexp = self._assign_GeneratorComprehension(rhs, **settings)
             if isinstance(expr, AugAssign):
@@ -2035,7 +2035,24 @@ class SemanticParser(BasicParser):
             else:
                 new_expressions.append(genexp)
                 rhs = genexp.lhs
+        elif isinstance(rhs, IfTernaryOperator):
+            value_true  = self._visit(rhs.value_true, **settings)
+            if value_true.rank > 0 or value_true.dtype is NativeString():
+                # Temporarily deactivate type checks to construct syntactic assigns
+                PyccelAstNode.stage = 'syntactic'
+                assign_true  = Assign(lhs, rhs.value_true, fst = fst)
+                assign_false = Assign(lhs, rhs.value_false, fst = fst)
+                PyccelAstNode.stage = 'semantic'
 
+                cond  = self._visit(rhs.cond, **settings)
+                true_section  = IfSection(cond, [self._visit(assign_true)])
+                false_section = IfSection(LiteralTrue(), [self._visit(assign_false)])
+                if_block = If(true_section, false_section)
+
+                return self._visit(if_block)
+
+
+        # Visit object
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.get_macro(name)
@@ -2629,7 +2646,13 @@ class SemanticParser(BasicParser):
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_GeneratorComprehension(self, expr, **settings):
-        return self.get_variable(expr.lhs)
+        lhs = self.check_for_variable(expr.lhs)
+        if lhs is None:
+            creation = self._visit(Assign(expr.lhs,expr, fst=expr.fst))
+            self._additional_exprs[-1].append(creation)
+            return self.get_variable(expr.lhs)
+        else:
+            return lhs
 
     def _visit_While(self, expr, **settings):
 
@@ -2651,10 +2674,26 @@ class SemanticParser(BasicParser):
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
-        cond        = self._visit(expr.cond, **settings)
         value_true  = self._visit(expr.value_true, **settings)
-        value_false = self._visit(expr.value_false, **settings)
-        return IfTernaryOperator(cond, value_true, value_false)
+        if value_true.rank > 0 or value_true.dtype is NativeString():
+            lhs = self.get_new_variable()
+            # Temporarily deactivate type checks to construct syntactic assigns
+            PyccelAstNode.stage = 'syntactic'
+            assign_true  = Assign(lhs, expr.value_true, fst = expr.fst)
+            assign_false = Assign(lhs, expr.value_false, fst = expr.fst)
+            PyccelAstNode.stage = 'semantic'
+
+            cond  = self._visit(expr.cond, **settings)
+            true_section  = IfSection(cond, [self._visit(assign_true)])
+            false_section = IfSection(LiteralTrue(), [self._visit(assign_false)])
+            if_block = self._visit(If(true_section, false_section))
+            self._additional_exprs[-1].append(if_block)
+
+            return self._visit(lhs)
+        else:
+            cond        = self._visit(expr.cond, **settings)
+            value_false = self._visit(expr.value_false, **settings)
+            return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr, **settings):
 
