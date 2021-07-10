@@ -1124,12 +1124,12 @@ class SemanticParser(BasicParser):
         """ Function using data about the new lhs to determine
         whether the lhs is a pointer and the rhs is a target
         """
-        if isinstance(rhs, Variable) and rhs.allocatable:
+        if isinstance(rhs, Variable) and rhs.is_ndarray:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.is_ndarray or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
@@ -2677,7 +2677,6 @@ class SemanticParser(BasicParser):
             for a in allocs:
                 var_shapes[i][a.variable] = a.shape
         variables = [v for branch in var_shapes for v in branch]
-        print(variables)
 
         for v in variables:
             if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
