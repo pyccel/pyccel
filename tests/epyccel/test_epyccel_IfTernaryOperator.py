@@ -270,3 +270,39 @@ def test_f12(language):
     assert fwp(6) == f12wp(6)
     assert fwp(4) == f12wp(4)
     # ...
+#------------------------------------------------------------------------------
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Can't return a string"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Can't declare a string"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_f13(language):
+    def f13(b : bool):
+        a = 'hello' if b else 'world!'
+        return a
+
+    def f13wp(b1 : bool, b2 : bool):
+        a = 'hello' if b1 else ('world' if b2 else 'hello world')
+        return a
+
+    f = epyccel(f13, language = language)
+    fwp = epyccel(f13wp, language = language)
+
+    # ...
+    assert f(True) == f13(True)
+    assert f(False) == f13(False)
+
+    assert fwp(True,True)   == f13wp(True,True)
+    assert fwp(True,False)  == f13wp(True,False)
+    assert fwp(False,True)  == f13wp(False,True)
+    assert fwp(False,False) == f13wp(False,False)
+    # ...
+#------------------------------------------------------------------------------
