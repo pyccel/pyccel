@@ -760,7 +760,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
             d_var['order'         ] = expr.order
-            d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
+            d_var['is_stack_array'] = d.get('is_stack_array',False) and isinstance(expr.length, LiteralInteger)
             d_var['allocatable'   ] = not d_var['is_stack_array']
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
