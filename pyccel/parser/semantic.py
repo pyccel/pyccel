@@ -180,7 +180,6 @@ class SemanticParser(BasicParser):
 
         # used to store code split into multiple lines to be reinserted in the CodeBlock
         self._additional_exprs = []
-
         # we use it to detect the current method or function
 
         #
@@ -718,6 +717,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
+            d_var['allocatable'   ] = expr.allocatable
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
@@ -725,6 +725,7 @@ class SemanticParser(BasicParser):
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
+            d_var['is_stack_array'] = expr.is_stack_array
             return d_var
 
         elif isinstance(expr, PythonTuple):
@@ -735,6 +736,7 @@ class SemanticParser(BasicParser):
             d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
+            d_var['allocatable'   ] = not isinstance(expr.dtype, NativeGeneric)
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -744,6 +746,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
+            d_var['allocatable'   ] = True
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -756,12 +759,14 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
             d_var['order'         ] = expr.order
+            d_var['allocatable'   ] = True
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
             d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -772,6 +777,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -1125,14 +1131,16 @@ class SemanticParser(BasicParser):
         """ Function using data about the new lhs to determine
         whether the lhs is a pointer and the rhs is a target
         """
-        if isinstance(rhs, Variable) and rhs.is_ndarray:
+        if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
 
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.is_ndarray or rhs.base.is_pointer):
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
 
             rhs.base.is_target = not rhs.base.is_pointer
 
@@ -1193,9 +1201,6 @@ class SemanticParser(BasicParser):
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
-
-                if 'allocatable' not in d_lhs and d_lhs['rank']>0:
-                    d_lhs['allocatable'] = True
 
                 # Create new variable
                 lhs = self._create_variable(name, dtype, rhs, d_lhs)
@@ -1569,6 +1574,7 @@ class SemanticParser(BasicParser):
         ls = []
         self._additional_exprs.append([])
         for b in expr.body:
+
             # Save parsed code
             line = self._visit(b, **settings)
             ls.extend(self._additional_exprs[-1])
