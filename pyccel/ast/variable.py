@@ -718,7 +718,8 @@ class InhomogeneousTupleVariable(TupleVariable):
             raise TypeError('allocatable must be a boolean.')
         self._allocatable = allocatable
         for var in self._vars:
-            var.allocatable = allocatable
+            if var.rank > 0:
+                var.allocatable = allocatable
 
     @Variable.is_pointer.setter
     def is_pointer(self, is_pointer):
@@ -726,7 +727,8 @@ class InhomogeneousTupleVariable(TupleVariable):
             raise TypeError('is_pointer must be a boolean.')
         self._is_pointer = is_pointer
         for var in self._vars:
-            var.is_pointer = is_pointer
+            if var.rank > 0:
+                var.is_pointer = is_pointer
 
     @Variable.is_target.setter
     def is_target(self, is_target):
@@ -734,7 +736,8 @@ class InhomogeneousTupleVariable(TupleVariable):
             raise TypeError('is_target must be a boolean.')
         self._is_target = is_target
         for var in self._vars:
-            var.is_target = is_target
+            if var.rank > 0:
+                var.is_target = is_target
 
 class Constant(ValuedVariable):
 
