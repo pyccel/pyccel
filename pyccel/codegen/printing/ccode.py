@@ -240,7 +240,6 @@ class CCodePrinter(CodePrinter):
         self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
-        self._additional_declaration_code = []
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
@@ -1190,11 +1189,7 @@ class CCodePrinter(CodePrinter):
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
-
-        self._additional_declaration_code.append('')
         body  = self._print(expr.body)
-        dec_code = self._additional_declaration_code.pop()
-
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             for i in expr.results:
@@ -1203,7 +1198,7 @@ class CCodePrinter(CodePrinter):
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
-        decs  = dec_code+''.join(self._print(i) for i in decs)
+        decs  = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
         sep = self._print(SeparatorComment(40))
