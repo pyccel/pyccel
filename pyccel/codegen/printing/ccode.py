@@ -282,7 +282,6 @@ class CCodePrinter(CodePrinter):
             String
                 Return a str that contains the declaration of a dummy data_buffer
                        and a call to an operator which copies it to an NdArray struct
-                if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -298,18 +297,12 @@ class CCodePrinter(CodePrinter):
 
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            if expr.lhs.is_stack_array:
-                cpy_data = self._init_stack_array(expr, rhs.arg)
-            else:
-                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
+            cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
             return '%s' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            if expr.lhs.is_stack_array:
-                cpy_data = self._init_stack_array(expr, dummy_array_name)
-            else:
-                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
+            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s' % (dummy_array, cpy_data)
 
     def arrayFill(self, expr):
@@ -323,37 +316,11 @@ class CCodePrinter(CodePrinter):
         ------
             String
                 Return a str that contains a call to the C function array_fill,
-                if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-
-        if lhs.is_stack_array:
-            symbol_map = {}
-            used_names_tmp = self._parser.used_names.copy()
-            sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
-
-            length = functools.reduce(operator.mul, sympy_shapes)
-            printable_length = functools.reduce(PyccelMul, lhs.alloc_shape)
-
-            length_code = self._print(printable_length)
-
-            if length.is_constant():
-                buffer_array = "({declare_dtype}[{length}]){{}}".format(
-                                        declare_dtype = declare_dtype,
-                                        length=length_code)
-            else:
-                dummy_array_name, _ = create_incremented_string(self._parser.used_names,
-                                                                prefix = lhs.name+'_data')
-                code_init += "{dtype} {name}[{length}];\n".format(
-                        dtype  = declare_dtype,
-                        name   = dummy_array_name,
-                        length = length_code)
-                buffer_array = dummy_array_name
-
-            code_init += self._init_stack_array(expr, buffer_array)
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
@@ -362,37 +329,38 @@ class CCodePrinter(CodePrinter):
                 code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return code_init
 
-    def _init_stack_array(self, expr, buffer_array):
+    def _init_stack_array(self, expr):
         """ return a string which handles the assignment of a stack ndarray
 
         Parameters
         ----------
             expr : PyccelAstNode
                 The Assign Node used to get the lhs and rhs
-            buffer_array : String
-                The data buffer
         Returns
         -------
             Returns a string that contains the initialization of a stack_array
         """
 
-        lhs = expr.lhs
-        rhs = expr.rhs
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        shape = ", ".join(self._print(i) for i in lhs.alloc_shape)
+        var = expr
+        dtype = self.find_in_ndarray_type_registry(self._print(var.dtype), var.precision)
+        shape = ", ".join(self._print(i) for i in var.alloc_shape)
+        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
+        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        buffer_array = "{dtype} {name}[{size}];\n".format(
+                dtype = declare_dtype,
+                name  = dummy_array_name,
+                size  = tot_shape)
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
-        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(lhs.shape))
-        if isinstance(buffer_array, Variable):
-            buffer_array = "{0}.{1}".format(self._print(buffer_array), dtype)
-        cpy_data = '{0} = (t_ndarray){{\n.{1}={2},\n .shape={3},\n .strides={4},\n '
-        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}\n}};\n'
-        cpy_data = cpy_data.format(self._print(lhs), dtype, buffer_array,
-                    shape_init, strides_init, len(lhs.shape), 'false')
-        cpy_data += 'stack_array_init(&{});\n'.format(self._print(lhs))
+        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
+        cpy_data = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
+        cpy_data += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
+        cpy_data = cpy_data.format(dtype, dummy_array_name,
+                    shape_init, strides_init, len(var.shape), 'false')
+        cpy_data += 'stack_array_init(&{})'.format(self._print(var))
         self._additional_imports.add("ndarrays")
-        return cpy_data
+        return buffer_array, cpy_data
 
     def fill_NumpyArange(self, expr, lhs):
         """ print the assignment of a NumpyArange
@@ -849,7 +817,18 @@ class CCodePrinter(CodePrinter):
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
-        return '{0}{1};\n'.format(declaration_type, variable)
+        if expr.variable.is_stack_array:
+            preface, init = self._init_stack_array(expr.variable,)
+        else:
+            preface = ''
+            init    = ''
+
+        declaration = '{dtype}{var}{init};\n'.format(
+                            dtype = declaration_type,
+                            var   = variable,
+                            init  = init)
+
+        return preface + declaration
 
     def _print_NativeBool(self, expr):
         self._additional_imports.add('stdbool')
