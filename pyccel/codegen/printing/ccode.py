@@ -342,21 +342,23 @@ class CCodePrinter(CodePrinter):
         """
 
         var = expr
-        dtype = self.find_in_ndarray_type_registry(self._print(var.dtype), var.precision)
+        dtype_str = self._print(var.dtype)
+        dtype = self.find_in_dtype_registry(dtype_str, var.precision)
+        np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
-                dtype = declare_dtype,
+                dtype = dtype,
                 name  = dummy_array_name,
                 size  = tot_shape)
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
         strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
         cpy_data = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
         cpy_data += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
-        cpy_data = cpy_data.format(dtype, dummy_array_name,
+        cpy_data = cpy_data.format(np_dtype, dummy_array_name,
                     shape_init, strides_init, len(var.shape), 'false')
         cpy_data += 'stack_array_init(&{})'.format(self._print(var))
         self._additional_imports.add("ndarrays")
