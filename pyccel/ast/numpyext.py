@@ -25,7 +25,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
-from .variable       import (Variable, IndexedElement, Constant)
+from .variable       import (Variable, IndexedElement, Constant, HomogeneousTupleVariable)
 
 
 __all__ = (
@@ -332,9 +332,11 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
+        is_homogeneous_tuple = isinstance(arg, (PythonTuple, PythonList, HomogeneousTupleVariable)) and arg.is_homogeneous
+        is_array = isinstance(arg, Variable) and arg.is_ndarray
+
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if isinstance(arg, (PythonTuple, PythonList)) and not arg.is_homogeneous or \
-            isinstance(arg, Variable) and not arg.is_ndarray and not arg.is_stack_array:
+        if not (is_homogeneous_tuple or is_array):
             raise TypeError('we only accept homogeneous arguments')
 
         # Verify dtype and get precision
