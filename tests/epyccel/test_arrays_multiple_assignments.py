@@ -240,7 +240,7 @@ def test_Assign_after_If():
     errors = Errors()
 
     # epyccel should raise an Exception
-    epyccel(f)
+    f2 = epyccel(f)
 
     # Check that we got exactly 1 Pyccel warning
     assert errors.has_warnings()
@@ -250,6 +250,9 @@ def test_Assign_after_If():
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
+
+    assert f(True) == f2(True)
+    assert f(False) == f2(False)
 
 #==============================================================================
 def test_stack_array_if():
