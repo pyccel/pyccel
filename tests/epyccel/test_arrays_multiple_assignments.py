@@ -251,6 +251,21 @@ def test_Assign_after_If():
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
 
+#==============================================================================
+def test_stack_array_if():
+
+    @stack_array('x')
+    def f(b : bool):
+        import numpy as np
+        if b:
+            x = np.array([1,2,3])
+        else:
+            x = np.array([4,5,6])
+        return x[0]
+
+    # Initialize singleton that stores Pyccel errors
+    f2 = epyccel(f)
+
     assert f(True) == f2(True)
     assert f(False) == f2(False)
 
