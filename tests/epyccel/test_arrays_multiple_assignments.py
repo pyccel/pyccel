@@ -223,7 +223,7 @@ def test_Assign_Between_Allocatables():
 
 #==============================================================================
 
-def test_stack_array_if():
+def test_stack_array_if(language):
 
     @stack_array('x')
     def f(b : bool):
@@ -235,7 +235,7 @@ def test_stack_array_if():
         return x[0]
 
     # Initialize singleton that stores Pyccel errors
-    f2 = epyccel(f)
+    f2 = epyccel(f, language=language)
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
