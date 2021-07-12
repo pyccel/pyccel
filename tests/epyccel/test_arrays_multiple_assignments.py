@@ -240,7 +240,7 @@ def test_Assign_after_If():
     errors = Errors()
 
     # epyccel should raise an Exception
-    f2 = epyccel(f)
+    epyccel(f)
 
     # Check that we got exactly 1 Pyccel warning
     assert errors.has_warnings()
