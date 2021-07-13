@@ -2650,16 +2650,13 @@ class SemanticParser(BasicParser):
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
-        var_shapes = [dict() for _ in range(len(args))]
-        for i,allocs in enumerate(allocations):
-            for a in allocs:
-                var_shapes[i][a.variable] = a.shape
+        var_shapes = [{a.variable : a.shape for a in allocs} for allocs in allocations]
         variables = [v for branch in var_shapes for v in branch]
-        print(variables)
 
         for v in variables:
+            shape_branch1 = var_shapes[0][v]
             if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
-                    or not all(var_shapes[0][v]==branch_shapes[v] \
+                    or not all(shape_branch1==branch_shapes[v] \
                                 for branch_shapes in var_shapes[1:]):
                 v.set_changeable_shape()
         return If(*args)
