@@ -280,8 +280,9 @@ def test_Assign_between_nested_If():
     # Check that we don't get a Pyccel warning
     assert not errors.has_warnings()
 
-    assert f(True) == f2(True)
-    assert f(False) == f2(False)
+    assert f(True,True) == f2(True,True)
+    assert f(True,False) == f2(True,False)
+    assert f(False,True) == f2(False,True)
 
 #==============================================================================
 if __name__ == '__main__':
