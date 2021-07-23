@@ -338,7 +338,10 @@ class CCodePrinter(CodePrinter):
                 The Assign Node used to get the lhs and rhs
         Returns
         -------
-            Returns a string that contains the initialization of a stack_array
+            buffer_array : str
+                String initialising the stack (C) array which stores the data
+            array_init   : str
+                String containing the rhs of the initialization of a stack_array
         """
 
         var = expr
@@ -356,13 +359,13 @@ class CCodePrinter(CodePrinter):
                 size  = tot_shape)
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
         strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
-        cpy_data = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
-        cpy_data += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
-        cpy_data = cpy_data.format(np_dtype, dummy_array_name,
+        array_init = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
+        array_init += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
+        array_init = array_init.format(np_dtype, dummy_array_name,
                     shape_init, strides_init, len(var.shape), 'false')
-        cpy_data += 'stack_array_init(&{})'.format(self._print(var))
+        array_init += 'stack_array_init(&{})'.format(self._print(var))
         self._additional_imports.add("ndarrays")
-        return buffer_array, cpy_data
+        return buffer_array, array_init
 
     def fill_NumpyArange(self, expr, lhs):
         """ print the assignment of a NumpyArange
