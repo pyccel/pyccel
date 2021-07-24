@@ -20,25 +20,20 @@ from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import construct_flags
 from pyccel.codegen.utilities      import compile_files
+from pyccel.codegen.utilities      import compile_folder
+from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.python_wrapper import create_shared_library
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler
 
-import pyccel.stdlib as stdlib_folder
-
 __all__ = ['execute_pyccel']
 
 # map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
-    "ndarrays" : "ndarrays",
-    "pyc_math" : "math",
-}
-
-# map language to its file extension
-lang_ext_dict = {
-    "c" : ".c",
-    "fortran": ".f90",
+    "ndarrays"     : "ndarrays",
+    "pyc_math_f90" : "math",
+    "pyc_math_c"   : "math",
 }
 
 #==============================================================================
@@ -249,8 +244,6 @@ def execute_pyccel(fname, *,
         module_names = [module_name]
 
     # -------------------------------------------------------------------------
-    # get path to pyccel/stdlib/lib_name
-    stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
     internal_libs_name = set()
     internal_libs_path = []
@@ -293,56 +286,31 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-        for lib in internal_libs:
-            if lib in codegen.get_printer_imports():
+        for lib_name, folder_lib in internal_libs.items():
+            if lib_name in codegen.get_printer_imports() and \
+                    lib_name not in internal_libs_name:
+
+                lib_dest_path = copy_internal_library(folder_lib, pyccel_dirpath)
+
+                # stop after copying lib to __pyccel__ directory for
+                # convert only
+                if convert_only:
+                    continue
+
                 # get the include folder path and library files
-                if lib not in internal_libs_name:
-                    # get the library folder name
-                    lib_name = internal_libs[lib]
-                    # get lib path (stdlib_path/lib_name)
-                    lib_path = os.path.join(stdlib_path, lib_name)
-                    # remove library folder to avoid missing files and copy
-                    # new one from pyccel stdlib
-                    lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-                    with FileLock(lib_dest_path + '.lock'):
-                        if not os.path.exists(lib_dest_path):
-                            shutil.copytree(lib_path, lib_dest_path)
+                internal_modules = compile_folder(lib_dest_path,
+                                                  language = language,
+                                                  compiler = f90exec,
+                                                  flags    = fflags,
+                                                  debug    = debug,
+                                                  verbose  = verbose)
 
-                    # stop after copying lib to __pyccel__ directory for
-                    # convert only
-                    if convert_only:
-                        continue
-
-                    # get library source files
-                    ext = lang_ext_dict[language]
-                    source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
-                                                                if e.endswith(ext)]
-                    internal_modules = [os.path.splitext(f)[0] for f in source_files]
-
-                    # compile library source files
-                    flags = construct_flags(f90exec,
-                                            fflags=fflags,
-                                            debug=debug,
-                                            includes=[lib_dest_path])
-                    try:
-                        for f,l in zip(source_files, internal_modules):
-                            with FileLock(l + '.lock'):
-                                compile_files(f, f90exec, flags,
-                                                binary=None,
-                                                verbose=verbose,
-                                                is_module=True,
-                                                output=lib_dest_path,
-                                                language=language)
-                    except Exception:
-                        handle_error('C {} library compilation'.format(lib))
-                        raise
-
-                    # Add internal lib to internal_libs_name set
-                    internal_libs_name.add(lib)
-                    # add source file without extension to internal_libs_files
-                    internal_libs_files.extend(internal_modules)
-                    # add library path to internal_libs_path
-                    internal_libs_path.append(lib_dest_path)
+                # Add internal lib to internal_libs_name set
+                internal_libs_name.add(lib_name)
+                # add source file without extension to internal_libs_files
+                internal_libs_files.extend(internal_modules)
+                # add library path to internal_libs_path
+                internal_libs_path.append(lib_dest_path)
 
         if convert_only:
             continue

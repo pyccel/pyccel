@@ -14,6 +14,11 @@ import subprocess
 import sys
 import sysconfig
 import warnings
+from filelock import FileLock
+import pyccel.stdlib as stdlib_folder
+
+# get path to pyccel/stdlib/lib_name
+stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
 __all__ = ['construct_flags', 'compile_files', 'get_gfortran_library_dir']
 
@@ -198,3 +203,91 @@ def get_gfortran_library_dir():
                 # Add to system path
                 sys.path.insert(0, lib_dir)
     return lib_dir
+
+def copy_internal_library(lib_folder, pyccel_dirpath):
+    # get lib path (stdlib_path/lib_name)
+    lib_path = os.path.join(stdlib_path, lib_folder)
+    # remove library folder to avoid missing files and copy
+    # new one from pyccel stdlib
+    lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)
+    with FileLock(lib_dest_path + '.lock'):
+        if not os.path.exists(lib_dest_path):
+            shutil.copytree(lib_path, lib_dest_path)
+        else:
+            src_files = os.listdir(lib_path)
+            dst_files = os.listdir(lib_dest_path)
+            outdated = any(s not in dst_files for s in src_files)
+            if not outdated:
+                outdated = any(os.path.getmtime(os.path.join(lib_path, s)) > os.path.getmtime(os.path.join(lib_dest_path,s)) for s in src_files)
+            if outdated:
+                shutil.rmtree(lib_dest_path)
+                shutil.copytree(lib_path, lib_dest_path)
+    return lib_dest_path
+
+def compile_folder(folder,
+                   language,
+                   compiler,
+                   flags = (),
+                   includes = (),
+                   libs = (),
+                   libdirs = (),
+                   debug = False,
+                   verbose = False):
+    """
+    Compile all files matching the language extension in a folder
+
+    Parameters
+    ----------
+    folder   : str
+               The folder to compile
+    language : str
+               The language we are translating to
+    compiler : str
+               The compiler used
+    flags    : iterable
+               Any additional requested flags
+    includes : iterable
+               Any folders which should be added to the default includes
+    libs     : iterable
+               Any libraries which are needed to compile
+    libdirs  : iterable
+               Any folders which should be added to the default libdirs
+    debug    : bool
+               Indicates whether we should compile in debug mode
+    verbose  : bool
+               Indicates whethere additional information should be printed
+    """
+
+    # get library source files
+    ext = '.'+language_extension[language]
+    source_files = [os.path.join(folder, e) for e in os.listdir(folder)
+                                                if e.endswith(ext)]
+    internal_modules = [os.path.splitext(f)[0] for f in source_files]
+
+    # compile library source files
+    flags = construct_flags(compiler,
+                            fflags=flags,
+                            debug=debug,
+                            includes=[*includes, folder])
+    try:
+        for f,l in zip(source_files, internal_modules):
+            with FileLock(l + '.lock'):
+                if os.path.exists(l+'.o'):
+                    o_file_age   = os.path.getmtime(l+'.o')
+                    src_file_age = os.path.getmtime(f)
+                    outdated     = o_file_age < src_file_age
+                else:
+                    outdated = True
+                if outdated:
+                    compile_files(f, compiler, flags,
+                                    binary=None,
+                                    verbose=verbose,
+                                    is_module=True,
+                                    output=folder,
+                                    libs=libs,
+                                    libdirs=libdirs,
+                                    language=language)
+    except Exception:
+        handle_error('C {} library compilation'.format(lib))
+        raise
+    return internal_modules
