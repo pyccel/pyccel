@@ -16,7 +16,7 @@ compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
 available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                     if f.endswith('.json')}
 if len(available_compilers)==0:
-    from pyccel.compiling.generate_default import generate_default
+    from pyccel.compilers.generate_default import generate_default
     generate_default()
     available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                         if f.endswith('.json')}
