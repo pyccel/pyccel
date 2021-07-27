@@ -102,9 +102,8 @@ def get_unique_name(prefix, path):
 def epyccel_seq(function_or_module, *,
                 language     = None,
                 compiler     = None,
-                mpi_compiler = None,
                 fflags       = None,
-                accelerator  = None,
+                accelerators = (),
                 verbose      = False,
                 debug        = False,
                 includes     = (),
@@ -169,14 +168,13 @@ def epyccel_seq(function_or_module, *,
                            verbose     = verbose,
                            language    = language,
                            compiler    = compiler,
-                           mpi_compiler= mpi_compiler,
                            fflags      = fflags,
                            includes    = includes,
                            libdirs     = libdirs,
                            modules     = modules,
                            libs        = libs,
                            debug       = debug,
-                           accelerator = accelerator,
+                           accelerators= accelerators,
                            output_name = module_name)
         finally:
             # Change working directory back to starting point
@@ -226,9 +224,9 @@ def epyccel( python_function_or_module, **kwargs ):
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
 
-    accelerator : str, optional
+    accelerators : iterable of str, optional
         Parallel multi-threading acceleration strategy
-        (currently supported: 'openmp', 'openacc').
+        (currently supported: 'mpi', 'openmp', 'openacc').
 
     Options for parallel mode
     -------------------------
@@ -245,9 +243,6 @@ def epyccel( python_function_or_module, **kwargs ):
     -------------
     compiler : str, optional
         User-defined command for compiling generated source code.
-
-    mpi_compiler : str, optional
-        Compiler for MPI parallel code.
 
     Returns
     -------
@@ -282,9 +277,6 @@ def epyccel( python_function_or_module, **kwargs ):
                                               # mpi4py to broadcast exceptions
         assert isinstance( comm, MPI.Comm )
         assert isinstance( root, int      )
-
-        # TODO [YG, 25.02.2020] Get default MPI compiler from somewhere else
-        kwargs.setdefault('mpi_compiler', 'mpif90')
 
         # Master process calls epyccel
         if comm.rank == root:

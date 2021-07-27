@@ -46,7 +46,7 @@ def _which(program):
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
-def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None):
+def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
     pyccel console command.
     """
@@ -85,8 +85,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran', \
             'gcc', 'icc'), help='Compiler name')
 
-    group.add_argument('--mpi-compiler', help='MPI compiler wrapper')
-
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
     group.add_argument('--debug', action='store_true', \
@@ -120,6 +118,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     # ... Accelerators
     group = parser.add_argument_group('Accelerators options')
+    group.add_argument('--mpi', action='store_true', \
+                       help='uses mpi')
     group.add_argument('--openmp', action='store_true', \
                        help='uses openmp')
     group.add_argument('--openacc', action='store_true', \
@@ -155,6 +155,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     if args.compiler:
         compiler = args.compiler
+
+    if not mpi:
+        mpi = args.mpi
 
     if not openmp:
         openmp = args.openmp
@@ -213,11 +216,13 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
             errors.check()
             sys.exit(1)
 
-    accelerator = None
+    accelerators = []
+    if mpi:
+        accelerators.append("mpi")
     if openmp:
-        accelerator = "openmp"
+        accelerators.append("openmp")
     if openacc:
-        accelerator = "openacc"
+        accelerators.append("openacc")
 
     # ...
 
@@ -244,14 +249,13 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        verbose       = args.verbose,
                        language      = args.language,
                        compiler      = compiler,
-                       mpi_compiler  = args.mpi_compiler,
                        fflags        = args.flags,
                        includes      = args.includes,
                        libdirs       = args.libdirs,
                        modules       = (),
                        libs          = args.libs,
                        debug         = args.debug,
-                       accelerator   = accelerator,
+                       accelerators  = accelerators,
                        folder        = args.output)
     except PyccelError:
         sys.exit(1)
