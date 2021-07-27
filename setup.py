@@ -3,18 +3,6 @@
 
 from pathlib import Path
 from setuptools import setup, find_packages
-import atexit
-from setuptools.command.install import install
-
-def _post_install():
-    from pyccel.compilers.generate_default import generate_default
-    generate_default()
-
-
-class new_install(install):
-    def __init__(self, *args, **kwargs):
-        super(new_install, self).__init__(*args, **kwargs)
-        atexit.register(_post_install)
 
 # ...
 # Read library version into '__version__' variable
