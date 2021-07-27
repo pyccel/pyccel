@@ -3,25 +3,17 @@
 
 from pathlib import Path
 from setuptools import setup, find_packages
-from setuptools.command.develop import develop
-from setuptools.command.install import install
+import atexit
+
+def _post_install():
+    from pyccel.compilers.generate_default import generate_default
+    generate_default()
 
 
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        develop.run(self)
-        # PUT YOUR POST-INSTALL SCRIPT HERE or CALL A FUNCTION
-        from pyccel.compilers.generate_default import generate_default
-        generate_default()
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-    def run(self):
-        install.run(self)
-        # PUT YOUR POST-INSTALL SCRIPT HERE or CALL A FUNCTION
-        from pyccel.compilers.generate_default import generate_default
-        generate_default()
+class new_install(install):
+    def __init__(self, *args, **kwargs):
+        super(new_install, self).__init__(*args, **kwargs)
+        atexit.register(_post_install)
 
 # ...
 # Read library version into '__version__' variable
@@ -69,10 +61,7 @@ def setup_package():
           include_package_data=True, \
           install_requires=install_requires, \
           entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel', 'pyccel-clean = pyccel.commands.pyccel_clean:pyccel_clean_command']}, \
-          cmdclass={
-                'develop': PostDevelopCommand,
-                'install': PostInstallCommand,
-            }, \
+          cmdclass={'install': new_install},
           **setup_args)
 
 
