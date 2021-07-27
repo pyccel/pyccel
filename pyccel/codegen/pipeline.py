@@ -286,11 +286,11 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-        for lib_name, (folder, compile_obj) in internal_libs.items():
+        for lib_name, (lib_folder, compile_obj) in internal_libs.items():
             if lib_name in codegen.get_printer_imports() and \
                     lib_name not in internal_libs_name:
 
-                lib_dest_path = copy_internal_library(folder, pyccel_dirpath)
+                lib_dest_path = copy_internal_library(lib_folder, pyccel_dirpath)
 
                 # stop after copying lib to __pyccel__ directory for
                 # convert only
