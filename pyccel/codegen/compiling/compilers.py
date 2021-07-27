@@ -1,3 +1,6 @@
+"""
+Module handling everything related to the compilers used to compile the various generated files
+"""
 import json
 import os
 import subprocess
@@ -28,8 +31,8 @@ class Compiler:
     def __init__(self, name : str, debug=False):
         try:
             self._info = available_compilers[name]
-        except KeyError:
-            raise NotImplementedError("Compiler not available")
+        except KeyError as e:
+            raise NotImplementedError("Compiler not available") from e
 
         self._debug = debug
 
@@ -334,7 +337,8 @@ class Compiler:
 
         return file_out
 
-    def run_command(self, cmd, verbose):
+    @staticmethod
+    def run_command(cmd, verbose):
         """
         Run the provided command and collect the output
 
