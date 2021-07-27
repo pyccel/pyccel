@@ -96,3 +96,7 @@ class CompileObj:
     @property
     def accelerators(self):
         return self._accelerators
+
+    @property
+    def is_module(self):
+        return self._is_module
