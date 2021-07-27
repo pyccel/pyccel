@@ -4,6 +4,7 @@
 from pathlib import Path
 from setuptools import setup, find_packages
 import atexit
+from setuptools.command.install import install
 
 def _post_install():
     from pyccel.compilers.generate_default import generate_default
