@@ -17,6 +17,7 @@ from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from pyccel.codegen.utilities               import compile_files, get_gfortran_library_dir
 from .cwrapper import create_c_setup
+from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
 
@@ -32,16 +33,16 @@ fortran_c_flag_equivalence = {'-Wconversion-extra' : '-Wconversion' }
 
 #==============================================================================
 def create_shared_library(codegen,
+                          main_obj,
                           language,
                           pyccel_dirpath,
                           compiler,
-                          mpi_compiler,
                           accelerator,
                           dep_mods,
                           libs,
                           libdirs,
                           includes='',
-                          flags = '',
+                          flags = (),
                           sharedlib_modname=None,
                           verbose = False):
 
@@ -75,14 +76,20 @@ def create_shared_library(codegen,
             with open(bind_c_filename, 'w') as f:
                 f.writelines(bind_c_code)
 
-            compile_files(bind_c_filename, compiler, flags,
-                binary=None,
-                verbose=verbose,
-                is_module=True,
-                output=pyccel_dirpath,
-                libs=libs,
-                libdirs=libdirs,
-                language=language)
+            bind_c_obj=CompileObj(file_name = bind_c_filename,
+                    is_module = True,
+                    dependencies = (main_obj,))
+            compiler.compile_module(compile_obj=bind_c_obj,
+                    output_folder=pyccel_dirpath,
+                    verbose=verbose)
+            #compile_files(bind_c_filename, compiler, flags,
+            #    binary=None,
+            #    verbose=verbose,
+            #    is_module=True,
+            #    output=pyccel_dirpath,
+            #    libs=libs,
+            #    libdirs=libdirs,
+            #    language=language)
 
             dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
             if compiler == 'gfortran':

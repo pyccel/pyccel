@@ -22,6 +22,9 @@ from pyccel.codegen.utilities      import construct_flags
 from pyccel.codegen.utilities      import compile_files
 from pyccel.codegen.python_wrapper import create_shared_library
 
+from .compiling.basic     import CompileObj
+from .compiling.compilers import Compiler
+
 import pyccel.stdlib as stdlib_folder
 
 __all__ = ['execute_pyccel']
@@ -53,14 +56,13 @@ def execute_pyccel(fname, *,
                    folder        = None,
                    language      = None,
                    compiler      = None,
-                   mpi_compiler  = None,
                    fflags        = None,
                    includes      = (),
                    libdirs       = (),
                    modules       = (),
                    libs          = (),
                    debug         = False,
-                   accelerator   = None,
+                   accelerators  = (),
                    output_name   = None):
     """
     Carries out the main steps required to execute pyccel
@@ -103,12 +105,7 @@ def execute_pyccel(fname, *,
 
     compiler      : str
                     The compiler used to compile the generated files
-                    Default : GNU
-
-    mpi_compiler  : str
-                    The compiler used to compile the generated files when mpi is needed.
-                    This value must be provided to compile with mpi
-                    Default : None (compile with 'compiler')
+                    Default : gfortran
 
     fflags        : str
                     The flags passed to the compiler
@@ -131,7 +128,7 @@ def execute_pyccel(fname, *,
                     (currently this only implies that the flag -fcheck=bounds is added)
                     Default : False
 
-    accelerator   : str
+    accelerators  : iterable
                     Tool used to accelerate the code (e.g. openmp openacc)
 
     output_name   : str
@@ -202,36 +199,8 @@ def execute_pyccel(fname, *,
         elif language == 'c':
             compiler = 'gcc'
 
-    f90exec = mpi_compiler if mpi_compiler else compiler
-
-    if (language == "c"):
-        libs = libs + ['m']
-    if accelerator == 'openmp':
-        if compiler in ["gcc","gfortran"]:
-            if sys.platform == "darwin" and compiler == "gcc":
-                libs = libs + ['omp']
-            else:
-                libs = libs + ['gomp']
-
-        elif compiler == 'ifort':
-            libs.append('iomp5')
-
-    # ...
-    # Construct flags for the compiler (if one is required)
-    if fflags is None and compiler:
-        fflags = construct_flags(f90exec,
-                                 fflags=None,
-                                 debug=debug,
-                                 accelerator=accelerator,
-                                 includes=())
-    elif fflags is not None:
-        fflags = fflags.split()
-    else:
-        fflags = [] # Used for python
-
-    # Build position-independent code, suited for use in shared library
-    fflags.append('-fPIC')
-    # ...
+    # Get compiler object
+    compiler = Compiler(compiler, debug)
 
     # Parse Python file
     try:
@@ -416,28 +385,23 @@ def execute_pyccel(fname, *,
             modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
 
 
-        # Construct compiler flags
-        flags = construct_flags(f90exec,
-                                fflags=fflags,
-                                debug=debug,
-                                accelerator=accelerator,
-                                includes=includes)
-
         # Compile Fortran code
         #
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
+        main_obj = CompileObj(file_name = fname,
+                is_module    = codegen.is_module,
+                flags        = fflags,
+                includes     = includes,
+                libs         = libs,
+                libdirs      = libdirs,
+                dependencies = modules,
+                accelerators = accelerators)
         try:
-            compile_files(fname, f90exec, flags,
-                            binary=None,
-                            verbose=verbose,
-                            modules=modules,
-                            is_module=codegen.is_module,
-                            output=pyccel_dirpath,
-                            libs=libs,
-                            libdirs=libdirs,
-                            language=language)
+            compiler.compile_file(compile_obj=main_obj,
+                    output_folder=pyccel_dirpath,
+                    verbose=verbose)
         except Exception:
             handle_error('Fortran compilation')
             raise
@@ -453,16 +417,16 @@ def execute_pyccel(fname, *,
         # Create shared library
         try:
             sharedlib_filepath = create_shared_library(codegen,
+                                                       main_obj,
                                                        language,
                                                        pyccel_dirpath,
                                                        compiler,
-                                                       mpi_compiler,
-                                                       accelerator,
+                                                       accelerators,
                                                        dep_mods,
                                                        libs,
                                                        libdirs,
                                                        includes,
-                                                       flags,
+                                                       main_obj.flags,
                                                        output_name,
                                                        verbose)
         except NotImplementedError as error:

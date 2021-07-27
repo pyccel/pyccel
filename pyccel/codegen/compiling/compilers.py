@@ -272,6 +272,24 @@ class Compiler:
 
         self.run_command(cmd, verbose)
 
+    def compile_file(self, compile_obj, output_folder, verbose = False):
+        """
+        Compile a program
+
+        Parameters
+        ----------
+        compile_obj   : CompileObj
+                        Object containing all information about the object to be compiled
+        output_folder : str
+                        The folder where the result should be saved
+        verbose       : bool
+                        Indicates whether additional output should be shown
+        """
+        if compile_obj.is_module:
+            self.compile_module(compile_obj, output_folder, verbose)
+        else:
+            self.compile_program(compile_obj, output_folder, verbose)
+
     def compile_shared_library(self, compile_obj, output_folder, verbose = False):
         """
         Compile a module to a shared library
