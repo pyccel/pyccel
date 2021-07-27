@@ -45,7 +45,6 @@ install_requires = [
 ]
 
 def setup_package():
-    import os
 
     setup(packages=packages, \
           include_package_data=True, \
