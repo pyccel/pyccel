@@ -84,7 +84,7 @@ python_info = {
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
-            'includes' : [*config_var.get("INCLUDEPY","").split(), get_numpy_include()],
+            'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             'libs' : [s[2:] for s in config_vars.get("LIBPYTHON","").split()
                                         +config_vars.get("BLDLIBRARY","").split()
                                         +config_vars.get("LIBS","").split()], #Strip -l from beginning
