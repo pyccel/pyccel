@@ -46,14 +46,15 @@ install_requires = [
 
 def setup_package():
     import os
-    from pyccel.compilers.generate_default import generate_default
-    generate_default()
 
     setup(packages=packages, \
           include_package_data=True, \
           install_requires=install_requires, \
           entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel', 'pyccel-clean = pyccel.commands.pyccel_clean:pyccel_clean_command']}, \
           **setup_args)
+
+    from pyccel.compilers.generate_default import generate_default
+    generate_default()
 
 if __name__ == "__main__":
     setup_package()
