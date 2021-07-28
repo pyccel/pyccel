@@ -16,6 +16,7 @@ import sysconfig
 import warnings
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
+from .compiling.basic     import CompileObj
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
@@ -227,10 +228,6 @@ def copy_internal_library(lib_folder, pyccel_dirpath):
 def compile_folder(folder,
                    language,
                    compiler,
-                   flags = (),
-                   includes = (),
-                   libs = (),
-                   libdirs = (),
                    debug = False,
                    verbose = False):
     """
@@ -244,8 +241,6 @@ def compile_folder(folder,
                The language we are translating to
     compiler : str
                The compiler used
-    flags    : iterable
-               Any additional requested flags
     includes : iterable
                Any folders which should be added to the default includes
     libs     : iterable
@@ -262,32 +257,20 @@ def compile_folder(folder,
     ext = '.'+language_extension[language]
     source_files = [os.path.join(folder, e) for e in os.listdir(folder)
                                                 if e.endswith(ext)]
-    internal_modules = [os.path.splitext(f)[0] for f in source_files]
+    compile_objs = [CompileObj(s,folder) for s in source_files]
 
     # compile library source files
-    flags = construct_flags(compiler,
-                            fflags=flags,
-                            debug=debug,
-                            includes=[*includes, folder])
-    try:
-        for f,l in zip(source_files, internal_modules):
-            with FileLock(l + '.lock'):
-                if os.path.exists(l+'.o'):
-                    o_file_age   = os.path.getmtime(l+'.o')
-                    src_file_age = os.path.getmtime(f)
-                    outdated     = o_file_age < src_file_age
-                else:
-                    outdated = True
-                if outdated:
-                    compile_files(f, compiler, flags,
-                                    binary=None,
-                                    verbose=verbose,
-                                    is_module=True,
-                                    output=folder,
-                                    libs=libs,
-                                    libdirs=libdirs,
-                                    language=language)
-    except Exception:
-        handle_error('C {} library compilation'.format(lib))
-        raise
-    return internal_modules
+    for f in compile_objs:
+        f.acquire_lock()
+        if os.path.exists(f.target):
+            o_file_age   = os.path.getmtime(f.target)
+            src_file_age = os.path.getmtime(f.source)
+            outdated     = o_file_age < src_file_age
+        else:
+            outdated = True
+        if outdated:
+            compiler.compile_file(compile_obj=f,
+                    output_folder=folder,
+                    verbose=verbose)
+        f.release_lock()
+    return compile_objs
