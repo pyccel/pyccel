@@ -6,6 +6,7 @@ import os
 import subprocess
 import sysconfig
 import warnings
+from pyccel import __version__ as pyccel_version
 
 # Set correct deployment target if on mac
 mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
@@ -15,11 +16,15 @@ if mac_target:
 compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
 available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                     if f.endswith('.json')}
-if len(available_compilers)==0:
+if len(available_compilers)==0 or \
+        next(iter(available_compilers.values()))['pyccel_version'] != pyccel_version:
     from pyccel.compilers.generate_default import generate_default
     generate_default()
     available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                         if f.endswith('.json')}
+
+vendors = {c['family'] for c in available_compilers.values()}
+sorted_compilers = {(c['family'],c['language']) : c for c in available_compilers.values()}
 
 #------------------------------------------------------------
 class Compiler:
@@ -29,13 +34,17 @@ class Compiler:
     Parameters
     ----------
     name  : str
-            Name of the compiler used to select the relevant json file
+               Name of the family of compilers
+    language : str
+               Language that we are translating to
     debug : bool
             Indicates whether we are compiling in debug mode
     """
-    def __init__(self, name : str, debug=False):
+    def __init__(self, vendor : str, language : str, debug=False):
+        if vendor not in vendors:
+            raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
         try:
-            self._info = available_compilers[name]
+            self._info = sorted_compilers[(vendor,language)]
         except KeyError as e:
             raise NotImplementedError("Compiler not available") from e
 
