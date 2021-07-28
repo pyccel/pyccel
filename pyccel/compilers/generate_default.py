@@ -102,7 +102,7 @@ python_info = {
         }
 if sys.platform == "win32":
     python_info['python']['libs'].append('python{}.lib'.format(config_vars["VERSION"]))
-    python_info['python']['libdirs'].append(config_vars.get("LIBDEST","").split())
+    python_info['python']['libdirs'].extend(config_vars.get("LIBDEST","").split())
 
 save_folder = os.path.dirname(os.path.abspath(__file__))
 
