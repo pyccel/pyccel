@@ -111,7 +111,9 @@ def print_json(filename, info):
           file=open(os.path.join(save_folder, filename),'w'))
 
 def generate_default():
-    print(config_vars)
+    if sys.platform == "win32":
+        print("Config vars:")
+        print(json.dumps(config_vars,indent=4))
     files = {
             'gfortran.json' : gfort_info,
             'gcc.json'      : gcc_info,
