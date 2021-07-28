@@ -596,7 +596,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelMod(self, expr):
         self._additional_imports.add("math")
-        self._additional_imports.add("pyc_math")
+        self._additional_imports.add("pyc_math_c")
 
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
@@ -1109,7 +1109,7 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math')
+            self._additional_imports.add('pyc_math_c')
         else:
             if expr.dtype is NativeComplex():
                 self._additional_imports.add('cmath')
