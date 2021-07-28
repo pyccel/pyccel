@@ -84,16 +84,18 @@ icc_info = {'exec' : 'icc',
             }
 #------------------------------------------------------------
 config_vars = sysconfig.get_config_vars()
+python_libs = config_vars.get("LIBPYTHON","").split()
+                    +config_vars.get("BLDLIBRARY","").split()
+                    +config_vars.get("LIBS","").split()
+                    +config_vars.get("LIBPL","").split()
 python_info = {
         "libs" : [s[2:] for s in config_vars.get("LIBM","").split()], # Strip -l from beginning
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-            'libs' : config_vars.get("LIBPYTHON","").split()
-                            +config_vars.get("BLDLIBRARY","").split()
-                            +config_vars.get("LIBS","").split(),
-            'libdirs' : config_vars.get("LIBPL","").split(),
+            'libs' : [l for l in libs if l.startswith('-l')],
+            'libdirs' : [l for l in libs if l.startswith('-L')],
             "linker_flags" : config_vars.get("LDSHARED","").split()[1:],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
             }
