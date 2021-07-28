@@ -346,9 +346,8 @@ class Compiler:
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.target,
-                '-o', file_out,
-                *libs_flags]
+                *libs_flags, *m_code, compile_obj.target,
+                '-o', file_out]
 
         compile_obj.acquire_lock()
         self.run_command(cmd, verbose)
