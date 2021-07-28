@@ -4,6 +4,7 @@ import sys
 import sysconfig
 from itertools import chain
 from numpy import get_include as get_numpy_include
+from pyccel import __version__ as pyccel_version
 
 gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
@@ -21,6 +22,7 @@ gfort_info = {'exec' : 'gfortran',
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
+              'family': 'GNU',
               }
 if sys.platform == "win32":
     gfort_info['mpi']['flags'] = ('-D','USE_MPI_MODULE')
@@ -43,6 +45,7 @@ ifort_info = {'exec' : 'ifort',
               'openacc': {
                   'flags' : ("-ta=multicore", "-Minfo=accel"),
                   },
+              'family': 'intel',
               }
 #------------------------------------------------------------
 gcc_info = {'exec' : 'gcc',
@@ -58,6 +61,7 @@ gcc_info = {'exec' : 'gcc',
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
+            'family': 'GNU',
             }
 if sys.platform == "darwin":
     gcc_info['openmp']['flags'] = ("-Xpreprocessor",'fopenmp')
@@ -76,6 +80,7 @@ icc_info = {'exec' : 'icc',
             'openacc': {
                 'flags' : ("-ta=multicore", "-Minfo=accel"),
                 },
+            'family': 'intel',
             }
 #------------------------------------------------------------
 config_vars = sysconfig.get_config_vars()
@@ -97,7 +102,9 @@ python_info = {
 save_folder = os.path.dirname(os.path.abspath(__file__))
 
 def print_json(filename, info):
-    print(json.dumps({k:v for k,v in chain(info.items(), python_info.items())},
+    print(json.dumps({k:v for k,v in chain(info.items(),
+                                            python_info.items(),
+                                            [('pyccel_version', pyccel_version)])},
                      indent=4),
           file=open(os.path.join(save_folder, filename),'w'))
 
