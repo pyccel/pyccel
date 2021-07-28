@@ -281,6 +281,7 @@ def execute_pyccel(fname, *,
                 libdirs      = libdirs,
                 dependencies = modules,
                 accelerators = accelerators)
+        parser.compile_obj = main_obj
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
@@ -317,7 +318,7 @@ def execute_pyccel(fname, *,
         if convert_only:
             continue
 
-        deps = set()
+        deps = dict()
         # ...
         # Determine all .o files and all folders needed by executable
         def get_module_dependencies(parser):
@@ -329,7 +330,11 @@ def execute_pyccel(fname, *,
                parser.metavars.get('module_name', None) == 'omp_lib':
                 return mods, folders
 
-            deps.add((mod_folder, mod_base))
+            if parser.compile_obj:
+                deps[mod_base] = parser.compile_obj
+            elif mod_base not in deps:
+                deps[mod_base] = CompileObj(mod_base,
+                                    folder=mod_folder)
 
             # Proceed recursively
             for son in parser.sons:
@@ -337,7 +342,7 @@ def execute_pyccel(fname, *,
 
         for son in parser.sons:
             get_module_dependencies(son)
-        main_obj.add_dependencies(*[CompileObj(d[1], folder=d[0]) for d in deps])
+        main_obj.add_dependencies(*deps.values())
 
         # Compile Fortran code
         #
