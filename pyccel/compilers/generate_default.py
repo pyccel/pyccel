@@ -95,7 +95,7 @@ python_info = {
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             'libs' : [l for l in python_libs if l.startswith('-l')],
-            'libdirs' : [l for l in python_libs if l.startswith('-L')]+config_vars.get("DEST_LIB","").split(),
+            'libdirs' : [l[2:] for l in python_libs if l.startswith('-L')]+config_vars.get("DEST_LIB","").split(),
             "linker_flags" : config_vars.get("LDSHARED","").split()[1:],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
             }
@@ -111,12 +111,6 @@ def print_json(filename, info):
           file=open(os.path.join(save_folder, filename),'w'))
 
 def generate_default():
-    print("Config vars:")
-    print(json.dumps(config_vars,indent=4))
-    print("--------------------------------------------------------------")
-    makefile = sysconfig.get_makefile_filename()
-    with open(makefile, 'r') as f:
-        print(f.read())
     files = {
             'gfortran.json' : gfort_info,
             'gcc.json'      : gcc_info,
