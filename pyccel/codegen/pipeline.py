@@ -244,8 +244,6 @@ def execute_pyccel(fname, *,
     # -------------------------------------------------------------------------
 
     internal_libs_name = set()
-    internal_libs_path = []
-    internal_libs_files = []
     for parser, module_name in zip(parsers, module_names):
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
@@ -315,10 +313,6 @@ def execute_pyccel(fname, *,
 
                 # Add internal lib to internal_libs_name set
                 internal_libs_name.add(lib_name)
-                # add source file without extension to internal_libs_files
-                internal_libs_files.extend(internal_modules)
-                # add library path to internal_libs_path
-                internal_libs_path.append(lib_dest_path)
 
         if convert_only:
             continue
@@ -345,10 +339,6 @@ def execute_pyccel(fname, *,
             return mods, folders
 
         dep_mods, inc_dirs = get_module_dependencies(parser)
-
-        # Add internal dependencies
-        dep_mods = [*dep_mods, *internal_libs_files]
-        inc_dirs = [*inc_dirs, *internal_libs_path]
 
         # Remove duplicates without changing order
         dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
