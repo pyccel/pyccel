@@ -100,7 +100,7 @@ def execute_pyccel(fname, *,
 
     compiler      : str
                     The compiler used to compile the generated files
-                    Default : gfortran
+                    Default : GNU
 
     fflags        : str
                     The flags passed to the compiler
@@ -189,13 +189,11 @@ def execute_pyccel(fname, *,
 
     # Choose Fortran compiler
     if compiler is None:
-        if language == 'fortran':
-            compiler = 'gfortran'
-        elif language == 'c':
-            compiler = 'gcc'
+        compiler = 'GNU'
 
     # Get compiler object
-    compiler = Compiler(compiler, debug)
+    src_compiler = Compiler(compiler, language, debug)
+    wrapper_compiler = Compiler(compiler, 'c', debug)
 
     # Parse Python file
     try:
@@ -367,7 +365,7 @@ def execute_pyccel(fname, *,
                 dependencies = modules,
                 accelerators = accelerators)
         try:
-            compiler.compile_file(compile_obj=main_obj,
+            src_compiler.compile_file(compile_obj=main_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
         except Exception:
@@ -388,7 +386,7 @@ def execute_pyccel(fname, *,
                                                        main_obj,
                                                        language,
                                                        pyccel_dirpath,
-                                                       compiler,
+                                                       src_compiler,
                                                        accelerators,
                                                        dep_mods,
                                                        libs,
