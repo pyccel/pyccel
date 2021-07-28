@@ -41,6 +41,8 @@ class Compiler:
             Indicates whether we are compiling in debug mode
     """
     def __init__(self, vendor : str, language : str, debug=False):
+        if language=='python':
+            return
         if vendor not in vendors:
             raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
         try:
