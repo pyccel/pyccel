@@ -31,9 +31,9 @@ __all__ = ['execute_pyccel']
 
 # map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
-    "ndarrays"     : ("ndarrays", CompileObj("ndarrays")),
-    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90")),
-    "pyc_math_c"   : ("math", CompileObj("pyc_math_c")),
+    "ndarrays"     : "ndarrays",
+    "pyc_math_f90" : "math",
+    "pyc_math_c"   : "math",
 }
 
 #==============================================================================
@@ -274,6 +274,16 @@ def execute_pyccel(fname, *,
             shutil.copyfile(fname, new_location)
             continue
 
+        main_obj = CompileObj(file_name = fname,
+                folder       = pyccel_dirpath,
+                is_module    = codegen.is_module,
+                flags        = fflags,
+                includes     = includes,
+                libs         = libs,
+                libdirs      = libdirs,
+                dependencies = modules,
+                accelerators = accelerators)
+
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
         # if recursive:
@@ -284,7 +294,7 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-        for lib_name, (lib_folder, compile_obj) in internal_libs.items():
+        for lib_name, lib_folder in internal_libs.items():
             if lib_name in codegen.get_printer_imports() and \
                     lib_name not in internal_libs_name:
 
@@ -297,11 +307,11 @@ def execute_pyccel(fname, *,
 
                 # get the include folder path and library files
                 internal_modules = compile_folder(lib_dest_path,
-                                                  language = language,
-                                                  compiler = f90exec,
-                                                  flags    = fflags,
-                                                  debug    = debug,
+                                                  language,
+                                                  compiler = src_compiler,
                                                   verbose  = verbose)
+
+                main_obj.add_dependencies(*internal_modules)
 
                 # Add internal lib to internal_libs_name set
                 internal_libs_name.add(lib_name)
@@ -347,23 +357,12 @@ def execute_pyccel(fname, *,
 
         includes += inc_dirs
 
-        if codegen.is_program:
-            modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
-
 
         # Compile Fortran code
         #
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
-        main_obj = CompileObj(file_name = fname,
-                is_module    = codegen.is_module,
-                flags        = fflags,
-                includes     = includes,
-                libs         = libs,
-                libdirs      = libdirs,
-                dependencies = modules,
-                accelerators = accelerators)
         try:
             src_compiler.compile_file(compile_obj=main_obj,
                     output_folder=pyccel_dirpath,
@@ -387,12 +386,7 @@ def execute_pyccel(fname, *,
                                                        language,
                                                        pyccel_dirpath,
                                                        src_compiler,
-                                                       accelerators,
-                                                       dep_mods,
-                                                       libs,
-                                                       libdirs,
-                                                       includes,
-                                                       main_obj.flags,
+                                                       wrapper_compiler,
                                                        output_name,
                                                        verbose)
         except NotImplementedError as error:
