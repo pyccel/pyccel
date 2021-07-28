@@ -182,7 +182,7 @@ class Compiler:
         lst = [(prefix, i) for i in lst]
         return [f for fi in lst for f in fi]
 
-    def _get_compile_componenets(self, compile_obj, accelerators = ()):
+    def _get_compile_components(self, compile_obj, accelerators = ()):
         """
         Provide all components required for compiling
 
@@ -287,7 +287,7 @@ class Compiler:
 
         # Get compile options
         exec_cmd, flags, includes, libs_flags, libdirs_flags, m_code = \
-                self._get_compile_componenets(compile_obj, verbose, accelerators)
+                self._get_compile_components(compile_obj, accelerators)
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
@@ -351,7 +351,7 @@ class Compiler:
 
         # Collect compile information
         exec_cmd, flags, includes, libs_flags, libdirs_flags, m_code = \
-                self._get_compile_componenets(compile_obj, accelerators)
+                self._get_compile_components(compile_obj, accelerators)
 
         # Include linker flags to generate shared object
         flags.extend(self._info['python']['linker_flags'])
