@@ -1,5 +1,6 @@
 import os
 import sys
+from filelock import FileLock
 
 class CompileObj:
     """
@@ -34,7 +35,7 @@ class CompileObj:
     """
     def __init__(self,
                  file_name,
-                 folder       = None,
+                 folder,
                  is_module    = True,
                  flags        = (),
                  includes     = (),
@@ -45,8 +46,8 @@ class CompileObj:
         if not all(isinstance(d, CompileObj) for d in dependencies):
             raise TypeError("Dependencies require necessary compile information")
 
-        self._file = os.path.join(folder, file_name) if folder else file_name
-        self._folder = folder if folder else '.'
+        self._file = file_name
+        self._folder = folder
         self._module_name = os.path.splitext(file_name)[0]
         if is_module:
             self._target = self._module_name+'.o'
@@ -55,13 +56,16 @@ class CompileObj:
             if sys.platform == "win32":
                 self._target += '.o'
 
-        self._flags        = flags or ()
-        self._includes     = includes or ()
-        self._libs         = libs or ()
-        self._libdirs      = libdirs or ()
-        self._dependencies = dependencies or ()
-        self._accelerators = accelerators or ()
+        self._flags        = list(flags or ())
+        self._includes     = [folder, *(includes or ())]
+        self._libs         = list(libs or ())
+        self._libdirs      = list(libdirs or ())
+        self._accelerators = set(accelerators or ())
+        self._dependencies = []
+        if dependencies:
+            self.add_dependencies(*dependencies)
         self._is_module    = is_module
+        self._lock         = FileLock(self.python_module+'.lock')
 
     @property
     def source(self):
@@ -72,7 +76,7 @@ class CompileObj:
         return self._folder
 
     @property
-    def module(self):
+    def python_module(self):
         return self._module_name
 
     @property
@@ -96,8 +100,36 @@ class CompileObj:
         return self._libdirs
 
     @property
+    def extra_modules(self):
+        deps = [d.target for d in self._dependencies]
+        for d in self._dependencies:
+            deps.extend(d.extra_modules)
+        return deps
+
+    @property
     def dependencies(self):
         return self._dependencies
+
+    def add_dependencies(self, *args):
+        if not all(isinstance(d, CompileObj) for d in args):
+            raise TypeError("Dependencies require necessary compile information")
+        self._dependencies.extend(args)
+        for a in args:
+            self._flags.extend(a.flags)
+            self._includes.extend(a.includes)
+            self._libs.extend(a.libs)
+            self._libdirs.extend(a.libdirs)
+            self._accelerators.union(a.accelerators)
+
+    def acquire_lock(self):
+        self._lock.acquire()
+        for d in self.dependencies:
+            d.acquire_lock()
+
+    def release_lock(self):
+        self._lock.release()
+        for d in self.dependencies:
+            d.release_lock()
 
     @property
     def accelerators(self):
