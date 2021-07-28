@@ -46,7 +46,7 @@ class CompileObj:
         if not all(isinstance(d, CompileObj) for d in dependencies):
             raise TypeError("Dependencies require necessary compile information")
 
-        self._file = file_name
+        self._file = os.path.join(folder, file_name)
         self._folder = folder
         self._module_name = os.path.splitext(file_name)[0]
         if is_module:
@@ -55,6 +55,7 @@ class CompileObj:
             self._target = self._module_name
             if sys.platform == "win32":
                 self._target += '.o'
+        self._target = os.path.join(folder, self._target)
 
         self._flags        = list(flags or ())
         self._includes     = [folder, *(includes or ())]
@@ -101,9 +102,9 @@ class CompileObj:
 
     @property
     def extra_modules(self):
-        deps = [d.target for d in self._dependencies]
+        deps = set(d.target for d in self._dependencies)
         for d in self._dependencies:
-            deps.extend(d.extra_modules)
+            deps = deps.union(d.extra_modules)
         return deps
 
     @property
