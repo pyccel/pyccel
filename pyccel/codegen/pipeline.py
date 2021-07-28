@@ -317,36 +317,27 @@ def execute_pyccel(fname, *,
         if convert_only:
             continue
 
+        deps = set()
         # ...
         # Determine all .o files and all folders needed by executable
-        def get_module_dependencies(parser, mods=(), folders=()):
+        def get_module_dependencies(parser):
             mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
-            mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
+            mod_base = os.path.basename(parser.filename)
 
             # Stop conditions
             if parser.metavars.get('ignore_at_import', False) or \
                parser.metavars.get('module_name', None) == 'omp_lib':
                 return mods, folders
 
-            # Update lists
-            mods = [*mods, os.path.join(mod_folder, mod_base)]
-            folders = [*folders, mod_folder]
+            deps.add((mod_folder, mod_base))
 
             # Proceed recursively
             for son in parser.sons:
-                mods, folders = get_module_dependencies(son, mods, folders)
+                get_module_dependencies(son)
 
-            return mods, folders
-
-        dep_mods, inc_dirs = get_module_dependencies(parser)
-
-        # Remove duplicates without changing order
-        dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
-        inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
-        # ...
-
-        includes += inc_dirs
-
+        for son in parser.sons:
+            get_module_dependencies(son)
+        main_obj.add_dependencies(*[CompileObj(d[1], folder=d[0]) for d in deps])
 
         # Compile Fortran code
         #
