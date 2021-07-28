@@ -9,14 +9,12 @@ import subprocess
 import os
 import glob
 import warnings
-from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module
 from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from pyccel.codegen.utilities               import compile_files, get_gfortran_library_dir
-from .cwrapper import create_c_setup
 from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
@@ -36,13 +34,8 @@ def create_shared_library(codegen,
                           main_obj,
                           language,
                           pyccel_dirpath,
-                          compiler,
-                          accelerator,
-                          dep_mods,
-                          libs,
-                          libdirs,
-                          includes='',
-                          flags = (),
+                          src_compiler,
+                          wrapper_compiler,
                           sharedlib_modname=None,
                           verbose = False):
 
@@ -63,112 +56,51 @@ def create_shared_library(codegen,
 
     sharedlib_folder = ''
 
-    if language in ['c', 'fortran']:
-        extra_libs = []
-        extra_libdirs = []
-        if language == 'fortran':
-            # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
-            new_module_name = 'bind_c_{}'.format(module_name)
-            bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
-            bind_c_code = fcode(bind_c_mod, codegen.parser)
-            bind_c_filename = '{}.f90'.format(new_module_name)
+    wrapper_filename_root = '{}_wrapper'.format(module_name)
+    wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    wrapper_compile_obj = CompileObj(os.path.join(pyccel_dirpath, wrapper_filename),
+            pyccel_dirpath,
+            dependencies = (main_obj,),
+            accelerators = ('python',))
 
-            with open(bind_c_filename, 'w') as f:
-                f.writelines(bind_c_code)
+    if language == 'fortran':
+        # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
+        new_module_name = 'bind_c_{}'.format(module_name)
+        bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
+        bind_c_code = fcode(bind_c_mod, codegen.parser)
+        bind_c_filename = '{}.f90'.format(new_module_name)
 
-            bind_c_obj=CompileObj(file_name = bind_c_filename,
-                    is_module = True,
-                    dependencies = (main_obj,))
-            compiler.compile_module(compile_obj=bind_c_obj,
-                    output_folder=pyccel_dirpath,
-                    verbose=verbose)
-            #compile_files(bind_c_filename, compiler, flags,
-            #    binary=None,
-            #    verbose=verbose,
-            #    is_module=True,
-            #    output=pyccel_dirpath,
-            #    libs=libs,
-            #    libdirs=libdirs,
-            #    language=language)
+        with open(bind_c_filename, 'w') as f:
+            f.writelines(bind_c_code)
 
-            dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
-            if compiler == 'gfortran':
-                extra_libs.append('gfortran')
-                extra_libdirs.append(get_gfortran_library_dir())
-            elif compiler == 'ifort':
-                extra_libs.append('ifcore')
+        bind_c_obj=CompileObj(file_name = bind_c_filename,
+                folder = pyccel_dirpath,
+                is_module = True,
+                dependencies = (main_obj,))
+        wrapper_compile_obj.add_dependencies(bind_c_obj)
+        src_compiler.compile_module(compile_obj=bind_c_obj,
+                output_folder=pyccel_dirpath,
+                verbose=verbose)
 
-        if sys.platform == 'win32':
-            extra_libs.append('quadmath')
+    module_old_name = codegen.expr.name
+    codegen.expr.set_name(sharedlib_modname)
+    wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
+    if errors.has_errors():
+        return
 
-        module_old_name = codegen.expr.name
-        codegen.expr.set_name(sharedlib_modname)
-        wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
-        if errors.has_errors():
-            return
+    codegen.expr.set_name(module_old_name)
 
-        codegen.expr.set_name(module_old_name)
-        wrapper_filename_root = '{}_wrapper'.format(module_name)
-        wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    with open(wrapper_filename, 'w') as f:
+        f.writelines(wrapper_code)
 
-        with open(wrapper_filename, 'w') as f:
-            f.writelines(wrapper_code)
+    wrapper_compiler.compile_module(wrapper_compile_obj,
+                                output_folder = pyccel_dirpath,
+                                verbose = verbose)
 
-        c_flags = [fortran_c_flag_equivalence[f] if f in fortran_c_flag_equivalence \
-                else f for f in flags]
-
-        if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
-            idx = 0
-            while idx < len(c_flags):
-                if c_flags[idx] == "-fopenmp":
-                    c_flags.insert(idx, "-Xpreprocessor")
-                    idx += 1
-                idx += 1
-
-        setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
-                dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags)
-        setup_filename = "setup_{}.py".format(module_name)
-
-        with open(setup_filename, 'w') as f:
-            f.writelines(setup_code)
-
-        setup_filename = os.path.join(pyccel_dirpath, setup_filename)
-        cmd = [sys.executable, setup_filename, "build"]
-        if sys.platform == 'win32' and compiler in ('gfortran','gcc','ifort','icc'):
-            cmd += ['--compiler=mingw32']
-
-        if verbose:
-            print(' '.join(cmd))
-        locks = [FileLock(d+'.lock') for d in dep_mods]
-        for l in locks:
-            l.acquire()
-        try:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-            out, err = p.communicate()
-        finally:
-            for l in locks:
-                l.release()
-        if verbose:
-            print(out)
-        if p.returncode != 0:
-            err_msg = "Failed to build module"
-            err_msg += "\n" + err
-            raise RuntimeError(err_msg)
-        if err:
-            warnings.warn(UserWarning(err))
-
-        sharedlib_folder += 'build/lib*/'
-
-    # Obtain absolute path of newly created shared library
-
-    # Set file name extension of Python extension module
-    if os.name == 'nt':  # Windows
-        extext = 'pyd'
-    else:
-        extext = 'so'
-    pattern = '{}{}*.{}'.format(sharedlib_folder, sharedlib_modname, extext)
-    sharedlib_filename = glob.glob(pattern)[0]
-    sharedlib_filepath = os.path.abspath(sharedlib_filename)
+    sharedlib_filepath = src_compiler.compile_shared_library(wrapper_compile_obj,
+                                                    output_folder = pyccel_dirpath,
+                                                    sharedlib_modname = sharedlib_modname,
+                                                    verbose = verbose)
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
