@@ -13,7 +13,7 @@ from modules        import arrays
 def test_array_int32_1d_scalar_add(language):
 
     f1 = arrays.array_int32_1d_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -27,7 +27,7 @@ def test_array_int32_1d_scalar_add(language):
 def test_array_int32_1d_scalar_sub(language):
 
     f1 = arrays.array_int32_1d_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -41,7 +41,7 @@ def test_array_int32_1d_scalar_sub(language):
 def test_array_int32_1d_scalar_mul(language):
 
     f1 = arrays.array_int32_1d_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -55,7 +55,7 @@ def test_array_int32_1d_scalar_mul(language):
 def test_array_int32_1d_scalar_div(language):
 
     f1 = arrays.array_int32_1d_scalar_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -69,7 +69,7 @@ def test_array_int32_1d_scalar_div(language):
 def test_array_int32_1d_scalar_idiv(language):
 
     f1 = arrays.array_int32_1d_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -83,7 +83,7 @@ def test_array_int32_1d_scalar_idiv(language):
 def test_array_int32_1d_add(language):
 
     f1 = arrays.array_int32_1d_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -97,7 +97,7 @@ def test_array_int32_1d_add(language):
 def test_array_int32_1d_sub(language):
 
     f1 = arrays.array_int32_1d_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -111,7 +111,7 @@ def test_array_int32_1d_sub(language):
 def test_array_int32_1d_mul(language):
 
     f1 = arrays.array_int32_1d_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -125,7 +125,7 @@ def test_array_int32_1d_mul(language):
 def test_array_int32_1d_idiv(language):
 
     f1 = arrays.array_int32_1d_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -139,7 +139,7 @@ def test_array_int32_1d_idiv(language):
 def test_array_int32_1d_add_augassign(language):
 
     f1 = arrays.array_int32_1d_add_augassign
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -153,7 +153,7 @@ def test_array_int32_1d_add_augassign(language):
 def test_array_int32_1d_sub_augassign(language):
 
     f1 = arrays.array_int32_1d_sub_augassign
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -174,7 +174,7 @@ def test_array_int32_1d_sub_augassign(language):
 def test_array_int_1d_initialization_1(language):
 
     f1 = arrays.array_int_1d_initialization_1
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     assert np.array_equal(f1(), f2())
 
@@ -188,7 +188,7 @@ def test_array_int_1d_initialization_1(language):
 def test_array_int_1d_initialization_2(language):
 
     f1 = arrays.array_int_1d_initialization_2
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     assert np.array_equal(f1(), f2())
 
@@ -202,7 +202,7 @@ def test_array_int_1d_initialization_2(language):
 def test_array_int_1d_initialization_3(language):
 
     f1 = arrays.array_int_1d_initialization_3
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     assert np.array_equal(f1(), f2())
 
@@ -213,7 +213,7 @@ def test_array_int_1d_initialization_3(language):
 def test_array_int32_2d_C_scalar_add(language):
 
     f1 = arrays.array_int32_2d_C_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -227,7 +227,7 @@ def test_array_int32_2d_C_scalar_add(language):
 def test_array_int32_2d_C_scalar_sub(language):
 
     f1 = arrays.array_int32_2d_C_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -241,7 +241,7 @@ def test_array_int32_2d_C_scalar_sub(language):
 def test_array_int32_2d_C_scalar_mul(language):
 
     f1 = arrays.array_int32_2d_C_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -255,7 +255,7 @@ def test_array_int32_2d_C_scalar_mul(language):
 def test_array_int32_2d_C_scalar_idiv(language):
 
     f1 = arrays.array_int32_2d_C_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -269,7 +269,7 @@ def test_array_int32_2d_C_scalar_idiv(language):
 def test_array_int32_2d_C_add(language):
 
     f1 = arrays.array_int32_2d_C_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -283,7 +283,7 @@ def test_array_int32_2d_C_add(language):
 def test_array_int32_2d_C_sub(language):
 
     f1 = arrays.array_int32_2d_C_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -297,7 +297,7 @@ def test_array_int32_2d_C_sub(language):
 def test_array_int32_2d_C_mul(language):
 
     f1 = arrays.array_int32_2d_C_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -311,7 +311,7 @@ def test_array_int32_2d_C_mul(language):
 def test_array_int32_2d_C_idiv(language):
 
     f1 = arrays.array_int32_2d_C_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -329,7 +329,7 @@ def test_array_int32_2d_C_idiv(language):
 def test_array_int32_2d_F_scalar_add(language):
 
     f1 = arrays.array_int32_2d_F_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -343,7 +343,7 @@ def test_array_int32_2d_F_scalar_add(language):
 def test_array_int32_2d_F_scalar_sub(language):
 
     f1 = arrays.array_int32_2d_F_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -357,7 +357,7 @@ def test_array_int32_2d_F_scalar_sub(language):
 def test_array_int32_2d_F_scalar_mul(language):
 
     f1 = arrays.array_int32_2d_F_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -371,7 +371,7 @@ def test_array_int32_2d_F_scalar_mul(language):
 def test_array_int32_2d_F_scalar_idiv(language):
 
     f1 = arrays.array_int32_2d_F_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -385,7 +385,7 @@ def test_array_int32_2d_F_scalar_idiv(language):
 def test_array_int32_2d_F_add(language):
 
     f1 = arrays.array_int32_2d_F_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -399,7 +399,7 @@ def test_array_int32_2d_F_add(language):
 def test_array_int32_2d_F_sub(language):
 
     f1 = arrays.array_int32_2d_F_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -413,7 +413,7 @@ def test_array_int32_2d_F_sub(language):
 def test_array_int32_2d_F_mul(language):
 
     f1 = arrays.array_int32_2d_F_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -427,7 +427,7 @@ def test_array_int32_2d_F_mul(language):
 def test_array_int32_2d_F_idiv(language):
 
     f1 = arrays.array_int32_2d_F_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -446,7 +446,7 @@ def test_array_int32_2d_F_idiv(language):
 def test_array_int_1d_scalar_add(language):
 
     f1 = arrays.array_int_1d_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -460,7 +460,7 @@ def test_array_int_1d_scalar_add(language):
 def test_array_int_1d_scalar_sub(language):
 
     f1 = arrays.array_int_1d_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -474,7 +474,7 @@ def test_array_int_1d_scalar_sub(language):
 def test_array_int_1d_scalar_mul(language):
 
     f1 = arrays.array_int_1d_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -488,7 +488,7 @@ def test_array_int_1d_scalar_mul(language):
 def test_array_int_1d_scalar_idiv(language):
 
     f1 = arrays.array_int_1d_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -502,7 +502,7 @@ def test_array_int_1d_scalar_idiv(language):
 def test_array_int_1d_add(language):
 
     f1 = arrays.array_int_1d_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -516,7 +516,7 @@ def test_array_int_1d_add(language):
 def test_array_int_1d_sub(language):
 
     f1 = arrays.array_int_1d_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -530,7 +530,7 @@ def test_array_int_1d_sub(language):
 def test_array_int_1d_mul(language):
 
     f1 = arrays.array_int_1d_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -544,7 +544,7 @@ def test_array_int_1d_mul(language):
 def test_array_int_1d_idiv(language):
 
     f1 = arrays.array_int_1d_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -562,7 +562,7 @@ def test_array_int_1d_idiv(language):
 def test_array_int_2d_C_scalar_add(language):
 
     f1 = arrays.array_int_2d_C_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -576,7 +576,7 @@ def test_array_int_2d_C_scalar_add(language):
 def test_array_int_2d_C_scalar_sub(language):
 
     f1 = arrays.array_int_2d_C_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -590,7 +590,7 @@ def test_array_int_2d_C_scalar_sub(language):
 def test_array_int_2d_C_scalar_mul(language):
 
     f1 = arrays.array_int_2d_C_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -604,7 +604,7 @@ def test_array_int_2d_C_scalar_mul(language):
 def test_array_int_2d_C_scalar_idiv(language):
 
     f1 = arrays.array_int_2d_C_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -618,7 +618,7 @@ def test_array_int_2d_C_scalar_idiv(language):
 def test_array_int_2d_C_add(language):
 
     f1 = arrays.array_int_2d_C_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -632,7 +632,7 @@ def test_array_int_2d_C_add(language):
 def test_array_int_2d_C_sub(language):
 
     f1 = arrays.array_int_2d_C_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -646,7 +646,7 @@ def test_array_int_2d_C_sub(language):
 def test_array_int_2d_C_mul(language):
 
     f1 = arrays.array_int_2d_C_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -660,7 +660,7 @@ def test_array_int_2d_C_mul(language):
 def test_array_int_2d_C_idiv(language):
 
     f1 = arrays.array_int_2d_C_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]] )
     x2 = np.copy(x1)
@@ -674,7 +674,7 @@ def test_array_int_2d_C_idiv(language):
 def test_array_int_2d_C_initialization(language):
 
     f1 = arrays.array_int_2d_C_initialization
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x1 = np.zeros((2, 3), dtype=int)
     x2 = np.ones_like(x1)
@@ -691,7 +691,7 @@ def test_array_int_2d_C_initialization(language):
 def test_array_int_2d_F_scalar_add(language):
 
     f1 = arrays.array_int_2d_F_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -705,7 +705,7 @@ def test_array_int_2d_F_scalar_add(language):
 def test_array_int_2d_F_scalar_sub(language):
 
     f1 = arrays.array_int_2d_F_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -719,7 +719,7 @@ def test_array_int_2d_F_scalar_sub(language):
 def test_array_int_2d_F_scalar_mul(language):
 
     f1 = arrays.array_int_2d_F_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -733,7 +733,7 @@ def test_array_int_2d_F_scalar_mul(language):
 def test_array_int_2d_F_scalar_idiv(language):
 
     f1 = arrays.array_int_2d_F_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -747,7 +747,7 @@ def test_array_int_2d_F_scalar_idiv(language):
 def test_array_int_2d_F_add(language):
 
     f1 = arrays.array_int_2d_F_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -761,7 +761,7 @@ def test_array_int_2d_F_add(language):
 def test_array_int_2d_F_sub(language):
 
     f1 = arrays.array_int_2d_F_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -775,7 +775,7 @@ def test_array_int_2d_F_sub(language):
 def test_array_int_2d_F_mul(language):
 
     f1 = arrays.array_int_2d_F_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -789,7 +789,7 @@ def test_array_int_2d_F_mul(language):
 def test_array_int_2d_F_idiv(language):
 
     f1 = arrays.array_int_2d_F_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], order='F' )
     x2 = np.copy(x1)
@@ -803,7 +803,7 @@ def test_array_int_2d_F_idiv(language):
 def test_array_int_2d_F_initialization(language):
 
     f1 = arrays.array_int_2d_F_initialization
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x1 = np.zeros((2, 3), dtype=int, order='F')
     x2 = np.ones_like(x1)
@@ -820,7 +820,7 @@ def test_array_int_2d_F_initialization(language):
 def test_array_real_1d_scalar_add(language):
 
     f1 = arrays.array_real_1d_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -834,7 +834,7 @@ def test_array_real_1d_scalar_add(language):
 def test_array_real_1d_scalar_sub(language):
 
     f1 = arrays.array_real_1d_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -848,7 +848,7 @@ def test_array_real_1d_scalar_sub(language):
 def test_array_real_1d_scalar_mul(language):
 
     f1 = arrays.array_real_1d_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -862,7 +862,7 @@ def test_array_real_1d_scalar_mul(language):
 def test_array_real_1d_scalar_div(language):
 
     f1 = arrays.array_real_1d_scalar_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -876,7 +876,7 @@ def test_array_real_1d_scalar_div(language):
 def test_array_real_1d_scalar_idiv(language):
 
     f1 = arrays.array_real_1d_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -890,7 +890,7 @@ def test_array_real_1d_scalar_idiv(language):
 def test_array_real_1d_add(language):
 
     f1 = arrays.array_real_1d_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -904,7 +904,7 @@ def test_array_real_1d_add(language):
 def test_array_real_1d_sub(language):
 
     f1 = arrays.array_real_1d_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -918,7 +918,7 @@ def test_array_real_1d_sub(language):
 def test_array_real_1d_mul(language):
 
     f1 = arrays.array_real_1d_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -932,7 +932,7 @@ def test_array_real_1d_mul(language):
 def test_array_real_1d_div(language):
 
     f1 = arrays.array_real_1d_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -946,7 +946,7 @@ def test_array_real_1d_div(language):
 def test_array_real_1d_idiv(language):
 
     f1 = arrays.array_real_1d_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -964,7 +964,7 @@ def test_array_real_1d_idiv(language):
 def test_array_real_2d_C_scalar_add(language):
 
     f1 = arrays.array_real_2d_C_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -978,7 +978,7 @@ def test_array_real_2d_C_scalar_add(language):
 def test_array_real_2d_C_scalar_sub(language):
 
     f1 = arrays.array_real_2d_C_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -992,7 +992,7 @@ def test_array_real_2d_C_scalar_sub(language):
 def test_array_real_2d_C_scalar_mul(language):
 
     f1 = arrays.array_real_2d_C_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1006,7 +1006,7 @@ def test_array_real_2d_C_scalar_mul(language):
 def test_array_real_2d_C_scalar_div(language):
 
     f1 = arrays.array_real_2d_C_scalar_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1020,7 +1020,7 @@ def test_array_real_2d_C_scalar_div(language):
 def test_array_real_2d_C_add(language):
 
     f1 = arrays.array_real_2d_C_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1034,7 +1034,7 @@ def test_array_real_2d_C_add(language):
 def test_array_real_2d_C_sub(language):
 
     f1 = arrays.array_real_2d_C_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1048,7 +1048,7 @@ def test_array_real_2d_C_sub(language):
 def test_array_real_2d_C_mul(language):
 
     f1 = arrays.array_real_2d_C_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1062,7 +1062,7 @@ def test_array_real_2d_C_mul(language):
 def test_array_real_2d_C_div(language):
 
     f1 = arrays.array_real_2d_C_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1076,7 +1076,7 @@ def test_array_real_2d_C_div(language):
 def test_array_real_2d_C_array_initialization(language):
 
     f1 = arrays.array_real_2d_C_array_initialization
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x1 = np.zeros((2, 3), dtype=float )
     x2 = np.ones_like(x1)
@@ -1096,7 +1096,7 @@ def test_array_real_2d_C_array_initialization(language):
 def test_array_real_3d_C_array_initialization_1(language):
 
     f1 = arrays.array_real_3d_C_array_initialization_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x  = np.random.random((3,2))
     y  = np.random.random((3,2))
@@ -1113,7 +1113,7 @@ def test_array_real_3d_C_array_initialization_1(language):
 def test_array_real_3d_C_array_initialization_2(language):
 
     f1 = arrays.array_real_3d_C_array_initialization_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x1 = np.zeros((2,3,4))
     x2 = np.zeros((2,3,4))
@@ -1133,7 +1133,7 @@ def test_array_real_3d_C_array_initialization_2(language):
 def test_array_real_4d_C_array_initialization(language):
 
     f1 = arrays.array_real_4d_C_array_initialization
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x  = np.random.random((3,2,4))
     y  = np.random.random((3,2,4))
@@ -1153,7 +1153,7 @@ def test_array_real_4d_C_array_initialization(language):
 def test_array_real_2d_F_scalar_add(language):
 
     f1 = arrays.array_real_2d_F_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1167,7 +1167,7 @@ def test_array_real_2d_F_scalar_add(language):
 def test_array_real_2d_F_scalar_sub(language):
 
     f1 = arrays.array_real_2d_F_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1181,7 +1181,7 @@ def test_array_real_2d_F_scalar_sub(language):
 def test_array_real_2d_F_scalar_mul(language):
 
     f1 = arrays.array_real_2d_F_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1195,7 +1195,7 @@ def test_array_real_2d_F_scalar_mul(language):
 def test_array_real_2d_F_scalar_div(language):
 
     f1 = arrays.array_real_2d_F_scalar_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1209,7 +1209,7 @@ def test_array_real_2d_F_scalar_div(language):
 def test_array_real_2d_F_add(language):
 
     f1 = arrays.array_real_2d_F_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1223,7 +1223,7 @@ def test_array_real_2d_F_add(language):
 def test_array_real_2d_F_sub(language):
 
     f1 = arrays.array_real_2d_F_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1237,7 +1237,7 @@ def test_array_real_2d_F_sub(language):
 def test_array_real_2d_F_mul(language):
 
     f1 = arrays.array_real_2d_F_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1251,7 +1251,7 @@ def test_array_real_2d_F_mul(language):
 def test_array_real_2d_F_div(language):
 
     f1 = arrays.array_real_2d_F_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1265,7 +1265,7 @@ def test_array_real_2d_F_div(language):
 def test_array_real_2d_F_array_initialization(language):
 
     f1 = arrays.array_real_2d_F_array_initialization
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x1 = np.zeros((2, 3), dtype=float, order='F')
     x2 = np.ones_like(x1)
@@ -1286,7 +1286,7 @@ def test_array_real_2d_F_array_initialization(language):
 def test_array_real_3d_F_array_initialization_1(language):
 
     f1 = arrays.array_real_3d_F_array_initialization_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x  = np.random.random((3,2)).copy(order='F')
     y  = np.random.random((3,2)).copy(order='F')
@@ -1303,7 +1303,7 @@ def test_array_real_3d_F_array_initialization_1(language):
 def test_array_real_3d_F_array_initialization_2(language):
 
     f1 = arrays.array_real_3d_F_array_initialization_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x1 = np.zeros((2,3,4), order='F')
     x2 = np.zeros((2,3,4), order='F')
@@ -1324,7 +1324,7 @@ def test_array_real_3d_F_array_initialization_2(language):
 def test_array_real_4d_F_array_initialization(language):
 
     f1 = arrays.array_real_4d_F_array_initialization
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x  = np.random.random((3,2,4)).copy(order='F')
     y  = np.random.random((3,2,4)).copy(order='F')
@@ -1342,7 +1342,7 @@ def test_array_real_4d_F_array_initialization(language):
 def test_array_real_4d_F_array_initialization_mixed_ordering(language):
 
     f1 = arrays.array_real_4d_F_array_initialization_mixed_ordering
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     x  = np.array([[16., 17.], [18., 19.]], dtype='float', order='F')
     a  = np.array(([[[0., 1.], [2., 3.]],
@@ -1368,7 +1368,7 @@ def test_array_real_4d_F_array_initialization_mixed_ordering(language):
 def test_array_int32_1d_complex_3d_expr(language):
 
     f1 = arrays.array_int32_1d_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -1382,7 +1382,7 @@ def test_array_int32_1d_complex_3d_expr(language):
 def test_array_int32_2d_C_complex_3d_expr(language):
 
     f1 = arrays.array_int32_2d_C_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -1396,7 +1396,7 @@ def test_array_int32_2d_C_complex_3d_expr(language):
 def test_array_int32_2d_F_complex_3d_expr(language):
 
     f1 = arrays.array_int32_2d_F_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -1410,7 +1410,7 @@ def test_array_int32_2d_F_complex_3d_expr(language):
 def test_array_int32_in_bool_out_1d_complex_3d_expr(language):
 
     f1 = arrays.array_int32_in_bool_out_1d_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x  = np.array( [1,2,3], dtype=np.int32 )
     a  = np.array( [-1,-2,-3], dtype=np.int32 )
@@ -1425,7 +1425,7 @@ def test_array_int32_in_bool_out_1d_complex_3d_expr(language):
 def test_array_int32_in_bool_out_2d_C_complex_3d_expr(language):
 
     f1 = arrays.array_int32_in_bool_out_2d_C_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x  = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
@@ -1440,7 +1440,7 @@ def test_array_int32_in_bool_out_2d_C_complex_3d_expr(language):
 def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
 
     f1 = arrays.array_int32_in_bool_out_2d_F_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x  = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32, order='F' )
@@ -1455,7 +1455,7 @@ def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
 def test_array_real_1d_complex_3d_expr(language):
 
     f1 = arrays.array_real_1d_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -1469,7 +1469,7 @@ def test_array_real_1d_complex_3d_expr(language):
 def test_array_real_2d_C_complex_3d_expr(language):
 
     f1 = arrays.array_real_2d_C_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
     x2 = np.copy(x1)
@@ -1483,7 +1483,7 @@ def test_array_real_2d_C_complex_3d_expr(language):
 def test_array_real_2d_F_complex_3d_expr(language):
 
     f1 = arrays.array_real_2d_F_complex_3d_expr
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
 
     x1 = np.array( [[ 1., 2., 3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -1501,7 +1501,7 @@ def test_array_real_2d_F_complex_3d_expr(language):
 def test_array_real_sum_stack_array(language):
 
     f1 = arrays.array_real_1d_sum_stack_array
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
@@ -1509,7 +1509,7 @@ def test_array_real_sum_stack_array(language):
 def test_array_real_div_stack_array(language):
 
     f1 = arrays.array_real_1d_div_stack_array
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
@@ -1517,13 +1517,13 @@ def test_array_real_div_stack_array(language):
 def test_multiple_stack_array_1(language):
 
     f1 = arrays.multiple_stack_array_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.equal(f1(), f2())
 
 def test_multiple_stack_array_2(language):
 
     f1 = arrays.multiple_stack_array_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.equal(f1(), f2())
 
 #==============================================================================
@@ -1533,7 +1533,7 @@ def test_multiple_stack_array_2(language):
 def test_array_real_sum_2d_stack_array(language):
 
     f1 = arrays.array_real_2d_sum_stack_array
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
@@ -1541,7 +1541,7 @@ def test_array_real_sum_2d_stack_array(language):
 def test_array_real_div_2d_stack_array(language):
 
     f1 = arrays.array_real_2d_div_stack_array
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
@@ -1549,13 +1549,13 @@ def test_array_real_div_2d_stack_array(language):
 def test_multiple_2d_stack_array_1(language):
 
     f1 = arrays.multiple_2d_stack_array_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.equal(f1(), f2())
 
 def test_multiple_2d_stack_array_2(language):
 
     f1 = arrays.multiple_2d_stack_array_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.equal(f1(), f2())
 
 #==============================================================================
@@ -1571,7 +1571,7 @@ def test_multiple_2d_stack_array_2(language):
 )
 def test_array_real_1d_1d_prod(language):
     f1 = arrays.array_real_1d_1d_prod
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     x1 = np.array([3.0, 2.0, 1.0])
     x2 = np.copy(x1)
     y1 = np.empty(3)
@@ -1590,7 +1590,7 @@ def test_array_real_1d_1d_prod(language):
 )
 def test_array_real_2d_1d_matmul(language):
     f1 = arrays.array_real_2d_1d_matmul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     A1 = np.ones([3, 2])
     A1[1,0] = 2
     A2 = np.copy(A1)
@@ -1612,7 +1612,7 @@ def test_array_real_2d_1d_matmul(language):
 )
 def test_array_real_2d_1d_matmul_order_F_F(language):
     f1 = arrays.array_real_2d_1d_matmul_order_F
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     A1 = np.ones([3, 2], order='F')
     A1[1,0] = 2
     A2 = np.copy(A1)
@@ -1634,7 +1634,7 @@ def test_array_real_2d_1d_matmul_order_F_F(language):
 )
 def test_array_real_2d_2d_matmul(language):
     f1 = arrays.array_real_2d_2d_matmul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     A1 = np.ones([3, 2])
     A1[1, 0] = 2
     A2 = np.copy(A1)
@@ -1656,7 +1656,7 @@ def test_array_real_2d_2d_matmul(language):
 )
 def test_array_real_2d_2d_matmul_F_F_F_F(language):
     f1 = arrays.array_real_2d_2d_matmul_F_F
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     A1 = np.ones([3, 2], order='F')
     A1[1, 0] = 2
     A2 = np.copy(A1)
@@ -1681,7 +1681,7 @@ def test_array_real_2d_2d_matmul_F_F_F_F(language):
 )
 def test_array_real_2d_2d_matmul_mixorder(language):
     f1 = arrays.array_real_2d_2d_matmul_mixorder
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     A1 = np.ones([3, 2])
     A1[1, 0] = 2
     A2 = np.copy(A1)
@@ -1703,7 +1703,7 @@ def test_array_real_2d_2d_matmul_mixorder(language):
 )
 def test_array_real_2d_2d_matmul_operator(language):
     f1 = arrays.array_real_2d_2d_matmul_operator
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     A1 = np.ones([3, 2])
     A1[1, 0] = 2
     A2 = np.copy(A1)
@@ -1717,7 +1717,7 @@ def test_array_real_2d_2d_matmul_operator(language):
 
 def test_array_real_loopdiff(language):
     f1 = arrays.array_real_loopdiff
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     x1 = np.ones(5)
     y1 = np.zeros(5)
     x2 = np.copy(x1)
@@ -1740,7 +1740,7 @@ def test_array_real_loopdiff(language):
 )
 def test_array_kwargs_full(language):
     f1 = arrays.array_kwargs_full
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     assert f1() == f2()
 
 @pytest.mark.parametrize( 'language', [
@@ -1752,7 +1752,7 @@ def test_array_kwargs_full(language):
 )
 def test_array_kwargs_ones(language):
     f1 = arrays.array_kwargs_ones
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     assert f1() == f2()
 
 #==============================================================================
@@ -1763,14 +1763,14 @@ def test_constant_negative_index(language):
     from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     assert f1(n) == f2(n)
 
 def test_almost_negative_index(language):
     from numpy.random import randint
     n = randint(2, 10)
     f1 = arrays.constant_negative_index
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     assert f1(n) == f2(n)
 
 def test_var_negative_index(language):
@@ -1778,7 +1778,7 @@ def test_var_negative_index(language):
     n = randint(2, 10)
     idx = randint(-n,0)
     f1 = arrays.var_negative_index
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     assert f1(n,idx) == f2(n,idx)
 
 def test_expr_negative_index(language):
@@ -1787,24 +1787,24 @@ def test_expr_negative_index(language):
     idx1 = randint(-n,2*n)
     idx2 = randint(idx1,idx1+n+1)
     f1 = arrays.expr_negative_index
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     assert f1(n,idx1,idx2) == f2(n,idx1,idx2)
 
 def test_multiple_negative_index(language):
     f1 = arrays.test_multiple_negative_index
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(-2, -1), f2(-2, -1))
 
 def test_multiple_negative_index_2(language):
     f1 = arrays.test_multiple_negative_index_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(-4, -2), f2(-4, -2))
 
 def test_multiple_negative_index_3(language):
     f1 = arrays.test_multiple_negative_index_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(-1, -1, -3), f2(-1, -1, -3))
 
@@ -1812,14 +1812,14 @@ def test_argument_negative_index_1(language):
     a = arrays.a_1d
 
     f1 = arrays.test_argument_negative_index_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 def test_argument_negative_index_2(language):
     a = arrays.a_1d
 
     f1 = arrays.test_argument_negative_index_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a, a), f2(a, a))
 
 #==============================================================================
@@ -1835,13 +1835,13 @@ def test_argument_negative_index_2(language):
 )
 def test_array_random_size(language):
     f1 = arrays.array_random_size
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     s1, s2 = f2()
     assert s1 == s2
 
 def test_array_variable_size(language):
     f1 = arrays.array_variable_size
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language, verbose=True)
     from numpy.random import randint
     n = randint(1, 10)
     m = randint(11,20)
@@ -1863,7 +1863,7 @@ def test_array_1d_slice_1(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1878,7 +1878,7 @@ def test_array_1d_slice_2(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1893,7 +1893,7 @@ def test_array_1d_slice_3(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1908,7 +1908,7 @@ def test_array_1d_slice_4(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1923,7 +1923,7 @@ def test_array_1d_slice_5(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1938,7 +1938,7 @@ def test_array_1d_slice_6(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1953,7 +1953,7 @@ def test_array_1d_slice_7(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_7
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1968,7 +1968,7 @@ def test_array_1d_slice_8(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_8
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1983,7 +1983,7 @@ def test_array_1d_slice_9(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_9
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -1998,7 +1998,7 @@ def test_array_1d_slice_10(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_10
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -2013,7 +2013,7 @@ def test_array_1d_slice_11(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_11
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -2028,7 +2028,7 @@ def test_array_1d_slice_12(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_12
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
 
     assert np.array_equal(f1(a), f2(a))
 
@@ -2047,7 +2047,7 @@ def test_array_2d_F_slice_1(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2061,7 +2061,7 @@ def test_array_2d_F_slice_2(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2075,7 +2075,7 @@ def test_array_2d_F_slice_3(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2089,7 +2089,7 @@ def test_array_2d_F_slice_4(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2103,7 +2103,7 @@ def test_array_2d_F_slice_5(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2117,7 +2117,7 @@ def test_array_2d_F_slice_6(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2131,7 +2131,7 @@ def test_array_2d_F_slice_7(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_7
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2145,7 +2145,7 @@ def test_array_2d_F_slice_8(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_8
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2159,7 +2159,7 @@ def test_array_2d_F_slice_9(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_9
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2173,7 +2173,7 @@ def test_array_2d_F_slice_10(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_10
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2187,7 +2187,7 @@ def test_array_2d_F_slice_11(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_11
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2201,7 +2201,7 @@ def test_array_2d_F_slice_12(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_12
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2215,7 +2215,7 @@ def test_array_2d_F_slice_13(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_13
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2229,7 +2229,7 @@ def test_array_2d_F_slice_14(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_14
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2243,7 +2243,7 @@ def test_array_2d_F_slice_15(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_15
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2257,7 +2257,7 @@ def test_array_2d_F_slice_16(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_16
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2271,7 +2271,7 @@ def test_array_2d_F_slice_17(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_17
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2285,7 +2285,7 @@ def test_array_2d_F_slice_18(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_18
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2299,7 +2299,7 @@ def test_array_2d_F_slice_19(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_19
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2313,7 +2313,7 @@ def test_array_2d_F_slice_20(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_20
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2327,7 +2327,7 @@ def test_array_2d_F_slice_21(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_21
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2341,7 +2341,7 @@ def test_array_2d_F_slice_22(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_22
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2355,7 +2355,7 @@ def test_array_2d_F_slice_23(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_23
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 #==============================================================================
@@ -2374,7 +2374,7 @@ def test_array_2d_C_slice_1(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2388,7 +2388,7 @@ def test_array_2d_C_slice_2(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2402,7 +2402,7 @@ def test_array_2d_C_slice_3(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2416,7 +2416,7 @@ def test_array_2d_C_slice_4(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2430,7 +2430,7 @@ def test_array_2d_C_slice_5(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2444,7 +2444,7 @@ def test_array_2d_C_slice_6(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2458,7 +2458,7 @@ def test_array_2d_C_slice_7(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_7
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2473,7 +2473,7 @@ def test_array_2d_C_slice_8(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_8
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2487,7 +2487,7 @@ def test_array_2d_C_slice_9(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_9
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2501,7 +2501,7 @@ def test_array_2d_C_slice_10(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_10
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2515,7 +2515,7 @@ def test_array_2d_C_slice_11(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_11
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2529,7 +2529,7 @@ def test_array_2d_C_slice_12(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_12
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2543,7 +2543,7 @@ def test_array_2d_C_slice_13(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_13
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2557,7 +2557,7 @@ def test_array_2d_C_slice_14(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_14
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2571,7 +2571,7 @@ def test_array_2d_C_slice_15(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_15
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2585,7 +2585,7 @@ def test_array_2d_C_slice_16(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_16
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2599,7 +2599,7 @@ def test_array_2d_C_slice_17(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_17
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2613,7 +2613,7 @@ def test_array_2d_C_slice_18(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_18
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2627,7 +2627,7 @@ def test_array_2d_C_slice_19(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_19
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2641,7 +2641,7 @@ def test_array_2d_C_slice_20(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_20
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2655,7 +2655,7 @@ def test_array_2d_C_slice_21(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_21
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2669,7 +2669,7 @@ def test_array_2d_C_slice_22(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_22
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2683,7 +2683,7 @@ def test_array_2d_C_slice_23(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_23
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 #==============================================================================
@@ -2701,7 +2701,7 @@ def test_array_1d_slice_stride_1(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2716,7 +2716,7 @@ def test_array_1d_slice_stride_2(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2731,7 +2731,7 @@ def test_array_1d_slice_stride_3(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2746,7 +2746,7 @@ def test_array_1d_slice_stride_4(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2761,7 +2761,7 @@ def test_array_1d_slice_stride_5(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2776,7 +2776,7 @@ def test_array_1d_slice_stride_6(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2791,7 +2791,7 @@ def test_array_1d_slice_stride_7(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_7
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2806,7 +2806,7 @@ def test_array_1d_slice_stride_8(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_8
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2821,7 +2821,7 @@ def test_array_1d_slice_stride_9(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_9
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2836,7 +2836,7 @@ def test_array_1d_slice_stride_10(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_10
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2851,7 +2851,7 @@ def test_array_1d_slice_stride_11(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_11
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2866,7 +2866,7 @@ def test_array_1d_slice_stride_12(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_12
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2881,7 +2881,7 @@ def test_array_1d_slice_stride_13(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_13
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2896,7 +2896,7 @@ def test_array_1d_slice_stride_14(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_14
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2911,7 +2911,7 @@ def test_array_1d_slice_stride_15(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_15
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -2926,7 +2926,7 @@ def test_array_1d_slice_stride_16(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_16
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2940,7 +2940,7 @@ def test_array_1d_slice_stride_17(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_17
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2954,7 +2954,7 @@ def test_array_1d_slice_stride_18(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_18
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2968,7 +2968,7 @@ def test_array_1d_slice_stride_19(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_19
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2982,7 +2982,7 @@ def test_array_1d_slice_stride_20(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_20
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -2996,7 +2996,7 @@ def test_array_1d_slice_stride_21(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_21
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3010,7 +3010,7 @@ def test_array_1d_slice_stride_22(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_22
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3024,7 +3024,7 @@ def test_array_1d_slice_stride_23(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_23
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 #==============================================================================
@@ -3042,7 +3042,7 @@ def test_array_2d_F_slice_stride_1(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3056,7 +3056,7 @@ def test_array_2d_F_slice_stride_2(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3070,7 +3070,7 @@ def test_array_2d_F_slice_stride_3(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3084,7 +3084,7 @@ def test_array_2d_F_slice_stride_4(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3098,7 +3098,7 @@ def test_array_2d_F_slice_stride_5(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3112,7 +3112,7 @@ def test_array_2d_F_slice_stride_6(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3126,7 +3126,7 @@ def test_array_2d_F_slice_stride_7(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_7
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -3141,7 +3141,7 @@ def test_array_2d_F_slice_stride_8(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_8
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3155,7 +3155,7 @@ def test_array_2d_F_slice_stride_9(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_9
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3169,7 +3169,7 @@ def test_array_2d_F_slice_stride_10(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_10
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3183,7 +3183,7 @@ def test_array_2d_F_slice_stride_11(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_11
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3197,7 +3197,7 @@ def test_array_2d_F_slice_stride_12(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_12
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3211,7 +3211,7 @@ def test_array_2d_F_slice_stride_13(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_13
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3225,7 +3225,7 @@ def test_array_2d_F_slice_stride_14(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_14
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3239,7 +3239,7 @@ def test_array_2d_F_slice_stride_15(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_15
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3253,7 +3253,7 @@ def test_array_2d_F_slice_stride_16(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_16
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3267,7 +3267,7 @@ def test_array_2d_F_slice_stride_17(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_17
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3281,7 +3281,7 @@ def test_array_2d_F_slice_stride_18(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_18
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3295,7 +3295,7 @@ def test_array_2d_F_slice_stride_19(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_19
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3309,7 +3309,7 @@ def test_array_2d_F_slice_stride_20(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_20
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -3324,7 +3324,7 @@ def test_array_2d_F_slice_stride_21(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_21
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3338,7 +3338,7 @@ def test_array_2d_F_slice_stride_22(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_22
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3352,7 +3352,7 @@ def test_array_2d_F_slice_stride_23(language):
     a = arrays.a_2d_f
 
     f1 = arrays.array_2d_F_slice_stride_23
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 #==============================================================================
@@ -3370,7 +3370,7 @@ def test_array_2d_C_slice_stride_1(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3384,7 +3384,7 @@ def test_array_2d_C_slice_stride_2(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3398,7 +3398,7 @@ def test_array_2d_C_slice_stride_3(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3412,7 +3412,7 @@ def test_array_2d_C_slice_stride_4(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3426,7 +3426,7 @@ def test_array_2d_C_slice_stride_5(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3440,7 +3440,7 @@ def test_array_2d_C_slice_stride_6(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3454,7 +3454,7 @@ def test_array_2d_C_slice_stride_7(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_7
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 
@@ -3469,7 +3469,7 @@ def test_array_2d_C_slice_stride_8(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_8
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3483,7 +3483,7 @@ def test_array_2d_C_slice_stride_9(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_9
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3497,7 +3497,7 @@ def test_array_2d_C_slice_stride_10(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_10
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3511,7 +3511,7 @@ def test_array_2d_C_slice_stride_11(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_11
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3525,7 +3525,7 @@ def test_array_2d_C_slice_stride_12(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_12
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3539,7 +3539,7 @@ def test_array_2d_C_slice_stride_13(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_13
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3553,7 +3553,7 @@ def test_array_2d_C_slice_stride_14(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_14
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3567,7 +3567,7 @@ def test_array_2d_C_slice_stride_15(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_15
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3581,7 +3581,7 @@ def test_array_2d_C_slice_stride_16(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_16
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3595,7 +3595,7 @@ def test_array_2d_C_slice_stride_17(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_17
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3609,7 +3609,7 @@ def test_array_2d_C_slice_stride_18(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_18
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3623,7 +3623,7 @@ def test_array_2d_C_slice_stride_19(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_19
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3637,7 +3637,7 @@ def test_array_2d_C_slice_stride_20(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_20
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3651,7 +3651,7 @@ def test_array_2d_C_slice_stride_21(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_21
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3665,7 +3665,7 @@ def test_array_2d_C_slice_stride_22(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_22
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 @pytest.mark.parametrize( 'language', [
@@ -3679,7 +3679,7 @@ def test_array_2d_C_slice_stride_23(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_23
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(a), f2(a))
 
 #==============================================================================
@@ -3688,32 +3688,32 @@ def test_array_2d_C_slice_stride_23(language):
 
 def test_arrs_similar_shapes_0(language):
     f1 = arrays.arrs_similar_shapes_0
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert f1() == f2()
 
 def test_arrs_similar_shapes_1(language):
     f1 = arrays.arrs_similar_shapes_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert f1() == f2()
 
 def test_arrs_different_shapes_0(language):
     f1 = arrays.arrs_different_shapes_0
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert f1() == f2()
 
 def test_arrs_uncertain_shape_1(language):
     f1 = arrays.arrs_uncertain_shape_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert f1() == f2()
 
 def test_arrs_2d_similar_shapes_0(language):
     f1 = arrays.arrs_2d_similar_shapes_0
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 def test_arrs_2d_different_shapes_0(language):
     f1 = arrays.arrs_2d_different_shapes_0
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
@@ -3725,7 +3725,7 @@ def test_arrs_2d_different_shapes_0(language):
 )
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
@@ -3737,17 +3737,17 @@ def test_arrs_1d_negative_index_1(language):
 )
 def test_arrs_1d_negative_index_2(language):
     f1 = arrays.arrs_1d_negative_index_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 def test_arrs_1d_int32_index(language):
     f1 = arrays.arrs_1d_int32_index
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 def test_arrs_1d_int64_index(language):
     f1 = arrays.arrs_1d_int64_index
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
@@ -3759,7 +3759,7 @@ def test_arrs_1d_int64_index(language):
 )
 def test_arrs_1d_negative_index_negative_step(language):
     f1 = arrays.arrs_1d_negative_index_negative_step
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
@@ -3771,7 +3771,7 @@ def test_arrs_1d_negative_index_negative_step(language):
 )
 def test_arrs_1d_negative_step_positive_step(language):
     f1 = arrays.arrs_1d_negative_step_positive_step
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
@@ -3783,7 +3783,7 @@ def test_arrs_1d_negative_step_positive_step(language):
 )
 def test_arrs_2d_negative_index(language):
     f1 = arrays.arrs_2d_negative_index
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 #==============================================================================
@@ -3792,32 +3792,32 @@ def test_arrs_2d_negative_index(language):
 
 def test_numpy_arange_one_arg(language):
     f1 = arrays.arr_arange_1
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 def test_numpy_arange_two_arg(language):
     f1 = arrays.arr_arange_2
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 def test_numpy_arange_full_arg(language):
     f1 = arrays.arr_arange_3
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
 
 def test_numpy_arange_with_dtype(language):
     f1 = arrays.arr_arange_4
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     assert np.array_equal(f1(), f2())
 
 def test_numpy_arange_negative_step(language):
     f1 = arrays.arr_arange_5
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
 
 def test_numpy_arange_negative_step_2(language):
     f1 = arrays.arr_arange_6
-    f2 = epyccel(f1, language = language)
+    f2 = epyccel(f1, language = language, verbose=True)
     np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
 
 ##==============================================================================
