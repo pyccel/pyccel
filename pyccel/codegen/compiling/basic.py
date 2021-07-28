@@ -20,6 +20,9 @@ class CompileObj:
     file_name     : str
                     Name of file to be compiled
 
+    folder        : str
+                    Name of the folder where the file is found
+
     is_module     : bool
                     Indicates whether we are compiling a module or a program
                     Default : True
