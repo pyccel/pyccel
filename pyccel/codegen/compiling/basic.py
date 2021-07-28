@@ -34,6 +34,7 @@ class CompileObj:
     """
     def __init__(self,
                  file_name,
+                 folder       = None,
                  is_module    = True,
                  flags        = (),
                  includes     = (),
@@ -44,7 +45,8 @@ class CompileObj:
         if not all(isinstance(d, CompileObj) for d in dependencies):
             raise TypeError("Dependencies require necessary compile information")
 
-        self._file = file_name
+        self._file = os.path.join(folder, file_name) if folder else file_name
+        self._folder = folder if folder else '.'
         self._module_name = os.path.splitext(file_name)[0]
         if is_module:
             self._target = self._module_name+'.o'
@@ -64,6 +66,10 @@ class CompileObj:
     @property
     def source(self):
         return self._file
+
+    @property
+    def source_folder(self):
+        return self._folder
 
     @property
     def module(self):
