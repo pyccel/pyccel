@@ -354,7 +354,7 @@ def test_floor_call(language):
         from math import floor
         return floor(x)
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f1 = epyccel(floor_call, language = language, fflags=fflags)
     x = rand()
     assert(isclose(f1(x) ,  floor_call(x), rtol=1e-14, atol=1e-15))
@@ -367,7 +367,7 @@ def test_floor_phrase(language):
         a = floor(x)*floor(y)
         return a
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f2 = epyccel(floor_phrase, language = language, fflags=fflags)
     x = rand()
     y = rand()
@@ -389,7 +389,7 @@ def test_floor_return_type(language):
         a = floor(x)
         return a
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f1 = epyccel(floor_return_type_int, language = language, fflags=fflags)
 
     x = randint(100)
@@ -397,7 +397,7 @@ def test_floor_return_type(language):
     assert(isclose(f1(-x) ,  floor_return_type_int(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x))  == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f1 = epyccel(floor_return_type_real, language = language, fflags=fflags)
 
     x = uniform(100)
@@ -412,7 +412,7 @@ def test_ceil_call_r(language):
         from math import ceil
         return ceil(x)
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f1 = epyccel(ceil_call, language = language, fflags=fflags)
 
     x = rand()
@@ -427,7 +427,7 @@ def test_ceil_call_i(language):
         from math import ceil
         return ceil(x)
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f1 = epyccel(ceil_call, language = language, fflags=fflags)
 
     x = randint(10)
@@ -443,7 +443,7 @@ def test_ceil_phrase(language):
         a = ceil(x)*ceil(y)
         return a
 
-    fflags = "-Werror -Wconversion"
+    fflags = ["-Werror","-Wconversion"]
     f2 = epyccel(ceil_phrase, language = language, fflags=fflags)
 
     x = rand()
