@@ -263,8 +263,10 @@ class Compiler:
                 *j_code]
 
         compile_obj.acquire_lock()
-        self.run_command(cmd, verbose)
-        compile_obj.release_lock()
+        try:
+            self.run_command(cmd, verbose)
+        finally:
+            compile_obj.release_lock()
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
@@ -299,8 +301,10 @@ class Compiler:
                 *libs_flags, *j_code]
 
         compile_obj.acquire_lock()
-        self.run_command(cmd, verbose)
-        compile_obj.release_lock()
+        try:
+            self.run_command(cmd, verbose)
+        finally:
+            compile_obj.release_lock()
 
     def compile_file(self, compile_obj, output_folder, verbose = False):
         """
@@ -360,8 +364,10 @@ class Compiler:
                 '-o', file_out]
 
         compile_obj.acquire_lock()
-        self.run_command(cmd, verbose)
-        compile_obj.release_lock()
+        try:
+            self.run_command(cmd, verbose)
+        finally:
+            compile_obj.release_lock()
 
         return file_out
 
