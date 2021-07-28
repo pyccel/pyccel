@@ -78,8 +78,10 @@ class Compiler:
             flags.extend(self._info.get('release_flags',()))
 
         flags.extend(self._info.get('general_flags',()))
-        if 'python' not in accelerators:
-            flags.extend(self._info.get('standard_flags',()))
+        # M_PI is not in the standard
+        #if 'python' not in accelerators:
+        #    # Python sets its own standard
+        #    flags.extend(self._info.get('standard_flags',()))
 
         for a in accelerators:
             flags.extend(self._info.get(a,{}).get('flags',()))
