@@ -95,13 +95,14 @@ python_info = {
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             'libs' : [l for l in python_libs if l.startswith('-l')],
-            'libdirs' : [l[2:] for l in python_libs if l.startswith('-L')]+config_vars.get("DESTLIB","").split(),
+            'libdirs' : [l[2:] for l in python_libs if l.startswith('-L')]+config_vars.get("LIBPL","").split(),
             "linker_flags" : config_vars.get("LDSHARED","").split()[1:],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
             }
         }
 if sys.platform == "win32":
     python_info['python']['libs'].append('python{}.lib'.format(config_vars["VERSION"]))
+    python_info['python']['libdirs'].append(config_vars.get("LIBDEST","").split())
 
 save_folder = os.path.dirname(os.path.abspath(__file__))
 
