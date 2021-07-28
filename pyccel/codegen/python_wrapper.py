@@ -58,7 +58,7 @@ def create_shared_library(codegen,
 
     wrapper_filename_root = '{}_wrapper'.format(module_name)
     wrapper_filename = '{}.c'.format(wrapper_filename_root)
-    wrapper_compile_obj = CompileObj(os.path.join(pyccel_dirpath, wrapper_filename),
+    wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
             dependencies = (main_obj,),
             accelerators = ('python',))
