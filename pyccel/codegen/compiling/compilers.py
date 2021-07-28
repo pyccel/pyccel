@@ -204,8 +204,7 @@ class Compiler:
         inc_flags = self._insert_prefix_to_list(includes, '-I')
 
         # Get dependencies (.o/.a)
-        m_code = ['{}.o'.format(m) for m in compile_obj.dependencies]
-        m_code = self._get_dependencies(m_code, accelerators)
+        m_code = self._get_dependencies(compile_obj.extra_modules, accelerators)
 
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, accelerators)
@@ -253,7 +252,9 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.target,
                 *j_code]
 
+        compile_obj.acquire_lock()
         self.run_command(cmd, verbose)
+        compile_obj.release_lock()
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
@@ -287,7 +288,9 @@ class Compiler:
                 '-o', compile_obj.target,
                 *libs_flags, *j_code]
 
+        compile_obj.acquire_lock()
         self.run_command(cmd, verbose)
+        compile_obj.release_lock()
 
     def compile_file(self, compile_obj, output_folder, verbose = False):
         """
@@ -307,7 +310,7 @@ class Compiler:
         else:
             self.compile_program(compile_obj, output_folder, verbose)
 
-    def compile_shared_library(self, compile_obj, output_folder, verbose = False):
+    def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
         """
         Compile a module to a shared library
 
@@ -326,10 +329,9 @@ class Compiler:
                    Generated library name
         """
         # Ensure python options are collected
+        accelerators = list(compile_obj.accelerators)
         if 'python' not in accelerators:
-            accelerators = [*compile_obj.accelerators, 'python']
-        else:
-            accelerators = compile_obj.accelerators
+            accelerators.append('python')
 
         # Collect compile information
         exec_cmd, flags, includes, libs_flags, libdirs_flags, m_code = \
@@ -340,14 +342,17 @@ class Compiler:
 
         # Get name of file
         ext_suffix = self._info['python']['shared_suffix']
-        file_out = compile_obj.module+ext_suffix
+        sharedlib_modname = sharedlib_modname or compile_obj.python_module
+        file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.source,
+                *m_code, compile_obj.target,
                 '-o', file_out,
                 *libs_flags]
 
+        compile_obj.acquire_lock()
         self.run_command(cmd, verbose)
+        compile_obj.release_lock()
 
         return file_out
 
