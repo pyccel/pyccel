@@ -100,6 +100,8 @@ python_info = {
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
             }
         }
+if sys.platform == "win32":
+    python_info['python']['libs'].append('python{}.lib'.format(config_vars["VERSION"]))
 
 save_folder = os.path.dirname(os.path.abspath(__file__))
 
