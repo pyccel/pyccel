@@ -156,7 +156,7 @@ class CompileObj:
             self._includes.extend(a.includes)
             self._libs.extend(a.libs)
             self._libdirs.extend(a.libdirs)
-            self._accelerators.union(a.accelerators)
+            self._accelerators = self._accelerators.union(a.accelerators)
 
     def acquire_lock(self):
         """
