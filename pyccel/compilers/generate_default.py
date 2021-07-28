@@ -90,9 +90,9 @@ python_info = {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-            'libs' : [s[2:] for s in config_vars.get("LIBPYTHON","").split()
-                                        +config_vars.get("BLDLIBRARY","").split()
-                                        +config_vars.get("LIBS","").split()], #Strip -l from beginning
+            'libs' : config_vars.get("LIBPYTHON","").split()
+                            +config_vars.get("BLDLIBRARY","").split()
+                            +config_vars.get("LIBS","").split(),
             'libdirs' : config_vars.get("LIBPL","").split(),
             "linker_flags" : config_vars.get("LDSHARED","").split()[1:],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
@@ -109,6 +109,7 @@ def print_json(filename, info):
           file=open(os.path.join(save_folder, filename),'w'))
 
 def generate_default():
+    print(config_vars)
     files = {
             'gfortran.json' : gfort_info,
             'gcc.json'      : gcc_info,
