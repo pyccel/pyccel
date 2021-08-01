@@ -4,17 +4,11 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import sys
-import subprocess
 import os
-import glob
-import warnings
 
 from pyccel.ast.bind_c                      import as_static_module
-from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
-from pyccel.codegen.utilities               import compile_files, get_gfortran_library_dir
 from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
@@ -24,8 +18,6 @@ errors = Errors()
 __all__ = ['create_shared_library', 'fortran_c_flag_equivalence']
 
 #==============================================================================
-
-PY_VERSION = sys.version_info[0:2]
 
 fortran_c_flag_equivalence = {'-Wconversion-extra' : '-Wconversion' }
 
