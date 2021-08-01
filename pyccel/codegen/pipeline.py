@@ -10,16 +10,12 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import shutil
-from collections import OrderedDict
-from filelock import FileLock
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import construct_flags
-from pyccel.codegen.utilities      import compile_files
 from pyccel.codegen.utilities      import compile_folder
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.python_wrapper import create_shared_library
@@ -104,7 +100,7 @@ def execute_pyccel(fname, *,
 
     fflags        : str
                     The flags passed to the compiler
-                    Default : provided by codegen.utilities.construct_flags
+                    Default : provided by Compiler
 
     includes      : list
                     list of include directories paths
