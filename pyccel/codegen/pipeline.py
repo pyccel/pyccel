@@ -344,30 +344,24 @@ def execute_pyccel(fname, *,
             get_module_dependencies(son)
         main_obj.add_dependencies(*deps.values())
 
-        # Compile Fortran code
-        #
-        # TODO: stop at object files, do not compile executable
-        #       This allows for properly linking program to modules
-        #
+        # Compile code to modules
         try:
-            src_compiler.compile_file(compile_obj=main_obj,
+            src_compiler.compile_module(compile_obj=main_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
         except Exception:
             handle_error('Fortran compilation')
             raise
 
-        # For a program stop here
-        if codegen.is_program:
-            if verbose:
-                exec_filepath = os.path.join(folder, module_name)
-                print( '> Executable has been created: {}'.format(exec_filepath))
-            os.chdir(base_dirpath)
-            continue
 
-        # Create shared library
         try:
-            sharedlib_filepath = create_shared_library(codegen,
+            if codegen.is_program:
+                generated_filepath = src_compiler.compile_program(compile_obj=main_obj,
+                        output_folder=pyccel_dirpath,
+                        verbose=verbose)
+            else:
+                # Create shared library
+                generated_filepath = create_shared_library(codegen,
                                                        main_obj,
                                                        language,
                                                        pyccel_dirpath,
@@ -394,13 +388,16 @@ def execute_pyccel(fname, *,
 
         # Move shared library to folder directory
         # (First construct absolute path of target location)
-        sharedlib_filename = os.path.basename(sharedlib_filepath)
-        target = os.path.join(folder, sharedlib_filename)
-        shutil.move(sharedlib_filepath, target)
-        sharedlib_filepath = target
+        generated_filename = os.path.basename(generated_filepath)
+        target = os.path.join(folder, generated_filename)
+        shutil.move(generated_filepath, target)
+        generated_filepath = target
 
         if verbose:
-            print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+            if codegen.is_program:
+                print( '> Executable has been created: {}'.format(generated_filepath))
+            else:
+                print( '> Shared library has been created: {}'.format(generated_filepath))
 
     # Print all warnings now
     if errors.has_warnings():

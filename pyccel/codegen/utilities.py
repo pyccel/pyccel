@@ -269,7 +269,7 @@ def compile_folder(folder,
         else:
             outdated = True
         if outdated:
-            compiler.compile_file(compile_obj=f,
+            compiler.compile_module(compile_obj=f,
                     output_folder=folder,
                     verbose=verbose)
         f.release_lock()

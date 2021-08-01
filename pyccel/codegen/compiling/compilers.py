@@ -261,7 +261,7 @@ class Compiler:
             j_code = ()
 
         cmd = [exec_cmd, *flags, *inc_flags,
-                compile_obj.source, '-o', compile_obj.target,
+                compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
         compile_obj.acquire_lock()
@@ -298,7 +298,7 @@ class Compiler:
             flags.append('-c')
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.source,
+                *m_code, compile_obj.module_target,
                 '-o', compile_obj.target,
                 *libs_flags, *j_code]
 
@@ -308,23 +308,7 @@ class Compiler:
         finally:
             compile_obj.release_lock()
 
-    def compile_file(self, compile_obj, output_folder, verbose = False):
-        """
-        Compile a program
-
-        Parameters
-        ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
-        output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
-        """
-        if compile_obj.is_module:
-            self.compile_module(compile_obj, output_folder, verbose)
-        else:
-            self.compile_program(compile_obj, output_folder, verbose)
+        return compile_obj.target
 
     def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
         """
@@ -362,7 +346,7 @@ class Compiler:
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *libs_flags, *m_code, compile_obj.target,
+                *libs_flags, *m_code, compile_obj.module_target,
                 '-o', file_out]
 
         compile_obj.acquire_lock()
