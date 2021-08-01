@@ -12,6 +12,7 @@ import os
 import subprocess
 import sysconfig
 import warnings
+from filelock import FileLock
 from pyccel import __version__ as pyccel_version
 
 # Set correct deployment target if on mac
@@ -20,14 +21,15 @@ if mac_target:
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
-available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
-                                                    if f.endswith('.json')}
-if len(available_compilers)==0 or \
-        next(iter(available_compilers.values()))['pyccel_version'] != pyccel_version:
-    from pyccel.compilers.generate_default import generate_default
-    generate_default()
+with FileLock(compilers_folder+'.lock'):
     available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                         if f.endswith('.json')}
+    if len(available_compilers)==0 or \
+            next(iter(available_compilers.values()))['pyccel_version'] != pyccel_version:
+        from pyccel.compilers.generate_default import generate_default
+        generate_default()
+        available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
+                                                            if f.endswith('.json')}
 
 vendors = {c['family'] for c in available_compilers.values()}
 sorted_compilers = {(c['family'],c['language']) : c for c in available_compilers.values()}
