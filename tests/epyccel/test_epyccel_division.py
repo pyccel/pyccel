@@ -137,7 +137,7 @@ def test_call_fdiv_i_i_8(language):
     def fdiv_i_i(x, y):
         return x // y
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(120, dtype='int8')
@@ -151,7 +151,7 @@ def test_call_fdiv_i_i_16(language):
     def fdiv_i_i(x, y):
         return x // y
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(32000, dtype='int16')
@@ -168,7 +168,7 @@ def test_call_fdiv_i_i_32(language):
     def fdiv_i_i(x, y):
         return x // y
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(1e4, dtype='int32')
@@ -185,7 +185,7 @@ def test_call_fdiv_i_i_i(language):
     def fdiv_i_i_i(x, y, z):
         return x // y // z
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i_i, language=language, fflags=fflags)
     x = randint(1e9)
@@ -203,7 +203,7 @@ def test_call_fdiv_i_r(language):
     def fdiv_i_r(x, y):
         return x // y
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_r, language=language, fflags=fflags)
     x = randint(1e9)
@@ -219,7 +219,7 @@ def test_call_fdiv_r_i(language):
     def fdiv_r_i(x, y):
         return x // y
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_r_i, language=language, fflags=fflags)
     x = uniform(high=1e9)
@@ -235,7 +235,7 @@ def test_call_fdiv_r_r(language):
     def fdiv_r_r(x, y):
         return x // y
 
-    fflags = ["-Werror","-Wconversion"]
+    fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_r_r, language=language, fflags=fflags)
     x = uniform(high=1e9)

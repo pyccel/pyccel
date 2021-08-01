@@ -187,6 +187,8 @@ def execute_pyccel(fname, *,
     if compiler is None:
         compiler = 'GNU'
 
+    fflags = [] if fflags is None else fflags.split()
+
     # Get compiler object
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler(compiler, 'c', debug)
