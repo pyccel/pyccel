@@ -304,7 +304,8 @@ def execute_pyccel(fname, *,
                 if convert_only:
                     continue
 
-                stdlib.reset_folder(lib_dest_path)
+                # Pylint determines wrong type
+                stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
                 # get the include folder path and library files
                 recompile_object(stdlib,
                                   compiler = src_compiler,
