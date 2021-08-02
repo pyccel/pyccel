@@ -47,8 +47,6 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    sharedlib_folder = ''
-
     wrapper_filename_root = '{}_wrapper'.format(module_name)
     wrapper_filename = '{}.c'.format(wrapper_filename_root)
     wrapper_compile_obj = CompileObj(wrapper_filename,
