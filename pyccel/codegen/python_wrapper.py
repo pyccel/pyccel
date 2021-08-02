@@ -15,11 +15,7 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-__all__ = ['create_shared_library', 'fortran_c_flag_equivalence']
-
-#==============================================================================
-
-fortran_c_flag_equivalence = {'-Wconversion-extra' : '-Wconversion' }
+__all__ = ['create_shared_library']
 
 #==============================================================================
 def create_shared_library(codegen,
