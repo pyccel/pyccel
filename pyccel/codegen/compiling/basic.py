@@ -74,11 +74,11 @@ class CompileObj:
 
         self._lock         = FileLock(self.target+'.lock')
 
-        self._flags        = list(flags or ())
-        self._includes     = [folder, *(includes or ())]
-        self._libs         = list(libs or ())
-        self._libdirs      = list(libdirs or ())
-        self._accelerators = set(accelerators or ())
+        self._flags        = list(flags)
+        self._includes     = [folder, *includes]
+        self._libs         = list(libs)
+        self._libdirs      = list(libdirs)
+        self._accelerators = set(accelerators)
         self._dependencies = set()
         if dependencies:
             self.add_dependencies(*dependencies)

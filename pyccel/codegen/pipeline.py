@@ -104,6 +104,10 @@ def execute_pyccel(fname, *,
                     The flags passed to the compiler
                     Default : provided by Compiler
 
+    wrapper_flags : str
+                    The flags passed to the compiler to compile the c wrapper
+                    Default : provided by Compiler
+
     includes      : list
                     list of include directories paths
 
@@ -190,6 +194,7 @@ def execute_pyccel(fname, *,
         compiler = 'GNU'
 
     fflags = [] if fflags is None else fflags.split()
+    wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
     src_compiler = Compiler(compiler, language, debug)
