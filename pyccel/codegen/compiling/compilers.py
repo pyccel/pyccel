@@ -227,7 +227,7 @@ class Compiler:
         libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
 
         # Get executable
-        exec_cmd = self._info['exec'] if 'mpi' in accelerators else self._info['exec']
+        exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
 
         return exec_cmd, flags, inc_flags, libs_flags, libdirs_flags, m_code
 
@@ -255,7 +255,7 @@ class Compiler:
         inc_flags = self._insert_prefix_to_list(includes, '-I')
 
         # Get executable
-        exec_cmd = self._info['exec'] if 'mpi' in accelerators else self._info['exec']
+        exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
