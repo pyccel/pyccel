@@ -55,8 +55,6 @@ class CompileObj:
                  libdirs      = (),
                  dependencies = (),
                  accelerators = ()):
-        if not all(isinstance(d, CompileObj) for d in dependencies):
-            raise TypeError("Dependencies require necessary compile information")
 
         self._file = os.path.join(folder, file_name)
         self._folder = folder
