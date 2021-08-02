@@ -109,16 +109,35 @@ if sys.platform == "win32":
     python_info['python']['libs'].append('python{}'.format(config_vars["VERSION"]))
     python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
 
+#------------------------------------------------------------
 save_folder = os.path.dirname(os.path.abspath(__file__))
 
+#------------------------------------------------------------
 def print_json(filename, info):
-    print(json.dumps({k:v for k,v in chain(info.items(),
-                                            python_info.items(),
-                                            [('pyccel_version', pyccel_version)])},
+    """
+    Print the json file described by info into the specied file
+
+    Parameters
+    ----------
+    filename : str
+               The name of the json file where the configuration information
+               will be saved
+    info     : dict
+               A dictionary containing information about the flags, libraries, etc
+               associated with a given compiler
+    """
+    print(json.dumps(dict(chain(info.items(),
+                                python_info.items(),
+                                [('pyccel_version', pyccel_version)])),
                      indent=4),
           file=open(os.path.join(save_folder, filename),'w'))
 
+#------------------------------------------------------------
 def generate_default():
+    """
+    Generate the json files containing the default configurations for the
+    available compilers
+    """
     files = {
             'gfortran.json' : gfort_info,
             'gcc.json'      : gcc_info,
