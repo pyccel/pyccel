@@ -9,11 +9,15 @@ Module handling everything related to the compilers used to compile the various 
 """
 import json
 import os
+import shutil
 import subprocess
 import sysconfig
 import warnings
 from filelock import FileLock
 from pyccel import __version__ as pyccel_version
+from pyccel.errors.errors import Errors
+
+errors = Errors()
 
 # Set correct deployment target if on mac
 mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
@@ -22,6 +26,7 @@ if mac_target:
 
 compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
 with FileLock(compilers_folder+'.lock'):
+    # TODO: Add an additional search location for user provided compiler files
     available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                         if f.endswith('.json')}
     if len(available_compilers)==0 or \
@@ -59,6 +64,16 @@ class Compiler:
             raise NotImplementedError("Compiler not available") from e
 
         self._debug = debug
+
+    def _get_exec(self, accelerators):
+        # Get executable
+        exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
+
+        if shutil.which(exec_cmd) is None:
+            errors.report("Could not find compiler ({})".format(exec_cmd),
+                    severity='fatal')
+
+        return exec_cmd
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
@@ -226,8 +241,7 @@ class Compiler:
         libdirs = self._get_libdirs(compile_obj.libdirs, accelerators)
         libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
 
-        # Get executable
-        exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
+        exec_cmd = self._get_exec(accelerators)
 
         return exec_cmd, flags, inc_flags, libs_flags, libdirs_flags, m_code
 
@@ -255,7 +269,7 @@ class Compiler:
         inc_flags = self._insert_prefix_to_list(includes, '-I')
 
         # Get executable
-        exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
+        exec_cmd = self._get_exec(accelerators)
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)

@@ -23,26 +23,6 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #==============================================================================
-def _which(program):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    if os.name == 'nt':  # Windows
-        program = program + '.exe'
-    fpath, _ = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-#==============================================================================
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
@@ -82,8 +62,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
 
-    group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran', \
-            'gcc', 'icc'), help='Compiler name')
+    group.add_argument('--compiler', choices=('GNU','intel'), help='Compiler name')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
@@ -207,16 +186,6 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
         errors.check()
         sys.exit(1)
     # ...
-
-    if compiler:
-        if _which(compiler) is None:
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report('Could not find compiler',
-                          symbol=compiler,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
 
     accelerators = []
     if mpi:
