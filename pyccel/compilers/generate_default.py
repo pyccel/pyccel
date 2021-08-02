@@ -72,7 +72,7 @@ gcc_info = {'exec' : 'gcc',
             'family': 'GNU',
             }
 if sys.platform == "darwin":
-    gcc_info['openmp']['flags'] = ("-Xpreprocessor",'fopenmp')
+    gcc_info['openmp']['flags'] = ("-Xpreprocessor",'-fopenmp')
     gcc_info['openmp']['libs'] = ('omp',)
 
 #------------------------------------------------------------
