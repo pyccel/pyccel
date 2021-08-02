@@ -24,13 +24,27 @@ stdlib_path = os.path.dirname(stdlib_folder.__file__)
 __all__ = ['copy_internal_library','compile_folder']
 
 #==============================================================================
-# TODO use constructor and a dict to map flags w.r.t the compiler
-_avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort', 'gcc', 'icc']
-
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath):
+    """
+    Copy an internal library from its specified stdlib folder to the pyccel
+    directory. The copy is only done if the files are not already present or
+    if the files have changed since they were last copied
+
+    Parameters
+    ----------
+    lib_folder     : str
+                     The name of the folder to be copied, relative to the stdlib folder
+    pyccel_dirpath : str
+                     The location that the folder should be copied to
+
+    Results
+    -------
+    lib_dest_path  : str
+                     The location that the files were copied to
+    """
     # get lib path (stdlib_path/lib_name)
     lib_path = os.path.join(stdlib_path, lib_folder)
     # remove library folder to avoid missing files and copy
@@ -57,7 +71,9 @@ def compile_folder(folder,
                    debug = False,
                    verbose = False):
     """
-    Compile all files matching the language extension in a folder
+    Compile all files matching the language extension in a folder.
+    If the file has already been compiled then it will only be recompiled
+    if the source has been modified
 
     Parameters
     ----------
@@ -89,6 +105,7 @@ def compile_folder(folder,
     for f in compile_objs:
         f.acquire_lock()
         if os.path.exists(f.target):
+            # Check if source file has changed since last compile
             o_file_age   = os.path.getmtime(f.target)
             src_file_age = os.path.getmtime(f.source)
             outdated     = o_file_age < src_file_age
