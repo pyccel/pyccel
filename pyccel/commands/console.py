@@ -265,8 +265,6 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     finally:
         os.chdir(base_dirpath)
 
-    return
-
 #==============================================================================
 # NOTE: left here for later reference
 #
