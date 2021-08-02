@@ -100,17 +100,18 @@ def get_unique_name(prefix, path):
 
 #==============================================================================
 def epyccel_seq(function_or_module, *,
-                language     = None,
-                compiler     = None,
-                fflags       = None,
-                accelerators = (),
-                verbose      = False,
-                debug        = False,
-                includes     = (),
-                libdirs      = (),
-                modules      = (),
-                libs         = (),
-                folder       = None):
+                language      = None,
+                compiler      = None,
+                fflags        = None,
+                wrapper_flags = None,
+                accelerators  = (),
+                verbose       = False,
+                debug         = False,
+                includes      = (),
+                libdirs       = (),
+                modules       = (),
+                libs          = (),
+                folder        = None):
 
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
@@ -165,17 +166,18 @@ def epyccel_seq(function_or_module, *,
         try:
             # Generate shared library
             execute_pyccel(pymod_filename,
-                           verbose     = verbose,
-                           language    = language,
-                           compiler    = compiler,
-                           fflags      = fflags,
-                           includes    = includes,
-                           libdirs     = libdirs,
-                           modules     = modules,
-                           libs        = libs,
-                           debug       = debug,
-                           accelerators= accelerators,
-                           output_name = module_name)
+                           verbose       = verbose,
+                           language      = language,
+                           compiler      = compiler,
+                           fflags        = fflags,
+                           wrapper_flags = wrapper_flags,
+                           includes      = includes,
+                           libdirs       = libdirs,
+                           modules       = modules,
+                           libs          = libs,
+                           debug         = debug,
+                           accelerators  = accelerators,
+                           output_name   = module_name)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
