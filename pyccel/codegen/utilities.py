@@ -10,13 +10,8 @@ This file contains some useful functions to compile the generated fortran code
 
 import os
 import shutil
-import subprocess
-import sys
-import sysconfig
-import warnings
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
-from .compiling.basic     import CompileObj
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
