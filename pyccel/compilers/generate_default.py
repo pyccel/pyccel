@@ -93,6 +93,7 @@ icc_info = {'exec' : 'icc',
             }
 #------------------------------------------------------------
 config_vars = sysconfig.get_config_vars()
+print(config_vars)
 python_libs = config_vars.get("LIBPYTHON","").split() \
                     +config_vars.get("BLDLIBRARY","").split() \
                     +config_vars.get("LIBS","").split() \
@@ -131,6 +132,10 @@ def print_json(filename, info):
                A dictionary containing information about the flags, libraries, etc
                associated with a given compiler
     """
+    print(json.dumps(dict(chain(info.items(),
+                                python_info.items(),
+                                [('pyccel_version', pyccel_version)])),
+                     indent=4))
     print(json.dumps(dict(chain(info.items(),
                                 python_info.items(),
                                 [('pyccel_version', pyccel_version)])),
