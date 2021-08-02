@@ -77,7 +77,7 @@ class CompileObj:
         if dependencies:
             self.add_dependencies(*dependencies)
         self._is_module    = is_module
-        self._lock         = FileLock(self.python_module+'.lock')
+        self._lock         = FileLock(os.path.splitext(self.source)[0]+'.lock')
 
     @property
     def source(self):
