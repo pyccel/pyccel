@@ -320,7 +320,7 @@ def execute_pyccel(fname, *,
         deps = dict()
         # ...
         # Determine all .o files and all folders needed by executable
-        def get_module_dependencies(parser):
+        def get_module_dependencies(parser, deps):
             mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
             mod_base = os.path.basename(parser.filename)
 
@@ -337,10 +337,10 @@ def execute_pyccel(fname, *,
 
             # Proceed recursively
             for son in parser.sons:
-                get_module_dependencies(son)
+                get_module_dependencies(son, deps)
 
         for son in parser.sons:
-            get_module_dependencies(son)
+            get_module_dependencies(son, deps)
         main_obj.add_dependencies(*deps.values())
 
         # Compile code to modules
