@@ -93,7 +93,7 @@ icc_info = {'exec' : 'icc',
             }
 #------------------------------------------------------------
 config_vars = sysconfig.get_config_vars()
-print(config_vars)
+print(json.dumps(config_vars, indent=4))
 python_libs = config_vars.get("LIBPYTHON","").split() \
                     +config_vars.get("BLDLIBRARY","").split() \
                     +config_vars.get("LIBS","").split() \
