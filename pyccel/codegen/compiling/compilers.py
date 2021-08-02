@@ -53,6 +53,7 @@ class Compiler:
     debug : bool
             Indicates whether we are compiling in debug mode
     """
+    __slots__ = ('_debug','_info')
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return

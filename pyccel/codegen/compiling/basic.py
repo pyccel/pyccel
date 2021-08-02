@@ -45,6 +45,9 @@ class CompileObj:
     accelerators  : str
                     Tool used to accelerate the code (e.g. openmp openacc)
     """
+    __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
+                 '_target','_lock','_flags','_includes','_libs','_libdirs','_accelerators',
+                 '_dependencies','_is_module')
     def __init__(self,
                  file_name,
                  folder,
