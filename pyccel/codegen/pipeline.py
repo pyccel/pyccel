@@ -16,7 +16,7 @@ from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import compile_folder
+from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.python_wrapper import create_shared_library
 
@@ -27,9 +27,9 @@ __all__ = ['execute_pyccel']
 
 # map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
-    "ndarrays"     : "ndarrays",
-    "pyc_math_f90" : "math",
-    "pyc_math_c"   : "math",
+    "ndarrays"     : CompileObj("ndarrays.c",folder="ndarrays"),
+    "pyc_math_f90" : CompileObj("pyc_math_f90.f90",folder="math"),
+    "pyc_math_c"   : CompileObj("pyc_math_c.c",folder="math"),
 }
 
 #==============================================================================
@@ -292,24 +292,24 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-        for lib_name, lib_folder in internal_libs.items():
+        for lib_name, stdlib in internal_libs.items():
             if lib_name in codegen.get_printer_imports() and \
                     lib_name not in internal_libs_name:
 
-                lib_dest_path = copy_internal_library(lib_folder, pyccel_dirpath)
+                lib_dest_path = copy_internal_library(stdlib.source_folder, pyccel_dirpath)
 
                 # stop after copying lib to __pyccel__ directory for
                 # convert only
                 if convert_only:
                     continue
 
+                stdlib.reset_folder(lib_dest_path)
                 # get the include folder path and library files
-                internal_modules = compile_folder(lib_dest_path,
-                                                  language,
-                                                  compiler = src_compiler,
-                                                  verbose  = verbose)
+                recompile_object(stdlib,
+                                  compiler = src_compiler,
+                                  verbose  = verbose)
 
-                main_obj.add_dependencies(*internal_modules)
+                main_obj.add_dependencies(stdlib)
 
                 # Add internal lib to internal_libs_name set
                 internal_libs_name.add(lib_name)

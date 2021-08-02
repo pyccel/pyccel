@@ -60,13 +60,19 @@ class CompileObj:
 
         self._file = os.path.join(folder, file_name)
         self._folder = folder
+
         self._module_name = os.path.splitext(file_name)[0]
-        self._module_target = self._module_name+'.o'
-        self._prog_target = self._module_name
+        rel_mod_name = os.path.join(folder, self._module_name)
+        self._module_target = rel_mod_name+'.o'
+
+        self._prog_target = rel_mod_name
         if sys.platform == "win32":
             self._prog_target += '.exe'
+
         self._target = self._module_target if is_module else self._prog_target
         self._target = os.path.join(folder, self._target)
+
+        self._lock         = FileLock(self.target+'.lock')
 
         self._flags        = list(flags or ())
         self._includes     = [folder, *(includes or ())]
@@ -77,6 +83,21 @@ class CompileObj:
         if dependencies:
             self.add_dependencies(*dependencies)
         self._is_module    = is_module
+
+    def reset_folder(self, folder):
+        self._file = os.path.join(folder, os.path.basename(self._file))
+        self._folder = folder
+
+        rel_mod_name = os.path.join(folder, self._module_name)
+        self._module_target = rel_mod_name+'.o'
+
+        self._prog_target = rel_mod_name
+        if sys.platform == "win32":
+            self._prog_target += '.exe'
+
+        self._target = self._module_target if self.is_module else self._prog_target
+        self._target = os.path.join(folder, self._target)
+
         self._lock         = FileLock(self.target+'.lock')
 
     @property
@@ -160,6 +181,7 @@ class CompileObj:
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies = self._dependencies.union(args)
         for a in args:
+            self._includes.append(a.source_folder)
             self._includes.extend(a.includes)
             self._libs.extend(a.libs)
             self._libdirs.extend(a.libdirs)

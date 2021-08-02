@@ -21,7 +21,7 @@ from .compiling.basic     import CompileObj
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
-__all__ = ['copy_internal_library','compile_folder']
+__all__ = ['copy_internal_library','recompile_object']
 
 #==============================================================================
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
@@ -65,55 +65,35 @@ def copy_internal_library(lib_folder, pyccel_dirpath):
     return lib_dest_path
 
 #==============================================================================
-def compile_folder(folder,
-                   language,
+def recompile_object(compile_obj,
                    compiler,
-                   debug = False,
                    verbose = False):
     """
-    Compile all files matching the language extension in a folder.
+    Compile the provided file.
     If the file has already been compiled then it will only be recompiled
     if the source has been modified
 
     Parameters
     ----------
-    folder   : str
-               The folder to compile
-    language : str
-               The language we are translating to
-    compiler : str
-               The compiler used
-    includes : iterable
-               Any folders which should be added to the default includes
-    libs     : iterable
-               Any libraries which are needed to compile
-    libdirs  : iterable
-               Any folders which should be added to the default libdirs
-    debug    : bool
-               Indicates whether we should compile in debug mode
-    verbose  : bool
-               Indicates whethere additional information should be printed
+    compile_obj : CompileObj
+                  The object to compile
+    compiler    : str
+                  The compiler used
+    verbose     : bool
+                  Indicates whethere additional information should be printed
     """
 
-    # get library source files
-    ext = '.'+language_extension[language]
-    source_files = [os.path.join(folder, e) for e in os.listdir(folder)
-                                                if e.endswith(ext)]
-    compile_objs = [CompileObj(s,folder) for s in source_files]
-
     # compile library source files
-    for f in compile_objs:
-        f.acquire_lock()
-        if os.path.exists(f.target):
-            # Check if source file has changed since last compile
-            o_file_age   = os.path.getmtime(f.target)
-            src_file_age = os.path.getmtime(f.source)
-            outdated     = o_file_age < src_file_age
-        else:
-            outdated = True
-        if outdated:
-            compiler.compile_module(compile_obj=f,
-                    output_folder=folder,
-                    verbose=verbose)
-        f.release_lock()
-    return compile_objs
+    compile_obj.acquire_lock()
+    if os.path.exists(compile_obj.target):
+        # Check if source file has changed since last compile
+        o_file_age   = os.path.getmtime(compile_obj.target)
+        src_file_age = os.path.getmtime(compile_obj.source)
+        outdated     = o_file_age < src_file_age
+    else:
+        outdated = True
+    if outdated:
+        compiler.compile_module(compile_obj=compile_obj,
+                output_folder=compile_obj.source_folder,
+                verbose=verbose)
+    compile_obj.release_lock()
