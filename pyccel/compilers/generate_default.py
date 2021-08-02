@@ -1,3 +1,8 @@
+"""
+Module responsible for the creation of the json files containing the default configuration for each available compiler.
+This module only needs to be imported once. Once the json files have been generated they can be used directly thus
+avoiding the need for a large number of imports
+"""
 import json
 import os
 import sys
