@@ -25,6 +25,7 @@ fortran_c_flag_equivalence = {'-Wconversion-extra' : '-Wconversion' }
 def create_shared_library(codegen,
                           main_obj,
                           language,
+                          wrapper_flags,
                           pyccel_dirpath,
                           src_compiler,
                           wrapper_compiler,
@@ -52,6 +53,7 @@ def create_shared_library(codegen,
     wrapper_filename = '{}.c'.format(wrapper_filename_root)
     wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
+            flags        = wrapper_flags,
             dependencies = (main_obj,),
             accelerators = ('python',))
 

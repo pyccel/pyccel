@@ -160,7 +160,6 @@ class CompileObj:
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.extend(args)
         for a in args:
-            self._flags.extend(a.flags)
             self._includes.extend(a.includes)
             self._libs.extend(a.libs)
             self._libdirs.extend(a.libdirs)
