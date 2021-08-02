@@ -25,11 +25,12 @@ from .compiling.compilers import Compiler
 
 __all__ = ['execute_pyccel']
 
-# map internal libraries to their folders inside pyccel/stdlib
+# map internal libraries to their folders inside pyccel/stdlib and their compile objects
+# The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "ndarrays"     : CompileObj("ndarrays.c",folder="ndarrays"),
-    "pyc_math_f90" : CompileObj("pyc_math_f90.f90",folder="math"),
-    "pyc_math_c"   : CompileObj("pyc_math_c.c",folder="math"),
+    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
 }
 
 #==============================================================================
@@ -292,11 +293,11 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-        for lib_name, stdlib in internal_libs.items():
+        for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
             if lib_name in codegen.get_printer_imports() and \
                     lib_name not in internal_libs_name:
 
-                lib_dest_path = copy_internal_library(stdlib.source_folder, pyccel_dirpath)
+                lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
 
                 # stop after copying lib to __pyccel__ directory for
                 # convert only
