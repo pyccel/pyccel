@@ -100,6 +100,7 @@ python_libs = config_vars.get("LIBPYTHON","").split() \
                     +config_vars.get("LIBPL","").split()
 python_info = {
         "libs" : [s[2:] for s in config_vars.get("LIBM","").split()], # Strip -l from beginning
+        "libdirs" : config_vars.get("LIBDIR","").split(),
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
