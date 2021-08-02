@@ -94,6 +94,7 @@ icc_info = {'exec' : 'icc',
 #------------------------------------------------------------
 config_vars = sysconfig.get_config_vars()
 print(json.dumps(config_vars, indent=4))
+linker_flags = config_vars.get("BLDLIBRARY","").split()+config_vars.get("LDSHARED","").split()
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
         "libdirs" : config_vars.get("LIBDIR","").split(),
@@ -101,9 +102,9 @@ python_info = {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-            'libs' : config_vars.get("BLDLIBRARY","").split(),
-            'libdirs' : config_vars.get("LIBPL","").split(),
-            "linker_flags" : config_vars.get("LDSHARED","").split()[1:],
+            'libs' : [l for l in linker_flags if l.startswith('-l')],
+            'libdirs' : [l for l in linker_flags if l.startswith('-L')]+config_vars.get("LIBPL","").split(),
+            "linker_flags" : [l for l in linker_flags if not l.startswith('-l') and not l.startswith('-L')],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
             }
         }
