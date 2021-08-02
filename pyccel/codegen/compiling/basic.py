@@ -85,6 +85,9 @@ class CompileObj:
         self._is_module    = is_module
 
     def reset_folder(self, folder):
+        """
+        Change the folder in which the source file is saved (useful for stdlib)
+        """
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._folder = folder
 
