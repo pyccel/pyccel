@@ -62,7 +62,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
 
-    group.add_argument('--compiler', choices=('GNU','intel'), help='Compiler name')
+    group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel}')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
