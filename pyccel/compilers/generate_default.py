@@ -92,6 +92,7 @@ icc_info = {'exec' : 'icc',
             'family': 'intel',
             }
 #------------------------------------------------------------
+python_version = sysconfig.get_python_version()
 config_vars = sysconfig.get_config_vars()
 linker_flags = config_vars.get("BLDLIBRARY","").split() \
                 + config_vars.get("LDSHARED","").split()[1:]
@@ -132,7 +133,8 @@ def print_json(filename, info):
     """
     print(json.dumps(dict(chain(info.items(),
                                 python_info.items(),
-                                [('pyccel_version', pyccel_version)])),
+                                [('pyccel_version', pyccel_version),
+                                 ('python_version', python_version)])),
                      indent=4),
           file=open(os.path.join(save_folder, filename),'w'))
 

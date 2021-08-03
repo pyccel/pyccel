@@ -24,13 +24,22 @@ mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
 if mac_target:
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
+python_version = sysconfig.get_python_version()
+def different_version(compiler):
+    """
+    Determine whether the specified compiler matches or differs from
+    the expected version of pyccel and python
+    """
+    return compiler['pyccel_version'] != pyccel_version or \
+            compiler['python_version'] != python_version
+
 compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
 with FileLock(compilers_folder+'.lock'):
     # TODO: Add an additional search location for user provided compiler files
     available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                         if f.endswith('.json')}
     if len(available_compilers)==0 or \
-            next(iter(available_compilers.values()))['pyccel_version'] != pyccel_version:
+            different_version(next(iter(available_compilers.values()))):
         from pyccel.compilers.generate_default import generate_default
         generate_default()
         available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
