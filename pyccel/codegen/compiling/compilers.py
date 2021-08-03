@@ -66,12 +66,18 @@ class Compiler:
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
-        if vendor not in vendors:
-            raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
-        try:
-            self._info = sorted_compilers[(vendor,language)]
-        except KeyError as e:
-            raise NotImplementedError("Compiler not available") from e
+        if vendor.endswith('.json') and os.path.exists(vendor):
+            self._info = json.load(open(vendor))
+            if language != self._info['language']:
+                warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
+                self._info = sorted_compilers[('GNU',language)]
+        else:
+            if vendor not in vendors:
+                raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
+            try:
+                self._info = sorted_compilers[(vendor,language)]
+            except KeyError as e:
+                raise NotImplementedError("Compiler not available") from e
 
         self._debug = debug
 
