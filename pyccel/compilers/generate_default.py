@@ -158,7 +158,6 @@ python_info = {
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             'libs' : [l[2:] for l in linker_flags if l.startswith('-l')],
             'libdirs' : [l[2:] for l in linker_flags if l.startswith('-L')]+config_vars.get("LIBPL","").split(),
-            "linker_flags" : [l for l in linker_flags if not l.startswith('-l') and not l.startswith('-L')],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
             }
         }

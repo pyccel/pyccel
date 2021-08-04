@@ -230,8 +230,6 @@ class Compiler:
         -------
         exec_cmd      : str
                         The command required to run the executable
-        flags         : iterable of strs
-                        The flags required to compile
         inc_flags     : iterable of strs
                         The include directories required to compile
         libs_flags    : iterable of strs
@@ -241,8 +239,6 @@ class Compiler:
         m_code        : iterable of strs
                         The objects required to compile
         """
-        # get flags
-        flags = self._get_flags(compile_obj.flags, accelerators)
 
         # get includes
         includes = self._get_includes(compile_obj.includes, accelerators)
@@ -259,7 +255,7 @@ class Compiler:
 
         exec_cmd = self._get_exec(accelerators)
 
-        return exec_cmd, flags, inc_flags, libs_flags, libdirs_flags, m_code
+        return exec_cmd, inc_flags, libs_flags, libdirs_flags, m_code
 
     def compile_module(self, compile_obj, output_folder, verbose = False):
         """
@@ -317,8 +313,11 @@ class Compiler:
         """
         accelerators = compile_obj.accelerators
 
+        # get flags
+        flags = self._get_flags(compile_obj.flags, accelerators)
+
         # Get compile options
-        exec_cmd, flags, includes, libs_flags, libdirs_flags, m_code = \
+        exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
 
         if self._info['language'] == 'fortran':
@@ -361,16 +360,20 @@ class Compiler:
                    Generated library name
         """
         # Ensure python options are collected
-        accelerators = list(compile_obj.accelerators)
-        if 'python' not in accelerators:
-            accelerators.append('python')
+        accelerators = set(compile_obj.accelerators)
+
+        accelerators.remove('python')
+
+        # get flags
+        flags = self._get_flags(compile_obj.flags, accelerators)
+
+        accelerators.add('python')
 
         # Collect compile information
-        exec_cmd, flags, includes, libs_flags, libdirs_flags, m_code = \
+        exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
 
-        # Include linker flags to generate shared object
-        flags.extend(self._info['python']['linker_flags'])
+        flags.insert(0,"-shared")
 
         # Get name of file
         ext_suffix = self._info['python']['shared_suffix']
