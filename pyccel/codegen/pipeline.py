@@ -198,7 +198,7 @@ def execute_pyccel(fname, *,
 
     # Get compiler object
     src_compiler = Compiler(compiler, language, debug)
-    wrapper_compiler = Compiler(compiler, 'c', debug)
+    wrapper_compiler = Compiler('GNU', 'c', debug)
 
     # Parse Python file
     try:
