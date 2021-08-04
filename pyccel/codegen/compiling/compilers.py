@@ -133,14 +133,15 @@ class Compiler:
         accelerators : iterable or str
                        Accelerators used by the code
         """
-        prop = set(prop)
+        # Use dict keys as an ordered set
+        prop = dict.fromkeys(prop)
 
-        prop.update(self._info.get(key,()))
+        prop.update(dict.fromkeys(self._info.get(key,())))
 
         for a in accelerators:
-            prop.update(self._info.get(a,{}).get(key,()))
+            prop.update(dict.fromkeys(self._info.get(a,{}).get(key,())))
 
-        return prop
+        return prop.keys()
 
     def _get_includes(self, includes = (), accelerators = ()):
         """
