@@ -372,6 +372,7 @@ class Compiler:
         # Collect compile information
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
+        linker_libdirs_flags = ['-Wl,-R' if l == '-L' else l for l in libdirs_flags]
 
         flags.insert(0,"-shared")
 
@@ -380,7 +381,7 @@ class Compiler:
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
-        cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
+        cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
                 *libs_flags, *m_code, compile_obj.module_target,
                 '-o', file_out]
 
