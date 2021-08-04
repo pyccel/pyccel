@@ -70,7 +70,7 @@ pgfortran_info = {'exec' : 'pgfortran',
               'openacc': {
                   'flags' : ("-acc"),
                   },
-              'family': 'pgi',
+              'family': 'PGI',
               }
 
 #------------------------------------------------------------
@@ -125,7 +125,7 @@ pgcc_info = {'exec' : 'pgcc',
             'openacc': {
                 'flags' : ("-acc"),
                 },
-            'family': 'pgi',
+            'family': 'PGI',
             }
 
 #------------------------------------------------------------
