@@ -78,7 +78,7 @@ class CompileObj:
         self._flags        = list(flags)
         self._includes     = set([folder, *includes])
         self._libs         = list(libs)
-        self._libdirs      = list(libdirs)
+        self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
         self._dependencies = set()
         if dependencies:
@@ -188,7 +188,7 @@ class CompileObj:
             self._includes.add(a.source_folder)
             self._includes = self._includes.union(a.includes)
             self._libs.extend(a.libs)
-            self._libdirs.extend(a.libdirs)
+            self._libdirs = self._libdirs.union(a.libdirs)
             self._accelerators = self._accelerators.union(a.accelerators)
 
     def acquire_lock(self):
