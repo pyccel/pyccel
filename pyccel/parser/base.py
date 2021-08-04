@@ -8,11 +8,11 @@
 Module containing aspects of a parser which are in common over all stages.
 """
 
-from collections import OrderedDict
-from filelock import FileLock
 import importlib
 import os
 import re
+from collections import OrderedDict
+from filelock import FileLock
 
 #==============================================================================
 from pyccel.version import __version__
