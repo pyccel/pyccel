@@ -201,9 +201,9 @@ def generate_default():
             'gfortran.json'  : gfort_info,
             'gcc.json'       : gcc_info,
             'ifort.json'     : ifort_info,
-            'icc.json'       : icc_info
-            'pgfortran.json' : pgfortran_info
-            'pgcc.json'      : pgcc_info
+            'icc.json'       : icc_info,
+            'pgfortran.json' : pgfortran_info,
+            'pgcc.json'      : pgcc_info,
             }
     for f, d in files.items():
         print_json(f,d)
