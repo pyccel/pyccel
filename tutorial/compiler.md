@@ -1,4 +1,5 @@
-# Compilers supported by Pyccel
+# Different compilers in Pyccel
+## Compilers supported by Pyccel
 
 Pyccel provides default compiler settings for 4 different compiler families:
 -   **GNU** : gcc / gfortran
@@ -8,7 +9,7 @@ Pyccel provides default compiler settings for 4 different compiler families:
 
 **Warning** : The **GNU** compiler is currently the only compiler which is tested regularly
 
-# Specifying a compiler
+## Specifying a compiler
 
 The default compiler family is **GNU**. To use a different compiler, the compiler family should be passed to either pyccel or epyccel.
 E.g.
@@ -20,7 +21,7 @@ or
 epyccel(my_func, compiler='intel')
 ```
 
-# User-defined compiler
+## User-defined compiler
 
 The user can also define their own compiler in a json file. To use this definition, the location of the json file must be passed to the _compiler_ argument. The json file must define the following:
 
