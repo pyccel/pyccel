@@ -54,6 +54,26 @@ ifort_info = {'exec' : 'ifort',
                   },
               'family': 'intel',
               }
+
+#------------------------------------------------------------
+pgfortran_info = {'exec' : 'pgfortran',
+              'mpi_exec' : 'pgfortran',
+              'language': 'fortran',
+              'module_output_flag': '-module',
+              'debug_flags': ("-Mbounds",),
+              'release_flags': ("-O3",),
+              'general_flags' : ('-fPIC',),
+              'standard_flags' : ('-Mstandard',),
+              'openmp': {
+                  'flags' : ('-mp'),
+                  'libs'  : ('iomp5',),
+                  },
+              'openacc': {
+                  'flags' : ("-acc"),
+                  },
+              'family': 'pgi',
+              }
+
 #------------------------------------------------------------
 gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
@@ -91,6 +111,24 @@ icc_info = {'exec' : 'icc',
                 },
             'family': 'intel',
             }
+
+#------------------------------------------------------------
+pgcc_info = {'exec' : 'pgcc',
+            'mpi_exec' : 'pgcc',
+            'language': 'c',
+            'debug_flags': ("-g",),
+            'release_flags': ("-O3",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('-std=c99',),
+            'openmp': {
+                'flags' : ('-mp',),
+                },
+            'openacc': {
+                'flags' : ("-acc"),
+                },
+            'family': 'pgi',
+            }
+
 #------------------------------------------------------------
 def change_to_lib_flag(lib):
     """
@@ -160,10 +198,12 @@ def generate_default():
     available compilers
     """
     files = {
-            'gfortran.json' : gfort_info,
-            'gcc.json'      : gcc_info,
-            'ifort.json'    : ifort_info,
-            'icc.json'      : icc_info
+            'gfortran.json'  : gfort_info,
+            'gcc.json'       : gcc_info,
+            'ifort.json'     : ifort_info,
+            'icc.json'       : icc_info
+            'pgfortran.json' : pgfortran_info
+            'pgcc.json'      : pgcc_info
             }
     for f, d in files.items():
         print_json(f,d)
