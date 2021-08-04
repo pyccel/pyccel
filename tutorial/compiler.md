@@ -28,20 +28,20 @@ The user can also define their own compiler in a json file. To use this definiti
 -   **mpi\_exec** : The name of the mpi executable
 -   **language** : The language handled by this compiler
 -   **module\_output\_flag** : This flag is only required when the language is fortran. It specifies the flag which indicates where .mod files should be saved (e.g. '-J' for gfortran)
--   **debug\_flags** : A list of flags used when compiling in debug mode [optional]
--   **release\_flags** : A list of flags used when compiling in release mode [optional]
--   **general\_flags** : A list of flags used when compiling in any mode [optional]
--   **standard\_flags** : A list of flags used to impose the expected language standard [optional]
--   **libs** : A list of libraries necessary for compiling [optional]
--   **libdirs** : A list of library directories necessary for compiling [optional]
--   **includes** : A list of include directories necessary for compiling [optional]
+-   **debug\_flags** : A list of flags used when compiling in debug mode \[optional\]
+-   **release\_flags** : A list of flags used when compiling in release mode \[optional\]
+-   **general\_flags** : A list of flags used when compiling in any mode \[optional\]
+-   **standard\_flags** : A list of flags used to impose the expected language standard \[optional\]
+-   **libs** : A list of libraries necessary for compiling \[optional\]
+-   **libdirs** : A list of library directories necessary for compiling \[optional\]
+-   **includes** : A list of include directories necessary for compiling \[optional\]
   
 In addition, for each accelerator (mpi/openmp/openacc/python) that you will use the json file must define the following:
   
--   **flags** : A list of flags used to impose the expected language standard [optional]
--   **libs** : A list of libraries necessary for compiling [optional]
--   **libdirs** : A list of library directories necessary for compiling [optional]
--   **includes** : A list of include directories necessary for compiling [optional]
+-   **flags** : A list of flags used to impose the expected language standard \[optional\]
+-   **libs** : A list of libraries necessary for compiling \[optional\]
+-   **libdirs** : A list of library directories necessary for compiling \[optional\]
+-   **includes** : A list of include directories necessary for compiling \[optional\]
 
 Python is considered to be an accelerator and must additionally specify shared\_suffix.
 
