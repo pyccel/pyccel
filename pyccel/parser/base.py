@@ -9,6 +9,7 @@ Module containing aspects of a parser which are in common over all stages.
 """
 
 from collections import OrderedDict
+from filelock import FileLock
 import importlib
 import os
 import re
@@ -560,13 +561,14 @@ class BasicParser(object):
         # ...
 
         # we are only exporting the AST.
-        try:
-            code = self.code.encode('utf-8')
-            hs   = hashlib.md5(code)
-            with open(filename, 'wb') as f:
-                pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-        except (FileNotFoundError, PermissionError, pickle.PickleError):
-            pass
+        with FileLock(filename+'.lock'):
+            try:
+                code = self.code.encode('utf-8')
+                hs   = hashlib.md5(code)
+                with open(filename, 'wb') as f:
+                    pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
+            except (FileNotFoundError, PermissionError, pickle.PickleError):
+                pass
 
     def load(self, filename=None):
         """ Load the current ast using Pickle.
@@ -598,11 +600,12 @@ class BasicParser(object):
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
-        try:
-            with open(filename, 'rb') as f:
-                hs, version, parser = pickle.load(f)
-        except (FileNotFoundError, PermissionError, pickle.PickleError):
-            return
+        with FileLock(filename+'.lock'):
+            try:
+                with open(filename, 'rb') as f:
+                    hs, version, parser = pickle.load(f)
+            except (FileNotFoundError, PermissionError, pickle.PickleError):
+                return
 
         import hashlib
         code = self.code.encode('utf-8')
