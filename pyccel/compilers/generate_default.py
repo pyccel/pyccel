@@ -74,6 +74,24 @@ pgfortran_info = {'exec' : 'pgfortran',
               }
 
 #------------------------------------------------------------
+nvfort_info = {'exec' : 'nvfort',
+              'mpi_exec' : 'nvfort',
+              'language': 'fortran',
+              'module_output_flag': '-module',
+              'debug_flags': ("-Mbounds",),
+              'release_flags': ("-O3",),
+              'general_flags' : ('-fPIC',),
+              'standard_flags' : ('-Mstandard',),
+              'openmp': {
+                  'flags' : ('-mp',),
+                  },
+              'openacc': {
+                  'flags' : ("-acc"),
+                  },
+              'family': 'nvidia',
+              }
+
+#------------------------------------------------------------
 gcc_info = {'exec' : 'gcc',
             'mpi_exec' : 'mpicc',
             'language': 'c',
@@ -126,6 +144,23 @@ pgcc_info = {'exec' : 'pgcc',
                 'flags' : ("-acc"),
                 },
             'family': 'PGI',
+            }
+
+#------------------------------------------------------------
+nvc_info = {'exec' : 'nvc',
+            'mpi_exec' : 'nvc',
+            'language': 'c',
+            'debug_flags': ("-g",),
+            'release_flags': ("-O3",),
+            'general_flags' : ('-fPIC',),
+            'standard_flags' : ('-std=c99',),
+            'openmp': {
+                'flags' : ('-mp',),
+                },
+            'openacc': {
+                'flags' : ("-acc"),
+                },
+            'family': 'nvidia',
             }
 
 #------------------------------------------------------------
@@ -201,6 +236,8 @@ def generate_default():
             'icc.json'       : icc_info,
             'pgfortran.json' : pgfortran_info,
             'pgcc.json'      : pgcc_info,
+            'nvfort.json'    : nvfort_info,
+            'nvc.json'       : nvc_info,
             }
     for f, d in files.items():
         print_json(f,d)
