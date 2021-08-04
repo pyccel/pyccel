@@ -135,10 +135,10 @@ class Compiler:
         """
         prop = set(prop)
 
-        prop = prop.union(self._info.get(key,()))
+        prop.update(self._info.get(key,()))
 
         for a in accelerators:
-            prop = prop.union(self._info.get(a,{}).get(key,()))
+            prop.update(self._info.get(a,{}).get(key,()))
 
         return prop
 

@@ -164,7 +164,7 @@ class CompileObj:
         """
         deps = set(d.target for d in self._dependencies)
         for d in self._dependencies:
-            deps = deps.union(d.extra_modules)
+            deps.update(d.extra_modules)
         return deps
 
     @property
@@ -183,13 +183,13 @@ class CompileObj:
         """
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
-        self._dependencies = self._dependencies.union(args)
+        self._dependencies.update(args)
         for a in args:
             self._includes.add(a.source_folder)
-            self._includes = self._includes.union(a.includes)
+            self._includes.update(a.includes)
             self._libs.extend(a.libs)
-            self._libdirs = self._libdirs.union(a.libdirs)
-            self._accelerators = self._accelerators.union(a.accelerators)
+            self._libdirs.update(a.libdirs)
+            self._accelerators.update(a.accelerators)
 
     def acquire_lock(self):
         """
