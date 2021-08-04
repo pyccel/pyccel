@@ -147,8 +147,7 @@ def change_to_lib_flag(lib):
 python_version = sysconfig.get_python_version()
 config_vars = sysconfig.get_config_vars()
 linker_flags = [change_to_lib_flag(l) for l in
-                    config_vars.get("BLDLIBRARY","").split() \
-                    + config_vars.get("LDSHARED","").split()[1:]]
+                    config_vars.get("LDSHARED","").split()[1:]]
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
         "libdirs" : config_vars.get("LIBDIR","").split(),
