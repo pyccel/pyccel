@@ -65,7 +65,7 @@ pgfortran_info = {'exec' : 'pgfortran',
               'general_flags' : ('-fPIC',),
               'standard_flags' : ('-Mstandard',),
               'openmp': {
-                  'flags' : ('-mp'),
+                  'flags' : ('-mp',),
                   },
               'openacc': {
                   'flags' : ("-acc"),
