@@ -372,7 +372,7 @@ class Compiler:
         # Collect compile information
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-R' if l == '-L' else l for l in libdirs_flags]
+        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         flags.insert(0,"-shared")
 
