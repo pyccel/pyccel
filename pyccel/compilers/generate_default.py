@@ -92,10 +92,25 @@ icc_info = {'exec' : 'icc',
             'family': 'intel',
             }
 #------------------------------------------------------------
+def change_to_lib_flag(lib):
+    """
+    Convert a library to a library flag
+    """
+    if lib.startswith('lib'):
+        end = len(lib)
+        if lib.endswith('.a'):
+            end = end-2
+        if lib.endswith('.so'):
+            end = end-3
+        return '-l{}'.format(lib[3:end])
+    else:
+        return lib
+
 python_version = sysconfig.get_python_version()
 config_vars = sysconfig.get_config_vars()
-linker_flags = config_vars.get("BLDLIBRARY","").split() \
-                + config_vars.get("LDSHARED","").split()[1:]
+linker_flags = [change_to_lib_flag(l) for l in
+                    config_vars.get("BLDLIBRARY","").split() \
+                    + config_vars.get("LDSHARED","").split()[1:]]
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
         "libdirs" : config_vars.get("LIBDIR","").split(),
