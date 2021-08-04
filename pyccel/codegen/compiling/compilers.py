@@ -133,12 +133,12 @@ class Compiler:
         accelerators : iterable or str
                        Accelerators used by the code
         """
-        prop = list(prop)
+        prop = set(prop)
 
-        prop.extend(self._info.get(key,()))
+        prop = prop.union(self._info.get(key,()))
 
         for a in accelerators:
-            prop.extend(self._info.get(a,{}).get(key,()))
+            prop = prop.union(self._info.get(a,{}).get(key,()))
 
         return prop
 
