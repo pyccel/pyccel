@@ -162,7 +162,6 @@ python_info = {
             }
         }
 if sys.platform == "win32":
-    python_info['python']['linker_flags'].append('-shared')
     python_info['python']['libs'].append('python{}'.format(config_vars["VERSION"]))
     python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
 
