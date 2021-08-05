@@ -18,9 +18,6 @@ from collections import OrderedDict
 import functools
 import operator
 
-from sympy.core.numbers import NegativeInfinity as NINF
-from sympy.core.numbers import Infinity as INF
-
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import SeparatorComment, Comment
@@ -35,7 +32,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement, HomogeneousTupleVariable,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize)
+                             DottedName, PyccelArraySize, Constant)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot, PyccelEq, PyccelAnd
 from pyccel.ast.operators      import PyccelMod
@@ -44,9 +41,9 @@ from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTern
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
-from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
-                                  PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonFloat, PythonTuple)
+from pyccel.ast.builtins  import (PythonInt,
+                                  PythonPrint, PythonRange,
+                                  PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -61,6 +58,8 @@ from pyccel.ast.internals import Slice
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.literals  import Nil
+
+from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
@@ -153,6 +152,8 @@ math_function_to_fortran = {
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
 }
+
+INF = math_constants['inf']
 
 _default_methods = {
     '__init__': 'create',
@@ -277,15 +278,8 @@ class FCodePrinter(CodePrinter):
     def _get_statement(self, codestring):
         return codestring
 
-    def _get_comment(self, text):
-        return "! {0}".format(text)
-
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
-
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for j in range(cols) for i in range(rows))
 
     def print_kind(self, expr):
         """
@@ -566,39 +560,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
-
-#    # TODO this is not used anymore since, we are calling printer inside
-#    #      numpyext. must be improved!!
-#    def _print_ZerosLike(self, expr):
-#        lhs = self._print(expr.lhs)
-#        rhs = self._print(expr.rhs)
-#        if isinstance(expr.rhs, IndexedElement):
-#            shape = []
-#            for i in expr.rhs.indices:
-#                if isinstance(i, Slice):
-#                    shape.append(i)
-#            rank = len(shape)
-#        else:
-#            rank = expr.rhs.rank
-#        rs = []
-#        for i in range(1, rank+1):
-#            l = 'lbound({0},{1})'.format(rhs, str(i))
-#            u = 'ubound({0},{1})'.format(rhs, str(i))
-#            r = '{0}:{1}'.format(l, u)
-#            rs.append(r)
-#        shape = ', '.join(self._print(i) for i in rs)
-#        init_value = self._print(expr.init_value)
-#
-#        code  = ('allocate({lhs}({shape}))\n'
-#                 '{lhs} = {init_value}').format(lhs=lhs,
-#                                                shape=shape,
-#                                                init_value=init_value)
-#
-#        return self._get_statement(code)
-
-
-    def _print_SumFunction(self, expr):
-        return str(expr)
 
     def _print_PythonLen(self, expr):
         var = expr.arg
@@ -920,20 +881,6 @@ class FCodePrinter(CodePrinter):
             code = 'max('+code+')'
         return self._get_statement(code)
 
-    def _print_Dot(self, expr):
-        return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l), self._print(expr.expr_r)))
-
-    def _print_Ceil(self, expr):
-        return self._get_statement('ceiling(%s)'%(self._print(expr.rhs)))
-
-    def _print_Mod(self, expr):
-        args = ','.join(self._print(i) for i in expr.args)
-        return 'modulo({})'.format(args)
-
-    def _print_Sign(self, expr):
-        # TODO use the appropriate precision from rhs
-        return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
-
     # ... MACROS
     def _print_MacroShape(self, expr):
         var = expr.argument
@@ -1245,11 +1192,11 @@ class FCodePrinter(CodePrinter):
         rhs = expr.rhs
         # we don't print Range
         # TODO treat the case of iterable classes
-        if isinstance(rhs, NINF):
+        if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, INF):
+        if rhs == INF:
             rhs_code = 'Huge({0})'.format(lhs_code)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
@@ -1787,59 +1734,28 @@ class FCodePrinter(CodePrinter):
         return loops
 
     def _print_For(self, expr):
-        prolog = ''
-        epilog = ''
 
-        # ...
+        indices = expr.iterable.loop_counters
+        index = indices[0] if indices else expr.target
+        if expr.iterable.num_loop_counters_required:
+            self.add_vars_to_namespace(index)
 
-        def _do_range(target, iterable, prolog, epilog):
-            if not isinstance(iterable, PythonRange):
-                # Only iterable currently supported is PythonRange
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
+        target   = index
+        my_range = expr.iterable.get_range()
 
-            tar        = self._print(target)
-            range_code = self._print(iterable)
-
-            prolog += 'do {0} = {1}\n'.format(tar, range_code)
-            epilog = 'end do\n' + epilog
-
-            return prolog, epilog
-        # ...
-
-        if not isinstance(expr.iterable, (PythonRange, Product , PythonZip,
-                            PythonEnumerate, PythonMap)):
-            # Only iterable currently supported are PythonRange or Product
+        if not isinstance(my_range, PythonRange):
+            # Only iterable currently supported is PythonRange
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
 
-        if isinstance(expr.iterable, PythonRange):
-            prolog, epilog = _do_range(expr.target, expr.iterable, \
-                                       prolog, epilog)
+        tar        = self._print(target)
+        range_code = self._print(my_range)
 
-        elif isinstance(expr.iterable, Product):
-            for i, a in zip(expr.target, expr.iterable.elements):
-                if isinstance(a, PythonRange):
-                    itr_ = a
-                else:
-                    itr_ = PythonRange(a.shape[0])
-                prolog, epilog = _do_range(i, itr_, \
-                                           prolog, epilog)
+        prolog = 'do {0} = {1}\n'.format(tar, range_code)
+        epilog = 'end do\n'
 
-        elif isinstance(expr.iterable, PythonZip):
-            itr_ = PythonRange(expr.iterable.length)
-            prolog, epilog = _do_range(expr.target, itr_, \
-                                       prolog, epilog)
-
-        elif isinstance(expr.iterable, PythonEnumerate):
-            itr_ = PythonRange(PythonLen(expr.iterable.element))
-            prolog, epilog = _do_range(expr.target, itr_, \
-                                       prolog, epilog)
-
-        elif isinstance(expr.iterable, PythonMap):
-            itr_ = PythonRange(PythonLen(expr.iterable.args[1]))
-            prolog, epilog = _do_range(expr.target, itr_, \
-                                       prolog, epilog)
+        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+        prolog += self._print(additional_assign)
 
         body = self._print(expr.body)
 
@@ -2327,8 +2243,6 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelMinus(self, expr):
         args = [self._print(a) for a in expr.args]
 
-        if len(args) == 1:
-            return '-{}'.format(args[0])
         return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
@@ -2785,15 +2699,6 @@ class FCodePrinter(CodePrinter):
             return self._print_not_supported(expr)
 
 #=======================================================================================
-
-    def _pad_leading_columns(self, lines):
-        result = []
-        for line in lines:
-            if line.startswith('!'):
-                result.append("! " + line[1:].lstrip())
-            else:
-                result.append(line)
-        return result
 
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines

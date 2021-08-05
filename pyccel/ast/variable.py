@@ -213,6 +213,8 @@ class Variable(PyccelAstNode):
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        if self._rank < 2:
+            self._order = None
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
