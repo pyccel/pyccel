@@ -8,8 +8,6 @@
 Handling the transitions between python code and C code.
 """
 
-import numpy as np
-
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -21,16 +19,8 @@ from .datatypes import NativeBool, NativeString, NativeGeneric
 from .literals  import LiteralFalse, LiteralTrue
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
-from .core      import AliasAssign, Assign, Return, If, DottedVariable
-from .core      import IfSection
 
-from .literals  import LiteralTrue
-
-from .numpyext  import NumpyReal, NumpyImag
-
-from .operators import PyccelEq
-
-from .variable  import Variable, ValuedVariable, VariableAddress
+from .variable  import Variable, ValuedVariable
 
 
 errors = Errors()
