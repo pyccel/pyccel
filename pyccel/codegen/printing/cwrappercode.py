@@ -7,14 +7,10 @@
 
 from collections import OrderedDict
 
-import numpy as np
-
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
-
-from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
@@ -22,9 +18,9 @@ from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import Import
 from pyccel.ast.core import AugAssign
 
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, str_dtype
 
 from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import PyArgKeywords
@@ -41,11 +37,6 @@ from pyccel.ast.numpy_wrapper   import numpy_get_data, numpy_get_dim
 from pyccel.ast.bind_c   import as_static_function_call
 
 from pyccel.ast.variable  import VariableAddress, Variable, ValuedVariable
-
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
-
-errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 

@@ -13,7 +13,6 @@ import shutil
 from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module
-from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from pyccel.codegen.utilities               import compile_files, get_gfortran_library_dir
