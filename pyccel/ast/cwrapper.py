@@ -38,34 +38,13 @@ __all__ = (
     'Py_True',
     'Py_False',
     'Py_None',
+    'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
-    'pycomplex_real',
-    'pycomplex_imag',
-    'pycomplex_fromdoubles',
     'Py_DECREF',
-    'PyLong_AsLong',
-    'PyFloat_AsDouble',
-    'PythonType_Check',
-    'NumpyType_Check',
     'PyErr_SetString',
-#------- CAST FUNCTIONS ------
-    'pyint_to_bool',
-    'bool_to_pyobj',
-    'pycomplex_to_complex',
-    'complex_to_pycomplex',
-    'pybool_to_bool',
-#--------- Numpy ----------
-    'numpy_get_ndims',
-    'numpy_get_data',
-    'numpy_get_dim',
-    'numpy_get_stride',
-    'numpy_check_flag',
-    'numpy_get_base',
-    'numpy_itemsize',
-    'numpy_flag_own_data',
-    'numpy_flag_c_contig',
-    'numpy_flag_f_contig',
-    'numpy_dtype_registry',
+#----- CHECK FUNCTIONS ---
+    'generate_datatype_error',
+    'scalar_object_check',
 )
 
 class PyccelPyObject(DataType):
