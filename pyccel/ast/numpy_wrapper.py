@@ -23,18 +23,15 @@ from .literals          import LiteralInteger
 from .variable          import Variable
 
 from ..errors.errors   import Errors
-
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
 __all__ = (
     #------- CAST FUNCTIONS ------
-    'numpy_get_data',
     'pyarray_to_c_ndarray',
     #-------CHECK FUNCTIONS ------
     'array_checker',
-    'NumpyType_Check',
     #-------HELPERS ------
     'numpy_get_dim',
     'numpy_get_ndims',
@@ -46,7 +43,11 @@ __all__ = (
 
 def get_numpy_max_acceptable_version():
     """
-    #TODO
+    Get the macro specifying the last acceptable numpy version. If numpy is more
+    recent than this then deprecation warnings are shown.
+
+    The last acceptable numpy version is 1.19. If the current version is older
+    than this then the last acceptable numpy version is the current version
     """
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
@@ -78,7 +79,7 @@ pyarray_checker = FunctionDef(
                         Variable(name = 'rank', dtype = NativeInteger()),
                         Variable(name = 'flag', dtype = NativeInteger())
                     ],
-                body      = [], 
+                body      = [],
                 results   = [Variable(name = 'b', dtype = NativeBool())])
 
 # https://numpy.org/devdocs/reference/c-api/array.html#c.PyArray_DIMS
@@ -204,6 +205,7 @@ def find_in_numpy_dtype_registry(var):
         errors.report(PYCCEL_RESTRICTION_TODO,
                 symbol = "{}[kind = {}]".format(dtype, prec),
                 severity='fatal')
+        return
 
 
 def array_checker(py_variable, c_variable, type_check_needed, language):
@@ -231,7 +233,7 @@ def array_checker(py_variable, c_variable, type_check_needed, language):
     # extract numpy type ref
     if type_check_needed:
         type_ref = find_in_numpy_dtype_registry(c_variable)
-        
+
     # order flag
     if rank > 1 and language == 'fortran':
         if c_variable.order == 'F':
@@ -245,6 +247,7 @@ def array_checker(py_variable, c_variable, type_check_needed, language):
 
 def array_type_check(py_variable, c_variable):
     """
+    Return the code which checks if the array has the expected type
     """
     type_ref = find_in_numpy_dtype_registry(c_variable)
 
