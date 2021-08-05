@@ -202,10 +202,9 @@ def find_in_numpy_dtype_registry(var):
     try :
         return numpy_dtype_registry[(dtype, prec)]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO,
+        return errors.report(PYCCEL_RESTRICTION_TODO,
                 symbol = "{}[kind = {}]".format(dtype, prec),
                 severity='fatal')
-        return
 
 
 def array_checker(py_variable, c_variable, type_check_needed, language):
