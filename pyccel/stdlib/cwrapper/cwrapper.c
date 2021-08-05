@@ -34,11 +34,6 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
 float complex PyComplex_to_Complex64(PyObject *object)
 {
 	float complex	c;
-	float	real_part;
-	float	imag_part;
-
-	real_part = 0.0;
-	imag_part = 0.0;
 
 	// https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
 	// https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
@@ -47,8 +42,8 @@ float complex PyComplex_to_Complex64(PyObject *object)
 
 	else
 	{
-		real_part = (float)PyComplex_RealAsDouble(object);
-		imag_part = (float)PyComplex_ImagAsDouble(object);
+		float real_part = (float)PyComplex_RealAsDouble(object);
+		float imag_part = (float)PyComplex_ImagAsDouble(object);
 
 		c = real_part + imag_part * _Complex_I;
 	}
@@ -439,14 +434,13 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  */
 static bool _check_pyarray_order(PyArrayObject *a, int flag)
 {
-	char	order;
 
 	if (flag == NO_ORDER_CHECK)
 		return true;
 
 	if (!PyArray_CHKFLAGS(a, flag))
 	{
-		order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
+		char order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
 		PyErr_Format(PyExc_NotImplementedError,
 			"argument does not have the expected ordering (%c)", order);
 		return false;
