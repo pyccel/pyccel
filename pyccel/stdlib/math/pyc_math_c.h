@@ -3,8 +3,8 @@
 /* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
 /* --------------------------------------------------------------------------------------- */
 
-#ifndef         PYC_MATH_H
-#define         PYC_MATH_H
+#ifndef         PYC_MATH_C_H
+#define         PYC_MATH_C_H
 
 #include <stdint.h>
 
