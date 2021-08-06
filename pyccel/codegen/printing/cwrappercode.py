@@ -46,7 +46,7 @@ dtype_registry = {('pyobject'     , 0) : 'PyObject',
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
     an interface between python and an implementation of the module in c"""
-    def __init__(self, parser, target_language, **settings):
+    def __init__(self, parser, target_language, extra_includes=(), **settings):
         CCodePrinter.__init__(self, parser, **settings)
         self._target_language = target_language
         self._cast_functions_dict = OrderedDict()
@@ -54,6 +54,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names = dict()
         self._global_names = set()
         self._module_name = None
+        self._extra_includes = extra_includes
 
 
     # --------------------------------------------------------------------
@@ -892,7 +893,7 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = [Import(s) for s in self._additional_imports]
         imports += [Import('numpy_version')]
         imports += [Import('numpy/arrayobject')]
-        imports += [Import('cwrapper')]
+        imports += [Import(i) for i in self._extra_includes]
         imports  = ''.join(self._print(i) for i in imports)
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'

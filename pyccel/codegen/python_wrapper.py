@@ -74,19 +74,13 @@ def create_shared_library(codegen,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
 
-    module_old_name = codegen.expr.name
-    codegen.expr.set_name(sharedlib_modname)
-    wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
-    if errors.has_errors():
-        return
-
-    codegen.expr.set_name(module_old_name)
-
-    with open(wrapper_filename, 'w') as f:
-        f.writelines(wrapper_code)
-
+    #---------------------------------------
+    #     Compile cwrapper from stdlib
+    #---------------------------------------
     cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
-            extra_files={'numpy_version.h':get_numpy_max_acceptable_version_file()})
+                                extra_files = {'numpy_version.h' :
+                                                get_numpy_max_acceptable_version_file()})
+
     cwrapper_lib = CompileObj("cwrapper.c",
                         folder=cwrapper_lib_dest_path,
                         accelerators=('python',))
@@ -97,7 +91,43 @@ def create_shared_library(codegen,
                       verbose  = verbose)
 
     wrapper_compile_obj.add_dependencies(cwrapper_lib)
+    extra_includes  = ['cwrapper']
 
+    #--------------------------------------------------------
+    #  Compile cwrapper_ndarrays from stdlib (if necessary)
+    #--------------------------------------------------------
+    ndarrays_target = os.path.join(pyccel_dirpath,'ndarrays','ndarrays.o')
+    ndarrays_dep    = main_obj.get_dependency(ndarrays_target)
+    if ndarrays_dep:
+        cwrapper_ndarrays_lib = CompileObj("cwrapper_ndarrays.c",
+                            folder       = cwrapper_lib_dest_path,
+                            dependencies = (ndarrays_dep,),
+                            accelerators = ('python',))
+
+        recompile_object(cwrapper_ndarrays_lib,
+                          compiler = wrapper_compiler,
+                          verbose  = verbose)
+
+        wrapper_compile_obj.add_dependencies(cwrapper_ndarrays_lib)
+        extra_includes.append('cwrapper_ndarrays')
+
+    #---------------------------------------
+    #      Print code specific cwrapper
+    #---------------------------------------
+    module_old_name = codegen.expr.name
+    codegen.expr.set_name(sharedlib_modname)
+    wrapper_code = cwrappercode(codegen.expr, codegen.parser, language, extra_includes=extra_includes)
+    if errors.has_errors():
+        return
+
+    codegen.expr.set_name(module_old_name)
+
+    with open(wrapper_filename, 'w') as f:
+        f.writelines(wrapper_code)
+
+    #---------------------------------------
+    #         Compile code
+    #---------------------------------------
     wrapper_compiler.compile_module(wrapper_compile_obj,
                                 output_folder = pyccel_dirpath,
                                 verbose = verbose)
