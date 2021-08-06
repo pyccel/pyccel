@@ -2402,7 +2402,7 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math')
+            self._additional_imports.add('pyc_math_f90')
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
