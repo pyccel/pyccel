@@ -6,6 +6,7 @@
 # include <complex.h>
 # include <stdint.h>
 # include <stdbool.h>
+# include "numpy_version.h"
 
 # define NO_IMPORT_ARRAY
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
@@ -14,12 +15,6 @@
 # define NO_TYPE_CHECK -1
 # define NO_ORDER_CHECK -1
 
-
-# ifdef NDARRAYS
-# include "ndarrays.h"
-/* converting numpy array to c nd array*/
-t_ndarray	pyarray_to_c_ndarray(PyArrayObject *o);
-# endif
 
 /* arrays check*/
 bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag);
