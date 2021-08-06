@@ -62,7 +62,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             shutil.copytree(lib_path, lib_dest_path)
             if extra_files:
                 for filename, contents in extra_files.items():
-                   with open(os.path.join(lib_dest_path, filename), 'w') as f:
+                    with open(os.path.join(lib_dest_path, filename), 'w') as f:
                         f.writelines(contents)
     return lib_dest_path
 

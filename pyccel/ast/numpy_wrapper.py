@@ -37,7 +37,7 @@ __all__ = (
     'numpy_get_ndims',
     'numpy_get_data',
     #-------OTHERS--------
-    'get_numpy_max_acceptable_version'
+    'get_numpy_max_acceptable_version_file'
 )
 
 
@@ -58,8 +58,6 @@ def get_numpy_max_acceptable_version_file():
     return '#ifndef NPY_NO_DEPRECATED_API\n'+ \
             numpy_api_macro+\
            '#endif'
-
-    return numpy_api_macro
 
 # https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE
 numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
