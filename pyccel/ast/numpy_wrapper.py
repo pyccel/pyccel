@@ -41,7 +41,7 @@ __all__ = (
 )
 
 
-def get_numpy_max_acceptable_version():
+def get_numpy_max_acceptable_version_file():
     """
     Get the macro specifying the last acceptable numpy version. If numpy is more
     recent than this then deprecation warnings are shown.
@@ -51,9 +51,13 @@ def get_numpy_max_acceptable_version():
     """
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
-    numpy_api_macro = '(r\'NPY_NO_DEPRECATED_API\', r\'NPY_{}_{}_API_VERSION\')'.format(
+    numpy_api_macro = '# define NPY_NO_DEPRECATED_API NPY_{}_{}_API_VERSION\n'.format(
         min(numpy_max_acceptable_version[0], numpy_current_version[0]),
 	    min(numpy_max_acceptable_version[1], numpy_current_version[1]))
+
+    return '#ifndef NPY_NO_DEPRECATED_API\n'+ \
+            numpy_api_macro+\
+           '#endif'
 
     return numpy_api_macro
 

@@ -7,7 +7,7 @@
 import os
 
 from pyccel.ast.bind_c                      import as_static_module
-from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version
+from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from pyccel.codegen.utilities      import recompile_object
@@ -85,7 +85,8 @@ def create_shared_library(codegen,
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
 
-    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath)
+    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
+            extra_files={'numpy_version.h':get_numpy_max_acceptable_version_file()})
     cwrapper_lib = CompileObj("cwrapper.c",
                         folder=cwrapper_lib_dest_path,
                         accelerators=('python',))
