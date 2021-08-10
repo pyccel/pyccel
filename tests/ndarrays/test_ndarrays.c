@@ -1,5 +1,7 @@
 #include "ndarrays.h"
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 
 #define getname(X) #X
