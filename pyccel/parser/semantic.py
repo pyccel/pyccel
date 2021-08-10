@@ -1322,10 +1322,22 @@ class SemanticParser(BasicParser):
                             if not previous_allocations:
                                 errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
                                         symbol=var, severity='fatal')
-                            if previous_allocations[-1].get_user_nodes((If, For, While)):
+
+                            last_allocation = previous_allocations[-1]
+
+                            # Find outermost IfSection of last allocation
+                            last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                            alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                            while len(last_alloc_ifsection)>0:
+                                alloc_ifsection = last_alloc_ifsection[-1]
+                                last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+
+                            alloc_has_if = len(alloc_ifsection.get_direct_user_nodes(lambda x: isinstance(x,If))) == 1
+
+                            if alloc_ifsection and not alloc_has_if:
+                                status = last_allocation.status
+                            elif last_allocation.get_user_nodes((If, For, While)):
                                 status='unknown'
-                            elif previous_allocations[-1].get_user_nodes(IfSection):
-                                status = previous_allocations[-1].status
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
