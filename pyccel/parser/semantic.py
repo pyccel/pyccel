@@ -1332,9 +1332,11 @@ class SemanticParser(BasicParser):
                                 alloc_ifsection = last_alloc_ifsection[-1]
                                 last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
 
-                            alloc_has_if = len(alloc_ifsection.get_direct_user_nodes(lambda x: isinstance(x,If))) == 1
+                            ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                                lambda x: isinstance(x,If))) == 1 \
+                                            if alloc_ifsection else False
 
-                            if alloc_ifsection and not alloc_has_if:
+                            if alloc_ifsection and not ifsection_has_if:
                                 status = last_allocation.status
                             elif last_allocation.get_user_nodes((If, For, While)):
                                 status='unknown'
