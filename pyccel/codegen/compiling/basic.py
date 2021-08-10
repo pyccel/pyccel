@@ -89,8 +89,10 @@ class CompileObj:
         """
         Change the folder in which the source file is saved (useful for stdlib)
         """
+        self._includes.remove(self._folder)
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._folder = folder
+        self._includes.add(self._folder)
 
         rel_mod_name = os.path.join(folder, self._module_name)
         self._module_target = rel_mod_name+'.o'
