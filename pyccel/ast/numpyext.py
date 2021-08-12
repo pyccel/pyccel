@@ -18,7 +18,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeReal, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction
+from .internals      import PyccelInternalFunction, Slice
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -950,7 +950,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def __init__(self, x):
         self._set_dtype_precision(x)
         self._set_shape_rank(x)
-        self._order      = x.order
+        self._set_order(x)
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -960,6 +960,9 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def _set_dtype_precision(self, x):
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision  = default_precision[str_dtype(self._dtype)]
+
+    def _set_order(self, x):
+        self._order      = x.order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -1173,6 +1176,38 @@ class NumpyAmax(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
+class NumpyTranspose(NumpyUfuncUnary):
+    __slots__ = ('_x','_x_T')
+    name = 'transpose'
+
+    def __init__(self, a):
+        self._x = a
+        other_order = 'C' if a.order=='F' else 'F'
+        self._x_T = a.clone(a.name, order=other_order)
+        super().__init__(a)
+
+    @property
+    def internal_var(self):
+        return self._x
+
+    @property
+    def transposed_var(self):
+        return self._x_T
+
+    def __getitem__(self, *args):
+        rank = self._x.rank
+        # Add empty slices to fully index the object
+        if len(args) < rank:
+            args = args + tuple([Slice(None, None)]*(rank-len(args)))
+        return self._x_T.__getitem__(*reversed(args))
+
+    def _set_order(self, x):
+        self._order      = self._x_T.order
+
+    @property
+    def is_elemental(self):
+        return False
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
@@ -1242,6 +1277,7 @@ numpy_functions = {
     'arctanh'   : NumpyArctanh,
     # 'deg2rad'   : NumpyDeg2rad,
     # 'rad2deg'   : NumpyRad2deg,
+    'transpose' : NumpyTranspose,
 }
 
 numpy_linalg_functions = {

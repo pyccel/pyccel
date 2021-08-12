@@ -10,7 +10,7 @@ from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeReal,
                         NativeComplex, NativeString)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal)
+                        NumpyImag, NumpyReal, NumpyTranspose)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -135,6 +135,8 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':Shape}),
+            FunctionDef('T',[],[],body=[],
+                decorators={'property':'property', 'numpy_wrapper':NumpyTranspose}),
             FunctionDef('sum',[],[],body=[],
                 decorators={'numpy_wrapper':NumpySum}),
             FunctionDef('min',[],[],body=[],
