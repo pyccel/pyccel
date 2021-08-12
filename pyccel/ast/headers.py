@@ -7,11 +7,11 @@
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
-from .core              import ValuedArgument
+from .core              import ValuedArgument, Assign
 from .core              import FunctionDef, Interface, FunctionAddress
 from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
-from .internals         import PyccelSymbol
+from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
@@ -588,7 +588,8 @@ class InterfaceHeader(Header):
 #==============================================================================
 class MacroFunction(Header):
     """."""
-    __slots__ = ('_name','_arguments','_master','_master_arguments','_results')
+    __slots__ = ('_name','_arguments','_master','_master_arguments',
+                 '_results','_copies_required')
 
     def __init__(self, name, args, master, master_args, results=None):
         if not isinstance(name, str):
@@ -603,6 +604,7 @@ class MacroFunction(Header):
         self._master           = master
         self._master_arguments = master_args
         self._results          = results
+        self._copies_required  = [a in self._results for a in self._arguments]
         super().__init__()
 
     @property
@@ -733,6 +735,41 @@ class MacroFunction(Header):
 
             newargs[i] = new
         return newargs
+
+    def make_necessary_copies(self, args, results):
+        """ Copy any arguments which are modified in fortran but
+        not in python into the result variable. If the variable
+        is modified in fortran then the argument and result
+        variable should be the same when apply is called
+
+        Parameters
+        ----------
+        args    : list of Variables
+                   The arguments passed to the macro function
+        results : list of Variables
+                  The results collected from the macro function
+
+        Results
+        -------
+        final_args : list of Variables
+                     The arguments which can be passed to the apply function
+        expr       : list of Assigns
+                      Any Assigns necessary before the function is calling
+                      the function returned by the apply function
+        """
+        expr = []
+        final_args = []
+        for arg, func_arg in zip(args, self.arguments):
+            if func_arg in self.results and arg.rank > 0:
+                r = results[self.results.index(func_arg)]
+                if arg != r:
+                    slices = [Slice(None,None)]*arg.rank
+                    expr.append(Assign(r[slices], arg[slices]))
+                    arg = r
+            final_args.append(arg)
+
+        return final_args, expr
+
 
 #==============================================================================
 class MacroVariable(Header):
