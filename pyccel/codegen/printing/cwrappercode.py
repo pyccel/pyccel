@@ -211,6 +211,24 @@ class CWrapperCodePrinter(CCodePrinter):
         return static_function, static_args, additional_body
 
     def _get_check_type_statement(self, variable, collect_var):
+        """
+        Get the code which checks if the variable collected from python
+        has the expected type
+
+        Parameters
+        ----------
+        variable    : Variable
+                      The variable containing the PythonObject
+        collect_var : Variable
+                      The variable in which the result will be saved,
+                      used to provide information about the expected type
+
+        Returns
+        -------
+        check : str
+                A string containing the code which determines whether 'variable'
+                contains an object which can be saved in 'collect_var'
+        """
 
         if variable.rank > 0 :
             check = array_type_check(collect_var, variable)
@@ -219,7 +237,9 @@ class CWrapperCodePrinter(CCodePrinter):
             check = scalar_object_check(collect_var, variable, precision_check = True)
 
         if isinstance(variable, ValuedVariable):
-            default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+            default = PyccelNot(VariableAddress(collect_var)) \
+                            if variable.rank > 0 else \
+                      PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
         return check
