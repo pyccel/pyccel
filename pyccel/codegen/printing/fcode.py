@@ -958,8 +958,7 @@ class FCodePrinter(CodePrinter):
 
         if rank == 0:
             return '1'
-
-        return str(functools.reduce(operator.mul, shape ))
+        return self._print(functools.reduce(PyccelMul, shape))
 
     def _print_Declare(self, expr):
         # ... ignored declarations
