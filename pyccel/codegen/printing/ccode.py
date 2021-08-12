@@ -1438,7 +1438,10 @@ class CCodePrinter(CodePrinter):
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
         if isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
                 and isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-            return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            if lhs_var.order == rhs_var.order:
+                return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            else:
+                return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
 
         return '{} = {};\n'.format(lhs, rhs)
 
