@@ -98,6 +98,10 @@ class CompileObj:
         """
         Change the folder in which the source file is saved (useful for stdlib)
         """
+        if not self.no_target_file:
+            self._includes.remove(self._folder)
+            self._includes.add(folder)
+
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._folder = folder
 
