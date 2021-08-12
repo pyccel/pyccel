@@ -392,6 +392,16 @@ check_type_registry = {
     (NativeReal(), 8)      : 'PyIs_Double',
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
+check_type_compatiblity_registry = {
+    (NativeBool(), 4)      : 'PyIs_Bool',
+    (NativeInteger(), 1)   : 'PyIs_Int8Compatible',
+    (NativeInteger(), 2)   : 'PyIs_Int16Compatible',
+    (NativeInteger(), 4)   : 'PyIs_Int32Compatible',
+    (NativeInteger(), 8)   : 'PyIs_Int64Compatible',
+    (NativeReal(), 4)      : 'PyIs_FloatCompatible',
+    (NativeReal(), 8)      : 'PyIs_Double',
+    (NativeComplex(), 4)   : 'PyIs_Complex64Compatible',
+    (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
 def scalar_object_check(py_object, c_object, precision_check = False):
     """
@@ -410,19 +420,19 @@ def scalar_object_check(py_object, c_object, precision_check = False):
     """
 
     try :
-        check_type = check_type_registry[c_object.dtype, c_object.precision]
+        if precision_check:
+            check_type = check_type_registry[c_object.dtype, c_object.precision]
+        else:
+            check_type = check_type_compatiblity_registry[c_object.dtype, c_object.precision]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
-    precision_check = LiteralTrue() if precision_check else LiteralFalse()
-
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
-                                 Variable(dtype = NativeBool(), name = 'hard_check')],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
-    return FunctionCall(check_func, [py_object, precision_check])
+    return FunctionCall(check_func, [py_object])
 
 # This registry is used for interface management,
 # mapping each data type to a given flag
