@@ -1298,7 +1298,7 @@ class SemanticParser(BasicParser):
                     order = getattr(var, 'order', 'None')
                     shape = getattr(var, 'shape', 'None')
 
-                    if var.is_argument:
+                    if rank > 0 and var.is_argument:
                         errors.report(ARRAY_IS_ARG, symbol=var,
                             severity='error', blocker=False,
                             bounding_box=(self._current_fst_node.lineno,
