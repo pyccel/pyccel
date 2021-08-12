@@ -288,22 +288,6 @@ def execute_pyccel(fname, *,
                 accelerators = accelerators)
         parser.compile_obj = main_obj
 
-        def get_dependencies(main_obj, parser):
-            for p in parser.sons:
-                if p.compile_obj is None:
-                    libs = (p.metavars['libraries'],) if 'libraries' in p.metavars else ()
-                    no_target = p.metavars.get('no_target',False) or \
-                            p.metavars.get('ignore_at_import',False)
-                    s_obj = CompileObj(file_name = p.filename,
-                                folder       = os.path.dirname(p.filename),
-                                libs         = libs,
-                                no_target_file = no_target)
-                    p.compile_obj = s_obj
-                main_obj.add_dependencies(p.compile_obj)
-                get_dependencies(main_obj, p)
-
-        get_dependencies(main_obj, parser)
-
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
         # if recursive:
@@ -355,8 +339,13 @@ def execute_pyccel(fname, *,
             if parser.compile_obj:
                 deps[mod_base] = parser.compile_obj
             elif mod_base not in deps:
+                libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
+                no_target = parser.metavars.get('no_target',False) or \
+                        parser.metavars.get('ignore_at_import',False)
                 deps[mod_base] = CompileObj(mod_base,
-                                    folder=mod_folder)
+                                    folder         = mod_folder,
+                                    libs           = libs,
+                                    no_target_file = no_target)
 
             # Proceed recursively
             for son in parser.sons:
