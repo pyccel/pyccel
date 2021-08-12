@@ -771,6 +771,22 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = NumpyArrayClass
             return d_var
 
+        elif isinstance(expr, NumpyTranspose):
+
+            var = expr.internal_var
+
+            d_var['datatype'      ] = var.dtype
+            d_var['allocatable'   ] = var.allocatable
+            d_var['shape'         ] = var.shape
+            d_var['rank'          ] = var.rank
+            d_var['cls_base'      ] = var.cls_base
+            d_var['is_pointer'    ] = var.is_pointer
+            d_var['is_target'     ] = var.is_target
+            d_var['order'         ] = 'C' if var.order=='F' else 'F'
+            d_var['precision'     ] = var.precision
+            d_var['is_stack_array'] = var.is_stack_array
+            return d_var
+
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
@@ -1131,6 +1147,12 @@ class SemanticParser(BasicParser):
         """ Function using data about the new lhs to determine
         whether the lhs is a pointer and the rhs is a target
         """
+        if isinstance(rhs, NumpyTranspose) and rhs.internal_var.allocatable:
+            d_lhs['allocatable'] = False
+            d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
+
+            rhs.internal_var.is_target = True
         if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
@@ -2216,6 +2238,10 @@ class SemanticParser(BasicParser):
             for d_var_i in d_var:
                 d_var_i['shape'] = dvar['shape']
                 d_var_i['rank' ]  = dvar['rank']
+
+        elif isinstance(rhs, NumpyTranspose):
+            d_var  = self._infere_type(rhs, **settings)
+            rhs = rhs.internal_var
 
         else:
             d_var  = self._infere_type(rhs, **settings)
@@ -3422,12 +3448,6 @@ class SemanticParser(BasicParser):
         assert(var.rank==1)
         size = var.shape[0]
         return StarredArguments([var[i] for i in range(size)])
-
-    def _visit_NumpyMatmul(self, expr, **settings):
-        self.insert_import('numpy', 'matmul')
-        a = self._visit(expr.a)
-        b = self._visit(expr.b)
-        return NumpyMatmul(a, b)
 
 #==============================================================================
 
