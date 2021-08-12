@@ -155,19 +155,9 @@ inline bool    PyIs_Int8(PyObject *o)
     return PyArray_IsScalar(o, Int8);
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Int8Compatible(PyObject *o)
-{
-	return PyLong_Check(o) || PyArray_IsScalar(o, Int8);
-}
-//--------------------------------------------------------//
 inline bool    PyIs_Int16(PyObject *o)
 {
     return PyArray_IsScalar(o, Int16);
-}
-//--------------------------------------------------------//
-inline bool    PyIs_Int16Compatible(PyObject *o)
-{
-	return PyLong_Check(o) || PyArray_IsScalar(o, Int16);
 }
 //--------------------------------------------------------//
 inline bool    PyIs_Int32(PyObject *o)
@@ -179,11 +169,6 @@ inline bool    PyIs_Int32(PyObject *o)
 #endif
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Int32Compatible(PyObject *o)
-{
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
-}
-//--------------------------------------------------------//
 inline bool    PyIs_Int64(PyObject *o)
 {
 #ifdef _WIN32
@@ -193,19 +178,9 @@ inline bool    PyIs_Int64(PyObject *o)
 #endif
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Int64Compatible(PyObject *o)
-{
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
-}
-//--------------------------------------------------------//
 inline bool    PyIs_Float(PyObject *o)
 {
     return PyArray_IsScalar(o, Float32);
-}
-//--------------------------------------------------------//
-inline bool    PyIs_FloatCompatible(PyObject *o)
-{
-	return PyFloat_Check(o) || PyArray_IsScalar(o, Float32);
 }
 //--------------------------------------------------------//
 inline bool    PyIs_Double(PyObject *o)
@@ -226,11 +201,6 @@ inline bool    PyIs_Complex128(PyObject *o)
 inline bool    PyIs_Complex64(PyObject *o)
 {
     return PyArray_IsScalar(o, Complex64);
-}
-//--------------------------------------------------------//
-inline bool    PyIs_Complex64Compatible(PyObject *o)
-{
-	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
 }
 
 

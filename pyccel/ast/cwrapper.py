@@ -391,18 +391,8 @@ check_type_registry = {
     (NativeReal(), 8)      : 'PyIs_Double',
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
-check_type_compatiblity_registry = {
-    (NativeBool(), 4)      : 'PyIs_Bool',
-    (NativeInteger(), 1)   : 'PyIs_Int8Compatible',
-    (NativeInteger(), 2)   : 'PyIs_Int16Compatible',
-    (NativeInteger(), 4)   : 'PyIs_Int32Compatible',
-    (NativeInteger(), 8)   : 'PyIs_Int64Compatible',
-    (NativeReal(), 4)      : 'PyIs_FloatCompatible',
-    (NativeReal(), 8)      : 'PyIs_Double',
-    (NativeComplex(), 4)   : 'PyIs_Complex64Compatible',
-    (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
-def scalar_object_check(py_object, c_object, precision_check = False):
+def scalar_object_check(py_object, c_object):
     """
     Create FunctionCall responsible for checking python argument data type
     Parameters:
@@ -419,10 +409,7 @@ def scalar_object_check(py_object, c_object, precision_check = False):
     """
 
     try :
-        if precision_check:
-            check_type = check_type_registry[c_object.dtype, c_object.precision]
-        else:
-            check_type = check_type_compatiblity_registry[c_object.dtype, c_object.precision]
+        check_type = check_type_registry[c_object.dtype, c_object.precision]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
