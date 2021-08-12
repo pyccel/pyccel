@@ -168,7 +168,7 @@ class CompileObj:
     def extra_modules(self):
         """ Returns the additional objects required to compile the file
         """
-        deps = set(d.target for d in self._dependencies if self.ignore_at_import)
+        deps = set(d.target for d in self._dependencies if not d.ignore_at_import)
         for d in self._dependencies:
             if not self.ignore_at_import:
                 deps.update(d.extra_modules)
