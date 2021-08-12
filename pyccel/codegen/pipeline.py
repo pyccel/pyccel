@@ -288,6 +288,20 @@ def execute_pyccel(fname, *,
                 accelerators = accelerators)
         parser.compile_obj = main_obj
 
+        def get_dependencies(main_obj, parser):
+            for p in parser.sons:
+                if p.compile_obj is None:
+                    libs = (p.metavars['libraries'],) if 'libraries' in p.metavars else ()
+                    s_obj = CompileObj(file_name = p.filename,
+                                folder       = os.path.dirname(p.filename),
+                                libs         = libs,
+                                ignore_at_import = p.metavars.get('ignore_at_import',False))
+                    p.compile_obj = s_obj
+                main_obj.add_dependencies(p.compile_obj)
+                get_dependencies(main_obj, p)
+
+        get_dependencies(main_obj, parser)
+
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
         # if recursive:
