@@ -81,7 +81,10 @@ class CompileObj:
         self._lock         = FileLock(self.target+'.lock')
 
         self._flags        = list(flags)
-        self._includes     = set([folder, *includes])
+        if no_target_file:
+            self._includes = includes
+        else:
+            self._includes     = set([folder, *includes])
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
@@ -192,7 +195,6 @@ class CompileObj:
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.update(args)
         for a in args:
-            self._includes.add(a.source_folder)
             self._includes.update(a.includes)
             self._libs.extend(a.libs)
             self._libdirs.update(a.libdirs)
