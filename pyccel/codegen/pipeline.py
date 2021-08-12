@@ -349,7 +349,6 @@ def execute_pyccel(fname, *,
 
             # Stop conditions
             if parser.metavars.get('ignore_at_import', False) or \
-
                parser.metavars.get('module_name', None) == 'omp_lib':
                 return
 
