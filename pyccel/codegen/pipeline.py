@@ -292,7 +292,7 @@ def execute_pyccel(fname, *,
             for p in parser.sons:
                 if p.compile_obj is None:
                     libs = (p.metavars['libraries'],) if 'libraries' in p.metavars else ()
-                    no_target = p.metavars.get('no_target_file',False) or \
+                    no_target = p.metavars.get('no_target',False) or \
                             p.metavars.get('ignore_at_import',False)
                     s_obj = CompileObj(file_name = p.filename,
                                 folder       = os.path.dirname(p.filename),
