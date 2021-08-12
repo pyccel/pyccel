@@ -1,4 +1,6 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=unused-variable
+# TODO: Remove disable unused variable when #927 is fixed
 # > Usage:
 #
 #   pyccel test.py -t
@@ -12,9 +14,9 @@ from scipy.linalg.lapack import dgbtrs
 
 from scipy.linalg.lapack import dgetrf
 from scipy.linalg.lapack import dgetrs
-from scipy.linalg.lapack import dgecon
+#from scipy.linalg.lapack import dgecon
 
-from scipy.linalg.lapack import dgetri
+#from scipy.linalg.lapack import dgetri
 
 from numpy import zeros, empty
 
@@ -69,13 +71,13 @@ def test_2():
     a, ipiv, info = dgetrf(a)
 #    assert(info == 0)
 
-    iwork = zeros(n, 'int')
-    lwork = 4 * n
-    work  = zeros(lwork)
+    #iwork = zeros(n, 'int')
+    #lwork = 4 * n
+    #work  = zeros(lwork)
 
-    # Get the condition number.
-    anorm = 1.0
-    rcond = -1.0
+    ## Get the condition number.
+    #anorm = 1.0
+    #rcond = -1.0
     # [TODO] dgecon('I', n, a, lda, anorm, rcond, work, iwork, info)
 #    assert(info == 0)
 
@@ -103,8 +105,8 @@ def test_3():
     a, ipiv, info = dgetrf(a)
 #    assert(info == 0)
 
-    lwork = 4 * n
-    work  = zeros(lwork)
+    #lwork = 4 * n
+    #work  = zeros(lwork)
 
     # Compute the inverse matrix.
     # [TODO] dgetri(n, a, lda, ipiv, work, lwork, info)
