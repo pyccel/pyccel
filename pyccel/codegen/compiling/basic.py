@@ -44,10 +44,14 @@ class CompileObj:
 
     accelerators  : str
                     Tool used to accelerate the code (e.g. openmp openacc)
+
+    ignore_at_import : bool
+                    If set to true then this flag indicates that the file has no target.
+                    Eg an interface for a library
     """
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_target','_lock','_flags','_includes','_libs','_libdirs','_accelerators',
-                 '_dependencies','_is_module')
+                 '_dependencies','_is_module','_ignore_at_import')
     def __init__(self,
                  file_name,
                  folder,
@@ -57,7 +61,8 @@ class CompileObj:
                  libs         = (),
                  libdirs      = (),
                  dependencies = (),
-                 accelerators = ()):
+                 accelerators = (),
+                 ignore_at_import = False):
 
         self._file = os.path.join(folder, file_name)
         self._folder = folder
@@ -84,6 +89,7 @@ class CompileObj:
         if dependencies:
             self.add_dependencies(*dependencies)
         self._is_module    = is_module
+        self._ignore_at_import = ignore_at_import
 
     def reset_folder(self, folder):
         """
@@ -162,9 +168,10 @@ class CompileObj:
     def extra_modules(self):
         """ Returns the additional objects required to compile the file
         """
-        deps = set(d.target for d in self._dependencies)
+        deps = set(d.target for d in self._dependencies if self.ignore_at_import)
         for d in self._dependencies:
-            deps.update(d.extra_modules)
+            if not self.ignore_at_import:
+                deps.update(d.extra_modules)
         return deps
 
     @property
@@ -236,3 +243,11 @@ class CompileObj:
 
     def __hash__(self):
         return hash(self.target)
+
+    @property
+    def ignore_at_import(self):
+        """
+        Indicates whether the file has a target.
+        Eg an interface for a library may not have a target
+        """
+        return self._ignore_at_import
