@@ -43,8 +43,9 @@ float complex PyComplex_to_Complex64(PyObject *object)
 	// https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
 	// https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
 	if (PyArray_IsScalar(object, Complex64))
+    {
 		PyArray_ScalarAsCtype(object, &c);
-
+    }
 	else
 	{
 		float real_part = (float)PyComplex_RealAsDouble(object);
@@ -57,94 +58,48 @@ float complex PyComplex_to_Complex64(PyObject *object)
 //-----------------------------------------------------//
 double complex	PyComplex_to_Complex128(PyObject *object)
 {
-	double complex	c;
 	double	real_part;
 	double	imag_part;
 
 	real_part = PyComplex_RealAsDouble(object);
 	imag_part = PyComplex_ImagAsDouble(object);
 
-	c = real_part + imag_part * _Complex_I;
-
-	return	c;
+	return real_part + imag_part * _Complex_I;
 }
 //-----------------------------------------------------//
 int64_t	PyInt64_to_Int64(PyObject *object)
 {
-	int64_t		i;
-	long long	out;
-
-	out = PyLong_AsLongLong(object);
-
-	i = (int64_t)out;
-
-	return	i;
+	return (int64_t)PyLong_AsLongLong(object);
 }
 //-----------------------------------------------------//
 int32_t	PyInt32_to_Int32(PyObject *object)
 {
-	int32_t	i;
-	long	out;
-
-	out = PyLong_AsLong(object);
-
-	i = (int32_t)out;
-
-	return	i;
+	return (int32_t)PyLong_AsLong(object);
 }
 //-----------------------------------------------------//
 int16_t	PyInt16_to_Int16(PyObject *object)
 {
-	int16_t	i;
-	long	out;
-
-	out = PyLong_AsLong(object);
-
-	i = (int16_t)out;
-
-	return	i;
+	return (int16_t)PyLong_AsLong(object);
 }
 //-----------------------------------------------------//
 int8_t	PyInt8_to_Int8(PyObject *object)
 {
-	int8_t	i;
-	long	out;
-
-	out = PyLong_AsLong(object);
-
-	i = (int8_t)out;
-
-	return	i;
+	return (int8_t)PyLong_AsLong(object);
 }
 //-----------------------------------------------------//
 bool	PyBool_to_Bool(PyObject *object)
 {
-	bool	b;
-
-	b = object == Py_True;
-
-	return	b;
+	return object == Py_True;
 }
 //-----------------------------------------------------//
 float	PyFloat_to_Float(PyObject *object)
 {
-	float	f;
-	double	out;
-
-	out = PyFloat_AsDouble(object);
-
-	f = (float)out;
-
-	return	f;
+	return (float)PyFloat_AsDouble(object);
 }
 //-----------------------------------------------------//
 double	PyDouble_to_Double(PyObject *object)
 {
-	double	d;
-
-	d = PyFloat_AsDouble(object);
-
-	return	d;
+	return PyFloat_AsDouble(object);
 }
 
 
@@ -170,26 +125,20 @@ PyObject	*Complex128_to_PyComplex(double complex *c)
 {
 	double		real_part;
 	double		imag_part;
-	PyObject	*object;
 
 	real_part = creal(*c);
 	imag_part = cimag(*c);
-	object = PyComplex_FromDoubles(real_part, imag_part);
-
-	return object;
+	return PyComplex_FromDoubles(real_part, imag_part);
 }
 //-----------------------------------------------------//
 PyObject	*Complex64_to_PyComplex(float complex *c)
 {
 	float		real_part;
 	float		imag_part;
-	PyObject	*object;
 
 	real_part = crealf(*c);
 	imag_part = cimagf(*c);
-	object = PyComplex_FromDoubles((double) real_part, (double) imag_part);
-
-	return object;
+	return PyComplex_FromDoubles((double) real_part, (double) imag_part);
 }
 //-----------------------------------------------------//
 PyObject	*Bool_to_PyBool(bool *b)
@@ -199,56 +148,32 @@ PyObject	*Bool_to_PyBool(bool *b)
 //-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
 {
-	PyObject	*object;
-
-	object = PyLong_FromLongLong((long long) *i);
-
-	return object;
+	return PyLong_FromLongLong((long long) *i);
 }
 //-----------------------------------------------------//
 PyObject	*Int32_to_PyLong(int32_t *i)
 {
-	PyObject	*object;
-
-	object = PyLong_FromLongLong((long long) *i);
-
-	return object;
+	return PyLong_FromLongLong((long long) *i);
 }
 //-----------------------------------------------------//
 PyObject	*Int16_to_PyLong(int16_t *i)
 {
-	PyObject	*object;
-
-	object = PyLong_FromLongLong((long long) *i);
-
-	return object;
+	return PyLong_FromLongLong((long long) *i);
 }
 //--------------------------------------------------------//
 PyObject	*Int8_to_PyLong(int8_t *i)
 {
-	PyObject	*object;
-
-	object = PyLong_FromLongLong((long long) *i);
-
-	return object;
+	return PyLong_FromLongLong((long long) *i);
 }
 //--------------------------------------------------------//
 PyObject	*Double_to_PyDouble(double *d)
 {
-	PyObject	*object;
-
-	object = PyFloat_FromDouble(*d);
-
-	return object;
+	return PyFloat_FromDouble(*d);
 }
 //--------------------------------------------------------//
 PyObject	*Float_to_PyDouble(float *d)
 {
-	PyObject	*object;
-
-	object = PyFloat_FromDouble((double)*d);
-
-	return object;
+	return PyFloat_FromDouble((double)*d);
 }
 
 /*
