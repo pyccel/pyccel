@@ -189,7 +189,7 @@ PyObject	*Complex64_to_PyComplex(float complex *c)
 //-----------------------------------------------------//
 PyObject	*Bool_to_PyBool(bool *b)
 {
-	return *b == true ? Py_True : Py_False;
+	return (*b) ? Py_True : Py_False;
 }
 //-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
@@ -269,7 +269,7 @@ PyObject	*Float_to_PyDouble(float *d)
 
 bool    PyIs_Int8(PyObject *o, bool hard_check)
 {
-	if (hard_check == true)
+	if (hard_check)
 		return PyArray_IsScalar(o, Int8);
 
 	return PyLong_Check(o) || PyArray_IsScalar(o, Int8);
@@ -277,7 +277,7 @@ bool    PyIs_Int8(PyObject *o, bool hard_check)
 //--------------------------------------------------------//
 bool    PyIs_Int16(PyObject *o, bool hard_check)
 {	
-	if (hard_check == true)
+	if (hard_check)
 		return PyArray_IsScalar(o, Int16);
 
 	return PyLong_Check(o) || PyArray_IsScalar(o, Int16);
@@ -288,7 +288,7 @@ bool    PyIs_Int32(PyObject *o, bool hard_check)
 	#ifdef _WIN32
 		return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
     #else
-        if (hard_check == true)
+        if (hard_check)
             return PyArray_IsScalar(o, Int32);
 
         return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
@@ -300,7 +300,7 @@ bool    PyIs_Int64(PyObject *o, bool hard_check)
 	#ifndef _WIN32
 		return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
     #else
-        if (hard_check == true)
+        if (hard_check)
             return PyArray_IsScalar(o, Int64);
 
         return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
@@ -309,7 +309,7 @@ bool    PyIs_Int64(PyObject *o, bool hard_check)
 //--------------------------------------------------------//
 bool    PyIs_Float(PyObject *o, bool hard_check)
 {
-	if (hard_check == true)
+	if (hard_check)
 		return PyArray_IsScalar(o, Float32);
 
 	return PyFloat_Check(o) || PyArray_IsScalar(o, Float32);
@@ -338,7 +338,7 @@ bool    PyIs_Complex128(PyObject *o, bool hard_check)
 //--------------------------------------------------------//
 bool    PyIs_Complex64(PyObject *o, bool hard_check)
 {
-	if (hard_check == true)
+	if (hard_check)
 		return PyArray_IsScalar(o, Complex64);
 
 	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
