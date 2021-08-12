@@ -81,6 +81,7 @@ from pyccel.ast.numpyext import NumpyBool
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
+from pyccel.ast.numpyext import NumpyTranspose
 from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
