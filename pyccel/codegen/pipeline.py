@@ -277,6 +277,8 @@ def execute_pyccel(fname, *,
             shutil.copyfile(fname, new_location)
             continue
 
+        compile_libs = [*libs, parser.metavars['libraries']] \
+                        if 'libraries' in parser.metavars else libs
         main_obj = CompileObj(file_name = fname,
                 folder       = pyccel_dirpath,
                 is_module    = codegen.is_module,
@@ -332,19 +334,18 @@ def execute_pyccel(fname, *,
             mod_base = os.path.basename(parser.filename)
 
             # Stop conditions
-            if parser.metavars.get('ignore_at_import', False) or \
-               parser.metavars.get('module_name', None) == 'omp_lib':
+            if parser.metavars.get('module_name', None) == 'omp_lib':
                 return
 
             if parser.compile_obj:
                 deps[mod_base] = parser.compile_obj
             elif mod_base not in deps:
-                libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
+                compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
                 no_target = parser.metavars.get('no_target',False) or \
                         parser.metavars.get('ignore_at_import',False)
                 deps[mod_base] = CompileObj(mod_base,
                                     folder         = mod_folder,
-                                    libs           = libs,
+                                    libs           = compile_libs,
                                     no_target_file = no_target)
 
             # Proceed recursively
