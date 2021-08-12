@@ -1180,29 +1180,20 @@ class NumpyTranspose(NumpyUfuncUnary):
     __slots__ = ('_x','_x_T')
     name = 'transpose'
 
-    def __init__(self, a):
-        self._x = a
-        other_order = 'C' if a.order=='F' else 'F'
-        self._x_T = a.clone(a.name, order=other_order)
-        super().__init__(a)
-
     @property
     def internal_var(self):
-        return self._x
-
-    @property
-    def transposed_var(self):
-        return self._x_T
+        return self._args[0]
 
     def __getitem__(self, *args):
-        rank = self._x.rank
+        x = self._args[0]
+        rank = x.rank
         # Add empty slices to fully index the object
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
-        return self._x_T.__getitem__(*reversed(args))
+        return x.__getitem__(*reversed(args))
 
     def _set_order(self, x):
-        self._order      = self._x_T.order
+        self._order = 'C' if x.order=='F' else 'F'
 
     @property
     def is_elemental(self):
