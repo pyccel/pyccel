@@ -284,7 +284,7 @@ def execute_pyccel(fname, *,
                 is_module    = codegen.is_module,
                 flags        = fflags,
                 includes     = includes,
-                libs         = libs,
+                libs         = compile_libs,
                 libdirs      = libdirs,
                 dependencies = modules,
                 accelerators = accelerators)
