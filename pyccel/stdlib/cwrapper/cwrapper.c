@@ -20,11 +20,8 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
  *
  * Reference of the used c python api function
  * --------------------------------------------
- * https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
  * https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
  * https://docs.python.org/3/c-api/complex.html#c.PyComplex_ImagAsDouble
- * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
- * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
  */
 float complex PyComplex_to_Complex64(PyObject *object)
 {
@@ -55,41 +52,6 @@ double complex	PyComplex_to_Complex128(PyObject *object)
 	imag_part = PyComplex_ImagAsDouble(object);
 
 	return real_part + imag_part * _Complex_I;
-}
-//-----------------------------------------------------//
-int64_t	PyInt64_to_Int64(PyObject *object)
-{
-	return (int64_t)PyLong_AsLongLong(object);
-}
-//-----------------------------------------------------//
-int32_t	PyInt32_to_Int32(PyObject *object)
-{
-	return (int32_t)PyLong_AsLong(object);
-}
-//-----------------------------------------------------//
-int16_t	PyInt16_to_Int16(PyObject *object)
-{
-	return (int16_t)PyLong_AsLong(object);
-}
-//-----------------------------------------------------//
-int8_t	PyInt8_to_Int8(PyObject *object)
-{
-	return (int8_t)PyLong_AsLong(object);
-}
-//-----------------------------------------------------//
-bool	PyBool_to_Bool(PyObject *object)
-{
-	return object == Py_True;
-}
-//-----------------------------------------------------//
-float	PyFloat_to_Float(PyObject *object)
-{
-	return (float)PyFloat_AsDouble(object);
-}
-//-----------------------------------------------------//
-double	PyDouble_to_Double(PyObject *object)
-{
-	return PyFloat_AsDouble(object);
 }
 
 

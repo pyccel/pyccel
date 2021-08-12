@@ -57,19 +57,51 @@ bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag);
  *     The desired C type, an error may be raised by c/python converter
  *     so one should call PyErr_Occurred() to check for errors after the
  *	   calling a cast function
+ *
+ * Reference of the used c python api function
+ * --------------------------------------------
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
  */
 float complex	PyComplex_to_Complex64(PyObject *o) ;
 double complex	PyComplex_to_Complex128(PyObject *o);
 
-int64_t			PyInt64_to_Int64(PyObject *o);
-int32_t			PyInt32_to_Int32(PyObject *o);
-int16_t			PyInt16_to_Int16(PyObject *o);
-int8_t			PyInt8_to_Int8(PyObject *o);
-
-float			PyFloat_to_Float(PyObject *o);
-double			PyDouble_to_Double(PyObject *o);
-
-bool			PyBool_to_Bool(PyObject *o);
+//-----------------------------------------------------//
+inline int64_t	PyInt64_to_Int64(PyObject *object)
+{
+	return (int64_t)PyLong_AsLongLong(object);
+}
+//-----------------------------------------------------//
+inline int32_t	PyInt32_to_Int32(PyObject *object)
+{
+	return (int32_t)PyLong_AsLong(object);
+}
+//-----------------------------------------------------//
+inline int16_t	PyInt16_to_Int16(PyObject *object)
+{
+	return (int16_t)PyLong_AsLong(object);
+}
+//-----------------------------------------------------//
+inline int8_t	PyInt8_to_Int8(PyObject *object)
+{
+	return (int8_t)PyLong_AsLong(object);
+}
+//-----------------------------------------------------//
+inline bool	PyBool_to_Bool(PyObject *object)
+{
+	return object == Py_True;
+}
+//-----------------------------------------------------//
+inline float	PyFloat_to_Float(PyObject *object)
+{
+	return (float)PyFloat_AsDouble(object);
+}
+//-----------------------------------------------------//
+inline double	PyDouble_to_Double(PyObject *object)
+{
+	return PyFloat_AsDouble(object);
+}
 
 
 /*
