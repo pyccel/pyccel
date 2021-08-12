@@ -3,6 +3,14 @@
 /* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
 /* --------------------------------------------------------------------------------------- */
 
+/*
+ * File containing functions useful for the cwrapper.
+ * There are 3 types of functions:
+ * - Functions converting PythonObjects to standard C types
+ * - Functions converting standard C types to PythonObjects
+ * - Functions which test the type of PythonObjects
+ */
+
 #ifndef CWRAPPER_H
 # define CWRAPPER_H
 # define PY_SSIZE_T_CLEAN
@@ -21,10 +29,35 @@
 # define NO_ORDER_CHECK -1
 
 
-/* arrays check*/
+/*
+ * Function: pyarray_checker
+ * --------------------
+ * Check Python Object (DataType, Rank, Order):
+ *
+ * Parameters :
+ *     a 	 : python array object
+ *     dtype : desired data type enum
+ *     rank  : desired rank
+ *     flag  : desired order flag
+ *
+ * Returns	  :
+ *     return true if no error occurred otherwise it will return false
+ */
 bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag);
 
-/* casting python object to c type */
+/*
+ * Functions : Cast functions
+ * --------------------------
+ * All functions listed down are based on C/python api
+ * with more tolerance to different precision
+ * Convert python type object to the desired C type
+ * Parameters :
+ *     object : the python object
+ * Returns    :
+ *     The desired C type, an error may be raised by c/python converter
+ *     so one should call PyErr_Occurred() to check for errors after the
+ *	   calling a cast function
+ */
 float complex	PyComplex_to_Complex64(PyObject *o) ;
 double complex	PyComplex_to_Complex128(PyObject *o);
 
@@ -39,7 +72,18 @@ double			PyDouble_to_Double(PyObject *o);
 bool			PyBool_to_Bool(PyObject *o);
 
 
-/* casting c type to python object */
+/*
+ * Functions : Cast functions
+ * ---------------------------
+ * Some of the function used below are based on C/python api
+ * with more tolerance to different precisions and complex type.
+ * Collect the python object from the C object
+ * Parameters :
+ *     object : the C object
+ *
+ * Returns    :
+ *     boolean : python object
+ */
 PyObject	*Complex128_to_PyComplex(double complex *c);
 PyObject	*Complex64_to_PyComplex(float complex *c);
 
@@ -53,7 +97,19 @@ PyObject	*Int8_to_PyLong(int8_t *i);
 PyObject	*Double_to_PyDouble(double *d);
 PyObject	*Float_to_PyDouble(float *d);
 
-/* Chech functions*/
+/*
+ * Functions : Type check functions
+ * ---------------------------
+ * Some of the function used below are based on C/python api and numpy/c api with
+ * more tolerance to different precisions, different system architectures and complex type.
+ * Check the C data type ob a python object
+ * Parameters :
+ *     object     : the python object
+ *     hard_check : boolean true if intensive precision check is needed
+ *
+ * Returns    :
+ *     boolean : logic statement responsible for checking python data type
+ */
 bool    PyIs_Int8(PyObject *o, bool hard_check);
 bool    PyIs_Int16(PyObject *o, bool hard_check);
 bool    PyIs_Int32(PyObject *o, bool hard_check);

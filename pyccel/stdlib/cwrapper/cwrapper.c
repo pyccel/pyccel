@@ -15,18 +15,9 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
 
 
 
-/*
- * Functions : Cast functions
- * --------------------------
- * All functions listed down are based on C/python api
- * with more tolerance to different precision
- * Convert python type object to the desired C type
- * Parameters :
- *     object : the python object
- * Returns    :
- *     The desired C type, an error may be raised by c/python converter
- *     so one should call PyErr_Occurred() to check for errors after the
- *	   calling a cast function
+
+/* Casting python object to c type
+ *
  * Reference of the used c python api function
  * --------------------------------------------
  * https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
@@ -35,7 +26,6 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
  * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
  * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
  */
-
 float complex PyComplex_to_Complex64(PyObject *object)
 {
 	float complex	c;
@@ -103,17 +93,8 @@ double	PyDouble_to_Double(PyObject *object)
 }
 
 
-/*
- * Functions : Cast functions
- * ---------------------------
- * Some of the function used below are based on C/python api
- * with more tolerance to different precisions and complex type.
- * Collect the python object from the C object
- * Parameters :
- *     object : the C object
+/* casting c type to python object
  *
- * Returns    :
- *     boolean : python object
  * reference of the used c/python api function
  * ---------------------------------------------------
  * https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
@@ -176,18 +157,8 @@ PyObject	*Float_to_PyDouble(float *d)
 	return PyFloat_FromDouble((double)*d);
 }
 
-/*
- * Functions : Cast functions
- * ---------------------------
- * Some of the function used below are based on C/python api and numpy/c api with
- * more tolerance to different precisions, different system architectures and complex type.
- * Check the C data type ob a python object
- * Parameters :
- *     object     : the python object
- *     hard_check : boolean true if intensive precision check is needed
+/* Check functions
  *
- * Returns    :
- *     boolean : logic statement responsible for checking python data type
  * Reference of the used c/python api function
  * ---------------------------------------------------
  * https://docs.python.org/3/c-api/long.html#c.PyLong_Check
@@ -409,20 +380,7 @@ static bool _check_pyarray_type(PyObject *a)
 	return true;
 }
 
-/*
- * Function: pyarray_checker
- * --------------------
- * Check Python Object (DataType, Rank, Order):
- *
- * Parameters :
- *     a 	 : python array object
- *     dtype : desired data type enum
- *     rank  : desired rank
- *     flag  : desired order flag
- *
- * Returns	  :
- *     return true if no error occurred otherwise it will return false
- */
+/* arrays check*/
 bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag)
 {
 	if (!_check_pyarray_type((PyObject *)o)) return false;
