@@ -300,6 +300,25 @@ void        alias_assign(t_ndarray *dest, t_ndarray src)
     dest->is_view = true;
 }
 
+void        transpose_alias_assign(t_ndarray *dest, t_ndarray src)
+{
+    /*
+    ** copy src to dest
+    ** allocate new memory for shape and strides
+    ** setting is_view to true for the garbage collector to deallocate
+    */
+
+    *dest = src;
+    dest->shape = malloc(sizeof(int64_t) * src.nd);
+    dest->strides = malloc(sizeof(int64_t) * src.nd);
+    for (int32_t i = 0; i < src.nd; i++)
+    {
+        dest->shape[i] = src.shape[src.nd-1-i];
+        dest->strides[i] = src.strides[src.nd-1-i];
+    }
+    dest->is_view = true;
+}
+
 /*
 ** indexing
 */
