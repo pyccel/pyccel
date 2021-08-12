@@ -292,10 +292,12 @@ def execute_pyccel(fname, *,
             for p in parser.sons:
                 if p.compile_obj is None:
                     libs = (p.metavars['libraries'],) if 'libraries' in p.metavars else ()
+                    no_target = p.metavars.get('no_target_file',False) or \
+                            p.metavars.get('ignore_at_import',False)
                     s_obj = CompileObj(file_name = p.filename,
                                 folder       = os.path.dirname(p.filename),
                                 libs         = libs,
-                                ignore_at_import = p.metavars.get('ignore_at_import',False))
+                                no_target_file = no_target)
                     p.compile_obj = s_obj
                 main_obj.add_dependencies(p.compile_obj)
                 get_dependencies(main_obj, p)
@@ -347,6 +349,7 @@ def execute_pyccel(fname, *,
 
             # Stop conditions
             if parser.metavars.get('ignore_at_import', False) or \
+
                parser.metavars.get('module_name', None) == 'omp_lib':
                 return
 
