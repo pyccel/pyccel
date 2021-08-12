@@ -1,3 +1,8 @@
+/* --------------------------------------------------------------------------------------- */
+/* This file is part of Pyccel which is released under MIT License. See the LICENSE file   */
+/* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
+/* --------------------------------------------------------------------------------------- */
+
 #ifndef CWRAPPER_H
 # define CWRAPPER_H
 # define PY_SSIZE_T_CLEAN
