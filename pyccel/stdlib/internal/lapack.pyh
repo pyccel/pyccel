@@ -2,7 +2,7 @@
 
 #$ header metavar module_version='3.8'
 #$ header metavar ignore_at_import=True
-#$ header metavar libraries='${LAPACK_LIBRARIES}'
+#$ header metavar libraries='lapack'
 #$ header metavar save=True
 
 # .......................................
