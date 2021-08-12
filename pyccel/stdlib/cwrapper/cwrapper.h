@@ -187,9 +187,9 @@ inline bool    PyIs_Int32Compatible(PyObject *o)
 inline bool    PyIs_Int64(PyObject *o)
 {
 #ifdef _WIN32
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
-#else
     return PyArray_IsScalar(o, Int64);
+#else
+    return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
 #endif
 }
 //--------------------------------------------------------//
