@@ -907,7 +907,8 @@ class FCodePrinter(CodePrinter):
         if var.rank == 0:
             return '1'
         else:
-            return self._print(functools.reduce(PyccelMul, var.shape))
+            return self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
     def _print_Declare(self, expr):
         # ... ignored declarations
