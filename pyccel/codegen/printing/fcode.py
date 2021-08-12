@@ -105,6 +105,8 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+    # ---
+    'NumpyTranspose' : 'transpose',
 }
 
 math_function_to_fortran = {
