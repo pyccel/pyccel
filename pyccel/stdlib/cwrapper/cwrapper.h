@@ -137,7 +137,6 @@ PyObject	*Float_to_PyDouble(float *d);
  * Check the C data type ob a python object
  * Parameters :
  *     object     : the python object
- *     hard_check : boolean true if intensive precision check is needed
  *
  * Returns    :
  *     boolean : logic statement responsible for checking python data type
@@ -171,7 +170,7 @@ inline bool    PyIs_Int16Compatible(PyObject *o)
 	return PyLong_Check(o) || PyArray_IsScalar(o, Int16);
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Int32(PyObject *o, bool hard_check)
+inline bool    PyIs_Int32(PyObject *o)
 {
 #ifdef _WIN32
     return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
@@ -180,7 +179,7 @@ inline bool    PyIs_Int32(PyObject *o, bool hard_check)
 #endif
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Int32Compatible(PyObject *o, bool hard_check)
+inline bool    PyIs_Int32Compatible(PyObject *o)
 {
     return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
 }
@@ -209,7 +208,7 @@ inline bool    PyIs_FloatCompatible(PyObject *o)
 	return PyFloat_Check(o) || PyArray_IsScalar(o, Float32);
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Double(PyObject *o, bool hard_check)
+inline bool    PyIs_Double(PyObject *o)
 {
 	return PyFloat_Check(o) || PyArray_IsScalar(o, Float64);
 }
@@ -224,12 +223,12 @@ inline bool    PyIs_Complex128(PyObject *o)
 	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Complex64(PyObject *o, bool hard_check)
+inline bool    PyIs_Complex64(PyObject *o)
 {
     return PyArray_IsScalar(o, Complex64);
 }
 //--------------------------------------------------------//
-inline bool    PyIs_Complex64Compatible(PyObject *o, bool hard_check)
+inline bool    PyIs_Complex64Compatible(PyObject *o)
 {
 	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
 }
