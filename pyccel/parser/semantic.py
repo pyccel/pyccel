@@ -1298,13 +1298,7 @@ class SemanticParser(BasicParser):
                     order = getattr(var, 'order', 'None')
                     shape = getattr(var, 'shape', 'None')
 
-                    if rank > 0 and var.is_argument:
-                        errors.report(ARRAY_IS_ARG, symbol=var,
-                            severity='error', blocker=False,
-                            bounding_box=(self._current_fst_node.lineno,
-                                self._current_fst_node.col_offset))
-
-                    elif (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
+                    if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                         txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
                         format_shape = lambda s: "" if len(s)==0 else s
@@ -1316,7 +1310,13 @@ class SemanticParser(BasicParser):
 
                     elif d_var['shape'] != shape:
 
-                        if var.is_stack_array:
+                        if var.is_argument:
+                            errors.report(ARRAY_IS_ARG, symbol=var,
+                                severity='error', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
+
+                        elif var.is_stack_array:
                             errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
