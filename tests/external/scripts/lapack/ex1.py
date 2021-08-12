@@ -16,7 +16,7 @@ from scipy.linalg.lapack import dgecon
 
 from scipy.linalg.lapack import dgetri
 
-from numpy import zeros
+from numpy import zeros, empty
 
 def test_1():
     n   = 25
@@ -128,10 +128,12 @@ def test_4():
     a[2,1] = 8.0
     a[2,2] = 0.0
 
+    lu = empty((lda,n))
+
     info = -1
     ipiv = zeros(n, 'int')
 
-    a, ipiv, info = dgetrf(a)
+    lu, ipiv, info = dgetrf(a)
 #    assert(info == 0)
 
     # Compute the inverse matrix.
@@ -140,8 +142,10 @@ def test_4():
     b[1] = 32.0
     b[2] = 23.0
 
+    x = empty((1,n))
+
     # Solve the linear system.
-    b, info = dgetrs(a, ipiv, b, 'n')
+    x, info = dgetrs(a, ipiv, b, 'n')
 #    assert(info == 0)
 
 test_1()
