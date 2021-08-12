@@ -16,7 +16,6 @@ from .basic     import Basic
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
-from .literals  import LiteralFalse, LiteralTrue
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
