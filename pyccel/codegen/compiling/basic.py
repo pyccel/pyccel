@@ -202,7 +202,7 @@ class CompileObj:
         """
         Lock the file and its dependencies to prevent race conditions
         """
-        self._lock.acquire()
+        self.acquire_simple_lock()
         for d in self.dependencies:
             d.acquire_simple_lock()
 
@@ -210,13 +210,14 @@ class CompileObj:
         """
         Lock the file to prevent race conditions but not its dependencies
         """
-        self._lock.acquire()
+        if not self.ignore_at_import:
+            self._lock.acquire()
 
     def release_lock(self):
         """
         Unlock the file and its dependencies
         """
-        self._lock.release()
+        self.release_simple_lock()
         for d in self.dependencies:
             d.release_simple_lock()
 
@@ -224,7 +225,8 @@ class CompileObj:
         """
         Unlock the file
         """
-        self._lock.release()
+        if not self.ignore_at_import:
+            self._lock.release()
 
     @property
     def accelerators(self):
