@@ -778,7 +778,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'      ] = var.dtype
             d_var['allocatable'   ] = var.allocatable
-            d_var['shape'         ] = var.shape
+            d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
             d_var['cls_base'      ] = var.cls_base
             d_var['is_pointer'    ] = var.is_pointer
