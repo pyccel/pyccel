@@ -254,7 +254,7 @@ def insert_index(expr, pos, index_var):
 
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
-        return IndexedElement(expr.internal_var, *reversed(indexes))
+        return expr.__getitem__(*indexes)
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
