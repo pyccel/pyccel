@@ -2377,9 +2377,13 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_NumpyTranspose(self, expr):
-        args = [self._print(a) for a in expr.args]
-        code_args = ', '.join(args)
-        return 'transpose({0})'.format(code_args)
+        var = expr.internal_var
+        arg = self._print(var)
+        assign = expr.get_user_nodes(Assign)[0]
+        if assign.lhs.order != var.order:
+            return arg
+        else:
+            return 'transpose({0})'.format(arg)
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
