@@ -99,3 +99,25 @@ def test_mixed_order(language):
 
     f3_epyc = epyccel(f3, language=language)
     assert f3( x2 ) == f3_epyc( x2 )
+
+def test_transpose_pointer(language):
+    def f1(x : 'int[:,:]'):
+        from numpy import transpose
+        y = transpose(x)
+        x[0,-1] += 22
+        n, m = y.shape
+        return n, m, y[-1,0], y[0,-1]
+    def f2(x : 'int[:,:,:]'):
+        y = x.T
+        x[0,-1,0] += 11
+        n, m, p = y.shape
+        return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
+
+    x1 = randint(50, size=(2,5))
+    x2 = randint(50, size=(2,3,7))
+
+    f1_epyc = epyccel(f1, language=language)
+    assert f1( x1 ) == f1_epyc( x1 )
+
+    f2_epyc = epyccel(f2, language=language)
+    assert f2( x2 ) == f2_epyc( x2 )
