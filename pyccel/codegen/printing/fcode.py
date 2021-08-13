@@ -105,8 +105,6 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    # ---
-    'NumpyTranspose' : 'transpose',
 }
 
 math_function_to_fortran = {
@@ -2377,6 +2375,11 @@ class FCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpyTranspose(self, expr):
+        args = [self._print(a) for a in expr.args]
+        code_args = ', '.join(args)
+        return 'transpose({0})'.format(code_args)
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
