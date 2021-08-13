@@ -253,8 +253,10 @@ def insert_index(expr, pos, index_var):
             index_var = LiteralInteger(0)
 
         # Add index at the required position
-        indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
-        return expr.__getitem__(*indexes)
+        if expr.rank<2:
+            return insert_index(expr.internal_var, expr.rank-1+pos, index_var)
+        else:
+            return NumpyTranspose(insert_index(expr.internal_var, expr.rank-1+pos, index_var))
 
     elif isinstance(expr, IndexedElement):
         base = expr.base

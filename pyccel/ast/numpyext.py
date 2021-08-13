@@ -1180,6 +1180,12 @@ class NumpyTranspose(NumpyUfuncUnary):
     __slots__ = ()
     name = 'transpose'
 
+    def __new__(cls, x):
+        if x.rank<2:
+            return x
+        else:
+            return super().__new__(cls)
+
     @property
     def internal_var(self):
         return self._args[0]
@@ -1190,7 +1196,7 @@ class NumpyTranspose(NumpyUfuncUnary):
         # Add empty slices to fully index the object
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
-        return x.__getitem__(*reversed(args))
+        return NumpyTranspose(x.__getitem__(*reversed(args)))
 
     def _set_dtype_precision(self, x):
         self._dtype      = x.dtype
