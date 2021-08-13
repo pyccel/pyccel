@@ -1177,7 +1177,7 @@ class NumpyAmax(NumpyUfuncUnary):
         return False
 
 class NumpyTranspose(NumpyUfuncUnary):
-    __slots__ = ('_x','_x_T')
+    __slots__ = ()
     name = 'transpose'
 
     @property
@@ -1191,6 +1191,14 @@ class NumpyTranspose(NumpyUfuncUnary):
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
         return x.__getitem__(*reversed(args))
+
+    def _set_dtype_precision(self, x):
+        self._dtype      = x.dtype
+        self._precision  = x.precision
+
+    def _set_shape_rank(self, x):
+        self._shape      = tuple(reversed(x.shape))
+        self._rank       = x.rank
 
     def _set_order(self, x):
         self._order = 'C' if x.order=='F' else 'F'
