@@ -30,7 +30,7 @@ from .literals      import LiteralString, LiteralInteger, Literal, Nil
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants, NumpyArray,
                             NumpyTranspose)
-from .operators     import PyccelAdd, PyccelMul, PyccelIs
+from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, InhomogeneousTupleVariable, VariableAddress,
                             HomogeneousTupleVariable )
@@ -234,7 +234,9 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i, language_has_vectors = True)
     c := a + b
     """
-    if isinstance(expr, (Variable, VariableAddress)):
+    if expr.rank==0:
+        return expr
+    elif isinstance(expr, (Variable, VariableAddress)):
         if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
@@ -281,6 +283,10 @@ def insert_index(expr, pos, index_var):
 
         indices[pos] = index_var
         return IndexedElement(base, *indices)
+
+    elif isinstance(expr, PyccelArithmeticOperator):
+        return type(expr)(insert_index(expr.args[0], pos, index_var),
+                          insert_index(expr.args[1], pos, index_var))
 
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
@@ -389,9 +395,9 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 continue
 
             # Find function calls in this line
-            funcs           = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
+            funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
-            internal_funcs  = [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
+            internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelInternalFunction) \
                                                             and not f.is_elemental) \
                                                             and not isinstance(f, NumpyTranspose)]
 
