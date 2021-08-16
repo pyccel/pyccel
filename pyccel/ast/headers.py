@@ -658,27 +658,13 @@ class MacroFunction(Header):
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 name = str(arg) if isinstance(arg, PyccelSymbol) \
                             else arg.name
-                if not isinstance(arg, tuple):
-                    d_arguments[name] = val
-                else:
-                    if not isinstance(val, (list, tuple)):
-                        val = [val]
-                    #TODO improve add more checks and generalize
-                    if len(val)>len(arg):
-                        raise ValueError('length mismatch of argument and its value ')
-                    elif len(val)<len(arg):
-                        for val_ in arg[len(val):]:
-                            if isinstance(val_, ValuedVariable):
-                                val +=tuple(val_.value,)
-                            else:
-                                val +=tuple(val_)
-
-                    for arg_,val_ in zip(arg,val):
-                        d_arguments[arg_.name] = val_
+                d_arguments[name] = val
 
             d_unsorted_args = {}
             for arg in self.arguments[len(sorted_args):]:
-                d_unsorted_args[arg.name] = arg.value
+                name = str(arg) if isinstance(arg, PyccelSymbol) \
+                            else arg.name
+                d_unsorted_args[name] = arg.value
 
             for arg in unsorted_args:
                 if arg.name in d_unsorted_args.keys():
