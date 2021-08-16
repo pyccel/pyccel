@@ -3450,6 +3450,12 @@ class SemanticParser(BasicParser):
         size = var.shape[0]
         return StarredArguments([var[i] for i in range(size)])
 
+    def _visit_NumpyMatmul(self, expr, **settings):
+        self.insert_import('numpy', 'matmul')
+        a = self._visit(expr.a)
+        b = self._visit(expr.b)
+        return NumpyMatmul(a, b)
+
 #==============================================================================
 
 
