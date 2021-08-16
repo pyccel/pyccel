@@ -638,9 +638,8 @@ class MacroFunction(Header):
 
             unsorted_args = []
             n_sorted = len(args)
-            for ind, (arg, val) in enumerate(self.arguments, args):
-                if not isinstance(i, ValuedArgument):
-                    arg = self.arguments[ind]
+            for ind, (arg, val) in enumerate(zip(self.arguments, args)):
+                if not isinstance(val, ValuedArgument):
                     d_arguments[str(arg)] = val
                 else:
                     n_sorted=ind
