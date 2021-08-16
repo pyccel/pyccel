@@ -723,25 +723,25 @@ class MacroFunction(Header):
         return newargs
 
     def make_necessary_copies(self, args, results):
-        """ Copy any arguments which are modified in fortran but
-        not in python into the result variable. If the variable
-        is modified in fortran then the argument and result
-        variable should be the same when apply is called
+        """ Copy any arguments provided in python which the macro
+        definition indicates should match the results into the
+        corresponding result.
 
         Parameters
         ----------
         args    : list of Variables
-                   The arguments passed to the macro function
+                   The arguments passed to the macro in the python code
         results : list of Variables
-                  The results collected from the macro function
+                  The results collected from the macro in the python code
 
         Results
         -------
         final_args : list of Variables
                      The arguments which can be passed to the apply function
+                     which match the expectations of the macro definition
         expr       : list of Assigns
-                      Any Assigns necessary before the function is calling
-                      the function returned by the apply function
+                      Any Assigns necessary before the function (result of the 
+                      macro expansion) returned by the apply function is called
         """
         expr = []
         final_args = []
