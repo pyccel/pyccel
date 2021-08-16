@@ -640,7 +640,9 @@ class MacroFunction(Header):
             n_sorted = len(args)
             for ind, (arg, val) in enumerate(zip(self.arguments, args)):
                 if not isinstance(val, ValuedArgument):
-                    d_arguments[str(arg)] = val
+                    name = str(arg) if isinstance(arg, PyccelSymbol) \
+                            else arg.name
+                    d_arguments[name] = val
                 else:
                     n_sorted=ind
                     break
@@ -661,6 +663,7 @@ class MacroFunction(Header):
                     raise ValueError('Unknown valued argument')
 
             d_arguments.update(d_unsorted_args)
+
             for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
