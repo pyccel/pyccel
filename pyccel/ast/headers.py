@@ -636,32 +636,23 @@ class MacroFunction(Header):
 
         if len(args) > 0:
 
-            sorted_args   = []
             unsorted_args = []
-            j = -1
-            for ind, i in enumerate(args):
+            n_sorted = len(args)
+            for ind, (arg, val) in enumerate(self.arguments, args):
                 if not isinstance(i, ValuedArgument):
-                    sorted_args.append(i)
+                    arg = self.arguments[ind]
+                    d_arguments[str(arg)] = val
                 else:
-                    j=ind
+                    n_sorted=ind
                     break
-            if j>0:
-                unsorted_args = args[j:]
-                for i in unsorted_args:
-                    if not isinstance(i, ValuedVariable):
-                        raise ValueError('variable not allowed after an optional argument')
 
-            for i in self.arguments[len(sorted_args):]:
+            unsorted_args = args[n_sorted:]
+            for i in unsorted_args:
                 if not isinstance(i, ValuedVariable):
                     raise ValueError('variable not allowed after an optional argument')
 
-            for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
-                name = str(arg) if isinstance(arg, PyccelSymbol) \
-                            else arg.name
-                d_arguments[name] = val
-
             d_unsorted_args = {}
-            for arg in self.arguments[len(sorted_args):]:
+            for arg in self.arguments[n_sorted:]:
                 d_unsorted_args[arg.name] = arg.value
 
             for arg in unsorted_args:
@@ -669,6 +660,7 @@ class MacroFunction(Header):
                     d_unsorted_args[arg.name] = arg.value
                 else:
                     raise ValueError('Unknown valued argument')
+
             d_arguments.update(d_unsorted_args)
             for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
