@@ -1177,6 +1177,7 @@ class NumpyAmax(NumpyUfuncUnary):
         return False
 
 class NumpyTranspose(NumpyUfuncUnary):
+    """Represents a call to the transpose function in the Numpy library"""
     __slots__ = ()
     name = 'transpose'
 
@@ -1188,6 +1189,8 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     @property
     def internal_var(self):
+        """ Return the variable being transposed
+        """
         return self._args[0]
 
     def __getitem__(self, *args):
