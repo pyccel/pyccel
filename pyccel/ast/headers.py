@@ -656,13 +656,13 @@ class MacroFunction(Header):
                     raise ValueError('variable not allowed after an optional argument')
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
-                d_arguments[arg.name] = val
+                name = str(arg) if isinstance(arg, PyccelSymbol) \
+                            else arg.name
+                d_arguments[name] = val
 
             d_unsorted_args = {}
             for arg in self.arguments[len(sorted_args):]:
-                name = str(arg) if isinstance(arg, PyccelSymbol) \
-                            else arg.name
-                d_unsorted_args[name] = arg.value
+                d_unsorted_args[arg.name] = arg.value
 
             for arg in unsorted_args:
                 if arg.name in d_unsorted_args.keys():
