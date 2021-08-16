@@ -481,7 +481,7 @@ class PythonCodePrinter(CodePrinter):
 
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
-        if isinstance(rhs, Variable) and rhs.order!= lhs.order:
+        if isinstance(rhs, Variable) and lhs.rank>1 and rhs.order != lhs.order:
             return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
         else:
             return'{0} = {1}\n'.format(lhs_code,rhs_code)
