@@ -114,10 +114,12 @@ def test_transpose_pointer(language):
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
     x1 = randint(50, size=(2,5))
+    x1_copy = x1.copy()
     x2 = randint(50, size=(2,3,7))
+    x2_copy = x2.copy()
 
     f1_epyc = epyccel(f1, language=language)
-    assert f1( x1 ) == f1_epyc( x1 )
+    assert f1( x1 ) == f1_epyc( x1_copy )
 
     f2_epyc = epyccel(f2, language=language)
-    assert f2( x2 ) == f2_epyc( x2 )
+    assert f2( x2 ) == f2_epyc( x2_copy )
