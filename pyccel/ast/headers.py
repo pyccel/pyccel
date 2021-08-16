@@ -740,7 +740,7 @@ class MacroFunction(Header):
                      The arguments which can be passed to the apply function
                      which match the expectations of the macro definition
         expr       : list of Assigns
-                      Any Assigns necessary before the function (result of the 
+                      Any Assigns necessary before the function (result of the
                       macro expansion) returned by the apply function is called
         """
         expr = []
