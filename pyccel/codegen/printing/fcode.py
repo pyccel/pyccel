@@ -237,8 +237,8 @@ class FCodePrinter(CodePrinter):
         """Prints the use line that indicates the macros used"""
         macro = "use ISO_C_BINDING, only: "
         rename = []
-        for idx, mc in enumerate(self._macros):
-            if self._macros[idx]:
+        for idx, used in enumerate(self._macros):
+            if used:
                 rename.append(iso_c_binding_shortcuts[idx] + ' => ' + iso_c_bindings[idx])
         macro += " , ".join(rename)
         return macro
