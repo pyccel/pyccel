@@ -214,14 +214,29 @@ class FCodePrinter(CodePrinter):
 
     def check_restrictions(self):
         """Checks if the namespace contains any of the shortcuts"""
+            def check_restrictions(self):
+        """Checks if the namespace contains any of the shortcuts"""
         valid = [True] * len(iso_c_binding_shortcuts)
-        for variable in self._namespace.variables:
+        for variableName in self._namespace.variables:
             for idx in range(len(iso_c_binding_shortcuts)):
-                if variable == iso_c_binding_shortcuts[idx]:
+                if variableName == iso_c_binding_shortcuts[idx]:
+                    valid[idx] = False
+        for functionName in self._namespace.functions:
+            for idx in range(len(iso_c_binding_shortcuts)):
+                if functionName == iso_c_binding_shortcuts[idx]:
+                    valid[idx] = False
+        for variableName in self._namespace.imports['variables']:
+            for idx in range(len(iso_c_binding_shortcuts)):
+                if variableName == iso_c_binding_shortcuts[idx]:
+                    valid[idx] = False
+        for functionName in self._namespace.imports['functions']:
+            for idx in range(len(iso_c_binding_shortcuts)):
+                if functionName == iso_c_binding_shortcuts[idx]:
                     valid[idx] = False
         return valid
 
     def print_macros(self):
+        """Prints the use line that indicates the macros used"""
         macro = "use ISO_C_BINDING, only: "
         rename = []
         for idx in range(len(self._macros)):
@@ -309,8 +324,10 @@ class FCodePrinter(CodePrinter):
         """
         Prints the kind(precision) of a literal value
         """
+        if self._print(expr.dtype) == 'complex':
+            return iso_c_binding[self._print(expr.dtype)][expr.precision]
         index = iso_c_binding_check_index[self._print(expr.dtype)][expr.precision]
-        if expr.dtype == 'complex' or not self._namespace_restrictions[index]:
+        if not self._namespace_restrictions[index]:
             return iso_c_binding[self._print(expr.dtype)][expr.precision]
         self._macros[index] = True
         return iso_c_binding_shortcut[self._print(expr.dtype)][expr.precision]
@@ -1376,7 +1393,7 @@ class FCodePrinter(CodePrinter):
             for f in expr.functions:
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                        'use, intrinsic :: ISO_C_BINDING\n',
+                        'use, intrinsic :: ISO_C_BINDING\n'+self.print_macros()+'\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
