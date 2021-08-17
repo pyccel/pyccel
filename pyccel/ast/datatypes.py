@@ -81,7 +81,37 @@ iso_c_binding = {
     "logical" : {
         4  : "C_BOOL"}
 }
-
+iso_c_binding_shortcut = {
+    "integer" : {
+        1  : 'i8',
+        2  : 'i16',
+        4  : 'i32',
+        8  : 'i64',
+        16 : 'i128'}, #no supported yet
+    "real"    : {
+        4  : 'f32',
+        8  : 'f64',
+        16 : 'f128'},
+    "logical" : {
+        4  : "b4"}
+}
+iso_c_bindings = ['C_INT8_T', 'C_INT16_T', 'C_INT32_T', 'C_INT64_T', 'C_INT128',
+                  'C_FLOAT', 'C_DOUBLE', 'C_LONG_DOUBLE', "C_BOOL"]
+iso_c_binding_shortcuts = ['i8', 'i16', 'i32', 'i64', 'i128', 'f32', 'f64', 'f128', "b4"]
+iso_c_binding_check_index = {
+    "integer" : {
+        1  : 0,
+        2  : 1,
+        4  : 2,
+        8  : 3,
+        16 : 4}, #no supported yet
+    "real"    : {
+        4  : 5,
+        8  : 6,
+        16 : 7},
+    "logical" : {
+        4  : 8}
+}
 default_precision = {'real': 8,
                     'int': numpy.dtype(int).alignment,
                     'integer': numpy.dtype(int).alignment,
