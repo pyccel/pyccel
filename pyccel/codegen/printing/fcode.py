@@ -216,20 +216,20 @@ class FCodePrinter(CodePrinter):
         """Checks if the namespace contains any of the shortcuts"""
         valid = [True] * len(iso_c_binding_shortcuts)
         for variableName in self._namespace.variables:
-            for idx in range(len(iso_c_binding_shortcuts)):
-                if variableName == iso_c_binding_shortcuts[idx]:
+            for idx, alias in enumerate(iso_c_binding_shortcuts):
+                if variableName == alias:
                     valid[idx] = False
         for functionName in self._namespace.functions:
-            for idx in range(len(iso_c_binding_shortcuts)):
-                if functionName == iso_c_binding_shortcuts[idx]:
+            for idx, alias in enumerate(iso_c_binding_shortcuts):
+                if functionName == alias:
                     valid[idx] = False
         for variableName in self._namespace.imports['variables']:
-            for idx in range(len(iso_c_binding_shortcuts)):
-                if variableName == iso_c_binding_shortcuts[idx]:
+            for idx, alias in enumerate(iso_c_binding_shortcuts):
+                if variableName == alias:
                     valid[idx] = False
         for functionName in self._namespace.imports['functions']:
-            for idx in range(len(iso_c_binding_shortcuts)):
-                if functionName == iso_c_binding_shortcuts[idx]:
+            for idx, alias in enumerate(iso_c_binding_shortcuts):
+                if functionName == alias:
                     valid[idx] = False
         return valid
 
@@ -237,7 +237,7 @@ class FCodePrinter(CodePrinter):
         """Prints the use line that indicates the macros used"""
         macro = "use ISO_C_BINDING, only: "
         rename = []
-        for idx in range(len(self._macros)):
+        for idx, mc in enumerate(self._macros):
             if self._macros[idx]:
                 rename.append(iso_c_binding_shortcuts[idx] + ' => ' + iso_c_bindings[idx])
         macro += " , ".join(rename)
