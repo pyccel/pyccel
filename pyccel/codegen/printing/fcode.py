@@ -214,8 +214,6 @@ class FCodePrinter(CodePrinter):
 
     def check_restrictions(self):
         """Checks if the namespace contains any of the shortcuts"""
-            def check_restrictions(self):
-        """Checks if the namespace contains any of the shortcuts"""
         valid = [True] * len(iso_c_binding_shortcuts)
         for variableName in self._namespace.variables:
             for idx in range(len(iso_c_binding_shortcuts)):
