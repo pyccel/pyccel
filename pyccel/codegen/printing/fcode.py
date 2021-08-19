@@ -50,10 +50,7 @@ from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatyp
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
-from pyccel.ast.datatypes import iso_c_binding_shortcut
-from pyccel.ast.datatypes import iso_c_bindings
-from pyccel.ast.datatypes import iso_c_binding_shortcuts
-from pyccel.ast.datatypes import iso_c_binding_check_index
+from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
@@ -202,8 +199,7 @@ class FCodePrinter(CodePrinter):
         super().__init__()
         self.parser = parser
         self._namespace = self.parser.namespace
-        self._namespace_restrictions = self.check_restrictions()
-        self._macros = [False] * len(iso_c_binding_shortcuts)
+        self._constantImports = set()
         self._current_function = None
         self._current_class    = None
 
@@ -212,34 +208,17 @@ class FCodePrinter(CodePrinter):
 
         self.prefix_module = prefix_module
 
-    def check_restrictions(self):
-        """Checks if the namespace contains any of the shortcuts"""
-        valid = [True] * len(iso_c_binding_shortcuts)
-        for variableName in self._namespace.variables:
-            for idx, alias in enumerate(iso_c_binding_shortcuts):
-                if variableName == alias:
-                    valid[idx] = False
-        for functionName in self._namespace.functions:
-            for idx, alias in enumerate(iso_c_binding_shortcuts):
-                if functionName == alias:
-                    valid[idx] = False
-        for variableName in self._namespace.imports['variables']:
-            for idx, alias in enumerate(iso_c_binding_shortcuts):
-                if variableName == alias:
-                    valid[idx] = False
-        for functionName in self._namespace.imports['functions']:
-            for idx, alias in enumerate(iso_c_binding_shortcuts):
-                if functionName == alias:
-                    valid[idx] = False
-        return valid
-
-    def print_macros(self):
-        """Prints the use line that indicates the macros used"""
+    def print_constant_imports(self):
+        """Prints the use line for the constant imports used"""
         macro = "use ISO_C_BINDING, only: "
         rename = []
-        for idx, used in enumerate(self._macros):
-            if used:
-                rename.append(iso_c_binding_shortcuts[idx] + ' => ' + iso_c_bindings[idx])
+        for constant in self._constantImports:
+            if isinstance(constant, str):
+                rename.append(constant)
+            else:
+                rename.append(constant[0] + ' => ' + constant[1])
+        if len(rename) == 0:
+            return ''
         macro += " , ".join(rename)
         return macro
 
@@ -322,13 +301,14 @@ class FCodePrinter(CodePrinter):
         """
         Prints the kind(precision) of a literal value
         """
-        if self._print(expr.dtype) == 'complex':
-            return iso_c_binding[self._print(expr.dtype)][expr.precision]
-        index = iso_c_binding_check_index[self._print(expr.dtype)][expr.precision]
-        if not self._namespace_restrictions[index]:
-            return iso_c_binding[self._print(expr.dtype)][expr.precision]
-        self._macros[index] = True
-        return iso_c_binding_shortcut[self._print(expr.dtype)][expr.precision]
+        constant_name = iso_c_binding[self._print(expr.dtype)][expr.precision]
+        constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
+        if constant_shortcut not in self.parser.used_names and constant_name != constant_shortcut:
+            self._constantImports.add((constant_shortcut, constant_name))
+            constant_name = constant_shortcut
+        else:
+            self._constantImports.add(constant_name)
+        return constant_name
 
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
@@ -342,7 +322,6 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use, intrinsic :: ISO_C_BINDING\n'
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
@@ -377,7 +356,7 @@ class FCodePrinter(CodePrinter):
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += "\n".join('use ' + lib for lib in self._additional_imports)
-        imports += "\n" + self.print_macros()
+        imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
                  imports,
                  'implicit none\n',
@@ -393,7 +372,6 @@ class FCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use, intrinsic :: ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -418,7 +396,7 @@ class FCodePrinter(CodePrinter):
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
         imports += "\n".join('use ' + lib for lib in self._additional_imports)
-        imports += "\n" + self.print_macros()
+        imports += "\n" + self.print_constant_imports()
         parts = ['program {}\n'.format(name),
                  imports,
                 'implicit none\n',
@@ -1391,7 +1369,7 @@ class FCodePrinter(CodePrinter):
             for f in expr.functions:
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                        'use, intrinsic :: ISO_C_BINDING\n'+self.print_macros()+'\n',
+                        self.print_constant_imports()+'\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
