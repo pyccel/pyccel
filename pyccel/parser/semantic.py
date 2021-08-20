@@ -1144,6 +1144,149 @@ class SemanticParser(BasicParser):
 
             rhs.base.is_target = not rhs.base.is_pointer
 
+    def _alloc_var(self, lhs, d_var, rhs, new_expressions):
+
+        name = lhs
+        dtype = d_var.pop('datatype')
+
+        d_lhs = d_var.copy()
+
+        var = self.get_variable_from_scope(name)
+
+        if var and var.is_argument and rhs is None:
+            return var
+        if var is None:
+
+            # Update variable's dictionary with information from function decorators
+            decorators = self._namespace.decorators
+            if decorators:
+                if 'stack_array' in decorators:
+                    if name in decorators['stack_array']:
+                        d_lhs.update(is_stack_array=True,
+                                allocatable=False, is_pointer=False)
+                if 'allow_negative_index' in decorators:
+                    if lhs in decorators['allow_negative_index']:
+                        d_lhs.update(allows_negative_indexes=True)
+
+            # Create new variable
+            lhs = self._create_variable(name, dtype, rhs, d_lhs)
+            # Add variable to scope
+            self.insert_variable(lhs, name=lhs.name)
+
+            # ...
+            # Add memory allocation if needed
+            if lhs.allocatable:
+                if self._namespace.is_loop:
+                    # Array defined in a loop may need reallocation at every cycle
+                    errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                        severity='warning', blocker=False,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset))
+                    status='unknown'
+                else:
+                    # Array defined outside of a loop will be allocated only once
+                    status='unallocated'
+
+                # Create Allocate node
+                new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+            # ...
+
+            # ...
+            # Add memory deallocation for array variables
+            if lhs.is_ndarray and not lhs.is_stack_array:
+                # Create Deallocate node
+                self._allocs[-1].append(lhs)
+            # ...
+
+            # We cannot allow the definition of a stack array in a loop
+            if lhs.is_stack_array and self._namespace.is_loop:
+                errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                    severity='error', blocker=False,
+                    bounding_box=(self._current_fst_node.lineno,
+                        self._current_fst_node.col_offset))
+
+            # Not yet supported for arrays: x=y+z, x=b[:]
+            # Because we cannot infer shape of right-hand side yet
+            know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
+                or (lhs.rank == 0)
+
+            if not know_lhs_shape:
+                msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
+                errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal', blocker=self.blocking)
+
+        # Variable already exists
+        else:
+
+            # TODO improve check type compatibility
+            if not hasattr(var, 'dtype'):
+                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
+                        symbol='{}={}'.format(name, "test"),
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=False)
+
+            elif var.is_ndarray and var.is_pointer:
+                # we allow pointers to be reassigned multiple times
+                # pointers reassigning need to call free_pointer func
+                # to remove memory leaks
+                new_expressions.append(Deallocate(var))
+
+            else:
+
+                rank  = getattr(var, 'rank' , 'None')
+                order = getattr(var, 'order', 'None')
+                shape = getattr(var, 'shape', 'None')
+
+                if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
+                    txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
+                    format_shape = lambda s: "" if len(s)==0 else s
+                    txt = txt.format(name=name, dtype=dtype, old=format_shape(var.shape),
+                        new=format_shape(d_var['shape']))
+                    errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error', blocker=False)
+
+                elif d_var['shape'] != shape:
+
+                    if var.is_stack_array:
+                        errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
+                            severity='error', blocker=False,
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
+
+                    else:
+                        previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+                        if not previous_allocations:
+                            errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
+                                    symbol=var, severity='fatal')
+                        if previous_allocations[-1].get_user_nodes((If, For, While)):
+                            status='unknown'
+                        elif previous_allocations[-1].get_user_nodes(IfSection):
+                            status = previous_allocations[-1].status
+                        else:
+                            status='allocated'
+                        #only if rank>1
+                        new_expressions.append(Allocate(var,
+                            shape=d_var['shape'], order=d_var['order'],
+                            status=status))
+
+                        if status != 'unallocated':
+                            errors.report(ARRAY_REALLOCATION, symbol=name,
+                                severity='warning', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
+
+            # in the case of elemental, lhs is not of the same dtype as
+            # var.
+            # TODO d_lhs must be consistent with var!
+            # the following is a small fix, since lhs must be already
+            # declared
+            lhs = var
+
+        return lhs
+
+
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
         Create a lhs based on the information in d_var
@@ -1869,6 +2012,7 @@ class SemanticParser(BasicParser):
             macro = self.get_macro(rhs_name)
 
             # Macro
+            #is this ok with issue 926
             if isinstance(macro, MacroVariable):
                 return macro.master
             elif isinstance(macro, MacroFunction):
@@ -2049,6 +2193,11 @@ class SemanticParser(BasicParser):
 
                 master = macro.master
                 name = _get_name(master.name)
+                args = [self._visit(i, **settings) for i in
+                            rhs.args]
+                d_restps = macro.apply_to_results(args)
+                for d_var, var in zip(d_restps, lhs):
+                    self._alloc_var(var, d_var, None, new_expressions)
 
                 # all terms in lhs must be already declared and available
                 # the namespace
@@ -2064,12 +2213,15 @@ class SemanticParser(BasicParser):
                     results.append(var)
 
                 # ...
-
-                args = [self._visit(i, **settings) for i in
-                            rhs.args]
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
-                    return FunctionCall(master, args, self._current_function)
+                    new_expressions.append(FunctionCall(master, args, self._current_function))
+                    if (len(new_expressions)==1):
+                        new_expressions = new_expressions[0]
+                        return new_expressions
+                    else:
+                        result = CodeBlock(new_expressions)
+                        return result
                 else:
                     # TODO treate interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
@@ -2157,7 +2309,6 @@ class SemanticParser(BasicParser):
             return CodeBlock(stmts)
 
         elif isinstance(rhs, FunctionCall):
-
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results
@@ -2248,7 +2399,6 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
                     return None
-
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
@@ -3388,8 +3538,9 @@ class SemanticParser(BasicParser):
         master_args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
                 else a for a in expr.master_arguments]
         results = expr.results
+        restps = expr.restps
         macro   = MacroFunction(name, args, func, master_args,
-                                  results=results)
+                                  results=results, restps=restps)
         self.insert_macro(macro)
 
         return macro
