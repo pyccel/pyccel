@@ -81,8 +81,10 @@ AvailableMacro:
 
 // TODO shall we add also results to the master call?
 
+ExType: dtype=DataType ('*' prec=INT)? ('(' trailer+=MacroValue[','] ')')?;
+
 FunctionMacroStmt: 
-  'macro' ('(' results*=ID[','] ')' ',')?
+  'macro' ('('restps+=ExType[','] ')' ',')? ('(' results*=ID[','] ')' ',')?
   dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
