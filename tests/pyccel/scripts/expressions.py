@@ -64,6 +64,12 @@ g7 = x==10 and y == 4 and x == 7
 g8 = True and True or False and False
 g9 = False or True and False or True
 
+C_INT = 4.6
+i32 = 5
+i128 = 1337
+f32 = 5.2
+
+
 print(a1)
 print(a2)
 print(a3)
@@ -122,3 +128,8 @@ print(g6)
 print(g7)
 print(g8)
 print(g9)
+
+print(C_INT)
+print(i32)
+print(i128)
+print(f32)

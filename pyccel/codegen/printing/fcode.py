@@ -210,7 +210,7 @@ class FCodePrinter(CodePrinter):
 
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
-        macro = "use ISO_C_BINDING, only: "
+        macro = "use, intrinsic :: ISO_C_Binding, only : "
         rename = []
         for constant in self._constantImports:
             if isinstance(constant, str):
