@@ -157,6 +157,55 @@ class Type(BasicStmt):
             d_var['order'] = order
         return d_var
 
+class ExType(BasicStmt):
+    """Base class representing a header type in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Type.
+
+        dtype: str
+            variable type
+        """
+        self.dtype   = kwargs.pop('dtype')
+        self.prec    = kwargs.pop('prec')
+        self.trailer = kwargs.pop('trailer', [])
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        dtype = self.dtype
+        precision = self.prec
+        if dtype in dtype_registry.keys():
+            dtype,precision = dtype_registry[dtype]
+        trailer = self.trailer
+        order = 'C'
+
+        trailer = []
+        for i in self.trailer:
+            #check macrostmt
+            if isinstance(i, MacroStmt):
+                trailer.append(i.expr)
+            else:
+                trailer.append(PyccelSymbol(i))
+
+        d_var={}
+        d_var['datatype']=dtype
+        d_var['rank'] = len(trailer)
+        d_var['allocatable'] = len(trailer)>0
+        d_var['is_pointer'] = False
+        d_var['precision']  = precision
+        d_var['is_const'] = False
+        if not(precision):
+            if dtype in ['double' ,'float','complex', 'int']:
+                d_var['precision'] = default_precision[dtype]
+
+        if d_var['rank']>=1:
+            d_var['order'] = order
+        d_var['shape']=trailer
+        return d_var
+
 class TypeHeader(BasicStmt):
     pass
 
@@ -450,6 +499,7 @@ class FunctionMacroStmt(BasicStmt):
         self.results = kwargs.pop('results',None)
         if self.results:
             self.results = [PyccelSymbol(r) for r in self.results]
+        self.restps = kwargs.pop('restps', None)
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -489,6 +539,9 @@ class FunctionMacroStmt(BasicStmt):
         if (results is None):
             results = []
 
+        restps = []
+        if self.restps:
+            restps = [restp.expr for restp in self.restps]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
@@ -498,7 +551,7 @@ class FunctionMacroStmt(BasicStmt):
             # so that we always have a name of type str
             args = list(name.name[:-1]) + list(args)
             name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args, results=results)
+        return MacroFunction(name, args, master_name, master_args, results=results, restps=restps)
 
 
 #################################################
@@ -508,6 +561,7 @@ class FunctionMacroStmt(BasicStmt):
 # lists.
 hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
+               ExType,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,
