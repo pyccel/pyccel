@@ -77,7 +77,7 @@ class MetaVariable(Header):
            a callable that can be called
            to create the initial version of the object
            and its arguments
-           """
+        """
         return (self.__class__, (self.name, self.value))
 
 #==============================================================================
@@ -130,7 +130,7 @@ class VariableHeader(Header):
            a callable that can be called
            to create the initial version of the object
            and its arguments
-           """
+        """
         return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
@@ -189,7 +189,7 @@ class Template(Header):
            a callable function that can be called
            to create the initial version of the object
            and its arguments
-           """
+        """
         return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
@@ -225,8 +225,8 @@ class FunctionHeader(Header):
 
     # TODO dtypes should be a dictionary (useful in syntax)
     def __init__(self, name, dtypes,
-                results=None,
-                is_static=False):
+                 results=None,
+                 is_static=False):
 
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
@@ -295,22 +295,22 @@ class FunctionHeader(Header):
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
             var = Variable(dtype, var_name,
-                        allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
-                        rank=rank, shape=shape ,order = order, precision = precision,
-                        is_argument=True)
+                           allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
+                           rank=rank, shape=shape ,order = order, precision = precision,
+                           is_argument=True)
             return var
 
         def process_template(signature, Tname, d_type):
             #Replaces templates named Tname inside signature, with the given type.
             new_sig = tuple(d_type if 'datatype' in t and t['datatype'] == Tname\
-                    else t for t in signature)
+                            else t for t in signature)
             return new_sig
 
         def find_templates(signature, templates):
             #Creates a dictionary of only used templates in signature.
             new_templates = {d_type['datatype']:templates[d_type['datatype']]\
-                    for d_type in signature\
-                    if 'datatype' in d_type and d_type['datatype'] in templates}
+                             for d_type in signature\
+                             if 'datatype' in d_type and d_type['datatype'] in templates}
             return new_templates
 
         for i in self.dtypes:
@@ -318,8 +318,8 @@ class FunctionHeader(Header):
                 for d_type in i.args:
                     if d_type['datatype'] in templates:
                         errors.report(TEMPLATE_IN_UNIONTYPE,
-                                symbol=self.name,
-                                severity='error')
+                                      symbol=self.name,
+                                      severity='error')
                 dtypes += [i.args]
             elif isinstance(i, dict):
                 dtypes += [[i]]
@@ -333,7 +333,7 @@ class FunctionHeader(Header):
 
         for tmplt in new_templates:
             signatures = tuple(process_template(s, tmplt, d_type)\
-                    for s in signatures for d_type in new_templates[tmplt].dtypes)
+                               for s in signatures for d_type in new_templates[tmplt].dtypes)
 
         for args_ in signatures:
             args = []
@@ -373,12 +373,12 @@ class FunctionHeader(Header):
                 d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
-                             local_vars=[],
-                             global_vars=[],
-                             cls_name=cls_name,
-                             is_static=is_static,
-                             imports=imports,
-                             is_header=True)
+                              local_vars=[],
+                              global_vars=[],
+                              cls_name=cls_name,
+                              is_static=is_static,
+                              imports=imports,
+                              is_header=True)
             funcs += [func]
 
         return funcs
@@ -419,12 +419,12 @@ class FunctionHeader(Header):
            a callable function that can be called
            to create the initial version of the object
            and its arguments
-           """
+        """
 
         args = (self.name,
-            self.dtypes,
-            self.results,
-            self.is_static,)
+                self.dtypes,
+                self.results,
+                self.is_static,)
         return (self.__class__, args)
 
 
@@ -500,12 +500,12 @@ class MethodHeader(FunctionHeader):
            a callable function that can be called
            to create the initial version of the object
            and its arguments
-           """
+        """
 
         args = (self.name.split('.'),
-            self.dtypes,
-            self.results,
-            self.is_static,)
+                self.dtypes,
+                self.results,
+                self.is_static,)
         return (self.__class__, args)
 
 #==============================================================================
@@ -588,9 +588,9 @@ class InterfaceHeader(Header):
 #==============================================================================
 class MacroFunction(Header):
     """."""
-    __slots__ = ('_name','_arguments','_master','_master_arguments','_results')
+    __slots__ = ('_name','_arguments','_master','_master_arguments','_results', '_restps')
 
-    def __init__(self, name, args, master, master_args, results=None):
+    def __init__(self, name, args, master, master_args, results=None, restps=None):
         if not isinstance(name, str):
             raise TypeError('name must be of type str or PyccelSymbol')
 
@@ -598,11 +598,12 @@ class MacroFunction(Header):
         if not isinstance(master, (str, FunctionDef, Interface)):
             raise ValueError('Expecting a master name of FunctionDef')
 
-        self._name             = name
-        self._arguments        = args
-        self._master           = master
-        self._master_arguments = master_args
-        self._results          = results
+        self._name              = name
+        self._arguments         = args
+        self._master            = master
+        self._master_arguments  = master_args
+        self._results           = results
+        self._restps            = restps
         super().__init__()
 
     @property
@@ -625,9 +626,112 @@ class MacroFunction(Header):
     def results(self):
         return self._results
 
+    @property
+    def restps(self):
+        return self._restps
+
     # TODO: must be moved to annotation, once we add AliasVariables
     #       this is needed if we have to create a pointer or allocate a new
     #       variable to store the result
+
+    def resolve_args(self, args):
+        """."""
+
+        d_arguments = {}
+
+        if len(args) > 0:
+
+            sorted_args   = []
+            unsorted_args = []
+            j = -1
+            for ind, i in enumerate(args):
+                if not isinstance(i, ValuedArgument):
+                    sorted_args.append(i)
+                else:
+                    j=ind
+                    break
+            if j>0:
+                unsorted_args = args[j:]
+                for i in unsorted_args:
+                    if not isinstance(i, ValuedVariable):
+                        raise ValueError('variable not allowed after an optional argument')
+
+            for i in self.arguments[len(sorted_args):]:
+                if not isinstance(i, ValuedVariable):
+                    raise ValueError('variable not allowed after an optional argument')
+
+            for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
+                if not isinstance(arg, tuple):
+                    d_arguments[arg] = val
+                else:
+                    if not isinstance(val, (list, tuple)):
+                        val = [val]
+                    #TODO improve add more checks and generalize
+                    if len(val)>len(arg):
+                        raise ValueError('length mismatch of argument and its value ')
+                    elif len(val)<len(arg):
+                        for val_ in arg[len(val):]:
+                            if isinstance(val_, ValuedVariable):
+                                val +=tuple(val_.value,)
+                            else:
+                                val +=tuple(val_)
+
+                    for arg_,val_ in zip(arg,val):
+                        d_arguments[arg_.name] = val_
+
+            d_unsorted_args = {}
+            for arg in self.arguments[len(sorted_args):]:
+                d_unsorted_args[arg.name] = arg.value
+
+            for arg in unsorted_args:
+                if arg.name in d_unsorted_args.keys():
+                    d_unsorted_args[arg.name] = arg.value
+                else:
+                    raise ValueError('Unknown valued argument')
+            d_arguments.update(d_unsorted_args)
+            for i, arg in d_arguments.items():
+                if isinstance(arg, Macro):
+                    d_arguments[i] = construct_macro(arg.name,
+                                                     d_arguments[arg.argument])
+                    #change this
+                    if isinstance(arg, MacroShape):
+                        d_arguments[i]._index = arg.index
+            return d_arguments
+
+    def apply_to_results(self, args):
+        """."""
+        d_arguments = self.resolve_args(args)
+        argument_keys = d_arguments.keys()
+        new_restps = []
+        for d_sh in self.restps:
+            newargs = []
+            d_tmp = d_sh.copy()
+
+            for arg in d_sh['shape']:
+                if isinstance(arg, PyccelSymbol):
+                    if arg in argument_keys:
+                        new = d_arguments[arg]
+                    else:
+                        new = arg
+                elif isinstance(arg, Macro):
+                    if arg.argument in argument_keys:
+                        new = d_arguments[arg.argument]
+                    else:
+                        raise ValueError('Unknown variable name')
+
+                    if isinstance(arg, MacroShape):
+                        new = construct_macro(arg.name, new, arg.index)
+                    else:
+                        new = construct_macro(arg.name, new)
+                else:
+                    new=arg
+
+                newargs.append(new)
+            newargs = tuple(newargs)
+            d_tmp['shape'] = newargs
+            new_restps.append(d_tmp)
+        return new_restps
+
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
         d_arguments = {}
@@ -685,10 +789,9 @@ class MacroFunction(Header):
             for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
-                                      d_arguments[arg.argument])
+                                                     d_arguments[arg.argument])
                     if isinstance(arg, MacroShape):
                         d_arguments[i]._index = arg.index
-
 
         d_results = {}
         if not(results is None) and not(self.results is None):
@@ -714,8 +817,8 @@ class MacroFunction(Header):
                     new = d_results[arg]
                 else:
                     new = arg
-               #TODO uncomment later
-               #     raise ValueError('Unknown variable name')
+                #TODO uncomment later
+                #     raise ValueError('Unknown variable name')
             elif isinstance(arg, Macro):
                 if arg.argument in argument_keys:
                     new = d_arguments[arg.argument]
