@@ -89,6 +89,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelNot
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -263,11 +264,6 @@ class SemanticParser(BasicParser):
                                 severity='fatal')
 
         self._semantic_done = True
-
-        # Calling the Garbage collecting,
-        # it will add the necessary Deallocate nodes
-        # to the ast
-        self._ast = ast = self._garbage_collector(ast)
 
         return ast
 
@@ -676,15 +672,14 @@ class SemanticParser(BasicParser):
     def _garbage_collector(self, expr):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
-
-        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
         """
         code = expr
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
-            code = CodeBlock(code)
+            deallocs = [Deallocate(i) for i in self._allocs[-1]]
+        else:
+            deallocs = []
         self._allocs.pop()
-        return code
+        return deallocs
 
     def _infere_type(self, expr, **settings):
         """
@@ -1536,47 +1531,74 @@ class SemanticParser(BasicParser):
 
     def _visit_Module(self, expr, **settings):
         body = [self._visit(b) for b in expr.program]
-        functions  = []
-        classes    = []
-        interfaces = []
-        imports    = []
-        program    = []
-        init_func  = []
+        imports        = []
+        program        = []
+        init_func_body = []
 
         for b in body:
-            if isinstance(b, FunctionDef):
-                functions.append(b)
-            elif isinstance(b, ClassDef):
-                classes.append(b)
-            elif isinstance(b, Interface):
-                interfaces.append(b)
-            elif isinstance(b, Import):
+            if isinstance(b, Import):
                 imports.append(b)
             elif isinstance(b, If):
                 print("TODO")
-                init_func.append(b)
+                init_func_body.append(b)
             elif isinstance(b, CodeBlock):
-                init_func.extend(b.body)
-            else:
-                init_func.append(b)
+                init_func_body.extend(b.body)
+            elif not isinstance(b, EmptyNode):
+                init_func_body.append(b)
 
-        variables = self.namespace.variables.values()
+        variables = list(self.namespace.variables.values())
+        init_func = None
+        free_func = None
+        program   = None
+
+        if init_func_body:
+            init_var = Variable(NativeBool(), self.get_new_name('initialised'),
+                                is_private=True)
+            variables.append(init_var)
+            init_func_name = self.get_new_name(expr.name+'_init')
+            init_func_body = If(IfSection(PyccelNot(init_var),
+                                init_func_body+[Assign(init_var, LiteralTrue())]))
+            init_func = FunctionDef(init_func_name, [], [], [init_func_body],
+                    global_vars = variables)
+            self.create_new_function_scope(init_func_name, [])
+            self.exit_function_scope()
+            self.insert_function(init_func)
+
+        # Calling the Garbage collecting,
+        # it will add the necessary Deallocate nodes
+        # to the ast
+        if program:
+            program.insert2body(*self._garbage_collector(program))
 
         if init_func:
-            init_func_name = self.get_new_name(expr.name+'_init')
-            init_func = FunctionDef(init_func_name, [], [], init_func,
-                    global_vars = variables)
-        else:
-            init_func = None
+            free_func_name = self.get_new_name(expr.name+'_free')
+            deallocs = self._garbage_collector(init_func.body)
+            if deallocs:
+                init_var = variables[-1]
+                free_func_body = If(IfSection(init_var,
+                    deallocs+[Assign(init_var, LiteralFalse())]))
+                free_func = FunctionDef(free_func_name, [], [], [free_func_body],
+                                    global_vars = variables)
+                self.create_new_function_scope(free_func_name, [])
+                self.exit_function_scope()
+                self.insert_function(free_func)
+
+        funcs = []
+        interfaces = []
+        for f in self.namespace.functions.values():
+            if isinstance(f, FunctionDef) and not f.is_header:
+                funcs.append(f)
+            elif isinstance(f, Interface):
+                interfaces.append(f)
 
         return Module(expr.name,
                     variables,
-                    functions,
+                    funcs,
                     init_func = init_func,
-                    free_func = None,
+                    free_func = free_func,
                     program = None,
                     interfaces=interfaces,
-                    classes=classes,
+                    classes=self.namespace.classes.values(),
                     imports=imports)
 
     def _visit_tuple(self, expr, **settings):
@@ -2953,7 +2975,7 @@ class SemanticParser(BasicParser):
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
             # to the body of the function
-            body = self._garbage_collector(body)
+            body.insert2body(*self._garbage_collector(body))
 
             results = [self._visit(a) for a in results]
 
@@ -3264,6 +3286,8 @@ class SemanticParser(BasicParser):
 
         container = self.namespace.imports
 
+        result = EmptyNode()
+
         if isinstance(expr.source, AsName):
             source        = expr.source.name
             source_target = expr.source.target
@@ -3326,6 +3350,9 @@ class SemanticParser(BasicParser):
             # TODO shall we improve it?
 
             p       = self.d_parsers[source_target]
+            import_init = p.semantic_parser.ast.init_func
+            if import_init:
+                result  = FunctionCall(import_init,[],[])
             if expr.target:
                 targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
@@ -3390,7 +3417,7 @@ class SemanticParser(BasicParser):
 
                 container['imports'][source_target] = expr
 
-        return EmptyNode()
+        return result
 
 
 
