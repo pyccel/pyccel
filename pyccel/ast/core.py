@@ -1115,14 +1115,21 @@ class Module(Basic):
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
-    __slots__ = ('_name','_variables','_funcs','_interfaces','_classes','_imports')
-    _attribute_nodes = ('_variables','_funcs','_interfaces','_classes','_imports')
+    __slots__ = ('_name','_variables','_funcs','_interfaces',
+                 '_classes','_imports','_init_func','_free_func',
+                 '_program')
+    _attribute_nodes = ('_variables','_funcs','_interfaces',
+                        '_classes','_imports','_init_func',
+                        '_free_func','_program')
 
     def __init__(
         self,
         name,
         variables,
         funcs,
+        init_func = None,
+        free_func = None,
+        program = None,
         interfaces=(),
         classes=(),
         imports=(),
@@ -1156,6 +1163,15 @@ class Module(Basic):
             if not isinstance(i, Interface):
                 raise TypeError('Only a Inteface instance is allowed.')
 
+        if init_func is not None and not isinstance(init_func, FunctionDef):
+            raise TypeError('init_func must be a FunctionDef')
+
+        if free_func is not None and not isinstance(free_func, FunctionDef):
+            raise TypeError('free_func must be a FunctionDef')
+
+        if program is not None and not isinstance(program, Program):
+            raise TypeError('program must be a Program')
+
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
         imports = list(imports)
@@ -1167,6 +1183,9 @@ class Module(Basic):
         self._name = name
         self._variables = variables
         self._funcs = funcs
+        self._init_func = init_func
+        self._free_func = free_func
+        self._program   = program
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
@@ -1179,6 +1198,14 @@ class Module(Basic):
     @property
     def variables(self):
         return self._variables
+
+    @property
+    def init_func(self):
+        return self._init_func
+
+    @property
+    def free_func(self):
+        return self._free_func
 
     @property
     def funcs(self):
@@ -3882,94 +3909,6 @@ def get_iterable_ranges(it, var_name=None):
     # ...
 
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
-
-class ParserResult(Basic):
-    __slots__ = ('_program','_module','_prog_name','_mod_name')
-    _attribute_nodes = ('_program','_module')
-
-    def __init__(
-        self,
-        program   = None,
-        module    = None,
-        mod_name  = None,
-        prog_name = None,
-        ):
-
-        if program is not None  and not isinstance(program, CodeBlock):
-            raise TypeError('Program must be a CodeBlock')
-
-        if module is not None  and not isinstance(module, CodeBlock):
-            raise TypeError('Module must be a CodeBlock')
-
-        if program is not None and module is not None:
-            if mod_name is None:
-                raise TypeError('Please provide module name')
-            elif not isinstance(mod_name, str):
-                raise TypeError('Module name must be a string')
-            if prog_name is None:
-                raise TypeError('Please provide program name')
-            elif not isinstance(prog_name, str):
-                raise TypeError('Program name must be a string')
-
-        self._program   = program
-        self._module    = module
-        self._prog_name = prog_name
-        self._mod_name  = mod_name
-        super().__init__()
-
-
-    @property
-    def program(self):
-        return self._program
-
-    @property
-    def module(self):
-        return self._module
-
-    @property
-    def prog_name(self):
-        return self._prog_name
-
-    @property
-    def mod_name(self):
-        return self._mod_name
-
-    def has_additional_module(self):
-        return self.program is not None and self.module is not None
-
-    def is_program(self):
-        return self.program is not None
-
-    def get_focus(self):
-        if self.is_program():
-            return self.program
-        else:
-            return self.module
-
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        kwargs = dict(
-        program = self.program,
-        module  = self.module,
-        prog_name = self.prog_name,
-        mod_name  = self.mod_name)
-        return (apply, (self.__class__, (), kwargs))
 
 #==============================================================================
 def process_shape(shape):
