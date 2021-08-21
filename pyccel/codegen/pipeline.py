@@ -238,13 +238,8 @@ def execute_pyccel(fname, *,
     if semantic_only:
         return
 
-    if parser.module_parser:
-        parsers = [parser.module_parser, parser]
-        program_name = os.path.basename(os.path.splitext(parser.filename)[0])
-        module_names = [module_name, program_name]
-    else:
-        parsers = [parser]
-        module_names = [module_name]
+    parsers = [parser]
+    module_names = [module_name]
 
     # -------------------------------------------------------------------------
 
