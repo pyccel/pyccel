@@ -86,6 +86,9 @@ class Variable(PyccelAstNode):
     is_const: bool
         if object is a const argument of a function [Default value: False]
 
+    is_private: bool
+        if object is private within a Module [Default value: False]
+
     is_temp: bool
         Indicates if this symbol represents a temporary variable created by Pyccel,
         and was not present in the original Python code [default value : False].
@@ -104,7 +107,7 @@ class Variable(PyccelAstNode):
     __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
             '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order')
+            '_rank','_shape','_order','_is_private')
     _attribute_nodes = ()
 
     def __init__(
@@ -119,6 +122,7 @@ class Variable(PyccelAstNode):
         is_const=False,
         is_target=False,
         is_optional=False,
+        is_private=False,
         shape=None,
         cls_base=None,
         order='C',
@@ -169,6 +173,10 @@ class Variable(PyccelAstNode):
         if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
+
+        if not isinstance(is_private, bool):
+            raise TypeError('is_optional must be a boolean.')
+        self._is_private = is_private
 
         if not isinstance(allows_negative_indexes, bool):
             raise TypeError('allows_negative_indexes must be a boolean.')
@@ -334,6 +342,13 @@ class Variable(PyccelAstNode):
         in this context
         """
         return self._is_optional
+
+    @property
+    def is_private(self):
+        """ Indicates if the Variable is private
+        within the Module
+        """
+        return self._private
 
     @property
     def is_stack_array(self):

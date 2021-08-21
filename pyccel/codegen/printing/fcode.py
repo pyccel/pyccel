@@ -997,6 +997,7 @@ class FCodePrinter(CodePrinter):
         is_stack_array = var.is_stack_array
         is_optional = var.is_optional
         is_static = expr.static
+        is_private = expr.is_private
         intent = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
@@ -1049,6 +1050,7 @@ class FCodePrinter(CodePrinter):
         intentstr      = ''
         allocatablestr = ''
         optionalstr    = ''
+        privatestr     = ''
         rankstr        = ''
 
         # Compute intent string
@@ -1075,6 +1077,10 @@ class FCodePrinter(CodePrinter):
         # Compute optional string
         if is_optional:
             optionalstr = ', optional'
+
+        # Compute private string
+        if is_private:
+            privatestr = ', private'
 
         # Compute rank string
         # TODO: improve
@@ -1105,7 +1111,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr
+        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
