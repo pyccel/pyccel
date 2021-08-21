@@ -28,10 +28,6 @@ def create_shared_library(codegen,
                           sharedlib_modname=None,
                           verbose = False):
 
-    # Consistency checks
-    if not codegen.is_module:
-        raise TypeError('Expected Module')
-
     # Get module name
     module_name = codegen.name
 
@@ -71,13 +67,13 @@ def create_shared_library(codegen,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
 
-    module_old_name = codegen.expr.name
-    codegen.expr.set_name(sharedlib_modname)
-    wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
+    module_old_name = codegen.ast.name
+    codegen.ast.set_name(sharedlib_modname)
+    wrapper_code = cwrappercode(codegen.ast, codegen.parser, language)
     if errors.has_errors():
         return
 
-    codegen.expr.set_name(module_old_name)
+    codegen.ast.set_name(module_old_name)
 
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)

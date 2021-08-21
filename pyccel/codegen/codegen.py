@@ -42,7 +42,6 @@ class Codegen(object):
         self._ast      = parser.ast
         self._name     = name
         self._printer  = None
-        self._kind     = None
         self._code     = None
         self._language = None
 
@@ -75,12 +74,6 @@ class Codegen(object):
         """Returns the name associated to the source code"""
 
         return self._name
-
-    @property
-    def kind(self):
-        """Returns the kind of the source code: Module, Program or None."""
-
-        return self._kind
 
     @property
     def imports(self):
@@ -125,28 +118,16 @@ class Codegen(object):
         return self._stmts['modules']
 
     @property
-    def is_module(self):
-        """Returns True if a Module."""
-
-        return self.kind == 'module'
-
-    @property
     def is_program(self):
         """Returns True if a Program."""
 
-        return self.kind == 'program'
+        return self._is_program
 
     @property
     def ast(self):
         """Returns the AST."""
 
         return self._ast
-
-    @property
-    def expr(self):
-        """Returns the AST after Module/Program treatment."""
-
-        return self._expr
 
     @property
     def language(self):
@@ -207,52 +188,13 @@ class Codegen(object):
     def _set_kind(self):
         """Finds the source code kind."""
 
-
-        cls = (Header, EmptyNode, Comment, CommentBlock, Module)
-        is_module = all(isinstance(i,cls) for i in self.ast.body)
-
-
-
-        if is_module:
-            self._kind = 'module'
-        else:
-            self._kind = 'program'
-
-        #  ...
-
-        #  ...
-
-        expr = None
-
-        if self.is_module:
-            expr = Module(
-                self.name,
-                self.variables,
-                self.routines,
-                self.interfaces,
-                self.classes,
-                imports=self.imports)
-
-        elif self.is_program:
-            expr = Program(
-                self.name,
-                self.variables,
-                self.body.body,
-                imports=self.imports)
-
-        else:
-            raise NotImplementedError('TODO')
-
-
-        self._expr = expr
-
-        #  ...
+        self._is_program = self.ast.program is not None
 
     def doprint(self, **settings):
         """Prints the code in the target language."""
         if not self._printer:
             self.set_printer(**settings)
-        self._code = self._printer.doprint(self.expr)
+        self._code = self._printer.doprint(self.ast)
         return self._code
 
     def export(self, filename=None, **settings):
@@ -266,12 +208,12 @@ class Codegen(object):
         filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         if header_ext is not None and self.is_module:
-            code = self._printer.doprint(ModuleHeader(self.expr))
+            code = self._printer.doprint(ModuleHeader(self.ast))
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
         # print module or program code
-        self._code = self._printer.doprint(self.expr)
+        self._code = self._printer.doprint(self.ast)
         with open(filename, 'w') as f:
             for line in self._code:
                 f.write(line)
