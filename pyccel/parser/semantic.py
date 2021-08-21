@@ -53,6 +53,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
+from pyccel.ast.core import InModule, InProgram
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -73,7 +74,7 @@ from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
-from pyccel.ast.literals import Nil
+from pyccel.ast.literals import Nil, LiteralString
 
 from pyccel.ast.mathext  import math_constants
 
@@ -89,7 +90,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot
+from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelNe
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -1518,6 +1519,7 @@ class SemanticParser(BasicParser):
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
+                print(annotation_method)
                 obj = getattr(self, annotation_method)(expr, **settings)
                 if isinstance(obj, Basic) and self._current_fst_node:
                     obj.set_fst(self._current_fst_node)
@@ -1539,8 +1541,14 @@ class SemanticParser(BasicParser):
             if isinstance(b, Import):
                 imports.append(b)
             elif isinstance(b, If):
-                print("TODO")
-                init_func_body.append(b)
+                if all(isinstance(i.condition, (InModule,InProgram)) for i in b.blocks):
+                    for i in b.blocks:
+                        if isinstance(i.condition, InProgram):
+                            program.extend(i.body.body)
+                        elif isinstance(i.condition, InModule):
+                            init_func_body.append(i.body.body)
+                else:
+                    init_func_body.append(b)
             elif isinstance(b, CodeBlock):
                 init_func_body.extend(b.body)
             elif not isinstance(b, EmptyNode):
@@ -2710,12 +2718,39 @@ class SemanticParser(BasicParser):
         return While(test, body, local_vars)
 
     def _visit_IfSection(self, expr, **settings):
-        cond = self._visit(expr.condition)
+        condition = expr.condition
+
+        name_symbol = PyccelSymbol('__name__')
+        main = LiteralString('__main__')
+        prog_check = isinstance(condition, PyccelEq) \
+                and all(a in (name_symbol, main) for a in condition.args)
+        mod_check = isinstance(condition, PyccelNe) \
+                and all(a in (name_symbol, main) for a in condition.args)
+
+        if prog_check:
+            cond = InProgram()
+        elif mod_check:
+            cond = InModule()
+        else:
+            cond = self._visit(expr.condition)
         body = self._visit(expr.body)
         return IfSection(cond, body)
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
+
+        conds = [b.condition for b in args]
+        if any(isinstance(c, (InModule,InProgram)) for c in conds):
+            if all(isinstance(c, (InModule,LiteralTrue)) for c in conds):
+                args = [IfSection(i.condition if isinstance(i.condition, InModule) \
+                                    else InProgram(), i.body) for i in args]
+            elif all(isinstance(c, (InProgram,LiteralTrue)) for c in conds):
+                args = [IfSection(i.condition if isinstance(i.condition, InProgram) \
+                                    else InModule(), i.body) for i in args]
+            elif not all(isinstance(c, (InModule,InProgram)) for c in conds):
+                errors.report("Determination of main module is too complicated to handle",
+                        symbol=expr, severity='error')
+
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):

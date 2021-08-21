@@ -19,7 +19,7 @@ from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeBool, NativeRange,
+                        NativeBool, NativeRange, default_precision,
                         NativeTuple, is_iterable_datatype, str_dtype)
 from .internals      import Slice, PyccelSymbol
 
@@ -65,6 +65,8 @@ __all__ = (
     'FunctionDef',
     'If',
     'Import',
+    'InModule',
+    'InProgram',
     'Interface',
     'Module',
     'ModuleHeader',
@@ -3609,6 +3611,27 @@ class StarredArguments(Basic):
     def args_var(self):
         return self._starred_obj
 
+# ...
+
+class InModule(PyccelAstNode):
+    _dtype = NativeBool()
+    _precision = default_precision['bool']
+    _rank  = 0
+    _shape = ()
+    _order = None
+    _attribute_nodes = ()
+    __slots__ = ()
+
+# ...
+
+class InProgram(PyccelAstNode):
+    _dtype = NativeBool()
+    _precision = default_precision['bool']
+    _rank  = 0
+    _shape = ()
+    _order = None
+    _attribute_nodes = ()
+    __slots__ = ()
 
 # ...
 
