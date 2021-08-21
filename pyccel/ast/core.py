@@ -1169,8 +1169,9 @@ class Module(Basic):
         if free_func is not None and not isinstance(free_func, FunctionDef):
             raise TypeError('free_func must be a FunctionDef')
 
-        if program is not None and not isinstance(program, Program):
-            raise TypeError('program must be a Program')
+        if PyccelAstNode.stage != "syntactic":
+            if program is not None and not isinstance(program, Program):
+                raise TypeError('program must be a Program')
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
@@ -1206,6 +1207,10 @@ class Module(Basic):
     @property
     def free_func(self):
         return self._free_func
+
+    @property
+    def program(self):
+        return self._program
 
     @property
     def funcs(self):
