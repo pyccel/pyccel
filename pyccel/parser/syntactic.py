@@ -188,8 +188,7 @@ class SyntaxParser(BasicParser):
         name = os.path.splitext(os.path.basename(self._filename))[0]
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
-        mod_code = CodeBlock(body)
-        return Module(name, [], [], program = mod_code)
+        return Module(name, [], [], program = body)
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)

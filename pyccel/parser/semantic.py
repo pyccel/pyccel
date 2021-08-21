@@ -40,6 +40,7 @@ from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCal
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
+from pyccel.ast.core import Module
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
@@ -1532,6 +1533,51 @@ class SemanticParser(BasicParser):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
+
+    def _visit_Module(self, expr, **settings):
+        body = [self._visit(b) for b in expr.program]
+        functions  = []
+        classes    = []
+        interfaces = []
+        imports    = []
+        program    = []
+        init_func  = []
+
+        for b in body:
+            if isinstance(b, FunctionDef):
+                functions.append(b)
+            elif isinstance(b, ClassDef):
+                classes.append(b)
+            elif isinstance(b, Interface):
+                interfaces.append(b)
+            elif isinstance(b, Import):
+                imports.append(b)
+            elif isinstance(b, If):
+                print("TODO")
+                init_func.append(b)
+            elif isinstance(b, CodeBlock):
+                init_func.extend(b.body)
+            else:
+                init_func.append(b)
+
+        variables = self.namespace.variables.values()
+
+        if init_func:
+            init_func_name = self.get_new_name(expr.name+'_init')
+            init_func = FunctionDef(init_func_name, [], [], init_func,
+                    global_vars = variables)
+        else:
+            init_func = None
+
+        return Module(expr.name,
+                    variables,
+                    functions,
+                    init_func = init_func,
+                    free_func = None,
+                    program = None,
+                    interfaces=interfaces,
+                    classes=classes,
+                    imports=imports)
 
     def _visit_tuple(self, expr, **settings):
         return tuple(self._visit(i, **settings) for i in expr)
