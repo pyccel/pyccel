@@ -996,8 +996,8 @@ class FCodePrinter(CodePrinter):
         is_const = var.is_const
         is_stack_array = var.is_stack_array
         is_optional = var.is_optional
+        is_private = var.is_private
         is_static = expr.static
-        is_private = expr.is_private
         intent = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:

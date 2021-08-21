@@ -348,7 +348,7 @@ class Variable(PyccelAstNode):
         """ Indicates if the Variable is private
         within the Module
         """
-        return self._private
+        return self._is_private
 
     @property
     def is_stack_array(self):
