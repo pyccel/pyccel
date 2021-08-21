@@ -271,6 +271,9 @@ class AsName(Basic):
     def target(self):
         return self._target
 
+    def __repr__(self):
+        return '{0} as {1}'.format(str(self.name), str(self.target))
+
     def __str__(self):
         return '{0} as {1}'.format(str(self.name), str(self.target))
 
