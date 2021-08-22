@@ -207,7 +207,7 @@ class Codegen(object):
         header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
         filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
-        if header_ext is not None and self.is_module:
+        if header_ext is not None:
             code = self._printer.doprint(ModuleHeader(self.ast))
             with open(header_filename, 'w') as f:
                 for line in code:

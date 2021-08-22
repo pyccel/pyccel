@@ -93,9 +93,7 @@ class CompileObj:
         if sys.platform == "win32":
             self._prog_target += '.exe'
 
-        self._target = os.path.join(folder, self._target)
-
-        self._lock         = FileLock(self.target+'.lock')
+        self._lock         = FileLock(self.module_target+'.lock')
 
     @property
     def source(self):
