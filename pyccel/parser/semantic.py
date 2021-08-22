@@ -1569,7 +1569,7 @@ class SemanticParser(BasicParser):
                     init_func_body.append(b)
             elif isinstance(b, CodeBlock):
                 init_func_body.extend(b.body)
-            elif not isinstance(b, (EmptyNode, FunctionHeader)):
+            else:
                 init_func_body.append(b)
 
         variables = list(self.namespace.variables.values())
@@ -1577,7 +1577,7 @@ class SemanticParser(BasicParser):
         free_func = None
         program   = None
 
-        if init_func_body:
+        if not all(isinstance(l, (FunctionHeader, EmptyNode, Comment)) for l in init_func_body):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
             variables.append(init_var)
