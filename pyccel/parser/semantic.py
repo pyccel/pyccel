@@ -2195,9 +2195,11 @@ class SemanticParser(BasicParser):
                 name = _get_name(master.name)
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
+                args_names = [arg.name for arg in args if isinstance(arg, Variable)]
                 d_restps = macro.apply_to_results(args)
                 for d_var, var in zip(d_restps, lhs):
-                    self._alloc_var(var, d_var, None, new_expressions)
+                    if not var in args_names:
+                        self._alloc_var(var, d_var, None, new_expressions)
 
                 # all terms in lhs must be already declared and available
                 # the namespace
