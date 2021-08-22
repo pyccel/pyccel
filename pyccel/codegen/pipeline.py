@@ -356,7 +356,7 @@ def execute_pyccel(fname, *,
 
         try:
             if codegen.is_program:
-                generated_filepath = src_compiler.compile_program(compile_obj=main_obj,
+                generated_program_filepath = src_compiler.compile_program(compile_obj=main_obj,
                         output_folder=pyccel_dirpath,
                         verbose=verbose)
             # Create shared library
@@ -392,12 +392,17 @@ def execute_pyccel(fname, *,
         target = os.path.join(folder, generated_filename)
         shutil.move(generated_filepath, target)
         generated_filepath = target
-
         if verbose:
-            if codegen.is_program:
-                print( '> Executable has been created: {}'.format(generated_filepath))
-            else:
-                print( '> Shared library has been created: {}'.format(generated_filepath))
+            print( '> Shared library has been created: {}'.format(generated_filepath))
+
+        if codegen.is_program:
+            generated_program_filename = os.path.basename(generated_program_filepath)
+            target = os.path.join(folder, generated_program_filename)
+            shutil.move(generated_program_filepath, target)
+            generated_program_filepath = target
+
+            if verbose:
+                print( '> Executable has been created: {}'.format(generated_program_filepath))
 
     # Print all warnings now
     if errors.has_warnings():
