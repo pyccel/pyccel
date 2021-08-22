@@ -494,27 +494,44 @@ class CCodePrinter(CodePrinter):
         imports = [*expr.module.imports, *map(Import, self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
 
+        variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations])
+
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n'
+                '{variables}\n'
                 #'{classes}\n'
                 '{funcs}\n'
                 #'{interfaces}\n'
                 '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
+                        variables = variables,
                         funcs   = funcs)
 
     def _print_Module(self, expr):
+        self._current_module = expr.name
         body    = ''.join(self._print(i) for i in expr.body)
+
+        variables = ''.join([self._print(d) for d in expr.declarations])
+
+        if expr.program:
+            prog_code = self._print(expr.program)
+        else:
+            prog_code = ''
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
-        return ('{imports}\n'
+
+        code = ('{imports}\n'
+                '{variables}\n'
                 '{body}\n').format(
-                        imports = imports,
-                        body    = body)
+                        imports   = imports,
+                        variables = variables,
+                        body      = body)
+
+        return code+prog_code
 
     def _print_Break(self, expr):
         return 'break;\n'
@@ -1668,9 +1685,9 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        # PythonPrint imports last to be sure that all additional_imports have been collected
-        imports  = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = [i for i in expr.imports if not i.source == self._current_module]
         imports  = ''.join(self._print(i) for i in imports)
+
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
