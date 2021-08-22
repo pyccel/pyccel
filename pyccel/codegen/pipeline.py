@@ -359,17 +359,16 @@ def execute_pyccel(fname, *,
                 generated_filepath = src_compiler.compile_program(compile_obj=main_obj,
                         output_folder=pyccel_dirpath,
                         verbose=verbose)
-            else:
-                # Create shared library
-                generated_filepath = create_shared_library(codegen,
-                                                       main_obj,
-                                                       language,
-                                                       wrapper_flags,
-                                                       pyccel_dirpath,
-                                                       src_compiler,
-                                                       wrapper_compiler,
-                                                       output_name,
-                                                       verbose)
+            # Create shared library
+            generated_filepath = create_shared_library(codegen,
+                                                   main_obj,
+                                                   language,
+                                                   wrapper_flags,
+                                                   pyccel_dirpath,
+                                                   src_compiler,
+                                                   wrapper_compiler,
+                                                   output_name,
+                                                   verbose)
         except NotImplementedError as error:
             msg = str(error)
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
