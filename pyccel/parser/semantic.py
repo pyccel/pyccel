@@ -1572,7 +1572,7 @@ class SemanticParser(BasicParser):
             else:
                 init_func_body.append(b)
 
-        variables = list(self.namespace.variables.values())
+        variables = self.get_variables(self.namespace)
         init_func = None
         free_func = None
         program   = None
@@ -1612,7 +1612,7 @@ class SemanticParser(BasicParser):
                 program_body = [*program_body, free_func]
             container = self._program_namespace
             program = Program(prog_name,
-                            container.variables.values(),
+                            self.get_variables(container),
                             program_body,
                             container.imports['imports'].values())
 
