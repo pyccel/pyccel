@@ -158,11 +158,11 @@ class Type(BasicStmt):
         return d_var
 
 class ExType(BasicStmt):
-    """Base class representing a header type in the grammar."""
+    """Base class representing a header extype in the grammar."""
 
     def __init__(self, **kwargs):
         """
-        Constructor for a Type.
+        Constructor for a ExType.
 
         dtype: str
             variable type
@@ -170,6 +170,7 @@ class ExType(BasicStmt):
         self.dtype   = kwargs.pop('dtype')
         self.prec    = kwargs.pop('prec')
         self.trailer = kwargs.pop('trailer', [])
+        self.order   = kwargs.pop('order')
 
         super().__init__(**kwargs)
 
@@ -184,12 +185,12 @@ class ExType(BasicStmt):
 
         trailer = []
         for i in self.trailer:
-            #check macrostmt
             if isinstance(i, MacroStmt):
                 trailer.append(i.expr)
             else:
                 trailer.append(PyccelSymbol(i))
-
+        if self.order:
+            order = str(self.order)
         d_var={}
         d_var['datatype']=dtype
         d_var['rank'] = len(trailer)
@@ -201,6 +202,7 @@ class ExType(BasicStmt):
             if dtype in ['double' ,'float','complex', 'int']:
                 d_var['precision'] = default_precision[dtype]
 
+        #this is temporarly
         if d_var['rank']>=1:
             d_var['order'] = order
         d_var['shape']=trailer
