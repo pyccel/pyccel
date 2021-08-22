@@ -344,7 +344,12 @@ class FCodePrinter(CodePrinter):
                  body,
                  'end module {}\n'.format(name)]
 
-        return '\n'.join([a for a in parts if a])
+        code = '\n'.join([a for a in parts if a])
+
+        if expr.program:
+            code += self._print(expr.program)
+
+        return code
 
     def _print_Program(self, expr):
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
