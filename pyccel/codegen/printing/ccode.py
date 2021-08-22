@@ -494,7 +494,7 @@ class CCodePrinter(CodePrinter):
         imports = [*expr.module.imports, *map(Import, self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
 
-        variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations])
+        variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
