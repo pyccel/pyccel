@@ -352,6 +352,10 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Program(self, expr):
+        self.parser.change_to_program_scope()
+        module_namespace = self._namespace
+        self._namespace = self.parser.namespace
+
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
         imports += 'use, intrinsic :: ISO_C_BINDING\n'
@@ -385,6 +389,9 @@ class FCodePrinter(CodePrinter):
                  decs,
                  body,
                 'end program {}\n'.format(name)]
+
+        self.parser.change_to_module_scope()
+        self._namespace = module_namespace
 
         return '\n'.join(a for a in parts if a)
 

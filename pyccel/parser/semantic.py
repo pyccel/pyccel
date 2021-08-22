@@ -44,6 +44,7 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
+from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Concatenate
 from pyccel.ast.core import ValuedArgument
@@ -175,6 +176,8 @@ class SemanticParser(BasicParser):
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = OrderedDict()
+        self._program_namespace = Scope()
+        self._module_namespace  = self._namespace
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
@@ -206,6 +209,10 @@ class SemanticParser(BasicParser):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
+
+    @property
+    def program_namespace(self):
+        return self._program_namespace
 
     #================================================================
     #                     Public functions
@@ -271,6 +278,15 @@ class SemanticParser(BasicParser):
     #================================================================
     #              Utility functions for scope handling
     #================================================================
+
+    def change_to_program_scope(self):
+        self._allocs.append([])
+        self._module_namespace = self._namespace
+        self._namespace = self._program_namespace
+
+    def change_to_module_scope(self):
+        self._program_namespace = self._namespace
+        self._namespace = self._module_namespace
 
     def get_variable_from_scope(self, name):
         """
@@ -1532,9 +1548,15 @@ class SemanticParser(BasicParser):
 
     def _visit_Module(self, expr, **settings):
         body = [self._visit(b) for b in expr.program]
-        imports        = []
-        program        = []
-        init_func_body = []
+        imports           = []
+        program_body      = []
+        init_func_body    = []
+        mod_name = expr.name
+        prog_name = self.get_new_name('prog_'+expr.name)
+        self.insert_import
+        container = self._program_namespace.imports
+        container['imports'][mod_name] = Import(mod_name)
+        self._allocs.append([])
 
         for b in body:
             if isinstance(b, Import):
@@ -1543,7 +1565,7 @@ class SemanticParser(BasicParser):
                 if all(isinstance(i.condition, (InModule,InProgram)) for i in b.blocks):
                     for i in b.blocks:
                         if isinstance(i.condition, InProgram):
-                            program.extend(i.body.body)
+                            program_body.extend(i.body.body)
                         elif isinstance(i.condition, InModule):
                             init_func_body.append(i.body.body)
                 else:
@@ -1571,12 +1593,6 @@ class SemanticParser(BasicParser):
             self.exit_function_scope()
             self.insert_function(init_func)
 
-        # Calling the Garbage collecting,
-        # it will add the necessary Deallocate nodes
-        # to the ast
-        if program:
-            program.insert2body(*self._garbage_collector(program))
-
         if init_func:
             free_func_name = self.get_new_name(expr.name+'_free')
             deallocs = self._garbage_collector(init_func.body)
@@ -1590,6 +1606,13 @@ class SemanticParser(BasicParser):
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
+        if program_body:
+            container = self._program_namespace
+            program = Program(prog_name,
+                            container.variables.values(),
+                            program_body,
+                            container.imports['imports'].values())
+
         funcs = []
         interfaces = []
         for f in self.namespace.functions.values():
@@ -1598,12 +1621,12 @@ class SemanticParser(BasicParser):
             elif isinstance(f, Interface):
                 interfaces.append(f)
 
-        return Module(expr.name,
+        return Module(mod_name,
                     variables,
                     funcs,
                     init_func = init_func,
                     free_func = free_func,
-                    program = None,
+                    program = program,
                     interfaces=interfaces,
                     classes=self.namespace.classes.values(),
                     imports=imports)
@@ -2728,11 +2751,24 @@ class SemanticParser(BasicParser):
 
         if prog_check:
             cond = InProgram()
+            self.change_to_program_scope()
+
+            mod_container = self._module_namespace
+            prog_container = self._program_namespace
+            prog_container.imports['variables'].update(mod_container.variables)
+            prog_container.imports['functions'].update(mod_container.functions)
         elif mod_check:
             cond = InModule()
         else:
             cond = self._visit(expr.condition)
         body = self._visit(expr.body)
+        if prog_check:
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the ast
+            body.insert2body(*self._garbage_collector(body))
+            self.change_to_module_scope()
+
         return IfSection(cond, body)
 
     def _visit_If(self, expr, **settings):
