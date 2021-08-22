@@ -1548,7 +1548,6 @@ class SemanticParser(BasicParser):
 
     def _visit_Module(self, expr, **settings):
         body = [self._visit(b) for b in expr.program]
-        imports           = []
         program_body      = []
         init_func_body    = []
         mod_name = expr.name
@@ -1559,9 +1558,7 @@ class SemanticParser(BasicParser):
         self._allocs.append([])
 
         for b in body:
-            if isinstance(b, Import):
-                imports.append(b)
-            elif isinstance(b, If):
+            if isinstance(b, If):
                 if all(isinstance(i.condition, (InModule,InProgram)) for i in b.blocks):
                     for i in b.blocks:
                         if isinstance(i.condition, InProgram):
@@ -1572,7 +1569,7 @@ class SemanticParser(BasicParser):
                     init_func_body.append(b)
             elif isinstance(b, CodeBlock):
                 init_func_body.extend(b.body)
-            elif not isinstance(b, EmptyNode):
+            elif not isinstance(b, (EmptyNode, FunctionHeader)):
                 init_func_body.append(b)
 
         variables = list(self.namespace.variables.values())
@@ -1635,7 +1632,7 @@ class SemanticParser(BasicParser):
                     program = program,
                     interfaces=interfaces,
                     classes=self.namespace.classes.values(),
-                    imports=imports)
+                    imports=self._namespace.imports['imports'].values())
 
     def _visit_tuple(self, expr, **settings):
         return tuple(self._visit(i, **settings) for i in expr)
@@ -2761,6 +2758,9 @@ class SemanticParser(BasicParser):
 
             mod_container = self._module_namespace
             prog_container = self._program_namespace
+            mod_imports = mod_container.imports
+            for k in mod_imports:
+                prog_container.imports[k].update(mod_container.imports[k])
             prog_container.imports['variables'].update(mod_container.variables)
             prog_container.imports['functions'].update(mod_container.functions)
         elif mod_check:
@@ -3427,8 +3427,6 @@ class SemanticParser(BasicParser):
 
             p       = self.d_parsers[source_target]
             import_init = p.semantic_parser.ast.init_func
-            if import_init:
-                result  = FunctionCall(import_init,[],[])
             if expr.target:
                 targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
@@ -3472,6 +3470,10 @@ class SemanticParser(BasicParser):
                 targets = container['imports'][source_target].target.union(expr.target)
             else:
                 targets = expr.target
+
+            if import_init:
+                result  = FunctionCall(import_init,[],[])
+                targets.add(import_init.name)
 
             expr = Import(expr.source, targets)
 
