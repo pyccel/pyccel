@@ -1607,6 +1607,12 @@ class SemanticParser(BasicParser):
                 self.insert_function(free_func)
 
         if program_body:
+            if init_func:
+                import_init  = FunctionCall(init_func,[],[])
+                program_body = [import_init, *program_body]
+            if free_func:
+                import_init  = FunctionCall(free_func,[],[])
+                program_body = [*program_body, free_func]
             container = self._program_namespace
             program = Program(prog_name,
                             container.variables.values(),
