@@ -85,7 +85,9 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
         base_name = os.path.basename(root)
         prog_root = os.path.join(base_dir, base_name)
         if os.path.isfile(prog_root+extension):
-            compile_fortran(path_dir, test_file, dependencies, is_mod = True)
+            compile_fortran_or_c(compiler, extension,
+                                path_dir, test_file,
+                                dependencies, is_mod = True)
             root = prog_root
 
     if is_mod:
