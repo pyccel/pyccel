@@ -1318,7 +1318,14 @@ class FCodePrinter(CodePrinter):
 
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
-        return 'deallocate({0})\n'.format(self._print(expr.variable))
+        var = expr.variable
+        if isinstance(var, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in var)
+
+        if var.is_pointer:
+            return ''
+        else:
+            return 'deallocate({0})\n'.format(self._print(var))
 #------------------------------------------------------------------------------
 
     def _print_NativeBool(self, expr):
