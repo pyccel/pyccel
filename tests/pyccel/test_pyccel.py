@@ -29,7 +29,7 @@ def get_exe(filename, language=None):
         exefile1 += ".exe"
 
     dirname = os.path.dirname(filename)
-    basename = "prog_"+os.path.basename(exefile1)
+    basename = os.path.basename(exefile1)
     exefile2 = os.path.join(dirname, basename)
 
     if os.path.isfile(exefile2):
@@ -83,21 +83,19 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
     if not is_mod:
         base_dir = os.path.dirname(root)
         base_name = os.path.basename(root)
-        prog_root = os.path.join(base_dir, "prog_"+base_name)
+        prog_root = os.path.join(base_dir, base_name)
         if os.path.isfile(prog_root+extension):
             compile_fortran(path_dir, test_file, dependencies, is_mod = True)
-            dependencies.append(test_file)
             root = prog_root
 
     if is_mod:
         command = [shutil.which(compiler), "-c", root+extension]
     else:
         command = [shutil.which(compiler), "-O3", root+extension]
-
-    for d in deps:
-        d = insert_pyccel_folder(d)
-        command.append(d[:-3]+".o")
-        command.append("-I"+os.path.dirname(d))
+        for d in deps:
+            d = insert_pyccel_folder(d)
+            command.append(d[:-3]+".o")
+            command.append("-I"+os.path.dirname(d))
 
     command.append("-o")
     if is_mod:
@@ -659,7 +657,8 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1))\n")
+                "if __name__ == '__main__':\n"
+                "    print(f(1))\n")
 
         f.write(code)
 
@@ -685,7 +684,8 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1.5))\n")
+                "if __name__ == '__main__':\n"
+                "    print(f(1.5))\n")
 
         f.write(code)
 
