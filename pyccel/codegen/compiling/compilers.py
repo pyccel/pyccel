@@ -326,12 +326,9 @@ class Compiler:
         else:
             j_code = ()
 
-        if compile_obj.is_module:
-            flags.append('-c')
-
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
                 *m_code, compile_obj.module_target,
-                '-o', compile_obj.target,
+                '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
         compile_obj.acquire_lock()
@@ -340,7 +337,7 @@ class Compiler:
         finally:
             compile_obj.release_lock()
 
-        return compile_obj.target
+        return compile_obj.program_target
 
     def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
         """

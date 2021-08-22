@@ -274,7 +274,6 @@ def execute_pyccel(fname, *,
 
         main_obj = CompileObj(file_name = fname,
                 folder       = pyccel_dirpath,
-                is_module    = codegen.is_program,
                 flags        = fflags,
                 includes     = includes,
                 libs         = libs,
