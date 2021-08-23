@@ -406,10 +406,12 @@ class Compiler:
         verbose : bool
                   Indicates whether additional output should be shown
         """
+        cmd = [os.path.expandvars(c) for c in cmd]
         if verbose:
             print(' '.join(cmd))
 
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True)
         out, err = p.communicate()
 
         if verbose and out:

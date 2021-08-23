@@ -165,7 +165,7 @@ class StringStmt(BasicStmt):
         self.arg = kwargs.pop('arg')
     @property
     def expr(self):
-        return LiteralString(repr(str(self.arg)))
+        return LiteralString(str(self.arg))
 
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
