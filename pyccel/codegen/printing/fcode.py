@@ -27,14 +27,14 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName,
-                             If, IfSection, FunctionDef)
+                             If, IfSection)
 
-from pyccel.ast.variable  import (Variable, TupleVariable,
+from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize, Constant)
+                             DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
 from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
@@ -51,7 +51,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeRange, NativeTuple
+from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice
@@ -63,7 +63,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
-from pyccel.ast.numpyext import NumpyMod, NumpyFloat
+from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
@@ -877,20 +877,7 @@ class FCodePrinter(CodePrinter):
         var = expr.argument
         if not isinstance(var, (Variable, IndexedElement)):
             raise TypeError('Expecting a variable, given {}'.format(type(var)))
-        shape = None
-        if isinstance(var, Variable):
-            shape = var.shape
-
-        if shape is None:
-            rank = var.rank
-            shape = []
-            for i in range(0, rank):
-                l = 'lbound({var},{i})'.format(var=self._print(var),
-                                               i=self._print(i+1))
-                u = 'ubound({var},{i})'.format(var=self._print(var),
-                                               i=self._print(i+1))
-                s = '{u}-{l}+1'.format(u=u, l=l)
-                shape.append(s)
+        shape = var.shape
 
         if len(shape) == 1:
             shape = shape[0]
@@ -902,9 +889,8 @@ class FCodePrinter(CodePrinter):
             else:
                 shape = '1'
 
-        code = '{}'.format(self._print(shape))
+        return self._print(shape)
 
-        return self._get_statement(code)
     # ...
     def _print_MacroType(self, expr):
         dtype = self._print(expr.argument.dtype)
@@ -935,49 +921,12 @@ class FCodePrinter(CodePrinter):
     def _print_MacroCount(self, expr):
 
         var = expr.argument
-        #TODO calculate size when type is pointer
-        # it must work according to fortran documentation
-        # but it raises somehow an error when it's a pointer
-        # and shape is None
 
-        if isinstance(var, Variable):
-            shape = var.shape
-            if not isinstance(shape,(tuple,list)):
-                shape = [shape]
-            rank = len(shape)
-            if shape is None:
-                return 'size({})'.format(self._print(var))
-
-
-        elif isinstance(var, IndexedElement):
-            _shape = var.base.shape
-            if _shape is None:
-                return 'size({})'.format(self._print(var))
-
-            shape = []
-            for (s, i) in zip(_shape, var.indices):
-                if isinstance(i, Slice):
-                    if i.start is None and i.stop is None:
-                        shape.append(s)
-                    elif i.start is None:
-                        if (isinstance(i.stop, (int, LiteralInteger)) and i.stop>0) or not(isinstance(i.stop, (int, LiteralInteger))):
-                            shape.append(i.stop)
-                    elif i.stop is None:
-                        if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
-                            shape.append(PyccelMinus(s, i.start, simplify = True))
-                    else:
-                        shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, LiteralInteger(1), simplify = True), simplify = True))
-
-            rank = len(shape)
-
-        else:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
-
-        if rank == 0:
+        if var.rank == 0:
             return '1'
-
-        return str(functools.reduce(operator.mul, shape ))
+        else:
+            return self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
     def _print_Declare(self, expr):
         # ... ignored declarations

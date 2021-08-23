@@ -44,10 +44,14 @@ class CompileObj:
 
     accelerators  : str
                     Tool used to accelerate the code (e.g. openmp openacc)
+
+    has_target_file : bool
+                    If set to false then this flag indicates that the file has no target.
+                    Eg an interface for a library
     """
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_target','_lock','_flags','_includes','_libs','_libdirs','_accelerators',
-                 '_dependencies','_is_module')
+                 '_dependencies','_is_module','_has_target_file')
     def __init__(self,
                  file_name,
                  folder,
@@ -57,7 +61,8 @@ class CompileObj:
                  libs         = (),
                  libdirs      = (),
                  dependencies = (),
-                 accelerators = ()):
+                 accelerators = (),
+                 has_target_file = True):
 
         self._file = os.path.join(folder, file_name)
         self._folder = folder
@@ -76,21 +81,30 @@ class CompileObj:
         self._lock         = FileLock(self.target+'.lock')
 
         self._flags        = list(flags)
-        self._includes     = set([folder, *includes])
+        if has_target_file:
+            self._includes     = set([folder, *includes])
+        else:
+            self._includes = set(includes)
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
-        self._dependencies = set()
+        self._dependencies = dict()
         if dependencies:
             self.add_dependencies(*dependencies)
         self._is_module    = is_module
+        self._has_target_file = has_target_file
 
     def reset_folder(self, folder):
         """
         Change the folder in which the source file is saved (useful for stdlib)
         """
+        if self.has_target_file:
+            self._includes.remove(self._folder)
+            self._includes.add(folder)
+
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._folder = folder
+        self._includes.add(self._folder)
 
         rel_mod_name = os.path.join(folder, self._module_name)
         self._module_target = rel_mod_name+'.o'
@@ -162,16 +176,23 @@ class CompileObj:
     def extra_modules(self):
         """ Returns the additional objects required to compile the file
         """
-        deps = set(d.target for d in self._dependencies)
-        for d in self._dependencies:
-            deps.update(d.extra_modules)
+        deps = set()
+        for d in self._dependencies.values():
+            if d.has_target_file:
+                deps.add(d.module_target)
+                deps.update(d.extra_modules)
         return deps
 
     @property
     def dependencies(self):
         """ Returns the objects which the file to be compiled uses
         """
-        return self._dependencies
+        return self._dependencies.values()
+
+    def get_dependency(self, target):
+        """ Returns the objects which the file to be compiled uses
+        """
+        return self._dependencies.get(target, None)
 
     def add_dependencies(self, *args):
         """
@@ -183,9 +204,8 @@ class CompileObj:
         """
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
-        self._dependencies.update(args)
+        self._dependencies.update({a.target:a for a in args})
         for a in args:
-            self._includes.add(a.source_folder)
             self._includes.update(a.includes)
             self._libs.extend(a.libs)
             self._libdirs.update(a.libdirs)
@@ -195,7 +215,7 @@ class CompileObj:
         """
         Lock the file and its dependencies to prevent race conditions
         """
-        self._lock.acquire()
+        self.acquire_simple_lock()
         for d in self.dependencies:
             d.acquire_simple_lock()
 
@@ -203,13 +223,14 @@ class CompileObj:
         """
         Lock the file to prevent race conditions but not its dependencies
         """
-        self._lock.acquire()
+        if self.has_target_file:
+            self._lock.acquire()
 
     def release_lock(self):
         """
         Unlock the file and its dependencies
         """
-        self._lock.release()
+        self.release_simple_lock()
         for d in self.dependencies:
             d.release_simple_lock()
 
@@ -217,7 +238,8 @@ class CompileObj:
         """
         Unlock the file
         """
-        self._lock.release()
+        if self.has_target_file:
+            self._lock.release()
 
     @property
     def accelerators(self):
@@ -236,3 +258,11 @@ class CompileObj:
 
     def __hash__(self):
         return hash(self.target)
+
+    @property
+    def has_target_file(self):
+        """
+        Indicates whether the file has a target.
+        Eg an interface for a library may not have a target
+        """
+        return self._has_target_file

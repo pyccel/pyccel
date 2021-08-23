@@ -6,11 +6,7 @@
 #ifndef NDARRAYS_H
 # define NDARRAYS_H
 
-# include <stdlib.h>
 # include <complex.h>
-# include <string.h>
-# include <stdio.h>
-# include <stdarg.h>
 # include <stdbool.h>
 # include <stdint.h>
 
