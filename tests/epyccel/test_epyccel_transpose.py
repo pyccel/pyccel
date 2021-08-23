@@ -141,3 +141,28 @@ def test_transpose_of_expression(language):
 
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
+
+def test_force_transpose(language):
+    def f1(x : 'int[:,:]'):
+        from numpy import transpose, empty
+        n,m = x.shape
+        y = empty((m,n))
+        y[:,:] = transpose(x)
+        n, m = y.shape
+        return n, m, y[-1,0], y[0,-1]
+    def f2(x : 'int[:,:,:]'):
+        from numpy import empty
+        n,m,p = x.shape
+        y = empty((p,m,n))
+        y[:,:,:] = x.T
+        n, m, p = y.shape
+        return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
+
+    x1 = randint(50, size=(2,5))
+    x2 = randint(50, size=(2,3,7))
+
+    f1_epyc = epyccel(f1, language=language)
+    assert f1( x1 ) == f1_epyc( x1 )
+
+    f2_epyc = epyccel(f2, language=language)
+    assert f2( x2 ) == f2_epyc( x2 )
