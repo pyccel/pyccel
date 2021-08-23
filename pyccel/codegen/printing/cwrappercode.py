@@ -36,7 +36,7 @@ from pyccel.ast.numpy_wrapper   import numpy_get_data, numpy_get_dim
 
 from pyccel.ast.bind_c   import as_static_function_call
 
-from pyccel.ast.variable  import VariableAddress, Variable, ValuedVariable
+from pyccel.ast.variable  import VariableAddress, Variable
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
@@ -178,13 +178,13 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
-    def get_default_assign(self, arg, func_arg):
+    def get_default_assign(self, arg, func_arg, value):
         if arg.rank > 0 :
             return AliasAssign(arg, Nil())
         elif func_arg.is_optional:
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
-            return Assign(arg, func_arg.value)
+            return Assign(arg, value)
         elif isinstance(arg.dtype, PyccelPyObject):
             return AliasAssign(arg, Py_None)
         else:
@@ -201,7 +201,8 @@ class CWrapperCodePrinter(CCodePrinter):
         additional_body = []
         if self._target_language == 'fortran':
             static_args = []
-            for a in function.arguments:
+            for arg in function.arguments:
+                a = arg.var
                 if isinstance(a, Variable) and a.rank>0:
                     # Add shape arguments for static function
                     for i in range(collect_dict[a].rank):
@@ -216,7 +217,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_function = as_static_function_call(function, self._module_name)
         else:
             static_function = function
-            static_args = function.arguments
+            static_args = [a.var for a in function.arguments]
         return static_function, static_args, additional_body
 
     def _get_check_type_statement(self, variable, collect_var):
@@ -280,7 +281,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # Functions managing  the creation of wrapper body
     # -------------------------------------------------------------------
 
-    def _valued_variable_management(self, variable, collect_var, tmp_variable):
+    def _valued_variable_management(self, variable, collect_var, tmp_variable, default_value):
         """
         Responsible for creating the body collecting the default value of an valuedVariable
         and the check needed.
@@ -311,12 +312,12 @@ class CWrapperCodePrinter(CCodePrinter):
             section       = IfSection(valued_var_check, [AliasAssign(variable, Nil())])
 
         else:
-            section       = IfSection(valued_var_check, [Assign(variable, variable.value)])
+            section       = IfSection(valued_var_check, [Assign(variable, default_value)])
 
         return section, collect_body
 
 
-    def _body_scalar(self, variable, collect_var, error_check = False, tmp_variable = None):
+    def _body_scalar(self, variable, collect_var, default_value = None, error_check = False, tmp_variable = None):
         """
         Responsible for collecting value and managing error and create the body
         of arguments in format:
@@ -342,8 +343,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         collect_value = [Assign(var, FunctionCall(Python_to_C(var), [collect_var]))]
 
-        if isinstance(variable, ValuedVariable):
-            section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable)
+        if default_value is not None:
+            section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable, default_value)
             sections.append(section)
             collect_value += optional_collect
 
@@ -396,7 +397,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def _body_management(self, used_names, variable, collect_var, check_type = False):
+    def _body_management(self, used_names, variable, collect_var, default_value = None, check_type = False):
         """
         Responsible for calling functions that take care of body creation
 
@@ -405,9 +406,10 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names : list of strings
             List of variable and function names to avoid name collisions
         Variable : Variable
-            The optional variable
+            The variable (which may be optional)
         collect_var : variable
             the pyobject type variable  holder of value
+        default_value : PyccelAstNode
         check_type : Boolean
             True if the type is needed
 
@@ -429,7 +431,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
                                         name = self.get_new_name(used_names, variable.name+"_tmp"))
 
-            body = [self._body_scalar(variable, collect_var, check_type, tmp_variable)]
+            body = [self._body_scalar(variable, collect_var, default_value, check_type, tmp_variable)]
 
         return body, tmp_variable
 
@@ -750,10 +752,11 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name])
 
         # update ndarray local variables properties
-        local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
-                          if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
+        local_arg_vars = {(a.var.clone(a.var.name, is_pointer=True, allocatable=False)
+                          if isinstance(a.var, Variable) and a.var.rank > 0 else a.var):a for a in expr.arguments}
         # update optional variable properties
-        local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_arg_vars]
+        local_arg_vars = {(v.clone(v.name, is_pointer=True) if v.is_optional \
+                            else v) : a for v,a in local_arg_vars.items()}
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
@@ -796,11 +799,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         parse_args = []
         collect_vars = {}
-        for arg in local_arg_vars:
-            collect_var  = self.get_PyArgParseType(used_names, arg)
-            collect_vars[arg] = collect_var
+        for var, arg in local_arg_vars.items():
+            collect_var  = self.get_PyArgParseType(used_names, var)
+            collect_vars[var] = collect_var
 
-            body, tmp_variable = self._body_management(used_names, arg, collect_var, True)
+            body, tmp_variable = self._body_management(used_names, var, collect_var, arg.value, True)
             if tmp_variable :
                 wrapper_vars[tmp_variable.name] = tmp_variable
 
@@ -813,11 +816,13 @@ class CWrapperCodePrinter(CCodePrinter):
             parse_args.append(collect_var)
 
             # Write default values
-            if isinstance(arg, ValuedVariable):
-                wrapper_body.append(self.get_default_assign(parse_args[-1], arg))
+            if arg.value is not None:
+                wrapper_body.append(self.get_default_assign(parse_args[-1], var, arg.value))
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, local_arg_vars, parse_args, keyword_list)
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs,
+                                          list(local_arg_vars.values()),
+                                          parse_args, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
@@ -825,8 +830,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Call function
         static_function, static_args, additional_body = self._get_static_function(used_names, expr, collect_vars)
         wrapper_body.extend(additional_body)
-        for var in static_args :
-            wrapper_vars[var.name] = var
+        wrapper_vars.update({arg.name : arg for arg in static_args})
 
         if len(expr.results)==0:
             func_call = FunctionCall(static_function, static_args)
