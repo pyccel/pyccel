@@ -1181,14 +1181,14 @@ class NumpyTranspose(NumpyUfuncUnary):
     __slots__ = ()
     name = 'transpose'
 
-    def __new__(cls, x, axes = None):
+    def __new__(cls, x, *axes):
         if x.rank<2:
             return x
         else:
             return super().__new__(cls)
 
-    def __init__(self, x, axes = None):
-        if axes is not None:
+    def __init__(self, x, *axes):
+        if len(axes)!=0:
             raise NotImplementedError("The axes argument of the transpose function is not yet implemented")
         super().__init__(x)
 
