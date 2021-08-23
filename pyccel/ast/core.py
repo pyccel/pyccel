@@ -13,14 +13,12 @@ from sympy.logic.boolalg      import And as sp_And
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
-from pyccel.utilities.metaclasses import Singleton
-
 from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
-                        NativeTuple, is_iterable_datatype, str_dtype)
+                        NativeTuple, str_dtype)
 from .internals      import Slice, PyccelSymbol
 
 from .literals       import LiteralInteger, Nil, convert_to_literal
@@ -28,7 +26,7 @@ from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 
-from .variable import DottedName, DottedVariable, IndexedElement
+from .variable import DottedName, IndexedElement
 from .variable import ValuedVariable, Variable
 
 errors = Errors()

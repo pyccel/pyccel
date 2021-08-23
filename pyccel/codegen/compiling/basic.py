@@ -80,7 +80,7 @@ class CompileObj:
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
-        self._dependencies = set()
+        self._dependencies = dict()
         if dependencies:
             self.add_dependencies(*dependencies)
         self._is_module    = is_module
@@ -89,8 +89,10 @@ class CompileObj:
         """
         Change the folder in which the source file is saved (useful for stdlib)
         """
+        self._includes.remove(self._folder)
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._folder = folder
+        self._includes.add(self._folder)
 
         rel_mod_name = os.path.join(folder, self._module_name)
         self._module_target = rel_mod_name+'.o'
@@ -162,8 +164,8 @@ class CompileObj:
     def extra_modules(self):
         """ Returns the additional objects required to compile the file
         """
-        deps = set(d.target for d in self._dependencies)
-        for d in self._dependencies:
+        deps = set(self._dependencies.keys())
+        for d in self._dependencies.values():
             deps.update(d.extra_modules)
         return deps
 
@@ -171,7 +173,12 @@ class CompileObj:
     def dependencies(self):
         """ Returns the objects which the file to be compiled uses
         """
-        return self._dependencies
+        return self._dependencies.values()
+
+    def get_dependency(self, target):
+        """ Returns the objects which the file to be compiled uses
+        """
+        return self._dependencies.get(target, None)
 
     def add_dependencies(self, *args):
         """
@@ -183,7 +190,7 @@ class CompileObj:
         """
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
-        self._dependencies.update(args)
+        self._dependencies.update({a.target:a for a in args})
         for a in args:
             self._includes.add(a.source_folder)
             self._includes.update(a.includes)
