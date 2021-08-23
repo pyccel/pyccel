@@ -144,7 +144,7 @@ class PyArg_ParseTupleNode(Basic):
         self._flags      = ''
         i = 0
 
-        while i < len(c_func_args) and not c_func_args[i].has_keyword:
+        while i < len(c_func_args) and not c_func_args[i].has_default:
             self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):
