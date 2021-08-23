@@ -1250,8 +1250,10 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
          # Ensure the correct syntax is used for pointers
         args = []
-        for a, f in zip(expr.args, func.arguments):
-            a = a.value
+        expr_args = list(expr.args)
+        expr_args += [None]*(len(func.arguments)-len(expr_args))
+        for a, f in zip(expr_args, func.arguments):
+            a = a.value if a else Nil()
             f = f.var
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
