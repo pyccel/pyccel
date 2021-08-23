@@ -2382,8 +2382,11 @@ class FCodePrinter(CodePrinter):
         assign = expr.get_user_nodes(Assign)[0]
         if assign.lhs.order != var.order:
             return arg
-        else:
+        elif var.rank == 2:
             return 'transpose({0})'.format(arg)
+        else:
+            order = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+            return 'reshape({}, order=[{}])'.format(arg, order)
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
