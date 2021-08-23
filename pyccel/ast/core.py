@@ -80,7 +80,6 @@ __all__ = (
     'With',
     'create_variable',
     'create_incremented_string',
-    'get_initial_value',
     'get_iterable_ranges',
     'inline',
     'process_shape',
@@ -3616,97 +3615,6 @@ class StarredArguments(Basic):
     @property
     def args_var(self):
         return self._starred_obj
-
-
-# ...
-
-# ...
-
-def get_initial_value(expr, var):
-    """Returns the first assigned value to var in the Expression expr.
-
-    Parameters
-    ----------
-    expr: Expression
-        any AST valid expression
-
-    var: str, Variable, DottedName, list, tuple
-        variable name
-    """
-
-    # ...
-
-    def is_None(expr):
-        """Returns True if expr is None or Nil()."""
-
-        return isinstance(expr, Nil) or expr is None
-
-    # ...
-
-    # ...
-
-    if isinstance(var, str):
-        return get_initial_value(expr, [var])
-    elif isinstance(var, DottedName):
-
-        return get_initial_value(expr, [str(var)])
-    elif isinstance(var, Variable):
-
-        return get_initial_value(expr, [var.name])
-    elif not isinstance(var, (list, tuple)):
-
-        raise TypeError('Expecting var to be str, list, tuple or Variable, given {0}'.format(type(var)))
-
-    # ...
-
-    # ...
-
-    if isinstance(expr, ValuedArgument):
-        if expr.has_default and expr.name in var:
-            return expr.value
-    elif isinstance(expr, Variable):
-
-        # expr.cls_base if of type ClassDef
-
-        if expr.cls_base:
-            return get_initial_value(expr.cls_base, var)
-    elif isinstance(expr, Assign):
-
-        if str(expr.lhs) in var:
-            return expr.rhs
-    elif isinstance(expr, FunctionDef):
-
-        value = get_initial_value(expr.body, var)
-        if not is_None(value):
-            r = get_initial_value(expr.arguments, value)
-            if 'self._linear' in var:
-                print ('>>>> ', var, value, r)
-            if not r is None:
-                return r
-        return value
-
-    elif isinstance(expr, ConstructorCall):
-
-        return get_initial_value(expr.func, var)
-    elif isinstance(expr, (list, tuple)):
-
-        for i in expr:
-            value = get_initial_value(i, var)
-
-            # here we make a difference between None and Nil,
-            # since the output of our function can be None
-
-            if not value is None:
-                return value
-    elif isinstance(expr, ClassDef):
-
-        methods = expr.methods_as_dict
-        init_method = methods['__init__']
-        return get_initial_value(init_method, var)
-
-    # ...
-
-    return Nil()
 
 
 # ...
