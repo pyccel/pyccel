@@ -75,7 +75,7 @@ def test_mixed_order(language):
         from numpy import transpose, ones
         n, m = x.shape
         y = ones((m,n), order='F')
-        z = transpose(x)+y
+        z = x.transpose()+y
         n, m = z.shape
         return n, m, z[-1,0], z[0,-1]
     def f3(x : 'int[:,:,:]'):
@@ -154,7 +154,7 @@ def test_force_transpose(language):
         from numpy import empty
         n,m,p = x.shape
         y = empty((p,m,n))
-        y[:,:,:] = x.T
+        y[:,:,:] = x.transpose()
         n, m, p = y.shape
         return n, m, p, y[0,-1,0], y[0,0,-1], y[-1,-1,0]
 
