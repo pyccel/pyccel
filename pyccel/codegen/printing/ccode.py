@@ -196,6 +196,7 @@ c_library_headers = (
     "stdint",
     "stdio",
     "stdlib",
+    "string",
     "tgmath",
 )
 
@@ -295,6 +296,7 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
 
+        self._additional_imports.add('string')
         if isinstance(arg, Variable):
             arg = self._print(arg)
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
