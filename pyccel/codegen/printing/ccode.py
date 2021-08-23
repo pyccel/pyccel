@@ -742,17 +742,17 @@ class CCodePrinter(CodePrinter):
                 self._additional_declare.append(for_index)
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
                 for_range = PythonRange(max_index)
-                print_body = [ f[for_index] ]
-                if orig_args[i].rank == 1:
+                print_body = [ FunctionCallArgument(f[for_index]) ]
+                if f.rank == 1:
                     print_body.append(space_end)
 
                 for_body  = [PythonPrint(print_body)]
                 for_loop  = For(for_index, for_range, for_body)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
-                body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
+                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
                                   for_loop,
-                                  PythonPrint([ orig_args[i][max_index], for_end])],
+                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end])],
                                  unravelled = True)
                 code += self._print(body)
             else:
