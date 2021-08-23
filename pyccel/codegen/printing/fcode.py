@@ -1365,7 +1365,7 @@ class FCodePrinter(CodePrinter):
         name = self._print(expr.name)
         results   = list(expr.results)
         arguments = list(expr.arguments)
-        if any([isinstance(a.var, FunctionAddress) for a in arguments]):
+        if any(isinstance(a.var, FunctionAddress) for a in arguments):
             # Functions with function addresses as arguments cannot be
             # exposed to python so there is no need to print their signature
             return ''
