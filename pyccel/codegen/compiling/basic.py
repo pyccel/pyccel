@@ -176,9 +176,10 @@ class CompileObj:
     def extra_modules(self):
         """ Returns the additional objects required to compile the file
         """
-        deps = set(self._dependencies.keys())
+        deps = set()
         for d in self._dependencies.values():
             if d.has_target_file:
+                deps.add(d.module_target)
                 deps.update(d.extra_modules)
         return deps
 
