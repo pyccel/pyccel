@@ -251,6 +251,13 @@ class Variable(PyccelAstNode):
         """
         return self.is_pointer
 
+    def set_changeable_shape(self):
+        """
+        Indicate that the exact shape is unknown, e.g. if the allocate is done in
+        an If block.
+        """
+        self._shape = [PyccelArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
+
     @property
     def name(self):
         """ Name of the variable
