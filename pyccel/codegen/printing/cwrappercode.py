@@ -64,12 +64,15 @@ class CWrapperCodePrinter(CCodePrinter):
     def stored_in_c_pointer(self, a):
         """
         Return True if variable is pointer or stored in a pointer
-        Parameters:
+        
+        Parameters
         -----------
         a      : Variable
             Variable holding information needed (is_pointer, is_optional)
-        Returns: Boolean
-        --------
+
+        Returns
+        -------
+        stored_in_c : Boolean
         """
         stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
         if self._target_language == 'fortran':
@@ -89,6 +92,7 @@ class CWrapperCodePrinter(CCodePrinter):
             Set of variable and function names to avoid name collisions
         requested_name : String
             The desired name
+
         Returns
         ----------
         name  : String
@@ -112,12 +116,15 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_declare_type(self, expr):
         """
         Get the declaration type of a variable
-        Parameters:
+        
+        Parameters
         -----------
         variable : Variable
             Variable holding information needed to choose the declaration type
-        Returns: String
-        --------
+
+        Returns
+        -------
+        type_declaration : String
         """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
@@ -134,7 +141,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_new_PyObject(self, name, used_names):
         """
         Create new PyccelPyObject Variable with the desired name
-        Parameters:
+        
+        Parameters
         -----------
         name       : String
             The desired name
@@ -153,7 +161,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Find the corresponding C dtype in the dtype_registry
         raise PYCCEL_RESTRICTION_TODO if not found
 
-        Parameters:
+        Parameters
         -----------
         dtype : String
             expression data type
@@ -161,8 +169,9 @@ class CWrapperCodePrinter(CCodePrinter):
         prec  : Integer
             expression precision
 
-        Returns: String
-        --------
+        Returns
+        -------
+        dtype : String
         """
         try :
             return dtype_registry[(dtype, prec)]
@@ -248,13 +257,13 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         create wrapper function name
 
-        Parameters:
+        Parameters
         -----------
         used_names: list of strings
             List of variable and function names to avoid name collisions
         func      : FunctionDef or Interface
 
-        Returns:
+        Returns
         -------
         wrapper_name : string
         """
@@ -277,7 +286,7 @@ class CWrapperCodePrinter(CCodePrinter):
         and the check needed.
         if the valuedVariable is optional create body to collect the new value
 
-        Parameters:
+        Parameters
         ----------
         tmp_variable : Variable
             The temporary variable  to hold result
@@ -312,7 +321,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Responsible for collecting value and managing error and create the body
         of arguments in format:
 
-        Parameters:
+        Parameters
         ----------
         variable    : Variable
             the variable needed to collect
@@ -353,7 +362,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
-        Parameters:
+        
+        Parameters
         ----------
         Variable : Variable
             The optional variable
@@ -389,7 +399,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def _body_management(self, used_names, variable, collect_var, check_type = False):
         """
         Responsible for calling functions that take care of body creation
-        Parameters:
+        
+        Parameters
         ----------
         used_names : list of strings
             List of variable and function names to avoid name collisions
@@ -430,7 +441,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
 
-        Parameters:
+        Parameters
         ----------
         used_names : list of strings
             List of variable and function names to avoid name collisions
@@ -462,7 +473,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Responsible for collecting the variable required to build the result
         and the necessary cast function
 
-        Parameters:
+        Parameters
         ----------
         used_names : list of strings
             List of variable and function names to avoid name collisions
