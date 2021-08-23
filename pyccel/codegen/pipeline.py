@@ -344,9 +344,9 @@ def execute_pyccel(fname, *,
                 no_target = parser.metavars.get('no_target',False) or \
                         parser.metavars.get('ignore_at_import',False)
                 deps[mod_base] = CompileObj(mod_base,
-                                    folder         = mod_folder,
-                                    libs           = compile_libs,
-                                    no_target_file = no_target)
+                                    folder          = mod_folder,
+                                    libs            = compile_libs,
+                                    has_target_file = not no_target)
 
             # Proceed recursively
             for son in parser.sons:
