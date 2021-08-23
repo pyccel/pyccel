@@ -220,7 +220,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_args = [a.var for a in function.arguments]
         return static_function, static_args, additional_body
 
-    def _get_check_type_statement(self, variable, collect_var):
+    def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
         Get the code which checks if the variable collected from python
         has the expected type
@@ -232,6 +232,10 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var : Variable
                       The variable in which the result will be saved,
                       used to provide information about the expected type
+        compulsory  : bool
+                      Indicates whether the argument is a compulsory argument
+                      to the function (if not then it must have a default or
+                      be optional)
 
         Returns
         -------
@@ -246,7 +250,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else :
             check = scalar_object_check(collect_var, variable)
 
-        if isinstance(variable, ValuedVariable):
+        if not compulsory:
             default = PyccelNot(VariableAddress(collect_var)) \
                             if variable.rank > 0 else \
                       PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
@@ -541,9 +545,9 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        types_dict = OrderedDict((a, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
+        types_dict = OrderedDict((a.var, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
         # collect parse arg
-        parse_args = [self.get_PyArgParseType(used_names,a) for a in funcs[0].arguments]
+        parse_args = [self.get_PyArgParseType(used_names,a.var) for a in funcs[0].arguments]
 
         # Managing the body of wrapper
         for func in funcs :
@@ -551,22 +555,23 @@ class CWrapperCodePrinter(CCodePrinter):
             res_args = []
             mini_wrapper_func_vars = {a.name : a for a in func.arguments}
             # update ndarray local variables properties
-            local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
-                              if isinstance(a, Variable) and a.rank > 0 else a for a in func.arguments]
+            local_arg_vars = {(a.var.clone(a.var.name, is_pointer=True, allocatable=False)
+                              if isinstance(a.var, Variable) and a.var.rank > 0 else a.var):a for a in func.arguments}
             # update optional variable properties
-            local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_arg_vars]
+            local_arg_vars = {(v.clone(v.name, is_pointer=True) if v.is_optional \
+                                else v) : a for v,a in local_arg_vars.items()}
             flags = 0
             collect_vars = {}
 
             # Loop for all args in every functions and create the corresponding condition and body
-            for p_arg, f_arg in zip(parse_args, local_arg_vars):
-                collect_vars[f_arg] = p_arg
-                body, tmp_variable = self._body_management(used_names, f_arg, p_arg)
+            for p_arg, (f_val, f_arg) in zip(parse_args, local_arg_vars.items()):
+                collect_vars[f_val] = p_arg
+                body, tmp_variable = self._body_management(used_names, f_val, p_arg, f_arg.value)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
                 # get check type function
-                check = self._get_check_type_statement(f_arg, p_arg)
+                check = self._get_check_type_statement(f_val, p_arg, f_arg.value is None)
                 # If the variable cannot be collected from PyArgParse directly
                 wrapper_vars[p_arg.name] = p_arg
 
@@ -574,12 +579,12 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body_translations.extend(body)
 
                 # Write default values
-                if isinstance(f_arg, ValuedVariable):
-                    wrapper_body.append(self.get_default_assign(parse_args[-1], f_arg))
+                if f_arg.value is not None:
+                    wrapper_body.append(self.get_default_assign(parse_args[-1], f_val, f_arg.value))
 
-                flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
+                flag_value = flags_registry[(f_val.dtype, f_val.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
-                types_dict[f_arg].add((f_arg, check, flag_value)) # collect variable type for each arguments
+                types_dict[f_val].add((f_val, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += body
 
             # create the corresponding function call
