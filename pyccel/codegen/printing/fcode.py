@@ -1300,7 +1300,8 @@ class FCodePrinter(CodePrinter):
         if expr.is_argument:
             funcs_sigs = []
             for f in expr.functions:
-                parts = self.function_signature(f, f.name)
+                args  = [a.var for a in f.arguments]
+                parts = self.function_signature(f, f.name, args)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
                         'use, intrinsic :: ISO_C_BINDING\n',
                         parts['arg_decs'],
