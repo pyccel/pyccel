@@ -1453,21 +1453,42 @@ class SemanticParser(BasicParser):
 
                     elif d_var['shape'] != shape:
 
-                        if var.is_stack_array:
+                        if var.is_argument:
+                            errors.report(ARRAY_IS_ARG, symbol=var,
+                                severity='error', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
+
+                        elif var.is_stack_array:
                             errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
                                     self._current_fst_node.col_offset))
 
                         else:
+                            var.set_changeable_shape()
                             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
                             if not previous_allocations:
                                 errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
                                         symbol=var, severity='fatal')
-                            if previous_allocations[-1].get_user_nodes((If, For, While)):
+
+                            last_allocation = previous_allocations[-1]
+
+                            # Find outermost IfSection of last allocation
+                            last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                            alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                            while len(last_alloc_ifsection)>0:
+                                alloc_ifsection = last_alloc_ifsection[-1]
+                                last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+
+                            ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                                lambda x: isinstance(x,If))) == 1 \
+                                            if alloc_ifsection else False
+
+                            if alloc_ifsection and not ifsection_has_if:
+                                status = last_allocation.status
+                            elif last_allocation.get_user_nodes((If, For, While)):
                                 status='unknown'
-                            elif previous_allocations[-1].get_user_nodes(IfSection):
-                                status = previous_allocations[-1].status
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
@@ -2207,15 +2228,15 @@ class SemanticParser(BasicParser):
                         results.append(tmp)
 
                 # ...
+                args, expr = macro.make_necessary_copies(args, results)
+                new_expressions += expr
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
-                    new_expressions.append(FunctionCall(master, args, self._current_function))
-                    if (len(new_expressions)==1):
-                        new_expressions = new_expressions[0]
-                        return new_expressions
+                    func_call = FunctionCall(master, args, self._current_function)
+                    if new_expressions:
+                        return CodeBlock([*new_expressions, func_call])
                     else:
-                        result = CodeBlock(new_expressions)
-                        return result
+                        return func_call
                 else:
                     # TODO treate interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
@@ -2792,6 +2813,16 @@ class SemanticParser(BasicParser):
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
+        allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
+        var_shapes = [{a.variable : a.shape for a in allocs} for allocs in allocations]
+        variables = [v for branch in var_shapes for v in branch]
+
+        for v in variables:
+            shape_branch1 = var_shapes[0][v]
+            if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
+                    or not all(shape_branch1==branch_shapes[v] \
+                                for branch_shapes in var_shapes[1:]):
+                v.set_changeable_shape()
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):

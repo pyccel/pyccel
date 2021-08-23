@@ -25,6 +25,13 @@ def test_mpi4py(f):
 
     print('\n')
 
+@pytest.mark.parametrize("f", get_files_from_folder('lapack'))
+def test_lapack(f):
+
+    execute_pyccel(f)
+
+    print('\n')
+
 
 ######################
 if __name__ == '__main__':
