@@ -740,9 +740,9 @@ class CCodePrinter(CodePrinter):
                     args = []
                 for_index = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
                 self._additional_declare.append(for_index)
-                max_index = PyccelMinus(orig_args[i].shape[0], LiteralInteger(1), simplify = True)
+                max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
                 for_range = PythonRange(max_index)
-                print_body = [ orig_args[i][for_index] ]
+                print_body = [ f[for_index] ]
                 if orig_args[i].rank == 1:
                     print_body.append(space_end)
 
