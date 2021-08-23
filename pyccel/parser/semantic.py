@@ -2193,26 +2193,18 @@ class SemanticParser(BasicParser):
 
                 master = macro.master
                 name = _get_name(master.name)
+                results = []
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
                 args_names = [arg.name for arg in args if isinstance(arg, Variable)]
                 d_restps = macro.apply_to_results(args)
-                for d_var, var in zip(d_restps, lhs):
-                    if not var in args_names:
-                        self._alloc_var(var, d_var, None, new_expressions)
-
-                # all terms in lhs must be already declared and available
-                # the namespace
-                # TODO improve
 
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
-
-                results = []
-                for a in lhs:
-                    _name = _get_name(a)
-                    var = self.get_variable(_name)
-                    results.append(var)
+                for d_var, var in zip(d_restps, lhs):
+                    if not var in args_names:
+                        tmp = self._assign_lhs_variable(var, d_var, None, new_expressions, None, **settings)
+                        results.append(tmp)
 
                 # ...
                 args = macro.apply(args, results=results)
