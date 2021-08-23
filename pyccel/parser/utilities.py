@@ -9,9 +9,6 @@
 from sympy import srepr
 import os
 
-import string
-import random
-
 from pyccel.ast.variable       import DottedName
 from pyccel.parser.extend_tree import CommentLine
 from pyccel.ast.internals      import PyccelSymbol

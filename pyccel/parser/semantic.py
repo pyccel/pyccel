@@ -1329,7 +1329,13 @@ class SemanticParser(BasicParser):
 
                     elif d_var['shape'] != shape:
 
-                        if var.is_stack_array:
+                        if var.is_argument:
+                            errors.report(ARRAY_IS_ARG, symbol=var,
+                                severity='error', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
+
+                        elif var.is_stack_array:
                             errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
@@ -2124,9 +2130,15 @@ class SemanticParser(BasicParser):
 
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
+                args, expr = macro.make_necessary_copies(args, results)
+                new_expressions += expr
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
-                    return FunctionCall(master, args, self._current_function)
+                    func_call = FunctionCall(master, args, self._current_function)
+                    if new_expressions:
+                        return CodeBlock([*new_expressions, func_call])
+                    else:
+                        return func_call
                 else:
                     # TODO treate interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
