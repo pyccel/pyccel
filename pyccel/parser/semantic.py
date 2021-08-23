@@ -2269,7 +2269,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infere_type(rhs, **settings)
-            if d_var['is_pointer']:
+            if d_var['is_pointer'] and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
 
         else:
