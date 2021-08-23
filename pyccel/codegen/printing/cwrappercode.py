@@ -104,14 +104,14 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
-    def function_signature(self, expr):
+    def function_signature(self, expr, print_arg_names = True):
         args = list(expr.arguments)
-        if any([isinstance(a, FunctionAddress) for a in args]):
+        if any([isinstance(a.var, FunctionAddress) for a in args]):
             # Functions with function addresses as arguments cannot be
             # exposed to python so there is no need to print their signature
             return ''
         else:
-            return CCodePrinter.function_signature(self, expr)
+            return CCodePrinter.function_signature(self, expr, print_arg_names)
 
     def get_declare_type(self, expr):
         """
