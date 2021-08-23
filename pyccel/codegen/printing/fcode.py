@@ -211,12 +211,7 @@ class FCodePrinter(CodePrinter):
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
         macro = "use, intrinsic :: ISO_C_Binding, only : "
-        rename = []
-        for constant in self._constantImports:
-            if isinstance(constant, str):
-                rename.append(constant)
-            else:
-                rename.append(constant[0] + ' => ' + constant[1])
+        rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in self._constantImports]
         if len(rename) == 0:
             return ''
         macro += " , ".join(rename)
@@ -299,7 +294,7 @@ class FCodePrinter(CodePrinter):
 
     def print_kind(self, expr):
         """
-        Prints the kind(precision) of a literal value
+        Prints the kind(precision) of a literal value or its shortcut if possible
         """
         constant_name = iso_c_binding[self._print(expr.dtype)][expr.precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
