@@ -1466,7 +1466,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionAddress(self, expr):
         return expr.name
 
-    def function_signature(self, expr, name):
+    def function_signature(self, expr, name, arguments):
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         out_args = []
@@ -1478,7 +1478,7 @@ class FCodePrinter(CodePrinter):
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
-                if result in expr.arguments:
+                if result in arguments:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
@@ -1498,7 +1498,7 @@ class FCodePrinter(CodePrinter):
             args_decs[result] = dec
         # ...
 
-        for i,arg in enumerate(expr.arguments):
+        for i,arg in enumerate(arguments):
             if isinstance(arg, Variable):
                 if i == 0 and expr.cls_name:
                     dec = Declare(arg.dtype, arg, intent='inout', passed_from_dotted = True)
@@ -1509,7 +1509,7 @@ class FCodePrinter(CodePrinter):
                 args_decs[arg] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
-        for i in expr.arguments:
+        for i in arguments:
             if i in out_args:
                 out_args.remove(i)
 
@@ -1522,7 +1522,7 @@ class FCodePrinter(CodePrinter):
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
-        arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
+        arg_code  = ', '.join(self._print(i) for i in chain( arguments, out_args ))
 
         arg_decs = ''.join(self._print(i) for i in args_decs.values())
 
@@ -1553,7 +1553,9 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
 
-        sig_parts = self.function_signature(expr, name)
+        arguments = [a.var for a in expr.arguments]
+
+        sig_parts = self.function_signature(expr, name, arguments)
         prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
         functions = expr.functions
@@ -1567,7 +1569,7 @@ class FCodePrinter(CodePrinter):
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
+            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
