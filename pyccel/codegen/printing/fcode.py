@@ -2334,7 +2334,7 @@ class FCodePrinter(CodePrinter):
         elif var.rank == 2:
             return 'transpose({0})'.format(arg)
         else:
-            order = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+            order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
             return 'reshape({}, order=[{}])'.format(arg, order)
 
     def _print_MathFunctionBase(self, expr):
