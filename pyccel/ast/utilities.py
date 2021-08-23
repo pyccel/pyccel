@@ -337,7 +337,8 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
+                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental
+                                    and not isinstance(f, NumpyTranspose)))
     for line in block:
 
         if (isinstance(line, Assign) and
