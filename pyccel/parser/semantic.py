@@ -180,7 +180,6 @@ class SemanticParser(BasicParser):
 
         # used to store code split into multiple lines to be reinserted in the CodeBlock
         self._additional_exprs = []
-        # we use it to detect the current method or function
 
         #
         self._code = parser._code
