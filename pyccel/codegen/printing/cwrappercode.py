@@ -64,7 +64,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def stored_in_c_pointer(self, a):
         """
         Return True if variable is pointer or stored in a pointer
-        
+
         Parameters
         -----------
         a      : Variable
@@ -116,7 +116,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_declare_type(self, expr):
         """
         Get the declaration type of a variable
-        
+
         Parameters
         -----------
         variable : Variable
@@ -141,7 +141,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_new_PyObject(self, name, used_names):
         """
         Create new PyccelPyObject Variable with the desired name
-        
+
         Parameters
         -----------
         name       : String
@@ -362,7 +362,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
-        
+
         Parameters
         ----------
         Variable : Variable
@@ -399,7 +399,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _body_management(self, used_names, variable, collect_var, check_type = False):
         """
         Responsible for calling functions that take care of body creation
-        
+
         Parameters
         ----------
         used_names : list of strings
