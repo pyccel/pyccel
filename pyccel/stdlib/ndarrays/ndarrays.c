@@ -3,7 +3,10 @@
 /* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
 /* --------------------------------------------------------------------------------------- */
 
-#include "ndarrays.h"
+# include "ndarrays.h"
+# include <string.h>
+# include <stdarg.h>
+# include <stdlib.h>
 
 /*
 ** allocation
