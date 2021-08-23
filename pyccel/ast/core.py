@@ -1831,6 +1831,8 @@ class FunctionCall(PyccelAstNode):
                 # Replace default arguments with provided keyword arguments
                 f_args_dict[a.keyword] = a
 
+            args = list(f_args_dict.values())
+
         # Handle function as argument
         args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), keyword=a.keyword)
                 if isinstance(a.value, FunctionDef) else a for a in args]
