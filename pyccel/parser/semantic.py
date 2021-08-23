@@ -781,7 +781,7 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
             d_var['cls_base'      ] = var.cls_base
-            d_var['is_pointer'    ] = var.is_pointer
+            d_var['is_pointer'    ] = isinstance(var, Variable)
             d_var['is_target'     ] = var.is_target
             d_var['order'         ] = 'C' if var.order=='F' else 'F'
             d_var['precision'     ] = var.precision
