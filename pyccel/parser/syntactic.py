@@ -909,8 +909,8 @@ class SyntaxParser(BasicParser):
         if len(args) == 0:
             args = ()
 
-        if len(args) == 1 and isinstance(args[0], GeneratorComprehension):
-            return args[0]
+        if len(args) == 1 and isinstance(args[0].value, GeneratorComprehension):
+            return args[0].value
 
         func = self._visit(stmt.func)
 
@@ -992,7 +992,7 @@ class SyntaxParser(BasicParser):
         result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
-        parent = self._scope[-3]
+        parent = self._scope[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
