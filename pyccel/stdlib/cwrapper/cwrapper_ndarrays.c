@@ -5,7 +5,19 @@
 
 #include "cwrapper_ndarrays.h"
 
-/* converting numpy array to c nd array*/
+/*
+ * Function : _numpy_to_ndarray_strides
+ * --------------------
+ * Convert numpy strides to nd_array strides, and return it in a new array, to
+ * avoid the problem of different implementations of strides in numpy and ndarray.
+ * Parameters :
+ *     np_strides : npy_intp array
+ *     type_size  : data type enum
+ *     nd : size of the array
+ *
+ * Returns    :
+ *     ndarray_strides : a new array with new strides values
+ */
 static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
@@ -42,22 +54,7 @@ static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
 
 }
 
-/*
- * Function: pyarray_to_c_ndarray
- * ----------------------------
- * A Cast function that convert numpy array variable into ndarray variable,
- * by copying its information and data to a new variable of type ndarray struct
- * and return this variable to be used inside c code.
- * Parameters :
- *     o : python array object
- *
- * Returns    :
- *     array : c ndarray
- *
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
- */
+/* converting numpy array to c nd array*/
 t_ndarray	pyarray_to_c_ndarray(PyArrayObject *a)
 {
 	t_ndarray		array;
