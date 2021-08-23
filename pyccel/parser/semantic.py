@@ -15,7 +15,6 @@ from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
-from sympy import oo  as INF
 from sympy.core import cache
 
 #==============================================================================
@@ -40,7 +39,7 @@ from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For, FunctionalFor, ForIterator
+from pyccel.ast.core import For
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
@@ -51,6 +50,7 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import Iterable
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -61,7 +61,7 @@ from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeReal, NativeString,
                                   NativeGeneric, NativeComplex)
 
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -72,6 +72,8 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil
+
+from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
@@ -84,7 +86,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -815,6 +817,9 @@ class SemanticParser(BasicParser):
             d_var['cls_base'      ] = cls
             return d_var
 
+        elif isinstance(expr, GeneratorComprehension):
+            return self._infere_type(expr.lhs)
+
         else:
             msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
             errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
@@ -1305,21 +1310,42 @@ class SemanticParser(BasicParser):
 
                     elif d_var['shape'] != shape:
 
-                        if var.is_stack_array:
+                        if var.is_argument:
+                            errors.report(ARRAY_IS_ARG, symbol=var,
+                                severity='error', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
+
+                        elif var.is_stack_array:
                             errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
                                     self._current_fst_node.col_offset))
 
                         else:
+                            var.set_changeable_shape()
                             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
                             if not previous_allocations:
                                 errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
                                         symbol=var, severity='fatal')
-                            if previous_allocations[-1].get_user_nodes((If, For, While)):
+
+                            last_allocation = previous_allocations[-1]
+
+                            # Find outermost IfSection of last allocation
+                            last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                            alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                            while len(last_alloc_ifsection)>0:
+                                alloc_ifsection = last_alloc_ifsection[-1]
+                                last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+
+                            ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                                lambda x: isinstance(x,If))) == 1 \
+                                            if alloc_ifsection else False
+
+                            if alloc_ifsection and not ifsection_has_if:
+                                status = last_allocation.status
+                            elif last_allocation.get_user_nodes((If, For, While)):
                                 status='unknown'
-                            elif previous_allocations[-1].get_user_nodes(IfSection):
-                                status = previous_allocations[-1].status
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
@@ -1380,6 +1406,115 @@ class SemanticParser(BasicParser):
 
         return lhs
 
+    def _assign_GeneratorComprehension(self, expr, **settings):
+        """
+        Visit the GeneratorComprehension node creating all necessary expressions
+        for its definition
+
+        Parameters
+        ----------
+        expr : GeneratorComprehension
+
+        Results
+        -------
+        new_expr : CodeBlock
+                   CodeBlock containing the semantic version of the GeneratorComprehension node
+        """
+
+        result   = expr.expr
+        lhs_name = _get_name(expr.lhs)
+        lhs  = self.check_for_variable(lhs_name)
+
+        loop = expr.loops
+        loops = expr.loops
+        nlevels = 0
+        # Create throw-away variable to help obtain result type
+        index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
+        self.insert_variable(index)
+        new_expr = []
+        while isinstance(loop, For):
+            nlevels+=1
+            iterable = Iterable(self._visit(loop.iterable, **settings))
+            n_index = max(1, iterable.num_loop_counters_required)
+            # Set dummy indices to iterable object in order to be able to
+            # obtain a target with a deducible dtype
+            iterable.set_loop_counter(*[index]*n_index)
+
+            iterator = loop.target
+
+            # Collect a target with a deducible dtype
+            iterator_rhs = iterable.get_target_from_range()
+            # Use _visit_Assign to create the requested iterator with the correct type
+            # The result of this operation is not stored, it is just used to declare
+            # iterator with the correct dtype to allow correct dtype deductions later
+            self._visit(Assign(iterator, iterator_rhs, fst=expr.fst))
+
+            loop_elem = loop.body.body[0]
+
+            if isinstance(loop_elem, Assign):
+                # If the result contains a GeneratorComprehension, treat it and replace
+                # it with it's lhs variable before continuing
+                gens = set(loop_elem.get_attribute_nodes(GeneratorComprehension))
+                if len(gens)==1:
+                    gen = gens.pop()
+                    assign = self._visit(Assign(gen.lhs, gen, fst=gen.fst))
+                    new_expr.append(assign)
+                    loop.substitute(gen, assign.lhs)
+                    loop_elem = loop.body.body[0]
+            loop = loop_elem
+        # Remove the throw-away variable from the namespace
+        self.remove_variable(index)
+
+        # Visit result expression (correctly defined as iterator
+        # objects exist in the scope despite not being defined)
+        result = self._visit(result, **settings)
+        if isinstance(result, CodeBlock):
+            result = result.body[-1]
+
+        # Infer the final dtype of the expression
+        d_var = self._infere_type(result, **settings)
+        dtype = d_var.pop('datatype')
+        lhs = Variable(dtype, lhs_name, **d_var)
+        self.insert_variable(lhs)
+
+        # Iterate over the loops
+        # This provides the definitions of iterators as well
+        # as the central expression
+        loops  = [self._visit(expr.loops, **settings)]
+
+        # If necessary add additional expressions corresponding
+        # to nested GeneratorComprehensions
+        if new_expr:
+            loop = loops[0]
+            for _ in range(nlevels-1):
+                loop = loop.body.body[0]
+            _ = [loop.body.insert2body(e, back=False) for e in new_expr]
+
+
+        if isinstance(expr, FunctionalSum):
+            val = LiteralInteger(0)
+            if str_dtype(dtype) in ['real', 'complex']:
+                val = LiteralFloat(0.0)
+        elif isinstance(expr, FunctionalMin):
+            val = math_constants['inf']
+        elif isinstance(expr, FunctionalMax):
+            val = PyccelUnarySub(math_constants['inf'])
+
+        # Initialise result with correct initial value
+        stmt = Assign(lhs, val)
+        stmt.set_fst(expr.fst)
+        loops.insert(0, stmt)
+
+        indices = [self._visit(i) for i in expr.indices]
+
+        if isinstance(expr, FunctionalSum):
+            expr_new = FunctionalSum(loops, lhs=lhs, indices = indices)
+        elif isinstance(expr, FunctionalMin):
+            expr_new = FunctionalMin(loops, lhs=lhs, indices = indices)
+        elif isinstance(expr, FunctionalMax):
+            expr_new = FunctionalMax(loops, lhs=lhs, indices = indices)
+        expr_new.set_fst(expr.fst)
+        return expr_new
 
     #====================================================
     #                 _visit functions
@@ -1448,8 +1583,25 @@ class SemanticParser(BasicParser):
                 kwonly=expr.kwonly)
 
     def _visit_CodeBlock(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr.body]
-        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
+        ls = []
+        for b in expr.body:
+            # Collect generator expressions in statements
+            gen_exp = b.get_attribute_nodes(GeneratorComprehension,
+                                     excluded_nodes = (FunctionDef,)) \
+                        if not isinstance(b, FunctionDef) else []
+            # Assign generator expressions to temporaries
+            gen_exp = [self._visit(Assign(g.lhs,g, fst=g.fst)) \
+                            for g in gen_exp if g.get_direct_user_nodes(
+                                lambda x: not isinstance(x, (GeneratorComprehension, Assign, Return)))]
+
+            # Save parsed code
+            ls.extend(gen_exp)
+            line = self._visit(b, **settings)
+            if isinstance(line, CodeBlock):
+                ls.extend(line.body)
+            else:
+                ls.append(line)
+
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
@@ -1898,6 +2050,17 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        if isinstance(rhs, GeneratorComprehension):
+            genexp = self._assign_GeneratorComprehension(rhs, **settings)
+            if isinstance(expr, AugAssign):
+                new_expressions.append(genexp)
+                rhs = genexp.lhs
+            elif rhs.lhs == lhs:
+                return genexp
+            else:
+                new_expressions.append(genexp)
+                rhs = genexp.lhs
+
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.get_macro(name)
@@ -2267,146 +2430,63 @@ class SemanticParser(BasicParser):
         self.create_new_loop_scope()
 
         # treatment of the index/indices
-        iterable = self._visit(expr.iterable, **settings)
+        iterable = Iterable(self._visit(expr.iterable, **settings))
         body     = list(expr.body.body)
         iterator = expr.target
 
-        PyccelAstNode.stage = 'syntactic'
+        if iterable.num_loop_counters_required:
+            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
+            iterable.set_loop_counter(*indices)
+        else:
+            if isinstance(iterable.iterable, PythonEnumerate):
+                iterator = iterator[0]
+            index = self.check_for_variable(iterator)
+            if index is None:
+                index = Variable('int', iterator, is_temp = iterator.is_temp)
+                self.insert_variable(index)
+            iterable.set_loop_counter(index)
 
-        if isinstance(iterable, Variable):
-            indx   = self.get_new_variable()
-            assign = Assign(iterator, IndexedElement(iterable, indx))
-            assign.set_fst(expr.fst)
-            iterator = indx
-            body     = [assign] + body
+        new_expr = []
 
-        elif isinstance(iterable, PythonMap):
-            indx   = self.get_new_variable()
-            func   = iterable.args[0]
-            args   = [IndexedElement(arg, indx) for arg in iterable.args[1:]]
-            assign = Assign(iterator, FunctionCall(func, args))
-            assign.set_fst(expr.fst)
-            iterator = indx
-            body     = [assign] + body
-
-        elif isinstance(iterable, PythonZip):
-            args = iterable.args
-            indx = self.get_new_variable()
-            for i, arg in enumerate(args):
-                assign = Assign(iterator[i], IndexedElement(arg, indx))
-                assign.set_fst(expr.fst)
-                body = [assign] + body
-            iterator = indx
-
-        elif isinstance(iterable, PythonEnumerate):
-            indx   = iterator.args[0]
-            var    = iterator.args[1]
-            assign = Assign(var, IndexedElement(iterable.element, indx))
-            assign.set_fst(expr.fst)
-            iterator = indx
-            body     = [assign] + body
-
-        elif isinstance(iterable, Product):
-            args     = iterable.elements
-            iterator = list(iterator)
-            for i,arg in enumerate(args):
-                if not isinstance(arg, PythonRange):
-                    indx   = self.get_new_variable()
-                    assign = Assign(iterator[i], IndexedElement(arg, indx))
-
-                    assign.set_fst(expr.fst)
-                    body        = [assign] + body
-                    iterator[i] = indx
+        iterator = expr.target
 
         if isinstance(iterator, PyccelSymbol):
-            name   = iterator
-            var    = self.check_for_variable(name)
-            target = var
-            if var is None:
-                target = Variable('int', name, rank=0)
-                self.insert_variable(target)
+            iterator_rhs = iterable.get_target_from_range()
+            iterator_d_var = self._infere_type(iterator_rhs)
+            target = self._assign_lhs_variable(iterator, iterator_d_var,
+                            rhs=iterator_rhs, new_expressions=new_expr,
+                            is_augassign=False, **settings)
 
-        elif isinstance(iterator, list):
-            target = []
-            for name in iterator:
-                var  = Variable('int', name, rank=0)
-                self.insert_variable(var)
-                target.append(var)
+        elif isinstance(iterator, PythonTuple):
+            iterator_rhs = iterable.get_target_from_range()
+            target = [self._assign_lhs_variable(it, self._infere_type(rhs),
+                                rhs=rhs, new_expressions=new_expr,
+                                is_augassign=False, **settings)
+                        for it, rhs in zip(iterator, iterator_rhs)]
         else:
-
-            # TODO ERROR not tested yet
 
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
-        PyccelAstNode.stage = 'semantic'
+
 
         body = [self._visit(i, **settings) for i in body]
 
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
 
-        if isinstance(iterable, Variable):
-            return ForIterator(target, iterable, body)
-
-        for_expr = For(target, iterable, body, local_vars=local_vars)
-        for_expr.nowait_expr = expr.nowait_expr
+        if isinstance(iterable.iterable, Product):
+            for_expr = body
+            for t, r in zip(target, iterable.get_range()):
+                for_expr = For(t, r, for_expr, local_vars=local_vars)
+                for_expr.nowait_expr = expr.nowait_expr
+                for_expr = [for_expr]
+            for_expr = for_expr[0]
+        else:
+            for_expr = For(target, iterable, body, local_vars=local_vars)
+            for_expr.nowait_expr = expr.nowait_expr
         return for_expr
 
-
-    def _visit_GeneratorComprehension(self, expr, **settings):
-        msg = "Generator expressions as args are not currently correctly implemented\n"
-        msg += "See issue #272 at https://github.com/pyccel/pyccel/issues"
-        errors.report(msg, symbol = expr,
-                  bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                  severity='fatal')
-
-        result   = expr.expr
-        lhs_name = _get_name(expr.lhs)
-        lhs  = self.check_for_variable(lhs_name)
-
-        if lhs is None:
-            tmp_lhs  = Variable('int', lhs_name)
-            self.insert_variable(tmp_lhs)
-        else:
-            tmp_lhs = None
-
-        loops  = [self._visit(i, **settings) for i in expr.loops]
-        result = self._visit(result, **settings)
-        if isinstance(result, CodeBlock):
-            result = result.body[-1]
-
-
-        d_var = self._infere_type(result, **settings)
-        dtype = d_var.pop('datatype')
-
-        if tmp_lhs is not None:
-            self.remove_variable(tmp_lhs)
-            lhs = Variable(dtype, lhs_name, **d_var)
-            self.insert_variable(lhs)
-
-
-        if isinstance(expr, FunctionalSum):
-            val = LiteralInteger(0)
-            if str_dtype(dtype) in ['real', 'complex']:
-                val = LiteralFloat(0.0)
-        elif isinstance(expr, FunctionalMin):
-            val = INF
-        elif isinstance(expr, FunctionalMax):
-            val = -INF
-
-        stmt = Assign(expr.lhs, val)
-        stmt.set_fst(expr.fst)
-        loops.insert(0, stmt)
-
-        if isinstance(expr, FunctionalSum):
-            expr_new = FunctionalSum(loops, lhs=lhs)
-        elif isinstance(expr, FunctionalMin):
-            expr_new = FunctionalMin(loops, lhs=lhs)
-        elif isinstance(expr, FunctionalMax):
-            expr_new = FunctionalMax(loops, lhs=lhs)
-        expr_new.set_fst(expr.fst)
-        return expr_new
 
     def _visit_FunctionalFor(self, expr, **settings):
 
@@ -2574,6 +2654,9 @@ class SemanticParser(BasicParser):
 
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
+    def _visit_GeneratorComprehension(self, expr, **settings):
+        return self.get_variable(expr.lhs)
+
     def _visit_While(self, expr, **settings):
 
         self.create_new_loop_scope()
@@ -2591,6 +2674,16 @@ class SemanticParser(BasicParser):
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
+        allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
+        var_shapes = [{a.variable : a.shape for a in allocs} for allocs in allocations]
+        variables = [v for branch in var_shapes for v in branch]
+
+        for v in variables:
+            shape_branch1 = var_shapes[0][v]
+            if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
+                    or not all(shape_branch1==branch_shapes[v] \
+                                for branch_shapes in var_shapes[1:]):
+                v.set_changeable_shape()
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):

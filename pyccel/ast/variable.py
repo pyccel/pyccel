@@ -14,8 +14,7 @@ from pyccel.errors.errors import Errors
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeGeneric,
-                        default_precision)
+                        NativeComplex, default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -212,6 +211,8 @@ class Variable(PyccelAstNode):
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        if self._rank < 2:
+            self._order = None
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -248,6 +249,13 @@ class Variable(PyccelAstNode):
         Indicates if the shape can change in the i-th dimension
         """
         return self.is_pointer
+
+    def set_changeable_shape(self):
+        """
+        Indicate that the exact shape is unknown, e.g. if the allocate is done in
+        an If block.
+        """
+        self._shape = [PyccelArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
 
     @property
     def name(self):

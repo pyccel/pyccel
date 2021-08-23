@@ -8,8 +8,8 @@
 import functools
 import operator
 
-from pyccel.ast.builtins  import PythonRange, PythonComplex, PythonEnumerate
-from pyccel.ast.builtins  import PythonZip, PythonMap, PythonLen, PythonPrint
+from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonPrint
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -32,6 +32,8 @@ from pyccel.ast.internals import Slice
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
+
+from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
@@ -194,6 +196,7 @@ c_library_headers = (
     "stdint",
     "stdio",
     "stdlib",
+    "string",
     "tgmath",
 )
 
@@ -260,10 +263,6 @@ class CCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for i in range(rows) for j in range(cols))
-
     def _flatten_list(self, irregular_list):
         if isinstance(irregular_list, (PythonList, PythonTuple)):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
@@ -284,7 +283,6 @@ class CCodePrinter(CodePrinter):
             String
                 Return a str that contains the declaration of a dummy data_buffer
                        and a call to an operator which copies it to an NdArray struct
-                if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -298,20 +296,15 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
 
+        self._additional_imports.add('string')
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            if expr.lhs.is_stack_array:
-                cpy_data = self._init_stack_array(expr, rhs.arg)
-            else:
-                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
+            cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
             return '%s' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            if expr.lhs.is_stack_array:
-                cpy_data = self._init_stack_array(expr, dummy_array_name)
-            else:
-                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
+            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s' % (dummy_array, cpy_data)
 
     def arrayFill(self, expr):
@@ -325,37 +318,11 @@ class CCodePrinter(CodePrinter):
         ------
             String
                 Return a str that contains a call to the C function array_fill,
-                if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-
-        if lhs.is_stack_array:
-            symbol_map = {}
-            used_names_tmp = self._parser.used_names.copy()
-            sympy_shapes = [pyccel_to_sympy(s, symbol_map, used_names_tmp) for s in lhs.alloc_shape]
-
-            length = functools.reduce(operator.mul, sympy_shapes)
-            printable_length = functools.reduce(PyccelMul, lhs.alloc_shape)
-
-            length_code = self._print(printable_length)
-
-            if length.is_constant():
-                buffer_array = "({declare_dtype}[{length}]){{}}".format(
-                                        declare_dtype = declare_dtype,
-                                        length=length_code)
-            else:
-                dummy_array_name, _ = create_incremented_string(self._parser.used_names,
-                                                                prefix = lhs.name+'_data')
-                code_init += "{dtype} {name}[{length}];\n".format(
-                        dtype  = declare_dtype,
-                        name   = dummy_array_name,
-                        length = length_code)
-                buffer_array = dummy_array_name
-
-            code_init += self._init_stack_array(expr, buffer_array)
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
@@ -364,37 +331,43 @@ class CCodePrinter(CodePrinter):
                 code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return code_init
 
-    def _init_stack_array(self, expr, buffer_array):
+    def _init_stack_array(self, expr):
         """ return a string which handles the assignment of a stack ndarray
 
         Parameters
         ----------
             expr : PyccelAstNode
                 The Assign Node used to get the lhs and rhs
-            buffer_array : String
-                The data buffer
         Returns
         -------
-            Returns a string that contains the initialization of a stack_array
+            buffer_array : str
+                String initialising the stack (C) array which stores the data
+            array_init   : str
+                String containing the rhs of the initialization of a stack_array
         """
 
-        lhs = expr.lhs
-        rhs = expr.rhs
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        shape = ", ".join(self._print(i) for i in lhs.alloc_shape)
+        var = expr
+        dtype_str = self._print(var.dtype)
+        dtype = self.find_in_dtype_registry(dtype_str, var.precision)
+        np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
+        shape = ", ".join(self._print(i) for i in var.alloc_shape)
+        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
+        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        buffer_array = "{dtype} {name}[{size}];\n".format(
+                dtype = dtype,
+                name  = dummy_array_name,
+                size  = tot_shape)
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
-        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(lhs.shape))
-        if isinstance(buffer_array, Variable):
-            buffer_array = "{0}.{1}".format(self._print(buffer_array), dtype)
-        cpy_data = '{0} = (t_ndarray){{\n.{1}={2},\n .shape={3},\n .strides={4},\n '
-        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}\n}};\n'
-        cpy_data = cpy_data.format(self._print(lhs), dtype, buffer_array,
-                    shape_init, strides_init, len(lhs.shape), 'false')
-        cpy_data += 'stack_array_init(&{});\n'.format(self._print(lhs))
+        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(var.shape))
+        array_init = ' = (t_ndarray){{\n.{0}={1},\n .shape={2},\n .strides={3},\n '
+        array_init += '.nd={4},\n .type={0},\n .is_view={5}\n}};\n'
+        array_init = array_init.format(np_dtype, dummy_array_name,
+                    shape_init, strides_init, len(var.shape), 'false')
+        array_init += 'stack_array_init(&{})'.format(self._print(var))
         self._additional_imports.add("ndarrays")
-        return cpy_data
+        return buffer_array, array_init
 
     def fill_NumpyArange(self, expr, lhs):
         """ print the assignment of a NumpyArange
@@ -625,7 +598,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelMod(self, expr):
         self._additional_imports.add("math")
-        self._additional_imports.add("pyc_math")
+        self._additional_imports.add("pyc_math_c")
 
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
@@ -851,7 +824,18 @@ class CCodePrinter(CodePrinter):
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
-        return '{0}{1};\n'.format(declaration_type, variable)
+        if expr.variable.is_stack_array:
+            preface, init = self._init_stack_array(expr.variable,)
+        else:
+            preface = ''
+            init    = ''
+
+        declaration = '{dtype}{var}{init};\n'.format(
+                            dtype = declaration_type,
+                            var   = variable,
+                            init  = init)
+
+        return preface + declaration
 
     def _print_NativeBool(self, expr):
         self._additional_imports.add('stdbool')
@@ -1127,7 +1111,7 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math')
+            self._additional_imports.add('pyc_math_c')
         else:
             if expr.dtype is NativeComplex():
                 self._additional_imports.add('cmath')
@@ -1332,15 +1316,15 @@ class CCodePrinter(CodePrinter):
                 return 'return {0};\n'.format(self._print(args[0]))
 
             # make sure that stmt contains one assign node.
-            assert(len(last_assign)==1)
-            variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+            last_assign = last_assign[-1]
+            variables = last_assign.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
             unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
-                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
-                return code + '\nreturn {};\n'.format(self._print(last_assign[0].rhs))
+                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                return code + '\nreturn {};\n'.format(self._print(last_assign.rhs))
             else:
                 code = ''+self._print(expr.stmt)
-                self._additional_declare.append(last_assign[0].lhs)
+                self._additional_declare.append(last_assign.lhs)
         return code + 'return {0};\n'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
@@ -1471,18 +1455,26 @@ class CCodePrinter(CodePrinter):
         return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
-        counter = self._print(expr.target)
-        body  = self._print(expr.body)
-        if isinstance(expr.iterable, PythonRange):
-            iterable = expr.iterable
-        elif isinstance(expr.iterable, PythonEnumerate):
-            iterable = PythonRange(PythonLen(expr.iterable.element))
-        elif isinstance(expr.iterable, PythonZip):
-            iterable = PythonRange(expr.iterable.length)
-        elif isinstance(expr.iterable, PythonMap):
-            iterable = PythonRange(PythonLen(expr.iterable.args[1]))
-        else:
-            raise NotImplementedError("Only iterables currently supported are Range, Enumerate, Zip and Map")
+
+        indices = expr.iterable.loop_counters
+        index = indices[0] if indices else expr.target
+        if expr.iterable.num_loop_counters_required:
+            self._additional_declare.append(index)
+
+        target   = index
+        iterable = expr.iterable.get_range()
+
+        if not isinstance(iterable, PythonRange):
+            # Only iterable currently supported is PythonRange
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal')
+
+        counter    = self._print(target)
+        body       = self._print(expr.body)
+
+        additional_assign = CodeBlock(expr.iterable.get_assigns(expr.target))
+        body = self._print(additional_assign) + body
+
         start = self._print(iterable.start)
         stop  = self._print(iterable.stop )
         step  = self._print(iterable.step )
@@ -1600,6 +1592,19 @@ class CCodePrinter(CodePrinter):
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
+
+    def _print_Constant(self, expr):
+        if expr == math_constants['inf']:
+            self._additional_imports.add("math")
+            return 'HUGE_VAL'
+        elif expr == math_constants['pi']:
+            self._additional_imports.add("math")
+            return 'M_PI'
+        elif expr == math_constants['e']:
+            self._additional_imports.add("math")
+            return 'M_E'
+        else:
+            raise NotImplementedError("Constant not implemented")
 
     def _print_Variable(self, expr):
         if self.stored_in_c_pointer(expr):

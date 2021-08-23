@@ -222,6 +222,87 @@ def test_Assign_Between_Allocatables():
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================
+
+def test_Assign_after_If():
+
+    def f(b : bool):
+        import numpy as np
+        if b:
+            x = np.zeros(3, dtype=int)
+        else:
+            x = np.zeros(4, dtype=int)
+        n = x.shape[0]
+        x = np.ones(3, dtype=int)
+        m = x.shape[0]
+        return n,m
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    f2 = epyccel(f)
+
+    # Check that we got exactly 1 Pyccel warning
+    assert errors.has_warnings()
+    assert errors.num_messages() == 1
+
+    # Check that the warning is correct
+    warning_info = [*errors.error_info_map.values()][0][0]
+    assert warning_info.symbol  == 'x'
+    assert warning_info.message == ARRAY_REALLOCATION
+
+    assert f(True) == f2(True)
+    assert f(False) == f2(False)
+
+def test_stack_array_if(language):
+
+    @stack_array('x')
+    def f(b : bool):
+        import numpy as np
+        if b:
+            x = np.array([1,2,3])
+        else:
+            x = np.array([4,5,6])
+        return x[0]
+
+    # Initialize singleton that stores Pyccel errors
+    f2 = epyccel(f, language=language)
+
+    assert f(True) == f2(True)
+    assert f(False) == f2(False)
+
+#==============================================================================
+
+def test_Assign_between_nested_If():
+
+    def f(b1 : bool, b2 : bool):
+        import numpy as np
+        if b1:
+            if b2:
+                x = np.zeros(3, dtype=int)
+                n = x.shape[0]
+            else:
+                n = 0
+        else:
+            x = np.zeros(4, dtype=int)
+            n = x.shape[0]
+        return n
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    f2 = epyccel(f)
+
+    # Check that we don't get a Pyccel warning
+    assert not errors.has_warnings()
+
+    assert f(True,True) == f2(True,True)
+    assert f(True,False) == f2(True,False)
+    assert f(False,True) == f2(False,True)
+
+#==============================================================================
+
 if __name__ == '__main__':
 
     for l in ['fortran']:
