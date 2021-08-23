@@ -351,7 +351,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype_str, var.precision)
         np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
+        tot_shape = self._print(functools.reduce(
+            lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
@@ -1697,6 +1698,36 @@ class CCodePrinter(CodePrinter):
                 '}}').format(imports=imports,
                                     decs=decs,
                                     body=body)
+
+    #=================== MACROS ==================
+
+    def _print_MacroShape(self, expr):
+        var = expr.argument
+        if not isinstance(var, (Variable, IndexedElement)):
+            raise TypeError('Expecting a variable, given {}'.format(type(var)))
+        shape = var.shape
+
+        if len(shape) == 1:
+            shape = shape[0]
+
+
+        elif not(expr.index is None):
+            if expr.index < len(shape):
+                shape = shape[expr.index]
+            else:
+                shape = '1'
+
+        return self._print(shape)
+
+    def _print_MacroCount(self, expr):
+
+        var = expr.argument
+
+        if var.rank == 0:
+            return '1'
+        else:
+            return self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
 
 
