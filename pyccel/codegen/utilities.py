@@ -26,7 +26,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
     Copy an internal library from its specified stdlib folder to the pyccel
     directory. The copy is only done if the files are not already present or
-    if the files have changed since they were last copied
+    if the files have changed since they were last copied. Extra files can be
+    added to the folder if and when the copy occurs (e.g. for specifying
+    the numpy version compatibility)
 
     Parameters
     ----------
@@ -34,6 +36,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                      The name of the folder to be copied, relative to the stdlib folder
     pyccel_dirpath : str
                      The location that the folder should be copied to
+    extra_files    : dict
+                     A dictionary whose keys are the names of any files to be created
+                     in the folder and whose values are the contents of the file
 
     Results
     -------
