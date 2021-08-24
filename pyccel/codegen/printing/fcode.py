@@ -435,7 +435,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonPrint(self, expr):
         args = []
-        for f in expr.expr:
+        n = len(expr.expr)
+        for j, f in enumerate(expr.expr):
             if f.keyword:
                 continue
             else:
@@ -444,14 +445,14 @@ class FCodePrinter(CodePrinter):
                 args.append("'{}'".format(f))
             elif isinstance(f, PythonTuple):
                 for i in f:
-                    args.append("{}".format(self._print(i)))
+                    args.append(self._print(i))
             elif isinstance(f, InhomogeneousTupleVariable):
                 for i in f:
-                    args.append("{}".format(self._print(i)))
-            elif f.dtype is NativeString() and f != expr.expr[-1]:
+                    args.append(self._print(i))
+            elif f.dtype is NativeString() and j != n-1:
                 args.append("{} // ' ' ".format(self._print(f)))
             else:
-                args.append("{}".format(self._print(f)))
+                args.append(self._print(f))
 
         code = ', '.join(['print *', *args])
         return self._get_statement(code) + '\n'
