@@ -9,7 +9,7 @@ import numpy
 
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonAbs, PythonImag, PythonList)
+                             PythonComplex, PythonReal, PythonImag, PythonList)
 
 from .core           import process_shape, ValuedArgument
 
@@ -18,7 +18,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeReal, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction
+from .internals      import PyccelInternalFunction, Slice
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -950,7 +950,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def __init__(self, x):
         self._set_dtype_precision(x)
         self._set_shape_rank(x)
-        self._order      = x.order
+        self._set_order(x)
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -960,6 +960,9 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def _set_dtype_precision(self, x):
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision  = default_precision[str_dtype(self._dtype)]
+
+    def _set_order(self, x):
+        self._order      = x.order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -1173,6 +1176,51 @@ class NumpyAmax(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
+class NumpyTranspose(NumpyUfuncUnary):
+    """Represents a call to the transpose function in the Numpy library"""
+    __slots__ = ()
+    name = 'transpose'
+
+    def __new__(cls, x, *axes):
+        if x.rank<2:
+            return x
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, x, *axes):
+        if len(axes)!=0:
+            raise NotImplementedError("The axes argument of the transpose function is not yet implemented")
+        super().__init__(x)
+
+    @property
+    def internal_var(self):
+        """ Return the variable being transposed
+        """
+        return self._args[0]
+
+    def __getitem__(self, *args):
+        x = self._args[0]
+        rank = x.rank
+        # Add empty slices to fully index the object
+        if len(args) < rank:
+            args = args + tuple([Slice(None, None)]*(rank-len(args)))
+        return NumpyTranspose(x.__getitem__(*reversed(args)))
+
+    def _set_dtype_precision(self, x):
+        self._dtype      = x.dtype
+        self._precision  = x.precision
+
+    def _set_shape_rank(self, x):
+        self._shape      = tuple(reversed(x.shape))
+        self._rank       = x.rank
+
+    def _set_order(self, x):
+        self._order = 'C' if x.order=='F' else 'F'
+
+    @property
+    def is_elemental(self):
+        return False
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
@@ -1242,6 +1290,7 @@ numpy_functions = {
     'arctanh'   : NumpyArctanh,
     # 'deg2rad'   : NumpyDeg2rad,
     # 'rad2deg'   : NumpyRad2deg,
+    'transpose' : NumpyTranspose,
 }
 
 numpy_linalg_functions = {
