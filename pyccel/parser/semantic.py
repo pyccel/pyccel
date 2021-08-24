@@ -1603,7 +1603,7 @@ class SemanticParser(BasicParser):
         value = self._visit(expr.value, **settings)
         return Argument(var, value=value,
                 annotation=expr.annotation,
-                kwonly=expr.kwonly)
+                kwonly=expr.is_kwonly)
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = []
