@@ -21,7 +21,7 @@ print('--- before swap')
 print(a)
 print(b)
 
-#$ header macro (x, y), _dswap(x, y, n=x.shape, incx=1, incy=1) := dswap(n, x, incx, y, incy)
+#$ header macro (double(x.shape[0], x.shape[1]), double(y.shape[0], y.shape[1])) :: (x, y), _dswap(x, y, n=x.shape, incx=1, incy=1) := dswap(n, x, incx, y, incy)
 a,b = _dswap(a, b)
 
 print('--- after swap')

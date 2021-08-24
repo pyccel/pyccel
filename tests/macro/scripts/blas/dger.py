@@ -30,7 +30,7 @@ alpha = 2.0
 incx = 1
 incy = 1
 
-#$ header macro (a), _dger(alpha, x, y, a, incx=1, incy=1, lda=a.shape[0]) := dger(a.shape[0], a.shape[1], alpha, y, incy, x, incx, a, lda)
+#$ header macro (double(a.shape[0], a.shape[1])) :: (a), _dger(alpha, x, y, a, incx=1, incy=1, lda=a.shape[0]) := dger(a.shape[0], a.shape[1], alpha, y, incy, x, incx, a, lda)
 
 a = _dger(alpha, x, y, a)
 print(a)
