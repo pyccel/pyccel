@@ -1684,6 +1684,12 @@ class FunctionCallArgument(Basic):
         """
         return self._keyword is not None
 
+    def __repr__(self):
+        if self.has_keyword:
+            return 'FunctionCallArgument({} = {})'.format(self.keyword, repr(self.value))
+        else:
+            return 'FunctionCallArgument({})'.format(repr(self.value))
+
 class Argument(PyccelAstNode):
 
     """A FunctionDef Argument
