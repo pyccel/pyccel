@@ -711,6 +711,8 @@ class MacroFunction(Header):
                     new = construct_macro(arg.name, new, arg.index)
                 else:
                     new = construct_macro(arg.name, new)
+            else:
+                new = arg
 
             newargs[i] = new
         return newargs

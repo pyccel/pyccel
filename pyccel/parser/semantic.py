@@ -3450,12 +3450,14 @@ class SemanticParser(BasicParser):
         name = expr.name
         args = [a if isinstance(a, Argument) else Argument(a) for a in expr.arguments]
 
-        master_arg_names    = [str(m) if isinstance(m, PyccelSymbol) else m.name
-                                for m in expr.master_arguments]
-        master_arg_defaults = [m.value if isinstance(m, Argument) else a.value
-                                for a,m in zip(func.arguments, expr.master_arguments)]
-        master_args = [m if isinstance(m, Macro) else Argument(a.var.clone(n), value=d)
-                        for a,n,d,m in zip(func.arguments, master_arg_names, master_arg_defaults, expr.master_arguments)]
+        def get_arg(func_arg, master_arg):
+            if isinstance(master_arg, Argument):
+                return Argument(func_arg.var.clone(master_arg.name), value = master_arg.default)
+            else:
+                return Argument(func_arg.var.clone(str(master_arg)))
+
+        master_args = [get_arg(a,m) if isinstance(m, PyccelSymbol) else m
+                        for a,m in zip(func.arguments, expr.master_arguments)]
 
         results = expr.results
         macro   = MacroFunction(name, args, func, master_args,
