@@ -436,7 +436,7 @@ def test_generic_functions():
                     int,int])
 
 #------------------------------------------------------------------------------
-def test_default_arguments():
+def test_default_arguments(language):
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,int,float,float,float,
