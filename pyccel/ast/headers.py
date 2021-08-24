@@ -589,9 +589,9 @@ class InterfaceHeader(Header):
 class MacroFunction(Header):
     """."""
     __slots__ = ('_name','_arguments','_master','_master_arguments',
-                 '_results','_copies_required', '_restps')
+                 '_results','_copies_required', '_results_sh')
 
-    def __init__(self, name, args, master, master_args, results=None, restps=None):
+    def __init__(self, name, args, master, master_args, results=None, results_sh=None):
         if not isinstance(name, str):
             raise TypeError('name must be of type str or PyccelSymbol')
 
@@ -599,13 +599,13 @@ class MacroFunction(Header):
         if not isinstance(master, (str, FunctionDef, Interface)):
             raise ValueError('Expecting a master name of FunctionDef')
 
-        self._name             = name
-        self._arguments        = args
-        self._master           = master
-        self._master_arguments = master_args
-        self._results          = results
-        self._restps            = restps
-        self._copies_required  = [a in self._results for a in self._arguments]
+        self._name              = name
+        self._arguments         = args
+        self._master            = master
+        self._master_arguments  = master_args
+        self._results           = results
+        self._results_sh        = results_sh
+        self._copies_required   = [a in self._results for a in self._arguments]
         super().__init__()
 
     @property
@@ -629,113 +629,16 @@ class MacroFunction(Header):
         return self._results
 
     @property
-    def restps(self):
-        return self._restps
+    def results_sh(self):
+        return self._results_sh
 
     # TODO: must be moved to annotation, once we add AliasVariables
     #       this is needed if we have to create a pointer or allocate a new
     #       variable to store the result
 
-    def resolve_args(self, args):
-        """."""
+    def link_args(self, args):
+        """links macro arguments to the appropriate functioncall args"""
 
-        d_arguments = {}
-
-        if len(args) > 0:
-
-            sorted_args   = []
-            unsorted_args = []
-            j = -1
-            for ind, i in enumerate(args):
-                if not isinstance(i, ValuedArgument):
-                    sorted_args.append(i)
-                else:
-                    j=ind
-                    break
-            if j>0:
-                unsorted_args = args[j:]
-                for i in unsorted_args:
-                    if not isinstance(i, ValuedVariable):
-                        raise ValueError('variable not allowed after an optional argument')
-
-            for i in self.arguments[len(sorted_args):]:
-                if not isinstance(i, ValuedVariable):
-                    raise ValueError('variable not allowed after an optional argument')
-
-            for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
-                if not isinstance(arg, tuple):
-                    d_arguments[arg] = val
-                else:
-                    if not isinstance(val, (list, tuple)):
-                        val = [val]
-                    #TODO improve add more checks and generalize
-                    if len(val)>len(arg):
-                        raise ValueError('length mismatch of argument and its value ')
-                    elif len(val)<len(arg):
-                        for val_ in arg[len(val):]:
-                            if isinstance(val_, ValuedVariable):
-                                val +=tuple(val_.value,)
-                            else:
-                                val +=tuple(val_)
-
-                    for arg_,val_ in zip(arg,val):
-                        d_arguments[arg_.name] = val_
-
-            d_unsorted_args = {}
-            for arg in self.arguments[len(sorted_args):]:
-                d_unsorted_args[arg.name] = arg.value
-
-            for arg in unsorted_args:
-                if arg.name in d_unsorted_args.keys():
-                    d_unsorted_args[arg.name] = arg.value
-                else:
-                    raise ValueError('Unknown valued argument')
-            d_arguments.update(d_unsorted_args)
-            for i, arg in d_arguments.items():
-                if isinstance(arg, Macro):
-                    d_arguments[i] = construct_macro(arg.name,
-                                                     d_arguments[arg.argument])
-                    #change this
-                    if isinstance(arg, MacroShape):
-                        d_arguments[i]._index = arg.index
-            return d_arguments
-
-    def apply_to_results(self, args):
-        """."""
-        d_arguments = self.resolve_args(args)
-        argument_keys = d_arguments.keys()
-        new_restps = []
-        for d_sh in self.restps:
-            newargs = []
-            d_tmp = d_sh.copy()
-
-            for arg in d_sh['shape']:
-                if isinstance(arg, PyccelSymbol):
-                    if arg in argument_keys:
-                        new = d_arguments[arg]
-                    else:
-                        new = arg
-                elif isinstance(arg, Macro):
-                    if arg.argument in argument_keys:
-                        new = d_arguments[arg.argument]
-                    else:
-                        raise ValueError('Unknown variable name')
-
-                    if isinstance(arg, MacroShape):
-                        new = construct_macro(arg.name, new, arg.index)
-                    else:
-                        new = construct_macro(arg.name, new)
-                else:
-                    new=arg
-
-                newargs.append(new)
-            newargs = tuple(newargs)
-            d_tmp['shape'] = newargs
-            new_restps.append(d_tmp)
-        return new_restps
-
-    def apply(self, args, results=None):
-        """returns the appropriate arguments."""
         d_arguments = {}
 
         if len(args) > 0:
@@ -774,7 +677,46 @@ class MacroFunction(Header):
                                                      d_arguments[arg.argument])
                     if isinstance(arg, MacroShape):
                         d_arguments[i]._index = arg.index
+        return d_arguments
 
+    def apply_to_results(self, args):
+        """."""
+        d_arguments = self.link_args(args)
+        argument_keys = d_arguments.keys()
+        ld_results = []
+        for d_result in self.results_sh:
+            newargs = []
+            d_tmp = d_result.copy()
+
+            for arg in d_result['shape']:
+                if isinstance(arg, PyccelSymbol):
+                    if arg in argument_keys:
+                        new = d_arguments[arg]
+                    else:
+                        new = arg
+                elif isinstance(arg, Macro):
+                    if arg.argument in argument_keys:
+                        new = d_arguments[arg.argument]
+                    else:
+                        raise ValueError('Unknown variable name')
+
+                    if isinstance(arg, MacroShape):
+                        new = construct_macro(arg.name, new, arg.index)
+                    else:
+                        new = construct_macro(arg.name, new)
+                else:
+                    new=arg
+
+                newargs.append(new)
+            newargs = tuple(newargs)
+            d_tmp['shape'] = newargs
+            ld_results.append(d_tmp)
+        return ld_results
+
+    def apply(self, args, results=None):
+        """returns the appropriate arguments."""
+
+        d_arguments = self.link_args(args)
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
