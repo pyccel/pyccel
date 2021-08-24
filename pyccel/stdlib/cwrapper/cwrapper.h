@@ -150,58 +150,23 @@ PyObject	*Float_to_PyDouble(float *d);
  * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
  */
 //--------------------------------------------------------//
-inline bool    PyIs_Int8(PyObject *o)
-{
-    return PyArray_IsScalar(o, Int8);
-}
+bool    PyIs_Int8(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Int16(PyObject *o)
-{
-    return PyArray_IsScalar(o, Int16);
-}
+bool    PyIs_Int16(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Int32(PyObject *o)
-{
-#ifdef _WIN32
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
-#else
-    return PyArray_IsScalar(o, Int32);
-#endif
-}
+bool    PyIs_Int32(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Int64(PyObject *o)
-{
-#ifdef _WIN32
-    return PyArray_IsScalar(o, Int64);
-#else
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
-#endif
-}
+bool    PyIs_Int64(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Float(PyObject *o)
-{
-    return PyArray_IsScalar(o, Float32);
-}
+bool    PyIs_Float(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Double(PyObject *o)
-{
-	return PyFloat_Check(o) || PyArray_IsScalar(o, Float64);
-}
+bool    PyIs_Double(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Bool(PyObject *o)
-{
-	return PyBool_Check(o) || PyArray_IsScalar(o, Bool);
-}
+bool    PyIs_Bool(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Complex128(PyObject *o)
-{
-	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
-}
+bool    PyIs_Complex128(PyObject *o);
 //--------------------------------------------------------//
-inline bool    PyIs_Complex64(PyObject *o)
-{
-    return PyArray_IsScalar(o, Complex64);
-}
+bool    PyIs_Complex64(PyObject *o);
 
 
 #endif
