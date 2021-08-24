@@ -1829,9 +1829,7 @@ class FunctionCall(PyccelAstNode):
             f_args = f_args[1:]
         if not len(args) == len(f_args):
             # Collect dict of keywords and values (initialised as default)
-            f_args_dict = {a.name: a.default_call_arg
-                                    if a.has_default else (a.name, None)
-                                    for a in f_args}
+            f_args_dict = {a.name: a if a.has_default else None for a in f_args}
             keyword_args = []
             for i,a in enumerate(args):
                 if a.keyword is None:
@@ -1848,8 +1846,9 @@ class FunctionCall(PyccelAstNode):
             args = list(f_args_dict.values())
 
         # Handle function as argument
-        args = [FunctionCallArgument(FunctionAddress(a.value.name, a.value.arguments, a.value.results, []), keyword=a.keyword)
-                if isinstance(a.value, FunctionDef) else a for a in args]
+        arg_vals = [None if a is None else a.value for a in args]
+        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results, []), keyword=a.keyword)
+                if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
