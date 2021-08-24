@@ -2,7 +2,7 @@
 # coding: utf-8
 import numpy as np
 
-from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity
+from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity, print_var
 
 print(f1(2))
 print(f1())
@@ -30,3 +30,6 @@ print(recursivity(19.2,6.7))
 print(recursivity(4.5))
 print(recursivity(19.2,6.7,True))
 print(recursivity(4.5,z = False))
+
+print_var()
+print_var(5)

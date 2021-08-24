@@ -39,3 +39,6 @@ def recursivity(x, y = 0.0, z = None):
     if (tmp):
         y = 2.5
     return x + y
+
+def print_var(n : int = 0):
+    print(n)
