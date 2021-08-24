@@ -7,7 +7,7 @@
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
-from .core              import Assign
+from .core              import Assign, Argument
 from .core              import FunctionDef, Interface, FunctionAddress
 from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
@@ -685,26 +685,25 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg.var, Variable):
-                arg = arg.var.name
-                if arg in argument_keys:
-                    new = d_arguments[arg]
-                    if isinstance(new, PyccelSymbol) and new in result_keys:
-                        new = d_results[new]
+            if isinstance(arg, Argument):
+                arg_name = arg.var.name
+                if arg_name in result_keys:
+                    new = d_results[arg_name]
 
-                elif arg in result_keys:
-                    new = d_results[arg]
+                elif arg_name in argument_keys:
+                    new = d_arguments[arg_name]
+
+                elif arg.has_default:
+                    new = arg.value
+
                 else:
-                    new = arg
-               #TODO uncomment later
-               #     raise ValueError('Unknown variable name')
+                    raise ValueError('Missing argument')
+
             elif isinstance(arg, Macro):
-                if arg.argument in argument_keys:
-                    new = d_arguments[arg.argument]
-                    if isinstance(new, PyccelSymbol) and new in result_keys:
-                        new = d_results[new]
-                elif arg.argument in result_keys:
+                if arg.argument in result_keys:
                     new = d_results[arg.argument]
+                elif arg.argument in argument_keys:
+                    new = d_arguments[arg.argument]
                 else:
                     raise ValueError('Unknown variable name')
 
