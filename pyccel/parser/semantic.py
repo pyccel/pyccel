@@ -1349,7 +1349,7 @@ class SemanticParser(BasicParser):
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
-                                shape=d_var['shape'], order=d_var['order'],
+                                shape=d_var['shape'], order=d_var.get('order'),
                                 status=status))
 
                             if status != 'unallocated':
@@ -1890,7 +1890,6 @@ class SemanticParser(BasicParser):
             macro = self.get_macro(rhs_name)
 
             # Macro
-            #is this ok with issue 926
             if isinstance(macro, MacroVariable):
                 return macro.master
             elif isinstance(macro, MacroFunction):
