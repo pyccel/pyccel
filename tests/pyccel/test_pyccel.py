@@ -409,8 +409,8 @@ def test_funcs(language):
 
 #------------------------------------------------------------------------------
 # Enumerate not supported in c
-def test_inout_func():
-    pyccel_test("scripts/runtest_inoutfunc.py")
+def test_inout_func(language):
+    pyccel_test("scripts/runtest_inoutfunc.py", language = language)
 
 #------------------------------------------------------------------------------
 def test_bool(language):
@@ -436,13 +436,13 @@ def test_generic_functions():
                     int,int])
 
 #------------------------------------------------------------------------------
-# C does not handle functions in functions
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,int,float,float,float,
                 float,float,float,float,bool,bool,bool,
-                float,float,float,float])
+                float,float,float,float],
+            language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
