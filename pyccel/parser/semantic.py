@@ -2211,7 +2211,6 @@ class SemanticParser(BasicParser):
             else:
 
                 # TODO check types from FunctionDef
-
                 master = macro.master
                 name = _get_name(master.name)
                 results = []
@@ -2225,6 +2224,10 @@ class SemanticParser(BasicParser):
                 for d_var, var in zip(d_restps, lhs):
                     if not var in args_names:
                         tmp = self._assign_lhs_variable(var, d_var, None, new_expressions, None, **settings)
+                        results.append(tmp)
+                    else:
+                        _name = _get_name(var)
+                        tmp = self.get_variable(_name)
                         results.append(tmp)
 
                 # ...
