@@ -81,10 +81,11 @@ AvailableMacro:
 
 // TODO shall we add also results to the master call?
 
-ExType: dtype=DataType ('*' prec=INT)? ('(' trailer+=MacroValue[','] ')')? ( '(' 'order' '=' order = ID ')' )?;
+//Extended Type with shape
+ExType: dtype=DataType ('*' prec=INT)? ('(' shape+=MacroValue[','] ')')? ( '(' 'order' '=' order = ID ')' )?;
 
 FunctionMacroStmt: 
-  'macro' ('('restps+=ExType[','] ')' '::')? ('(' results*=ID[','] ')' ',')?
+  'macro' ('('results_sh+=ExType[','] ')' '::')? ('(' results*=ID[','] ')' ',')?
   dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?

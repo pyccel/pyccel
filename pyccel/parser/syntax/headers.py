@@ -162,14 +162,21 @@ class ExType(BasicStmt):
 
     def __init__(self, **kwargs):
         """
-        Constructor for a ExType.
+        Constructor for ExType.
 
         dtype: str
             variable type
+        prec: integer
+            variable precisions
+        shape: Macro/integer/str
+            variable shape
+        order: str
+            variable order
+
         """
         self.dtype   = kwargs.pop('dtype')
         self.prec    = kwargs.pop('prec')
-        self.trailer = kwargs.pop('trailer', [])
+        self.shape = kwargs.pop('shape', [])
         self.order   = kwargs.pop('order')
 
         super().__init__(**kwargs)
@@ -180,21 +187,20 @@ class ExType(BasicStmt):
         precision = self.prec
         if dtype in dtype_registry.keys():
             dtype,precision = dtype_registry[dtype]
-        trailer = self.trailer
         order = 'C'
 
-        trailer = []
-        for i in self.trailer:
+        shape = []
+        for i in self.shape:
             if isinstance(i, MacroStmt):
-                trailer.append(i.expr)
+                shape.append(i.expr)
             else:
-                trailer.append(PyccelSymbol(i))
+                shape.append(PyccelSymbol(i))
         if self.order:
             order = str(self.order)
         d_var={}
         d_var['datatype']=dtype
-        d_var['rank'] = len(trailer)
-        d_var['allocatable'] = len(trailer)>0
+        d_var['rank'] = len(shape)
+        d_var['allocatable'] = len(shape)>0
         d_var['is_pointer'] = False
         d_var['precision']  = precision
         d_var['is_const'] = False
@@ -205,7 +211,7 @@ class ExType(BasicStmt):
         #this is temporarly
         if d_var['rank']>=1:
             d_var['order'] = order
-        d_var['shape']=trailer
+        d_var['shape']=shape
         return d_var
 
 class TypeHeader(BasicStmt):
@@ -501,7 +507,7 @@ class FunctionMacroStmt(BasicStmt):
         self.results = kwargs.pop('results',None)
         if self.results:
             self.results = [PyccelSymbol(r) for r in self.results]
-        self.restps = kwargs.pop('restps', None)
+        self.results_sh = kwargs.pop('results_sh', None)
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -541,9 +547,9 @@ class FunctionMacroStmt(BasicStmt):
         if (results is None):
             results = []
 
-        restps = []
-        if self.restps:
-            restps = [restp.expr for restp in self.restps]
+        results_sh = []
+        if self.results_sh:
+            results_sh = [d_result.expr for d_result in self.results_sh]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
@@ -553,7 +559,7 @@ class FunctionMacroStmt(BasicStmt):
             # so that we always have a name of type str
             args = list(name.name[:-1]) + list(args)
             name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args, results=results, restps=restps)
+        return MacroFunction(name, args, master_name, master_args, results=results, results_sh=results_sh)
 
 
 #################################################
