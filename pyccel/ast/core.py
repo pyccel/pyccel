@@ -1829,7 +1829,8 @@ class FunctionCall(PyccelAstNode):
             f_args = f_args[1:]
         if not len(args) == len(f_args):
             # Collect dict of keywords and values (initialised as default)
-            f_args_dict = {a.name: a if a.has_default else None for a in f_args}
+            f_args_dict = {a.name: (a.name, a.value) if a.has_default \
+                    else None for a in f_args}
             keyword_args = []
             for i,a in enumerate(args):
                 if a.keyword is None:
@@ -1843,7 +1844,7 @@ class FunctionCall(PyccelAstNode):
                 # Replace default arguments with provided keyword arguments
                 f_args_dict[a.keyword] = a
 
-            args = list(f_args_dict.values())
+            args = [FunctionCallArgument(keyword=a[0], value=a[1]) if isinstance(a, tuple) else a for a in f_args_dict.values()]
 
         # Handle function as argument
         arg_vals = [None if a is None else a.value for a in args]
