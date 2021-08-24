@@ -2074,11 +2074,11 @@ class SemanticParser(BasicParser):
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
                 args_names = [arg.name for arg in args if isinstance(arg, Variable)]
-                d_restps = macro.apply_to_results(args)
+                d_results = macro.apply_to_results(args)
 
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
-                for d_var, var in zip(d_restps, lhs):
+                for d_var, var in zip(d_results, lhs):
                     if not var in args_names:
                         tmp = self._assign_lhs_variable(var, d_var, None, new_expressions, None, **settings)
                         results.append(tmp)
@@ -3423,9 +3423,9 @@ class SemanticParser(BasicParser):
         master_args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
                 else a for a in expr.master_arguments]
         results = expr.results
-        restps = expr.restps
+        results_sh = expr.results_sh
         macro   = MacroFunction(name, args, func, master_args,
-                                  results=results, restps=restps)
+                                results=results, results_sh=results_sh)
         self.insert_macro(macro)
 
         return macro
