@@ -73,6 +73,8 @@ from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil
 
+from pyccel.ast.macros   import Macro
+
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
@@ -3453,8 +3455,8 @@ class SemanticParser(BasicParser):
                                 for m in expr.master_arguments]
         master_arg_defaults = [m.value if isinstance(m, Argument) else a.value
                                 for a,m in zip(func.arguments, expr.master_arguments)]
-        master_args = [Argument(a.var.clone(n), value=d)
-                        for a,n,d in zip(func.arguments, master_arg_names, master_arg_defaults)]
+        master_args = [m if isinstance(m, Macro) else Argument(a.var.clone(n), value=d)
+                        for a,n,d,m in zip(func.arguments, master_arg_names, master_arg_defaults, expr.master_arguments)]
 
         results = expr.results
         macro   = MacroFunction(name, args, func, master_args,
