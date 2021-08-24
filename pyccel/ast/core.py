@@ -1767,6 +1767,14 @@ class Argument(PyccelAstNode):
         else:
             return str(self.name)
 
+    def __repr__(self):
+        if self.has_default:
+            argument = str(self.name)
+            value = str(self.value)
+            return 'Argument({0}={1})'.format(argument, value)
+        else:
+            return 'Argument({})'.format(repr(self.name))
+
 class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
