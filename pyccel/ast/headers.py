@@ -638,10 +638,10 @@ class MacroFunction(Header):
             unsorted_args = []
             n_sorted = len(args)
             for ind, (arg, val) in enumerate(zip(self.arguments, args)):
-                if val.has_keyword:
+                if not val.has_keyword:
                     name = str(arg) if isinstance(arg, PyccelSymbol) \
                             else arg.name
-                    d_arguments[name] = val
+                    d_arguments[name] = val.value
                 else:
                     n_sorted=ind
                     break
@@ -685,7 +685,8 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg, PyccelSymbol):
+            if isinstance(arg.var, Variable):
+                arg = arg.var.name
                 if arg in argument_keys:
                     new = d_arguments[arg]
                     if isinstance(new, PyccelSymbol) and new in result_keys:
@@ -738,14 +739,16 @@ class MacroFunction(Header):
         """
         expr = []
         final_args = []
-        for arg, func_arg in zip(args, self.arguments):
+        for a, func_a in zip(args, self.arguments):
+            arg = a.value
+            func_arg = func_a.var
             if func_arg in self.results and arg.rank > 0:
                 r = results[self.results.index(func_arg)]
                 if arg != r:
                     slices = [Slice(None,None)]*arg.rank
                     expr.append(Assign(r[slices], arg[slices]))
                     arg = r
-            final_args.append(arg)
+            final_args.append(a)
 
         return final_args, expr
 
