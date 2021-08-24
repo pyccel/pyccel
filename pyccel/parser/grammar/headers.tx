@@ -84,7 +84,7 @@ AvailableMacro:
 ExType: dtype=DataType ('*' prec=INT)? ('(' trailer+=MacroValue[','] ')')? ( '(' 'order' '=' order = ID ')' )?;
 
 FunctionMacroStmt: 
-  'macro' ('('restps+=ExType[','] ')' ',')? ('(' results*=ID[','] ')' ',')?
+  'macro' ('('restps+=ExType[','] ')' '::')? ('(' results*=ID[','] ')' ',')?
   dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
