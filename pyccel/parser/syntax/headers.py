@@ -208,8 +208,7 @@ class ExType(BasicStmt):
             if dtype in ['double' ,'float','complex', 'int']:
                 d_var['precision'] = default_precision[dtype]
 
-        #this is temporarly
-        if d_var['rank']>=1:
+        if d_var['rank']>1:
             d_var['order'] = order
         d_var['shape']=shape
         return d_var
