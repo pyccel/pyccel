@@ -90,9 +90,9 @@ iso_c_binding_shortcut_mapping = {
     'C_FLOAT'               : 'f32',
     'C_DOUBLE'              : 'f64',
     'C_LONG_DOUBLE'         : 'f128',
-    'C_FLOAT_COMPLEX'       : 'C_FLOAT_COMPLEX',
-    'C_DOUBLE_COMPLEX'      : 'C_DOUBLE_COMPLEX',
-    'C_LONG_DOUBLE_COMPLEX' : 'C_LONG_DOUBLE_COMPLEX',
+    'C_FLOAT_COMPLEX'       : 'c32',
+    'C_DOUBLE_COMPLEX'      : 'c64',
+    'C_LONG_DOUBLE_COMPLEX' : 'c128',
     'C_BOOL'                : 'b4'
 }
 default_precision = {'real': 8,
