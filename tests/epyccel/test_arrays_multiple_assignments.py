@@ -254,6 +254,7 @@ def test_Assign_after_If():
     assert f(True) == f2(True)
     assert f(False) == f2(False)
 
+#==============================================================================
 def test_stack_array_if(language):
 
     @stack_array('x')
