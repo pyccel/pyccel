@@ -33,6 +33,8 @@ __all__ = [
         'tuples_inhomogeneous_copies_have_pointers',
         'tuples_mul_homogeneous',
         'tuples_mul_homogeneous2',
+        'tuples_mul_homogeneous3',
+        'tuples_mul_homogeneous4',
         'tuples_mul_inhomogeneous',
         'tuples_mul_inhomogeneous2',
         'tuples_mul_homogeneous_2d',
@@ -50,6 +52,7 @@ __all__ = [
         'tuples_add_mixed_homogeneous_variables',
         'tuples_add_mixed_homogeneous_with_variables',
         'tuples_2d_sum',
+        'tuples_func'
         ]
 
 def homogenous_tuple_int():
@@ -85,7 +88,9 @@ def inhomogenous_tuple_3():
     return ai[0], ai[1], ai[2]
 
 def inhomogenous_tuple_2_levels_1():
-    ai = ((1,2), (4,False), (3.0, 'boo'))
+    # TODO [EB 15.06.21] Put back original test when strings are supported in C
+    #ai = ((1,2), (4,False), (3.0, 'boo'))
+    ai = ((1,2), (4,False), (3.0, True))
     return ai[0][0], ai[0][1], ai[1][0], ai[1][1], ai[2][0]
 
 def inhomogenous_tuple_2_levels_2():
@@ -97,16 +102,22 @@ def homogeneous_tuple_2_levels():
     return ai[0][0], ai[0][1] ,ai[0][2], ai[1][0], ai[1][1], ai[1][2]
 
 def tuple_unpacking_1():
-    ai = (1,False,3.0)
+    ai = (1,False,3.5)
     a,b,c = ai
     return a,b,c
 
 def tuple_unpacking_2():
-    a,b,c = 1,False,3.0
+    a,b,c = 1,False,3.5
     return a,b,c
 
+def tuple_unpacking_3(x : 'int[:,:]'):
+    x[0,0], x[1,0] = 2, 2
+
+def tuple_unpacking_4(x : 'int[:,:]'):
+    x[:,0], x[0,:] = 2, 3
+
 def tuple_name_clash():
-    ai = (1+2j, False, 10.0)
+    ai = (1+2j, False, 10.4)
     ai_0 = 44
     return ai_0, ai[0], ai[1], ai[2]
 
@@ -241,6 +252,17 @@ def tuples_mul_homogeneous2():
     b = 2*a
     return b[0], b[1], b[2], b[3], b[4], b[5]
 
+def tuples_mul_homogeneous3():
+    a = (1,2,3)
+    s = 2
+    b = a*s
+    return b[0], b[1], b[2], b[3], b[4], b[5]
+
+def tuples_mul_homogeneous4():
+    s = 2
+    b = (1,2,3)*s
+    return b[0], b[1], b[2], b[3], b[4], b[5]
+
 def tuples_mul_inhomogeneous():
     a = (1,False)
     b = a*3
@@ -328,3 +350,9 @@ def tuples_2d_sum():
     a = ((1,2), (3,4))
     b = a + ((5,6),)
     return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1]
+
+def tuples_func():
+    def my_tup():
+        return 1, 2
+    c = my_tup()
+    return c[0], c[1]

@@ -14,11 +14,10 @@ from pyccel.errors.errors import Errors
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeGeneric,
-                        default_precision)
+                        NativeComplex, default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
-from .operators import (PyccelMinus, PyccelDiv,
+from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
 errors = Errors()
@@ -101,6 +100,10 @@ class Variable(PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
+    __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
+            '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
+            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
+            '_rank','_shape','_order')
     _attribute_nodes = ()
 
     def __init__(
@@ -125,40 +128,6 @@ class Variable(PyccelAstNode):
         allows_negative_indexes=False
         ):
         super().__init__()
-
-        # ------------ PyccelAstNode Properties ---------------
-        if isinstance(dtype, str) or str(dtype) == '*':
-
-            dtype = datatype(str(dtype))
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
-        if not isinstance(rank, int):
-            raise TypeError('rank must be an instance of int.')
-
-        if rank == 0:
-            shape = ()
-
-        if shape is None:
-            shape = tuple(None for i in range(rank))
-
-        if not precision:
-            if isinstance(dtype, NativeInteger):
-                precision = default_precision['int']
-            elif isinstance(dtype, NativeReal):
-                precision = default_precision['real']
-            elif isinstance(dtype, NativeComplex):
-                precision = default_precision['complex']
-            elif isinstance(dtype, NativeBool):
-                precision = default_precision['bool']
-        if not isinstance(precision,int) and precision is not None:
-            raise TypeError('precision must be an integer or None.')
-
-        self._alloc_shape = shape
-        self._dtype = dtype
-        self._rank  = rank
-        self._shape = self.process_shape(shape)
-        self._precision = precision
 
         # ------------ Variable Properties ---------------
         # if class attribute
@@ -210,6 +179,42 @@ class Variable(PyccelAstNode):
         self._is_kwonly      = is_kwonly
         self._is_temp        = is_temp
 
+        # ------------ PyccelAstNode Properties ---------------
+        if isinstance(dtype, str) or str(dtype) == '*':
+
+            dtype = datatype(str(dtype))
+        elif not isinstance(dtype, DataType):
+            raise TypeError('datatype must be an instance of DataType.')
+
+        if not isinstance(rank, int):
+            raise TypeError('rank must be an instance of int.')
+
+        if rank == 0:
+            shape = ()
+
+        if shape is None:
+            shape = tuple(None for i in range(rank))
+
+        if not precision:
+            if isinstance(dtype, NativeInteger):
+                precision = default_precision['int']
+            elif isinstance(dtype, NativeReal):
+                precision = default_precision['real']
+            elif isinstance(dtype, NativeComplex):
+                precision = default_precision['complex']
+            elif isinstance(dtype, NativeBool):
+                precision = default_precision['bool']
+        if not isinstance(precision,int) and precision is not None:
+            raise TypeError('precision must be an integer or None.')
+
+        self._alloc_shape = shape
+        self._dtype = dtype
+        self._rank  = rank
+        self._shape = self.process_shape(shape)
+        self._precision = precision
+        if self._rank < 2:
+            self._order = None
+
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
         has the expected format
@@ -226,7 +231,10 @@ class Variable(PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if isinstance(s,(LiteralInteger, PyccelArraySize)):
+            if self.shape_can_change(i):
+                # Shape of a pointer can change
+                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
+            elif isinstance(s,(LiteralInteger, PyccelArraySize)):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
@@ -236,6 +244,19 @@ class Variable(PyccelAstNode):
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
                                 'Variable, Slice, PyccelAstNode, int, Function')
         return tuple(new_shape)
+
+    def shape_can_change(self, i):
+        """
+        Indicates if the shape can change in the i-th dimension
+        """
+        return self.is_pointer
+
+    def set_changeable_shape(self):
+        """
+        Indicate that the exact shape is unknown, e.g. if the allocate is done in
+        an If block.
+        """
+        self._shape = [PyccelArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
 
     @property
     def name(self):
@@ -372,6 +393,9 @@ class Variable(PyccelAstNode):
     def __str__(self):
         return str(self.name)
 
+    def __repr__(self):
+        return '{}({}, dtype={})'.format(type(self).__name__, repr(self.name), repr(self.dtype))
+
     def __eq__(self, other):
         if type(self) is type(other):
             return self._name == other.name
@@ -420,9 +444,9 @@ class Variable(PyccelAstNode):
             cls = new_class
 
         args = inspect.signature(Variable.__init__)
-        new_kwargs = {k:self.__dict__['_'+k] \
+        new_kwargs = {k:getattr(self, '_'+k) \
                             for k in args.parameters.keys() \
-                            if '_'+k in self.__dict__}
+                            if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
 
@@ -495,6 +519,7 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    __slots__ = ('_name',)
     _attribute_nodes = ()
 
     def __init__(self, *args):
@@ -530,6 +555,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
+    __slots__ = ('_value',)
     _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
@@ -567,19 +593,77 @@ class TupleVariable(Variable):
     >>> n
     n
     """
+    __slots__ = ()
+
+    @property
+    def is_ndarray(self):
+        return False
+
+class HomogeneousTupleVariable(TupleVariable):
+
+    """Represents a tuple variable in the code.
+
+    Parameters
+    ----------
+    arg_vars: Iterable
+        Multiple variables contained within the tuple
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import TupleVariable, Variable
+    >>> v1 = Variable('int','v1')
+    >>> v2 = Variable('bool','v2')
+    >>> n  = TupleVariable([v1, v2],'n')
+    >>> n
+    n
+    """
+    __slots__ = ()
+    is_homogeneous = True
+
+    def shape_can_change(self, i):
+        """
+        Indicates if the shape can change in the i-th dimension
+        """
+        return self.is_pointer and i == (self.rank-1)
+
+    def __len__(self):
+        return self.shape[0]
+
+    def __iter__(self):
+        assert isinstance(self.shape[0], LiteralInteger)
+        return (self[i] for i in range(self.shape[0]))
+
+class InhomogeneousTupleVariable(TupleVariable):
+
+    """Represents a tuple variable in the code.
+
+    Parameters
+    ----------
+    arg_vars: Iterable
+        Multiple variables contained within the tuple
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import TupleVariable, Variable
+    >>> v1 = Variable('int','v1')
+    >>> v2 = Variable('bool','v2')
+    >>> n  = TupleVariable([v1, v2],'n')
+    >>> n
+    n
+    """
+    __slots__ = ('_vars',)
     _attribute_nodes = ('_vars',)
+    is_homogeneous = False
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
-        self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
-        self._is_homogeneous = not dtype is NativeGeneric()
         super().__init__(dtype, name, *args, **kwargs)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
         (used for inhomogeneous variables)
         """
-        return tuple(self[i] for i in range(len(self._vars)))
+        return self._vars
 
     def get_var(self, variable_idx):
         """ Get the n-th variable saved internally in the
@@ -591,7 +675,6 @@ class TupleVariable(Variable):
                        The index of the variable which we
                        wish to collect
         """
-        assert(not self._is_homogeneous)
         return self._vars[variable_idx]
 
     def rename_var(self, variable_idx, new_name):
@@ -606,25 +689,21 @@ class TupleVariable(Variable):
         new_name     : str
                        The new name of the variable
         """
-        assert(not self._is_homogeneous)
         self._vars[variable_idx].rename(new_name)
 
     def __getitem__(self, idx):
-        if self._is_homogeneous:
-            return Variable.__getitem__(self, idx)
+        if isinstance(idx, tuple):
+            sub_idx = idx[1:]
+            idx = idx[0]
         else:
-            if isinstance(idx, tuple):
-                sub_idx = idx[1:]
-                idx = idx[0]
-            else:
-                sub_idx = []
+            sub_idx = []
 
-            var = self.get_var(idx)
+        var = self.get_var(idx)
 
-            if len(sub_idx) > 0:
-                return var[sub_idx]
-            else:
-                return var
+        if len(sub_idx) > 0:
+            return var[sub_idx]
+        else:
+            return var
 
     def __iter__(self):
         return self._vars.__iter__()
@@ -632,33 +711,14 @@ class TupleVariable(Variable):
     def __len__(self):
         return len(self._vars)
 
-    @property
-    def inconsistent_shape(self):
-        """ Indicates whether all objects in the tuple have the
-        same shape
-        """
-        return self._inconsistent_shape
-
-    @property
-    def is_homogeneous(self):
-        """ Indicates if all objects in the tuple have the
-        same datatype
-        # TODO: Indicates if all objects in the tuple have the
-        same properties
-        """
-        return self._is_homogeneous
-
-    @is_homogeneous.setter
-    def is_homogeneous(self, is_homogeneous):
-        self._is_homogeneous = is_homogeneous
-
     @Variable.allocatable.setter
     def allocatable(self, allocatable):
         if not isinstance(allocatable, bool):
             raise TypeError('allocatable must be a boolean.')
         self._allocatable = allocatable
         for var in self._vars:
-            var.allocatable = allocatable
+            if var.rank > 0:
+                var.allocatable = allocatable
 
     @Variable.is_pointer.setter
     def is_pointer(self, is_pointer):
@@ -666,7 +726,8 @@ class TupleVariable(Variable):
             raise TypeError('is_pointer must be a boolean.')
         self._is_pointer = is_pointer
         for var in self._vars:
-            var.is_pointer = is_pointer
+            if var.rank > 0:
+                var.is_pointer = is_pointer
 
     @Variable.is_target.setter
     def is_target(self, is_target):
@@ -674,7 +735,8 @@ class TupleVariable(Variable):
             raise TypeError('is_target must be a boolean.')
         self._is_target = is_target
         for var in self._vars:
-            var.is_target = is_target
+            if var.rank > 0:
+                var.is_target = is_target
 
 class Constant(ValuedVariable):
 
@@ -684,6 +746,7 @@ class Constant(ValuedVariable):
     --------
 
     """
+    __slots__ = ()
     # The value of a constant is not a translated object
     _attribute_nodes = ()
 
@@ -705,6 +768,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(
@@ -753,18 +817,18 @@ class IndexedElement(PyccelAstNode):
                     stop  = a.stop if a.stop is not None else s
                     step  = a.step
                     if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start)
+                        start = PyccelAdd(s, start, simplify=True)
                     if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop)
+                        stop = PyccelAdd(s, stop, simplify=True)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start)
+                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
                     if step is not None:
                         if isinstance(step, PyccelUnarySub):
                             start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop)
+                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
                             step = PyccelUnarySub(step)
 
-                        _shape = MathCeil(PyccelDiv(_shape, step))
+                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
@@ -787,6 +851,34 @@ class IndexedElement(PyccelAstNode):
         """
         return self._indices
 
+    def __str__(self):
+        return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
+
+    def __repr__(self):
+        return '{}[{}]'.format(repr(self.base), ','.join(repr(i) for i in self.indices))
+
+    def __getitem__(self, *args):
+
+        if len(args) == 1 and isinstance(args[0], (tuple, list)):
+            args = args[0]
+
+        if self.rank < len(args):
+            raise IndexError('Rank mismatch.')
+
+        new_indexes = []
+        j = 0
+        for i in self.indices:
+            if isinstance(i, Slice) and j<len(args):
+                if j == 0:
+                    i = args[j]
+                elif i.step == 1:
+                    i = PyccelAdd(i.start, args[j], simplify = True)
+                else:
+                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j], simplify=True), simplify = True)
+                j += 1
+            new_indexes.append(i)
+        return IndexedElement(self.base, *new_indexes)
+
 class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
@@ -794,11 +886,12 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    __slots__ = ('_variable','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
-        if not isinstance(variable, Variable):
-            raise TypeError('variable must be a variable')
+        if not isinstance(variable, (Variable, IndexedElement)):
+            raise TypeError('variable must be a variable or indexed element')
         self._variable = variable
 
         self._shape     = variable.shape
@@ -827,6 +920,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    __slots__ = ('_lhs',)
     _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):

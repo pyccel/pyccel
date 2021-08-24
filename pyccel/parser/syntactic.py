@@ -28,7 +28,7 @@ from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
-from pyccel.ast.core import For, FunctionalFor
+from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
@@ -52,6 +52,7 @@ from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
+from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
@@ -59,10 +60,10 @@ from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -169,7 +170,7 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._scope.append(stmt)
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, Basic) and isinstance(stmt, ast.AST):
+            if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
                 result.set_fst(stmt)
             self._scope.pop()
             return result
@@ -259,7 +260,13 @@ class SyntaxParser(BasicParser):
         return code
 
     def _visit_Expr(self, stmt):
-        return self._visit(stmt.value)
+        val = self._visit(stmt.value)
+        if not isinstance(val, (CommentBlock, PythonPrint)):
+            # Collect any results of standalone expressions
+            # into a variable to avoid errors in C/Fortran
+            tmp_var,_ = create_variable(self._used_names)
+            val = Assign(tmp_var, val)
+        return val
 
     def _visit_Tuple(self, stmt):
         return PythonTuple(*self._treat_iterable(stmt.elts))
@@ -323,6 +330,7 @@ class SyntaxParser(BasicParser):
             lhs = PythonTuple(*lhs)
 
         rhs = self._visit(stmt.value)
+
         expr = Assign(lhs, rhs)
 
         # we set the fst to keep track of needed information for errors
@@ -534,6 +542,9 @@ class SyntaxParser(BasicParser):
         elif isinstance(stmt.op, ast.BitAnd):
             return PyccelBitAnd(first, second)
 
+        elif isinstance(stmt.op, ast.MatMult):
+            return NumpyMatmul(first, second)
+
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
@@ -586,10 +597,11 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if not isinstance(results, (list, PythonTuple, PythonList)):
+        if results is Nil():
+            results = []
+        elif not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
-        expr = Return(results)
-        return expr
+        return Return(results)
 
     def _visit_Pass(self, stmt):
         return Pass()
@@ -797,7 +809,7 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return)]
+        returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1
@@ -896,6 +908,9 @@ class SyntaxParser(BasicParser):
         if len(args) == 0:
             args = ()
 
+        if len(args) == 1 and isinstance(args[0], GeneratorComprehension):
+            return args[0]
+
         func = self._visit(stmt.func)
 
         if isinstance(func, PyccelSymbol):
@@ -973,7 +988,6 @@ class SyntaxParser(BasicParser):
 
     def _visit_GeneratorExp(self, stmt):
 
-
         result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
@@ -981,7 +995,7 @@ class SyntaxParser(BasicParser):
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
-        name = str(self._visit(parent.func))
+        name = self._visit(parent.func)
 
         grandparent = self._scope[-4]
         if isinstance(grandparent, ast.Assign):
@@ -1006,18 +1020,19 @@ class SyntaxParser(BasicParser):
             generators[-1].insert2body(body)
             body = generators.pop()
         indices = indices[::-1]
-        body = [body]
         if name == 'sum':
-            expr = FunctionalSum(body, result, lhs, indices, None)
+            expr = FunctionalSum(body, result, lhs, indices)
         elif name == 'min':
-            expr = FunctionalMin(body, result, lhs, indices, None)
+            expr = FunctionalMin(body, result, lhs, indices)
         elif name == 'max':
-            expr = FunctionalMax(body, result, lhs, indices, None)
+            expr = FunctionalMax(body, result, lhs, indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
                           symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
+
+        expr.set_fst(parent)
 
         return expr
 

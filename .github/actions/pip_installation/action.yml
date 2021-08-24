@@ -31,4 +31,12 @@ runs:
       shell: bash
       run:
         python -m pip install "pytest>=4.5"
+    - name: Install parallel pytest
+      shell: bash
+      run:
+        python -m pip install "pytest-xdist"
+    - name: Install astunparse
+      shell: bash
+      run:
+        python -m pip install astunparse
 

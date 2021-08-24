@@ -9,9 +9,6 @@
 from sympy import srepr
 import os
 
-import string
-import random
-
 from pyccel.ast.variable       import DottedName
 from pyccel.parser.extend_tree import CommentLine
 from pyccel.ast.internals      import PyccelSymbol
@@ -22,12 +19,6 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.fftpack"      : "pyccel.stdlib.external.dfftpack",
                        "fitpack"            : "pyccel.stdlib.internal.fitpack",
                        "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
-
-#==============================================================================
-def random_string( n ):
-    chars    = string.ascii_lowercase + string.digits
-    selector = random.SystemRandom()
-    return ''.join( selector.choice( chars ) for _ in range( n ) )
 
 #==============================================================================
 

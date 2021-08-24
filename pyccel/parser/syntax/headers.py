@@ -13,6 +13,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
+from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
@@ -164,7 +165,7 @@ class StringStmt(BasicStmt):
         self.arg = kwargs.pop('arg')
     @property
     def expr(self):
-        return LiteralString(repr(str(self.arg)))
+        return LiteralString(str(self.arg))
 
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
@@ -549,6 +550,8 @@ def parse(filename=None, stmts=None):
         model = meta.model_from_str(stmts)
     else:
         raise ValueError('Expecting a filename or a string')
+    # Ensure PyccelAstNode is in correct stage
+    PyccelAstNode.stage = 'syntactic'
 
     stmts = []
     for stmt in model.statements:

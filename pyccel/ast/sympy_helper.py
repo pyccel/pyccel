@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import create_incremented_string
+from .core      import create_incremented_string, Iterable
 
 from .builtins  import PythonRange, PythonTuple
 
@@ -45,7 +45,10 @@ def sympy_to_pyccel(expr, symbol_map):
 
     #Constants
     if isinstance(expr, sp.Integer):
-        return LiteralInteger(expr.p)
+        if expr.p >= 0:
+            return LiteralInteger(expr.p)
+        else:
+            return PyccelUnarySub(LiteralInteger(-expr.p))
     elif isinstance(expr, One):
         return LiteralInteger(1)
     elif isinstance(expr, NegativeOne):
@@ -77,7 +80,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
         # Find positive and negative elements
         for a in args[1:]:
-            if isinstance(a, PyccelMul) and a.args[0] == LiteralInteger(-1):
+            if isinstance(a, PyccelUnarySub):
                 result = PyccelMinus(result, a.args[1])
             else:
                 result = PyccelAdd(result, a)
@@ -179,6 +182,9 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
+
+    elif isinstance(expr, Iterable):
+        return pyccel_to_sympy(expr.iterable, symbol_map, used_names)
 
     elif isinstance(expr, PythonRange):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)

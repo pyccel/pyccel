@@ -34,6 +34,19 @@ def f1(i):
     #$ omp end parallel
     return out
 
+def directive_in_else(x : int):
+    result = 0
+    if x < 30:
+        return x
+    else:
+        #$ omp parallel
+        #$ omp for reduction(+:result)
+        for i in range(x):
+            result = result + i
+        #$ omp end parallel
+
+    return result
+
 def test_omp_number_of_procs():
     from pyccel.stdlib.internal.openmp import omp_get_num_procs
     procs_num = omp_get_num_procs()
@@ -250,6 +263,19 @@ def omp_matmul_single(A, x, out):
     #$ omp end single
     #$ omp end parallel
     #to let the function compile using epyccel issue #468
+    "bypass issue #468" # pylint: disable=W0105
+
+
+@types('int[:]', 'int[:]', 'real[:]')
+def omp_nowait(x, y, z):
+    #$ omp parallel
+    #$ omp for nowait
+    for i in range(0, 1000):
+        y[i] = x[i] * 2
+    #$ omp for nowait
+    for j in range(0, 1000):
+        z[j] = x[j] / 2
+    #$ omp end parallel
     "bypass issue #468" # pylint: disable=W0105
 
 @types('int[:]')

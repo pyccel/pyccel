@@ -37,6 +37,8 @@ doc/source
 
 *.swp
 
+pyccel/compilers/*.json
+
 tests/*.pyccel
 tests/*.f90
 tests/*.mod
@@ -50,6 +52,7 @@ tests/scripts/core/*.f90
 tests/scripts/core/*.mod
 tests/scripts/core/*.o
 
+tests/pyccel/scripts/runtest_headers.py
 tests/pyccel/scripts/headers.pyh
 tests/pyccel/scripts/test_headers.py
 

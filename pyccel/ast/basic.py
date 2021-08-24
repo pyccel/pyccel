@@ -22,12 +22,14 @@ iterable = lambda x : isinstance(x, iterable_types)
 class Immutable:
     """ Superclass for classes which cannot inherit
     from Basic """
+    __slots__ = ()
 
 #==============================================================================
 class Basic:
     """Basic class for Pyccel AST."""
-    _fst = None
+    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress')
     _ignored_types = (Immutable, type)
+    _attribute_nodes = None
 
     def __init__(self):
         self._user_nodes = []
@@ -47,11 +49,12 @@ class Basic:
                 setattr(self, c_name, c)
 
             elif iterable(c):
-                if any(iterable(ci) for ci in c):
-                    raise TypeError("Basic child cannot be a tuple of tuples")
+                size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
                                  or self.ignore(ci)) \
-                        else convert_to_literal(ci) for ci in c)
+                        else convert_to_literal(ci) for ci in c if not iterable(ci))
+                if len(c) != size:
+                    raise TypeError("Basic child cannot be a tuple of tuples")
                 setattr(self, c_name, c)
 
             elif not isinstance(c, Basic):
@@ -190,8 +193,6 @@ class Basic:
         def prepare_sub(found_node):
             idx = original.index(found_node)
             rep = replacement[idx]
-            if not self.ignore(found_node):
-                found_node.remove_user_node(self)
             if iterable(rep):
                 for r in rep:
                     if not self.ignore(r):
@@ -199,6 +200,8 @@ class Basic:
             else:
                 if not self.ignore(rep):
                     rep.set_current_user_node(self)
+            if not self.ignore(found_node):
+                found_node.remove_user_node(self)
             return rep
 
         for n in self._my_attribute_nodes:
@@ -241,12 +244,17 @@ class Basic:
         if not isinstance(fst, ast.AST):
             raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
 
-        if not hasattr(fst, 'lineno'):
-            # Handle module object
-            fst.lineno     = 1
-            fst.col_offset = 1
+        if self.fst:
+            if hasattr(fst, 'lineno'):
+                if self.fst.lineno != fst.lineno or self.fst.col_offset != fst.col_offset:
+                    self._fst.append(fst)
+        else:
+            if not hasattr(fst, 'lineno'):
+                # Handle module object
+                fst.lineno     = 1
+                fst.col_offset = 1
 
-        self._fst.append(fst)
+            self._fst.append(fst)
 
     @property
     def fst(self):
@@ -272,6 +280,13 @@ class Basic:
         """ Inform the class about the most recent user of the node
         """
         self._user_nodes.append(user_nodes)
+
+    def clear_user_nodes(self):
+        """ Delete all information about user nodes. This is useful
+        if the same node is used for the syntactic and semantic
+        stages, and it should only have 1 user.
+        """
+        self._user_nodes = []
 
     def remove_user_node(self, user_node):
         """ Indicate that the current node is no longer used
@@ -307,40 +322,36 @@ class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
     stage      = None
-    _shape     = None
-    _rank      = None
-    _dtype     = None
-    _precision = None
-    _order     = None
+    __slots__  = ()
 
     @property
     def shape(self):
         """ Tuple containing the length of each dimension
         of the object """
-        return self._shape
+        return self._shape # pylint: disable=no-member
 
     @property
     def rank(self):
         """ Number of dimensions of the object
         """
-        return self._rank
+        return self._rank # pylint: disable=no-member
 
     @property
     def dtype(self):
         """ Datatype of the object """
-        return self._dtype
+        return self._dtype # pylint: disable=no-member
 
     @property
     def precision(self):
         """ Precision of the datatype of the object """
-        return self._precision
+        return self._precision # pylint: disable=no-member
 
     @property
     def order(self):
         """ Indicates whether the data is stored in
         row-major ('C') or column-major ('F') format.
         This is only relevant if rank > 1 """
-        return self._order
+        return self._order # pylint: disable=no-member
 
     def copy_attributes(self, x):
         self._shape     = x.shape

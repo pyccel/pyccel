@@ -20,12 +20,15 @@ RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive fun
                               "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
 
 INCOMPATIBLE_TYPES = 'Incompatible types'
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
+INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Variable has already been defined with type '{}'. Type '{}' in assignment is incompatible"
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
 INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, because it does not support memory reallocation. Avoid redefinition, or use standard heap array.'
 STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
+INCOMPATIBLE_ARGUMENT = 'Incompatible argument {} passed to function (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)'
+UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
 UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
+UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
@@ -137,6 +140,7 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 # ARRAY ERRORS
 ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
+ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array arguments cannot be used as local variables'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
 INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 

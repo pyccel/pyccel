@@ -5,9 +5,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# TODO add version
-#  --version  show program's version number and exit
-
 import sys
 import os
 import argparse
@@ -26,30 +23,10 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #==============================================================================
-def _which(program):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    if os.name == 'nt':  # Windows
-        program = program + '.exe'
-    fpath, _ = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-#==============================================================================
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
-def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None):
+def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
     pyccel console command.
     """
@@ -85,13 +62,12 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
 
-    group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran', \
-            'gcc', 'icc'), help='Compiler name')
-
-    group.add_argument('--mpi-compiler', help='MPI compiler wrapper')
+    group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI}')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
+    group.add_argument('--wrapper-flags', type=str, \
+                       help='Compiler flags for the wrapper.')
     group.add_argument('--debug', action='store_true', \
                        help='compiles the code in a debug mode.')
 
@@ -123,6 +99,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     # ... Accelerators
     group = parser.add_argument_group('Accelerators options')
+    group.add_argument('--mpi', action='store_true', \
+                       help='uses mpi')
     group.add_argument('--openmp', action='store_true', \
                        help='uses openmp')
     group.add_argument('--openacc', action='store_true', \
@@ -158,6 +136,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     if args.compiler:
         compiler = args.compiler
+
+    if not mpi:
+        mpi = args.mpi
 
     if not openmp:
         openmp = args.openmp
@@ -206,21 +187,13 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
         sys.exit(1)
     # ...
 
-    if compiler:
-        if _which(compiler) is None:
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report('Could not find compiler',
-                          symbol=compiler,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
-
-    accelerator = None
+    accelerators = []
+    if mpi:
+        accelerators.append("mpi")
     if openmp:
-        accelerator = "openmp"
+        accelerators.append("openmp")
     if openacc:
-        accelerator = "openacc"
+        accelerators.append("openacc")
 
     # ...
 
@@ -247,21 +220,19 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        verbose       = args.verbose,
                        language      = args.language,
                        compiler      = compiler,
-                       mpi_compiler  = args.mpi_compiler,
                        fflags        = args.flags,
+                       wrapper_flags = args.wrapper_flags,
                        includes      = args.includes,
                        libdirs       = args.libdirs,
                        modules       = (),
                        libs          = args.libs,
                        debug         = args.debug,
-                       accelerator   = accelerator,
+                       accelerators  = accelerators,
                        folder        = args.output)
     except PyccelError:
         sys.exit(1)
     finally:
         os.chdir(base_dirpath)
-
-    return
 
 #==============================================================================
 # NOTE: left here for later reference
