@@ -961,8 +961,8 @@ class SemanticParser(BasicParser):
         args  = []
         for arg in arguments:
             a = self._visit(arg, **settings)
-            if isinstance(a, StarredArguments):
-                args.extend(a.args_var)
+            if isinstance(a.value, StarredArguments):
+                args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
                 args.append(a)
         return args
