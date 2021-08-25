@@ -1015,7 +1015,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                             wrapper_name = self._function_wrapper_names[f.name],
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""')
-                                     for f in funcs)
+                                     for f in funcs if f is not expr.init_func)
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
@@ -1035,12 +1035,21 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{method_def_name}\n'
                 '}};\n'.format(module_def_name = module_def_name, mod_name = expr.name, method_def_name = method_def_name))
 
+        init_call = ''
+        if expr.init_func:
+            used_names = set()
+            static_function, static_args, _ = self._get_static_function(used_names, expr.init_func, [])
+            init_call = self._print(FunctionCall(static_function,static_args,[]))
+
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'PyObject *m;\n'
                 'import_array();\n'
                 'm = PyModule_Create(&{module_def_name});\n'
+                '{init_call}'
                 'if (m == NULL) return NULL;\n'
-                'return m;\n}}\n'.format(mod_name=expr.name, module_def_name = module_def_name))
+                'return m;\n}}\n'.format(mod_name=expr.name,
+                    module_def_name = module_def_name,
+                    init_call = init_call))
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
