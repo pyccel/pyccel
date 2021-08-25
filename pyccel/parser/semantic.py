@@ -1580,7 +1580,7 @@ class SemanticParser(BasicParser):
         if not all(isinstance(l, (FunctionHeader, EmptyNode, Comment)) for l in init_func_body):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
-            variables.append(init_var)
+            variables.append(Assign(init_var, LiteralFalse()))
             init_func_name = self.get_new_name(expr.name+'_init')
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))

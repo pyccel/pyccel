@@ -1049,7 +1049,7 @@ class FCodePrinter(CodePrinter):
 
         code_value = ''
         if expr.value:
-            code_value = ' = {0}'.format(expr.value)
+            code_value = ' = {0}'.format(self._print(expr.value))
 
         vstr = self._print(expr.variable.name)
 

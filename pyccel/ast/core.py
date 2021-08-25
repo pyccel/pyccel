@@ -1122,10 +1122,10 @@ class Module(Basic):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program')
+                 '_program','_variable_inits')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
-                        '_free_func','_program')
+                        '_free_func','_program','_variable_inits')
 
     def __init__(
         self,
@@ -1145,7 +1145,7 @@ class Module(Basic):
         if not iterable(variables):
             raise TypeError('variables must be an iterable')
         for i in variables:
-            if not isinstance(i, Variable):
+            if not isinstance(i, (Variable, Assign)):
                 raise TypeError('Only a Variable instance is allowed.')
 
         if not iterable(funcs):
@@ -1187,7 +1187,8 @@ class Module(Basic):
         imports = tuple(imports)
 
         self._name = name
-        self._variables = variables
+        self._variables = [v.lhs if isinstance(v, Assign) else v for v in variables]
+        self._variable_inits = [v.rhs if isinstance(v, Assign) else None for v in variables]
         self._funcs = funcs
         self._init_func = init_func
         self._free_func = free_func
@@ -1235,7 +1236,7 @@ class Module(Basic):
 
     @property
     def declarations(self):
-        return [Declare(i.dtype, i) for i in self.variables]
+        return [Declare(i.dtype, i, value=v) for i,v in zip(self.variables, self._variable_inits)]
 
     @property
     def body(self):
