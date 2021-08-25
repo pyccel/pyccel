@@ -681,6 +681,7 @@ class MacroFunction(Header):
 
     def apply_to_results(self, args):
         """replace elements of the shape with appropriate values"""
+
         d_arguments = self.link_args(args)
         argument_keys = d_arguments.keys()
         ld_results = []
