@@ -50,6 +50,7 @@ from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatyp
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
+from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import CustomDataType
 
@@ -198,6 +199,7 @@ class FCodePrinter(CodePrinter):
         super().__init__()
         self.parser = parser
         self._namespace = self.parser.namespace
+        self._constantImports = set()
         self._current_function = None
         self._current_class    = None
 
@@ -205,6 +207,15 @@ class FCodePrinter(CodePrinter):
         self._additional_imports = set([])
 
         self.prefix_module = prefix_module
+
+    def print_constant_imports(self):
+        """Prints the use line for the constant imports used"""
+        macro = "use, intrinsic :: ISO_C_Binding, only : "
+        rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in self._constantImports]
+        if len(rename) == 0:
+            return ''
+        macro += " , ".join(rename)
+        return macro
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
@@ -283,9 +294,16 @@ class FCodePrinter(CodePrinter):
 
     def print_kind(self, expr):
         """
-        Prints the kind(precision) of a literal value
+        Prints the kind(precision) of a literal value or its shortcut if possible
         """
-        return iso_c_binding[self._print(expr.dtype)][expr.precision]
+        constant_name = iso_c_binding[self._print(expr.dtype)][expr.precision]
+        constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
+        if constant_shortcut not in self.parser.used_names and constant_name != constant_shortcut:
+            self._constantImports.add((constant_shortcut, constant_name))
+            constant_name = constant_shortcut
+        else:
+            self._constantImports.add(constant_name)
+        return constant_name
 
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
@@ -299,7 +317,6 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use, intrinsic :: ISO_C_BINDING\n'
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
@@ -334,6 +351,7 @@ class FCodePrinter(CodePrinter):
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
         imports += "\n".join('use ' + lib for lib in self._additional_imports)
+        imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
                  imports,
                  'implicit none\n',
@@ -349,7 +367,6 @@ class FCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use, intrinsic :: ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -374,6 +391,7 @@ class FCodePrinter(CodePrinter):
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
         imports += "\n".join('use ' + lib for lib in self._additional_imports)
+        imports += "\n" + self.print_constant_imports()
         parts = ['program {}\n'.format(name),
                  imports,
                 'implicit none\n',
@@ -1295,7 +1313,7 @@ class FCodePrinter(CodePrinter):
             for f in expr.functions:
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                        'use, intrinsic :: ISO_C_BINDING\n',
+                        self.print_constant_imports()+'\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
@@ -2324,6 +2342,20 @@ class FCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpyTranspose(self, expr):
+        var = expr.internal_var
+        arg = self._print(var)
+        assign = expr.get_user_nodes(Assign)[0]
+        if assign.lhs.order != var.order:
+            return arg
+        elif var.rank == 2:
+            return 'transpose({0})'.format(arg)
+        else:
+            var_shape = var.shape[::-1] if var.order == 'F' else var.shape
+            shape = ', '.join(self._print(i) for i in var_shape)
+            order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
+            return 'reshape({}, shape=[{}], order=[{}])'.format(arg, shape, order)
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to Fortran
