@@ -485,6 +485,9 @@ class CCodePrinter(CodePrinter):
                     PYCCEL_RESTRICTION_TODO,
                     symbol = expr, severity='fatal')
 
+    def _print_Header(self, expr):
+        return ''
+
     def _print_ModuleHeader(self, expr):
         name = expr.module.name
         # TODO: Add classes and interfaces
