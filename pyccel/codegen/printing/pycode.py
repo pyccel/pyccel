@@ -10,6 +10,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
+from pyccel.ast.core       import IfSection
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
@@ -56,6 +57,7 @@ class PythonCodePrinter(CodePrinter):
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}
+        self._init_funcs = []
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
@@ -252,7 +254,7 @@ class PythonCodePrinter(CodePrinter):
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
-        imports  = ''.join(self._print(i) for i in expr.imports)
+        imports  = ''.join(self._print(i) for i in expr.imports[:-1])
         body     = self._print(expr.body)
         body     = self._indent_codestring(body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
@@ -376,6 +378,8 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
+        if expr.funcdef in self._init_funcs:
+            return ''
         if expr.interface:
             func_name = expr.interface_name
         else:
@@ -388,6 +392,13 @@ class PythonCodePrinter(CodePrinter):
             return code+'\n'
 
     def _print_Import(self, expr):
+        p       = self._parser.d_parsers.get(expr.source, None)
+        init_func_name = ''
+        if p:
+            init_func = p.semantic_parser.ast.init_func
+            if init_func:
+                self._init_funcs.append(init_func)
+                init_func_name = init_func.name
         if not expr.target:
             source = self._print(expr.source)
             return 'import {source}\n'.format(source=source)
@@ -408,7 +419,7 @@ class PythonCodePrinter(CodePrinter):
                 target = expr.target
             if source in pyccel_builtin_import_registery:
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name], t.target) for t in target if isinstance(t, AsName)])
-            target = [self._print(i) for i in target]
+            target = [self._print(i) for i in target if i != init_func_name]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
 
@@ -674,15 +685,36 @@ class PythonCodePrinter(CodePrinter):
         imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
         # Collect functions which are not in an interface
-        funcs = [f for f in expr.funcs if not any(f in i.functions for i in expr.interfaces)]
+        funcs = [f for f in expr.funcs if not (any(f in i.functions for i in expr.interfaces) or f is expr.init_func)]
         funcs = ''.join(self._print(f) for f in funcs)
         classes = ''.join(self._print(c) for c in expr.classes)
-        body = ''.join((interfaces, funcs, classes))
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
+
+        init_func = expr.init_func
+        if init_func:
+            self._init_funcs.append(init_func)
+            # Collect initialisation body
+            init_if = init_func.get_attribute_nodes(IfSection)[0]
+            # Remove boolean from init_body
+            init_body = init_if.body.body[:-1]
+            init_body = ''.join(self._print(l) for l in init_body)
+        else:
+            init_body = ''
+
+        body = ''.join((interfaces, funcs, classes, init_body))
+
+        if expr.program:
+            expr.program.remove_import(expr.name)
+            prog = self._print(expr.program)
+        else:
+            prog = ''
+
         return ('{imports}\n'
-                '{body}').format(
+                '{body}'
+                '{prog}').format(
                         imports = imports,
-                        body    = body)
+                        body    = body,
+                        prog    = prog)
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])
