@@ -1292,7 +1292,11 @@ class FCodePrinter(CodePrinter):
         if var.is_pointer:
             return ''
         else:
-            return 'deallocate({0})\n'.format(self._print(var))
+            var_code = self._print(var)
+            code  = 'if (allocated({})) then\n'.format(var_code)
+            code += '  deallocate({})\n'     .format(var_code)
+            code += 'end if\n'
+            return code
 #------------------------------------------------------------------------------
 
     def _print_NativeBool(self, expr):
