@@ -359,16 +359,17 @@ def execute_pyccel(fname, *,
                 generated_program_filepath = src_compiler.compile_program(compile_obj=main_obj,
                         output_folder=pyccel_dirpath,
                         verbose=verbose)
-            # Create shared library
-            generated_filepath = create_shared_library(codegen,
-                                                   main_obj,
-                                                   language,
-                                                   wrapper_flags,
-                                                   pyccel_dirpath,
-                                                   src_compiler,
-                                                   wrapper_compiler,
-                                                   output_name,
-                                                   verbose)
+            if codegen.is_module:
+                # Create shared library
+                generated_filepath = create_shared_library(codegen,
+                                                       main_obj,
+                                                       language,
+                                                       wrapper_flags,
+                                                       pyccel_dirpath,
+                                                       src_compiler,
+                                                       wrapper_compiler,
+                                                       output_name,
+                                                       verbose)
         except NotImplementedError as error:
             msg = str(error)
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
@@ -386,14 +387,15 @@ def execute_pyccel(fname, *,
             handle_error('code generation (wrapping)')
             raise PyccelCodegenError('Code generation failed')
 
-        # Move shared library to folder directory
-        # (First construct absolute path of target location)
-        generated_filename = os.path.basename(generated_filepath)
-        target = os.path.join(folder, generated_filename)
-        shutil.move(generated_filepath, target)
-        generated_filepath = target
-        if verbose:
-            print( '> Shared library has been created: {}'.format(generated_filepath))
+        if codegen.is_module:
+            # Move shared library to folder directory
+            # (First construct absolute path of target location)
+            generated_filename = os.path.basename(generated_filepath)
+            target = os.path.join(folder, generated_filename)
+            shutil.move(generated_filepath, target)
+            generated_filepath = target
+            if verbose:
+                print( '> Shared library has been created: {}'.format(generated_filepath))
 
         if codegen.is_program:
             generated_program_filename = os.path.basename(generated_program_filepath)
