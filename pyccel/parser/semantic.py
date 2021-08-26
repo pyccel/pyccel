@@ -1621,7 +1621,7 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=self.blocking)
 
     def _visit_Module(self, expr, **settings):
-        body = [self._visit(b) for b in expr.program]
+        body = self._visit(expr.program).body
         program_body      = []
         init_func_body    = []
         mod_name = expr.name
