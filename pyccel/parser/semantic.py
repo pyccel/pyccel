@@ -84,6 +84,7 @@ from pyccel.ast.numpyext import NumpyBool
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
+from pyccel.ast.numpyext import NumpyTranspose
 from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
@@ -184,7 +185,8 @@ class SemanticParser(BasicParser):
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
 
-        # we use it to detect the current method or function
+        # used to store code split into multiple lines to be reinserted in the CodeBlock
+        self._additional_exprs = []
 
         #
         self._code = parser._code
@@ -728,7 +730,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
-            d_var['allocatable'   ] = expr.allocatable
+            d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
@@ -742,9 +744,10 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = expr.dtype
             d_var['precision'     ] = expr.precision
-            d_var['is_stack_array'] = expr.is_homogeneous
+            d_var['allocatable'   ] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
+            d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
@@ -754,6 +757,7 @@ class SemanticParser(BasicParser):
             d_var['precision'     ] = expr.precision
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
+            d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
             d_var['is_stack_array'] = not d_var['allocatable'   ]
@@ -768,7 +772,8 @@ class SemanticParser(BasicParser):
             d_var['datatype'      ] = d['datatype']
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
-            d_var['is_stack_array'] = d['is_stack_array'] and isinstance(expr.length, LiteralInteger)
+            d_var['order'         ] = expr.order
+            d_var['is_stack_array'] = d.get('is_stack_array',False) and isinstance(expr.length, LiteralInteger)
             d_var['allocatable'   ] = not d_var['is_stack_array']
             d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
@@ -782,6 +787,22 @@ class SemanticParser(BasicParser):
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = NumpyArrayClass
+            return d_var
+
+        elif isinstance(expr, NumpyTranspose):
+
+            var = expr.internal_var
+
+            d_var['datatype'      ] = var.dtype
+            d_var['allocatable'   ] = var.allocatable
+            d_var['shape'         ] = tuple(reversed(var.shape))
+            d_var['rank'          ] = var.rank
+            d_var['cls_base'      ] = var.cls_base
+            d_var['is_pointer'    ] = isinstance(var, Variable)
+            d_var['is_target'     ] = var.is_target
+            d_var['order'         ] = 'C' if var.order=='F' else 'F'
+            d_var['precision'     ] = var.precision
+            d_var['is_stack_array'] = var.is_stack_array
             return d_var
 
         elif isinstance(expr, PyccelAstNode):
@@ -1144,13 +1165,19 @@ class SemanticParser(BasicParser):
         """ Function using data about the new lhs to determine
         whether the lhs is a pointer and the rhs is a target
         """
-        if isinstance(rhs, Variable) and rhs.allocatable:
+        if isinstance(rhs, NumpyTranspose) and rhs.internal_var.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
             d_lhs['is_stack_array'] = False
 
-            rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
+            rhs.internal_var.is_target = True
+        if isinstance(rhs, Variable) and rhs.is_ndarray:
+            d_lhs['allocatable'] = False
+            d_lhs['is_pointer' ] = True
+            d_lhs['is_stack_array'] = False
+
+            rhs.is_target = not rhs.is_pointer
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.is_ndarray or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
             d_lhs['is_stack_array'] = False
@@ -1236,7 +1263,21 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     # Create Allocate node
-                    new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+                    if isinstance(lhs, InhomogeneousTupleVariable):
+                        args = [v for v in lhs.get_vars() if v.rank>0]
+                        new_args = []
+                        while len(args)>0:
+                            for a in args:
+                                if isinstance(a, InhomogeneousTupleVariable):
+                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
+                                else:
+                                    new_expressions.append(Allocate(a,
+                                        shape=a.alloc_shape, order=a.order, status=status))
+                                    # Add memory deallocation for array variables
+                                    self._allocs[-1].append(a)
+                            args = new_args
+                    else:
+                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
                 # ...
@@ -1323,21 +1364,42 @@ class SemanticParser(BasicParser):
 
                     elif d_var['shape'] != shape:
 
-                        if var.is_stack_array:
+                        if var.is_argument:
+                            errors.report(ARRAY_IS_ARG, symbol=var,
+                                severity='error', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
+
+                        elif var.is_stack_array:
                             errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
                                     self._current_fst_node.col_offset))
 
                         else:
+                            var.set_changeable_shape()
                             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
                             if not previous_allocations:
                                 errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
                                         symbol=var, severity='fatal')
-                            if previous_allocations[-1].get_user_nodes((If, For, While)):
+
+                            last_allocation = previous_allocations[-1]
+
+                            # Find outermost IfSection of last allocation
+                            last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                            alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                            while len(last_alloc_ifsection)>0:
+                                alloc_ifsection = last_alloc_ifsection[-1]
+                                last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+
+                            ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                                lambda x: isinstance(x,If))) == 1 \
+                                            if alloc_ifsection else False
+
+                            if alloc_ifsection and not ifsection_has_if:
+                                status = last_allocation.status
+                            elif last_allocation.get_user_nodes((If, For, While)):
                                 status='unknown'
-                            elif previous_allocations[-1].get_user_nodes(IfSection):
-                                status = previous_allocations[-1].status
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
@@ -1349,6 +1411,18 @@ class SemanticParser(BasicParser):
                                     severity='warning', blocker=False,
                                     bounding_box=(self._current_fst_node.lineno,
                                         self._current_fst_node.col_offset))
+                    else:
+                        # Same shape as before
+                        previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+
+                        if previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
+                                and not previous_allocations[-1].get_user_nodes((If)):
+                            # If previously allocated in If still under construction
+                            status = previous_allocations[-1].status
+
+                            new_expressions.append(Allocate(var,
+                                shape=d_var['shape'], order=d_var['order'],
+                                status=status))
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1660,23 +1734,18 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = []
+        self._additional_exprs.append([])
         for b in expr.body:
-            # Collect generator expressions in statements
-            gen_exp = b.get_attribute_nodes(GeneratorComprehension,
-                                     excluded_nodes = (FunctionDef,)) \
-                        if not isinstance(b, FunctionDef) else []
-            # Assign generator expressions to temporaries
-            gen_exp = [self._visit(Assign(g.lhs,g, fst=g.fst)) \
-                            for g in gen_exp if g.get_direct_user_nodes(
-                                lambda x: not isinstance(x, (GeneratorComprehension, Assign, Return)))]
 
             # Save parsed code
-            ls.extend(gen_exp)
             line = self._visit(b, **settings)
+            ls.extend(self._additional_exprs[-1])
+            self._additional_exprs[-1] = []
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
             else:
                 ls.append(line)
+        self._additional_exprs.pop()
 
         return CodeBlock(ls)
 
@@ -2126,6 +2195,7 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
+        # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
             genexp = self._assign_GeneratorComprehension(rhs, **settings)
             if isinstance(expr, AugAssign):
@@ -2136,7 +2206,22 @@ class SemanticParser(BasicParser):
             else:
                 new_expressions.append(genexp)
                 rhs = genexp.lhs
+        elif isinstance(rhs, IfTernaryOperator):
+            value_true  = self._visit(rhs.value_true, **settings)
+            if value_true.rank > 0 or value_true.dtype is NativeString():
+                # Temporarily deactivate type checks to construct syntactic assigns
+                PyccelAstNode.stage = 'syntactic'
+                assign_true  = Assign(lhs, rhs.value_true, fst = fst)
+                assign_false = Assign(lhs, rhs.value_false, fst = fst)
+                PyccelAstNode.stage = 'semantic'
 
+                cond  = self._visit(rhs.cond, **settings)
+                true_section  = IfSection(cond, [self._visit(assign_true)])
+                false_section = IfSection(LiteralTrue(), [self._visit(assign_false)])
+                return If(true_section, false_section)
+
+
+        # Visit object
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.get_macro(name)
@@ -2168,9 +2253,15 @@ class SemanticParser(BasicParser):
 
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
+                args, expr = macro.make_necessary_copies(args, results)
+                new_expressions += expr
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
-                    return FunctionCall(master, args, self._current_function)
+                    func_call = FunctionCall(master, args, self._current_function)
+                    if new_expressions:
+                        return CodeBlock([*new_expressions, func_call])
+                    else:
+                        return func_call
                 else:
                     # TODO treate interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
@@ -2317,6 +2408,11 @@ class SemanticParser(BasicParser):
             for d_var_i in d_var:
                 d_var_i['shape'] = dvar['shape']
                 d_var_i['rank' ]  = dvar['rank']
+
+        elif isinstance(rhs, NumpyTranspose):
+            d_var  = self._infere_type(rhs, **settings)
+            if d_var['is_pointer'] and not isinstance(lhs, IndexedElement):
+                rhs = rhs.internal_var
 
         else:
             d_var  = self._infere_type(rhs, **settings)
@@ -2730,7 +2826,13 @@ class SemanticParser(BasicParser):
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_GeneratorComprehension(self, expr, **settings):
-        return self.get_variable(expr.lhs)
+        lhs = self.check_for_variable(expr.lhs)
+        if lhs is None:
+            creation = self._visit(Assign(expr.lhs,expr, fst=expr.fst))
+            self._additional_exprs[-1].append(creation)
+            return self.get_variable(expr.lhs)
+        else:
+            return lhs
 
     def _visit_While(self, expr, **settings):
 
@@ -2792,13 +2894,40 @@ class SemanticParser(BasicParser):
                 errors.report("Determination of main module is too complicated to handle",
                         symbol=expr, severity='error')
 
+        allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
+
+        var_shapes = [{a.variable : a.shape for a in allocs} for allocs in allocations]
+        variables = [v for branch in var_shapes for v in branch]
+
+        for v in variables:
+            shape_branch1 = var_shapes[0][v]
+            if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
+                    or not all(shape_branch1==branch_shapes[v] \
+                                for branch_shapes in var_shapes[1:]):
+                v.set_changeable_shape()
+
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
-        cond        = self._visit(expr.cond, **settings)
         value_true  = self._visit(expr.value_true, **settings)
-        value_false = self._visit(expr.value_false, **settings)
-        return IfTernaryOperator(cond, value_true, value_false)
+        if value_true.rank > 0 or value_true.dtype is NativeString():
+            lhs = self.get_new_variable()
+            # Temporarily deactivate type checks to construct syntactic assigns
+            PyccelAstNode.stage = 'syntactic'
+            assign_true  = Assign(lhs, expr.value_true, fst = expr.fst)
+            assign_false = Assign(lhs, expr.value_false, fst = expr.fst)
+            PyccelAstNode.stage = 'semantic'
+
+            cond  = self._visit(expr.cond, **settings)
+            true_section  = IfSection(cond, [self._visit(assign_true)])
+            false_section = IfSection(LiteralTrue(), [self._visit(assign_false)])
+            self._additional_exprs[-1].append(If(true_section, false_section))
+
+            return self._visit(lhs)
+        else:
+            cond        = self._visit(expr.cond, **settings)
+            value_false = self._visit(expr.value_false, **settings)
+            return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr, **settings):
 

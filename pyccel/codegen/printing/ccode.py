@@ -43,7 +43,7 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import ValuedVariable, IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
-from pyccel.ast.variable import InhomogeneousTupleVariable
+from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 
@@ -196,6 +196,7 @@ c_library_headers = (
     "stdint",
     "stdio",
     "stdlib",
+    "string",
     "tgmath",
 )
 
@@ -295,6 +296,7 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
 
+        self._additional_imports.add('string')
         if isinstance(arg, Variable):
             arg = self._print(arg)
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
@@ -349,7 +351,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype_str, var.precision)
         np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
+        tot_shape = self._print(functools.reduce(
+            lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
@@ -804,7 +807,7 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
-            if expr.is_ndarray:
+            if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
                 self._additional_imports.add('ndarrays')
@@ -933,7 +936,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
         base_name = self._print(base)
-        if base.is_ndarray:
+        if base.is_ndarray or isinstance(base, HomogeneousTupleVariable):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):
@@ -1458,7 +1461,10 @@ class CCodePrinter(CodePrinter):
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
         if isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
                 and isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-            return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            if lhs_var.order == rhs_var.order:
+                return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            else:
+                return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
 
         return '{} = {};\n'.format(lhs, rhs)
 
@@ -1699,6 +1705,36 @@ class CCodePrinter(CodePrinter):
                 '}}').format(imports=imports,
                                     decs=decs,
                                     body=body)
+
+    #=================== MACROS ==================
+
+    def _print_MacroShape(self, expr):
+        var = expr.argument
+        if not isinstance(var, (Variable, IndexedElement)):
+            raise TypeError('Expecting a variable, given {}'.format(type(var)))
+        shape = var.shape
+
+        if len(shape) == 1:
+            shape = shape[0]
+
+
+        elif not(expr.index is None):
+            if expr.index < len(shape):
+                shape = shape[expr.index]
+            else:
+                shape = '1'
+
+        return self._print(shape)
+
+    def _print_MacroCount(self, expr):
+
+        var = expr.argument
+
+        if var.rank == 0:
+            return '1'
+        else:
+            return self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
 
 
