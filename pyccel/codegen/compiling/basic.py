@@ -195,7 +195,7 @@ class CompileObj:
         """
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
-        self._dependencies.update({a.target:a for a in args})
+        self._dependencies.update({a.module_target:a for a in args})
         for a in args:
             self._includes.update(a.includes)
             self._libs.extend(a.libs)

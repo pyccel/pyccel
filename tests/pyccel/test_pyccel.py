@@ -749,7 +749,5 @@ def test_module_init( language ):
         lang_out = get_lang_output(output_test_file, language)
     else:
         lang_out = get_lang_output(test_prog, language)
-    print(lang_out)
-    print("------------------")
 
     compare_pyth_fort_output(pyth_out, lang_out, str, language)
