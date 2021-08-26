@@ -2864,6 +2864,8 @@ class SemanticParser(BasicParser):
                 prog_container.imports[k].update(mod_container.imports[k])
             prog_container.imports['variables'].update(mod_container.variables)
             prog_container.imports['functions'].update(mod_container.functions)
+            prog_container.imports['classes'].update(mod_container.classes)
+            self._program_namespace.cls_constructs.update(self._module_namespace.cls_constructs)
         elif mod_check:
             cond = InModule()
         else:
