@@ -1626,7 +1626,6 @@ class SemanticParser(BasicParser):
         init_func_body    = []
         mod_name = expr.name
         prog_name = self.get_new_name('prog_'+expr.name)
-        self.insert_import
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name)
         self._allocs.append([])

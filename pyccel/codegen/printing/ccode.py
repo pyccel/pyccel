@@ -244,6 +244,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
+        self._current_module = None
         # Dictionary linking optional variables to their
         # temporary counterparts which provide allocated
         # memory
