@@ -1654,7 +1654,7 @@ class SemanticParser(BasicParser):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
             variables.append(Assign(init_var, LiteralFalse()))
-            init_func_name = self.get_new_name(expr.name+'_init')
+            init_func_name = self.get_new_name(expr.name+'__init')
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
@@ -1664,7 +1664,7 @@ class SemanticParser(BasicParser):
             self.insert_function(init_func)
 
         if init_func:
-            free_func_name = self.get_new_name(expr.name+'_free')
+            free_func_name = self.get_new_name(expr.name+'__free')
             deallocs = self._garbage_collector(init_func.body)
             if deallocs:
                 init_var = variables[-1]
