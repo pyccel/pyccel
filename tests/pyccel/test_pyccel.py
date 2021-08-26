@@ -719,3 +719,37 @@ def test_basic_header():
                                         ] )
 def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
+
+#------------------------------------------------------------------------------
+def test_module_init( language ):
+    test_mod  = get_abs_path("scripts/module_init.py")
+    test_prog = get_abs_path("scripts/runtest_module_init.py")
+
+    output_dir   = get_abs_path('scripts/__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language="+language
+    if language=="python":
+        if output_dir is None:
+            pyccel_commands += "--output="+output_dir
+
+    pyth_out = get_python_output(test_prog)
+
+    compile_pyccel (cwd, test_mod, pyccel_commands)
+
+    if language != "python":
+        pyth_mod_out = get_python_output(test_prog, cwd)
+        compare_pyth_fort_output(pyth_out, pyth_mod_out, str, language)
+
+    compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    if language == 'python' :
+        lang_out = get_lang_output(output_test_file, language)
+    else:
+        lang_out = get_lang_output(test_prog, language)
+    print(lang_out)
+    print("------------------")
+
+    compare_pyth_fort_output(pyth_out, lang_out, str, language)
