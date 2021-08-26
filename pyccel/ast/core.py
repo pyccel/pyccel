@@ -1364,7 +1364,7 @@ class Program(Basic):
         return [Declare(i.dtype, i) for i in self.variables]
 
     def remove_import(self, name):
-        self._imports = tuple([i for i in self.imports if i.source != name])
+        self._imports = tuple(i for i in self.imports if i.source != name)
 
 
 #==============================================================================
