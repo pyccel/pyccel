@@ -68,7 +68,6 @@ __all__ = (
     'Interface',
     'Module',
     'ModuleHeader',
-    'ParserResult',
     'Pass',
     'Program',
     'PythonFunction',
