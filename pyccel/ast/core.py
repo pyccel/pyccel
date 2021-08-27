@@ -1087,6 +1087,19 @@ class Module(Basic):
     funcs: list
         a list of FunctionDef instances
 
+    init_func: FunctionDef
+        The function which initialises the module (expressions in the
+        python module which are executed on import)
+        Default : None
+
+    free_func: FunctionDef
+        The function which frees any variables allocated in the module
+        Default : None
+
+    program: Program/CodeBlock
+        CodeBlock containing any expressions which are only executed
+        when the module is executed directly
+
     interfaces: list
         a list of Interface instances
 
@@ -1195,49 +1208,70 @@ class Module(Basic):
 
     @property
     def name(self):
+        """ Name of the module
+        """
         return self._name
 
     @property
     def variables(self):
+        """ Variables contained within the module
+        (but not in functions in the module)
+        """
         return self._variables
 
     @property
     def init_func(self):
+        """ The function which initialises the module (expressions in the
+        python module which are executed on import)
+        """
         return self._init_func
 
     @property
     def free_func(self):
+        """ The function which frees any variables allocated in the module
+        """
         return self._free_func
 
     @property
     def program(self):
+        """ CodeBlock or Program containing any expressions which are only executed
+        when the module is executed directly
+        """
         return self._program
 
     @property
     def funcs(self):
+        """ Any functions defined in the module
+        """
         return self._funcs
 
     @property
     def interfaces(self):
+        """ Any interfaces defined in the module
+        """
         return self._interfaces
 
     @property
     def classes(self):
+        """ Any classes defined in the module
+        """
         return self._classes
 
     @property
     def imports(self):
+        """ Any imports in the module
+        """
         return self._imports
 
     @property
     def declarations(self):
+        """ Returns the declarations of the variables
+        """
         return [Declare(i.dtype, i, value=v) for i,v in zip(self.variables, self._variable_inits)]
 
-    @property
-    def body(self):
-        return self.interfaces + self.funcs + self.classes
-
     def set_name(self, new_name):
+        """ Function for changing the name of a module
+        """
         self._name = new_name
 
 class ModuleHeader(Basic):
