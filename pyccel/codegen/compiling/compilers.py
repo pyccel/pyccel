@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import sysconfig
+import platform
 import warnings
 from filelock import FileLock
 from pyccel import __version__ as pyccel_version
@@ -19,10 +20,11 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-# Set correct deployment target if on mac
-mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
-if mac_target:
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+if platform.system() == 'Darwin':
+    # Set correct deployment target if on mac
+    mac_target = platform.mac_ver()[0]
+    if mac_target:
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 python_version = sysconfig.get_python_version()
 def different_version(compiler):
