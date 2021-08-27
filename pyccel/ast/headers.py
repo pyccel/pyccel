@@ -708,7 +708,7 @@ class MacroFunction(Header):
                     raise ValueError('Unknown variable name')
 
                 if isinstance(arg, MacroShape):
-                    new = construct_macro(arg.name, new, arg.index)
+                    new = MacroShape(new, arg.index)
                 else:
                     new = construct_macro(arg.name, new)
             else:
