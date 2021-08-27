@@ -702,19 +702,29 @@ class InhomogeneousTupleVariable(TupleVariable):
 class Constant(Variable):
 
     """
+    Class for expressing constant values (e.g. pi)
+
+    Parameters
+    ----------
+    *args, **kwargs : See pyccel.ast.variable.Variable
+
+    value : Type matching dtype
+            The value that the constant represents
 
     Examples
     --------
+    >>> from pyccel.ast.variable import Constant
+    >>> import math
+    >>> Constant('real', 'pi' , value=math.pi )
+    Constant('pi', dtype=NativeReal())
 
     """
     __slots__ = ('_value',)
     # The value of a constant is not a translated object
     _attribute_nodes = ()
 
-    def __init__(self, *args, **kwargs):
-
-        # if value is not given, we set it to Nil
-        self._value = kwargs.pop('value', Nil())
+    def __init__(self, *args, value = Nil(), **kwargs):
+        self._value = value
         super().__init__(*args, **kwargs)
 
     @property
