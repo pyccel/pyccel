@@ -703,13 +703,13 @@ class CCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
-        kwargs = [f for f in expr.expr if f.keyword]
+        kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
             elif f.keyword == 'end'    :   end = str(f.value)
         args_format = []
         args = []
-        orig_args = [f for f in expr.expr if not f.keyword]
+        orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
             args_format = sep.join(args_format)
