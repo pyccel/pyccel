@@ -1,1 +1,4 @@
-__version__ = "1.2.4"
+"""
+Module specifying the current version string for pyccel
+"""
+__version__ = "1.3.1"

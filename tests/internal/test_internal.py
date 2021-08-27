@@ -28,11 +28,11 @@ def test_lapack(f):
 @pytest.mark.skipif(sys.platform == "win32", reason = "Mpi not yet correctly installed")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi'))
 def test_mpi(f):
-    execute_pyccel(f, compiler='mpif90')
+    execute_pyccel(f, accelerators=['mpi'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('openmp'))
 def test_openmp(f):
-    execute_pyccel(f, accelerator='openmp')
+    execute_pyccel(f, accelerators=['openmp'])
 
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #def test_openacc():

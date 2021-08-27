@@ -10,32 +10,27 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import shutil
-from collections import OrderedDict
-from filelock import FileLock
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
 from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
-from pyccel.codegen.utilities      import construct_flags
-from pyccel.codegen.utilities      import compile_files
+from pyccel.codegen.utilities      import recompile_object
+from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.python_wrapper import create_shared_library
 
-import pyccel.stdlib as stdlib_folder
+from .compiling.basic     import CompileObj
+from .compiling.compilers import Compiler
 
 __all__ = ['execute_pyccel']
 
-# map internal libraries to their folders inside pyccel/stdlib
+# map internal libraries to their folders inside pyccel/stdlib and their compile objects
+# The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "ndarrays" : "ndarrays",
-    "pyc_math" : "math",
-}
-
-# map language to its file extension
-lang_ext_dict = {
-    "c" : ".c",
-    "fortran": ".f90",
+    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
 }
 
 #==============================================================================
@@ -53,14 +48,14 @@ def execute_pyccel(fname, *,
                    folder        = None,
                    language      = None,
                    compiler      = None,
-                   mpi_compiler  = None,
                    fflags        = None,
+                   wrapper_flags = None,
                    includes      = (),
                    libdirs       = (),
                    modules       = (),
                    libs          = (),
                    debug         = False,
-                   accelerator   = None,
+                   accelerators  = (),
                    output_name   = None):
     """
     Carries out the main steps required to execute pyccel
@@ -105,14 +100,13 @@ def execute_pyccel(fname, *,
                     The compiler used to compile the generated files
                     Default : GNU
 
-    mpi_compiler  : str
-                    The compiler used to compile the generated files when mpi is needed.
-                    This value must be provided to compile with mpi
-                    Default : None (compile with 'compiler')
-
     fflags        : str
                     The flags passed to the compiler
-                    Default : provided by codegen.utilities.construct_flags
+                    Default : provided by Compiler
+
+    wrapper_flags : str
+                    The flags passed to the compiler to compile the c wrapper
+                    Default : provided by Compiler
 
     includes      : list
                     list of include directories paths
@@ -131,7 +125,7 @@ def execute_pyccel(fname, *,
                     (currently this only implies that the flag -fcheck=bounds is added)
                     Default : False
 
-    accelerator   : str
+    accelerators  : iterable
                     Tool used to accelerate the code (e.g. openmp openacc)
 
     output_name   : str
@@ -197,41 +191,14 @@ def execute_pyccel(fname, *,
 
     # Choose Fortran compiler
     if compiler is None:
-        if language == 'fortran':
-            compiler = 'gfortran'
-        elif language == 'c':
-            compiler = 'gcc'
+        compiler = 'GNU'
 
-    f90exec = mpi_compiler if mpi_compiler else compiler
+    fflags = [] if fflags is None else fflags.split()
+    wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
-    if (language == "c"):
-        libs = libs + ['m']
-    if accelerator == 'openmp':
-        if compiler in ["gcc","gfortran"]:
-            if sys.platform == "darwin" and compiler == "gcc":
-                libs = libs + ['omp']
-            else:
-                libs = libs + ['gomp']
-
-        elif compiler == 'ifort':
-            libs.append('iomp5')
-
-    # ...
-    # Construct flags for the compiler (if one is required)
-    if fflags is None and compiler:
-        fflags = construct_flags(f90exec,
-                                 fflags=None,
-                                 debug=debug,
-                                 accelerator=accelerator,
-                                 includes=())
-    elif fflags is not None:
-        fflags = fflags.split()
-    else:
-        fflags = [] # Used for python
-
-    # Build position-independent code, suited for use in shared library
-    fflags.append('-fPIC')
-    # ...
+    # Get compiler object
+    src_compiler = Compiler(compiler, language, debug)
+    wrapper_compiler = Compiler('GNU', 'c', debug)
 
     # Parse Python file
     try:
@@ -280,12 +247,8 @@ def execute_pyccel(fname, *,
         module_names = [module_name]
 
     # -------------------------------------------------------------------------
-    # get path to pyccel/stdlib/lib_name
-    stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
     internal_libs_name = set()
-    internal_libs_path = []
-    internal_libs_files = []
     for parser, module_name in zip(parsers, module_names):
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
@@ -314,6 +277,19 @@ def execute_pyccel(fname, *,
             shutil.copyfile(fname, new_location)
             continue
 
+        compile_libs = [*libs, parser.metavars['libraries']] \
+                        if 'libraries' in parser.metavars else libs
+        main_obj = CompileObj(file_name = fname,
+                folder       = pyccel_dirpath,
+                is_module    = codegen.is_module,
+                flags        = fflags,
+                includes     = includes,
+                libs         = compile_libs,
+                libdirs      = libdirs,
+                dependencies = modules,
+                accelerators = accelerators)
+        parser.compile_obj = main_obj
+
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
         # if recursive:
@@ -324,145 +300,86 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-        for lib in internal_libs:
-            if lib in codegen.get_printer_imports():
+        for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
+            if lib_name in codegen.get_printer_imports() and \
+                    lib_name not in internal_libs_name:
+
+                lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+
+                # stop after copying lib to __pyccel__ directory for
+                # convert only
+                if convert_only:
+                    continue
+
+                # Pylint determines wrong type
+                stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
                 # get the include folder path and library files
-                if lib not in internal_libs_name:
-                    # get the library folder name
-                    lib_name = internal_libs[lib]
-                    # get lib path (stdlib_path/lib_name)
-                    lib_path = os.path.join(stdlib_path, lib_name)
-                    # remove library folder to avoid missing files and copy
-                    # new one from pyccel stdlib
-                    lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-                    with FileLock(lib_dest_path + '.lock'):
-                        if not os.path.exists(lib_dest_path):
-                            shutil.copytree(lib_path, lib_dest_path)
+                recompile_object(stdlib,
+                                  compiler = src_compiler,
+                                  verbose  = verbose)
 
-                    # stop after copying lib to __pyccel__ directory for
-                    # convert only
-                    if convert_only:
-                        continue
+                main_obj.add_dependencies(stdlib)
 
-                    # get library source files
-                    ext = lang_ext_dict[language]
-                    source_files = [os.path.join(lib_dest_path, e) for e in os.listdir(lib_dest_path)
-                                                                if e.endswith(ext)]
-                    internal_modules = [os.path.splitext(f)[0] for f in source_files]
-
-                    # compile library source files
-                    flags = construct_flags(f90exec,
-                                            fflags=fflags,
-                                            debug=debug,
-                                            includes=[lib_dest_path])
-                    try:
-                        for f,l in zip(source_files, internal_modules):
-                            with FileLock(l + '.lock'):
-                                compile_files(f, f90exec, flags,
-                                                binary=None,
-                                                verbose=verbose,
-                                                is_module=True,
-                                                output=lib_dest_path,
-                                                language=language)
-                    except Exception:
-                        handle_error('C {} library compilation'.format(lib))
-                        raise
-
-                    # Add internal lib to internal_libs_name set
-                    internal_libs_name.add(lib)
-                    # add source file without extension to internal_libs_files
-                    internal_libs_files.extend(internal_modules)
-                    # add library path to internal_libs_path
-                    internal_libs_path.append(lib_dest_path)
+                # Add internal lib to internal_libs_name set
+                internal_libs_name.add(lib_name)
 
         if convert_only:
             continue
 
+        deps = dict()
         # ...
         # Determine all .o files and all folders needed by executable
-        def get_module_dependencies(parser, mods=(), folders=()):
+        def get_module_dependencies(parser, deps):
             mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
-            mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
+            mod_base = os.path.basename(parser.filename)
 
             # Stop conditions
-            if parser.metavars.get('ignore_at_import', False) or \
-               parser.metavars.get('module_name', None) == 'omp_lib':
-                return mods, folders
+            if parser.metavars.get('module_name', None) == 'omp_lib':
+                return
 
-            # Update lists
-            mods = [*mods, os.path.join(mod_folder, mod_base)]
-            folders = [*folders, mod_folder]
+            if parser.compile_obj:
+                deps[mod_base] = parser.compile_obj
+            elif mod_base not in deps:
+                compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
+                no_target = parser.metavars.get('no_target',False) or \
+                        parser.metavars.get('ignore_at_import',False)
+                deps[mod_base] = CompileObj(mod_base,
+                                    folder          = mod_folder,
+                                    libs            = compile_libs,
+                                    has_target_file = not no_target)
 
             # Proceed recursively
             for son in parser.sons:
-                mods, folders = get_module_dependencies(son, mods, folders)
+                get_module_dependencies(son, deps)
 
-            return mods, folders
+        for son in parser.sons:
+            get_module_dependencies(son, deps)
+        main_obj.add_dependencies(*deps.values())
 
-        dep_mods, inc_dirs = get_module_dependencies(parser)
-
-        # Add internal dependencies
-        dep_mods = [*dep_mods, *internal_libs_files]
-        inc_dirs = [*inc_dirs, *internal_libs_path]
-
-        # Remove duplicates without changing order
-        dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
-        inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
-        # ...
-
-        includes += inc_dirs
-
-        if codegen.is_program:
-            modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
-
-
-        # Construct compiler flags
-        flags = construct_flags(f90exec,
-                                fflags=fflags,
-                                debug=debug,
-                                accelerator=accelerator,
-                                includes=includes)
-
-        # Compile Fortran code
-        #
-        # TODO: stop at object files, do not compile executable
-        #       This allows for properly linking program to modules
-        #
+        # Compile code to modules
         try:
-            compile_files(fname, f90exec, flags,
-                            binary=None,
-                            verbose=verbose,
-                            modules=modules,
-                            is_module=codegen.is_module,
-                            output=pyccel_dirpath,
-                            libs=libs,
-                            libdirs=libdirs,
-                            language=language)
+            src_compiler.compile_module(compile_obj=main_obj,
+                    output_folder=pyccel_dirpath,
+                    verbose=verbose)
         except Exception:
             handle_error('Fortran compilation')
             raise
 
-        # For a program stop here
-        if codegen.is_program:
-            if verbose:
-                exec_filepath = os.path.join(folder, module_name)
-                print( '> Executable has been created: {}'.format(exec_filepath))
-            os.chdir(base_dirpath)
-            continue
 
-        # Create shared library
         try:
-            sharedlib_filepath = create_shared_library(codegen,
+            if codegen.is_program:
+                generated_filepath = src_compiler.compile_program(compile_obj=main_obj,
+                        output_folder=pyccel_dirpath,
+                        verbose=verbose)
+            else:
+                # Create shared library
+                generated_filepath = create_shared_library(codegen,
+                                                       main_obj,
                                                        language,
+                                                       wrapper_flags,
                                                        pyccel_dirpath,
-                                                       compiler,
-                                                       mpi_compiler,
-                                                       accelerator,
-                                                       dep_mods,
-                                                       libs,
-                                                       libdirs,
-                                                       includes,
-                                                       flags,
+                                                       src_compiler,
+                                                       wrapper_compiler,
                                                        output_name,
                                                        verbose)
         except NotImplementedError as error:
@@ -484,13 +401,16 @@ def execute_pyccel(fname, *,
 
         # Move shared library to folder directory
         # (First construct absolute path of target location)
-        sharedlib_filename = os.path.basename(sharedlib_filepath)
-        target = os.path.join(folder, sharedlib_filename)
-        shutil.move(sharedlib_filepath, target)
-        sharedlib_filepath = target
+        generated_filename = os.path.basename(generated_filepath)
+        target = os.path.join(folder, generated_filename)
+        shutil.move(generated_filepath, target)
+        generated_filepath = target
 
         if verbose:
-            print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+            if codegen.is_program:
+                print( '> Executable has been created: {}'.format(generated_filepath))
+            else:
+                print( '> Shared library has been created: {}'.format(generated_filepath))
 
     # Print all warnings now
     if errors.has_warnings():
