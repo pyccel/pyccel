@@ -1650,7 +1650,9 @@ class SemanticParser(BasicParser):
         free_func = None
         program   = None
 
-        if not all(isinstance(l, (FunctionHeader, EmptyNode, Comment)) for l in init_func_body):
+        comment_types = (FunctionHeader, MacroFunction, EmptyNode, Comment, CommentBlock)
+
+        if not all(isinstance(l, comment_types) for l in init_func_body):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
             variables.append(Assign(init_var, LiteralFalse()))
