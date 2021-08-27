@@ -16,7 +16,6 @@ from itertools import chain
 from collections import OrderedDict
 
 import functools
-import operator
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges

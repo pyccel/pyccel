@@ -6,7 +6,6 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
-import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint
@@ -44,8 +43,6 @@ from pyccel.ast.variable import ValuedVariable, IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
-
-from pyccel.ast.sympy_helper import pyccel_to_sympy
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter

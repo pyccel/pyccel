@@ -92,7 +92,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelNe
+from pyccel.ast.operators import PyccelNot, PyccelEq
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
