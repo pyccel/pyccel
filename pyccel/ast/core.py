@@ -1379,6 +1379,7 @@ class Program(Basic):
         self._variables = variables
         self._body = body
         self._imports = imports
+        super().__init__()
 
     @property
     def name(self):
