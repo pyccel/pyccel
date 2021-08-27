@@ -656,7 +656,7 @@ class MacroFunction(Header):
                 d_unsorted_args[arg.name] = arg.value
 
             for arg in unsorted_args:
-                if arg.name in d_unsorted_args.keys():
+                if arg.keyword in d_unsorted_args.keys():
                     d_unsorted_args[arg.keyword] = arg.value
                 else:
                     raise ValueError('Unknown valued argument')
