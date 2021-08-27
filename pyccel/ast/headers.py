@@ -686,7 +686,7 @@ class MacroFunction(Header):
         for i,arg in enumerate(self.master_arguments):
 
             if isinstance(arg, Argument):
-                arg_name = arg.var.name
+                arg_name = arg.name
                 if arg_name in result_keys:
                     new = d_results[arg_name]
 
