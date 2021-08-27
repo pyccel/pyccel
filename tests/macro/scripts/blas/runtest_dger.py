@@ -1,8 +1,8 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable, unused-import
 # TODO - y must be optional
 
-from pyccel.stdlib.internal.blas import dger
 from numpy import zeros
+from pyccel.stdlib.internal.blas import dger
 
 if __name__ == '__main__':
     n = 4

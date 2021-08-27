@@ -1,8 +1,8 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable, unused-import
 # TODO - beta, ta, tb must optional
 
-from pyccel.stdlib.internal.blas import dgemm
 from numpy import zeros
+from pyccel.stdlib.internal.blas import dgemm
 
 if __name__ == '__main__':
     m = 4

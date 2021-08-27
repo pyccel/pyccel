@@ -1,8 +1,8 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable, unused-import
 # TODO default value for alpha must double and not int
 #      right now, textx raises an error, when we pass 1.0
-from pyccel.stdlib.internal.blas import daxpy
 from numpy import zeros
+from pyccel.stdlib.internal.blas import daxpy
 
 if __name__ == '__main__':
     n   = 4

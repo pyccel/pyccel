@@ -1,10 +1,10 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable, unused-import
 # TODO - y must be optional
 #      - t must be optiona, default 0 (map 1 -> 'T' and 0 -> 'N')
 #      - default value for beta must be 0.0 and not 0
 
-from pyccel.stdlib.internal.blas import dgemv
 from numpy import zeros
+from pyccel.stdlib.internal.blas import dgemv
 
 if __name__ == '__main__':
     n = 4

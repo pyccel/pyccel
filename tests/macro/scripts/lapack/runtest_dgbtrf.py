@@ -1,6 +1,6 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-from pyccel.stdlib.internal.lapack import dgbtrf
+# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable, unused-import
 from numpy import zeros
+from pyccel.stdlib.internal.lapack import dgbtrf
 
 if __name__ == '__main__':
     n   = 25
