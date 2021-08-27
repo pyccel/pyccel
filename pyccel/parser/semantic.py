@@ -692,7 +692,6 @@ class SemanticParser(BasicParser):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
         """
-        code = expr
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
             deallocs = [Deallocate(i) for i in self._allocs[-1]]
         else:
