@@ -1269,6 +1269,13 @@ class Module(Basic):
         """
         return [Declare(i.dtype, i, value=v) for i,v in zip(self.variables, self._variable_inits)]
 
+    @property
+    def body(self):
+        """ Returns the functions, interfaces and classes defined
+        in the module
+        """
+        return self.interfaces + self.funcs + self.classes
+
     def set_name(self, new_name):
         """ Function for changing the name of a module
         """
