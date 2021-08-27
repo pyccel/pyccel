@@ -124,6 +124,9 @@ class PythonCodePrinter(CodePrinter):
 
     #----------------------------------------------------------------------
 
+    def _print_Header(self, expr):
+        return ''
+
     def _print_tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
