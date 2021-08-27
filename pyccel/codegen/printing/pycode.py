@@ -255,15 +255,15 @@ class PythonCodePrinter(CodePrinter):
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
-        imports  = ''.join(self._print(i) for i in expr.imports[:-1])
+        imports  = ''.join(self._print(i) for i in expr.imports)
         body     = self._print(expr.body)
-        body     = self._indent_codestring(body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
-        return ('{imports}\n'
-                'if __name__ == "__main__":\n'
-                '{body}\n').format(imports=imports,
-                                    body=body)
+        body = imports+body
+        body = self._indent_codestring(body)
+
+        return ('if __name__ == "__main__":\n'
+                '{body}\n').format(body=body)
 
 
     def _print_AsName(self, expr):
