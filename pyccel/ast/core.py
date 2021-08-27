@@ -1373,29 +1373,40 @@ class Program(Basic):
         self._body = body
         self._imports = imports
 
-        super().__init__()
-
     @property
     def name(self):
+        """ Name of the executable
+        """
         return self._name
 
     @property
     def variables(self):
+        """ Variables contained within the program
+        """
         return self._variables
 
     @property
     def body(self):
+        """ Statements in the program
+        """
         return self._body
 
     @property
     def imports(self):
+        """ Imports imported in the program
+        """
         return self._imports
 
     @property
     def declarations(self):
+        """ Returns the declarations of the variables
+        """
         return [Declare(i.dtype, i) for i in self.variables]
 
     def remove_import(self, name):
+        """ Remove an import with the given source name from the list
+        of imports
+        """
         self._imports = tuple(i for i in self.imports if i.source != name)
 
 
