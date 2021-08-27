@@ -2600,33 +2600,6 @@ class FunctionAddress(FunctionDef):
     def is_optional(self):
         return self._is_optional
 
-class ValuedFunctionAddress(FunctionAddress):
-
-    """Represents a valued function address in the code.
-
-    Parameters
-    ----------
-    value: instance of FunctionDef or FunctionAddress
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, ValuedFunctionAddress, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> f = FunctionDef('f', [], [], [])
-    >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
-    """
-    __slots__ = ('_value')
-    _attribute_nodes = (*FunctionAddress._attribute_nodes, '_value')
-
-    def __init__(self, *args, **kwargs):
-        self._value = kwargs.pop('value', Nil())
-        super().__init__(*args, **kwargs)
-
-    @property
-    def value(self):
-        return self._value
-
 class SympyFunction(FunctionDef):
 
     """Represents a function definition."""

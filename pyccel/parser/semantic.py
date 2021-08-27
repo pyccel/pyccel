@@ -35,7 +35,6 @@ from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, Argument
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
