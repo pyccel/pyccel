@@ -731,15 +731,11 @@ class MacroFunction(Header):
 
         Results
         -------
-        final_args : list of Variables
-                     The arguments which can be passed to the apply function
-                     which match the expectations of the macro definition
         expr       : list of Assigns
                       Any Assigns necessary before the function (result of the
                       macro expansion) returned by the apply function is called
         """
         expr = []
-        final_args = []
         for a, func_a in zip(args, self.arguments):
             arg = a.value
             func_arg = func_a.var
@@ -749,9 +745,8 @@ class MacroFunction(Header):
                     slices = [Slice(None,None)]*arg.rank
                     expr.append(Assign(r[slices], arg[slices]))
                     arg = r
-            final_args.append(a)
 
-        return final_args, expr
+        return expr
 
 
 #==============================================================================

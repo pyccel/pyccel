@@ -2154,7 +2154,7 @@ class SemanticParser(BasicParser):
 
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
-                args, expr = macro.make_necessary_copies(args, results)
+                expr = macro.make_necessary_copies(args, results)
                 new_expressions += expr
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
