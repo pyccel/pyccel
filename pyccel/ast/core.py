@@ -63,7 +63,6 @@ __all__ = (
     'FunctionDef',
     'If',
     'Import',
-    'InModule',
     'InProgram',
     'Interface',
     'Module',
@@ -3613,18 +3612,11 @@ class StarredArguments(Basic):
 
 # ...
 
-class InModule(PyccelAstNode):
-    _dtype = NativeBool()
-    _precision = default_precision['bool']
-    _rank  = 0
-    _shape = ()
-    _order = None
-    _attribute_nodes = ()
-    __slots__ = ()
-
-# ...
-
 class InProgram(PyccelAstNode):
+    """
+    Class representing the boolean:
+    __name__ == '__main__'
+    """
     _dtype = NativeBool()
     _precision = default_precision['bool']
     _rank  = 0

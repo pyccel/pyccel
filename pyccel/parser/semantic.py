@@ -54,7 +54,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
-from pyccel.ast.core import InModule, InProgram
+from pyccel.ast.core import InProgram
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -1631,11 +1631,11 @@ class SemanticParser(BasicParser):
 
         for b in body:
             if isinstance(b, If):
-                if all(isinstance(i.condition, (InModule,InProgram)) for i in b.blocks):
+                if any(isinstance(i.condition, InProgram) for i in b.blocks):
                     for i in b.blocks:
                         if isinstance(i.condition, InProgram):
                             program_body.extend(i.body.body)
-                        elif isinstance(i.condition, InModule):
+                        else:
                             init_func_body.append(i.body.body)
                 else:
                     init_func_body.append(b)
@@ -2851,8 +2851,6 @@ class SemanticParser(BasicParser):
         main = LiteralString('__main__')
         prog_check = isinstance(condition, PyccelEq) \
                 and all(a in (name_symbol, main) for a in condition.args)
-        mod_check = isinstance(condition, PyccelNe) \
-                and all(a in (name_symbol, main) for a in condition.args)
 
         if prog_check:
             cond = InProgram()
@@ -2867,8 +2865,6 @@ class SemanticParser(BasicParser):
             prog_container.imports['functions'].update(mod_container.functions)
             prog_container.imports['classes'].update(mod_container.classes)
             self._program_namespace.cls_constructs.update(self._module_namespace.cls_constructs)
-        elif mod_check:
-            cond = InModule()
         else:
             cond = self._visit(expr.condition)
         body = self._visit(expr.body)
@@ -2885,14 +2881,8 @@ class SemanticParser(BasicParser):
         args = [self._visit(i, **settings) for i in expr.blocks]
 
         conds = [b.condition for b in args]
-        if any(isinstance(c, (InModule,InProgram)) for c in conds):
-            if all(isinstance(c, (InModule,LiteralTrue)) for c in conds):
-                args = [IfSection(i.condition if isinstance(i.condition, InModule) \
-                                    else InProgram(), i.body) for i in args]
-            elif all(isinstance(c, (InProgram,LiteralTrue)) for c in conds):
-                args = [IfSection(i.condition if isinstance(i.condition, InProgram) \
-                                    else InModule(), i.body) for i in args]
-            elif not all(isinstance(c, (InModule,InProgram)) for c in conds):
+        if any(isinstance(c, InProgram) for c in conds):
+            if not all(isinstance(c, (InProgram,LiteralTrue)) for c in conds):
                 errors.report("Determination of main module is too complicated to handle",
                         symbol=expr, severity='error')
 
