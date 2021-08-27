@@ -10,7 +10,7 @@ from pyccel.codegen.printing.ccode  import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.basic     import PyccelAstNode
-from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
+from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.ast.core      import EmptyNode, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors

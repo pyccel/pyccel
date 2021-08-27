@@ -9,7 +9,6 @@ Module containing the Parser object
 """
 
 import os
-import copy
 from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
