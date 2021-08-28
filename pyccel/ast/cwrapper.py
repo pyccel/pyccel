@@ -7,7 +7,9 @@
 Handling the transitions between python code and C code using (Python/C Api).
 """
 
-from ..errors.errors import Errors
+import numpy as np
+
+from ..errors.errors   import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
@@ -16,6 +18,8 @@ from .literals  import LiteralTrue, LiteralFalse
 
 from .datatypes import (DataType, NativeInteger, NativeReal, NativeComplex,
                         NativeBool, NativeString, NativeGeneric, NativeVoid)
+
+from .operators import PyccelOr, PyccelNot
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
@@ -36,7 +40,6 @@ __all__ = (
     'Py_True',
     'Py_False',
     'Py_None',
-    'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
     'malloc',
     'free',
@@ -51,11 +54,6 @@ __all__ = (
     'flags_registry'
 #---------Helpers-------------
     'generate_datatype_error'
-    'Py_DECREF',
-    'PyErr_SetString',
-#----- CHECK FUNCTIONS ---
-    'generate_datatype_error',
-    'scalar_object_check',
 )
 
 
@@ -66,13 +64,11 @@ __all__ = (
 class PyccelPyObject(DataType):
     """ Datatype representing a PyObject which is the
     class used to hold python objects"""
-    __slots__ = ()
     _name = 'pyobject'
 
 class PyccelPyArrayObject(DataType):
     """ Datatype representing a PyArrayObject which is the
     class used to hold numpy objects"""
-    __slots__ = ()
     _name = 'pyarrayobject'
 
 PyArray_Type         = Variable(NativeGeneric(), 'PyArray_Type')
@@ -95,7 +91,6 @@ class PyArgKeywords(Basic):
     arg_names : list of str
         A list of the names of the function arguments
     """
-    __slots__ = ('_name','_arg_names')
     _attribute_nodes = ()
     def __init__(self, name, arg_names):
         self._name      = name
@@ -128,7 +123,6 @@ class PyArg_ParseTupleNode(Basic):
         A list of the names of the function arguments
     """
 
-    __slots__ = ('_pyarg','_pykwarg','_parse_args','_arg_names','_flags')
     _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
 
     def __init__(self, python_func_args,
@@ -223,7 +217,6 @@ class PyBuildValueNode(Basic):
     converter_functions : dict
         dictionary maping argument to cast functions
     """
-    __slots__ = ('_flags','_result_args',)
     _attribute_nodes = ('_result_args',)
 
     def __init__(self, result_args = (), converters = []):
@@ -293,18 +286,6 @@ sizeof   = FunctionDef(name      = 'sizeof',
                        arguments = [Variable(name = 'ptr', dtype = NativeGeneric())],
                        results   = [Variable(name = 'size', dtype = NativeInteger())],
                        body      = [])
-
-#-------------------------------------------------------------------
-#                      cwrapper.h functions
-#-------------------------------------------------------------------
-
-Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
-
-# https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
-Py_DECREF = FunctionDef(name = 'Py_DECREF',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results = [])
 
 #-------------------------------------------------------------------
 #                      cwrapper.h functions
@@ -395,7 +376,7 @@ def PyErr_SetString(exception, message):
     """
     Generate function Call of c/python api PyErr_SetString
     https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
-    with a defined error message used to set the error indicator.
+    used to set the error indicator.
 
     Parameters:
     ----------
