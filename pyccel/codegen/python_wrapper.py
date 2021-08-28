@@ -91,7 +91,7 @@ def create_shared_library(codegen,
                       verbose  = verbose)
 
     wrapper_compile_obj.add_dependencies(cwrapper_lib)
-    extra_includes  = ['cwrapper']
+    extra_includes  = []
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)

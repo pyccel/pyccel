@@ -1113,10 +1113,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
+        imports += [Import('numpy_version')]
         imports += [Import('numpy/arrayobject')]
         imports += [Import('cwrapper')]
         imports += [Import(i) for i in self._extra_includes]
-        imports  = '\n'.join(self._print(i) for i in imports)
+        imports  = ''.join(self._print(i) for i in imports)
 
         sep = self._print(SeparatorComment(40))
 

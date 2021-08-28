@@ -9,6 +9,7 @@
 
 # define NO_IMPORT_ARRAY
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
+# include "numpy_version.h"
 # include "numpy/arrayobject.h"
 
 # define NO_TYPE_CHECK -1
