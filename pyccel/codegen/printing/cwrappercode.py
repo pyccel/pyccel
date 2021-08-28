@@ -54,13 +54,14 @@ RETURN_NULL = Return([Nil()])
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
     an interface between python and an implementation of the module in c"""
-    def __init__(self, parser, target_language, **settings):
+    def __init__(self, parser, target_language, extra_includes=(), **settings):
         CCodePrinter.__init__(self, parser, **settings)
         self._target_language             = target_language
         self._function_wrapper_names      = dict()
         self._global_names                = set()
         self._module_name                 = None
         self._converter_functions         = dict()
+        self._extra_includes = extra_includes
 
     # --------------------------------------------------------------------
     #                       Helper functions
@@ -1114,6 +1115,7 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = [Import(s) for s in self._additional_imports]
         imports += [Import('numpy/arrayobject')]
         imports += [Import('cwrapper')]
+        imports += [Import(i) for i in self._extra_includes]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         sep = self._print(SeparatorComment(40))
