@@ -401,7 +401,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         body = []
         # once valued variable rank > 0 are implemented change should be made here
-        if variable.rank > 0 and self._target_language is 'c':
+        if variable.rank > 0 and self._target_language == 'c':
             body.append(Deallocate(variable))
 
         if variable.is_optional:
@@ -412,7 +412,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def need_free(self, variable):
         """
         """
-        return variable.is_optional or (variable.rank > 0 and self._target_language is 'c')
+        return variable.is_optional or (variable.rank > 0 and self._target_language == 'c')
 
     def need_memory_allocation(self, variable):
         """
@@ -448,7 +448,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body.append(IfSection(check, [RETURN_ZERO]))
 
         elif not is_interface:
-            check = PyccelNot(scalar_object_check(p_arg, c_arg, False))
+            check = PyccelNot(scalar_object_check(p_arg, c_arg))
             error = [generate_datatype_error(c_arg)]
             body.append(IfSection(check, error + [RETURN_ZERO]))
 
@@ -574,7 +574,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     check = PyccelEq(FunctionCall(numpy_get_type, [p_arg]), ref)
 
                 else:
-                    check = scalar_object_check(p_arg, c_arg, True)
+                    check = scalar_object_check(p_arg, c_arg)
 
                 body.append(IfSection(check, [AugAssign(check_var, '+', flag)]))
             # Set error

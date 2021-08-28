@@ -21,6 +21,7 @@ from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .variable  import Variable, ValuedVariable
 
+
 errors = Errors()
 
 __all__ = (
@@ -60,11 +61,13 @@ __all__ = (
 class PyccelPyObject(DataType):
     """ Datatype representing a PyObject which is the
     class used to hold python objects"""
+    __slots__ = ()
     _name = 'pyobject'
 
 class PyccelPyArrayObject(DataType):
     """ Datatype representing a PyArrayObject which is the
     class used to hold numpy objects"""
+    __slots__ = ()
     _name = 'pyarrayobject'
 
 PyArray_Type         = Variable(NativeGeneric(), 'PyArray_Type')
@@ -74,7 +77,7 @@ Py_CLEANUP_SUPPORTED = Variable(dtype=NativeInteger(),  name = 'Py_CLEANUP_SUPPO
 #                  Parsing and Building Classes
 #-------------------------------------------------------------------
 
-# TODO: Is there an equivalent to static so this can be a static list of strings?
+#TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
     """
     Represents the list containing the names of all arguments to a function.
@@ -87,6 +90,7 @@ class PyArgKeywords(Basic):
     arg_names : list of str
         A list of the names of the function arguments
     """
+    __slots__ = ('_name','_arg_names')
     _attribute_nodes = ()
     def __init__(self, name, arg_names):
         self._name      = name
@@ -118,7 +122,7 @@ class PyArg_ParseTupleNode(Basic):
     arg_names : list of str
         A list of the names of the function arguments
     """
-
+    __slots__ = ('_pyarg','_pykwarg','_parse_args','_arg_names','_flags')
     _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
 
     def __init__(self, python_func_args,
@@ -209,16 +213,13 @@ class PyBuildValueNode(Basic):
     ---------
     parse_args: list of Variable
         List of arguments which the result will be buit from
-
-    converter_functions : dict
+    converters : dict
         dictionary maping argument to cast functions
     """
     _attribute_nodes = ('_result_args',)
 
-    def __init__(self, result_args = (), converters = []):
-        self._flags       = ''
-        for i in result_args:
-            self._flags  += 'O&'
+    def __init__(self, result_args = (), converters = ()):
+        self._flags = 'O&'*len(result_args)
 
         if (len(result_args) != len(converters)):
             raise TypeError('There should be same number of converter functions and arguments')
@@ -261,7 +262,7 @@ Py_True  = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
 Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 
 # Python.h object representing None
-Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
 #-------------------------------------------------------------------
 #                  C memory management functions
@@ -372,7 +373,7 @@ def PyErr_SetString(exception, message):
     """
     Generate function Call of c/python api PyErr_SetString
     https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
-    used to set the error indicator.
+    with a defined error message used to set the error indicator.
 
     Parameters:
     ----------
@@ -421,12 +422,6 @@ def generate_datatype_error(variable):
     return PyErr_SetString('PyExc_TypeError', message)
 
 
-# All functions used for type are from c python api :
-# https://docs.python.org/3/c-api/long.html#c.PyLong_Check
-# https://docs.python.org/3/c-api/complex.html#c.PyComplex_Check
-# https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
-# https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
-
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
     (NativeBool(), 4)      : 'PyIs_Bool',
@@ -439,7 +434,7 @@ check_type_registry = {
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
-def scalar_object_check(py_object, c_object, hard_check = False):
+def scalar_object_check(py_object, c_object):
     """
     Create FunctionCall responsible for checking python argument data type
     Parameters:
@@ -448,8 +443,6 @@ def scalar_object_check(py_object, c_object, hard_check = False):
         The python argument of the check function
     c_object   : Variable
         The variable needed for the generation of the type check
-    hard_check : boolean
-        True if checking the exact precision is needed
     Returns
     -------
     FunctionCall : Check type FunctionCall
@@ -460,15 +453,12 @@ def scalar_object_check(py_object, c_object, hard_check = False):
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
-    hard_check = LiteralTrue() if hard_check else LiteralFalse()
-
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
-                                 Variable(dtype = NativeBool(), name = 'hard_check')],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
-    return FunctionCall(check_func, [py_object, hard_check])
+    return FunctionCall(check_func, [py_object])
 
 # This registry is used for interface management,
 # mapping each data type to a given flag
