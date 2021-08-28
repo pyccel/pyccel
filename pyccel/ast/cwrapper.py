@@ -43,8 +43,7 @@ __all__ = (
     'C_to_Python',
     'Python_to_C',
 #-------CHECK FUNCTIONS ------
-    'PythonType_Check',
-    'scalar_checker',
+    'scalar_object_check',
 #-------- Regestry -----------
     'flags_registry'
 #---------Helpers-------------
@@ -127,13 +126,15 @@ class PyArg_ParseTupleNode(Basic):
                        python_func_kwargs,
                        arg_names,
                        func_args,
-                       parse_args = [],
+                       parse_args = (),
                        converters = None):
 
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
+        if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
+            raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(func_args, list) and any(not isinstance(c, Variable) for c in func_args):
@@ -156,18 +157,17 @@ class PyArg_ParseTupleNode(Basic):
                           symbol=parse_args, severity='warning')
 
         if converters:
-            parse_args = [[c, a] for a, c in zip(func_args, converters)]
-            parse_args = [a for args in parse_args for a in args]
-        
+            parse_args = [arg for a, c in zip(func_args, converters) for arg in (c, a)]
+
         else:
             parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
                                             else [a] for a in parse_args]
             parse_args = [a for arg in parse_args for a in arg]
 
-        self._pyarg               = python_func_args
-        self._pykwarg             = python_func_kwargs
-        self._parse_args          = parse_args
-        self._arg_names           = arg_names
+        self._pyarg      = python_func_args
+        self._pykwarg    = python_func_kwargs
+        self._parse_args = parse_args
+        self._arg_names  = arg_names
         super().__init__()
 
 
@@ -176,12 +176,11 @@ class PyArg_ParseTupleNode(Basic):
         """
         if converter is not None:
             return 'O&'
-        
+
         if argument.rank > 0:
             return 'O!'
-        
-        return 'O'
 
+        return 'O'
 
     @property
     def pyarg(self):
