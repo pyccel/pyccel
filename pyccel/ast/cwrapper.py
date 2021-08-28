@@ -7,8 +7,6 @@
 Handling the transitions between python code and C code using (Python/C Api).
 """
 
-import numpy as np
-
 from ..errors.errors   import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -18,8 +16,6 @@ from .literals  import LiteralTrue, LiteralFalse
 
 from .datatypes import (DataType, NativeInteger, NativeReal, NativeComplex,
                         NativeBool, NativeString, NativeGeneric, NativeVoid)
-
-from .operators import PyccelOr, PyccelNot
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 

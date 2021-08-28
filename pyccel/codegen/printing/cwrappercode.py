@@ -11,9 +11,9 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelIs, PyccelIsNot, PyccelNe
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelIs
 
-from pyccel.ast.datatypes   import NativeInteger, NativeGeneric, NativeBool, NativeComplex
+from pyccel.ast.datatypes   import NativeInteger, NativeGeneric
 
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
