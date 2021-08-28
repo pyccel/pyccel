@@ -97,8 +97,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_wrapper_name(self, used_names, function):
         """
         Generate wrapper function name
-        Parameters:
-        -----------
+        Parameters
+        ----------
         used_names : set of strings
             Set of variable and function names to avoid name collisions
 
@@ -121,14 +121,14 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Create new PyccelPyObject Variable with the desired name
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name       : String
             The desired name
 
         used_names : Set of strings
             Set of variable and function names to avoid name collisions
-    
+
         Returns: Variable
         -------
         """
@@ -145,8 +145,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_wrapper_arguments(self, used_names):
         """
         Create wrapper arguments
-        Parameters:
-        -----------
+        Parameters
+        ----------
         used_names : Set of strings
             Set of variable and function names to avoid name collisions
 
@@ -163,8 +163,8 @@ class CWrapperCodePrinter(CCodePrinter):
         find the corresponding C dtype in the dtype_registry
         raise PYCCEL_RESTRICTION_TODO if not found
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dtype : String
             expression data type
 
@@ -183,8 +183,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Get the declaration type of a variable
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         variable : Variable
             Variable holding information needed to choose the declaration type
 
@@ -205,7 +205,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if variable.is_pointer and variable.is_optional:
             return '{} **'.format(dtype)
-    
+
         if self.stored_in_c_pointer(variable):
             return '{0} *'.format(dtype)
 
@@ -215,8 +215,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Return True if variable is pointer or stored in pointer
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         a      : Variable
             Variable holding information needed (is_pointer, is_optional)
 
@@ -233,8 +233,8 @@ class CWrapperCodePrinter(CCodePrinter):
         Get the declaration type of a variable, this function is used for
         C/fortran binding using native C datatypes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         variable : Variable
             Variable holding information needed to choose the declaration type
 
@@ -252,7 +252,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         elif self._target_language == 'fortran' and variable.rank > 0:
             return '{0} *'.format(dtype)
-        
+
         else:
             return '{0} '.format(dtype)
 
@@ -303,8 +303,8 @@ class CWrapperCodePrinter(CCodePrinter):
         C/fortran binding.
         If target language is C return the argument function
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         function    : FunctionDef
             FunctionDef holding information needed to create static function
 
@@ -327,8 +327,8 @@ class CWrapperCodePrinter(CCodePrinter):
         where nd_data(a) = buffer holding data
               nd_dim(a)  = size of array
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         argument    : Variable
             Variable holding information needed (rank)
 
@@ -352,11 +352,11 @@ class CWrapperCodePrinter(CCodePrinter):
     def set_flag_value(flag, variable):
         """
         Collect data type flag value from flags_registry used to avoid
-        multiple data type check when using interfaces, and set the 
+        multiple data type check when using interfaces, and set the
         new flag value, raise NotImplementedError if not found
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         flag     : Integer
             the current flag value
 
@@ -378,9 +378,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_default_assign(self, variable):
         """
         Look up for the default value and create default assign
-        
-        Parameters:
-        -----------
+
+        Parameters
+        ----------
         variable : Variable
             Variable holding information needed (value)
 
@@ -418,8 +418,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         allocated needed memory to hold value this is used to avoid creating mass
         temporary variables and multiples checks
-        Parameters:
-        -----------
+        Parameters
+        ----------
         variable : Variable
             variable to allocate
 
@@ -518,8 +518,8 @@ class CWrapperCodePrinter(CCodePrinter):
             variable holding information needed to choose the converter
             function name
 
-        Returns:
-        --------
+        Returns
+        -------
         name : String
             the generated name
 
@@ -529,7 +529,7 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
         dtype = dtype.replace(" ", "_")
 
-        rank   = ''   if argument.rank < 1 else '_{}'.format(argument.rank)       
+        rank   = ''   if argument.rank < 1 else '_{}'.format(argument.rank)
         order  = ''   if argument.order is None else '_{}'.format(argument.order)
         valued = ''   if not argument.is_optional else 'o_'
 
@@ -565,7 +565,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if (dtype) in types: #to avoid check same type
                     continue
                 types.add(dtype)
-    
+
                 flag = self.set_flag_value(0, c_arg)
                 flag = flag << (4 * arg_size) #shift by 4 x argument position
 
@@ -579,11 +579,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 body.append(IfSection(check, [AugAssign(check_var, '+', flag)]))
             # Set error
             error = '"{} must be ({})"'.format(name, ' or '.join(types))
-            body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', error)])) 
+            body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', error)]))
             arg_size -= 1  # move to the next argument
             types.clear()  # clear the set
             function_body.append(If(*body))
-        
+
         #return
         function_body.append(Return([check_var]))
 
@@ -614,8 +614,8 @@ class CWrapperCodePrinter(CCodePrinter):
         argument   : Variable
             variable holding information needed to choose the converter function
 
-        Returns:
-        --------
+        Returns
+        -------
         function : FunctionDef
             the converter function
 
@@ -647,13 +647,13 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert c type to python.
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result : Variable
             variable holding information needed to choose the converter function
 
-        Returns:
-        --------
+        Returns
+        -------
         function   : FunctionDef
             the converter function
         """
@@ -678,8 +678,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Given that we cannot parse function as argument, create a wrapper
         function that raise NotImplemented exception and return NULL
-        Parameters:
-        -----------
+        Parameters
+        ----------
         wrapper_name    : String
             The name of the C wrapper function
 
@@ -689,8 +689,8 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results : Variable
             python object variable
 
-        Returns:
-        --------
+        Returns
+        -------
         String
             return string that contains printed functionDef
         """
@@ -711,8 +711,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Given that private function are not accessible from python, create a wrapper
         function that raise NotImplemented exception and return NULL
-        Parameters:
-        -----------
+        Parameters
+        ----------
         wrapper_name    : String
             The name of the C wrapper function
 
@@ -722,8 +722,8 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results : Variable
             Python object variable
 
-        Returns:
-        --------
+        Returns
+        -------
         String
             return string that contains printed functionDef
         """
@@ -745,7 +745,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyArrayObject(self, expr):
         return 'pyarrayobject'
-    
+
     def _print_AliasAssign(self, expr):
         lhs = expr.lhs
         rhs = expr.rhs
@@ -754,7 +754,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         lhs = self._print(lhs.name)
         rhs = self._print(rhs)
-        
+
         if expr.lhs.is_pointer and expr.lhs.is_optional:
             return '*{} = {};'.format(lhs, rhs)
 
@@ -765,7 +765,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return '(**{})'.format(expr.name)
 
         return CCodePrinter._print_Variable(self, expr)
-    
+
     def _print_VariableAddress(self, expr):
         variable = expr.variable
         if variable.is_pointer and variable.is_optional:
@@ -778,7 +778,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyArgKeywords(self, expr):
         arg_names  = ['"{}"'.format(a) for a in expr.arg_names]
-        
+
         arg_names.append(self._print(Nil()))
 
         arg_names  = ',\n'.join(arg_names)
@@ -859,7 +859,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #dict to collect each variable possible type
         types_dict     = OrderedDict((a, list()) for a in parse_args)
-        
+
         # To store the mini function responsible for collecting value and
         # calling interfaces functions and return the builded value
         wrapper_functions           = []
@@ -929,10 +929,10 @@ class CWrapperCodePrinter(CCodePrinter):
             call  = AliasAssign(wrapper_results[0], FunctionCall(mini_wrapper_function, parse_args))
             check = IfSection(PyccelEq(check_variable, LiteralInteger(flag)), [call])
             wrapper_body.append(check)
-    
+
         # Errors / Types management
         # Creating check_type function
-        check_function = self.generate_interface_check_function(check_variable, 
+        check_function = self.generate_interface_check_function(check_variable,
                                                                 parse_args, types_dict,
                                                                 used_names, wrapper_name)
         wrapper_functions.append(check_function)
@@ -949,7 +949,7 @@ class CWrapperCodePrinter(CCodePrinter):
         parse_node   = If(IfSection(PyccelNot(parse_node), [RETURN_NULL]))
         check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
         wrapper_body = [keyword_list, parse_node, check_call] + wrapper_body
-    
+
         wrapper_body.append(Return(wrapper_results)) # Return
 
         # Create FunctionDef for interface wrapper
@@ -1038,7 +1038,7 @@ class CWrapperCodePrinter(CCodePrinter):
         build_node = PyBuildValueNode(expr.results, converters)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
-        
+
         wrapper_body.extend(garbage_collector)
 
         # Return
