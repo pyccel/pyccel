@@ -34,6 +34,8 @@ from pyccel.ast.cwrapper      import get_custom_key
 from pyccel.ast.cwrapper      import PyErr_Occurred
 from pyccel.ast.cwrapper      import malloc, free, sizeof, generate_datatype_error
 
+from pyccel.ast.internals     import PyccelArraySize
+
 from pyccel.ast.numpy_wrapper import array_checker, array_get_dim, array_get_data
 from pyccel.ast.numpy_wrapper import pyarray_to_f_ndarray, pyarray_to_c_ndarray
 from pyccel.ast.numpy_wrapper import find_in_numpy_dtype_registry, numpy_get_type
@@ -304,14 +306,13 @@ class CWrapperCodePrinter(CCodePrinter):
             static_args = [
                 FunctionCall(array_get_dim, [argument, i]) for i in range(argument.rank)
             ]
-
             static_args.append(FunctionCall(array_get_data, [argument]))
         else:
             static_args = [argument]
 
         return static_args
 
-    def get_wrapper_name(self, used_names, function):
+    def get_wrapper_name(self, used_names, func):
         """
         create wrapper function name
 
@@ -765,9 +766,9 @@ class CWrapperCodePrinter(CCodePrinter):
         rhs = self._print(rhs)
 
         if expr.lhs.is_pointer and expr.lhs.is_optional:
-            return '*{} = {};'.format(lhs, rhs)
+            return '*{} = {};\n'.format(lhs, rhs)
 
-        return '{} = {};'.format(lhs, rhs)
+        return '{} = {};\n'.format(lhs, rhs)
 
     def _print_Variable(self, expr):
         if expr.is_pointer and expr.is_optional:
@@ -976,8 +977,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments]
-                    + [r.name for r in expr.results]
-                    + [expr.name])
+                        + [r.name for r in expr.results]
+                        + [expr.name])
 
         # Find a name for the wrapper function
         wrapper_name    = self.get_wrapper_name(used_names, expr)
@@ -1067,7 +1068,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         static_funcs = [self.get_static_function(func) for func in expr.funcs]
 
-        function_signatures = '\n'.join('{};'.format(self.static_function_signature(f))
+        function_signatures = '\n'.join('{};\n'.format(self.static_function_signature(f))
                                                         for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
@@ -1093,7 +1094,7 @@ class CWrapperCodePrinter(CCodePrinter):
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                             '{method_def_func},\n'
                             '{{ NULL, NULL, 0, NULL}}\n'
-                            '}};'.format(method_def_name = method_def_name,
+                            '}};\n'.format(method_def_name = method_def_name,
                                         method_def_func = method_def_func))
 
         module_def_name = self.get_new_name(self._global_names, '{}_module'.format(expr.name))
@@ -1107,7 +1108,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     'if the module keeps state in global variables. */\n'
                     '-1,\n'
                     '{method_def_name}\n'
-                    '}};'.format(module_def_name = module_def_name,
+                    '}};\n'.format(module_def_name = module_def_name,
                                 mod_name        = expr.name,
                                 method_def_name = method_def_name))
 
