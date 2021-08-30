@@ -630,6 +630,7 @@ class MacroFunction(Header):
 
     @property
     def results_sh(self):
+        """an iterable of the shapes of the results"""
         return self._results_sh
 
     # TODO: must be moved to annotation, once we add AliasVariables
