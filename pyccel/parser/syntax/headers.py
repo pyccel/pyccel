@@ -157,6 +157,31 @@ class Type(BasicStmt):
             d_var['order'] = order
         return d_var
 
+class MacroResult(BasicStmt):
+    """."""
+
+    def _init_(self, **kwargs):
+        """."""
+        self.name   = kwargs.pop('name')
+        self.shape  = kwargs.pop('shape', [])
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """."""
+        d_var = {}
+        shape = []
+        for i in self.shape:
+            if isinstance(i, MacroStmt):
+                shape.append(i.expr)
+            else:
+                shape.append(PyccelSymbol(i))
+        d_var['name']   = self.name
+        d_var['shape']  = shape
+
+        return d_var
+
 class ExType(BasicStmt):
     """Base class representing a header extype in the grammar."""
 
@@ -504,9 +529,6 @@ class FunctionMacroStmt(BasicStmt):
 
         self.dotted_name = tuple(kwargs.pop('dotted_name'))
         self.results = kwargs.pop('results',None)
-        if self.results:
-            self.results = [PyccelSymbol(r) for r in self.results]
-        self.results_sh = kwargs.pop('results_sh', None)
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -541,14 +563,12 @@ class FunctionMacroStmt(BasicStmt):
             else:
                 master_args.append(PyccelSymbol(i))
 
-
-        results = self.results
-        if (results is None):
-            results = []
-
+        results = []
         results_sh = []
-        if self.results_sh:
-            results_sh = [d_result.expr for d_result in self.results_sh]
+        if self.results:
+            results = [res.expr['name'] for res in self.results]
+            results = [PyccelSymbol(r) for r in results]
+            results_sh = [res.expr['shape'] for res in self.results]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
@@ -569,6 +589,7 @@ class FunctionMacroStmt(BasicStmt):
 hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
                ExType,
+               MacroResult,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,

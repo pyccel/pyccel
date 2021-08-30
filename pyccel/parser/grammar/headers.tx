@@ -84,8 +84,12 @@ AvailableMacro:
 //Extended Type with shape
 ExType: dtype=DataType ('*' prec=INT)? ('(' shape+=MacroValue[','] ')')? ( '(' 'order' '=' order = ID ')' )?;
 
+Shape: MacroValue | ':';
+
+MacroResult: name=ID ('(' shape+=Shape[','] ')')?;
+
 FunctionMacroStmt: 
-  'macro' ('('results_sh+=ExType[','] ')' '::')? ('(' results*=ID[','] ')' ',')?
+  'macro' ('(' results*=MacroResult[','] ')' ',')?
   dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?

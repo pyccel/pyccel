@@ -2137,20 +2137,27 @@ class SemanticParser(BasicParser):
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
                 args_names = [arg.name for arg in args if isinstance(arg, Variable)]
-                d_results = macro.apply_to_results(args)
 
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
-                for d_var, var in zip(d_results, lhs):
-                    if not var in args_names:
-                        tmp = self._assign_lhs_variable(var, d_var, None, new_expressions, None, **settings)
+                results_shapes = macro.get_results_shapes(args)
+                for i, result in enumerate(macro.results):
+                    if result in macro.master_arguments and not lhs[i] in args_names:
+                        index = macro.master_arguments.index(result)
+                        d_result = self._infere_type(master.arguments[index])
+                        d_result['shape'] = results_shapes[i]
+                        tmp = self._assign_lhs_variable(lhs[i], d_result, None, new_expressions, None, **settings)
                         results.append(tmp)
-                    else:
-                        _name = _get_name(var)
+                    elif lhs[i] in args_names:
+                        _name = _get_name(lhs[i])
                         tmp = self.get_variable(_name)
                         results.append(tmp)
+                    else:
+                        # TODO: check for result in master_results
+                        errors.report(UNVALID_MACRO_COMPOSITION, symbol=result,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error')
 
-                # ...
                 args, expr = macro.make_necessary_copies(args, results)
                 new_expressions += expr
                 args = macro.apply(args, results=results)

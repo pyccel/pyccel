@@ -679,18 +679,26 @@ class MacroFunction(Header):
                         d_arguments[i]._index = arg.index
         return d_arguments
 
-    def apply_to_results(self, args):
+
+    def get_results_shapes(self, args):
         """replace elements of the shape with appropriate values"""
 
         d_arguments = self.link_args(args)
         argument_keys = d_arguments.keys()
-        ld_results = []
-        for d_result in self.results_sh:
+        results_shapes = []
+        for j, shape in enumerate(self.results_sh):
             newargs = []
-            d_tmp = d_result.copy()
 
-            for arg in d_result['shape']:
-                if isinstance(arg, PyccelSymbol):
+            for i, arg in enumerate(shape):
+                if str(arg) == ':':
+                    try:
+                        new = MacroShape(d_arguments[self.results[j]], i)
+                    except KeyError:
+                        msg = "Shape needs to be provided explicitly as it cannot be deduced"
+                        errors.report(msg, symbol=self.results[j],
+                                      severity='error')
+
+                elif isinstance(arg, PyccelSymbol):
                     if arg in argument_keys:
                         new = d_arguments[arg]
                     else:
@@ -710,9 +718,8 @@ class MacroFunction(Header):
 
                 newargs.append(new)
             newargs = tuple(newargs)
-            d_tmp['shape'] = newargs
-            ld_results.append(d_tmp)
-        return ld_results
+            results_shapes.append(newargs)
+        return results_shapes
 
     def apply(self, args, results=None):
         """returns the appropriate arguments."""

@@ -14,6 +14,6 @@ a[3] = 5.0
 
 alpha = 2.0
 
-#$ header macro (double(x.shape[0], x.shape[1])) :: (x), _dscal(alpha, x, n=x.shape, incx=1) := dscal(n, alpha, x, incx)
+#$ header macro (x(:,:)), _dscal(alpha, x, n=x.shape, incx=1) := dscal(n, alpha, x, incx)
 a = _dscal(alpha, a)
 print(a)

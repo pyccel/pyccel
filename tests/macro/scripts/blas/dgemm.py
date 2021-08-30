@@ -50,7 +50,7 @@ b[3,4] = 1.0
 alpha = 2.0
 beta  = 1.0
 
-#$ header macro (double(c.shape[0], c.shape[1])) :: (c), _dgemm(alpha, a, b, beta, c, ta, tb, lda=a.shape[0], ldb=b.shape[0], ldc=c.shape[0]) := dgemm(ta, tb, a.shape[0], b.shape[1], a.shape[1], alpha, a, lda, b, ldb, beta, c, ldc)
+#$ header macro (c(:,:)), _dgemm(alpha, a, b, beta, c, ta, tb, lda=a.shape[0], ldb=b.shape[0], ldc=c.shape[0]) := dgemm(ta, tb, a.shape[0], b.shape[1], a.shape[1], alpha, a, lda, b, ldb, beta, c, ldc)
 
 c = _dgemm(alpha, a, b, beta, c, 'N', 'N')
 
