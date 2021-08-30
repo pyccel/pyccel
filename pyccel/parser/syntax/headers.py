@@ -158,12 +158,19 @@ class Type(BasicStmt):
         return d_var
 
 class MacroResult(BasicStmt):
-    """."""
+    """class representing a MacroResult in the grammar."""
 
-    def _init_(self, **kwargs):
-        """."""
-        self.name   = kwargs.pop('name')
-        self.shape  = kwargs.pop('shape', [])
+    def __init__(self, **kwargs):
+        """Constructor for MacroResult
+
+        name: str
+            Name of the variable result
+
+        shape: list
+            a list representing the shape of the result
+        """
+        self._name   = kwargs.pop('name')
+        self._shape  = kwargs.pop('shape', [])
 
         super().__init__(**kwargs)
 
@@ -172,70 +179,14 @@ class MacroResult(BasicStmt):
         """."""
         d_var = {}
         shape = []
-        for i in self.shape:
+        for i in self._shape:
             if isinstance(i, MacroStmt):
                 shape.append(i.expr)
             else:
                 shape.append(PyccelSymbol(i))
-        d_var['name']   = self.name
+        d_var['name']   = self._name
         d_var['shape']  = shape
 
-        return d_var
-
-class ExType(BasicStmt):
-    """Base class representing a header extype in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for ExType.
-
-        dtype: str
-            variable type
-        prec: integer
-            variable precisions
-        shape: Macro/integer/str
-            variable shape
-        order: str
-            variable order
-
-        """
-        self.dtype   = kwargs.pop('dtype')
-        self.prec    = kwargs.pop('prec')
-        self.shape = kwargs.pop('shape', [])
-        self.order   = kwargs.pop('order')
-
-        super().__init__(**kwargs)
-
-    @property
-    def expr(self):
-        dtype = self.dtype
-        precision = self.prec
-        if dtype in dtype_registry.keys():
-            dtype,precision = dtype_registry[dtype]
-        order = 'C'
-
-        shape = []
-        for i in self.shape:
-            if isinstance(i, MacroStmt):
-                shape.append(i.expr)
-            else:
-                shape.append(PyccelSymbol(i))
-        if self.order:
-            order = str(self.order)
-        d_var={}
-        d_var['datatype']=dtype
-        d_var['rank'] = len(shape)
-        d_var['allocatable'] = len(shape)>0
-        d_var['is_pointer'] = False
-        d_var['precision']  = precision
-        d_var['is_const'] = False
-        if not(precision):
-            if dtype in ['double' ,'float','complex', 'int']:
-                d_var['precision'] = default_precision[dtype]
-
-        if d_var['rank']>1:
-            d_var['order'] = order
-        d_var['shape']=shape
         return d_var
 
 class TypeHeader(BasicStmt):
@@ -588,7 +539,6 @@ class FunctionMacroStmt(BasicStmt):
 # lists.
 hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
-               ExType,
                MacroResult,
                HeaderResults,
                FunctionHeaderStmt,
