@@ -681,7 +681,20 @@ class MacroFunction(Header):
 
 
     def get_results_shapes(self, args):
-        """replace elements of the shape with appropriate values"""
+        """replace elements of the shape with appropriate values
+
+        Parameters
+        ----------
+        args: iterable
+            The arguments provided at function call
+
+        Results
+        -------
+        results_shapes: iterable
+            List of shapes after replacing variables indicated
+            in the macro if they exist, with the appropriate variables
+            from args.
+        """
 
         d_arguments = self.link_args(args)
         argument_keys = d_arguments.keys()
