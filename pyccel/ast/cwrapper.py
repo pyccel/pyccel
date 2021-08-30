@@ -12,8 +12,6 @@ from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
 
-from .literals  import LiteralTrue, LiteralFalse
-
 from .datatypes import (DataType, NativeInteger, NativeReal, NativeComplex,
                         NativeBool, NativeString, NativeGeneric, NativeVoid)
 
