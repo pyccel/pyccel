@@ -587,7 +587,30 @@ class InterfaceHeader(Header):
 
 #==============================================================================
 class MacroFunction(Header):
-    """."""
+    """Represents a macro function header in the code.
+
+    Parameters
+    ----------
+
+    name: str
+        the name used to call the function
+
+    args: iterable
+        The python arguments of the macro
+
+    master: str
+        The name of the function in Fortran
+
+    master_args: iterable
+        The Fortran arguments of the macro
+
+    results: iterable
+        The python results of the macro
+
+    results_sh: iterable
+        A list of shapes of the results
+    """
+
     __slots__ = ('_name','_arguments','_master','_master_arguments',
                  '_results','_copies_required', '_results_sh')
 
@@ -638,7 +661,19 @@ class MacroFunction(Header):
     #       variable to store the result
 
     def link_args(self, args):
-        """links macro arguments to the appropriate functioncall args"""
+        """links macro arguments to the appropriate functioncall args
+
+        Parameters
+        ----------
+        args: iterable
+            The arguments provided at function call
+
+        Results
+        -------
+        d_arguments: dictionary
+            A Dictionary, where the keys are arguments from the macro
+            and values are arugments provided at function call
+        """
 
         d_arguments = {}
 
