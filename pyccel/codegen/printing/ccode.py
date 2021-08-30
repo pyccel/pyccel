@@ -1400,11 +1400,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
         if isinstance(lhs, Variable) and lhs.is_optional:
-            if lhs in self._optional_partners:
-                # Collect temporary variable which provides
-                # allocated memory space for this optional variable
-                tmp_var = self._optional_partners[lhs]
-            else:
+            if lhs not in self._optional_partners:
                 # Create temporary variable to provide allocated
                 # memory space before assigning to the pointer value
                 # (may be NULL)
@@ -1412,8 +1408,14 @@ class CCodePrinter(CodePrinter):
                 tmp_var = lhs.clone(tmp_var_name, is_optional=False)
                 self._additional_declare.append(tmp_var)
                 self._optional_partners[lhs] = tmp_var
-            # Point optional variable at an allocated memory space
-            prefix_code = self._print(AliasAssign(lhs, tmp_var))
+                # Point optional variable at an allocated memory space
+                prefix_code = self._print(AliasAssign(lhs, tmp_var))
+            elif self._optional_partners[lhs] is not None:
+                # Collect temporary variable which provides
+                # allocated memory space for this optional variable
+                tmp_var = self._optional_partners[lhs]
+                # Point optional variable at an allocated memory space
+                prefix_code = self._print(AliasAssign(lhs, tmp_var))
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))

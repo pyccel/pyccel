@@ -67,6 +67,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name                 = None
         self._converter_functions         = dict()
         self._extra_includes = extra_includes
+        self._optional_partners = {}
 
     # --------------------------------------------------------------------
     #                       Helper functions
@@ -411,7 +412,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         body = []
         # once valued variable rank > 0 are implemented change should be made here
-        if variable.rank > 0 and self._target_language == 'c':
+        if variable.rank > 0:
             body.append(Deallocate(variable))
 
         if variable.is_optional:
@@ -422,7 +423,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def need_free(self, variable):
         """
         """
-        return variable.is_optional or (variable.rank > 0 and self._target_language == 'c')
+        return variable.is_optional or variable.rank > 0
 
     def need_memory_allocation(self, variable):
         """
@@ -498,6 +499,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Allocate memory if needed (we only allocate optional variable for the moment)
         if c_var.is_optional:
             body.append(self.need_memory_allocation(argument))
+            self._optional_partners[argument] = None
 
         # Collect value from python object
         body.append(Assign(argument, FunctionCall(cast_function, [parse_arg])))
@@ -639,8 +641,7 @@ class CWrapperCodePrinter(CCodePrinter):
         name = self.generate_converter_function_name(used_names, argument)
 
         if argument.rank > 0:
-            cast_function = pyarray_to_f_ndarray if self._target_language == 'fortran'\
-                                            else pyarray_to_c_ndarray
+            cast_function = pyarray_to_c_ndarray
         else:
             try:
                 cast_function = Python_to_C(argument)
