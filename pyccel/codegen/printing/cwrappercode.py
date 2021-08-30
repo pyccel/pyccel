@@ -629,7 +629,7 @@ class CWrapperCodePrinter(CCodePrinter):
         name = self.generate_converter_function_name(used_names, argument)
 
         if argument.rank > 0:
-            cast_function = pyarray_to_f_ndarray if self._target_language is 'fortran'\
+            cast_function = pyarray_to_f_ndarray if self._target_language == 'fortran'\
                                             else pyarray_to_c_ndarray
         else:
             try:
