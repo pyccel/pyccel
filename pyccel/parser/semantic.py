@@ -2146,7 +2146,7 @@ class SemanticParser(BasicParser):
                         index = macro.master_arguments.index(result)
                         d_result = self._infere_type(master.arguments[index])
                         d_result['shape'] = results_shapes[i]
-                        tmp = self._assign_lhs_variable(lhs[i], d_result, None, new_expressions, None, **settings)
+                        tmp = self._assign_lhs_variable(lhs[i], d_result, None, new_expressions, False, **settings)
                         results.append(tmp)
                     elif lhs[i] in args_names:
                         _name = _get_name(lhs[i])
