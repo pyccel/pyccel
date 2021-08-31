@@ -735,16 +735,16 @@ class MacroFunction(Header):
         d_arguments = self.link_args(args)
         argument_keys = d_arguments.keys()
         results_shapes = []
-        for j, shape in enumerate(self.results_shapes):
+        for result, shape in zip(self.results, self.results_shapes):
             newargs = []
 
             for i, arg in enumerate(shape):
                 if str(arg) == ':':
                     try:
-                        new = MacroShape(d_arguments[self.results[j]], i)
+                        new = MacroShape(d_arguments[result], i)
                     except KeyError:
                         msg = "Shape needs to be provided explicitly as it cannot be deduced"
-                        errors.report(msg, symbol=self.results[j],
+                        errors.report(msg, symbol=result,
                                       severity='error')
 
                 elif isinstance(arg, PyccelSymbol):
