@@ -282,23 +282,25 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     # -------------------------------------------------------------------
-    # Functions managing  the creation of wrapper body
+    # Functions managing the creation of wrapper body
     # -------------------------------------------------------------------
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable, default_value):
         """
-        Responsible for creating the body collecting the default value of an valuedVariable
+        Responsible for creating the body collecting the default value of a Variable
         and the check needed.
-        if the valuedVariable is optional create body to collect the new value
+        If the Variable is optional create body to collect the new value
 
         Parameters
         ----------
-        tmp_variable : Variable
-            The temporary variable  to hold result
-        variable     : Variable
-            The optional variable
-        collect_var  : Variable
-            variable which holds the value collected with PyArg_Parsetuple
+        variable      : Variable
+                        The optional variable
+        collect_var   : Variable
+                        variable which holds the value collected with PyArg_Parsetuple
+        tmp_variable  : Variable
+                        The temporary variable  to hold result
+        default_value : PyccelAstNode
+                        Object containing the default value of the variable
 
         Returns
         -------
@@ -328,14 +330,19 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Parameters
         ----------
-        variable    : Variable
-            the variable needed to collect
-        collect_var : Variable
-            variable which holds the value collected with PyArg_Parsetuple
-        error_check : boolean
-            True if checking the data type and raising error is needed
-        tmp_variable : Variable
-            temporary variable to hold value default None
+        variable      : Variable
+                        the variable to be collected
+        collect_var   : Variable
+                        variable which holds the value collected with PyArg_Parsetuple
+        default_value : PyccelAstNode
+                        Object containing the default value of the variable
+                        Default: None
+        error_check   : boolean
+                        True if checking the data type and raising error is needed
+                        Default: False
+        tmp_variable  : Variable
+                        temporary variable to hold value
+                        Default: None
 
         Returns
         -------
@@ -407,15 +414,18 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Parameters
         ----------
-        used_names : list of strings
-            List of variable and function names to avoid name collisions
-        Variable : Variable
-            The variable (which may be optional)
-        collect_var : variable
-            the pyobject type variable  holder of value
+        used_names    : set of strings
+                        Set of variable and function names to avoid name collisions
+        variable      : Variable
+                        The Variable (which may be optional)
+        collect_var   : Variable
+                        the pyobject type variable  holder of value
         default_value : PyccelAstNode
-        check_type : Boolean
-            True if the type is needed
+                        Object containing the default value of the variable
+                        Default: None
+        check_type    : Boolean
+                        True if the type is needed
+                        Default: False
 
         Returns
         -------
