@@ -649,7 +649,9 @@ class MacroFunction(Header):
             unsorted_args = args[n_sorted:]
             for i in unsorted_args:
                 if not i.has_keyword:
-                    raise ValueError('variable not allowed after an optional argument')
+                    errors.report("Positional argument not allowed after an optional argument",
+                            symbol=i,
+                            severity='fatal')
 
             d_unsorted_args = {}
             for arg in self.arguments[n_sorted:]:
