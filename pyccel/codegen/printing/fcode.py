@@ -27,12 +27,12 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName,
-                             If, IfSection)
+                             If, IfSection, For)
 
 from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize)
+                             DottedName, PyccelArraySize, ValuedVariable)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
 from pyccel.ast.operators      import PyccelMod
@@ -48,15 +48,14 @@ from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex, NativeTuple
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import CustomDataType
-
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, LiteralString, Literal
 from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.literals  import Nil
 
@@ -64,9 +63,15 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
+
+from pyccel.ast.variable import ValuedVariable, IndexedElement
+from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
+from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import expand_to_loops
@@ -205,6 +210,7 @@ class FCodePrinter(CodePrinter):
 
         self._additional_code = None
         self._additional_imports = set([])
+        self._additional_declare = []
 
         self.prefix_module = prefix_module
 
@@ -319,6 +325,7 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
+        decs += ''.join(self._print_Declare(Declare(i.dtype, i)) for i in self._additional_declare)
         body    = ''
 
         # ... TODO add other elements
@@ -374,6 +381,7 @@ class FCodePrinter(CodePrinter):
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.parser.get_variables(self._namespace)
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
+        decs += ''.join(self._print_Declare(Declare(i.dtype, i)) for i in self._additional_declare)
 
         # Detect if we are using mpi4py
         # TODO should we find a better way to do this?
@@ -451,24 +459,118 @@ class FCodePrinter(CodePrinter):
         code = code.replace("'", '')
         return self._get_statement(code) + '\n'
 
-    def _print_PythonPrint(self, expr):
-        args = []
-        for f in expr.expr:
-            if isinstance(f, str):
-                args.append("'{}'".format(f))
-            elif isinstance(f, PythonTuple):
-                for i in f:
-                    args.append("{}".format(self._print(i)))
-            elif isinstance(f, InhomogeneousTupleVariable):
-                for i in f:
-                    args.append("{}".format(self._print(i)))
-            elif f.dtype is NativeString() and f != expr.expr[-1]:
-                args.append("{} // ' ' ".format(self._print(f)))
-            else:
-                args.append("{}".format(self._print(f)))
+    def create_tmp_var(self, match_var):
+        tmp_var_name = self.parser.get_new_name('tmp')
+        tmp_var = Variable(name = tmp_var_name, dtype = match_var.dtype)
+        self._additional_declare(tmp_var)
+        return tmp_var
 
-        code = ', '.join(['print *', *args])
-        return self._get_statement(code) + '\n'
+    def extract_function_call_results(self, expr):
+        tmp_list = [self.create_tmp_var(a) for a in expr.funcdef.results]
+        return tmp_list
+
+    def _print_PythonPrint(self, expr):
+        end = '\n'
+        sep = ' '
+        code = ''
+        empty_end = ValuedVariable(NativeString(), 'end', value='')
+        space_end = ValuedVariable(NativeString(), 'end', value=' ')
+        kwargs = [f for f in expr.expr if isinstance(f, ValuedVariable)]
+        args_format = []
+        args = []
+        orig_args = [f for f in expr.expr if not isinstance(f, ValuedVariable)]
+        for f in kwargs:
+            if isinstance(f, ValuedVariable):
+                if f.name == 'sep':
+                    sep = str(f.value)
+                elif f.name == 'end':
+                    end = str(f.value)
+
+        def formatted_args_to_print(args_format, args, end):
+            if args_format == ['*']:
+              return ', '.join(['print *', *args]) + '\n'
+            args_format = ' A '.join(args_format)
+            new_line = "yes" if end.count('\n') > 0 else "no"
+            end = end.replace('\n', '')
+            args_code = ', " " ,'.join([*args])
+            if end != '':
+                return "write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)
+            return "write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)
+
+        if len(orig_args) == 0:
+            return formatted_args_to_print(args_format, args, end)
+
+        for i, f in enumerate(orig_args):
+            if isinstance(f, str):
+                arg_format, arg = self.get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
+            elif isinstance(f, PythonTuple):
+                for j in f:
+                    arg_format, arg = self.get_print_format_and_arg(f)
+                    args_format.append(arg_format)
+                    args.append(arg)
+            elif isinstance(f, InhomogeneousTupleVariable):
+                for j in f:
+                    arg_format, arg = self.get_print_format_and_arg(f)
+                    args_format.append(arg_format)
+                    args.append(arg)
+            elif f.dtype is NativeString() and f != expr.expr[-1]:
+                args_format.append('A')
+                args.append("{}".format(self._print(f)))
+            elif isinstance(f.rank,int) and f.rank > 0:
+                if args_format:
+                    code += formatted_args_to_print(args_format, args, sep)
+                    args_format = []
+                    args = []
+                for_index = Variable(NativeInteger(), name = self.parser.get_new_name('i'))
+                self._additional_declare.append(for_index)
+                max_index = PyccelMinus(orig_args[i].shape[0], LiteralInteger(1), simplify = True)
+                for_range = PythonRange(max_index)
+                print_body = [ orig_args[i][for_index] ]
+                if orig_args[i].rank == 1:
+                    print_body.append(space_end)
+                for_body  = [PythonPrint(print_body)]
+                for_loop  = For(for_index, for_range, for_body)
+                for_end   = ValuedVariable(NativeString(), 'end', value=']'+end if i == len(orig_args)-1 else ']')
+                body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
+                                  for_loop,
+                                  PythonPrint([ orig_args[i][max_index], for_end])],
+                                 unravelled = True)
+                code += self._print(body)
+            else:
+                arg_format, arg = self.get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
+        if args_format:
+            code += formatted_args_to_print(args_format, args, end)
+        return code
+
+    def get_print_format_and_arg(self,var):
+        type_to_format = {('real'): 'F0.12',
+                          ('complex'): '"(",F0.12," + ",F0.12,")"',
+                          ('integer'): 'I0',
+                          ('logical'): 'A',
+                          ('string'): 'A'}
+        var_type = self._print(var.dtype)
+        if var_type not in type_to_format:
+            if self._print(var.dtype).find("character") != -1:
+                return 'A', self._print(var)
+            return '*', self._print(var)
+
+        try:
+            arg_format = type_to_format[var_type]
+        except KeyError:
+            errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
+
+        if var.dtype is NativeComplex():
+            arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
+        elif var.dtype is NativeBool():
+            arg = 'merge("True ","False",{})'.format(self._print(var))
+        else:
+            arg = self._print(var)
+
+        return arg_format, arg
 
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
@@ -1524,6 +1626,11 @@ class FCodePrinter(CodePrinter):
             dec = Declare(i.dtype, i)
             decs[i] = dec
 
+        for i in self._additional_declare:
+            dec = Declare(i.dtype, i)
+            decs[i] = dec
+
+        self._additional_declare.clear()
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
