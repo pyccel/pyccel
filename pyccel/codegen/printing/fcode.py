@@ -48,7 +48,7 @@ from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex, NativeTuple
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
@@ -68,10 +68,6 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
 
-from pyccel.ast.variable import ValuedVariable, IndexedElement
-from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
-from pyccel.ast.variable import DottedName
-from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import expand_to_loops
@@ -488,7 +484,7 @@ class FCodePrinter(CodePrinter):
 
         def formatted_args_to_print(args_format, args, end):
             if args_format == ['*']:
-              return ', '.join(['print *', *args]) + '\n'
+                return ', '.join(['print *', *args]) + '\n'
             args_format = ' A '.join(args_format)
             new_line = "yes" if end.count('\n') > 0 else "no"
             end = end.replace('\n', '')
@@ -506,15 +502,13 @@ class FCodePrinter(CodePrinter):
                 args_format.append(arg_format)
                 args.append(arg)
             elif isinstance(f, PythonTuple):
-                for j in f:
-                    arg_format, arg = self.get_print_format_and_arg(f)
-                    args_format.append(arg_format)
-                    args.append(arg)
+                arg_format, arg = self.get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
             elif isinstance(f, InhomogeneousTupleVariable):
-                for j in f:
-                    arg_format, arg = self.get_print_format_and_arg(f)
-                    args_format.append(arg_format)
-                    args.append(arg)
+                arg_format, arg = self.get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
             elif f.dtype is NativeString() and f != expr.expr[-1]:
                 args_format.append('A')
                 args.append("{}".format(self._print(f)))
