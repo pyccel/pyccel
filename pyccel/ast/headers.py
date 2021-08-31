@@ -631,7 +631,7 @@ class MacroFunction(Header):
         self._master            = master
         self._master_arguments  = master_args
         self._results           = results
-        self._results_shapes        = results_shapes
+        self._results_shapes    = results_shapes
         self._copies_required   = [a in self._results for a in self._arguments]
         super().__init__()
 
