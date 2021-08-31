@@ -176,7 +176,7 @@ class MacroResult(BasicStmt):
 
     @property
     def expr(self):
-        """."""
+        """Returns a dictionary containing name and shape of result"""
         d_var = {}
         shape = []
         for i in self._shape:
