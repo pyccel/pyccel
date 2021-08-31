@@ -2153,7 +2153,7 @@ class SemanticParser(BasicParser):
                         results.append(tmp)
                     else:
                         # TODO: check for result in master_results
-                        errors.report(UNVALID_MACRO_COMPOSITION, symbol=result,
+                        errors.report(INVALID_MACRO_COMPOSITION, symbol=result,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error')
 
