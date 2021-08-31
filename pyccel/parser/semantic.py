@@ -2140,15 +2140,15 @@ class SemanticParser(BasicParser):
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
                 results_shapes = macro.get_results_shapes(args)
-                for i, result in enumerate(macro.results):
-                    if result in macro.master_arguments and not lhs[i] in args_names:
-                        index = macro.master_arguments.index(result)
+                for m_result, shape, result in zip(macro.results, results_shapes, lhs):
+                    if m_result in macro.master_arguments and not result in args_names:
+                        index = macro.master_arguments.index(m_result)
                         d_result = self._infere_type(master.arguments[index])
-                        d_result['shape'] = results_shapes[i]
-                        tmp = self._assign_lhs_variable(lhs[i], d_result, None, new_expressions, False, **settings)
+                        d_result['shape'] = shape
+                        tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False, **settings)
                         results.append(tmp)
-                    elif lhs[i] in args_names:
-                        _name = _get_name(lhs[i])
+                    elif result in args_names:
+                        _name = _get_name(result)
                         tmp = self.get_variable(_name)
                         results.append(tmp)
                     else:
