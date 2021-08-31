@@ -17,9 +17,10 @@ from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
 
+from .core      import FunctionDefArgument
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
-from .variable  import Variable, ValuedVariable
+from .variable  import Variable
 
 
 errors = Errors()
@@ -132,8 +133,8 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not all(isinstance(c, (Variable, FunctionAddress)) for c in c_func_args):
-            raise TypeError('C func args should be a list of Variables')
+        if not all(isinstance(c, FunctionDefArgument) for c in c_func_args):
+            raise TypeError('C func args should be a list of Arguments')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
@@ -144,7 +145,7 @@ class PyArg_ParseTupleNode(Basic):
         self._flags      = ''
         i = 0
 
-        while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
+        while i < len(c_func_args) and not c_func_args[i].has_default:
             self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):

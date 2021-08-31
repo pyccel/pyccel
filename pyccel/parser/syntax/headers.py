@@ -14,10 +14,11 @@ from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, Vari
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.basic     import PyccelAstNode
-from pyccel.ast.core      import ValuedArgument
+from pyccel.ast.core      import FunctionDefArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
-from pyccel.ast.literals  import LiteralString
+from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
 from pyccel.errors.errors import Errors
 
@@ -417,7 +418,7 @@ class MacroArg(BasicStmt):
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
-            return ValuedArgument(arg, value)
+            return FunctionDefArgument(arg, value=value)
         return arg
 
 
@@ -506,8 +507,18 @@ class FunctionMacroStmt(BasicStmt):
         for i in self.master_args:
             if isinstance(i, MacroStmt):
                 master_args.append(i.expr)
-            else:
+            elif isinstance(i, str):
                 master_args.append(PyccelSymbol(i))
+            elif isinstance(i, int):
+                master_args.append(LiteralInteger(i))
+            elif isinstance(i, float):
+                master_args.append(LiteralFloat(i))
+            elif i is True:
+                master_args.append(LiteralTrue())
+            elif i is False:
+                master_args.append(LiteralFalse())
+            else:
+                NotImplementedError("Unrecognised macro argument type")
 
         results = []
         results_shapes = []
