@@ -37,7 +37,7 @@ __all__ = (
     'AliasAssign',
     'Allocate',
     'AnnotatedComment',
-    'Argument',
+    'FunctionDefArgument',
     'AsName',
     'Assert',
     'Assign',
@@ -1690,14 +1690,14 @@ class FunctionCallArgument(Basic):
         else:
             return 'FunctionCallArgument({})'.format(repr(self.value))
 
-class Argument(PyccelAstNode):
+class FunctionDefArgument(PyccelAstNode):
 
-    """A FunctionDef Argument
+    """A FunctionDef FunctionDefArgument
 
     Examples
     --------
-    >>> from pyccel.ast.core import Argument
-    >>> n = Argument('n')
+    >>> from pyccel.ast.core import FunctionDefArgument
+    >>> n = FunctionDefArgument('n')
     >>> n
     n
     """
@@ -1777,9 +1777,9 @@ class Argument(PyccelAstNode):
         if self.has_default:
             argument = str(self.name)
             value = str(self.value)
-            return 'Argument({0}={1})'.format(argument, value)
+            return 'FunctionDefArgument({0}={1})'.format(argument, value)
         else:
-            return 'Argument({})'.format(repr(self.name))
+            return 'FunctionDefArgument({})'.format(repr(self.name))
 
 class FunctionCall(PyccelAstNode):
 
@@ -2035,13 +2035,13 @@ class FunctionDef(Basic):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
 
-    One can also use parametrized argument, using Argument
+    One can also use parametrized argument, using FunctionDefArgument
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Assign
     >>> from pyccel.ast.core import FunctionDef
-    >>> from pyccel.ast.core import Argument
-    >>> n = Argument('n', value=4)
+    >>> from pyccel.ast.core import FunctionDefArgument
+    >>> n = FunctionDefArgument('n', value=4)
     >>> x = Variable('real', 'x')
     >>> y = Variable('real', 'y')
     >>> args        = [x, n]
@@ -2100,7 +2100,7 @@ class FunctionDef(Basic):
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
 
-        arguments = tuple(a if isinstance(a, Argument) else Argument(a) for a in arguments)
+        arguments = tuple(a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in arguments)
 
         # body
 

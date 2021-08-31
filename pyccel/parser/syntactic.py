@@ -35,7 +35,7 @@ from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Argument
+from pyccel.ast.core import FunctionDefArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -368,10 +368,10 @@ class SyntaxParser(BasicParser):
         arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            positional_args        = [Argument(PyccelSymbol(a.arg),
+            positional_args        = [FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=self._visit(a.annotation))
                                         for a in stmt.args[:n_expl]]
-            valued_arguments       = [Argument(PyccelSymbol(a.arg),
+            valued_arguments       = [FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=self._visit(a.annotation),
                                             value = self._visit(d))
                                         for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
@@ -381,7 +381,7 @@ class SyntaxParser(BasicParser):
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
                 annotation = self._visit(a.annotation)
                 val = self._visit(d) if d is not None else d
-                arg = Argument(PyccelSymbol(a.arg),
+                arg = FunctionDefArgument(PyccelSymbol(a.arg),
                             annotation=annotation,
                             value=val, kwonly=True)
 

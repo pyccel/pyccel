@@ -14,7 +14,7 @@ from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, Vari
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.basic     import PyccelAstNode
-from pyccel.ast.core      import Argument
+from pyccel.ast.core      import FunctionDefArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
@@ -391,7 +391,7 @@ class MacroArg(BasicStmt):
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
-            return Argument(arg, value=value)
+            return FunctionDefArgument(arg, value=value)
         return arg
 
 

@@ -33,7 +33,7 @@ from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
-from pyccel.ast.core import Return, Argument
+from pyccel.ast.core import Return, FunctionDefArgument
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
@@ -1630,7 +1630,7 @@ class SemanticParser(BasicParser):
     def _visit_Argument(self, expr, **settings):
         var   = self._visit(expr.var, **settings)
         value = self._visit(expr.value, **settings)
-        return Argument(var, value=value,
+        return FunctionDefArgument(var, value=value,
                 annotation=expr.annotation,
                 kwonly=expr.is_kwonly)
 
@@ -2990,7 +2990,7 @@ class SemanticParser(BasicParser):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    arg_new = Argument(a_new, value=a.value, kwonly=a.is_kwonly,
+                    arg_new = FunctionDefArgument(a_new, value=a.value, kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
                     if additional_args:
@@ -3037,7 +3037,7 @@ class SemanticParser(BasicParser):
                 dt       = self.get_class_construct(cls_name)()
                 cls_base = self.get_class(cls_name)
                 var      = Variable(dt, 'self', cls_base=cls_base)
-                args     = [Argument(var)] + args
+                args     = [FunctionDefArgument(var)] + args
 
             arg_vars = [a.var for a in args]
 
@@ -3508,13 +3508,13 @@ class SemanticParser(BasicParser):
             func = interfaces[0]
 
         name = expr.name
-        args = [a if isinstance(a, Argument) else Argument(a) for a in expr.arguments]
+        args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
 
         def get_arg(func_arg, master_arg):
-            if isinstance(master_arg, Argument):
-                return Argument(func_arg.var.clone(master_arg.name), value = master_arg.default)
+            if isinstance(master_arg, FunctionDefArgument):
+                return FunctionDefArgument(func_arg.var.clone(master_arg.name), value = master_arg.default)
             else:
-                return Argument(func_arg.var.clone(str(master_arg)))
+                return FunctionDefArgument(func_arg.var.clone(str(master_arg)))
 
         master_args = [get_arg(a,m) if isinstance(m, PyccelSymbol) else m
                         for a,m in zip(func.arguments, expr.master_arguments)]

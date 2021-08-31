@@ -7,7 +7,7 @@
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
-from .core              import Assign, Argument
+from .core              import Assign, FunctionDefArgument
 from .core              import FunctionDef, Interface, FunctionAddress
 from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
@@ -687,7 +687,7 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg, Argument):
+            if isinstance(arg, FunctionDefArgument):
                 arg_name = arg.name
                 if arg_name in result_keys:
                     new = d_results[arg_name]
