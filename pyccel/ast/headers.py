@@ -747,10 +747,7 @@ class MacroFunction(Header):
                                       severity='error')
 
                 elif isinstance(arg, PyccelSymbol):
-                    if arg in d_arguments:
-                        new = d_arguments[arg]
-                    else:
-                        new = arg
+                    new = d_arguments.get(arg, arg)
                 elif isinstance(arg, Macro):
                     if arg.argument in d_arguments:
                         new = d_arguments[arg.argument]
