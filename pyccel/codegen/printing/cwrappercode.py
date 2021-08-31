@@ -766,12 +766,11 @@ class CWrapperCodePrinter(CCodePrinter):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name])
 
-        # update ndarray local variables properties
-        local_arg_vars = {(a.var.clone(a.var.name, is_pointer=True, allocatable=False)
-                          if isinstance(a.var, Variable) and a.var.rank > 0 else a.var):a for a in expr.arguments}
-        # update optional variable properties
-        local_arg_vars = {(v.clone(v.name, is_pointer=True) if v.is_optional \
-                            else v) : a for v,a in local_arg_vars.items()}
+        arg_vars = {a.var: a for a in expr.arguments}
+        # update ndarray and optional local variables properties
+        local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
+                          if isinstance(v, Variable) and (v.rank > 0 or v.is_optional) \
+                          else v)) : a for v,a in arg_vars.items()}
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
