@@ -30,9 +30,8 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False, 
                 by python should also be removed from the
                 directory path_dir
     remove_programs : bool
-                Indicates whether shared libraries generated
-                by python should also be removed from the
-                directory path_dir
+                Indicates whether programs should also be
+                removed from the directory path_dir
     """
     if path_dir is None:
         path_dir = os.getcwd()
@@ -43,7 +42,7 @@ def pyccel_clean(path_dir = None, recursive = True, remove_shared_libs = False, 
         if f in  ("__pyccel__", "__epyccel__"):
             shutil.rmtree( file_name, ignore_errors=True)
         elif not os.path.isfile(file_name) and recursive:
-            pyccel_clean(file_name, recursive, remove_shared_libs)
+            pyccel_clean(file_name, recursive, remove_shared_libs, remove_programs)
         elif remove_shared_libs and f.endswith(ext_suffix):
             os.remove(file_name)
         elif remove_programs and os.access(file_name, os.X_OK):
@@ -74,4 +73,4 @@ def pyccel_clean_command():
         pyccel_clean(None, recursive, remove_libs, remove_programs)
     else:
         for f in folders:
-            pyccel_clean(f, recursive, remove_libs)
+            pyccel_clean(f, recursive, remove_libs, remove_programs)
