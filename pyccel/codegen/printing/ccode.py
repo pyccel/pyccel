@@ -1228,12 +1228,12 @@ class CCodePrinter(CodePrinter):
 
     def stored_in_c_pointer(self, a):
         """
-        Indicates whether the Variable a needs to be stored in a pointer
+        Indicates whether the object a needs to be stored in a pointer
         in c code
 
         Parameters
         ----------
-        a : Variable
+        a : Variable/FunctionAddress
         """
         if not isinstance(a, Variable):
             return False
