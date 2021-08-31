@@ -1390,7 +1390,7 @@ class SemanticParser(BasicParser):
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
-                                shape=d_var['shape'], order=d_var.get('order'),
+                                shape=d_var['shape'], order=d_var['order'],
                                 status=status))
 
                             if status != 'unallocated':
