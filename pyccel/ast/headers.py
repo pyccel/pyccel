@@ -798,8 +798,6 @@ class MacroFunction(Header):
                     new = d_results[arg]
                 else:
                     new = arg
-                #TODO uncomment later
-                #     raise ValueError('Unknown variable name')
             elif isinstance(arg, Macro):
                 if arg.argument in argument_keys:
                     new = d_arguments[arg.argument]
