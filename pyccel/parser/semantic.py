@@ -3519,9 +3519,9 @@ class SemanticParser(BasicParser):
         master_args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
                 else a for a in expr.master_arguments]
         results = expr.results
-        results_sh = expr.results_sh
+        results_shapes = expr.results_shapes
         macro   = MacroFunction(name, args, func, master_args,
-                                results=results, results_sh=results_sh)
+                                results=results, results_shapes=results_shapes)
         self.insert_macro(macro)
 
         return macro

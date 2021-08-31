@@ -611,14 +611,14 @@ class MacroFunction(Header):
     results: iterable
         The python results of the macro
 
-    results_sh: iterable
+    results_shapes: iterable
         A list of shapes of the results
     """
 
     __slots__ = ('_name','_arguments','_master','_master_arguments',
-                 '_results','_copies_required', '_results_sh')
+                 '_results','_copies_required', '_results_shapes')
 
-    def __init__(self, name, args, master, master_args, results=None, results_sh=None):
+    def __init__(self, name, args, master, master_args, results=None, results_shapes=None):
         if not isinstance(name, str):
             raise TypeError('name must be of type str or PyccelSymbol')
 
@@ -631,7 +631,7 @@ class MacroFunction(Header):
         self._master            = master
         self._master_arguments  = master_args
         self._results           = results
-        self._results_sh        = results_sh
+        self._results_shapes        = results_shapes
         self._copies_required   = [a in self._results for a in self._arguments]
         super().__init__()
 
@@ -656,9 +656,9 @@ class MacroFunction(Header):
         return self._results
 
     @property
-    def results_sh(self):
+    def results_shapes(self):
         """an iterable of the shapes of the results"""
-        return self._results_sh
+        return self._results_shapes
 
     def link_args(self, args):
         """links macro arguments to the appropriate functioncall args
@@ -735,7 +735,7 @@ class MacroFunction(Header):
         d_arguments = self.link_args(args)
         argument_keys = d_arguments.keys()
         results_shapes = []
-        for j, shape in enumerate(self.results_sh):
+        for j, shape in enumerate(self.results_shapes):
             newargs = []
 
             for i, arg in enumerate(shape):

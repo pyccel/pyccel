@@ -516,11 +516,11 @@ class FunctionMacroStmt(BasicStmt):
                 master_args.append(PyccelSymbol(i))
 
         results = []
-        results_sh = []
+        results_shapes = []
         if self.results:
             results = [res.expr['name'] for res in self.results]
             results = [PyccelSymbol(r) for r in results]
-            results_sh = [res.expr['shape'] for res in self.results]
+            results_shapes = [res.expr['shape'] for res in self.results]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
@@ -530,7 +530,8 @@ class FunctionMacroStmt(BasicStmt):
             # so that we always have a name of type str
             args = list(name.name[:-1]) + list(args)
             name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args, results=results, results_sh=results_sh)
+        return MacroFunction(name, args, master_name, master_args, results=results,
+                             results_shapes=results_shapes)
 
 
 #################################################
