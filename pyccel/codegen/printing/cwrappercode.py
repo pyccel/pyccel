@@ -61,25 +61,6 @@ class CWrapperCodePrinter(CCodePrinter):
     #                       Helper functions
     # --------------------------------------------------------------------
 
-    def stored_in_c_pointer(self, a):
-        """
-        Return True if variable is pointer or stored in a pointer
-
-        Parameters
-        -----------
-        a      : Variable
-            Variable holding information needed (is_pointer, is_optional)
-
-        Returns
-        -------
-        stored_in_c : Boolean
-        """
-        stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
-        if self._target_language == 'fortran':
-            return stored_in_c or (isinstance(a, Variable) and a.rank>0)
-        else:
-            return stored_in_c
-
     def get_new_name(self, used_names, requested_name):
         """
         Generate a new name, return the requested_name if it's not in
@@ -190,35 +171,99 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
-    def _get_static_function(self, used_names, function, collect_dict):
+    def get_static_function(self, function):
         """
-        Create arguments and functioncall for arguments rank > 0 in fortran.
-        Format : a is numpy array
-        func(a) ==> static_func(a.DIM , a.DATA)
-        where a.DATA = buffer holding data
-              a.DIM = size of array
+
+        Create a static FunctionDef from the argument used for
+        C/fortran binding.
+        If target language is C return the argument function
+        If target language is Fortran, return a static function which
+        takes both the data and the shapes as arguments
+
+        Parameters
+        ----------
+        function    : FunctionDef
+            FunctionDef holding information needed to create static function
+
+        Returns   :
+        -----------
+        static_func : FunctionDef
         """
-        additional_body = []
         if self._target_language == 'fortran':
-            static_args = []
-            for arg in function.arguments:
-                a = arg.var
-                if isinstance(a, Variable) and a.rank>0:
-                    # Add shape arguments for static function
-                    for i in range(collect_dict[a].rank):
-                        var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
-                        body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
-                        if a.is_optional:
-                            body = IfTernaryOperator(PyccelIsNot(VariableAddress(collect_dict[a]),Nil()), body , LiteralInteger(0))
-                        body = Assign(var, body)
-                        additional_body.append(body)
-                        static_args.append(var)
-                static_args.append(a)
-            static_function = as_static_function_call(function, self._module_name)
+            static_func = as_static_function_call(function, self._module_name)
         else:
-            static_function = function
-            static_args = [a.var for a in function.arguments]
-        return static_function, static_args, additional_body
+            static_func = function
+
+        return static_func
+
+    def static_function_signature(self, expr):
+        """
+        Extract from the function definition all the information (name, input, output)
+        needed to create the function signature used for C/fortran binding
+
+        Parameters:
+        ----------
+        expr : FunctionDef
+            The function defintion
+
+        Return:
+        ------
+        String
+            Signature of the function
+        """
+        #if target_language is C no need for the binding
+        if self._target_language == 'c':
+            return self.function_signature(expr)
+
+        args = list(expr.arguments)
+        if len(expr.results) == 1:
+            ret_type = self.get_declare_type(expr.results[0])
+        elif len(expr.results) > 1:
+            ret_type = self._print(datatype('int')) + ' '
+            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+        else:
+            ret_type = self._print(datatype('void')) + ' '
+        name = expr.name
+        if not args:
+            arg_code = 'void'
+        else:
+            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+                        if isinstance(i, FunctionAddress)
+                        else '{0}{1}'.format(self.get_static_declare_type(i), i.name)
+                        for i in args)
+
+        if isinstance(expr, FunctionAddress):
+            return '{}(*{})({})'.format(ret_type, name, arg_code)
+        else:
+            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
+    def get_static_args(self, argument):
+        """
+        Create bind_C arguments for arguments rank > 0 in fortran.
+        needed in static function call
+        func(a) ==> static_func(nd_dim(a) , nd_data(a))
+        where nd_data(a) = buffer holding data
+              nd_dim(a)  = size of array
+
+        Parameters
+        ----------
+        argument    : Variable
+            Variable holding information needed (rank)
+
+        Returns     : List of arguments
+            List that can contains Variables and FunctionCalls
+        -----------
+        """
+
+        if self._target_language == 'fortran' and argument.rank > 0:
+            static_args = [
+                FunctionCall(array_get_dim, [argument, i]) for i in range(argument.rank)
+            ]
+            static_args.append(FunctionCall(array_get_data, [argument]))
+        else:
+            static_args = [argument]
+
+        return static_args
 
     def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
@@ -279,6 +324,22 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names.add(wrapper_name)
 
         return wrapper_name
+
+    def get_wrapper_arguments(self, used_names):
+        """
+        Create wrapper arguments
+        Parameters
+        ----------
+        used_names : Set of strings
+            Set of variable and function names to avoid name collisions
+
+        Returns: List of variables
+        """
+        python_func_args    = self.get_new_PyObject("args"  , used_names)
+        python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
+        python_func_selfarg = self.get_new_PyObject("self"  , used_names)
+
+        return [python_func_selfarg, python_func_args, python_func_kwargs]
 
 
     # -------------------------------------------------------------------
@@ -398,10 +459,7 @@ class CWrapperCodePrinter(CCodePrinter):
         check = array_checker(collect_var, variable, check_type, self._target_language)
         body += [IfSection(check, [Return([Nil()])])]
 
-        if self._target_language == 'fortran':
-            collect_func = FunctionCall(numpy_get_data, [collect_var])
-        else:
-            collect_func = FunctionCall(pyarray_to_c_ndarray, [collect_var])
+        collect_func = FunctionCall(pyarray_to_c_ndarray, [collect_var])
         body += [IfSection(LiteralTrue(), [Assign(VariableAddress(variable),
                             collect_func)])]
         body = [If(*body)]
@@ -448,6 +506,44 @@ class CWrapperCodePrinter(CCodePrinter):
             body = [self._body_scalar(variable, collect_var, default_value, check_type, tmp_variable)]
 
         return body, tmp_variable
+
+    def untranslatable_function(self, wrapper_name, wrapper_args, wrapper_results, error_msg):
+        """
+        Certain functions are not handled in the wrapper (e.g. private),
+        This creates a wrapper function which raises NotImplementedError
+        exception and returns NULL
+
+        Parameters
+        ----------
+        wrapper_name    : string
+            The name of the C wrapper function
+
+        wrapper_args    : list of Variables
+            List of python object variables
+
+        wrapper_results : Variable
+            python object variable
+
+        error_msg       : string
+            The message to be raised in the NotImplementedError
+
+        Returns
+        -------
+        code : string
+            returns the string containing the printed FunctionDef
+        """
+        wrapper_func = FunctionDef(
+                name      = wrapper_name,
+                arguments = wrapper_args,
+                results   = wrapper_results,
+                body      = [
+                                PyErr_SetString('PyExc_NotImplementedError',
+                                            '"{}"'.format(error_msg)),
+                                AliasAssign(wrapper_results[0], Nil()),
+                                Return(wrapper_results)
+                            ])
+
+        return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     # -------------------------------------------------------------------
     # Parsing arguments and building values Types functions
@@ -764,7 +860,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_FunctionDef(self, expr):
         # Save all used names
-        used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name])
+        used_names = set([a.name for a in expr.arguments]
+                        + [r.name for r in expr.results]
+                        + [expr.name])
 
         arg_vars = {a.var: a for a in expr.arguments}
         # update ndarray and optional local variables properties
@@ -778,38 +876,29 @@ class CWrapperCodePrinter(CCodePrinter):
         # Collect local variables
         wrapper_vars        = {a.name : a for a in local_arg_vars}
         wrapper_vars.update({r.name : r for r in expr.results})
-        python_func_args    = self.get_new_PyObject("args"  , used_names)
-        python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
-        python_func_selfarg = self.get_new_PyObject("self"  , used_names)
 
         # Collect arguments and results
-        wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
+        wrapper_args    = self.get_wrapper_arguments(used_names)
         wrapper_results = [self.get_new_PyObject("result", used_names)]
-
-        if expr.is_private:
-            wrapper_func = FunctionDef(name = wrapper_name,
-                arguments = wrapper_args,
-                results = wrapper_results,
-                body = [PyErr_SetString('PyExc_NotImplementedError', '"Private functions are not accessible from python"'),
-                        AliasAssign(wrapper_results[0], Nil()),
-                        Return(wrapper_results)])
-            return CCodePrinter._print_FunctionDef(self, wrapper_func)
-        if any(isinstance(arg, FunctionAddress) for arg in local_arg_vars):
-            wrapper_func = FunctionDef(name = wrapper_name,
-                arguments = wrapper_args,
-                results = wrapper_results,
-                body = [PyErr_SetString('PyExc_NotImplementedError', '"Cannot pass a function as an argument"'),
-                        AliasAssign(wrapper_results[0], Nil()),
-                        Return(wrapper_results)])
-            return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in local_arg_vars]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
+        if expr.is_private:
+            return self.untranslatable_function(wrapper_name,
+                        wrapper_args, wrapper_results,
+                        "Private functions are not accessible from python")
+
+        if any(isinstance(arg, FunctionAddress) for arg in local_arg_vars):
+            return self.untranslatable_function(wrapper_name,
+                        wrapper_args, wrapper_results,
+                        "Cannot pass a function as an argument")
+
         wrapper_body              = [keyword_list]
         wrapper_body_translations = []
+        static_func_args  = []
 
         parse_args = []
         collect_vars = {}
@@ -829,12 +918,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
             parse_args.append(collect_var)
 
+            # Get Bind/C arguments
+            static_func_args.extend(self.get_static_args(var))
+
             # Write default values
             if arg.value is not None:
                 wrapper_body.append(self.get_default_assign(parse_args[-1], var, arg.value))
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs,
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
                                           list(local_arg_vars.values()),
                                           parse_args, keyword_list)
 
@@ -842,15 +934,15 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        static_function, static_args, additional_body = self._get_static_function(used_names, expr, collect_vars)
-        wrapper_body.extend(additional_body)
-        wrapper_vars.update({arg.name : arg for arg in static_args})
+        static_function = self.get_static_function(expr)
+        function_call   = FunctionCall(static_function, static_func_args)
+        wrapper_vars.update({arg.name : arg for arg in static_func_args})
 
         if len(expr.results)==0:
-            func_call = FunctionCall(static_function, static_args)
+            func_call = FunctionCall(static_function, static_func_args)
         else:
             results   = expr.results if len(expr.results)>1 else expr.results[0]
-            func_call = Assign(results,FunctionCall(static_function, static_args))
+            func_call = Assign(results,FunctionCall(static_function, static_func_args))
 
         wrapper_body.append(func_call)
 
