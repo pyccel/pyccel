@@ -37,7 +37,6 @@ __all__ = (
     'AliasAssign',
     'Allocate',
     'AnnotatedComment',
-    'FunctionDefArgument',
     'AsName',
     'Assert',
     'Assign',
@@ -60,7 +59,9 @@ __all__ = (
     'For',
     'ForIterator',
     'FunctionCall',
+    'FunctionCallArgument',
     'FunctionDef',
+    'FunctionDefArgument',
     'If',
     'Import',
     'Interface',
@@ -1712,7 +1713,7 @@ class FunctionDefArgument(PyccelAstNode):
             self._var  = name
             self._name = name
         else:
-            raise TypeError("Name must be a PyccelSymbol or Variable")
+            raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
