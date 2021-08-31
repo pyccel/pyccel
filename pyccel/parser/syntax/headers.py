@@ -178,15 +178,9 @@ class ShapedID(BasicStmt):
     @property
     def expr(self):
         """Returns a dictionary containing name and shape of result"""
-        d_var = {}
-        shape = []
-        for i in self._shape:
-            if isinstance(i, MacroStmt):
-                shape.append(i.expr)
-            else:
-                shape.append(PyccelSymbol(i))
-        d_var['name']   = self._name
-        d_var['shape']  = shape
+
+        shape = [i.expr if isinstance(i, MacroStmt) else PyccelSymbol(i) for i in self._shape]
+        d_var = {'name': self._name, 'shape': shape}
 
         return d_var
 
