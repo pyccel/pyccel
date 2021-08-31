@@ -11,7 +11,7 @@ from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
 
-from .core           import process_shape, ValuedArgument
+from .core           import process_shape
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -344,8 +344,6 @@ class NumpyArray(NumpyNewArray):
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
         # ... Determine ordering
-        if isinstance(order, ValuedArgument):
-            order = order.value
         order = str(order).strip("\'")
 
         if order not in ('K', 'A', 'C', 'F'):
