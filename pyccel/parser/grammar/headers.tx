@@ -81,9 +81,6 @@ AvailableMacro:
 
 // TODO shall we add also results to the master call?
 
-//Extended Type with shape
-ExType: dtype=DataType ('*' prec=INT)? ('(' shape+=MacroValue[','] ')')? ( '(' 'order' '=' order = ID ')' )?;
-
 Shape: MacroValue | ':';
 
 MacroResult: name=ID ('(' shape+=Shape[','] ')')?;
