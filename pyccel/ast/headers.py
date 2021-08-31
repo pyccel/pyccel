@@ -660,10 +660,6 @@ class MacroFunction(Header):
         """an iterable of the shapes of the results"""
         return self._results_sh
 
-    # TODO: must be moved to annotation, once we add AliasVariables
-    #       this is needed if we have to create a pointer or allocate a new
-    #       variable to store the result
-
     def link_args(self, args):
         """links macro arguments to the appropriate functioncall args
 
