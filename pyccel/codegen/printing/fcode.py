@@ -1319,8 +1319,7 @@ class FCodePrinter(CodePrinter):
         if expr.is_argument:
             funcs_sigs = []
             for f in expr.functions:
-                args  = [a.var for a in f.arguments]
-                parts = self.function_signature(f, f.name, args)
+                parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
                         self.print_constant_imports()+'\n',
                         parts['arg_decs'],
@@ -1435,11 +1434,12 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionAddress(self, expr):
         return expr.name
 
-    def function_signature(self, expr, name, arguments):
+    def function_signature(self, expr, name):
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         out_args = []
         args_decs = OrderedDict()
+        arguments = [a.var for a in expr.arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -1522,9 +1522,7 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
 
-        arguments = [a.var for a in expr.arguments]
-
-        sig_parts = self.function_signature(expr, name, arguments)
+        sig_parts = self.function_signature(expr, name)
         prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
         functions = expr.functions
@@ -1536,6 +1534,7 @@ class FCodePrinter(CodePrinter):
             dec = Declare(i.dtype, i)
             decs[i] = dec
 
+        arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
