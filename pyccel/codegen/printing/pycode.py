@@ -141,7 +141,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_Argument(self, expr):
+    def _print_FunctionDefArgument(self, expr):
         if expr.has_default:
             return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
         else:

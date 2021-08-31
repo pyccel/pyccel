@@ -1627,7 +1627,7 @@ class SemanticParser(BasicParser):
         value = self._visit(expr.value, **settings)
         return FunctionCallArgument(value, expr.keyword)
 
-    def _visit_Argument(self, expr, **settings):
+    def _visit_FunctionDefArgument(self, expr, **settings):
         var   = self._visit(expr.var, **settings)
         value = self._visit(expr.value, **settings)
         return FunctionDefArgument(var, value=value,

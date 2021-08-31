@@ -553,7 +553,7 @@ class FCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_Argument(self, expr):
+    def _print_FunctionDefArgument(self, expr):
         return self._print(expr.name)
 
     def _print_FunctionCallArgument(self, expr):
