@@ -770,7 +770,9 @@ class MacroFunction(Header):
         return results_shapes
 
     def apply(self, args, results=None):
-        """returns the appropriate arguments."""
+        """Converts the arguments provided to the macro to arguments
+        appropriate for the FunctionCall to the associated function
+        """
 
         d_arguments = self.link_args(args)
         d_results = {}
