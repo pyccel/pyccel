@@ -729,7 +729,7 @@ class Constant(Variable):
 
     @property
     def value(self):
-        """ Default value of the variable
+        """ Immutable value of the constant
         """
         return self._value
 
