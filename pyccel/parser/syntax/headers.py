@@ -157,8 +157,8 @@ class Type(BasicStmt):
             d_var['order'] = order
         return d_var
 
-class MacroResult(BasicStmt):
-    """class representing a MacroResult in the grammar.
+class ShapedID(BasicStmt):
+    """class representing a ShapedID in the grammar.
 
     Parameters
     ----------
@@ -541,7 +541,7 @@ class FunctionMacroStmt(BasicStmt):
 # lists.
 hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
-               MacroResult,
+               ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,

@@ -81,12 +81,12 @@ AvailableMacro:
 
 // TODO shall we add also results to the master call?
 
-Shape: MacroValue | ':';
+ShapeElement: MacroValue | ':';
 
-MacroResult: name=ID ('(' shape+=Shape[','] ')')?;
+ShapedID: name=ID ('(' shape+=ShapeElement[','] ')')?;
 
 FunctionMacroStmt: 
-  'macro' ('(' results*=MacroResult[','] ')' ',')?
+  'macro' ('(' results*=ShapedID[','] ')' ',')?
   dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
