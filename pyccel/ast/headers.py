@@ -733,7 +733,6 @@ class MacroFunction(Header):
         """
 
         d_arguments = self.link_args(args)
-        argument_keys = d_arguments.keys()
         results_shapes = []
         for result, shape in zip(self.results, self.results_shapes):
             newargs = []
@@ -748,12 +747,12 @@ class MacroFunction(Header):
                                       severity='error')
 
                 elif isinstance(arg, PyccelSymbol):
-                    if arg in argument_keys:
+                    if arg in d_arguments:
                         new = d_arguments[arg]
                     else:
                         new = arg
                 elif isinstance(arg, Macro):
-                    if arg.argument in argument_keys:
+                    if arg.argument in d_arguments:
                         new = d_arguments[arg.argument]
                     else:
                         raise ValueError('Unknown variable name')
