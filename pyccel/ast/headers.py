@@ -588,6 +588,10 @@ class InterfaceHeader(Header):
 #==============================================================================
 class MacroFunction(Header):
     """Represents a macro function header in the code.
+    A macro function header maps a defined function name, set of arguments
+    and results to a different function call. This is notably useful when
+    mapping python functions to fortran functions which do the same thing but
+    do not have the same set of arguments/results.
 
     Parameters
     ----------
