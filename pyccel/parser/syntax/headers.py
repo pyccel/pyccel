@@ -158,17 +158,18 @@ class Type(BasicStmt):
         return d_var
 
 class MacroResult(BasicStmt):
-    """class representing a MacroResult in the grammar."""
+    """class representing a MacroResult in the grammar.
+
+    Parameters
+    ----------
+    name: str
+        Name of the variable result
+
+    shape: list
+        A list representing the shape of the result
+    """
 
     def __init__(self, **kwargs):
-        """Constructor for MacroResult
-
-        name: str
-            Name of the variable result
-
-        shape: list
-            a list representing the shape of the result
-        """
         self._name   = kwargs.pop('name')
         self._shape  = kwargs.pop('shape', [])
 
