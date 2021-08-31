@@ -770,7 +770,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # update ndarray and optional local variables properties
         local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
                           if isinstance(v, Variable) and (v.rank > 0 or v.is_optional) \
-                          else v)) : a for v,a in arg_vars.items()}
+                          else v) : a for v,a in arg_vars.items()}
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
