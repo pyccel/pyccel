@@ -2134,8 +2134,7 @@ class SemanticParser(BasicParser):
                 master = macro.master
                 name = _get_name(master.name)
                 results = []
-                args = [self._visit(i, **settings) for i in
-                            rhs.args]
+                args = [self._visit(i, **settings) for i in rhs.args]
                 args_names = [arg.name for arg in args if isinstance(arg, Variable)]
 
                 if not sympy_iterable(lhs):
