@@ -672,7 +672,7 @@ class MacroFunction(Header):
         -------
         d_arguments: dictionary
             A Dictionary, where the keys are arguments from the macro
-            and values are arugments provided at function call
+            and values are arguments provided at function call
         """
 
         d_arguments = {}
