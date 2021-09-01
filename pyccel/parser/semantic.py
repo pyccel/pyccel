@@ -33,10 +33,9 @@ from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
-from pyccel.ast.core import Return, Argument
+from pyccel.ast.core import Return, FunctionDefArgument
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import ValuedFunctionAddress
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
+from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
@@ -47,7 +46,6 @@ from pyccel.ast.core import Del
 from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Concatenate
-from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With
@@ -107,7 +105,6 @@ from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
-from pyccel.ast.variable import ValuedVariable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -977,8 +974,8 @@ class SemanticParser(BasicParser):
         args  = []
         for arg in arguments:
             a = self._visit(arg, **settings)
-            if isinstance(a, StarredArguments):
-                args.extend(a.args_var)
+            if isinstance(a.value, StarredArguments):
+                args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
                 args.append(a)
         return args
@@ -1028,6 +1025,8 @@ class SemanticParser(BasicParser):
                         i_arg.rank != f_arg.rank)
 
         for i_arg, f_arg in zip(input_args, func_args):
+            i_arg = i_arg.value
+            f_arg = f_arg.var
             # Ignore types which cannot be compared
             if (i_arg is Nil()
                     or isinstance(f_arg, FunctionAddress)
@@ -1725,12 +1724,16 @@ class SemanticParser(BasicParser):
                 severity='fatal')
         return expr
 
-    def _visit_ValuedArgument(self, expr, **settings):
+    def _visit_FunctionCallArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
-        d_var      = self._infere_type(value, **settings)
-        dtype      = d_var.pop('datatype')
-        return ValuedVariable(dtype, expr.name,
-                               value=value, **d_var)
+        return FunctionCallArgument(value, expr.keyword)
+
+    def _visit_FunctionDefArgument(self, expr, **settings):
+        var   = self._visit(expr.var, **settings)
+        value = self._visit(expr.value, **settings)
+        return FunctionDefArgument(var, value=value,
+                annotation=expr.annotation,
+                kwonly=expr.is_kwonly)
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = []
@@ -2092,9 +2095,7 @@ class SemanticParser(BasicParser):
         return expr_new
 
     def _visit_Lambda(self, expr, **settings):
-
-
-        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument), excluded_nodes = FunctionDef)))
+        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol, excluded_nodes = FunctionDef))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -2253,7 +2254,7 @@ class SemanticParser(BasicParser):
 
                 args = [self._visit(i, **settings) for i in
                             rhs.args]
-                args, expr = macro.make_necessary_copies(args, results)
+                expr = macro.make_necessary_copies(args, results)
                 new_expressions += expr
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
@@ -2372,15 +2373,16 @@ class SemanticParser(BasicParser):
 #                   d_var = None
                     func_args = func.arguments
                     call_args = rhs.args
-                    f_ranks = [x.rank for x in func_args]
-                    c_ranks = [x.rank for x in call_args]
+                    f_ranks = [x.var.rank for x in func_args]
+                    c_ranks = [x.value.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                     if not all(same_ranks):
                         assert(len(c_ranks) == 1)
-                        d_var['shape'      ] = call_args[0].shape
-                        d_var['rank'       ] = call_args[0].rank
-                        d_var['allocatable'] = call_args[0].allocatable
-                        d_var['order'      ] = call_args[0].order
+                        arg = call_args[0].value
+                        d_var['shape'      ] = arg.shape
+                        d_var['rank'       ] = arg.rank
+                        d_var['allocatable'] = arg.allocatable
+                        d_var['order'      ] = arg.order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -3095,27 +3097,22 @@ class SemanticParser(BasicParser):
 
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
+                    ah = ah.var
                     additional_args = []
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
                         d_var['is_pointer'] = True
-                        d_var['is_kwonly'] = a.is_kwonly
-                        if isinstance(a, ValuedArgument):
-
+                        if a.has_default:
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
-
-                            a_new = ValuedFunctionAddress(a.name, ah.arguments, ah.results, [],
-                                        value=a.value, **d_var)
-                        else:
-                            a_new = FunctionAddress(a.name, ah.arguments, ah.results, [], **d_var)
+                        a_new = FunctionAddress(a.name, ah.arguments, ah.results, [],
+                                        **d_var)
                     else:
                         d_var = self._infere_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
                         d_var['is_argument'] = True
-                        d_var['is_kwonly'] = a.is_kwonly
                         d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
                         if d_var['rank']>0:
@@ -3124,22 +3121,19 @@ class SemanticParser(BasicParser):
                         if 'allow_negative_index' in self._namespace.decorators:
                             if a.name in decorators['allow_negative_index']:
                                 d_var.update(allows_negative_indexes=True)
-                        # this is needed for the static case
-                        if isinstance(a, ValuedArgument):
-
+                        if a.has_default:
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
+                        a_new = Variable(dtype, a.name, **d_var)
 
-                            a_new = ValuedVariable(dtype, a.name,
-                                        value=a.value, **d_var)
-                        else:
-                            a_new = Variable(dtype, a.name, **d_var)
+                    arg_new = FunctionDefArgument(a_new, value=a.value, kwonly=a.is_kwonly,
+                                annotation=a.annotation)
 
                     if additional_args:
                         args += additional_args
 
-                    args.append(a_new)
+                    args.append(arg_new)
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
@@ -3180,11 +3174,13 @@ class SemanticParser(BasicParser):
                 dt       = self.get_class_construct(cls_name)()
                 cls_base = self.get_class(cls_name)
                 var      = Variable(dt, 'self', cls_base=cls_base)
-                args     = [var] + args
+                args     = [FunctionDefArgument(var)] + args
+
+            arg_vars = [a.var for a in args]
 
             # Determine local and global variables
-            local_vars  = [v for v in self.get_variables(self.namespace)              if v not in args + results]
-            global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in args + results + local_vars]
+            local_vars  = [v for v in self.get_variables(self.namespace)              if v not in arg_vars + results]
+            global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in arg_vars + results + local_vars]
 
             # get the imports
             imports   = self.namespace.imports['imports'].values()
@@ -3254,9 +3250,10 @@ class SemanticParser(BasicParser):
                             args_inout[i] = True
 
                         i_fa += 1
-                if isinstance(a, Variable):
-                    if a.is_const and (args_inout[i] or (a.name in local_assign)):
-                        msg = "Cannot modify 'const' argument ({})".format(a)
+                if isinstance(a.var, Variable):
+                    v = a.var
+                    if v.is_const and (args_inout[i] or (v.name in local_assign)):
+                        msg = "Cannot modify 'const' argument ({})".format(v)
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal', blocker=self.blocking)
@@ -3655,10 +3652,17 @@ class SemanticParser(BasicParser):
             func = interfaces[0]
 
         name = expr.name
-        args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
-                else a for a in expr.arguments]
-        master_args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
-                else a for a in expr.master_arguments]
+        args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
+
+        def get_arg(func_arg, master_arg):
+            if isinstance(master_arg, FunctionDefArgument):
+                return FunctionDefArgument(func_arg.var.clone(master_arg.name), value = master_arg.default)
+            else:
+                return FunctionDefArgument(func_arg.var.clone(str(master_arg)))
+
+        master_args = [get_arg(a,m) if isinstance(m, PyccelSymbol) else m
+                        for a,m in zip(func.arguments, expr.master_arguments)]
+
         results = expr.results
         macro   = MacroFunction(name, args, func, master_args,
                                   results=results)
