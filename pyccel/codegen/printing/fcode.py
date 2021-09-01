@@ -39,7 +39,7 @@ from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall, FunctionCallArgument, FunctionDef
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall, FunctionCallArgument
 
 from pyccel.ast.builtins  import (PythonInt,
                                   PythonPrint, PythonRange,
