@@ -39,7 +39,7 @@ from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall, FuncAddressDeclare, FunctionCallArgument, FunctionDef
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall, FunctionCallArgument, FunctionDef
 
 from pyccel.ast.builtins  import (PythonInt,
                                   PythonPrint, PythonRange,
@@ -507,7 +507,7 @@ class FCodePrinter(CodePrinter):
                 args.append("{}".format(self._print(f)))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += formatted_args_to_printf(args_format, args, sep)
+                    code += formatted_args_to_print(args_format, args, sep)
                     args_format = []
                     args = []
                 for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
