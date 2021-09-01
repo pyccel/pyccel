@@ -486,6 +486,7 @@ class FCodePrinter(CodePrinter):
             return formatted_args_to_print(args_format, args, end)
 
         for i, f in enumerate(orig_args):
+
             if f.keyword:
                 continue
             else:
@@ -1623,6 +1624,7 @@ class FCodePrinter(CodePrinter):
         for i in self._additional_declare:
             dec = Declare(i.dtype, i)
             decs[i] = dec
+
 
         self._additional_declare.clear()
         arguments = [a.var for a in expr.arguments]
