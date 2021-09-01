@@ -32,14 +32,14 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
 from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize, ValuedVariable)
+                             DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
 from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall, FuncAddressDeclare, FunctionCallArgument, FunctionDef
 
 from pyccel.ast.builtins  import (PythonInt,
                                   PythonPrint, PythonRange,
@@ -53,10 +53,11 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import CustomDataType
+
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat, LiteralString, Literal
-from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
+from pyccel.ast.literals  import LiteralTrue,LiteralString
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
@@ -67,7 +68,6 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
-
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import expand_to_loops
@@ -455,32 +455,21 @@ class FCodePrinter(CodePrinter):
         code = code.replace("'", '')
         return self._get_statement(code) + '\n'
 
-    def create_tmp_var(self, match_var):
-        tmp_var_name = self.parser.get_new_name('tmp')
-        tmp_var = Variable(name = tmp_var_name, dtype = match_var.dtype)
-        self._additional_declare(tmp_var)
-        return tmp_var
-
-    def extract_function_call_results(self, expr):
-        tmp_list = [self.create_tmp_var(a) for a in expr.funcdef.results]
-        return tmp_list
-
     def _print_PythonPrint(self, expr):
         end = '\n'
         sep = ' '
         code = ''
-        empty_end = ValuedVariable(NativeString(), 'end', value='')
-        space_end = ValuedVariable(NativeString(), 'end', value=' ')
-        kwargs = [f for f in expr.expr if isinstance(f, ValuedVariable)]
+        empty_end = FunctionCallArgument(LiteralString(''), 'end')
+        space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        kwargs = [f for f in expr.expr if f.has_keyword]
+        for f in kwargs:
+            if f.keyword == 'sep':
+                sep = str(f.value)
+            elif f.keyword == 'end':
+                end = str(f.value)
         args_format = []
         args = []
-        orig_args = [f for f in expr.expr if not isinstance(f, ValuedVariable)]
-        for f in kwargs:
-            if isinstance(f, ValuedVariable):
-                if f.name == 'sep':
-                    sep = str(f.value)
-                elif f.name == 'end':
-                    end = str(f.value)
+        orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_print(args_format, args, end):
             if args_format == ['*']:
@@ -497,6 +486,10 @@ class FCodePrinter(CodePrinter):
             return formatted_args_to_print(args_format, args, end)
 
         for i, f in enumerate(orig_args):
+            if f.keyword:
+                continue
+            else:
+                f = f.value
             if isinstance(f, str):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
@@ -512,25 +505,28 @@ class FCodePrinter(CodePrinter):
             elif f.dtype is NativeString() and f != expr.expr[-1]:
                 args_format.append('A')
                 args.append("{}".format(self._print(f)))
-            elif isinstance(f.rank,int) and f.rank > 0:
+            elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += formatted_args_to_print(args_format, args, sep)
+                    code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                for_index = Variable(NativeInteger(), name = self.parser.get_new_name('i'))
+                for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
                 self._additional_declare.append(for_index)
-                max_index = PyccelMinus(orig_args[i].shape[0], LiteralInteger(1), simplify = True)
+                max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
                 for_range = PythonRange(max_index)
-                print_body = [ orig_args[i][for_index] ]
-                if orig_args[i].rank == 1:
+                print_body = [FunctionCallArgument(f[for_index])]
+                if f.rank == 1:
                     print_body.append(space_end)
-                for_body  = [PythonPrint(print_body)]
-                for_loop  = For(for_index, for_range, for_body)
-                for_end   = ValuedVariable(NativeString(), 'end', value=']'+end if i == len(orig_args)-1 else ']')
-                body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
+
+                for_body = [PythonPrint(print_body)]
+                for_loop = For(for_index, for_range, for_body)
+                for_end = FunctionCallArgument(LiteralString(']' + end if i == len(orig_args) - 1 else ']'),
+                                               keyword='end')
+
+                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end]),
                                   for_loop,
-                                  PythonPrint([ orig_args[i][max_index], for_end])],
-                                 unravelled = True)
+                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end])],
+                                 unravelled=True)
                 code += self._print(body)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
@@ -644,11 +640,14 @@ class FCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_ValuedVariable(self, expr):
-        if expr.is_argument:
-            return self._print_Variable(expr)
+    def _print_FunctionDefArgument(self, expr):
+        return self._print(expr.name)
+
+    def _print_FunctionCallArgument(self, expr):
+        if expr.keyword:
+            return '{} = {}'.format(expr.keyword, self._print(expr.value))
         else:
-            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+            return '{}'.format(self._print(expr.value))
 
     def _print_Constant(self, expr):
         val = LiteralFloat(expr.value)
@@ -1471,7 +1470,7 @@ class FCodePrinter(CodePrinter):
         name = self._print(expr.name)
         results   = list(expr.results)
         arguments = list(expr.arguments)
-        if any([isinstance(a, FunctionAddress) for a in arguments]):
+        if any(isinstance(a.var, FunctionAddress) for a in arguments):
             # Functions with function addresses as arguments cannot be
             # exposed to python so there is no need to print their signature
             return ''
@@ -1483,6 +1482,7 @@ class FCodePrinter(CodePrinter):
             else:
                 intent='in'
 
+            arg = arg.var
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
             args_decs[arg] = dec
 
@@ -1526,6 +1526,7 @@ class FCodePrinter(CodePrinter):
         is_elemental = expr.is_elemental
         out_args = []
         args_decs = OrderedDict()
+        arguments = [a.var for a in expr.arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -1533,7 +1534,7 @@ class FCodePrinter(CodePrinter):
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
-                if result in expr.arguments:
+                if result in arguments:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
@@ -1553,7 +1554,7 @@ class FCodePrinter(CodePrinter):
             args_decs[result] = dec
         # ...
 
-        for i,arg in enumerate(expr.arguments):
+        for i,arg in enumerate(arguments):
             if isinstance(arg, Variable):
                 if i == 0 and expr.cls_name:
                     dec = Declare(arg.dtype, arg, intent='inout', passed_from_dotted = True)
@@ -1564,7 +1565,7 @@ class FCodePrinter(CodePrinter):
                 args_decs[arg] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
-        for i in expr.arguments:
+        for i in arguments:
             if i in out_args:
                 out_args.remove(i)
 
@@ -1577,7 +1578,7 @@ class FCodePrinter(CodePrinter):
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
-        arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
+        arg_code  = ', '.join(self._print(i) for i in chain( arguments, out_args ))
 
         arg_decs = ''.join(self._print(i) for i in args_decs.values())
 
@@ -1619,15 +1620,15 @@ class FCodePrinter(CodePrinter):
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[i] = dec
-
         for i in self._additional_declare:
             dec = Declare(i.dtype, i)
             decs[i] = dec
 
         self._additional_declare.clear()
+        arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
+            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
@@ -2691,7 +2692,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        args = [a for a in expr.args if not isinstance(a, Nil)]
+        args = [a for a in expr.args if not isinstance(a.value, Nil)]
         results = func.results
 
         if len(results) == 1:

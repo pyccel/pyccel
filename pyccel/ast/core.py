@@ -27,7 +27,7 @@ from .itertoolsext   import Product
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 
 from .variable import DottedName, IndexedElement
-from .variable import ValuedVariable, Variable
+from .variable import Variable
 
 errors = Errors()
 
@@ -37,7 +37,6 @@ __all__ = (
     'AliasAssign',
     'Allocate',
     'AnnotatedComment',
-    'Argument',
     'AsName',
     'Assert',
     'Assign',
@@ -60,7 +59,9 @@ __all__ = (
     'For',
     'ForIterator',
     'FunctionCall',
+    'FunctionCallArgument',
     'FunctionDef',
+    'FunctionDefArgument',
     'If',
     'Import',
     'Interface',
@@ -76,12 +77,10 @@ __all__ = (
     'SymbolicAssign',
     'SymbolicPrint',
     'SympyFunction',
-    'ValuedArgument',
     'While',
     'With',
     'create_variable',
     'create_incremented_string',
-    'get_initial_value',
     'get_iterable_ranges',
     'inline',
     'process_shape',
@@ -673,7 +672,7 @@ class CodeBlock(Basic):
         else:
             self._body = tuple((obj,) + self.body)
 
-    def __str__(self):
+    def __repr__(self):
         return 'CodeBlock({})'.format(self.body)
 
     def __reduce_ex__(self, i):
@@ -1649,98 +1648,139 @@ class ConstructorCall(Basic):
         else:
             return self.func
 
-class Argument(PyccelAstNode):
+class FunctionCallArgument(Basic):
+    """
+    An argument passed in a function call
 
-    """An abstract Argument data structure.
+    Parameters
+    ---------
+    value   : PyccelAstNode
+              The expression passed as an argument
+    keyword : str
+              If the argument is passed by keyword then this
+              is that keyword
+    """
+    __slots__ = ('_value', '_keyword')
+    _attribute_nodes = ('_value',)
+    def __init__(self, value, keyword = None):
+        self._value = value
+        self._keyword = keyword
+        super().__init__()
+
+    @property
+    def value(self):
+        """ The value passed as argument
+        """
+        return self._value
+
+    @property
+    def keyword(self):
+        """ The keyword used to pass the argument
+        """
+        return self._keyword
+
+    @property
+    def has_keyword(self):
+        """ Indicates whether the argument was passed by keyword
+        """
+        return self._keyword is not None
+
+    def __repr__(self):
+        if self.has_keyword:
+            return 'FunctionCallArgument({} = {})'.format(self.keyword, repr(self.value))
+        else:
+            return 'FunctionCallArgument({})'.format(repr(self.value))
+
+class FunctionDefArgument(PyccelAstNode):
+
+    """A FunctionDef FunctionDefArgument
 
     Examples
     --------
-    >>> from pyccel.ast.core import Argument
-    >>> n = Argument('n')
+    >>> from pyccel.ast.core import FunctionDefArgument
+    >>> n = FunctionDefArgument('n')
     >>> n
     n
     """
-    __slots__ = ('_name','_kwonly','_annotation')
-    _attribute_nodes = ()
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value')
+    _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, kwonly=False, annotation=None):
-        self._name       = name
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None):
+        if isinstance(name, (Variable, FunctionAddress)):
+            self._var  = name
+            self._name = name.name
+        elif isinstance(name, PyccelSymbol):
+            self._var  = name
+            self._name = name
+        else:
+            raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
+        self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
         super().__init__()
 
     @property
     def name(self):
+        """ The name of the argument
+        """
         return self._name
 
     @property
+    def var(self):
+        """ The variable representing the argument
+        (available after the semantic treatment)
+        """
+        return self._var
+
+    @property
     def is_kwonly(self):
+        """ Indicates if the argument must be passed
+        by keyword
+        """
         return self._kwonly
 
     @property
     def annotation(self):
+        """ The argument annotation providing dtype information
+        """
         return self._annotation
-
-    def __str__(self):
-        return str(self.name)
-
-class ValuedArgument(Basic):
-
-    """Represents a valued argument in the code.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import ValuedArgument
-    >>> n = ValuedArgument('n', 4)
-    >>> n
-    n=4
-    """
-    __slots__ = ('_name','_expr','_value','_kwonly')
-    _attribute_nodes = ()
-
-    def __init__(self, expr, value, *, kwonly = False):
-        # TODO should we turn back to Argument
-
-        if isinstance(expr, Argument):
-            self._name = expr.name
-        elif isinstance(expr, str):
-            self._name = expr
-        else:
-            raise TypeError('Expecting an argument')
-
-        if isinstance(value, (bool, int, float, complex, str)) and not isinstance(value, PyccelSymbol):
-            value = convert_to_literal(value)
-        elif not isinstance(value, (Basic, PyccelSymbol)):
-            raise TypeError("Expecting a pyccel object not {}".format(type(value)))
-
-        if not isinstance(kwonly, bool):
-            raise TypeError("kwonly must be a bool")
-
-        self._expr   = expr
-        self._value  = value
-        self._kwonly = kwonly
-        super().__init__()
-
-    @property
-    def argument(self):
-        return self._expr
 
     @property
     def value(self):
+        """ The default value of the argument
+        """
         return self._value
 
     @property
-    def name(self):
-        return self._name
+    def default_call_arg(self):
+        """ The FunctionCallArgument which is passed to FunctionCall
+        if no value is provided for this argument
+        """
+        return FunctionCallArgument(self.value, keyword=self.name) \
+                if self.has_default else None
 
     @property
-    def is_kwonly(self):
-        return self._kwonly
+    def has_default(self):
+        """ Indicates whether the argument has a default value
+        (if not then it must be provided)
+        """
+        return self._value is not None
 
     def __str__(self):
-        argument = str(self.argument)
-        value = str(self.value)
-        return '{0}={1}'.format(argument, value)
+        if self.has_default:
+            argument = str(self.name)
+            value = str(self.value)
+            return '{0}={1}'.format(argument, value)
+        else:
+            return str(self.name)
+
+    def __repr__(self):
+        if self.has_default:
+            argument = str(self.name)
+            value = str(self.value)
+            return 'FunctionDefArgument({0}={1})'.format(argument, value)
+        else:
+            return 'FunctionDefArgument({})'.format(repr(self.name))
 
 class FunctionCall(PyccelAstNode):
 
@@ -1751,6 +1791,9 @@ class FunctionCall(PyccelAstNode):
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
+
+        # Ensure all arguments are of type FunctionCallArgument
+        args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
         if self.stage == "syntactic":
             self._interface = None
@@ -1786,21 +1829,28 @@ class FunctionCall(PyccelAstNode):
         if func.cls_name:
             f_args = f_args[1:]
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
+            # Collect dict of keywords and values (initialised as default)
+            f_args_dict = {a.name: (a.name, a.value) if a.has_default \
+                    else None for a in f_args}
             keyword_args = []
             for i,a in enumerate(args):
-                if not isinstance(a, (ValuedVariable, ValuedFunctionAddress)):
+                if a.keyword is None:
+                    # Replace default positional arguments with provided arguments
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
                     break
 
             for a in keyword_args:
-                f_args_dict[a.name] = a.value
+                # Replace default arguments with provided keyword arguments
+                f_args_dict[a.keyword] = a
 
-            args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
+            args = [FunctionCallArgument(keyword=a[0], value=a[1]) if isinstance(a, tuple) else a for a in f_args_dict.values()]
 
-        args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
+        # Handle function as argument
+        arg_vals = [None if a is None else a.value for a in args]
+        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results, []), keyword=a.keyword)
+                if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
@@ -1818,22 +1868,33 @@ class FunctionCall(PyccelAstNode):
 
     @property
     def args(self):
+        """ List of FunctionCallArguments provided to the function call
+        (contains default values after semantic stage)
+        """
         return self._arguments
 
     @property
     def funcdef(self):
+        """ The function called by this function call
+        """
         return self._funcdef
 
     @property
     def interface(self):
+        """ The interface called by this function call
+        """
         return self._interface
 
     @property
     def func_name(self):
+        """ The name of the function called by this function call
+        """
         return self._func_name
 
     @property
     def interface_name(self):
+        """ The name of the interface called by this function call
+        """
         return self._interface_name
 
     def __repr__(self):
@@ -1975,13 +2036,13 @@ class FunctionDef(Basic):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
 
-    One can also use parametrized argument, using ValuedArgument
+    One can also use parametrized argument, using FunctionDefArgument
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Assign
     >>> from pyccel.ast.core import FunctionDef
-    >>> from pyccel.ast.core import ValuedArgument
-    >>> n = ValuedArgument('n', 4)
+    >>> from pyccel.ast.core import FunctionDefArgument
+    >>> n = FunctionDefArgument('n', value=4)
     >>> x = Variable('real', 'x')
     >>> y = Variable('real', 'y')
     >>> args        = [x, n]
@@ -2040,11 +2101,7 @@ class FunctionDef(Basic):
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
 
-        # TODO improve and uncomment
-#        if not all(isinstance(a, Argument) for a in arguments):
-#            raise TypeError("All arguments must be of type Argument")
-
-        arguments = tuple(arguments)
+        arguments = tuple(a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in arguments)
 
         # body
 
@@ -2434,12 +2491,14 @@ class Interface(Basic):
             j += 1
             found = True
             for (x, y) in enumerate(args):
-                dtype1 = str_dtype(y.dtype)
-                dtype2 = str_dtype(i[x].dtype)
+                func_arg = i[x].var
+                call_arg = y.value
+                dtype1 = str_dtype(call_arg.dtype)
+                dtype2 = str_dtype(func_arg.dtype)
                 found = found and (dtype1 in dtype2
                                 or dtype2 in dtype1)
-                found = found and y.rank \
-                                == i[x].rank
+                found = found and call_arg.rank \
+                                == func_arg.rank
             if found:
                 break
 
@@ -2541,33 +2600,6 @@ class FunctionAddress(FunctionDef):
     @property
     def is_optional(self):
         return self._is_optional
-
-class ValuedFunctionAddress(FunctionAddress):
-
-    """Represents a valued function address in the code.
-
-    Parameters
-    ----------
-    value: instance of FunctionDef or FunctionAddress
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, ValuedFunctionAddress, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> f = FunctionDef('f', [], [], [])
-    >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
-    """
-    __slots__ = ('_value')
-    _attribute_nodes = (*FunctionAddress._attribute_nodes, '_value')
-
-    def __init__(self, *args, **kwargs):
-        self._value = kwargs.pop('value', Nil())
-        super().__init__(*args, **kwargs)
-
-    @property
-    def value(self):
-        return self._value
 
 class SympyFunction(FunctionDef):
 
@@ -3155,6 +3187,8 @@ class Declare(Basic):
         """
         return self._passed_from_dotted
 
+    def __repr__(self):
+        return 'Declare({})'.format(repr(self.variable))
 
 class Break(Basic):
 
@@ -3571,97 +3605,6 @@ class StarredArguments(Basic):
     @property
     def args_var(self):
         return self._starred_obj
-
-
-# ...
-
-# ...
-
-def get_initial_value(expr, var):
-    """Returns the first assigned value to var in the Expression expr.
-
-    Parameters
-    ----------
-    expr: Expression
-        any AST valid expression
-
-    var: str, Variable, DottedName, list, tuple
-        variable name
-    """
-
-    # ...
-
-    def is_None(expr):
-        """Returns True if expr is None or Nil()."""
-
-        return isinstance(expr, Nil) or expr is None
-
-    # ...
-
-    # ...
-
-    if isinstance(var, str):
-        return get_initial_value(expr, [var])
-    elif isinstance(var, DottedName):
-
-        return get_initial_value(expr, [str(var)])
-    elif isinstance(var, Variable):
-
-        return get_initial_value(expr, [var.name])
-    elif not isinstance(var, (list, tuple)):
-
-        raise TypeError('Expecting var to be str, list, tuple or Variable, given {0}'.format(type(var)))
-
-    # ...
-
-    # ...
-
-    if isinstance(expr, ValuedVariable):
-        if expr.variable.name in var:
-            return expr.value
-    elif isinstance(expr, Variable):
-
-        # expr.cls_base if of type ClassDef
-
-        if expr.cls_base:
-            return get_initial_value(expr.cls_base, var)
-    elif isinstance(expr, Assign):
-
-        if str(expr.lhs) in var:
-            return expr.rhs
-    elif isinstance(expr, FunctionDef):
-
-        value = get_initial_value(expr.body, var)
-        if not is_None(value):
-            r = get_initial_value(expr.arguments, value)
-            if 'self._linear' in var:
-                print ('>>>> ', var, value, r)
-            if not r is None:
-                return r
-        return value
-
-    elif isinstance(expr, ConstructorCall):
-
-        return get_initial_value(expr.func, var)
-    elif isinstance(expr, (list, tuple)):
-
-        for i in expr:
-            value = get_initial_value(i, var)
-
-            # here we make a difference between None and Nil,
-            # since the output of our function can be None
-
-            if not value is None:
-                return value
-    elif isinstance(expr, ClassDef):
-
-        methods = expr.methods_as_dict
-        init_method = methods['__init__']
-        return get_initial_value(init_method, var)
-
-    # ...
-
-    return Nil()
 
 
 # ...
