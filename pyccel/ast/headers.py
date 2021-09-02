@@ -7,8 +7,8 @@
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
-from .core              import Assign, FunctionDefArgument
-from .core              import FunctionDef, Interface, FunctionAddress
+from .core              import Assign, FunctionCallArgument
+from .core              import FunctionDef, FunctionCall, FunctionAddress
 from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
 from .internals         import PyccelSymbol, Slice
@@ -621,9 +621,9 @@ class MacroFunction(Header):
         if not isinstance(name, str):
             raise TypeError('name must be of type str or PyccelSymbol')
 
-        # master can be a string or FunctionDef
-        if not isinstance(master, (str, FunctionDef, Interface)):
-            raise ValueError('Expecting a master name of FunctionDef')
+        # master can be a string or FunctionCall
+        if not isinstance(master, (str, FunctionCall)):
+            raise ValueError('Expecting a function name, or a FunctionCall')
 
         self._name              = name
         self._arguments         = args
@@ -787,36 +787,34 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg, FunctionDefArgument):
-                arg_name = arg.name
+            value = arg.value
+            if isinstance(value, Variable):
+                arg_name = value.name
                 if arg_name in result_keys:
-                    new = d_results[arg_name]
+                    new_value = d_results[arg_name]
 
                 elif arg_name in argument_keys:
-                    new = d_arguments[arg_name]
-
-                elif arg.has_default:
-                    new = arg.value
+                    new_value = d_arguments[arg_name]
 
                 else:
                     raise ValueError('Missing argument')
 
-            elif isinstance(arg, Macro):
-                if arg.argument in result_keys:
-                    new = d_results[arg.argument]
-                elif arg.argument in argument_keys:
-                    new = d_arguments[arg.argument]
+            elif isinstance(value, Macro):
+                if value.argument in result_keys:
+                    new_value = d_results[value.argument]
+                elif value.argument in argument_keys:
+                    new_value = d_arguments[value.argument]
                 else:
                     raise ValueError('Unknown variable name')
 
                 if isinstance(arg, MacroShape):
-                    new = MacroShape(new, arg.index)
+                    new_value = MacroShape(new_value, value.index)
                 else:
-                    new = construct_macro(arg.name, new)
+                    new_value = construct_macro(value.name, new_value)
             else:
-                new = arg
+                new_value = value
 
-            newargs[i] = new
+            newargs[i] = FunctionCallArgument(new_value)
         return newargs
 
     def make_necessary_copies(self, args, results):

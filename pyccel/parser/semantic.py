@@ -2133,18 +2133,18 @@ class SemanticParser(BasicParser):
 
                 # TODO check types from FunctionDef
                 master = macro.master
-                name = _get_name(master.name)
                 results = []
                 args = [self._visit(i, **settings) for i in rhs.args]
-                args_names = [arg.name for arg in args if isinstance(arg, Variable)]
+                args_names = [arg.value.name for arg in args if isinstance(arg.value, Variable)]
+                d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
+                                  if isinstance(arg.value, Variable)}
 
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
                 results_shapes = macro.get_results_shapes(args)
                 for m_result, shape, result in zip(macro.results, results_shapes, lhs):
-                    if m_result in macro.master_arguments and not result in args_names:
-                        index = macro.master_arguments.index(m_result)
-                        d_result = self._infere_type(master.arguments[index])
+                    if m_result in d_m_args and not result in args_names:
+                        d_result = self._infere_type(d_m_args[m_result])
                         d_result['shape'] = shape
                         tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False, **settings)
                         results.append(tmp)
@@ -2161,8 +2161,8 @@ class SemanticParser(BasicParser):
                 expr = macro.make_necessary_copies(args, results)
                 new_expressions += expr
                 args = macro.apply(args, results=results)
-                if isinstance(master, FunctionDef):
-                    func_call = FunctionCall(master, args, self._current_function)
+                if isinstance(master.funcdef, FunctionDef):
+                    func_call = FunctionCall(master.funcdef, args, self._current_function)
                     if new_expressions:
                         return CodeBlock([*new_expressions, func_call])
                     else:
@@ -3514,17 +3514,17 @@ class SemanticParser(BasicParser):
         args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
 
         def get_arg(func_arg, master_arg):
-            if isinstance(master_arg, FunctionDefArgument):
-                return FunctionDefArgument(func_arg.var.clone(master_arg.name), value = master_arg.default)
+            if isinstance(master_arg, PyccelSymbol):
+                return FunctionCallArgument(func_arg.var.clone(str(master_arg)))
             else:
-                return FunctionDefArgument(func_arg.var.clone(str(master_arg)))
+                return FunctionCallArgument(master_arg)
 
-        master_args = [get_arg(a,m) if isinstance(m, PyccelSymbol) else m
-                        for a,m in zip(func.arguments, expr.master_arguments)]
+        master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
 
         results = expr.results
         results_shapes = expr.results_shapes
-        macro   = MacroFunction(name, args, func, master_args,
+        master = FunctionCall(func, master_args)
+        macro   = MacroFunction(name, args, master, master_args,
                                 results=results, results_shapes=results_shapes)
         self.insert_macro(macro)
 
