@@ -58,6 +58,12 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: Test MPI
+        run: |
+          echo "$env:GITHUB_PATH"
+          python -m pytest internal/test_internal.py::test_mpi -sxv
+        shell: bash
+        working-directory: ./tests
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
