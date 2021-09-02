@@ -5,7 +5,6 @@
 #      execute the binary file
 
 import os
-import sys
 import pytest
 from pyccel.codegen.pipeline import execute_pyccel
 
