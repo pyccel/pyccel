@@ -2068,7 +2068,7 @@ class SemanticParser(BasicParser):
 
             macro = self.get_macro(name)
             if macro is not None:
-                func = macro.master
+                func = macro.master.funcdef
                 name = _get_name(func.name)
                 args = macro.apply(args)
             else:

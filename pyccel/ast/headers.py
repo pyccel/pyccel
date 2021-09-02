@@ -807,13 +807,12 @@ class MacroFunction(Header):
                 else:
                     raise ValueError('Unknown variable name')
 
-                if isinstance(arg, MacroShape):
+                if isinstance(value, MacroShape):
                     new_value = MacroShape(new_value, value.index)
                 else:
                     new_value = construct_macro(value.name, new_value)
             else:
                 new_value = value
-
             newargs[i] = FunctionCallArgument(new_value)
         return newargs
 
