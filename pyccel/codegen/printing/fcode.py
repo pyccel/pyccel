@@ -2791,7 +2791,21 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>72 and not splitQuotes and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
+            if len(line)>72 and splitQuotes:
+                pos = 72
+                substrings = []
+                while len(line) > 0:
+                    hunk = line[:pos].rstrip()
+                    line = line[pos:].lstrip()
+                    substrings.append(hunk)
+                for i,substring in enumerate(substrings):
+                    if i == 0:
+                        result.append(substring+'&')
+                    elif i == len(substrings)-1:
+                        result.append('&'+substring)
+                    else:
+                        result.append('&'+substring+'&')
+            elif len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
                 result.append(line)
             elif len(line)>72:
                 # code line
@@ -2807,10 +2821,7 @@ class FCodePrinter(CodePrinter):
                     line = line[pos:].lstrip()
                     if line:
                         hunk += trailing
-                    if splitQuotes:
-                        result.append("&%s%s"%("      " , hunk))
-                    else:
-                        result.append("%s%s"%("      " , hunk))
+                    result.append("%s%s"%("      " , hunk))
             else:
                 result.append(line)
 
