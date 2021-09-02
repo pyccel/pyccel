@@ -473,14 +473,14 @@ class FCodePrinter(CodePrinter):
 
         def formatted_args_to_print(args_format, args, end):
             if args_format == ['*']:
-                return ''.join(self._wrap_fortran([', '.join(['print *', *args]) + '\n']))
+                return ''.join(self._wrap_fortran([', '.join(['print *', *args]) + '\n'], splitQuotes=True))
             args_format = ' A '.join(args_format)
             new_line = "yes" if end.count('\n') > 0 else "no"
             end = end.replace('\n', '')
             args_code = ', " " ,'.join([*args])
             if end != '':
-                return ''.join(self._wrap_fortran(["write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)]))
-            return ''.join(self._wrap_fortran(["write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)]))
+                return ''.join(self._wrap_fortran(["write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)], splitQuotes=True))
+            return ''.join(self._wrap_fortran(["write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)], splitQuotes=True))
 
         if len(orig_args) == 0:
             return formatted_args_to_print(args_format, args, end)
@@ -2758,7 +2758,7 @@ class FCodePrinter(CodePrinter):
 
 #=======================================================================================
 
-    def _wrap_fortran(self, lines):
+    def _wrap_fortran(self, lines, **kwargs):
         """Wrap long Fortran lines
 
            Argument:
@@ -2770,6 +2770,7 @@ class FCodePrinter(CodePrinter):
         # routine to find split point in a code line
         my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
+        splitQuotes = 'splitQuotes' in kwargs
 
         def split_pos_code(line, endpos):
             if len(line) <= endpos:
@@ -2790,12 +2791,10 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
+            if len(line)>72 and not splitQuotes and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
                 result.append(line)
-
             elif len(line)>72:
                 # code line
-
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
                 line = line[pos:].lstrip()
@@ -2808,7 +2807,10 @@ class FCodePrinter(CodePrinter):
                     line = line[pos:].lstrip()
                     if line:
                         hunk += trailing
-                    result.append("%s%s"%("      " , hunk))
+                    if splitQuotes:
+                        result.append("&%s%s"%("      " , hunk))
+                    else:
+                        result.append("%s%s"%("      " , hunk))
             else:
                 result.append(line)
 
