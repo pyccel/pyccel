@@ -60,7 +60,6 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Test MPI
         run: |
-          echo "$PATH"
           python -m pytest internal/test_internal.py::test_mpi -sxv
         shell: bash
         working-directory: ./tests
