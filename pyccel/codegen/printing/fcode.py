@@ -2791,8 +2791,8 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>72 and splitQuotes:
-                pos = 72
+            if len(line)>68 and splitQuotes:
+                pos = 68
                 substrings = []
                 while len(line) > 0:
                     hunk = line[:pos].rstrip()
