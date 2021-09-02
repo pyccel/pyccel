@@ -117,7 +117,7 @@ class Codegen(object):
 
     @property
     def is_module(self):
-        """Returns True if a Program."""
+        """Returns True if a Module."""
 
         return self._is_module
 

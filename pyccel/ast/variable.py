@@ -173,7 +173,7 @@ class Variable(PyccelAstNode):
         self._is_optional = is_optional
 
         if not isinstance(is_private, bool):
-            raise TypeError('is_optional must be a boolean.')
+            raise TypeError('is_private must be a boolean.')
         self._is_private = is_private
 
         if not isinstance(allows_negative_indexes, bool):
