@@ -31,6 +31,7 @@ gfort_info = {'exec' : 'gfortran',
               'family': 'GNU',
               }
 if sys.platform == "win32":
+    gfort_info['mpi_exec'] = 'gfortran'
     gfort_info['mpi']['flags'] = ('-D','USE_MPI_MODULE')
     gfort_info['mpi']['includes'] = (os.environ["MSMPI_INC"].rstrip('\\'),)
     gfort_info['mpi']['libs'] = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
