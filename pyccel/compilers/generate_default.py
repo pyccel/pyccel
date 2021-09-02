@@ -100,6 +100,8 @@ gcc_info = {'exec' : 'gcc',
             'release_flags': ("-O3","-funroll-loops",),
             'general_flags' : ('-fPIC',),
             'standard_flags' : ('-std=c99',),
+            'mpi': {
+                },
             'openmp': {
                 'flags' : ('-fopenmp',),
                 'libs'  : ('gomp',),
