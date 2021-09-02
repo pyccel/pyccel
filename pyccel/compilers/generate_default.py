@@ -113,6 +113,13 @@ gcc_info = {'exec' : 'gcc',
 if sys.platform == "darwin":
     gcc_info['openmp']['flags'] = ("-Xpreprocessor",'-fopenmp')
     gcc_info['openmp']['libs'] = ('omp',)
+elif sys.platform == "win32":
+    gfort_info['mpi_exec'] = 'gcc'
+    gfort_info['mpi']['flags']        = ('-D','USE_MPI_MODULE')
+    gfort_info['mpi']['libs']         = ('msmpi',)
+    gfort_info['mpi']['includes']     = (os.environ["MSMPI_INC"].rstrip('\\'),)
+    gfort_info['mpi']['libdirs']      = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
+    gfort_info['mpi']['dependencies'] = (os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'),)
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icc',
