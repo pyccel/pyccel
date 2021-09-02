@@ -473,14 +473,14 @@ class FCodePrinter(CodePrinter):
 
         def formatted_args_to_print(args_format, args, end):
             if args_format == ['*']:
-                return ', '.join(['print *', *args]) + '\n'
+                return ''.join(self._wrap_fortran([', '.join(['print *', *args]) + '\n']))
             args_format = ' A '.join(args_format)
             new_line = "yes" if end.count('\n') > 0 else "no"
             end = end.replace('\n', '')
             args_code = ', " " ,'.join([*args])
             if end != '':
-                return "write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)
-            return "write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)
+                return ''.join(self._wrap_fortran(["write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)]))
+            return ''.join(self._wrap_fortran(["write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)]))
 
         if len(orig_args) == 0:
             return formatted_args_to_print(args_format, args, end)
