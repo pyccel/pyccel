@@ -901,12 +901,12 @@ class CWrapperCodePrinter(CCodePrinter):
         function_defs = '\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                        for f in self._cast_functions_dict.values())
-        method_def_func = ',\n'.join(('{{\n'
+        method_def_func = ''.join(('{{\n'
                                      '"{name}",\n'
                                      '(PyCFunction){wrapper_name},\n'
                                      'METH_VARARGS | METH_KEYWORDS,\n'
                                      '{doc_string}\n'
-                                     '}}').format(
+                                     '}},\n').format(
                                             name = f.name,
                                             wrapper_name = self._function_wrapper_names[f.name],
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
@@ -915,7 +915,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
-                        '{method_def_func},\n'
+                        '{method_def_func}'
                         '{{ NULL, NULL, 0, NULL}}\n'
                         '}};\n'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
 
