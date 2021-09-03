@@ -190,7 +190,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_func : FunctionDef
         """
         if self._target_language == 'fortran':
-            static_func = as_static_function(function, self._module_name)
+            static_func = as_static_function(function)
         else:
             static_func = function
 
@@ -1019,7 +1019,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
         if self._target_language == 'fortran':
-            static_funcs = [as_static_function(f, expr.name) for f in expr.funcs]
+            static_funcs = [self.get_static_function(f) for f in expr.funcs]
         else:
             static_funcs = expr.funcs
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
