@@ -116,12 +116,6 @@ class Codegen(object):
         return self._stmts['modules']
 
     @property
-    def is_module(self):
-        """Returns True if a Module."""
-
-        return self._is_module
-
-    @property
     def is_program(self):
         """Returns True if a Program."""
 
@@ -193,8 +187,6 @@ class Codegen(object):
         """Finds the source code kind."""
 
         self._is_program = self.ast.program is not None
-        # TODO: Expand this definition as we improve the cwrapper
-        self._is_module  = len(self.ast.funcs) + len(self.ast.interfaces) - bool(self.ast.init_func)>0
 
     def doprint(self, **settings):
         """Prints the code in the target language."""
