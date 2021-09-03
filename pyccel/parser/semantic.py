@@ -1665,10 +1665,14 @@ class SemanticParser(BasicParser):
         if init_func:
             free_func_name = self.get_new_name(expr.name+'__free')
             deallocs = self._garbage_collector(init_func.body)
-            if deallocs:
+            import_frees = [self.d_parsers[imp].semantic_parser.ast.free_func \
+                            for imp in self._namespace.imports['imports'] \
+                             if imp in self.d_parsers]
+            if deallocs or import_frees:
                 init_var = variables[-1].lhs
+                import_free_calls = [FunctionCall(f,[],[]) for f in import_frees]
                 free_func_body = If(IfSection(init_var,
-                    deallocs+[Assign(init_var, LiteralFalse())]))
+                    import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
                                     global_vars = variables)
                 self.create_new_function_scope(free_func_name, [])
@@ -1680,8 +1684,8 @@ class SemanticParser(BasicParser):
                 import_init  = FunctionCall(init_func,[],[])
                 program_body = [import_init, *program_body]
             if free_func:
-                import_init  = FunctionCall(free_func,[],[])
-                program_body = [*program_body, free_func]
+                import_free  = FunctionCall(free_func,[],[])
+                program_body = [*program_body, import_free]
             container = self._program_namespace
             program = Program(prog_name,
                             self.get_variables(container),
@@ -3544,6 +3548,7 @@ class SemanticParser(BasicParser):
 
             p       = self.d_parsers[source_target]
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
+            import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
                 targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
@@ -3591,6 +3596,9 @@ class SemanticParser(BasicParser):
             if import_init:
                 result  = FunctionCall(import_init,[],[])
                 targets.add(import_init.name)
+
+            if import_free:
+                targets.add(import_free.name)
 
             expr = Import(expr.source, targets)
 
