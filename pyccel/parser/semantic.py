@@ -65,7 +65,7 @@ from pyccel.ast.datatypes import (NativeInteger, NativeBool,
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
-from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import Slice, PyccelSymbol
@@ -1648,7 +1648,7 @@ class SemanticParser(BasicParser):
         free_func = None
         program   = None
 
-        comment_types = (FunctionHeader, MacroFunction, EmptyNode, Comment, CommentBlock)
+        comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
 
         if not all(isinstance(l, comment_types) for l in init_func_body):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
