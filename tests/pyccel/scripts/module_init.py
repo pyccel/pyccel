@@ -3,6 +3,9 @@
 def f():
     print("Hello")
 
+def g():
+    print("Universe")
+
 f()
 print("World!")
 f()
