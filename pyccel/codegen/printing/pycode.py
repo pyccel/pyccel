@@ -58,7 +58,7 @@ class PythonCodePrinter(CodePrinter):
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}
-        self._init_funcs = []
+        self._ignore_funcs = []
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
@@ -391,7 +391,7 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        if expr.funcdef in self._init_funcs:
+        if expr.funcdef in self._ignore_funcs:
             return ''
         if expr.interface:
             func_name = expr.interface_name
@@ -410,7 +410,7 @@ class PythonCodePrinter(CodePrinter):
         if p:
             init_func = p.semantic_parser.ast.init_func
             if init_func:
-                self._init_funcs.append(init_func)
+                self._ignore_funcs.append(init_func)
                 init_func_name = init_func.name
         if not expr.target:
             source = self._print(expr.source)
@@ -710,14 +710,15 @@ class PythonCodePrinter(CodePrinter):
         imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
         # Collect functions which are not in an interface
-        funcs = [f for f in expr.funcs if not (any(f in i.functions for i in expr.interfaces) or f is expr.init_func)]
+        funcs = [f for f in expr.funcs if not (any(f in i.functions for i in expr.interfaces) \
+                        or f is expr.init_func or f is expr.free_func)]
         funcs = ''.join(self._print(f) for f in funcs)
         classes = ''.join(self._print(c) for c in expr.classes)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
         init_func = expr.init_func
         if init_func:
-            self._init_funcs.append(init_func)
+            self._ignore_funcs.append(init_func)
             # Collect initialisation body
             init_if = init_func.get_attribute_nodes(IfSection)[0]
             # Remove boolean from init_body
@@ -725,6 +726,10 @@ class PythonCodePrinter(CodePrinter):
             init_body = ''.join(self._print(l) for l in init_body)
         else:
             init_body = ''
+
+        free_func = expr.free_func
+        if free_func:
+            self._ignore_funcs.append(free_func)
 
         body = ''.join((interfaces, funcs, classes, init_body))
 
