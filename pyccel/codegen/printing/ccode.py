@@ -16,7 +16,7 @@ from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
-from pyccel.ast.core      import Assign, datatype, Import, AugAssign, AliasAssign
+from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -25,7 +25,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
-from pyccel.ast.datatypes import NativeReal, NativeTuple, NativeString
+from pyccel.ast.datatypes import NativeReal, NativeTuple, NativeString, datatype
 
 from pyccel.ast.internals import Slice
 
@@ -792,7 +792,7 @@ class CCodePrinter(CodePrinter):
                     errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
                 self._additional_imports.add('ndarrays')
                 return 't_ndarray '
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr,severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
