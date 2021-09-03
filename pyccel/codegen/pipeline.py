@@ -18,20 +18,13 @@ from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
+from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.python_wrapper import create_shared_library
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler
 
 __all__ = ['execute_pyccel']
-
-# map internal libraries to their folders inside pyccel/stdlib and their compile objects
-# The compile object folder will be in the pyccel dirpath
-internal_libs = {
-    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
-    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
-    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
-}
 
 #==============================================================================
 # NOTE:
