@@ -1626,7 +1626,6 @@ class SemanticParser(BasicParser):
         prog_name = self.get_new_name('prog_'+expr.name)
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name)
-        self._allocs.append([])
 
         for b in body:
             if isinstance(b, If):
@@ -1667,7 +1666,7 @@ class SemanticParser(BasicParser):
             free_func_name = self.get_new_name(expr.name+'__free')
             deallocs = self._garbage_collector(init_func.body)
             if deallocs:
-                init_var = variables[-1]
+                init_var = variables[-1].lhs
                 free_func_body = If(IfSection(init_var,
                     deallocs+[Assign(init_var, LiteralFalse())]))
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
