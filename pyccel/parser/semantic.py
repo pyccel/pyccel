@@ -3544,7 +3544,7 @@ class SemanticParser(BasicParser):
             # TODO shall we improve it?
 
             p       = self.d_parsers[source_target]
-            import_init = p.semantic_parser.ast.init_func
+            import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             if expr.target:
                 targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
