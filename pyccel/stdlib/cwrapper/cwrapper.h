@@ -28,22 +28,7 @@
 # define NO_TYPE_CHECK -1
 # define NO_ORDER_CHECK -1
 
-
-/*
- * Function: pyarray_checker
- * --------------------
- * Check Python Object (DataType, Rank, Order):
- *
- * Parameters :
- *     a 	 : python array object
- *     dtype : desired data type enum
- *     rank  : desired rank
- *     flag  : desired order flag
- *
- * Returns	  :
- *     return true if no error occurred otherwise it will return false
- */
-bool	pyarray_checker(PyArrayObject *o, int dtype, int rank, int flag);
+extern const char* dataTypes[17];
 
 /*
  * Functions : Cast functions
