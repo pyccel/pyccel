@@ -1670,7 +1670,7 @@ class SemanticParser(BasicParser):
                              if imp in self.d_parsers]
             if deallocs or import_frees:
                 init_var = variables[-1].lhs
-                import_free_calls = [FunctionCall(f,[],[]) for f in import_frees]
+                import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
