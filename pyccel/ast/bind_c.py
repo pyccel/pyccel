@@ -9,7 +9,6 @@ from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
-from pyccel.ast.core import AsName
 from pyccel.ast.variable import Variable
 
 __all__ = (
@@ -23,7 +22,7 @@ __all__ = (
 def sanitize_arguments(args):
     _args = []
     for a in args:
-        if isinstance(a, (Variable, FunctionAddress)):
+        if isinstance(a.var, (Variable, FunctionAddress)):
             _args.append(a)
 
         else:
@@ -61,6 +60,7 @@ def as_static_function(func, name=None):
     _arguments_inout = []
 
     for i_a, a in enumerate(args):
+        a = a.var
         if not isinstance(a, (Variable, FunctionAddress)):
             raise TypeError('Expecting a Variable or FunctionAddress type for {}'.format(a))
         if not isinstance(a, FunctionAddress) and a.rank > 0:

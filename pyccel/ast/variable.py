@@ -14,8 +14,7 @@ from pyccel.errors.errors import Errors
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeGeneric,
-                        default_precision)
+                        NativeComplex, default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -28,7 +27,6 @@ __all__ = (
     'DottedVariable',
     'IndexedElement',
     'TupleVariable',
-    'ValuedVariable',
     'Variable',
     'VariableAddress'
 )
@@ -213,6 +211,8 @@ class Variable(PyccelAstNode):
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        if self._rank < 2:
+            self._order = None
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -249,6 +249,13 @@ class Variable(PyccelAstNode):
         Indicates if the shape can change in the i-th dimension
         """
         return self.is_pointer
+
+    def set_changeable_shape(self):
+        """
+        Indicate that the exact shape is unknown, e.g. if the allocate is done in
+        an If block.
+        """
+        self._shape = [PyccelArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
 
     @property
     def name(self):
@@ -529,44 +536,6 @@ class DottedName(Basic):
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
 
-class ValuedVariable(Variable):
-
-    """Represents a valued variable in the code.
-
-    Parameters
-    ----------
-    variable: Variable
-        A single variable
-    value: Variable, or instance of Native types
-        value associated to the variable
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import ValuedVariable
-    >>> n  = ValuedVariable('int', 'n', value=4)
-    >>> n
-    n := 4
-    """
-    __slots__ = ('_value',)
-    _attribute_nodes = ('_value',)
-
-    def __init__(self, *args, **kwargs):
-
-        # if value is not given, we set it to Nil
-        self._value = kwargs.pop('value', Nil())
-        super().__init__(*args, **kwargs)
-
-    @property
-    def value(self):
-        """ Default value of the variable
-        """
-        return self._value
-
-    def __str__(self):
-        name = str(self.name)
-        value = str(self.value)
-        return '{0}={1}'.format(name, value)
-
 class TupleVariable(Variable):
 
     """Represents a tuple variable in the code.
@@ -586,6 +555,10 @@ class TupleVariable(Variable):
     n
     """
     __slots__ = ()
+
+    @property
+    def is_ndarray(self):
+        return False
 
 class HomogeneousTupleVariable(TupleVariable):
 
@@ -705,7 +678,8 @@ class InhomogeneousTupleVariable(TupleVariable):
             raise TypeError('allocatable must be a boolean.')
         self._allocatable = allocatable
         for var in self._vars:
-            var.allocatable = allocatable
+            if var.rank > 0:
+                var.allocatable = allocatable
 
     @Variable.is_pointer.setter
     def is_pointer(self, is_pointer):
@@ -713,7 +687,8 @@ class InhomogeneousTupleVariable(TupleVariable):
             raise TypeError('is_pointer must be a boolean.')
         self._is_pointer = is_pointer
         for var in self._vars:
-            var.is_pointer = is_pointer
+            if var.rank > 0:
+                var.is_pointer = is_pointer
 
     @Variable.is_target.setter
     def is_target(self, is_target):
@@ -721,19 +696,47 @@ class InhomogeneousTupleVariable(TupleVariable):
             raise TypeError('is_target must be a boolean.')
         self._is_target = is_target
         for var in self._vars:
-            var.is_target = is_target
+            if var.rank > 0:
+                var.is_target = is_target
 
-class Constant(ValuedVariable):
+class Constant(Variable):
 
     """
+    Class for expressing constant values (e.g. pi)
+
+    Parameters
+    ----------
+    *args, **kwargs : See pyccel.ast.variable.Variable
+
+    value : Type matching dtype
+            The value that the constant represents
 
     Examples
     --------
+    >>> from pyccel.ast.variable import Constant
+    >>> import math
+    >>> Constant('real', 'pi' , value=math.pi )
+    Constant('pi', dtype=NativeReal())
 
     """
-    __slots__ = ()
+    __slots__ = ('_value',)
     # The value of a constant is not a translated object
     _attribute_nodes = ()
+
+    def __init__(self, *args, value = Nil(), **kwargs):
+        self._value = value
+        super().__init__(*args, **kwargs)
+
+    @property
+    def value(self):
+        """ Immutable value of the constant
+        """
+        return self._value
+
+    def __str__(self):
+        name = str(self.name)
+        value = str(self.value)
+        return '{0}={1}'.format(name, value)
 
 
 

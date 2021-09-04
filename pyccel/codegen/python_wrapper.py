@@ -4,44 +4,30 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import sys
-import subprocess
 import os
-import glob
-import warnings
-from filelock import FileLock
 
 from pyccel.ast.bind_c                      import as_static_module
-from pyccel.ast.core                        import SeparatorComment
+from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
-from pyccel.codegen.utilities               import compile_files, get_gfortran_library_dir
-from .cwrapper import create_c_setup
+from pyccel.codegen.utilities      import recompile_object
+from pyccel.codegen.utilities      import copy_internal_library
+from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-__all__ = ['create_shared_library', 'fortran_c_flag_equivalence']
-
-#==============================================================================
-
-PY_VERSION = sys.version_info[0:2]
-
-fortran_c_flag_equivalence = {'-Wconversion-extra' : '-Wconversion' }
+__all__ = ['create_shared_library']
 
 #==============================================================================
 def create_shared_library(codegen,
+                          main_obj,
                           language,
+                          wrapper_flags,
                           pyccel_dirpath,
-                          compiler,
-                          mpi_compiler,
-                          accelerator,
-                          dep_mods,
-                          libs,
-                          libdirs,
-                          includes='',
-                          flags = '',
+                          src_compiler,
+                          wrapper_compiler,
                           sharedlib_modname=None,
                           verbose = False):
 
@@ -60,108 +46,96 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    sharedlib_folder = ''
+    wrapper_filename_root = '{}_wrapper'.format(module_name)
+    wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    wrapper_compile_obj = CompileObj(wrapper_filename,
+            pyccel_dirpath,
+            flags        = wrapper_flags,
+            dependencies = (main_obj,),
+            accelerators = ('python',))
 
-    if language in ['c', 'fortran']:
-        extra_libs = []
-        extra_libdirs = []
-        if language == 'fortran':
-            # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
-            new_module_name = 'bind_c_{}'.format(module_name)
-            bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
-            bind_c_code = fcode(bind_c_mod, codegen.parser)
-            bind_c_filename = '{}.f90'.format(new_module_name)
+    if language == 'fortran':
+        # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
+        new_module_name = 'bind_c_{}'.format(module_name)
+        bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
+        bind_c_code = fcode(bind_c_mod, codegen.parser)
+        bind_c_filename = '{}.f90'.format(new_module_name)
 
-            with open(bind_c_filename, 'w') as f:
-                f.writelines(bind_c_code)
+        with open(bind_c_filename, 'w') as f:
+            f.writelines(bind_c_code)
 
-            compile_files(bind_c_filename, compiler, flags,
-                binary=None,
-                verbose=verbose,
-                is_module=True,
-                output=pyccel_dirpath,
-                libs=libs,
-                libdirs=libdirs,
-                language=language)
+        bind_c_obj=CompileObj(file_name = bind_c_filename,
+                folder = pyccel_dirpath,
+                flags  = main_obj.flags,
+                is_module = True,
+                dependencies = (main_obj,))
+        wrapper_compile_obj.add_dependencies(bind_c_obj)
+        src_compiler.compile_module(compile_obj=bind_c_obj,
+                output_folder=pyccel_dirpath,
+                verbose=verbose)
 
-            dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
-            if compiler == 'gfortran':
-                extra_libs.append('gfortran')
-                extra_libdirs.append(get_gfortran_library_dir())
-            elif compiler == 'ifort':
-                extra_libs.append('ifcore')
+    #---------------------------------------
+    #     Compile cwrapper from stdlib
+    #---------------------------------------
+    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
+                                extra_files = {'numpy_version.h' :
+                                                get_numpy_max_acceptable_version_file()})
 
-        if sys.platform == 'win32':
-            extra_libs.append('quadmath')
+    cwrapper_lib = CompileObj("cwrapper.c",
+                        folder=cwrapper_lib_dest_path,
+                        accelerators=('python',))
 
-        module_old_name = codegen.expr.name
-        codegen.expr.set_name(sharedlib_modname)
-        wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
-        if errors.has_errors():
-            return
+    # get the include folder path and library files
+    recompile_object(cwrapper_lib,
+                      compiler = wrapper_compiler,
+                      verbose  = verbose)
 
-        codegen.expr.set_name(module_old_name)
-        wrapper_filename_root = '{}_wrapper'.format(module_name)
-        wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    wrapper_compile_obj.add_dependencies(cwrapper_lib)
+    extra_includes  = ['cwrapper']
 
-        with open(wrapper_filename, 'w') as f:
-            f.writelines(wrapper_code)
+    #--------------------------------------------------------
+    #  Compile cwrapper_ndarrays from stdlib (if necessary)
+    #--------------------------------------------------------
+    ndarrays_target = os.path.join(pyccel_dirpath,'ndarrays','ndarrays.o')
+    ndarrays_dep    = main_obj.get_dependency(ndarrays_target)
+    if ndarrays_dep:
+        cwrapper_ndarrays_lib = CompileObj("cwrapper_ndarrays.c",
+                            folder       = cwrapper_lib_dest_path,
+                            dependencies = (ndarrays_dep,),
+                            accelerators = ('python',))
 
-        c_flags = [fortran_c_flag_equivalence[f] if f in fortran_c_flag_equivalence \
-                else f for f in flags]
+        recompile_object(cwrapper_ndarrays_lib,
+                          compiler = wrapper_compiler,
+                          verbose  = verbose)
 
-        if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
-            idx = 0
-            while idx < len(c_flags):
-                if c_flags[idx] == "-fopenmp":
-                    c_flags.insert(idx, "-Xpreprocessor")
-                    idx += 1
-                idx += 1
+        wrapper_compile_obj.add_dependencies(cwrapper_ndarrays_lib)
+        extra_includes.append('cwrapper_ndarrays')
 
-        setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
-                dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags)
-        setup_filename = "setup_{}.py".format(module_name)
+    #---------------------------------------
+    #      Print code specific cwrapper
+    #---------------------------------------
+    module_old_name = codegen.expr.name
+    codegen.expr.set_name(sharedlib_modname)
+    wrapper_code = cwrappercode(codegen.expr, codegen.parser, language, extra_includes=extra_includes)
+    if errors.has_errors():
+        return
 
-        with open(setup_filename, 'w') as f:
-            f.writelines(setup_code)
+    codegen.expr.set_name(module_old_name)
 
-        setup_filename = os.path.join(pyccel_dirpath, setup_filename)
-        cmd = [sys.executable, setup_filename, "build"]
-        if sys.platform == 'win32' and compiler in ('gfortran','gcc','ifort','icc'):
-            cmd += ['--compiler=mingw32']
+    with open(wrapper_filename, 'w') as f:
+        f.writelines(wrapper_code)
 
-        if verbose:
-            print(' '.join(cmd))
-        locks = [FileLock(d+'.lock') for d in dep_mods]
-        for l in locks:
-            l.acquire()
-        try:
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-            out, err = p.communicate()
-        finally:
-            for l in locks:
-                l.release()
-        if verbose:
-            print(out)
-        if p.returncode != 0:
-            err_msg = "Failed to build module"
-            err_msg += "\n" + err
-            raise RuntimeError(err_msg)
-        if err:
-            warnings.warn(UserWarning(err))
+    #---------------------------------------
+    #         Compile code
+    #---------------------------------------
+    wrapper_compiler.compile_module(wrapper_compile_obj,
+                                output_folder = pyccel_dirpath,
+                                verbose = verbose)
 
-        sharedlib_folder += 'build/lib*/'
-
-    # Obtain absolute path of newly created shared library
-
-    # Set file name extension of Python extension module
-    if os.name == 'nt':  # Windows
-        extext = 'pyd'
-    else:
-        extext = 'so'
-    pattern = '{}{}*.{}'.format(sharedlib_folder, sharedlib_modname, extext)
-    sharedlib_filename = glob.glob(pattern)[0]
-    sharedlib_filepath = os.path.abspath(sharedlib_filename)
+    sharedlib_filepath = src_compiler.compile_shared_library(wrapper_compile_obj,
+                                                    output_folder = pyccel_dirpath,
+                                                    sharedlib_modname = sharedlib_modname,
+                                                    verbose = verbose)
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)

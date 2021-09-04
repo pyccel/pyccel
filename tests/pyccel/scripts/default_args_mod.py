@@ -26,16 +26,20 @@ def is_nil_default_arg(a = None):
         c = True
     return c
 
+@types('bool')
+def is_not_nil(z = None):
+    c = False
+    if z is not None:
+        c = True
+    return c
+
 @types('real','real','bool')
 def recursivity(x, y = 0.0, z = None):
-    @types('bool')
-    def is_not_nil(z = None):
-        c = False
-        if z is not None:
-            c = True
-        return c
 
     tmp = is_not_nil(z)
     if (tmp):
         y = 2.5
     return x + y
+
+def print_var(n : int = 0):
+    print(n)

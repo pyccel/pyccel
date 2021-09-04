@@ -7,6 +7,9 @@ from numpy import isclose
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
+RTOL = 2e-14
+ATOL = 1e-15
+
 # -----------------------------------------------------------------------------
 
 def test_call_gcd(language):
@@ -61,8 +64,8 @@ def test_call_radians(language):
     f = epyccel(call_radians, language=language)
     x = uniform(low=0.0, high=1e6)
 
-    assert isclose(f(x), call_radians(x), rtol=1e-14, atol=1e-14)
-    assert isclose(f(-x), call_radians(-x), rtol=1e-14, atol=1e-14)
+    assert isclose(f(x), call_radians(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-x), call_radians(-x), rtol=RTOL, atol=ATOL)
 
 # -----------------------------------------------------------------------------
 
@@ -75,8 +78,8 @@ def test_call_degrees(language):
     f = epyccel(call_degrees, language=language)
     x = uniform(low=0.0, high=1e6)
 
-    assert isclose(f(x), call_degrees(x), rtol=1e-14, atol=1e-14)
-    assert isclose(f(-x), call_degrees(-x), rtol=1e-14, atol=1e-14)
+    assert isclose(f(x), call_degrees(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-x), call_degrees(-x), rtol=RTOL, atol=ATOL)
 # -----------------------------------------------------------------------------
 
 def test_call_degrees_i(language):
@@ -88,7 +91,7 @@ def test_call_degrees_i(language):
     f = epyccel(call_degrees_i, language=language)
     x = randint(1e6)
 
-    assert isclose(f(x), call_degrees_i(x), rtol=1e-14, atol=1e-14)
-    assert isclose(f(-x), call_degrees_i(-x), rtol=1e-14, atol=1e-14)
+    assert isclose(f(x), call_degrees_i(x), rtol=RTOL, atol=ATOL)
+    assert isclose(f(-x), call_degrees_i(-x), rtol=RTOL, atol=ATOL)
 
 # -----------------------------------------------------------------------------
