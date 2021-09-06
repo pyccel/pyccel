@@ -402,7 +402,6 @@ class FCodePrinter(CodePrinter):
                  decs,
                  body,
                 'end program {}\n'.format(name)]
-
         return '\n'.join(a for a in parts if a)
 
     def _print_Import(self, expr):
@@ -473,14 +472,14 @@ class FCodePrinter(CodePrinter):
 
         def formatted_args_to_print(args_format, args, end):
             if args_format == ['*']:
-                return ''.join(self._wrap_fortran([', '.join(['print *', *args]) + '\n'], splitQuotes=True))
+                return ', '.join(['print *', *args]) + '\n'
             args_format = ' A '.join(args_format)
             new_line = "yes" if end.count('\n') > 0 else "no"
             end = end.replace('\n', '')
             args_code = ', " " ,'.join([*args])
             if end != '':
-                return ''.join(self._wrap_fortran(["write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)], splitQuotes=True))
-            return ''.join(self._wrap_fortran(["write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)], splitQuotes=True))
+                return "write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)
+            return "write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)
 
         if len(orig_args) == 0:
             return formatted_args_to_print(args_format, args, end)
@@ -2791,22 +2790,36 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>68 and splitQuotes:
-                pos = 68
-                substrings = []
-                while len(line) > 0:
-                    hunk = line[:pos].rstrip()
-                    line = line[pos:].lstrip()
-                    substrings.append(hunk)
-                for i,substring in enumerate(substrings):
-                    if i == 0:
-                        result.append(substring+'&')
-                    elif i == len(substrings)-1:
-                        result.append('&'+substring)
+            if len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
+                pos=[]
+                quote = 0
+                double_quote = 0
+                mine = []
+                for idx, c in enumerate(line):
+                    if c == '\'':
+                        quote += 1
+                    if c == '\"':
+                        double_quote += 1
+                    if c == ' ' and quote%2 == 0 and double_quote %2 == 0 and idx > 72 and (not pos or idx > pos[-1] + 65):
+                        pos.append(idx)
+                last_cut = 0
+                for cut in pos:
+                    hunk = line[:(cut-last_cut)].rstrip()
+                    line = line[(cut-last_cut):].lstrip()
+                    if line:
+                        hunk += trailing
+                    if cut == pos[0]:
+                        result.append(hunk)
+                        mine.append(hunk)
                     else:
-                        result.append('&'+substring+'&')
-            elif len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
-                result.append(line)
+                        result.append("%s%s"%("      " , hunk))
+                        mine.append("%s%s"%("      " , hunk))
+                if not pos:
+                    result.append(line)
+                else:
+                    if line:
+                        result.append("%s%s"%("      " , line))
+                        mine.append("%s%s"%("      " , line))
             elif len(line)>72:
                 # code line
                 pos = split_pos_code(line, 72)
