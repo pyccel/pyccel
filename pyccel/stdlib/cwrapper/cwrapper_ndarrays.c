@@ -136,14 +136,13 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  */
 static bool _check_pyarray_order(PyArrayObject *a, int flag)
 {
-	char	order;
 
 	if (flag == NO_ORDER_CHECK)
 		return true;
 
 	if (!PyArray_CHKFLAGS(a, flag))
 	{
-		order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
+		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
 		PyErr_Format(PyExc_NotImplementedError,
 			"argument does not have the expected ordering (%c)", order);
 		return false;
