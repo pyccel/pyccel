@@ -138,7 +138,10 @@ def test_f11(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
             pytest.mark.c]
@@ -164,7 +167,10 @@ def test_optional_args_1d(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
+            pytest.mark.fortran]
+        ),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
             pytest.mark.c]
