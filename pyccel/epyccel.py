@@ -280,6 +280,10 @@ def epyccel( python_function_or_module, **kwargs ):
         assert isinstance( comm, MPI.Comm )
         assert isinstance( root, int      )
 
+        kwargs.setdefault('accelerators', [])
+        if 'mpi' not in kwargs['accelerators']:
+            kwargs['accelerators'] = [*kwargs['accelerators'], 'mpi']
+
         # Master process calls epyccel
         if comm.rank == root:
             try:
