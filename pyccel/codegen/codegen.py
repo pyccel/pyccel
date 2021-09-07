@@ -60,7 +60,7 @@ class Codegen(object):
             self._stmts[key] = []
 
         self._collect_statements()
-        self._set_kind()
+        self._is_program = self.ast.program is not None
 
 
     @property
@@ -183,10 +183,6 @@ class Codegen(object):
         self._stmts['body']       = self.ast
 
 
-    def _set_kind(self):
-        """Finds the source code kind."""
-
-        self._is_program = self.ast.program is not None
 
     def doprint(self, **settings):
         """Prints the code in the target language."""
