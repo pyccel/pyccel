@@ -475,7 +475,7 @@ class FunctionMacroStmt(BasicStmt):
         """
 
         self.dotted_name = tuple(kwargs.pop('dotted_name'))
-        self.results = kwargs.pop('results',None)
+        self.results = kwargs.pop('results', [])
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -520,12 +520,8 @@ class FunctionMacroStmt(BasicStmt):
             else:
                 NotImplementedError("Unrecognised macro argument type")
 
-        results = []
-        results_shapes = []
-        if self.results:
-            results = [res.expr['name'] for res in self.results]
-            results = [PyccelSymbol(r) for r in results]
-            results_shapes = [res.expr['shape'] for res in self.results]
+        results = [PyccelSymbol(r.expr['name']) for r in self.results]
+        results_shapes = [r.expr['shape'] for r in self.results]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
