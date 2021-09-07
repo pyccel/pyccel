@@ -1214,8 +1214,7 @@ class Module(Basic):
 
     @property
     def variables(self):
-        """ Variables contained within the module
-        (but not in functions in the module)
+        """ Module global variables
         """
         return self._variables
 
