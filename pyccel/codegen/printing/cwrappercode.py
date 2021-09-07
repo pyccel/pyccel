@@ -785,7 +785,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Create the wrapper body with collected informations
         body_tmp = [IfSection(PyccelNot(check_var), [Return([Nil()])])] + body_tmp
         body_tmp.append(IfSection(LiteralTrue(),
-            [PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
+            [PyErr_SetString('PyExc_TypeError', '"This combination of arguments is not valid"'),
             Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
