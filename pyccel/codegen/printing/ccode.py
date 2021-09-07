@@ -1447,16 +1447,19 @@ class CCodePrinter(CodePrinter):
         lhs = self._print(lhs)
         rhs = self._print(rhs)
 
+        if self.stored_in_c_pointer(lhs_var):
+            return '{} = {};\n'.format(lhs, rhs)
+
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
+        elif isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
                 and isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
             if lhs_var.order == rhs_var.order:
                 return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
             else:
                 return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
-
-        return '{} = {};\n'.format(lhs, rhs)
+        else:
+            raise NotImplementedError('Cannot AliasAssign object of type {}'.format(type(lhs)))
 
     def _print_For(self, expr):
 
