@@ -757,10 +757,13 @@ class CWrapperCodePrinter(CCodePrinter):
             # Building PybuildValue and freeing the allocated variable after.
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+
             # Call free function for C type
-            mini_wrapper_func_body += [Deallocate(i) for i in local_arg_vars if i.rank > 0]
+            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.stored_in_c_pointer(i) \
+                                        else Deallocate(i) for i in local_arg_vars if i.rank > 0]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
+
             # Building Mini wrapper function
             mini_wrapper_func_name = self.get_new_name(used_names.union(self._global_names), func.name + '_mini_wrapper')
             self._global_names.add(mini_wrapper_func_name)
@@ -1001,16 +1004,20 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
         # Call free function for C type
-        wrapper_body += [Deallocate(i) for i in local_arg_vars if i.rank > 0]
+        wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.stored_in_c_pointer(i) \
+                            else Deallocate(i) for i in local_arg_vars if i.rank > 0]
         self._to_free_PyObject_list.clear()
+
         #Return
         wrapper_body.append(Return(wrapper_results))
+
         # Create FunctionDef and write using classic method
         wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
             local_vars = tuple(wrapper_vars.values()))
+
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
