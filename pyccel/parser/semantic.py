@@ -3521,11 +3521,9 @@ class SemanticParser(BasicParser):
 
         master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
 
-        results = expr.results
-        results_shapes = expr.results_shapes
         master = FunctionCall(func, master_args)
         macro   = MacroFunction(name, args, master, master_args,
-                                results=results, results_shapes=results_shapes)
+                                results=expr.results, results_shapes=expr.results_shapes)
         self.insert_macro(macro)
 
         return macro
