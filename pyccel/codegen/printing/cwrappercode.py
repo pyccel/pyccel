@@ -758,8 +758,7 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             # Call free function for C type
-            if self._target_language == 'c':
-                mini_wrapper_func_body += [Deallocate(i) for i in local_arg_vars if i.rank > 0]
+            mini_wrapper_func_body += [Deallocate(i) for i in local_arg_vars if i.rank > 0]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
             # Building Mini wrapper function
@@ -1002,8 +1001,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
         # Call free function for C type
-        if self._target_language == 'c':
-            wrapper_body += [Deallocate(i) for i in local_arg_vars if i.rank > 0]
+        wrapper_body += [Deallocate(i) for i in local_arg_vars if i.rank > 0]
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
