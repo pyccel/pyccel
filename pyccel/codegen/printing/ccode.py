@@ -1236,7 +1236,7 @@ class CCodePrinter(CodePrinter):
         ----------
         a : PyccelAstNode
         """
-        if isinstance(a, Nil):
+        if isinstance(a, (Nil, VariableAddress)):
             return True
         if isinstance(a, FunctionCall):
             results = a.funcdef.results
@@ -1307,7 +1307,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+        args = [VariableAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
