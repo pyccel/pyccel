@@ -1234,8 +1234,17 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        a : Variable/FunctionAddress
+        a : PyccelAstNode
         """
+        if isinstance(a, Nil):
+            return True
+        if isinstance(a, FunctionCall):
+            results = a.funcdef.results
+            if len(results)==1:
+                a = a.funcdef.results[0]
+            else:
+                return False
+
         if not isinstance(a, Variable):
             return False
         return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
@@ -1254,14 +1263,16 @@ class CCodePrinter(CodePrinter):
         for a, f in zip(expr.args, func.arguments):
             a = a.value if a else Nil()
             f = f.var
-            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
-                args.append(VariableAddress(a))
-            elif f.is_optional and not isinstance(a, Nil):
-                tmp_var = self.create_tmp_var(f)
-                assign = Assign(tmp_var, a)
-                self._additional_code += self._print(assign) + '\n'
-                args.append(VariableAddress(tmp_var))
-
+            if self.stored_in_c_pointer(f):
+                if isinstance(a, Variable):
+                    args.append(VariableAddress(a))
+                elif not self.stored_in_c_pointer(a):
+                    tmp_var = self.create_tmp_var(f)
+                    assign = Assign(tmp_var, a)
+                    self._additional_code += self._print(assign) + '\n'
+                    args.append(VariableAddress(tmp_var))
+                else:
+                    args.append(a)
             else :
                 args.append(a)
 
