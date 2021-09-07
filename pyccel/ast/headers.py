@@ -7,15 +7,14 @@
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
-from .core              import ValuedArgument
+from .core              import Assign, FunctionDefArgument
 from .core              import FunctionDef, Interface, FunctionAddress
 from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
-from .internals         import PyccelSymbol
+from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
-from .variable          import ValuedVariable
 
 __all__ = (
     'ClassHeader',
@@ -588,7 +587,8 @@ class InterfaceHeader(Header):
 #==============================================================================
 class MacroFunction(Header):
     """."""
-    __slots__ = ('_name','_arguments','_master','_master_arguments','_results')
+    __slots__ = ('_name','_arguments','_master','_master_arguments',
+                 '_results','_copies_required')
 
     def __init__(self, name, args, master, master_args, results=None):
         if not isinstance(name, str):
@@ -603,6 +603,7 @@ class MacroFunction(Header):
         self._master           = master
         self._master_arguments = master_args
         self._results          = results
+        self._copies_required  = [a in self._results for a in self._arguments]
         super().__init__()
 
     @property
@@ -634,54 +635,36 @@ class MacroFunction(Header):
 
         if len(args) > 0:
 
-            sorted_args   = []
             unsorted_args = []
-            j = -1
-            for ind, i in enumerate(args):
-                if not isinstance(i, ValuedArgument):
-                    sorted_args.append(i)
+            n_sorted = len(args)
+            for ind, (arg, val) in enumerate(zip(self.arguments, args)):
+                if not val.has_keyword:
+                    name = str(arg) if isinstance(arg, PyccelSymbol) \
+                            else arg.name
+                    d_arguments[name] = val.value
                 else:
-                    j=ind
+                    n_sorted=ind
                     break
-            if j>0:
-                unsorted_args = args[j:]
-                for i in unsorted_args:
-                    if not isinstance(i, ValuedVariable):
-                        raise ValueError('variable not allowed after an optional argument')
 
-            for i in self.arguments[len(sorted_args):]:
-                if not isinstance(i, ValuedVariable):
-                    raise ValueError('variable not allowed after an optional argument')
-
-            for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
-                if not isinstance(arg, tuple):
-                    d_arguments[arg] = val
-                else:
-                    if not isinstance(val, (list, tuple)):
-                        val = [val]
-                    #TODO improve add more checks and generalize
-                    if len(val)>len(arg):
-                        raise ValueError('length mismatch of argument and its value ')
-                    elif len(val)<len(arg):
-                        for val_ in arg[len(val):]:
-                            if isinstance(val_, ValuedVariable):
-                                val +=tuple(val_.value,)
-                            else:
-                                val +=tuple(val_)
-
-                    for arg_,val_ in zip(arg,val):
-                        d_arguments[arg_.name] = val_
+            unsorted_args = args[n_sorted:]
+            for i in unsorted_args:
+                if not i.has_keyword:
+                    errors.report("Positional argument not allowed after an optional argument",
+                            symbol=i,
+                            severity='fatal')
 
             d_unsorted_args = {}
-            for arg in self.arguments[len(sorted_args):]:
+            for arg in self.arguments[n_sorted:]:
                 d_unsorted_args[arg.name] = arg.value
 
             for arg in unsorted_args:
-                if arg.name in d_unsorted_args.keys():
-                    d_unsorted_args[arg.name] = arg.value
+                if arg.keyword in d_unsorted_args.keys():
+                    d_unsorted_args[arg.keyword] = arg.value
                 else:
                     raise ValueError('Unknown valued argument')
+
             d_arguments.update(d_unsorted_args)
+
             for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
@@ -704,35 +687,69 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg, PyccelSymbol):
-                if arg in argument_keys:
-                    new = d_arguments[arg]
-                    if isinstance(new, PyccelSymbol) and new in result_keys:
-                        new = d_results[new]
+            if isinstance(arg, FunctionDefArgument):
+                arg_name = arg.name
+                if arg_name in result_keys:
+                    new = d_results[arg_name]
 
-                elif arg in result_keys:
-                    new = d_results[arg]
+                elif arg_name in argument_keys:
+                    new = d_arguments[arg_name]
+
+                elif arg.has_default:
+                    new = arg.value
+
                 else:
-                    new = arg
-               #TODO uncomment later
-               #     raise ValueError('Unknown variable name')
+                    raise ValueError('Missing argument')
+
             elif isinstance(arg, Macro):
-                if arg.argument in argument_keys:
-                    new = d_arguments[arg.argument]
-                    if isinstance(new, PyccelSymbol) and new in result_keys:
-                        new = d_results[new]
-                elif arg.argument in result_keys:
+                if arg.argument in result_keys:
                     new = d_results[arg.argument]
+                elif arg.argument in argument_keys:
+                    new = d_arguments[arg.argument]
                 else:
                     raise ValueError('Unknown variable name')
 
                 if isinstance(arg, MacroShape):
-                    new = construct_macro(arg.name, new, arg.index)
+                    new = MacroShape(new, arg.index)
                 else:
                     new = construct_macro(arg.name, new)
+            else:
+                new = arg
 
             newargs[i] = new
         return newargs
+
+    def make_necessary_copies(self, args, results):
+        """ Copy any arguments provided in python which the macro
+        definition indicates should match the results into the
+        corresponding result.
+
+        Parameters
+        ----------
+        args    : list of Variables
+                   The arguments passed to the macro in the python code
+        results : list of Variables
+                  The results collected from the macro in the python code
+
+        Results
+        -------
+        expr       : list of Assigns
+                      Any Assigns necessary before the function (result of the
+                      macro expansion) returned by the apply function is called
+        """
+        expr = []
+        for a, func_a in zip(args, self.arguments):
+            arg = a.value
+            func_arg = func_a.var
+            if func_arg in self.results and arg.rank > 0:
+                r = results[self.results.index(func_arg)]
+                if arg != r:
+                    slices = [Slice(None,None)]*arg.rank
+                    expr.append(Assign(r[slices], arg[slices]))
+                    arg = r
+
+        return expr
+
 
 #==============================================================================
 class MacroVariable(Header):

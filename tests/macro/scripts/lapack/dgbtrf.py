@@ -20,4 +20,4 @@ ipiv = zeros(n, 'int')
 
 #$ header macro (ab, ipiv, info), dgbtrf_v1(ab, kl, ku, m=ab.shape[1], n=ab.shape[1], ldab=ab.shape[0]) := dgbtrf(m, n, kl, ku, ab, ldab, ipiv, info)
 
-a, ipiv, info = dgbtrf_v1(a, ml, mu)
+a, ipiv, info = dgbtrf_v1(a, ml, ku=mu)

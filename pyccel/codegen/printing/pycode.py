@@ -13,7 +13,7 @@ from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, 
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
-from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable
+from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -38,6 +38,7 @@ import_target_swap = {
                    'ones_like'  : 'ones',
                    'max'        : 'amax',
                    'min'        : 'amin',
+                   'T'          : 'transpose',
                    'full_like'  : 'full'},
         'numpy.random' : {'random' : 'rand'}
         }
@@ -140,8 +141,17 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_ValuedArgument(self, expr):
-        return '{} = {}'.format(self._print(expr.argument), self._print(expr.value))
+    def _print_FunctionDefArgument(self, expr):
+        if expr.has_default:
+            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+        else:
+            return self._print(expr.name)
+
+    def _print_FunctionCallArgument(self, expr):
+        if expr.keyword:
+            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+        else:
+            return self._print(expr.value)
 
     def _print_Idx(self, expr):
         return self._print(expr.name)
@@ -475,14 +485,26 @@ class PythonCodePrinter(CodePrinter):
         return 'continue\n'
 
     def _print_Assign(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        return'{0} = {1}\n'.format(lhs,rhs)
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, Variable) and lhs.rank>1 and rhs.order != lhs.order:
+            return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
+        else:
+            return'{0} = {1}\n'.format(lhs_code,rhs_code)
 
     def _print_AliasAssign(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        return'{0} = {1}\n'.format(lhs,rhs)
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, Variable) and rhs.order!= lhs.order:
+            return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
+        else:
+            return'{0} = {1}\n'.format(lhs_code,rhs_code)
 
     def _print_AugAssign(self, expr):
         lhs = self._print(expr.lhs)

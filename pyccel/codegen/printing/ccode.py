@@ -13,9 +13,9 @@ from pyccel.ast.builtins  import PythonPrint
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
-from pyccel.ast.core      import FunctionAddress
+from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
@@ -40,10 +40,10 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import ValuedVariable, IndexedElement
+from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
-from pyccel.ast.variable import InhomogeneousTupleVariable
+from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 
@@ -351,7 +351,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype_str, var.precision)
         np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(PyccelMul, var.alloc_shape))
+        tot_shape = self._print(functools.reduce(
+            lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
@@ -700,16 +701,15 @@ class CCodePrinter(CodePrinter):
         end = '\n'
         sep = ' '
         code = ''
-        empty_end = ValuedVariable(NativeString(), 'end', value='')
-        space_end = ValuedVariable(NativeString(), 'end', value=' ')
-        kwargs = [f for f in expr.expr if isinstance(f, ValuedVariable)]
+        empty_end = FunctionCallArgument(LiteralString(''), 'end')
+        space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
-            if isinstance(f, ValuedVariable):
-                if f.name == 'sep'      :   sep = str(f.value)
-                elif f.name == 'end'    :   end = str(f.value)
+            if f.keyword == 'sep'      :   sep = str(f.value)
+            elif f.keyword == 'end'    :   end = str(f.value)
         args_format = []
         args = []
-        orig_args = [f for f in expr.expr if not isinstance(f, ValuedVariable)]
+        orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
             args_format = sep.join(args_format)
@@ -722,6 +722,7 @@ class CCodePrinter(CodePrinter):
             return formatted_args_to_printf(args_format, args, end)
 
         for i, f in enumerate(orig_args):
+            f = f.value
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
                 tmp_arg_format_list = []
@@ -739,19 +740,19 @@ class CCodePrinter(CodePrinter):
                     args = []
                 for_index = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
                 self._additional_declare.append(for_index)
-                max_index = PyccelMinus(orig_args[i].shape[0], LiteralInteger(1), simplify = True)
+                max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
                 for_range = PythonRange(max_index)
-                print_body = [ orig_args[i][for_index] ]
-                if orig_args[i].rank == 1:
+                print_body = [ FunctionCallArgument(f[for_index]) ]
+                if f.rank == 1:
                     print_body.append(space_end)
 
                 for_body  = [PythonPrint(print_body)]
                 for_loop  = For(for_index, for_range, for_body)
-                for_end   = ValuedVariable(NativeString(), 'end', value=']'+end if i == len(orig_args)-1 else ']')
+                for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
-                body = CodeBlock([PythonPrint([ LiteralString('['), empty_end]),
+                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
                                   for_loop,
-                                  PythonPrint([ orig_args[i][max_index], for_end])],
+                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end])],
                                  unravelled = True)
                 code += self._print(body)
             else:
@@ -786,7 +787,7 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
-            if expr.is_ndarray:
+            if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
                 self._additional_imports.add('ndarrays')
@@ -880,16 +881,16 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += [FunctionDefArgument(a.clone(name = a.name, is_pointer =True)) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
-                        if isinstance(i, FunctionAddress)
-                        else '{0}'.format(self.get_declare_type(i)) + (i.name if print_arg_names else '')
+            arg_code = ', '.join('{}'.format(self.function_signature(i.var, False))
+                        if isinstance(i.var, FunctionAddress)
+                        else '{0}'.format(self.get_declare_type(i.var)) + (i.name if print_arg_names else '')
                         for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
@@ -916,7 +917,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
         base_name = self._print(base)
-        if base.is_ndarray:
+        if base.is_ndarray or isinstance(base, HomogeneousTupleVariable):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):
@@ -1227,6 +1228,14 @@ class CCodePrinter(CodePrinter):
         return ''.join(p for p in parts if p)
 
     def stored_in_c_pointer(self, a):
+        """
+        Indicates whether the object a needs to be stored in a pointer
+        in c code
+
+        Parameters
+        ----------
+        a : Variable/FunctionAddress
+        """
         if not isinstance(a, Variable):
             return False
         return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
@@ -1243,6 +1252,8 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
+            a = a.value if a else Nil()
+            f = f.var
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
@@ -1441,7 +1452,10 @@ class CCodePrinter(CodePrinter):
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
         if isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
                 and isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-            return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            if lhs_var.order == rhs_var.order:
+                return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+            else:
+                return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
 
         return '{} = {};\n'.format(lhs, rhs)
 
@@ -1603,6 +1617,12 @@ class CCodePrinter(CodePrinter):
         else:
             return expr.name
 
+    def _print_FunctionDefArgument(self, expr):
+        return self._print(expr.name)
+
+    def _print_FunctionCallArgument(self, expr):
+        return self._print(expr.value)
+
     def _print_VariableAddress(self, expr):
         if isinstance(expr.variable, IndexedElement):
             return '&{}'.format(self._print(expr.variable))
@@ -1682,6 +1702,36 @@ class CCodePrinter(CodePrinter):
                 '}}').format(imports=imports,
                                     decs=decs,
                                     body=body)
+
+    #=================== MACROS ==================
+
+    def _print_MacroShape(self, expr):
+        var = expr.argument
+        if not isinstance(var, (Variable, IndexedElement)):
+            raise TypeError('Expecting a variable, given {}'.format(type(var)))
+        shape = var.shape
+
+        if len(shape) == 1:
+            shape = shape[0]
+
+
+        elif not(expr.index is None):
+            if expr.index < len(shape):
+                shape = shape[expr.index]
+            else:
+                shape = '1'
+
+        return self._print(shape)
+
+    def _print_MacroCount(self, expr):
+
+        var = expr.argument
+
+        if var.rank == 0:
+            return '1'
+        else:
+            return self._print(functools.reduce(
+                lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
 
 
