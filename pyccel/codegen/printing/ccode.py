@@ -494,7 +494,7 @@ class CCodePrinter(CodePrinter):
         # TODO: Add classes and interfaces
         funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
 
-        variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
+        global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *map(Import, self._additional_imports)]
@@ -510,14 +510,14 @@ class CCodePrinter(CodePrinter):
                 '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
-                        variables = variables,
+                        variables = global_variables,
                         funcs   = funcs)
 
     def _print_Module(self, expr):
         self._current_module = expr.name
         body    = ''.join(self._print(i) for i in expr.body)
 
-        variables = ''.join([self._print(d) for d in expr.declarations])
+        global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         if expr.program:
             prog_code = self._print(expr.program)
@@ -532,7 +532,7 @@ class CCodePrinter(CodePrinter):
                 '{variables}\n'
                 '{body}\n').format(
                         imports   = imports,
-                        variables = variables,
+                        variables = global_variables,
                         body      = body)
 
         return code+prog_code
