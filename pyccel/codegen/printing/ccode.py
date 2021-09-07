@@ -791,8 +791,9 @@ class CCodePrinter(CodePrinter):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
                 self._additional_imports.add('ndarrays')
-                return 't_ndarray '
-            errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr,severity='fatal')
+                dtype = 't_ndarray'
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr,severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
