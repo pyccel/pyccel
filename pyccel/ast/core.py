@@ -1176,13 +1176,14 @@ class Module(Basic):
             if not isinstance(i, Interface):
                 raise TypeError('Only a Inteface instance is allowed.')
 
-        if init_func is not None and not isinstance(init_func, FunctionDef):
+        NoneType = type(None)
+        if not isinstance(init_func, (NoneType, FunctionDef)):
             raise TypeError('init_func must be a FunctionDef')
 
-        if free_func is not None and not isinstance(free_func, FunctionDef):
+        if not isinstance(free_func, (NoneType, FunctionDef)):
             raise TypeError('free_func must be a FunctionDef')
 
-        if program is not None and not isinstance(program, (Program, CodeBlock)):
+        if not isinstance(program, (NoneType, Program, CodeBlock)):
             raise TypeError('program must be a Program')
 
         if not iterable(imports):
