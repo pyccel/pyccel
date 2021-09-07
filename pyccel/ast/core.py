@@ -1414,6 +1414,7 @@ class Program(Basic):
         """ Remove an import with the given source name from the list
         of imports
         """
+        _ = [i.invalidate_node() for i in self.imports if i.source == name]
         self._imports = tuple(i for i in self.imports if i.source != name)
 
 
@@ -1614,6 +1615,7 @@ class For(Basic):
         return self._local_vars
 
     def insert2body(self, stmt):
+        stmt.set_current_user_node(self)
         self.body.insert2body(stmt)
 
 
