@@ -1471,7 +1471,7 @@ class CCodePrinter(CodePrinter):
             else:
                 return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
         else:
-            raise NotImplementedError('Cannot AliasAssign object of type {}'.format(type(lhs)))
+            return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
 
