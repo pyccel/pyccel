@@ -265,7 +265,10 @@ def execute_pyccel(fname, *,
         if verbose:
             print("cp {} {}".format(fname, new_location))
         shutil.copyfile(fname, new_location)
-        continue
+
+        # Change working directory back to starting point
+        os.chdir(base_dirpath)
+        return
 
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
@@ -309,7 +312,9 @@ def execute_pyccel(fname, *,
             main_obj.add_dependencies(stdlib)
 
     if convert_only:
-        continue
+        # Change working directory back to starting point
+        os.chdir(base_dirpath)
+        return
 
     deps = dict()
     # ...
