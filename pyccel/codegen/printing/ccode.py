@@ -519,6 +519,7 @@ class CCodePrinter(CodePrinter):
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
+        # This is done before the imports to avoid splitting imports as much as possible
         if expr.program:
             prog_code = self._print(expr.program)
         else:
