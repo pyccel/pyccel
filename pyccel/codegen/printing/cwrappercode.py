@@ -457,8 +457,10 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             sections.append(IfSection(LiteralTrue(), collect_value))
 
-
-        return If(*sections)
+        if len(sections)==1 and sections[0].condition == LiteralTrue():
+            return sections[0].body
+        else:
+            return If(*sections)
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
