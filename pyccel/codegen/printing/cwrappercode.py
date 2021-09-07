@@ -18,7 +18,7 @@ from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import Import
 from pyccel.ast.core import AugAssign
 
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, str_dtype
 from pyccel.ast.datatypes import datatype

@@ -25,7 +25,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
-from pyccel.ast.datatypes import NativeReal, NativeTuple, NativeString, datatype
+from pyccel.ast.datatypes import NativeReal, NativeTuple, datatype
 
 from pyccel.ast.internals import Slice
 
