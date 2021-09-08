@@ -26,7 +26,7 @@ def test_lapack(f):
 
 @pytest.mark.parametrize("f", get_files_from_folder('mpi'))
 def test_mpi(f):
-    execute_pyccel(f, accelerators=['mpi'])
+    execute_pyccel(f, accelerators=['mpi'], verbose=True)
 
 @pytest.mark.parametrize("f", get_files_from_folder('openmp'))
 def test_openmp(f):
