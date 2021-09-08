@@ -2068,7 +2068,7 @@ class SemanticParser(BasicParser):
 
             macro = self.get_macro(name)
             if macro is not None:
-                func = macro.master
+                func = macro.master.funcdef
                 name = _get_name(func.name)
                 args = macro.apply(args)
             else:
@@ -2132,32 +2132,37 @@ class SemanticParser(BasicParser):
             else:
 
                 # TODO check types from FunctionDef
-
                 master = macro.master
-                name = _get_name(master.name)
-
-                # all terms in lhs must be already declared and available
-                # the namespace
-                # TODO improve
+                results = []
+                args = [self._visit(i, **settings) for i in rhs.args]
+                args_names = [arg.value.name for arg in args if isinstance(arg.value, Variable)]
+                d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
+                                  if isinstance(arg.value, Variable)}
 
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
+                results_shapes = macro.get_results_shapes(args)
+                for m_result, shape, result in zip(macro.results, results_shapes, lhs):
+                    if m_result in d_m_args and not result in args_names:
+                        d_result = self._infere_type(d_m_args[m_result])
+                        d_result['shape'] = shape
+                        tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False, **settings)
+                        results.append(tmp)
+                    elif result in args_names:
+                        _name = _get_name(result)
+                        tmp = self.get_variable(_name)
+                        results.append(tmp)
+                    else:
+                        # TODO: check for result in master_results
+                        errors.report(INVALID_MACRO_COMPOSITION, symbol=result,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error')
 
-                results = []
-                for a in lhs:
-                    _name = _get_name(a)
-                    var = self.get_variable(_name)
-                    results.append(var)
-
-                # ...
-
-                args = [self._visit(i, **settings) for i in
-                            rhs.args]
                 expr = macro.make_necessary_copies(args, results)
                 new_expressions += expr
                 args = macro.apply(args, results=results)
-                if isinstance(master, FunctionDef):
-                    func_call = FunctionCall(master, args, self._current_function)
+                if isinstance(master.funcdef, FunctionDef):
+                    func_call = FunctionCall(master.funcdef, args, self._current_function)
                     if new_expressions:
                         return CodeBlock([*new_expressions, func_call])
                     else:
@@ -2249,7 +2254,6 @@ class SemanticParser(BasicParser):
             return CodeBlock(stmts)
 
         elif isinstance(rhs, FunctionCall):
-
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results
@@ -2346,7 +2350,6 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
                     return None
-
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
@@ -3511,17 +3514,16 @@ class SemanticParser(BasicParser):
         args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
 
         def get_arg(func_arg, master_arg):
-            if isinstance(master_arg, FunctionDefArgument):
-                return FunctionDefArgument(func_arg.var.clone(master_arg.name), value = master_arg.default)
+            if isinstance(master_arg, PyccelSymbol):
+                return FunctionCallArgument(func_arg.var.clone(str(master_arg)))
             else:
-                return FunctionDefArgument(func_arg.var.clone(str(master_arg)))
+                return FunctionCallArgument(master_arg)
 
-        master_args = [get_arg(a,m) if isinstance(m, PyccelSymbol) else m
-                        for a,m in zip(func.arguments, expr.master_arguments)]
+        master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
 
-        results = expr.results
-        macro   = MacroFunction(name, args, func, master_args,
-                                  results=results)
+        master = FunctionCall(func, master_args)
+        macro   = MacroFunction(name, args, master, master_args,
+                                results=expr.results, results_shapes=expr.results_shapes)
         self.insert_macro(macro)
 
         return macro
