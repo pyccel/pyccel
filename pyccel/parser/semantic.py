@@ -1652,7 +1652,6 @@ class SemanticParser(BasicParser):
         if not all(isinstance(l, comment_types) for l in init_func_body):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
-            variables.append(Assign(init_var, LiteralFalse()))
             init_func_name = self.get_new_name(expr.name+'__init')
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
@@ -1669,7 +1668,6 @@ class SemanticParser(BasicParser):
                             for imp in self._namespace.imports['imports'] \
                              if imp in self.d_parsers]
             if deallocs or import_frees:
-                init_var = variables[-1].lhs
                 import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))

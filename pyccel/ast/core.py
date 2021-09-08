@@ -21,7 +21,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeTuple, str_dtype)
 from .internals      import Slice, PyccelSymbol
 
-from .literals       import LiteralInteger, Nil, convert_to_literal
+from .literals       import LiteralInteger, Nil, convert_to_literal, LiteralFalse
 from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
@@ -1153,7 +1153,7 @@ class Module(Basic):
         if not iterable(variables):
             raise TypeError('variables must be an iterable')
         for i in variables:
-            if not isinstance(i, (Variable, Assign)):
+            if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
         if not iterable(funcs):
@@ -1195,8 +1195,8 @@ class Module(Basic):
         imports = tuple(imports)
 
         self._name = name
-        self._variables = [v.lhs if isinstance(v, Assign) else v for v in variables]
-        self._variable_inits = [v.rhs if isinstance(v, Assign) else None for v in variables]
+        self._variables = variables
+        self._variable_inits = [None]*len(variables)
         self._funcs = funcs
         self._init_func = init_func
         self._free_func = free_func
@@ -1204,6 +1204,14 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+
+        if init_func:
+            init_if = init_func.body.body[0]
+            init_cond = init_if.blocks[0].condition
+            init_var = init_cond.args[0]
+            self._variables.append(init_var)
+            self._variable_inits.append(LiteralFalse())
+
         super().__init__()
 
     @property
