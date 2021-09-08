@@ -2,10 +2,9 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=missing-function-docstring
 
 """
-Handling the transitions between python code and C code.
+Handling the transitions between python code and C code using (Python/C Api).
 """
 
 from ..errors.errors import Errors
@@ -47,7 +46,12 @@ __all__ = (
     'scalar_object_check',
 )
 
+#-------------------------------------------------------------------
+#                        Python DataTypes
+#-------------------------------------------------------------------
 class PyccelPyObject(DataType):
+    """ Datatype representing a PyObject which is the
+    class used to hold python objects"""
     __slots__ = ()
     _name = 'pyobject'
 
@@ -58,6 +62,10 @@ class PyccelPyArrayObject(DataType):
     _name = 'pyarrayobject'
 
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
+
+#-------------------------------------------------------------------
+#                  Parsing and Building Classes
+#-------------------------------------------------------------------
 
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
@@ -81,10 +89,16 @@ class PyArgKeywords(Basic):
 
     @property
     def name(self):
+        """ The name of the variable in which the list of
+        all arguments to the function is stored
+        """
         return self._name
 
     @property
     def arg_names(self):
+        """ The names of the arguments to the function which are
+        contained in the PyArgKeywords list
+        """
         return self._arg_names
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
@@ -181,22 +195,38 @@ class PyArg_ParseTupleNode(Basic):
 
     @property
     def pyarg(self):
+        """ The  variable containing all positional arguments
+        passed to the function
+        """
         return self._pyarg
 
     @property
     def pykwarg(self):
+        """ The  variable containing all keyword arguments
+        passed to the function
+        """
         return self._pykwarg
 
     @property
     def flags(self):
+        """ The flags indicating the types of the objects to
+        be collected from the python arguments passed to the
+        function
+        """
         return self._flags
 
     @property
     def args(self):
+        """ The arguments into which the python args and kwargs
+        are collected
+        """
         return self._parse_args
 
     @property
     def arg_names(self):
+        """ The PyArgKeywords object which contains all the
+        names of the function's arguments
+        """
         return self._arg_names
 
 class PyBuildValueNode(Basic):
@@ -227,7 +257,7 @@ class PyBuildValueNode(Basic):
         return self._result_args
 
 #-------------------------------------------------------------------
-#                      Python.h functions
+#                      Python.h Constants
 #-------------------------------------------------------------------
 
 # Python.h object  representing Booleans True and False
