@@ -152,3 +152,4 @@ ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtim
 ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'
 TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'
+INVALID_MACRO_COMPOSITION = 'Invalid macro composition'

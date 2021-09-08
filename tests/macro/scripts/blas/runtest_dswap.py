@@ -22,7 +22,7 @@ if __name__ == '__main__':
     print(a)
     print(b)
 
-    #$ header macro (x, y), _dswap(x, y, n=x.shape, incx=1, incy=1) := dswap(n, x, incx, y, incy)
+    #$ header macro (x(:,:), y(:,:)), _dswap(x, y, n=x.shape, incx=1, incy=1) := dswap(n, x, incx, y, incy)
     a,b = _dswap(a, b)
 
     print('--- after swap')

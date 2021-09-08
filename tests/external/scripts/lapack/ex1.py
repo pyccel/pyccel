@@ -1,6 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-# pylint: disable=unused-variable
-# TODO: Remove disable unused variable when #927 is fixed
 # > Usage:
 #
 #   pyccel test.py -t
@@ -38,9 +36,6 @@ def test_1():
     a[  m,0:n] =  2.0
     a[m+1,0:n-1] = -1.0
 
-    info = -1
-    ipiv = zeros(n, 'int')
-
     a, ipiv, info = dgbtrf(a, ml, mu)
 #    assert(info == 0)
 
@@ -64,9 +59,6 @@ def test_2():
     a[2,0] = 7.0
     a[2,1] = 8.0
     a[2,2] = 0.0
-
-    info = -1
-    ipiv = zeros(n, 'int')
 
     a, ipiv, info = dgetrf(a)
 #    assert(info == 0)
@@ -99,9 +91,6 @@ def test_3():
     a[2,1] = 8.0
     a[2,2] = 0.0
 
-    info = -1
-    ipiv = zeros(n, 'int')
-
     a, ipiv, info = dgetrf(a)
 #    assert(info == 0)
 
@@ -130,11 +119,6 @@ def test_4():
     a[2,1] = 8.0
     a[2,2] = 0.0
 
-    lu = empty((lda,n))
-
-    info = -1
-    ipiv = zeros(n, 'int')
-
     lu, ipiv, info = dgetrf(a)
 #    assert(info == 0)
 
@@ -143,8 +127,6 @@ def test_4():
     b[0] = 14.0
     b[1] = 32.0
     b[2] = 23.0
-
-    x = empty((1,n))
 
     # Solve the linear system.
     x, info = dgetrs(a, ipiv, b, 'n')

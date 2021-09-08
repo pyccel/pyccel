@@ -15,6 +15,6 @@ if __name__ == '__main__':
 
     alpha = 2.0
 
-    #$ header macro (x), _dscal(alpha, x, n=x.shape, incx=1) := dscal(n, alpha, x, incx)
+    #$ header macro (x(:,:)), _dscal(alpha, x, n=x.shape, incx=1) := dscal(n, alpha, x, incx)
     a = _dscal(alpha, a)
     print(a)

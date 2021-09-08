@@ -13,6 +13,6 @@ if __name__ == '__main__':
     a[2] = 4.0
     a[3] = 5.0
 
-    #$ header macro (y), _dcopy(x, y, n=x.shape, incx=1, incy=1) := dcopy(n, x, incx, y, incy)
+    #$ header macro (y(:,:)), _dcopy(x, y, n=x.shape, incx=1, incy=1) := dcopy(n, x, incx, y, incy)
     b = _dcopy(a, b)
     print(b)

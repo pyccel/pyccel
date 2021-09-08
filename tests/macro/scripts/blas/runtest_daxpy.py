@@ -22,6 +22,6 @@ if __name__ == '__main__':
 
     alpha = 2.0
 
-    #$ header macro (y), _daxpy(x, y, alpha=1, n=x.shape, incx=1, incy=1) := daxpy(n, alpha, x, incx, y, incy)
+    #$ header macro (y(:,:)), _daxpy(x, y, alpha=1, n=x.shape, incx=1, incy=1) := daxpy(n, alpha, x, incx, y, incy)
     b = _daxpy(a, b, alpha)
     print(b)
