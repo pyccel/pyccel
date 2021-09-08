@@ -141,8 +141,17 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_ValuedArgument(self, expr):
-        return '{} = {}'.format(self._print(expr.argument), self._print(expr.value))
+    def _print_FunctionDefArgument(self, expr):
+        if expr.has_default:
+            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+        else:
+            return self._print(expr.name)
+
+    def _print_FunctionCallArgument(self, expr):
+        if expr.keyword:
+            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+        else:
+            return self._print(expr.value)
 
     def _print_Idx(self, expr):
         return self._print(expr.name)

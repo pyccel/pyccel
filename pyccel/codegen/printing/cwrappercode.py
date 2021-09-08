@@ -42,7 +42,7 @@ from pyccel.ast.numpy_wrapper import find_in_numpy_dtype_registry, numpy_get_typ
 
 from pyccel.ast.bind_c          import as_static_function_call
 
-from pyccel.ast.variable      import VariableAddress, Variable, ValuedVariable
+from pyccel.ast.variable      import VariableAddress, Variable
 
 from pyccel.errors.errors   import Errors
 
@@ -893,7 +893,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 flag = self.set_flag_value(flag, c_arg) # set flag value
                 types_dict[p_arg].append(c_arg)         # collect type
 
-                if isinstance(c_arg, ValuedVariable):
+                if c_arg.has_default:
                     mini_wrapper_body.append(self.get_default_assign(c_arg))
 
                 if self.need_free(c_arg):
@@ -1003,7 +1003,6 @@ class CWrapperCodePrinter(CCodePrinter):
         if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
             return self.python_function_as_argument(wrapper_name, wrapper_args, wrapper_results)
 
-
         converters = []
         # Loop on all the arguments and collect the needed converter functions
         for c_arg in expr.arguments:
@@ -1017,7 +1016,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_func_args.extend(self.get_static_args(c_arg))
 
             # Set default value when the argument is valued
-            if isinstance(c_arg, ValuedVariable):
+            if c_arg.has_default:
                 wrapper_body.append(self.get_default_assign(c_arg))
 
             if self.need_free(c_arg):
