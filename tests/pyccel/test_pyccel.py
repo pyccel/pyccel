@@ -743,9 +743,16 @@ def test_type_print( language ):
     lang_out = lang_out.split('\n')
     assert len(lang_out)>=5
 
-    assert 'int16' in lang_out[0]
-    assert 'int32' in lang_out[1]
-    assert 'int64' in lang_out[2]
-    # TODO: Change with issue #932
-    assert 'real32' in lang_out[3]
-    assert 'real64' in lang_out[4]
+    if language=="python":
+        assert 'int16' in lang_out[0]
+        assert 'int32' in lang_out[1]
+        assert 'int' in lang_out[2]
+        assert 'float32' in lang_out[3]
+        assert 'float' in lang_out[4]
+    else:
+        assert 'int16' in lang_out[0]
+        assert 'int32' in lang_out[1]
+        assert 'int64' in lang_out[2]
+        # TODO: Change with issue #932
+        assert 'real32' in lang_out[3]
+        assert 'real64' in lang_out[4]
