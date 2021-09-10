@@ -778,6 +778,8 @@ class Lambda(Basic):
 
 #==============================================================================
 class PythonType(Basic):
+    """ Represents the python builtin type function
+    """
     __slots__ = ('_dtype','_precision','_obj')
     _attribute_nodes = ('_obj',)
 
@@ -792,18 +794,27 @@ class PythonType(Basic):
 
     @property
     def dtype(self):
+        """ Returns the dtype of this type
+        """
         return self._dtype
 
     @property
     def precision(self):
+        """ Returns the precision of this type
+        """
         return self._precision
 
     @property
-    def obj(self):
+    def arg(self):
+        """ Returns the object for which the type is determined
+        """
         return self._obj
 
     @property
     def print_string(self):
+        """ Return a literal string representing the type that
+        can be used in a print  statement
+        """
         return LiteralString("<class '{dtype}{precision}'>".format(
             dtype = str(self.dtype),
             precision = self.precision*8 if self.precision else ''))
