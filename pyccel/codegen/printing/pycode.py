@@ -13,6 +13,7 @@ from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, 
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
+from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -672,7 +673,21 @@ class PythonCodePrinter(CodePrinter):
         return '{true} if {cond} else {false}'.format(cond = cond, true =value_true, false = value_false)
 
     def _print_Literal(self, expr):
-        return repr(expr.python_value)
+        dtype = expr.dtype
+        precision = expr.precision
+        if precision == default_precision[self._print(dtype)]:
+            return repr(expr.python_value)
+        else:
+            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
+            type_name = cast_func.__name__.lower()
+            is_numpy  = type_name.startswith('numpy')
+            cast_name = cast_func.name
+            name = self._aliases.get(cast_func, cast_name)
+            if is_numpy and name == cast_name:
+                self.insert_new_import(
+                        source = 'numpy',
+                        target = cast_name)
+            return '{}({})'.format(name, repr(expr.python_value))
 
     def _print_Print(self, expr):
         args = []
