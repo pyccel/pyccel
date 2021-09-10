@@ -5,7 +5,6 @@
 #      execute the binary file
 
 import os
-import sys
 import pytest
 from pyccel.codegen.pipeline import execute_pyccel
 
@@ -25,7 +24,6 @@ def test_blas(f):
 def test_lapack(f):
     execute_pyccel(f, libs=['blas', 'lapack'])
 
-@pytest.mark.skipif(sys.platform == "win32", reason = "Mpi not yet correctly installed")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi'))
 def test_mpi(f):
     execute_pyccel(f, accelerators=['mpi'])

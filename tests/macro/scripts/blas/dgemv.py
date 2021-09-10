@@ -51,7 +51,7 @@ x[4] = 6.0
 alpha = 2.0
 beta  = 0.0
 
-#$ header macro (y), _dgemv(alpha, a, x, y, t, beta=0, lda=a.shape[0], incx=1, incy=1) := dgemv(t, a.shape[0], a.shape[1], alpha, a, lda, x, incx, beta, y, incy)
+#$ header macro (y(:,:)), _dgemv(alpha, a, x, y, t, beta=0, lda=a.shape[0], incx=1, incy=1) := dgemv(t, a.shape[0], a.shape[1], alpha, a, lda, x, incx, beta, y, incy)
 
 y = _dgemv(alpha, a, x, y, 'N')
 print(y)
