@@ -720,7 +720,6 @@ def test_classes( test_file ):
 def test_type_print( language ):
     test_file = 'scripts/runtest_type_print.py'
 
-    rel_test_dir = os.path.dirname(test_file)
     test_file = os.path.normpath(test_file)
 
     cwd = os.path.dirname(test_file)
