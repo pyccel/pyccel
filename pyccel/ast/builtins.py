@@ -37,6 +37,7 @@ __all__ = (
     'PythonMap',
     'PythonPrint',
     'PythonRange',
+    'PythonType',
     'PythonZip',
     'PythonMax',
     'PythonMin',
@@ -775,6 +776,27 @@ class Lambda(Basic):
                 expr = self.expr)
 
 #==============================================================================
+class PythonType(Basic):
+    __slots__ = ('_dtype','_precision')
+    _attribute_nodes = ()
+
+    def __init__(self, obj):
+        self._dtype = obj.dtype
+        self._precision = obj.precision
+
+        if obj.rank > 0:
+            raise PyccelError("Python's type function doesn't return enough information about this object for pyccel to fully define a type")
+        super().__init__()
+
+    @property
+    def dtype(self):
+        return self._dtype
+
+    @property
+    def precision(self):
+        return self._precision
+
+#==============================================================================
 python_builtin_datatypes_dict = {
     'bool'   : PythonBool,
     'float'  : PythonFloat,
@@ -812,5 +834,6 @@ builtin_functions_dict = {
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
-    'map'      : PythonMap
+    'map'      : PythonMap,
+    'type'     : PythonType,
 }
