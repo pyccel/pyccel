@@ -12,6 +12,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
+from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import Shape as NumpyShape
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
@@ -675,7 +676,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_Literal(self, expr):
         dtype = expr.dtype
         precision = expr.precision
-        if precision==0 or precision == default_precision[self._print(dtype)]:
+
+        if not isinstance(expr, (LiteralInteger, LiteralFloat, LiteralComplex)) or \
+                precision == default_precision[self._print(dtype)]:
             return repr(expr.python_value)
         else:
             cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
