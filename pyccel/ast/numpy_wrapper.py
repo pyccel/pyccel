@@ -75,7 +75,7 @@ pyarray_to_ndarray = FunctionDef(
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
 # numpy array check elements : function definition in pyccel/stdlib/cwrapper.c
-pyarray_checker = FunctionDef(
+pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
                         Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True),
@@ -238,7 +238,7 @@ def array_checker(py_variable, c_variable, type_check_needed, language):
         else:
             flag = numpy_flag_c_contig
 
-    check = PyccelNot(FunctionCall(pyarray_checker, [py_variable, type_ref, LiteralInteger(rank), flag]))
+    check = PyccelNot(FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag]))
 
     return check
 
