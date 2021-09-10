@@ -824,7 +824,7 @@ class PythonCodePrinter(CodePrinter):
         return expr
 
     def _print_PythonType(self, expr):
-        return 'type({})'.format(self._print(expr.obj))
+        return 'type({})'.format(self._print(expr.arg))
 
     #------------------OmpAnnotatedComment Printer------------------
 
