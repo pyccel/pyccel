@@ -805,6 +805,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PyccelSymbol(self, expr):
         return expr
 
+    def _print_PythonType(self, expr):
+        return 'type({})'.format(self._print(expr.obj))
+
     #------------------OmpAnnotatedComment Printer------------------
 
     def _print_OmpAnnotatedComment(self, expr):

@@ -19,6 +19,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
 from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
+from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
 from .variable  import IndexedElement
@@ -777,12 +778,13 @@ class Lambda(Basic):
 
 #==============================================================================
 class PythonType(Basic):
-    __slots__ = ('_dtype','_precision')
-    _attribute_nodes = ()
+    __slots__ = ('_dtype','_precision','_obj')
+    _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
         self._dtype = obj.dtype
         self._precision = obj.precision
+        self._obj = obj
 
         if obj.rank > 0:
             raise PyccelError("Python's type function doesn't return enough information about this object for pyccel to fully define a type")
@@ -795,6 +797,16 @@ class PythonType(Basic):
     @property
     def precision(self):
         return self._precision
+
+    @property
+    def obj(self):
+        return self._obj
+
+    @property
+    def print_string(self):
+        return LiteralString("<class '{dtype}{precision}'>".format(
+            dtype = str(self.dtype),
+            precision = self.precision*8 if self.precision else ''))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
