@@ -744,8 +744,12 @@ def test_type_print( language ):
 
     if language=="python":
         assert 'int16' in lang_out[0]
-        assert 'int32' in lang_out[1]
-        assert 'int' in lang_out[2]
+        if sys.platform == "win32":
+            assert 'int' in lang_out[1]
+            assert 'int64' in lang_out[2]
+        else:
+            assert 'int32' in lang_out[1]
+            assert 'int' in lang_out[2]
         assert 'float32' in lang_out[3]
         assert 'float' in lang_out[4]
     else:
