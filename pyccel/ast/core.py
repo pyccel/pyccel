@@ -2499,6 +2499,8 @@ class Interface(Basic):
                                 or dtype2 in dtype1)
                 found = found and call_arg.rank \
                                 == func_arg.rank
+                found = found and call_arg.precision \
+                                == func_arg.precision
             if found:
                 break
 
