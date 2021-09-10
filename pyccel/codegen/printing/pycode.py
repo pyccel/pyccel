@@ -675,7 +675,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Literal(self, expr):
         dtype = expr.dtype
         precision = expr.precision
-        if precision == default_precision[self._print(dtype)]:
+        if precision==0 or precision == default_precision[self._print(dtype)]:
             return repr(expr.python_value)
         else:
             cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
