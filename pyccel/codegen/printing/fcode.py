@@ -460,32 +460,71 @@ class FCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
-        kwargs = [f for f in expr.expr if f.has_keyword]
-        for f in kwargs:
-            if f.keyword == 'sep':
-                sep = str(f.value)
-            elif f.keyword == 'end':
-                end = str(f.value)
+        for f in expr.expr:
+            if f.has_keyword:
+                if f.keyword == 'sep':
+                    sep = str(f.value)
+                elif f.keyword == 'end':
+                    end = str(f.value)
         args_format = []
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
-        def formatted_args_to_print(args_format, args, end):
-            if args_format == ['*']:
-                return ', '.join(['print *', *args]) + '\n'
-            args_format = ' A '.join(args_format)
-            new_line = "yes" if end.count('\n') > 0 else "no"
-            end = end.replace('\n', '')
-            args_code = ', " " ,'.join([*args])
+        def formatted_args_to_print(fargs_format, fargs, end):
+
+            def split_long_argument(line):
+                line = line[1 : len(line) - 1]
+                length = len(line)
+                longest_chunk = length
+                cuts = []
+                positions = [idx for idx in range(length) if line[idx] == ' ']
+                if len(positions) > 12:
+                    positions = positions[int(len(positions) / 4) : 12]
+                for mask in range(1, 1<<len(positions)):
+                    mask_cuts = [positions[idx] for idx in range(len(positions)) if (1 << idx)&mask != 0 ]
+                    mask_cuts.append(length)
+                    valid = True
+                    mask_longest_chunk = 0
+                    for idx in range(len(mask_cuts) - 1):
+                        if mask_cuts[idx + 1] - mask_cuts[idx] < 8:
+                            valid = False
+                        mask_longest_chunk = max(mask_longest_chunk, mask_cuts[idx + 1] - mask_cuts[idx])
+                    if valid and mask_longest_chunk < longest_chunk:
+                        cuts = mask_cuts
+                        longest_chunk = mask_longest_chunk
+                if longest_chunk != length:
+                    return [line[a + 1 : b + 1] for a, b in zip([-1, *cuts], cuts)]
+                return [line[i:i + int(length / 3 + 1)] for i in range(0, length, int(length / 3 + 1))]
+
+            if fargs_format == ['*']:
+                return ', '.join(['print *', *fargs]) + '\n'
+            separator = self._print_LiteralString(LiteralString(sep))
+            args_formatting = ''
+            args_code = ''
+            for a_f, a_c in zip(fargs_format, fargs):
+                if a_f == 'A' and len(a_c) > 30 and a_c[0] == '\'' and a_c.count('\'') == 2:
+                    chunks = split_long_argument(a_c)
+                    whole_format = ' '.join(['A'] * len(chunks))
+                    arg_concat = ' , '.join('\'{}\''.format(chunk) for chunk in chunks)
+                    args_code += ('' if args_formatting == ''
+                                  else (' , ' + separator + ' , ' if separator != '' else ' , ')) + arg_concat
+                    args_formatting += ('' if args_formatting == ''
+                                        else (' A ' if separator != '' else ' ')) + whole_format
+                else:
+                    args_code += ('' if args_formatting == ''
+                                  else (' , ' + separator + ' , ' if separator != '' else ' , ')) + (a_c if a_c != '' else '\'\'')
+                    args_formatting += ('' if args_formatting == ''
+                                        else (' A ' if separator != '' else ' ')) + a_f
+            if args_formatting == '':
+                return "write(*, '(A)', advance=\"no\") {}\n".format(self._print_LiteralString(LiteralString(end)))
             if end != '':
-                return "write(*, '({},A)',advance=\"{}\") {}, \"{}\"\n".format(args_format, new_line, args_code, end)
-            return "write(*, '({})',advance=\"{}\") {}\n".format(args_format, new_line, args_code)
+                return "write(*, '({} A)', advance=\"no\") {} , {}\n".format(args_formatting, args_code, self._print_LiteralString(LiteralString(end)))
+            return "write(*, '({})', advance=\"no\") {}\n".format(args_formatting, args_code)
 
         if len(orig_args) == 0:
             return formatted_args_to_print(args_format, args, end)
 
         for i, f in enumerate(orig_args):
-
             if f.keyword:
                 continue
             else:
@@ -504,10 +543,10 @@ class FCodePrinter(CodePrinter):
                 args.append(arg)
             elif f.dtype is NativeString() and f != expr.expr[-1]:
                 args_format.append('A')
-                args.append("{}".format(self._print(f)))
+                args.append(self._print(f))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += formatted_args_to_print(args_format, args, sep)
+                    code += formatted_args_to_print(args_format, args, self._print_LiteralString(LiteralString(sep)))
                     args_format = []
                     args = []
                 for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
@@ -556,7 +595,7 @@ class FCodePrinter(CodePrinter):
         if var.dtype is NativeComplex():
             arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
         elif var.dtype is NativeBool():
-            arg = 'merge("True ","False",{})'.format(self._print(var))
+            arg = 'merge("True ", "False", {})'.format(self._print(var))
         else:
             arg = self._print(var)
 
@@ -2757,7 +2796,7 @@ class FCodePrinter(CodePrinter):
 
 #=======================================================================================
 
-    def _wrap_fortran(self, lines, **kwargs):
+    def _wrap_fortran(self, lines):
         """Wrap long Fortran lines
 
            Argument:
@@ -2769,7 +2808,6 @@ class FCodePrinter(CodePrinter):
         # routine to find split point in a code line
         my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
-        splitQuotes = 'splitQuotes' in kwargs
 
         def split_pos_code(line, endpos):
             if len(line) <= endpos:
@@ -2790,39 +2828,40 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>72 and '!' in line[:72]:
+            if len(line) > 72 and '!' in line[:72]:
                 result.append(line)
-            elif len(line)>72 and ('"' in line[72:] or "'" in line[72:]):
-                pos=[]
-                quote = 0
-                double_quote = 0
-                mine = []
-                for idx, c in enumerate(line):
-                    if c == '\'':
-                        quote += 1
-                    if c == '\"':
-                        double_quote += 1
-                    if c == ' ' and quote%2 == 0 and double_quote %2 == 0 and idx > 72 and (not pos or idx > pos[-1] + 65):
-                        pos.append(idx)
+            elif len(line) > 72 and ('"' in line[72:] or "'" in line[72:]):
+                # finds all spaces outside double quotes
+                pattern = re.compile(' (?=(?:[^"]*"[^"]*")*[^"]*$)')
+                spaces_outside_dq = []
+                for match in pattern.finditer(line):
+                    spaces_outside_dq.append(match.start())
+                # finds all spaces outside quotes
+                pattern = re.compile(' (?=(?:[^\']*\'[^\']*\')*[^\']*$)')
+                spaces_outside_q = []
+                for match in pattern.finditer(line):
+                    spaces_outside_q.append(match.start())
+                positions = []
+                for pos in spaces_outside_dq:
+                    if pos > 72 and pos in spaces_outside_q and (not positions or pos > positions[-1] + 65):
+                        positions.append(pos)
                 last_cut = 0
-                for cut in pos:
+                for cut in positions:
                     hunk = line[:(cut-last_cut)].rstrip()
                     line = line[(cut-last_cut):].lstrip()
                     if line:
                         hunk += trailing
-                    if cut == pos[0]:
+                    if cut == positions[0]:
                         result.append(hunk)
-                        mine.append(hunk)
                     else:
-                        result.append("%s%s"%("      " , hunk))
-                        mine.append("%s%s"%("      " , hunk))
-                if not pos:
+                        result.append("      " + hunk)
+                    last_cut = cut
+                if not positions:
                     result.append(line)
                 else:
                     if line:
-                        result.append("%s%s"%("      " , line))
-                        mine.append("%s%s"%("      " , line))
-            elif len(line)>72:
+                        result.append("      " + line)
+            elif len(line) > 72:
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()

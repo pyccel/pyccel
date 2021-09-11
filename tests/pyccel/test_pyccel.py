@@ -612,10 +612,7 @@ def test_print_strings(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="formated string not implemented in fortran"),
-            pytest.mark.fortran]
-        )
+        pytest.param("fortran", marks = pytest.mark.fortran)
     )
 )
 def test_print_sp_and_end(language):
