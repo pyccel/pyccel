@@ -1453,13 +1453,15 @@ class CCodePrinter(CodePrinter):
         lhs_var = expr.lhs
         rhs_var = expr.rhs
 
-        lhs = VariableAddress(lhs_var) if lhs_var.rank == 0 else lhs_var
+        lhs_c_pointer = self.stored_in_c_pointer(lhs_var)
+
+        lhs = VariableAddress(lhs_var) if (not lhs_var.is_ndarray or lhs_c_pointer) else lhs_var
         rhs = VariableAddress(rhs_var) if isinstance(rhs_var, Variable) else rhs_var
 
         lhs = self._print(lhs)
         rhs = self._print(rhs)
 
-        if self.stored_in_c_pointer(lhs_var):
+        if lhs_c_pointer:
             return '{} = {};\n'.format(lhs, rhs)
 
         # the below condition handles the case of reassinging a pointer to an array view.

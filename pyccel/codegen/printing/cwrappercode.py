@@ -61,6 +61,20 @@ class CWrapperCodePrinter(CCodePrinter):
     #                       Helper functions
     # --------------------------------------------------------------------
 
+    def stored_in_c_pointer(self, a):
+        """
+        Indicates whether the object a needs to be stored in a pointer
+        in c code
+
+        Parameters
+        ----------
+        a : PyccelAstNode
+        """
+        if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
+            return True
+        else:
+            return CCodePrinter.stored_in_c_pointer(self,a)
+
     def get_new_name(self, used_names, requested_name):
         """
         Generate a new name, return the requested_name if it's not in
