@@ -37,7 +37,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
 from pyccel.ast.bind_c   import as_static_function
 
-from pyccel.ast.variable  import VariableAddress, Variable, IndexedElement
+from pyccel.ast.variable  import VariableAddress, Variable
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
