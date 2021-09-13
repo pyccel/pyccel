@@ -391,7 +391,7 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        if expr.funcdef in self._ignore_funcs:
+        if expr.funcdef.name in self._ignore_funcs:
             return ''
         if expr.interface:
             func_name = expr.interface_name
@@ -407,11 +407,14 @@ class PythonCodePrinter(CodePrinter):
     def _print_Import(self, expr):
         p       = self._parser.d_parsers.get(expr.source, None)
         init_func_name = ''
+        free_func_name = ''
         if p:
             init_func = p.semantic_parser.ast.init_func
             if init_func:
-                self._ignore_funcs.append(init_func)
                 init_func_name = init_func.name
+            free_func = p.semantic_parser.ast.free_func
+            if init_func:
+                free_func_name = free_func.name
         if not expr.target:
             source = self._print(expr.source)
             return 'import {source}\n'.format(source=source)
@@ -432,7 +435,13 @@ class PythonCodePrinter(CodePrinter):
                 target = expr.target
             if source in pyccel_builtin_import_registery:
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name], t.target) for t in target if isinstance(t, AsName)])
-            target = [self._print(i) for i in target if i != init_func_name]
+
+            target_name = dict((t.name,t.target) if isinstance(t, AsName) else (t,t) for t in target)
+            if init_func_name in target_name:
+                self._ignore_funcs.append(target_name[init_func_name])
+            if free_func_name in target_name:
+                self._ignore_funcs.append(target_name[free_func_name])
+            target = [self._print(i) for n,i in zip(target_name, target) if n not in (init_func_name, free_func_name)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
 
@@ -718,7 +727,7 @@ class PythonCodePrinter(CodePrinter):
 
         init_func = expr.init_func
         if init_func:
-            self._ignore_funcs.append(init_func)
+            self._ignore_funcs.append(init_func.name)
             # Collect initialisation body
             init_if = init_func.get_attribute_nodes(IfSection)[0]
             # Remove boolean from init_body
@@ -729,7 +738,7 @@ class PythonCodePrinter(CodePrinter):
 
         free_func = expr.free_func
         if free_func:
-            self._ignore_funcs.append(free_func)
+            self._ignore_funcs.append(free_func.name)
 
         body = ''.join((interfaces, funcs, classes, init_body))
 
