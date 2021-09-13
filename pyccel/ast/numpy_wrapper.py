@@ -86,7 +86,7 @@ pyarray_check = FunctionDef(
                 body      = [],
                 results   = [Variable(name = 'b', dtype = NativeBool())])
 
-# Return the shape in the n dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+# Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
                            arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True),
