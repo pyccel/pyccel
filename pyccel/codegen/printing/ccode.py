@@ -789,11 +789,13 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
-                    errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
+                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self._additional_imports.add('ndarrays')
                 dtype = 't_ndarray'
+                if expr.is_optional:
+                    errors.report("Optional arrays are not currently supported in C", symbol=expr, severity='error')
             else:
-                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr,severity='fatal')
+                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
