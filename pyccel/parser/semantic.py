@@ -1671,7 +1671,7 @@ class SemanticParser(BasicParser):
             import_frees = [f if f in imp.target else \
                              f.clone(next(i.target for i in imp.target \
                                         if isinstance(i, AsName) and i.name == f.name)) \
-                            for f,imp in zip(import_frees, pyccelised_imports)]
+                            for f,imp in zip(import_frees, pyccelised_imports) if f]
 
             if deallocs or import_frees:
                 import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
