@@ -114,8 +114,8 @@ def recompile_object(compile_obj,
         outdated     = o_file_age < src_file_age
     else:
         outdated = True
+    compile_obj.release_lock()
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
                 verbose=verbose)
-    compile_obj.release_lock()
