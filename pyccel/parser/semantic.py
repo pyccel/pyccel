@@ -3595,11 +3595,25 @@ class SemanticParser(BasicParser):
                 targets = expr.target
 
             if import_init:
+                old_name = import_init.name
+                new_name = self.get_new_name(old_name)
+
+                if new_name == old_name:
+                    targets.add(old_name)
+                else:
+                    import_init = import_init.clone(new_name)
+                    targets.add(AsName(old_name, new_name))
+
                 result  = FunctionCall(import_init,[],[])
-                targets.add(import_init.name)
 
             if import_free:
-                targets.add(import_free.name)
+                old_name = import_init.name
+                new_name = self.get_new_name(old_name)
+
+                if new_name == old_name:
+                    targets.add(old_name)
+                else:
+                    targets.add(AsName(old_name, new_name))
 
             expr = Import(expr.source, targets)
 
