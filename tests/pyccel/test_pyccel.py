@@ -735,7 +735,7 @@ def test_module_init( language ):
 
     pyth_out = get_python_output(test_prog)
 
-    compile_pyccel (cwd, test_mod, pyccel_commands)
+    compile_pyccel(cwd, test_mod, pyccel_commands)
 
     if language != "python":
         pyth_mod_out = get_python_output(test_prog, cwd)
@@ -749,3 +749,39 @@ def test_module_init( language ):
         lang_out = get_lang_output(test_prog, language)
 
     compare_pyth_fort_output(pyth_out, lang_out, str, language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled. And chained imports (see #756)"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_module_init_collisions( language ):
+    test_mod  = get_abs_path("scripts/module_init2.py")
+    test_prog = get_abs_path("scripts/runtest_module_init2.py")
+
+    output_dir   = get_abs_path('scripts/__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language="+language
+    if language=="python":
+        if output_dir is None:
+            pyccel_commands += "--output="+output_dir
+
+    pyth_out = get_python_output(test_prog)
+
+    compile_pyccel(cwd, test_mod, pyccel_commands)
+    compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    if language == 'python' :
+        lang_out = get_lang_output(output_test_file, language)
+    else:
+        lang_out = get_lang_output(test_prog, language)
+
+    compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
