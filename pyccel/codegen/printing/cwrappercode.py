@@ -124,7 +124,11 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if dtype != "pyarrayobject":
-            return CCodePrinter.get_declare_type(self, expr)
+            #TODO: Remove when #757 is fixed
+            if expr.rank > 0 and expr.is_ndarray and expr.is_optional:
+                dtype = 't_ndarray'
+            else:
+                return CCodePrinter.get_declare_type(self, expr)
         else :
             dtype = self.find_in_dtype_registry(dtype, prec)
 
