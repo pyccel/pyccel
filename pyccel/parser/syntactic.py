@@ -86,6 +86,8 @@ def get_name(a):
         return a.id
     elif isinstance(a, ast.arg):
         return a.arg
+    elif isinstance(a, ast.FunctionDef):
+        return a.name
     else:
         raise NotImplementedError()
 
@@ -130,7 +132,7 @@ class SyntaxParser(BasicParser):
 
         tree                = extend_tree(code)
         self._fst           = tree
-        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg, ast.FunctionDef)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
