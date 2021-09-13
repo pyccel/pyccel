@@ -1453,7 +1453,7 @@ class CCodePrinter(CodePrinter):
         lhs_var = expr.lhs
         rhs_var = expr.rhs
 
-        lhs = VariableAddress(lhs_var)
+        lhs = VariableAddress(lhs_var) if lhs_var.rank == 0 else lhs_var
         rhs = VariableAddress(rhs_var) if isinstance(rhs_var, Variable) else rhs_var
 
         lhs = self._print(lhs)
