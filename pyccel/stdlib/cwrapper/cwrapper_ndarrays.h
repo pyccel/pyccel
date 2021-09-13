@@ -16,6 +16,9 @@
 # include "cwrapper.h"
 # include "ndarrays.h"
 
+# define NO_TYPE_CHECK -1
+# define NO_ORDER_CHECK -1
+
 /*
  * Function: pyarray_to_ndarray
  * ----------------------------

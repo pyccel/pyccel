@@ -25,9 +25,6 @@
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
 # include "numpy/arrayobject.h"
 
-# define NO_TYPE_CHECK -1
-# define NO_ORDER_CHECK -1
-
 extern const char* dataTypes[17];
 
 /*
