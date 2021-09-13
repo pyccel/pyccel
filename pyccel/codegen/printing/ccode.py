@@ -1456,7 +1456,7 @@ class CCodePrinter(CodePrinter):
         rhs_var = expr.rhs
 
         lhs_address = VariableAddress(lhs_var)
-        # Ensure all everything which can be stored in a VariableAddress is
+        # Ensure everything which can be stored in a VariableAddress is
         try:
             rhs_address = VariableAddress(rhs_var)
         except TypeError:
