@@ -1664,9 +1664,15 @@ class SemanticParser(BasicParser):
         if init_func:
             free_func_name = self.get_new_name(expr.name+'__free')
             deallocs = self._garbage_collector(init_func.body)
-            import_frees = [self.d_parsers[imp].semantic_parser.ast.free_func \
-                            for imp in self._namespace.imports['imports'] \
-                             if imp in self.d_parsers]
+            pyccelised_imports = [imp for imp_name, imp in self._namespace.imports['imports'].items() \
+                             if imp_name in self.d_parsers]
+
+            import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports]
+            import_frees = [f if f in imp.target else \
+                             f.clone(next(i.target for i in imp.target \
+                                        if isinstance(i, AsName) and i.name == f.name)) \
+                            for f,imp in zip(import_frees, pyccelised_imports)]
+
             if deallocs or import_frees:
                 import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
@@ -3607,7 +3613,7 @@ class SemanticParser(BasicParser):
                 result  = FunctionCall(import_init,[],[])
 
             if import_free:
-                old_name = import_init.name
+                old_name = import_free.name
                 new_name = self.get_new_name(old_name)
 
                 if new_name == old_name:
