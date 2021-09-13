@@ -646,14 +646,6 @@ class CWrapperCodePrinter(CCodePrinter):
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
 
-    def _print_VariableAddress(self, expr):
-        if isinstance(expr.variable, IndexedElement):
-            return '&{}'.format(self._print(expr.variable))
-        elif self.stored_in_c_pointer(expr.variable):
-            return '{}'.format(expr.variable.name)
-        else:
-            return '&{}'.format(expr.variable.name)
-
     def _print_Interface(self, expr):
 
         # Collecting all functions

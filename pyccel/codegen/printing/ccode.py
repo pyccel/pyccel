@@ -1640,7 +1640,7 @@ class CCodePrinter(CodePrinter):
     def _print_VariableAddress(self, expr):
         if isinstance(expr.variable, IndexedElement):
             return '&{}'.format(self._print(expr.variable))
-        elif self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
+        elif self.stored_in_c_pointer(expr.variable):
             return '{}'.format(expr.variable.name)
         else:
             return '&{}'.format(expr.variable.name)
