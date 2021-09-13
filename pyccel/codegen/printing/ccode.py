@@ -1453,26 +1453,32 @@ class CCodePrinter(CodePrinter):
         lhs_var = expr.lhs
         rhs_var = expr.rhs
 
-        lhs_c_pointer = self.stored_in_c_pointer(lhs_var)
-
-        lhs = VariableAddress(lhs_var) if (not lhs_var.is_ndarray or lhs_c_pointer) else lhs_var
-        rhs = VariableAddress(rhs_var) if isinstance(rhs_var, Variable) else rhs_var
-
-        lhs = self._print(lhs)
-        rhs = self._print(rhs)
-
-        if lhs_c_pointer:
-            return '{} = {};\n'.format(lhs, rhs)
+        lhs_address = VariableAddress(lhs_var)
+        # Ensure all everything which can be stored in a VariableAddress is
+        try:
+            rhs_address = VariableAddress(rhs_var)
+        except TypeError:
+            rhs_address = rhs_var
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        elif isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
-                and isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-            if lhs_var.order == rhs_var.order:
-                return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
+        if not self.stored_in_c_pointer(lhs_var) and \
+                isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
+            rhs = self._print(rhs_var)
+
+            if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
+                lhs = self._print(lhs_address)
+                if lhs_var.order == rhs_var.order:
+                    return 'alias_assign({}, {});\n'.format(lhs, rhs)
+                else:
+                    return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
             else:
-                return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
+                lhs = self._print(lhs_var)
+                return '{} = {};\n'.format(lhs, rhs)
         else:
+            lhs = self._print(lhs_address)
+            rhs = self._print(rhs_address)
+
             return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
