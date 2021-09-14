@@ -416,6 +416,7 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add("complex")
             func = "cabs"
         else:
+            self._additional_imports.add("stdlib")
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
