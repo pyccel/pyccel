@@ -133,12 +133,6 @@ class Codegen(object):
 
         return self._language
 
-    def doprint(self, **settings):
-        """Prints the code in the target language."""
-        if not self._printer:
-            self.set_printer(**settings)
-        return self._printer.doprint(self.ast)
-
     def set_printer(self, **settings):
         """ Set the current codeprinter instance"""
         # Get language used (default language used is fortran)
@@ -181,6 +175,12 @@ class Codegen(object):
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
+
+    def doprint(self, **settings):
+        """Prints the code in the target language."""
+        if not self._printer:
+            self.set_printer(**settings)
+        return self._printer.doprint(self.ast)
 
 
     def export(self, filename=None, **settings):
