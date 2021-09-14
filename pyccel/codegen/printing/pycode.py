@@ -433,6 +433,8 @@ class PythonCodePrinter(CodePrinter):
                         import_target_swap[source].get(i,i) for i in expr.target]
             else:
                 target = expr.target
+
+            target = list(set(target))
             if source in pyccel_builtin_import_registery:
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name], t.target) for t in target if isinstance(t, AsName)])
 
