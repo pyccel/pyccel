@@ -80,10 +80,10 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
     assert(os.path.isfile(root+extension))
 
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
+    base_dir = os.path.dirname(root)
     if not is_mod:
-        base_dir = os.path.dirname(root)
         base_name = os.path.basename(root)
-        prog_root = os.path.join(base_dir, base_name)
+        prog_root = os.path.join(base_dir, "prog_"+base_name)
         if os.path.isfile(prog_root+extension):
             compile_fortran_or_c(compiler, extension,
                                 path_dir, test_file,
@@ -92,12 +92,16 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
 
     if is_mod:
         command = [shutil.which(compiler), "-c", root+extension]
+        for d in deps:
+            d = insert_pyccel_folder(d)
+            command.append("-I"+os.path.dirname(d))
     else:
         command = [shutil.which(compiler), "-O3", root+extension]
         for d in deps:
             d = insert_pyccel_folder(d)
             command.append(d[:-3]+".o")
             command.append("-I"+os.path.dirname(d))
+    command.append("-I"+base_dir)
 
     command.append("-o")
     if is_mod:
