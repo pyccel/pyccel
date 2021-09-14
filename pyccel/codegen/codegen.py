@@ -4,6 +4,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+import os
 
 from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
@@ -40,7 +41,6 @@ class Codegen(object):
         self._ast      = parser.ast
         self._name     = name
         self._printer  = None
-        self._code     = None
         self._language = None
 
         #TODO verify module name != function name
@@ -133,12 +133,6 @@ class Codegen(object):
 
         return self._language
 
-    @property
-    def code(self):
-        """Returns the generated code."""
-
-        return self._code
-
     def set_printer(self, **settings):
         """ Set the current codeprinter instance"""
         # Get language used (default language used is fortran)
@@ -183,14 +177,6 @@ class Codegen(object):
         self._stmts['body']       = self.ast
 
 
-
-    def doprint(self, **settings):
-        """Prints the code in the target language."""
-        if not self._printer:
-            self.set_printer(**settings)
-        self._code = self._printer.doprint(self.ast)
-        return self._code
-
     def export(self, filename=None, **settings):
         """Export code in filename"""
         self.set_printer(**settings)
@@ -206,10 +192,21 @@ class Codegen(object):
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
-        # print module or program code
-        self._code = self._printer.doprint(self.ast)
+
+        # print module
+        code = self._printer.doprint(self.ast)
         with open(filename, 'w') as f:
-            for line in self._code:
+            for line in code:
                 f.write(line)
 
-        return filename
+        prog_filename = None
+        if self.is_program and self.language != 'python':
+            folder = os.path.dirname(filename)
+            fname  = os.path.basename(filename)
+            prog_filename = os.path.join(folder,"prog_"+fname)
+            code = self._printer.doprint(self.ast.program)
+            with open(prog_filename, 'w') as f:
+                for line in code:
+                    f.write(line)
+
+        return filename, prog_filename
