@@ -89,6 +89,7 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
                                 path_dir, test_file,
                                 dependencies, is_mod = True)
             root = prog_root
+            deps.append(test_file)
 
     if is_mod:
         command = [shutil.which(compiler), "-c", root+extension]
