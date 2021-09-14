@@ -133,6 +133,12 @@ class Codegen(object):
 
         return self._language
 
+    def doprint(self, **settings):
+        """Prints the code in the target language."""
+        if not self._printer:
+            self.set_printer(**settings)
+        return self._printer.doprint(self.expr)
+
     def set_printer(self, **settings):
         """ Set the current codeprinter instance"""
         # Get language used (default language used is fortran)
