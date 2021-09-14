@@ -329,7 +329,7 @@ class Compiler:
             j_code = ()
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.module_target,
+                *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
