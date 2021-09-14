@@ -235,7 +235,7 @@ class CCodePrinter(CodePrinter):
 
         super().__init__()
         self.prefix_module = prefix_module
-        self._additional_imports = set()
+        self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -416,7 +416,6 @@ class CCodePrinter(CodePrinter):
             self._additional_imports.add("complex")
             func = "cabs"
         else:
-            self._additional_imports.add("stdlib")
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
@@ -1030,7 +1029,6 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            self._additional_imports.add('stdlib')
             free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
@@ -1347,7 +1345,6 @@ class CCodePrinter(CodePrinter):
         return '// pass\n'
 
     def _print_Nil(self, expr):
-        self._additional_imports.add('stdlib')
         return 'NULL'
 
     def _print_PyccelAdd(self, expr):
