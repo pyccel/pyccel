@@ -413,7 +413,7 @@ class PythonCodePrinter(CodePrinter):
             if init_func:
                 init_func_name = init_func.name
             free_func = p.semantic_parser.ast.free_func
-            if init_func:
+            if free_func:
                 free_func_name = free_func.name
         if not expr.target:
             source = self._print(expr.source)
