@@ -245,7 +245,7 @@ def execute_pyccel(fname, *,
     try:
         codegen = Codegen(semantic_parser, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
-        fname = codegen.export(fname, language=language)
+        fname, prog_name = codegen.export(fname, language=language)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
@@ -272,7 +272,7 @@ def execute_pyccel(fname, *,
 
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
-    main_obj = CompileObj(file_name = fname,
+    mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
             includes     = includes,
@@ -280,7 +280,7 @@ def execute_pyccel(fname, *,
             libdirs      = libdirs,
             dependencies = modules,
             accelerators = accelerators)
-    parser.compile_obj = main_obj
+    parser.compile_obj = mod_obj
 
     #------------------------------------------------------
     # TODO: collect dependencies and proceed recursively
@@ -309,7 +309,7 @@ def execute_pyccel(fname, *,
                               compiler = src_compiler,
                               verbose  = verbose)
 
-            main_obj.add_dependencies(stdlib)
+            mod_obj.add_dependencies(stdlib)
 
     if convert_only:
         # Change working directory back to starting point
@@ -344,11 +344,11 @@ def execute_pyccel(fname, *,
 
     for son in parser.sons:
         get_module_dependencies(son, deps)
-    main_obj.add_dependencies(*deps.values())
+    mod_obj.add_dependencies(*deps.values())
 
     # Compile code to modules
     try:
-        src_compiler.compile_module(compile_obj=main_obj,
+        src_compiler.compile_module(compile_obj=mod_obj,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
     except Exception:
@@ -358,12 +358,15 @@ def execute_pyccel(fname, *,
 
     try:
         if codegen.is_program:
-            generated_program_filepath = src_compiler.compile_program(compile_obj=main_obj,
+            prog_obj = CompileObj(file_name = prog_name,
+                    folder       = pyccel_dirpath,
+                    dependencies = (mod_obj,))
+            generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
         # Create shared library
         generated_filepath = create_shared_library(codegen,
-                                               main_obj,
+                                               mod_obj,
                                                language,
                                                wrapper_flags,
                                                pyccel_dirpath,
