@@ -137,7 +137,7 @@ class Codegen(object):
         """Prints the code in the target language."""
         if not self._printer:
             self.set_printer(**settings)
-        return self._printer.doprint(self.expr)
+        return self._printer.doprint(self.ast)
 
     def set_printer(self, **settings):
         """ Set the current codeprinter instance"""
