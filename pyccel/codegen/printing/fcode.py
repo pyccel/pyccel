@@ -361,12 +361,7 @@ class FCodePrinter(CodePrinter):
                  body,
                  'end module {}\n'.format(name)]
 
-        code = '\n'.join([a for a in parts if a])
-
-        if expr.program:
-            code += self._print(expr.program)
-
-        return code
+        return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
         self.parser.change_to_program_scope()
