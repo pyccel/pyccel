@@ -360,7 +360,8 @@ def execute_pyccel(fname, *,
         if codegen.is_program:
             prog_obj = CompileObj(file_name = prog_name,
                     folder       = pyccel_dirpath,
-                    dependencies = (mod_obj,))
+                    dependencies = (mod_obj,),
+                    prog_target  = module_name)
             generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)

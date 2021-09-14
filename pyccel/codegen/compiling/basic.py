@@ -57,7 +57,8 @@ class CompileObj:
                  libdirs      = (),
                  dependencies = (),
                  accelerators = (),
-                 has_target_file = True):
+                 has_target_file = True,
+                 prog_target  = None):
 
         self._file = os.path.join(folder, file_name)
         self._folder = folder
@@ -66,7 +67,7 @@ class CompileObj:
         rel_mod_name = os.path.join(folder, self._module_name)
         self._module_target = rel_mod_name+'.o'
 
-        self._prog_target = rel_mod_name
+        self._prog_target = prog_target or rel_mod_name
         if sys.platform == "win32":
             self._prog_target += '.exe'
 
