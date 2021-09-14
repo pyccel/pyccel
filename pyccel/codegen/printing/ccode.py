@@ -235,7 +235,7 @@ class CCodePrinter(CodePrinter):
 
         super().__init__()
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib'])
+        self._additional_imports = set()
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -519,12 +519,6 @@ class CCodePrinter(CodePrinter):
 
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
-        # This is done before the imports to avoid splitting imports as much as possible
-        if expr.program:
-            prog_code = self._print(expr.program)
-        else:
-            prog_code = ''
-
         # Print imports last to be sure that all additional_imports have been collected
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
@@ -536,7 +530,7 @@ class CCodePrinter(CodePrinter):
                         variables = global_variables,
                         body      = body)
 
-        return code+prog_code
+        return code
 
     def _print_Break(self, expr):
         return 'break;\n'
@@ -1035,6 +1029,7 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
+            self._additional_imports.add('stdlib')
             free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
@@ -1351,6 +1346,7 @@ class CCodePrinter(CodePrinter):
         return '// pass\n'
 
     def _print_Nil(self, expr):
+        self._additional_imports.add('stdlib')
         return 'NULL'
 
     def _print_PyccelAdd(self, expr):
@@ -1709,8 +1705,8 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        imports = [i for i in expr.imports if not i.source == self._current_module]
-        imports  = ''.join(self._print(i) for i in imports)
+        imports = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = ''.join(self._print(i) for i in imports)
 
         return ('{imports}'
                 'int main()\n{{\n'
