@@ -206,7 +206,6 @@ class FCodePrinter(CodePrinter):
 
         self._additional_code = None
         self._additional_imports = set([])
-        self._additional_declare = []
 
         self.prefix_module = prefix_module
 
@@ -321,7 +320,6 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
-        decs += ''.join(self._print_Declare(Declare(i.dtype, i)) for i in self._additional_declare)
         body    = ''
 
         # ... TODO add other elements
@@ -377,7 +375,6 @@ class FCodePrinter(CodePrinter):
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.parser.get_variables(self._namespace)
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
-        decs += ''.join(self._print_Declare(Declare(i.dtype, i)) for i in self._additional_declare)
 
         # Detect if we are using mpi4py
         # TODO should we find a better way to do this?
@@ -466,59 +463,29 @@ class FCodePrinter(CodePrinter):
                     sep = str(f.value)
                 elif f.keyword == 'end':
                     end = str(f.value)
+                else:
+                    errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
         args_format = []
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
-        def formatted_args_to_print(fargs_format, fargs, end):
-
-            def split_long_argument(line):
-                line = line[1 : len(line) - 1]
-                length = len(line)
-                longest_chunk = length
-                cuts = []
-                positions = [idx for idx in range(length) if line[idx] == ' ']
-                if len(positions) > 12:
-                    positions = positions[int(len(positions) / 4) : 12]
-                for mask in range(1, 1<<len(positions)):
-                    mask_cuts = [positions[idx] for idx in range(len(positions)) if (1 << idx)&mask != 0 ]
-                    mask_cuts.append(length)
-                    valid = True
-                    mask_longest_chunk = 0
-                    for idx in range(len(mask_cuts) - 1):
-                        if mask_cuts[idx + 1] - mask_cuts[idx] < 8:
-                            valid = False
-                        mask_longest_chunk = max(mask_longest_chunk, mask_cuts[idx + 1] - mask_cuts[idx])
-                    if valid and mask_longest_chunk < longest_chunk:
-                        cuts = mask_cuts
-                        longest_chunk = mask_longest_chunk
-                if longest_chunk != length:
-                    return [line[a + 1 : b + 1] for a, b in zip([-1, *cuts], cuts)]
-                return [line[i:i + int(length / 3 + 1)] for i in range(0, length, int(length / 3 + 1))]
+        def formatted_args_to_print(fargs_format, fargs, fend):
 
             if fargs_format == ['*']:
                 return ', '.join(['print *', *fargs]) + '\n'
             separator = self._print_LiteralString(LiteralString(sep))
-            args_formatting = ''
-            args_code = ''
+            args_formatting = []
+            args_code = []
             for a_f, a_c in zip(fargs_format, fargs):
-                if a_f == 'A' and len(a_c) > 30 and a_c[0] == '\'' and a_c.count('\'') == 2:
-                    chunks = split_long_argument(a_c)
-                    whole_format = ' '.join(['A'] * len(chunks))
-                    arg_concat = ' , '.join('\'{}\''.format(chunk) for chunk in chunks)
-                    args_code += ('' if args_formatting == ''
-                                  else (' , ' + separator + ' , ' if separator != '' else ' , ')) + arg_concat
-                    args_formatting += ('' if args_formatting == ''
-                                        else (' A ' if separator != '' else ' ')) + whole_format
-                else:
-                    args_code += ('' if args_formatting == ''
-                                  else (' , ' + separator + ' , ' if separator != '' else ' , ')) + (a_c if a_c != '' else '\'\'')
-                    args_formatting += ('' if args_formatting == ''
-                                        else (' A ' if separator != '' else ' ')) + a_f
+                args_code.append(a_c if a_c != '' else "''")
+                args_formatting.append(a_f)
+            args_code = (' , ' + separator + ' , ' if separator != '' else ' , ').join(args_code)
+            args_formatting = (' A ' if separator != '' else ' ').join(args_formatting)
             if args_formatting == '':
-                return "write(*, '(A)', advance=\"no\") {}\n".format(self._print_LiteralString(LiteralString(end)))
-            if end != '':
-                return "write(*, '({} A)', advance=\"no\") {} , {}\n".format(args_formatting, args_code, self._print_LiteralString(LiteralString(end)))
+                return "write(*, '(A)', advance=\"no\") {}\n".format(self._print_LiteralString(LiteralString(fend)))
+            if fend != '':
+                return "write(*, '({} A)', advance=\"no\") {} , {}\n"\
+                    .format(args_formatting, args_code, self._print_LiteralString(LiteralString(fend)))
             return "write(*, '({})', advance=\"no\") {}\n".format(args_formatting, args_code)
 
         if len(orig_args) == 0:
@@ -529,15 +496,7 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if isinstance(f, str):
-                arg_format, arg = self.get_print_format_and_arg(f)
-                args_format.append(arg_format)
-                args.append(arg)
-            elif isinstance(f, PythonTuple):
-                arg_format, arg = self.get_print_format_and_arg(f)
-                args_format.append(arg_format)
-                args.append(arg)
-            elif isinstance(f, InhomogeneousTupleVariable):
+            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
@@ -550,7 +509,7 @@ class FCodePrinter(CodePrinter):
                     args_format = []
                     args = []
                 for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
-                self._additional_declare.append(for_index)
+                self.add_vars_to_namespace(for_index)
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
                 for_range = PythonRange(max_index)
                 print_body = [FunctionCallArgument(f[for_index])]
@@ -571,8 +530,7 @@ class FCodePrinter(CodePrinter):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-        if args_format:
-            code += formatted_args_to_print(args_format, args, end)
+        code += formatted_args_to_print(args_format, args, end)
         return code
 
     def get_print_format_and_arg(self,var):
@@ -580,13 +538,10 @@ class FCodePrinter(CodePrinter):
                           ('complex'): '"(",F0.12," + ",F0.12,")"',
                           ('integer'): 'I0',
                           ('logical'): 'A',
-                          ('string'): 'A'}
+                          ('string'): 'A',
+                          ('Tuple'):  '*'
+                          }
         var_type = self._print(var.dtype)
-        if var_type not in type_to_format:
-            if self._print(var.dtype).find("character") != -1:
-                return 'A', self._print(var)
-            return '*', self._print(var)
-
         try:
             arg_format = type_to_format[var_type]
         except KeyError:
@@ -595,7 +550,13 @@ class FCodePrinter(CodePrinter):
         if var.dtype is NativeComplex():
             arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
         elif var.dtype is NativeBool():
-            arg = 'merge("True ", "False", {})'.format(self._print(var))
+            var_repr = self._print(var)
+            if var_repr == '.True.':
+                arg = "'True'"
+            elif var_repr == '.False.':
+                arg = "'False'"
+            else:
+                arg = 'merge("True ", "False", {})'.format(self._print(var))
         else:
             arg = self._print(var)
 
@@ -1659,12 +1620,6 @@ class FCodePrinter(CodePrinter):
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[i] = dec
-        for i in self._additional_declare:
-            dec = Declare(i.dtype, i)
-            decs[i] = dec
-
-
-        self._additional_declare.clear()
         arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
@@ -2827,55 +2782,41 @@ class FCodePrinter(CodePrinter):
         # split line by line and add the splitted lines to result
         result = []
         trailing = ' &'
+        # trailing with no added space characters in case splitting is within quotes
+        quote_trailing = '&'
         for line in lines:
             if len(line) > 72 and '!' in line[:72]:
                 result.append(line)
-            elif len(line) > 72 and ('"' in line[72:] or "'" in line[72:]):
-                # finds all spaces outside double quotes
-                pattern = re.compile(' (?=(?:[^"]*"[^"]*")*[^"]*$)')
-                spaces_outside_dq = []
-                for match in pattern.finditer(line):
-                    spaces_outside_dq.append(match.start())
-                # finds all spaces outside quotes
-                pattern = re.compile(' (?=(?:[^\']*\'[^\']*\')*[^\']*$)')
-                spaces_outside_q = []
-                for match in pattern.finditer(line):
-                    spaces_outside_q.append(match.start())
-                positions = []
-                for pos in spaces_outside_dq:
-                    if pos > 72 and pos in spaces_outside_q and (not positions or pos > positions[-1] + 65):
-                        positions.append(pos)
-                last_cut = 0
-                for cut in positions:
-                    hunk = line[:(cut-last_cut)].rstrip()
-                    line = line[(cut-last_cut):].lstrip()
-                    if line:
-                        hunk += trailing
-                    if cut == positions[0]:
-                        result.append(hunk)
-                    else:
-                        result.append("      " + hunk)
-                    last_cut = cut
-                if not positions:
-                    result.append(line)
-                else:
-                    if line:
-                        result.append("      " + line)
             elif len(line) > 72:
                 # code line
+                # set containing positions inside quotes
+                inside_quotes_positions = set()
+                inside_quotes_intervals = [(match.start(), match.end())
+                                           for match in re.compile('("[^"]*")|(\'[^\']*\')').finditer(line)]
+                for lidx, ridx in inside_quotes_intervals:
+                    for idx in range(lidx, ridx):
+                        inside_quotes_positions.add(idx)
                 pos = split_pos_code(line, 72)
-                hunk = line[:pos].rstrip()
-                line = line[pos:].lstrip()
+                if pos not in inside_quotes_positions:
+                    hunk = line[:pos].rstrip()
+                    line = line[pos:].lstrip()
+                else:
+                    hunk = line[:pos]
+                    line = line[pos:]
                 if line:
-                    hunk += trailing
+                    hunk += (quote_trailing if pos in inside_quotes_positions else trailing)
                 result.append(hunk)
                 while len(line) > 0:
                     pos = split_pos_code(line, 65)
-                    hunk = line[:pos].rstrip()
-                    line = line[pos:].lstrip()
+                    if pos not in inside_quotes_positions:
+                        hunk = line[:pos].rstrip()
+                        line = line[pos:].lstrip()
+                    else:
+                        hunk = line[:pos]
+                        line = line[pos:]
                     if line:
-                        hunk += trailing
-                    result.append("%s%s"%("      " , hunk))
+                        hunk += (quote_trailing if pos in inside_quotes_positions else trailing)
+                    result.append(('&' if pos in inside_quotes_positions else "      ") + hunk)
             else:
                 result.append(line)
 
