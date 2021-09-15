@@ -680,6 +680,8 @@ class CCodePrinter(CodePrinter):
                           ('int',1)     : '%c',
                           ('bool',4)    : '%s',
                           ('string', 0) : '%s'}
+        print('HERERERE')
+        print(self._print(var.dtype))
         try:
             arg_format = type_to_format[(self._print(var.dtype), var.precision)]
         except KeyError:
@@ -707,6 +709,7 @@ class CCodePrinter(CodePrinter):
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
             elif f.keyword == 'end'    :   end = str(f.value)
+            else: errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
         args_format = []
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
