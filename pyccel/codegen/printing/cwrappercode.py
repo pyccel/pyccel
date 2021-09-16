@@ -1080,8 +1080,8 @@ class CWrapperCodePrinter(CCodePrinter):
         init_call = ''
         if expr.init_func:
             used_names = set()
-            static_function, static_args, _ = self._get_static_function(used_names, expr.init_func, [])
-            init_call = self._print(FunctionCall(static_function,static_args,[]))
+            static_function = self.get_static_function(expr.init_func)
+            init_call = self._print(FunctionCall(static_function,[],[]))
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'PyObject *m;\n'
