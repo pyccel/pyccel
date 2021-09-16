@@ -193,6 +193,7 @@ class Codegen(object):
         header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
         filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
+        # print module header
         if header_ext is not None:
             code = self._printer.doprint(ModuleHeader(self.ast))
             with open(header_filename, 'w') as f:
@@ -205,6 +206,7 @@ class Codegen(object):
             for line in code:
                 f.write(line)
 
+        # print program
         prog_filename = None
         if self.is_program and self.language != 'python':
             folder = os.path.dirname(filename)

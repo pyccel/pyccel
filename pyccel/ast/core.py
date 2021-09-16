@@ -1184,7 +1184,7 @@ class Module(Basic):
             raise TypeError('free_func must be a FunctionDef')
 
         if not isinstance(program, (NoneType, Program, CodeBlock)):
-            raise TypeError('program must be a Program')
+            raise TypeError('program must be a Program (or a CodeBlock at the syntactic stage)')
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
