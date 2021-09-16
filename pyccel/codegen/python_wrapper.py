@@ -32,10 +32,6 @@ def create_shared_library(codegen,
                           sharedlib_modname=None,
                           verbose = False):
 
-    # Consistency checks
-    if not codegen.is_module:
-        raise TypeError('Expected Module')
-
     # Get module name
     module_name = codegen.name
 
@@ -68,7 +64,6 @@ def create_shared_library(codegen,
         bind_c_obj=CompileObj(file_name = bind_c_filename,
                 folder = pyccel_dirpath,
                 flags  = main_obj.flags,
-                is_module = True,
                 dependencies = (main_obj,))
         wrapper_compile_obj.add_dependencies(bind_c_obj)
         src_compiler.compile_module(compile_obj=bind_c_obj,
@@ -97,14 +92,14 @@ def create_shared_library(codegen,
     #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
-    module_old_name = codegen.expr.name
-    codegen.expr.set_name(sharedlib_modname)
+    module_old_name = codegen.ast.name
+    codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser, language)
     wrapper_code = wrapper_codegen.doprint(codegen.expr)
     if errors.has_errors():
         return
 
-    codegen.expr.set_name(module_old_name)
+    codegen.ast.set_name(module_old_name)
 
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)

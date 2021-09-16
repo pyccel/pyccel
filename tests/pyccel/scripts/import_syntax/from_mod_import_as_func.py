@@ -15,33 +15,34 @@ def matmat(a,b,c):
             for k in range(0, m):
                 c[i,j] = c[i,j] + a[i,k]*b[k,j]
 
-from numpy import zeros as zilch
+if __name__ == '__main__':
+    from numpy import zeros as zilch
 
-n = 3
-m = 4
-p = 3
+    n = 3
+    m = 4
+    p = 3
 
-a = zilch((n,m), 'double')
-b = zilch((m,p), 'double')
+    a = zilch((n,m), 'double')
+    b = zilch((m,p), 'double')
 
-for i in range(0, n):
-    for j in range(0, m):
-        a[i,j] = (i-j)*1.0
-        print(a[i,j])
+    for i in range(0, n):
+        for j in range(0, m):
+            a[i,j] = (i-j)*1.0
+            print(a[i,j])
+        print()
     print()
-print()
 
-for i in range(0, m):
-    for j in range(0, p):
-        b[i,j] = (i+j)*1.0
-        print(b[i,j])
+    for i in range(0, m):
+        for j in range(0, p):
+            b[i,j] = (i+j)*1.0
+            print(b[i,j])
+        print()
     print()
-print()
 
-c = zilch((n,p),'double')
-matmat(a,b,c)
+    c = zilch((n,p),'double')
+    matmat(a,b,c)
 
-for i in range(0, n):
-    for j in range(0, p):
-        print(c[i,j])
-    print()
+    for i in range(0, n):
+        for j in range(0, p):
+            print(c[i,j])
+        print()

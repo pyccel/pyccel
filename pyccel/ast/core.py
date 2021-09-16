@@ -17,11 +17,11 @@ from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeBool, NativeRange,
+                        NativeBool, NativeRange, default_precision,
                         NativeTuple, str_dtype)
 from .internals      import Slice, PyccelSymbol
 
-from .literals       import LiteralInteger, Nil, convert_to_literal
+from .literals       import LiteralInteger, Nil, convert_to_literal, LiteralFalse
 from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
@@ -64,10 +64,10 @@ __all__ = (
     'FunctionDefArgument',
     'If',
     'Import',
+    'InProgram',
     'Interface',
     'Module',
     'ModuleHeader',
-    'ParserResult',
     'Pass',
     'Program',
     'PythonFunction',
@@ -267,6 +267,9 @@ class AsName(Basic):
     @property
     def target(self):
         return self._target
+
+    def __repr__(self):
+        return '{0} as {1}'.format(str(self.name), str(self.target))
 
     def __str__(self):
         return '{0} as {1}'.format(str(self.name), str(self.target))
@@ -661,16 +664,16 @@ class CodeBlock(Basic):
     def lhs(self):
         return self.body[-1].lhs
 
-    def insert2body(self, obj, back=True):
-        """ Insert an object to the body of the codeblock
-        The object is inserted at the back by default but
+    def insert2body(self, *obj, back=True):
+        """ Insert object(s) to the body of the codeblock
+        The object(s) are inserted at the back by default but
         can be inserted at the front by setting back to False
         """
-        obj.set_current_user_node(self)
+        _ = [o.set_current_user_node(self) for o in obj]
         if back:
-            self._body = tuple(self.body + (obj,))
+            self._body = tuple([*self.body, *obj])
         else:
-            self._body = tuple((obj,) + self.body)
+            self._body = tuple([*obj, *self.body])
 
     def __repr__(self):
         return 'CodeBlock({})'.format(self.body)
@@ -1083,6 +1086,19 @@ class Module(Basic):
     funcs: list
         a list of FunctionDef instances
 
+    init_func: FunctionDef
+        The function which initialises the module (expressions in the
+        python module which are executed on import)
+        Default : None
+
+    free_func: FunctionDef
+        The function which frees any variables allocated in the module
+        Default : None
+
+    program: Program/CodeBlock
+        CodeBlock containing any expressions which are only executed
+        when the module is executed directly
+
     interfaces: list
         a list of Interface instances
 
@@ -1112,14 +1128,21 @@ class Module(Basic):
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
-    __slots__ = ('_name','_variables','_funcs','_interfaces','_classes','_imports')
-    _attribute_nodes = ('_variables','_funcs','_interfaces','_classes','_imports')
+    __slots__ = ('_name','_variables','_funcs','_interfaces',
+                 '_classes','_imports','_init_func','_free_func',
+                 '_program','_variable_inits')
+    _attribute_nodes = ('_variables','_funcs','_interfaces',
+                        '_classes','_imports','_init_func',
+                        '_free_func','_program','_variable_inits')
 
     def __init__(
         self,
         name,
         variables,
         funcs,
+        init_func = None,
+        free_func = None,
+        program = None,
         interfaces=(),
         classes=(),
         imports=(),
@@ -1153,6 +1176,16 @@ class Module(Basic):
             if not isinstance(i, Interface):
                 raise TypeError('Only a Inteface instance is allowed.')
 
+        NoneType = type(None)
+        if not isinstance(init_func, (NoneType, FunctionDef)):
+            raise TypeError('init_func must be a FunctionDef')
+
+        if not isinstance(free_func, (NoneType, FunctionDef)):
+            raise TypeError('free_func must be a FunctionDef')
+
+        if not isinstance(program, (NoneType, Program, CodeBlock)):
+            raise TypeError('program must be a Program (or a CodeBlock at the syntactic stage)')
+
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
         imports = list(imports)
@@ -1163,45 +1196,96 @@ class Module(Basic):
 
         self._name = name
         self._variables = variables
+        self._variable_inits = [None]*len(variables)
         self._funcs = funcs
+        self._init_func = init_func
+        self._free_func = free_func
+        self._program   = program
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+
+        if init_func:
+            init_if = init_func.body.body[0]
+            init_cond = init_if.blocks[0].condition
+            init_var = init_cond.args[0]
+            self._variables.append(init_var)
+            self._variable_inits.append(LiteralFalse())
+
         super().__init__()
 
     @property
     def name(self):
+        """ Name of the module
+        """
         return self._name
 
     @property
     def variables(self):
+        """ Module global variables
+        """
         return self._variables
 
     @property
+    def init_func(self):
+        """ The function which initialises the module (expressions in the
+        python module which are executed on import)
+        """
+        return self._init_func
+
+    @property
+    def free_func(self):
+        """ The function which frees any variables allocated in the module
+        """
+        return self._free_func
+
+    @property
+    def program(self):
+        """ CodeBlock or Program containing any expressions which are only executed
+        when the module is executed directly
+        """
+        return self._program
+
+    @property
     def funcs(self):
+        """ Any functions defined in the module
+        """
         return self._funcs
 
     @property
     def interfaces(self):
+        """ Any interfaces defined in the module
+        """
         return self._interfaces
 
     @property
     def classes(self):
+        """ Any classes defined in the module
+        """
         return self._classes
 
     @property
     def imports(self):
+        """ Any imports in the module
+        """
         return self._imports
 
     @property
     def declarations(self):
-        return [Declare(i.dtype, i) for i in self.variables]
+        """ Returns the declarations of the variables
+        """
+        return [Declare(i.dtype, i, value=v) for i,v in zip(self.variables, self._variable_inits)]
 
     @property
     def body(self):
+        """ Returns the functions, interfaces and classes defined
+        in the module
+        """
         return self.interfaces + self.funcs + self.classes
 
     def set_name(self, new_name):
+        """ Function for changing the name of a module
+        """
         self._name = new_name
 
 class ModuleHeader(Basic):
@@ -1302,28 +1386,44 @@ class Program(Basic):
         self._variables = variables
         self._body = body
         self._imports = imports
-
         super().__init__()
 
     @property
     def name(self):
+        """ Name of the executable
+        """
         return self._name
 
     @property
     def variables(self):
+        """ Variables contained within the program
+        """
         return self._variables
 
     @property
     def body(self):
+        """ Statements in the program
+        """
         return self._body
 
     @property
     def imports(self):
+        """ Imports imported in the program
+        """
         return self._imports
 
     @property
     def declarations(self):
+        """ Returns the declarations of the variables
+        """
         return [Declare(i.dtype, i) for i in self.variables]
+
+    def remove_import(self, name):
+        """ Remove an import with the given source name from the list
+        of imports
+        """
+        _ = [i.invalidate_node() for i in self.imports if i.source == name]
+        self._imports = tuple(i for i in self.imports if i.source != name)
 
 
 #==============================================================================
@@ -1523,6 +1623,7 @@ class For(Basic):
         return self._local_vars
 
     def insert2body(self, stmt):
+        stmt.set_current_user_node(self)
         self.body.insert2body(stmt)
 
 
@@ -3606,6 +3707,20 @@ class StarredArguments(Basic):
     def args_var(self):
         return self._starred_obj
 
+# ...
+
+class InProgram(PyccelAstNode):
+    """
+    Class representing the boolean:
+    __name__ == '__main__'
+    """
+    _dtype = NativeBool()
+    _precision = default_precision['bool']
+    _rank  = 0
+    _shape = ()
+    _order = None
+    _attribute_nodes = ()
+    __slots__ = ()
 
 # ...
 
@@ -3823,94 +3938,6 @@ def get_iterable_ranges(it, var_name=None):
     # ...
 
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
-
-class ParserResult(Basic):
-    __slots__ = ('_program','_module','_prog_name','_mod_name')
-    _attribute_nodes = ('_program','_module')
-
-    def __init__(
-        self,
-        program   = None,
-        module    = None,
-        mod_name  = None,
-        prog_name = None,
-        ):
-
-        if program is not None  and not isinstance(program, CodeBlock):
-            raise TypeError('Program must be a CodeBlock')
-
-        if module is not None  and not isinstance(module, CodeBlock):
-            raise TypeError('Module must be a CodeBlock')
-
-        if program is not None and module is not None:
-            if mod_name is None:
-                raise TypeError('Please provide module name')
-            elif not isinstance(mod_name, str):
-                raise TypeError('Module name must be a string')
-            if prog_name is None:
-                raise TypeError('Please provide program name')
-            elif not isinstance(prog_name, str):
-                raise TypeError('Program name must be a string')
-
-        self._program   = program
-        self._module    = module
-        self._prog_name = prog_name
-        self._mod_name  = mod_name
-        super().__init__()
-
-
-    @property
-    def program(self):
-        return self._program
-
-    @property
-    def module(self):
-        return self._module
-
-    @property
-    def prog_name(self):
-        return self._prog_name
-
-    @property
-    def mod_name(self):
-        return self._mod_name
-
-    def has_additional_module(self):
-        return self.program is not None and self.module is not None
-
-    def is_program(self):
-        return self.program is not None
-
-    def get_focus(self):
-        if self.is_program():
-            return self.program
-        else:
-            return self.module
-
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
-        """
-        kwargs = dict(
-        program = self.program,
-        module  = self.module,
-        prog_name = self.prog_name,
-        mod_name  = self.mod_name)
-        return (apply, (self.__class__, (), kwargs))
 
 #==============================================================================
 def process_shape(shape):
