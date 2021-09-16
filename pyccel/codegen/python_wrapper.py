@@ -95,7 +95,7 @@ def create_shared_library(codegen,
     module_old_name = codegen.ast.name
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser, language)
-    wrapper_code = wrapper_codegen.doprint(codegen.expr)
+    wrapper_code = wrapper_codegen.doprint(codegen.ast)
     if errors.has_errors():
         return
 
