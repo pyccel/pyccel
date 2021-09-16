@@ -6,7 +6,6 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
-import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint
@@ -44,8 +43,6 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
-
-from pyccel.ast.sympy_helper import pyccel_to_sympy
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -244,6 +241,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
+        self._current_module = None
         # Dictionary linking optional variables to their
         # temporary counterparts which provide allocated
         # memory
@@ -488,10 +486,15 @@ class CCodePrinter(CodePrinter):
                     PYCCEL_RESTRICTION_TODO,
                     symbol = expr, severity='fatal')
 
+    def _print_Header(self, expr):
+        return ''
+
     def _print_ModuleHeader(self, expr):
         name = expr.module.name
         # TODO: Add classes and interfaces
         funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
+
+        global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *map(Import, self._additional_imports)]
@@ -500,24 +503,34 @@ class CCodePrinter(CodePrinter):
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n'
+                '{variables}\n'
                 #'{classes}\n'
                 '{funcs}\n'
                 #'{interfaces}\n'
                 '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
+                        variables = global_variables,
                         funcs   = funcs)
 
     def _print_Module(self, expr):
+        self._current_module = expr.name
         body    = ''.join(self._print(i) for i in expr.body)
+
+        global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
-        return ('{imports}\n'
+
+        code = ('{imports}\n'
+                '{variables}\n'
                 '{body}\n').format(
-                        imports = imports,
-                        body    = body)
+                        imports   = imports,
+                        variables = global_variables,
+                        body      = body)
+
+        return code
 
     def _print_Break(self, expr):
         return 'break;\n'
@@ -1690,9 +1703,9 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        # PythonPrint imports last to be sure that all additional_imports have been collected
-        imports  = [*expr.imports, *map(Import, self._additional_imports)]
-        imports  = ''.join(self._print(i) for i in imports)
+        imports = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = ''.join(self._print(i) for i in imports)
+
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'

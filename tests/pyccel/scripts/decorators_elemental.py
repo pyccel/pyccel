@@ -9,10 +9,11 @@ def square(x):
     s = x*x
     return s
 
-a = 2.0
-b = square(a)
-print(b)
+if __name__ == '__main__':
+    a = 2.0
+    b = square(a)
+    print(b)
 
-xs = array([1., 2., 3.])
-ys = square(xs)
-print(ys)
+    xs = array([1., 2., 3.])
+    ys = square(xs)
+    print(ys)
