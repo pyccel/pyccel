@@ -2796,6 +2796,7 @@ class FCodePrinter(CodePrinter):
                 for lidx, ridx in inside_quotes_intervals:
                     for idx in range(lidx, ridx):
                         inside_quotes_positions.add(idx)
+                initial_len = len(line)
                 pos = split_pos_code(line, 72)
                 if pos not in inside_quotes_positions:
                     hunk = line[:pos].rstrip()
@@ -2805,18 +2806,21 @@ class FCodePrinter(CodePrinter):
                     line = line[pos:]
                 if line:
                     hunk += (quote_trailing if pos in inside_quotes_positions else trailing)
+                last_cut_was_inside_quotes = pos in inside_quotes_positions
                 result.append(hunk)
                 while len(line) > 0:
+                    removed = initial_len - len(line)
                     pos = split_pos_code(line, 65)
-                    if pos not in inside_quotes_positions:
+                    if pos + removed not in inside_quotes_positions:
                         hunk = line[:pos].rstrip()
                         line = line[pos:].lstrip()
                     else:
                         hunk = line[:pos]
                         line = line[pos:]
                     if line:
-                        hunk += (quote_trailing if pos in inside_quotes_positions else trailing)
-                    result.append(('&' if pos in inside_quotes_positions else "      ") + hunk)
+                        hunk += (quote_trailing if (pos + removed) in inside_quotes_positions else trailing)
+                    result.append(('&' if last_cut_was_inside_quotes else "      ") + hunk)
+                    last_cut_was_inside_quotes = (pos + removed) in inside_quotes_positions
             else:
                 result.append(line)
 
