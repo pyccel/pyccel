@@ -22,10 +22,11 @@ def qsort_kernel ( a , lo , hi ) :
         lo = i
         j = hi
 
-from numpy import array
+if __name__ == '__main__':
+    from numpy import array
 
-x = array([0.66, 0.96, 0.06, 0.89, 0.57, 0.56, 0.08, 0.33, 0.04, 0.59])
-qsort_kernel(x,0,9)
+    x = array([0.66, 0.96, 0.06, 0.89, 0.57, 0.56, 0.08, 0.33, 0.04, 0.59])
+    qsort_kernel(x,0,9)
 
-for xi in x:
-    print(xi)
+    for xi in x:
+        print(xi)

@@ -45,7 +45,7 @@ if sys.platform == 'win32':
     RTOL = 1e-13
     ATOL = 1e-14
 else:
-    RTOL = 1e-14
+    RTOL = 2e-14
     ATOL = 1e-15
 
 RTOL32 = 1e-5

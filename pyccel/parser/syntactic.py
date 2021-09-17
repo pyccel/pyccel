@@ -19,8 +19,8 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import FunctionCall
-from pyccel.ast.core import ParserResult
+from pyccel.ast.core import FunctionCall, FunctionCallArgument
+from pyccel.ast.core import Module
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -35,7 +35,7 @@ from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Argument, ValuedArgument
+from pyccel.ast.core import FunctionDefArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -56,7 +56,7 @@ from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import Header, MetaVariable
+from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
@@ -86,6 +86,8 @@ def get_name(a):
         return a.id
     elif isinstance(a, ast.arg):
         return a.arg
+    elif isinstance(a, ast.FunctionDef):
+        return a.name
     else:
         raise NotImplementedError()
 
@@ -130,7 +132,7 @@ class SyntaxParser(BasicParser):
 
         tree                = extend_tree(code)
         self._fst           = tree
-        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg, ast.FunctionDef)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
@@ -181,83 +183,14 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        prog          = []
-        mod           = []
-        start         = []
-        current_file  = start
-        targets       = []
-        n_empty_lines = 0
-        is_prog       = False
         body          = [self._visit(v) for v in stmt.body]
 
-        # Define the names of the module and program
+        # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
-        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        prog_name = 'prog_' + current_mod_name
+        name = os.path.splitext(os.path.basename(self._filename))[0]
 
-        new_body      = []
-        for i in body:
-            if isinstance(i, CodeBlock):
-                new_body += list(i.body)
-            else:
-                new_body.append(i)
-
-        body = new_body
-        for v in body:
-
-            if n_empty_lines > 3:
-                current_file = start
-            if isinstance(v,(FunctionDef, ClassDef)):
-                # Functions and classes are always defined in a module
-                n_empty_lines = 0
-                mod.append(v)
-                targets.append(v.name)
-                current_file = mod
-                im = Import(source=current_mod_name, target = [v.name])
-                prog.append(im)
-            elif isinstance(v,(Header, Comment, CommentBlock)):
-                # Headers and Comments are defined in the same block as the following object
-                n_empty_lines = 0
-                current_file = start
-                current_file.append(v)
-            elif isinstance(v, EmptyNode):
-                # EmptyNodes are defined in the same block as the previous line
-                current_file.append(v)
-                n_empty_lines += 1
-            elif isinstance(v, Import):
-                # Imports are defined in both the module and the program
-                n_empty_lines = 0
-                mod.append(v)
-                prog.append(v)
-            else:
-                # Everything else is defined in a module
-                is_prog = True
-                n_empty_lines = 0
-                prog.append(v)
-                current_file = prog
-
-            # If the current file is now a program or a module. Add headers and comments before the line we just read
-            if len(start)>0 and current_file is not start:
-                current_file[-1:-1] = start
-                start = []
-        if len(start)>0:
-            mod.extend(start)
-
-        mod_code = CodeBlock(mod) if len(targets)>0 else None
-        if is_prog:
-            prog_code = CodeBlock(prog)
-            prog_code.set_fst(stmt)
-        else:
-            prog_code = None
-            # If the file only contains headers
-            if mod_code is None:
-                mod_code = CodeBlock(mod)
-        assert( mod_code is not None or prog_code is not None)
-        code = ParserResult(program   = prog_code,
-                            module    = mod_code,
-                            prog_name = prog_name,
-                            mod_name  = current_mod_name)
-        return code
+        body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
+        return Module(name, [], [], program = CodeBlock(body))
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
@@ -368,19 +301,22 @@ class SyntaxParser(BasicParser):
         arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            positional_args        = [Argument(a.arg, annotation=self._visit(a.annotation)) for a in stmt.args[:n_expl]]
-            valued_arguments       = [ValuedArgument(Argument(a.arg, annotation=self._visit(a.annotation)),\
-                                      self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+            positional_args        = [FunctionDefArgument(PyccelSymbol(a.arg),
+                                            annotation=self._visit(a.annotation))
+                                        for a in stmt.args[:n_expl]]
+            valued_arguments       = [FunctionDefArgument(PyccelSymbol(a.arg),
+                                            annotation=self._visit(a.annotation),
+                                            value = self._visit(d))
+                                        for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
                 annotation = self._visit(a.annotation)
-                if d is not None:
-                    arg = Argument(a.arg, annotation=annotation)
-                    arg = ValuedArgument(arg, self._visit(d), kwonly=True)
-                else:
-                    arg = Argument(a.arg, kwonly=True, annotation=annotation)
+                val = self._visit(d) if d is not None else d
+                arg = FunctionDefArgument(PyccelSymbol(a.arg),
+                            annotation=annotation,
+                            value=val, kwonly=True)
 
                 arguments.append(arg)
 
@@ -628,6 +564,9 @@ class SyntaxParser(BasicParser):
         def fill_types(ls):
             container = []
             for arg in ls:
+                if isinstance(arg, FunctionCallArgument):
+                    arg = arg.value
+
                 if isinstance(arg, PyccelSymbol):
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
@@ -646,14 +585,11 @@ class SyntaxParser(BasicParser):
         # add the decorator @types if the arguments are annotated
         annotated_args = []
         for a in arguments:
-            if isinstance(a, Argument):
-                annotated_args.append(a.annotation)
-            elif isinstance(a, ValuedArgument):
-                annotated_args.append(a.argument.annotation)
+            annotated_args.append(a.annotation)
 
         if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
-                returns = ValuedArgument(PyccelSymbol('results'),self._visit(stmt.returns))
+                returns = FunctionCallArgument(self._visit(stmt.returns), keyword='results')
                 annotated_args.append(returns)
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
@@ -668,11 +604,11 @@ class SyntaxParser(BasicParser):
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            decorators['stack_array'] = tuple(str(b) for a in decorators['stack_array']
+            decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
                 for b in a.args)
 
         if 'allow_negative_index' in decorators:
-            decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
+            decorators['allow_negative_index'] = tuple(str(b.value) for a in decorators['allow_negative_index'] for b in a.args)
         template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
@@ -687,21 +623,19 @@ class SyntaxParser(BasicParser):
                                     severity='error')
 
                 for i in comb_types.args:
-                    if isinstance(i, ValuedArgument) and not i.name in ('name',
-                            'types'):
+                    if i.has_keyword and i.keyword not in ('name', 'types'):
                         msg = 'Argument provided to the template decorator is not valid'
                         errors.report(msg,
                                         symbol = comb_types,
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
-                if all(isinstance(i, ValuedArgument) for i in comb_types.args):
+                if all(i.has_keyword for i in comb_types.args):
                     tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
-                            comb_types.args[0].name == 'name' else\
+                            comb_types.args[0].keyword == 'name' else\
                             (comb_types.args[1].value, comb_types.args[0].value)
                 else:
-                    tp_name = comb_types.args[0]
-                    ls = comb_types.args[1]
-                    ls = ls.value if isinstance(ls, ValuedArgument) else ls
+                    tp_name = comb_types.args[0].value
+                    ls = comb_types.args[1].value
                 try:
                     tp_name = str(tp_name)
                     ls = ls if isinstance(ls, PythonTuple) else list(ls)
@@ -737,8 +671,8 @@ class SyntaxParser(BasicParser):
                 results = []
                 ls = comb_types.args
 
-                if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
-                    arg_name = ls[-1].name
+                if len(ls) > 0 and ls[-1].has_keyword:
+                    arg_name = ls[-1].keyword
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
@@ -901,15 +835,15 @@ class SyntaxParser(BasicParser):
 
         args = []
         if stmt.args:
-            args += self._visit(stmt.args)
+            args += [FunctionCallArgument(self._visit(a)) for a in stmt.args]
         if stmt.keywords:
             args += self._visit(stmt.keywords)
 
         if len(args) == 0:
             args = ()
 
-        if len(args) == 1 and isinstance(args[0], GeneratorComprehension):
-            return args[0]
+        if len(args) == 1 and isinstance(args[0].value, GeneratorComprehension):
+            return args[0].value
 
         func = self._visit(stmt.func)
 
@@ -930,7 +864,7 @@ class SyntaxParser(BasicParser):
 
         target = stmt.arg
         val = self._visit(stmt.value)
-        return ValuedArgument(target, val)
+        return FunctionCallArgument(val, keyword=target)
 
     def _visit_For(self, stmt):
 
@@ -991,7 +925,7 @@ class SyntaxParser(BasicParser):
         result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
-        parent = self._scope[-3]
+        parent = self._scope[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
 

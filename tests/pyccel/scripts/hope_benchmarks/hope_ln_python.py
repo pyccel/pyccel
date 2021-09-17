@@ -13,5 +13,6 @@ def ln_python_exp (Y) :
     x8 = x4*x4
     return x - x2 / 2 + x * x2 / 3 - x4 / 4 + x * x4 / 5 - x6 / 6 + x6 * x / 7 - x8 / 8 + x8 * x / 9
 
-print(ln_python(2.0))
-print(ln_python_exp(2.0))
+if __name__ == '__main__':
+    print(ln_python(2.0))
+    print(ln_python_exp(2.0))

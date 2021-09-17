@@ -17,6 +17,7 @@ __pycache__
 __pyccel__
 __epyccel__
 .DS_Store
+.vscode
 
 build
 *egg*
@@ -34,8 +35,11 @@ doc/source
 *.ps
 *.gv
 *.exe
+*.lock
 
 *.swp
+
+pyccel/compilers/*.json
 
 tests/*.pyccel
 tests/*.f90
