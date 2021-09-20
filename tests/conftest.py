@@ -25,7 +25,7 @@ def move_coverage(path_dir):
                 shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
 
 def pytest_runtest_teardown(item, nextitem):
-    path_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.dirname(os.path.realpath(item.fspath))
     move_coverage(path_dir)
 
     config = item.config
