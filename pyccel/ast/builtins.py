@@ -784,6 +784,8 @@ class PythonType(Basic):
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
+        if not isinstance (obj, PyccelAstNode):
+            raise PyccelError("Python's type function is not implemented for {} object".format(type(obj)))
         self._dtype = obj.dtype
         self._precision = obj.precision
         self._obj = obj
