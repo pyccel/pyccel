@@ -572,10 +572,12 @@ class CWrapperCodePrinter(CCodePrinter):
             The name of the C wrapper function
 
         wrapper_args    : list of Variables
-            List of python object variables
+            List of variables with dtype PyObject which hold the arguments
+            passed to the function
 
         wrapper_results : Variable
-            List of python object variable
+            List containing one variable with dtype PyObject which represents
+            the variable which will be returned by the function
 
         error_msg       : string
             The message to be raised in the NotImplementedError
