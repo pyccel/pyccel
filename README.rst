@@ -230,9 +230,6 @@ Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/act
 Pyccel Container Images
 =======================
 
-Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
-
-The images:
 
 - are based on ubuntu:latest
 - use distro packaged python3, gcc, gfortran, blas and openmpi
