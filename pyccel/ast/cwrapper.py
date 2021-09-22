@@ -4,7 +4,8 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Handling the transitions between python code and C code using (Python/C Api).
+Module representing objects (functions/variables etc) required for the interface
+between python code and C code (using Python/C Api and cwrapper.c).
 """
 
 from ..errors.errors import Errors
