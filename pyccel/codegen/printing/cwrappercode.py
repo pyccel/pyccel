@@ -294,8 +294,9 @@ class CWrapperCodePrinter(CCodePrinter):
         variable : Variable
             Variable holding information needed to choose the declaration type
 
-        Returns: String
-        --------
+        Returns
+        -------
+        string
 
         """
         dtype = self._print(variable.dtype)
@@ -375,12 +376,15 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_wrapper_arguments(self, used_names):
         """
         Create wrapper arguments
+
         Parameters
         ----------
         used_names : Set of strings
             Set of variable and function names to avoid name collisions
 
-        Returns: List of variables
+        Returns
+        -------
+        List of variables
         """
         python_func_args    = self.get_new_PyObject("args"  , used_names)
         python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
@@ -571,7 +575,7 @@ class CWrapperCodePrinter(CCodePrinter):
             List of python object variables
 
         wrapper_results : Variable
-            python object variable
+            List of python object variable
 
         error_msg       : string
             The message to be raised in the NotImplementedError
