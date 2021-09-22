@@ -681,7 +681,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_name = self._get_wrapper_name(used_names, expr)
         used_names.add(wrapper_name)
 
-        # Collect local variables
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments(used_names)
         wrapper_results = [self.get_new_PyObject("result", used_names)]
