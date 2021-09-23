@@ -15,7 +15,7 @@ from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
-from pyccel.ast.core      import Assign, datatype, Import, AugAssign, AliasAssign
+from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -24,7 +24,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
-from pyccel.ast.datatypes import NativeReal, NativeTuple, NativeString
+from pyccel.ast.datatypes import NativeReal, NativeTuple, datatype
 
 from pyccel.ast.internals import Slice
 
@@ -805,10 +805,13 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
-                    errors.report(UNSUPPORTED_ARRAY_RANK, severity='fatal')
+                    errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self._additional_imports.add('ndarrays')
-                return 't_ndarray '
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+                dtype = 't_ndarray'
+                if expr.is_optional:
+                    errors.report("Optional arrays are not currently supported in C", symbol=expr, severity='error')
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
@@ -1249,8 +1252,17 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        a : Variable/FunctionAddress
+        a : PyccelAstNode
         """
+        if isinstance(a, (Nil, VariableAddress)):
+            return True
+        if isinstance(a, FunctionCall):
+            results = a.funcdef.results
+            if len(results)==1:
+                a = a.funcdef.results[0]
+            else:
+                return False
+
         if not isinstance(a, Variable):
             return False
         return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
@@ -1269,14 +1281,16 @@ class CCodePrinter(CodePrinter):
         for a, f in zip(expr.args, func.arguments):
             a = a.value if a else Nil()
             f = f.var
-            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
-                args.append(VariableAddress(a))
-            elif f.is_optional and not isinstance(a, Nil):
-                tmp_var = self.create_tmp_var(f)
-                assign = Assign(tmp_var, a)
-                self._additional_code += self._print(assign) + '\n'
-                args.append(VariableAddress(tmp_var))
-
+            if self.stored_in_c_pointer(f):
+                if isinstance(a, Variable):
+                    args.append(VariableAddress(a))
+                elif not self.stored_in_c_pointer(a):
+                    tmp_var = self.create_tmp_var(f)
+                    assign = Assign(tmp_var, a)
+                    self._additional_code += self._print(assign) + '\n'
+                    args.append(VariableAddress(tmp_var))
+                else:
+                    args.append(a)
             else :
                 args.append(a)
 
@@ -1311,7 +1325,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+        args = [VariableAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
@@ -1457,22 +1471,33 @@ class CCodePrinter(CodePrinter):
         lhs_var = expr.lhs
         rhs_var = expr.rhs
 
-        lhs = VariableAddress(lhs_var)
-        rhs = VariableAddress(rhs_var) if isinstance(rhs_var, Variable) else rhs_var
-
-        lhs = self._print(lhs)
-        rhs = self._print(rhs)
+        lhs_address = VariableAddress(lhs_var)
+        # Ensure everything which can be stored in a VariableAddress is
+        try:
+            rhs_address = VariableAddress(rhs_var)
+        except TypeError:
+            rhs_address = rhs_var
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if isinstance(lhs_var, Variable) and lhs_var.is_ndarray \
-                and isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
-            if lhs_var.order == rhs_var.order:
-                return 'alias_assign(&{}, {});\n'.format(lhs, rhs)
-            else:
-                return 'transpose_alias_assign(&{}, {});\n'.format(lhs, rhs)
+        if not self.stored_in_c_pointer(lhs_var) and \
+                isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
+            rhs = self._print(rhs_var)
 
-        return '{} = {};\n'.format(lhs, rhs)
+            if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
+                lhs = self._print(lhs_address)
+                if lhs_var.order == rhs_var.order:
+                    return 'alias_assign({}, {});\n'.format(lhs, rhs)
+                else:
+                    return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
+            else:
+                lhs = self._print(lhs_var)
+                return '{} = {};\n'.format(lhs, rhs)
+        else:
+            lhs = self._print(lhs_address)
+            rhs = self._print(rhs_address)
+
+            return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
 
@@ -1641,7 +1666,7 @@ class CCodePrinter(CodePrinter):
     def _print_VariableAddress(self, expr):
         if isinstance(expr.variable, IndexedElement):
             return '&{}'.format(self._print(expr.variable))
-        elif self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
+        elif self.stored_in_c_pointer(expr.variable):
             return '{}'.format(expr.variable.name)
         else:
             return '&{}'.format(expr.variable.name)
