@@ -8,4 +8,5 @@ def pisum():
             pi_sum += 1.0/(k*k)
     return pi_sum
 
-print(pisum())
+if __name__ == '__main__':
+    print(pisum())

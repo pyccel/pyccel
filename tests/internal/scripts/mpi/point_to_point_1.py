@@ -13,34 +13,35 @@ from pyccel.stdlib.internal.mpi import MPI_REAL8
 
 import numpy as np
 
-# we need to declare these variables somehow,
-# since we are calling mpi subroutines
-ierr = np.int32(-1)
-sizes = np.int32(-1)
-rank = np.int32(-1)
+if __name__ == '__main__':
+    # we need to declare these variables somehow,
+    # since we are calling mpi subroutines
+    ierr = np.int32(-1)
+    sizes = np.int32(-1)
+    rank = np.int32(-1)
 
-mpi_init(ierr)
+    mpi_init(ierr)
 
-comm = mpi_comm_world
-mpi_comm_size(comm, sizes, ierr)
-mpi_comm_rank(comm, rank, ierr)
+    comm = mpi_comm_world
+    mpi_comm_size(comm, sizes, ierr)
+    mpi_comm_rank(comm, rank, ierr)
 
-nx = 4
-x = np.zeros(nx)
+    nx = 4
+    x = np.zeros(nx)
 
-if rank == 0:
-    x[:] = 1.0
+    if rank == 0:
+        x[:] = 1.0
 
-source = np.int32(0)
-dest   = np.int32(1)
+    source = np.int32(0)
+    dest   = np.int32(1)
 
-# ...
-tag1 = np.int32(1234)
-if rank == source:
-    x[1] = 2.0
-    count = np.int32(1)
-    mpi_send(x[1], count, MPI_REAL8, dest, tag1, comm, ierr)
-    print("> processor ", rank, " sent x(1) = ", x)
-# ...
+    # ...
+    tag1 = np.int32(1234)
+    if rank == source:
+        x[1] = 2.0
+        count = np.int32(1)
+        mpi_send(x[1], count, MPI_REAL8, dest, tag1, comm, ierr)
+        print("> processor ", rank, " sent x(1) = ", x)
+    # ...
 
-mpi_finalize(ierr)
+    mpi_finalize(ierr)

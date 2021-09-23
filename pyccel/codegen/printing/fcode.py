@@ -16,7 +16,6 @@ from itertools import chain
 from collections import OrderedDict
 
 import functools
-import operator
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
@@ -27,7 +26,7 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName,
-                             If, IfSection, For)
+                             If, IfSection, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
@@ -172,7 +171,7 @@ python_builtin_datatypes = {
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
                r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
-               r'interface\b',r'module\b',r'program\b')
+               r'interface\b',r'module\b(?! *procedure)',r'program\b')
 inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
@@ -366,6 +365,10 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
+        self.parser.change_to_program_scope()
+        module_namespace = self._namespace
+        self._namespace = self.parser.namespace
+
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
         body    = self._print(expr.body)
@@ -399,6 +402,10 @@ class FCodePrinter(CodePrinter):
                  decs,
                  body,
                 'end program {}\n'.format(name)]
+
+        self.parser.change_to_module_scope()
+        self._namespace = module_namespace
+
         return '\n'.join(a for a in parts if a)
 
     def _print_Import(self, expr):
@@ -1058,6 +1065,7 @@ class FCodePrinter(CodePrinter):
         is_const = var.is_const
         is_stack_array = var.is_stack_array
         is_optional = var.is_optional
+        is_private = var.is_private
         is_static = expr.static
         intent = expr.intent
 
@@ -1098,7 +1106,7 @@ class FCodePrinter(CodePrinter):
 
         code_value = ''
         if expr.value:
-            code_value = ' = {0}'.format(expr.value)
+            code_value = ' = {0}'.format(self._print(expr.value))
 
         vstr = self._print(expr.variable.name)
 
@@ -1111,6 +1119,7 @@ class FCodePrinter(CodePrinter):
         intentstr      = ''
         allocatablestr = ''
         optionalstr    = ''
+        privatestr     = ''
         rankstr        = ''
 
         # Compute intent string
@@ -1137,6 +1146,10 @@ class FCodePrinter(CodePrinter):
         # Compute optional string
         if is_optional:
             optionalstr = ', optional'
+
+        # Compute private string
+        if is_private:
+            privatestr = ', private'
 
         # Compute rank string
         # TODO: improve
@@ -1167,7 +1180,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr
+        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
@@ -1362,7 +1375,18 @@ class FCodePrinter(CodePrinter):
 
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
-        return ''
+        var = expr.variable
+        if isinstance(var, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in var)
+
+        if var.is_pointer:
+            return ''
+        else:
+            var_code = self._print(var)
+            code  = 'if (allocated({})) then\n'.format(var_code)
+            code += '  deallocate({})\n'     .format(var_code)
+            code += 'end if\n'
+            return code
 #------------------------------------------------------------------------------
 
     def _print_NativeBool(self, expr):

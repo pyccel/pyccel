@@ -12,38 +12,40 @@ from pyccel.stdlib.internal.mpi import MPI_INTEGER8
 
 import numpy as np
 
-# we need to declare these variables somehow,
-# since we are calling mpi subroutines
-ierr = np.int32(-1)
-sizes = np.int32(-1)
-rank = np.int32(-1)
 
-mpi_init(ierr)
+if __name__ == '__main__':
+    # we need to declare these variables somehow,
+    # since we are calling mpi subroutines
+    ierr = np.int32(-1)
+    sizes = np.int32(-1)
+    rank = np.int32(-1)
 
-comm = mpi_comm_world
-mpi_comm_size(comm, sizes, ierr)
-mpi_comm_rank(comm, rank, ierr)
+    mpi_init(ierr)
 
-nb_values = 8
+    comm = mpi_comm_world
+    mpi_comm_size(comm, sizes, ierr)
+    mpi_comm_rank(comm, rank, ierr)
 
-block_length = np.int32(nb_values // sizes)
+    nb_values = 8
 
-# ...
-values = np.zeros(block_length, 'int')
-for i in range(0, block_length):
-    values[i] = 1000 + rank*nb_values + i
+    block_length = np.int32(nb_values // sizes)
 
-print('I, process ', rank, 'sent my values array : ', values)
-# ...
+    # ...
+    values = np.zeros(block_length, 'int')
+    for i in range(0, block_length):
+        values[i] = 1000 + rank*nb_values + i
 
-# ...
-data = np.zeros(nb_values, 'int')
+    print('I, process ', rank, 'sent my values array : ', values)
+    # ...
 
-mpi_allgather (values, block_length, MPI_INTEGER8,
-               data, block_length, MPI_INTEGER8,
-               comm, ierr)
-# ...
+    # ...
+    data = np.zeros(nb_values, 'int')
 
-print('I, process ', rank, ', received ', data)
+    mpi_allgather (values, block_length, MPI_INTEGER8,
+                   data, block_length, MPI_INTEGER8,
+                   comm, ierr)
+    # ...
 
-mpi_finalize(ierr)
+    print('I, process ', rank, ', received ', data)
+
+    mpi_finalize(ierr)

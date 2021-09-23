@@ -29,7 +29,7 @@ def get_exe(filename, language=None):
         exefile1 += ".exe"
 
     dirname = os.path.dirname(filename)
-    basename = "prog_"+os.path.basename(exefile1)
+    basename = os.path.basename(exefile1)
     exefile2 = os.path.join(dirname, basename)
 
     if os.path.isfile(exefile2):
@@ -80,24 +80,29 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,is_m
     assert(os.path.isfile(root+extension))
 
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
+    base_dir = os.path.dirname(root)
     if not is_mod:
-        base_dir = os.path.dirname(root)
         base_name = os.path.basename(root)
         prog_root = os.path.join(base_dir, "prog_"+base_name)
         if os.path.isfile(prog_root+extension):
-            compile_fortran(path_dir, test_file, dependencies, is_mod = True)
-            dependencies.append(test_file)
+            compile_fortran_or_c(compiler, extension,
+                                path_dir, test_file,
+                                dependencies, is_mod = True)
             root = prog_root
+            deps.append(test_file)
 
     if is_mod:
         command = [shutil.which(compiler), "-c", root+extension]
+        for d in deps:
+            d = insert_pyccel_folder(d)
+            command.append("-I"+os.path.dirname(d))
     else:
         command = [shutil.which(compiler), "-O3", root+extension]
-
-    for d in deps:
-        d = insert_pyccel_folder(d)
-        command.append(d[:-3]+".o")
-        command.append("-I"+os.path.dirname(d))
+        for d in deps:
+            d = insert_pyccel_folder(d)
+            command.append(d[:-3]+".o")
+            command.append("-I"+os.path.dirname(d))
+    command.append("-I"+base_dir)
 
     command.append("-o")
     if is_mod:
@@ -654,7 +659,8 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1))\n")
+                "if __name__ == '__main__':\n"
+                "    print(f(1))\n")
 
         f.write(code)
 
@@ -680,7 +686,8 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1.5))\n")
+                "if __name__ == '__main__':\n"
+                "    print(f(1.5))\n")
 
         f.write(code)
 
@@ -712,3 +719,71 @@ def test_basic_header():
                                         ] )
 def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
+
+#------------------------------------------------------------------------------
+def test_module_init( language ):
+    test_mod  = get_abs_path("scripts/module_init.py")
+    test_prog = get_abs_path("scripts/runtest_module_init.py")
+
+    output_dir   = get_abs_path('scripts/__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language="+language
+    if language=="python":
+        if output_dir is None:
+            pyccel_commands += "--output="+output_dir
+
+    pyth_out = get_python_output(test_prog)
+
+    compile_pyccel(cwd, test_mod, pyccel_commands)
+
+    if language != "python":
+        pyth_mod_out = get_python_output(test_prog, cwd)
+        compare_pyth_fort_output(pyth_out, pyth_mod_out, str, language)
+
+    compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    if language == 'python' :
+        lang_out = get_lang_output(output_test_file, language)
+    else:
+        lang_out = get_lang_output(test_prog, language)
+
+    compare_pyth_fort_output(pyth_out, lang_out, str, language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled. And chained imports (see #756)"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_module_init_collisions( language ):
+    test_mod  = get_abs_path("scripts/module_init2.py")
+    test_prog = get_abs_path("scripts/runtest_module_init2.py")
+
+    output_dir   = get_abs_path('scripts/__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language="+language
+    if language=="python":
+        if output_dir is None:
+            pyccel_commands += "--output="+output_dir
+
+    pyth_out = get_python_output(test_prog)
+
+    compile_pyccel(cwd, test_mod, pyccel_commands)
+    compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    if language == 'python' :
+        lang_out = get_lang_output(output_test_file, language)
+    else:
+        lang_out = get_lang_output(test_prog, language)
+
+    compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)

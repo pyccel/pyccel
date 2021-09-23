@@ -39,9 +39,11 @@ from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCal
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
+from pyccel.ast.core import Module
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
+from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Concatenate
 from pyccel.ast.core import Import
@@ -50,6 +52,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
+from pyccel.ast.core import InProgram
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -62,7 +65,7 @@ from pyccel.ast.datatypes import (NativeInteger, NativeBool,
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
-from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import Slice, PyccelSymbol
@@ -70,7 +73,7 @@ from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
-from pyccel.ast.literals import Nil
+from pyccel.ast.literals import Nil, LiteralString
 
 from pyccel.ast.mathext  import math_constants
 
@@ -87,6 +90,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelNot, PyccelEq
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -170,6 +174,8 @@ class SemanticParser(BasicParser):
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = OrderedDict()
+        self._program_namespace = Scope()
+        self._module_namespace  = self._namespace
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
@@ -202,6 +208,10 @@ class SemanticParser(BasicParser):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
+
+    @property
+    def program_namespace(self):
+        return self._program_namespace
 
     #================================================================
     #                     Public functions
@@ -262,16 +272,20 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
-        # Calling the Garbage collecting,
-        # it will add the necessary Deallocate nodes
-        # to the ast
-        self._ast = ast = self._garbage_collector(ast)
-
         return ast
 
     #================================================================
     #              Utility functions for scope handling
     #================================================================
+
+    def change_to_program_scope(self):
+        self._allocs.append([])
+        self._module_namespace = self._namespace
+        self._namespace = self._program_namespace
+
+    def change_to_module_scope(self):
+        self._program_namespace = self._namespace
+        self._namespace = self._module_namespace
 
     def get_variable_from_scope(self, name):
         """
@@ -674,15 +688,13 @@ class SemanticParser(BasicParser):
     def _garbage_collector(self, expr):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
-
-        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
         """
-        code = expr
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
-            code = CodeBlock(code)
+            deallocs = [Deallocate(i) for i in self._allocs[-1]]
+        else:
+            deallocs = []
         self._allocs.pop()
-        return code
+        return deallocs
 
     def _infere_type(self, expr, **settings):
         """
@@ -1606,6 +1618,102 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
+    def _visit_Module(self, expr, **settings):
+        body = self._visit(expr.program).body
+        program_body      = []
+        init_func_body    = []
+        mod_name = expr.name
+        prog_name = self.get_new_name('prog_'+expr.name)
+        container = self._program_namespace.imports
+        container['imports'][mod_name] = Import(mod_name)
+
+        for b in body:
+            if isinstance(b, If):
+                if any(isinstance(i.condition, InProgram) for i in b.blocks):
+                    for i in b.blocks:
+                        if isinstance(i.condition, InProgram):
+                            program_body.extend(i.body.body)
+                        else:
+                            init_func_body.append(i.body.body)
+                else:
+                    init_func_body.append(b)
+            elif isinstance(b, CodeBlock):
+                init_func_body.extend(b.body)
+            else:
+                init_func_body.append(b)
+
+        variables = self.get_variables(self.namespace)
+        init_func = None
+        free_func = None
+        program   = None
+
+        comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
+
+        if not all(isinstance(l, comment_types) for l in init_func_body):
+            init_var = Variable(NativeBool(), self.get_new_name('initialised'),
+                                is_private=True)
+            init_func_name = self.get_new_name(expr.name+'__init')
+            init_func_body = If(IfSection(PyccelNot(init_var),
+                                init_func_body+[Assign(init_var, LiteralTrue())]))
+            init_func = FunctionDef(init_func_name, [], [], [init_func_body],
+                    global_vars = variables)
+            self.create_new_function_scope(init_func_name, [])
+            self.exit_function_scope()
+            self.insert_function(init_func)
+
+        if init_func:
+            free_func_name = self.get_new_name(expr.name+'__free')
+            deallocs = self._garbage_collector(init_func.body)
+            pyccelised_imports = [imp for imp_name, imp in self._namespace.imports['imports'].items() \
+                             if imp_name in self.d_parsers]
+
+            import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports]
+            import_frees = [f if f.name in imp.target else \
+                             f.clone(next(i.target for i in imp.target \
+                                        if isinstance(i, AsName) and i.name == f.name)) \
+                            for f,imp in zip(import_frees, pyccelised_imports) if f]
+
+            if deallocs or import_frees:
+                import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
+                free_func_body = If(IfSection(init_var,
+                    import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
+                free_func = FunctionDef(free_func_name, [], [], [free_func_body],
+                                    global_vars = variables)
+                self.create_new_function_scope(free_func_name, [])
+                self.exit_function_scope()
+                self.insert_function(free_func)
+
+        if program_body:
+            if init_func:
+                import_init  = FunctionCall(init_func,[],[])
+                program_body = [import_init, *program_body]
+            if free_func:
+                import_free  = FunctionCall(free_func,[],[])
+                program_body = [*program_body, import_free]
+            container = self._program_namespace
+            program = Program(prog_name,
+                            self.get_variables(container),
+                            program_body,
+                            container.imports['imports'].values())
+
+        funcs = []
+        interfaces = []
+        for f in self.namespace.functions.values():
+            if isinstance(f, FunctionDef) and not f.is_header:
+                funcs.append(f)
+            elif isinstance(f, Interface):
+                interfaces.append(f)
+
+        return Module(mod_name,
+                    variables,
+                    funcs,
+                    init_func = init_func,
+                    free_func = free_func,
+                    program = program,
+                    interfaces=interfaces,
+                    classes=self.namespace.classes.values(),
+                    imports=self._namespace.imports['imports'].values())
+
     def _visit_tuple(self, expr, **settings):
         return tuple(self._visit(i, **settings) for i in expr)
 
@@ -2068,7 +2176,7 @@ class SemanticParser(BasicParser):
 
             macro = self.get_macro(name)
             if macro is not None:
-                func = macro.master
+                func = macro.master.funcdef
                 name = _get_name(func.name)
                 args = macro.apply(args)
             else:
@@ -2132,32 +2240,37 @@ class SemanticParser(BasicParser):
             else:
 
                 # TODO check types from FunctionDef
-
                 master = macro.master
-                name = _get_name(master.name)
-
-                # all terms in lhs must be already declared and available
-                # the namespace
-                # TODO improve
+                results = []
+                args = [self._visit(i, **settings) for i in rhs.args]
+                args_names = [arg.value.name for arg in args if isinstance(arg.value, Variable)]
+                d_m_args = {arg.value.name:arg.value for arg in macro.master_arguments
+                                  if isinstance(arg.value, Variable)}
 
                 if not sympy_iterable(lhs):
                     lhs = [lhs]
+                results_shapes = macro.get_results_shapes(args)
+                for m_result, shape, result in zip(macro.results, results_shapes, lhs):
+                    if m_result in d_m_args and not result in args_names:
+                        d_result = self._infere_type(d_m_args[m_result])
+                        d_result['shape'] = shape
+                        tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False, **settings)
+                        results.append(tmp)
+                    elif result in args_names:
+                        _name = _get_name(result)
+                        tmp = self.get_variable(_name)
+                        results.append(tmp)
+                    else:
+                        # TODO: check for result in master_results
+                        errors.report(INVALID_MACRO_COMPOSITION, symbol=result,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error')
 
-                results = []
-                for a in lhs:
-                    _name = _get_name(a)
-                    var = self.get_variable(_name)
-                    results.append(var)
-
-                # ...
-
-                args = [self._visit(i, **settings) for i in
-                            rhs.args]
                 expr = macro.make_necessary_copies(args, results)
                 new_expressions += expr
                 args = macro.apply(args, results=results)
-                if isinstance(master, FunctionDef):
-                    func_call = FunctionCall(master, args, self._current_function)
+                if isinstance(master.funcdef, FunctionDef):
+                    func_call = FunctionCall(master.funcdef, args, self._current_function)
                     if new_expressions:
                         return CodeBlock([*new_expressions, func_call])
                     else:
@@ -2249,7 +2362,6 @@ class SemanticParser(BasicParser):
             return CodeBlock(stmts)
 
         elif isinstance(rhs, FunctionCall):
-
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results
@@ -2346,7 +2458,6 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
                     return None
-
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
@@ -2746,12 +2857,47 @@ class SemanticParser(BasicParser):
         return While(test, body, local_vars)
 
     def _visit_IfSection(self, expr, **settings):
-        cond = self._visit(expr.condition)
+        condition = expr.condition
+
+        name_symbol = PyccelSymbol('__name__')
+        main = LiteralString('__main__')
+        prog_check = isinstance(condition, PyccelEq) \
+                and all(a in (name_symbol, main) for a in condition.args)
+
+        if prog_check:
+            cond = InProgram()
+            self.change_to_program_scope()
+
+            mod_container = self._module_namespace
+            prog_container = self._program_namespace
+            mod_imports = mod_container.imports
+            for k in mod_imports:
+                prog_container.imports[k].update(mod_container.imports[k])
+            prog_container.imports['variables'].update(mod_container.variables)
+            prog_container.imports['functions'].update(mod_container.functions)
+            prog_container.imports['classes'].update(mod_container.classes)
+            self._program_namespace.cls_constructs.update(self._module_namespace.cls_constructs)
+        else:
+            cond = self._visit(expr.condition)
         body = self._visit(expr.body)
+        if prog_check:
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the ast
+            body.insert2body(*self._garbage_collector(body))
+            self.change_to_module_scope()
+
         return IfSection(cond, body)
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
+
+        conds = [b.condition for b in args]
+        if any(isinstance(c, InProgram) for c in conds):
+            if not all(isinstance(c, (InProgram,LiteralTrue)) for c in conds):
+                errors.report("Determination of main module is too complicated to handle",
+                        symbol=expr, severity='error')
+
         allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
 
         var_shapes = [{a.variable : a.shape for a in allocs} for allocs in allocations]
@@ -2763,6 +2909,7 @@ class SemanticParser(BasicParser):
                     or not all(shape_branch1==branch_shapes[v] \
                                 for branch_shapes in var_shapes[1:]):
                 v.set_changeable_shape()
+
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
@@ -3029,7 +3176,7 @@ class SemanticParser(BasicParser):
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
             # to the body of the function
-            body = self._garbage_collector(body)
+            body.insert2body(*self._garbage_collector(body))
 
             results = [self._visit(a) for a in results]
 
@@ -3343,6 +3490,8 @@ class SemanticParser(BasicParser):
 
         container = self.namespace.imports
 
+        result = EmptyNode()
+
         if isinstance(expr.source, AsName):
             source        = expr.source.name
             source_target = expr.source.target
@@ -3405,6 +3554,8 @@ class SemanticParser(BasicParser):
             # TODO shall we improve it?
 
             p       = self.d_parsers[source_target]
+            import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
+            import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
                 targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
@@ -3449,6 +3600,27 @@ class SemanticParser(BasicParser):
             else:
                 targets = expr.target
 
+            if import_init:
+                old_name = import_init.name
+                new_name = self.get_new_name(old_name)
+
+                if new_name == old_name:
+                    targets.add(old_name)
+                else:
+                    import_init = import_init.clone(new_name)
+                    targets.add(AsName(old_name, new_name))
+
+                result  = FunctionCall(import_init,[],[])
+
+            if import_free:
+                old_name = import_free.name
+                new_name = self.get_new_name(old_name)
+
+                if new_name == old_name:
+                    targets.add(old_name)
+                else:
+                    targets.add(AsName(old_name, new_name))
+
             expr = Import(expr.source, targets)
 
             if __import_all__:
@@ -3469,7 +3641,7 @@ class SemanticParser(BasicParser):
 
                 container['imports'][source_target] = expr
 
-        return EmptyNode()
+        return result
 
 
 
@@ -3511,17 +3683,16 @@ class SemanticParser(BasicParser):
         args = [a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in expr.arguments]
 
         def get_arg(func_arg, master_arg):
-            if isinstance(master_arg, FunctionDefArgument):
-                return FunctionDefArgument(func_arg.var.clone(master_arg.name), value = master_arg.default)
+            if isinstance(master_arg, PyccelSymbol):
+                return FunctionCallArgument(func_arg.var.clone(str(master_arg)))
             else:
-                return FunctionDefArgument(func_arg.var.clone(str(master_arg)))
+                return FunctionCallArgument(master_arg)
 
-        master_args = [get_arg(a,m) if isinstance(m, PyccelSymbol) else m
-                        for a,m in zip(func.arguments, expr.master_arguments)]
+        master_args = [get_arg(a,m) for a,m in zip(func.arguments, expr.master_arguments)]
 
-        results = expr.results
-        macro   = MacroFunction(name, args, func, master_args,
-                                  results=results)
+        master = FunctionCall(func, master_args)
+        macro   = MacroFunction(name, args, master, master_args,
+                                results=expr.results, results_shapes=expr.results_shapes)
         self.insert_macro(macro)
 
         return macro
