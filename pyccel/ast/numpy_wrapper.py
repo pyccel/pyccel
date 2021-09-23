@@ -29,17 +29,19 @@ errors = Errors()
 
 __all__ = (
     #------- CAST FUNCTIONS ------
-    'pyarray_to_c_ndarray',
+    'pyarray_to_ndarray',
     #-------CHECK FUNCTIONS ------
     'array_checker',
     #-------HELPERS ------
-    'numpy_get_dim',
-    'numpy_get_ndims',
-    'numpy_get_data',
+    'array_get_dim',
+    'array_get_data',
     #-------OTHERS--------
     'get_numpy_max_acceptable_version_file'
 )
 
+#-------------------------------------------------------------------
+#                      Numpy functions
+#-------------------------------------------------------------------
 
 def get_numpy_max_acceptable_version_file():
     """
@@ -65,16 +67,16 @@ numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                              arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                              results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
-# numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper.c
-pyarray_to_c_ndarray = FunctionDef(
-                name      = 'pyarray_to_c_ndarray',
+# numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+pyarray_to_ndarray = FunctionDef(
+                name      = 'pyarray_to_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
                 body      = [],
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
-# numpy array check elements : function definition in pyccel/stdlib/cwrapper.c
-pyarray_checker = FunctionDef(
-                name      = 'pyarray_checker',
+# numpy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+pyarray_check = FunctionDef(
+                name      = 'pyarray_check',
                 arguments = [
                         Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True),
                         Variable(name = 'dtype', dtype = NativeInteger()),
@@ -84,24 +86,18 @@ pyarray_checker = FunctionDef(
                 body      = [],
                 results   = [Variable(name = 'b', dtype = NativeBool())])
 
-# https://numpy.org/devdocs/reference/c-api/array.html#c.PyArray_DIMS
-numpy_get_ndims = FunctionDef(name      = 'PyArray_NDIM',
+# Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeInteger(), name = 'i')])
-
-# https://numpy.org/devdocs/reference/c-api/array.html#c.PyArray_DATA
-numpy_get_data  = FunctionDef(name      = 'PyArray_DATA',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeGeneric(), name = 'v', rank=1)])
-
-# https://numpy.org/devdocs/reference/c-api/array.html#c.PyArray_DIM
-numpy_get_dim   = FunctionDef(name      = 'PyArray_DIM',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True),
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
+
+# Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+array_get_data  = FunctionDef(name   = 'nd_data',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
 
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
@@ -111,7 +107,7 @@ numpy_flag_c_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_C
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_F_CONTIGUOUS
 numpy_flag_f_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
 
-# Custom Array Flags defined in pyccel/stdlib/cwrapper/cwrapper.h
+# Custom Array Flags defined in pyccel/stdlib/cwrapper/cwrapper_ndarrays.h
 no_type_check           = Variable(dtype=NativeInteger(),  name = 'NO_TYPE_CHECK')
 no_order_check          = Variable(dtype=NativeInteger(),  name = 'NO_ORDER_CHECK')
 
@@ -242,7 +238,7 @@ def array_checker(py_variable, c_variable, type_check_needed, language):
         else:
             flag = numpy_flag_c_contig
 
-    check = PyccelNot(FunctionCall(pyarray_checker, [py_variable, type_ref, LiteralInteger(rank), flag]))
+    check = PyccelNot(FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag]))
 
     return check
 

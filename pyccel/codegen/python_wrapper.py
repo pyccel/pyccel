@@ -9,9 +9,10 @@ import os
 from pyccel.ast.bind_c                      import as_static_module
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
-from pyccel.codegen.printing.cwrappercode   import cwrappercode
+from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
+from pyccel.codegen.utilities      import internal_libs
 from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
@@ -88,30 +89,13 @@ def create_shared_library(codegen,
     wrapper_compile_obj.add_dependencies(cwrapper_lib)
     extra_includes  = ['cwrapper']
 
-    #--------------------------------------------------------
-    #  Compile cwrapper_ndarrays from stdlib (if necessary)
-    #--------------------------------------------------------
-    ndarrays_target = os.path.join(pyccel_dirpath,'ndarrays','ndarrays.o')
-    ndarrays_dep    = main_obj.get_dependency(ndarrays_target)
-    if ndarrays_dep:
-        cwrapper_ndarrays_lib = CompileObj("cwrapper_ndarrays.c",
-                            folder       = cwrapper_lib_dest_path,
-                            dependencies = (ndarrays_dep,),
-                            accelerators = ('python',))
-
-        recompile_object(cwrapper_ndarrays_lib,
-                          compiler = wrapper_compiler,
-                          verbose  = verbose)
-
-        wrapper_compile_obj.add_dependencies(cwrapper_ndarrays_lib)
-        extra_includes.append('cwrapper_ndarrays')
-
     #---------------------------------------
     #      Print code specific cwrapper
     #---------------------------------------
     module_old_name = codegen.ast.name
     codegen.ast.set_name(sharedlib_modname)
-    wrapper_code = cwrappercode(codegen.ast, codegen.parser, language, extra_includes=extra_includes)
+    wrapper_codegen = CWrapperCodePrinter(codegen.parser, language)
+    wrapper_code = wrapper_codegen.doprint(codegen.ast)
     if errors.has_errors():
         return
 
@@ -119,6 +103,25 @@ def create_shared_library(codegen,
 
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
+
+    #--------------------------------------------------------
+    #  Compile cwrapper_ndarrays from stdlib (if necessary)
+    #--------------------------------------------------------
+    if "ndarrays" in wrapper_codegen.get_additional_imports():
+        for lib_name in ("ndarrays", "cwrapper_ndarrays"):
+            stdlib_folder, stdlib = internal_libs[lib_name]
+
+            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+
+            # Pylint determines wrong type
+            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
+            # get the include folder path and library files
+            recompile_object(stdlib,
+                              compiler = wrapper_compiler,
+                              verbose  = verbose)
+
+            wrapper_compile_obj.add_dependencies(stdlib)
+        extra_includes.append('cwrapper_ndarrays')
 
     #---------------------------------------
     #         Compile code
