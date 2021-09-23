@@ -20,7 +20,6 @@ if __name__ == '__main__':
     rank = np.int32(-1)
 
     mpi_init(ierr)
-    
     comm = mpi_comm_world
     mpi_comm_size(comm, sizes, ierr)
     mpi_comm_rank(comm, rank, ierr)

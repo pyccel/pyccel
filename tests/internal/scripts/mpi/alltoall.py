@@ -28,7 +28,6 @@ if __name__ == '__main__':
     nb_values = 8
 
     block_length = np.int32(nb_values // sizes)
-    
     # ...
     values = np.zeros(nb_values, 'int')
     for i in range(0, nb_values):
