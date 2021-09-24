@@ -16,8 +16,11 @@
 # include "cwrapper.h"
 # include "ndarrays.h"
 
+# define NO_TYPE_CHECK -1
+# define NO_ORDER_CHECK -1
+
 /*
- * Function: pyarray_to_c_ndarray
+ * Function: pyarray_to_ndarray
  * ----------------------------
  * A Cast function that convert numpy array variable into ndarray variable,
  * by copying its information and data to a new variable of type ndarray struct
@@ -32,7 +35,14 @@
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-t_ndarray	pyarray_to_c_ndarray(PyArrayObject *o);
+t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
+
+
+/* arrays checkers and helpers */
+bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
+
+void    *nd_data(t_ndarray *a);
+int     nd_ndim(t_ndarray *a, int n);
 
 t_ndarray	pyarray_to_c_ndarray(PyArrayObject *o);
 t_ndarray	pyarray_to_f_ndarray(PyArrayObject *o);

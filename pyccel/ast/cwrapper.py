@@ -4,7 +4,8 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Handling the transitions between python code and C code using (Python/C Api).
+Module representing objects (functions/variables etc) required for the interface
+between python code and C code (using Python/C Api and cwrapper.c).
 """
 
 from ..errors.errors   import Errors
@@ -51,7 +52,6 @@ __all__ = (
     'generate_datatype_error'
 )
 
-
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
@@ -70,6 +70,10 @@ class PyccelPyArrayObject(DataType):
 
 PyArray_Type         = Variable(NativeGeneric(), 'PyArray_Type')
 Py_CLEANUP_SUPPORTED = Variable(dtype=NativeInteger(),  name = 'Py_CLEANUP_SUPPORTED')
+
+#-------------------------------------------------------------------
+#                  Parsing and Building Classes
+#-------------------------------------------------------------------
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes

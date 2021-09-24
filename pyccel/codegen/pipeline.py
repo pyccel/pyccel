@@ -18,20 +18,13 @@ from pyccel.parser.parser          import Parser
 from pyccel.codegen.codegen        import Codegen
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
+from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.python_wrapper import create_shared_library
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler
 
 __all__ = ['execute_pyccel']
-
-# map internal libraries to their folders inside pyccel/stdlib and their compile objects
-# The compile object folder will be in the pyccel dirpath
-internal_libs = {
-    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
-    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
-    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
-}
 
 #==============================================================================
 # NOTE:
@@ -238,181 +231,177 @@ def execute_pyccel(fname, *,
     if semantic_only:
         return
 
-    if parser.module_parser:
-        parsers = [parser.module_parser, parser]
-        program_name = os.path.basename(os.path.splitext(parser.filename)[0])
-        module_names = [module_name, program_name]
-    else:
-        parsers = [parser]
-        module_names = [module_name]
-
     # -------------------------------------------------------------------------
 
-    internal_libs_name = set()
-    for parser, module_name in zip(parsers, module_names):
-        semantic_parser = parser.semantic_parser
-        # Generate .f90 file
-        try:
-            codegen = Codegen(semantic_parser, module_name)
-            fname = os.path.join(pyccel_dirpath, module_name)
-            fname = codegen.export(fname, language=language)
-        except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-                severity='error')
-        except PyccelError:
-            handle_error('code generation')
-            # Raise a new error to avoid a large traceback
-            raise PyccelCodegenError('Code generation failed') from None
+    semantic_parser = parser.semantic_parser
+    # Generate .f90 file
+    try:
+        codegen = Codegen(semantic_parser, module_name)
+        fname = os.path.join(pyccel_dirpath, module_name)
+        fname, prog_name = codegen.export(fname, language=language)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
+    except PyccelError:
+        handle_error('code generation')
+        # Raise a new error to avoid a large traceback
+        raise PyccelCodegenError('Code generation failed') from None
 
-        if errors.has_errors():
-            handle_error('code generation')
-            raise PyccelCodegenError('Code generation failed')
+    if errors.has_errors():
+        handle_error('code generation')
+        raise PyccelCodegenError('Code generation failed')
 
-        if language == 'python':
-            output_file = (output_name + '.py') if output_name else os.path.basename(fname)
-            new_location = os.path.join(folder, output_file)
-            if verbose:
-                print("cp {} {}".format(fname, new_location))
-            shutil.copyfile(fname, new_location)
-            continue
+    if language == 'python':
+        output_file = (output_name + '.py') if output_name else os.path.basename(fname)
+        new_location = os.path.join(folder, output_file)
+        if verbose:
+            print("cp {} {}".format(fname, new_location))
+        shutil.copyfile(fname, new_location)
 
-        compile_libs = [*libs, parser.metavars['libraries']] \
-                        if 'libraries' in parser.metavars else libs
-        main_obj = CompileObj(file_name = fname,
-                folder       = pyccel_dirpath,
-                is_module    = codegen.is_module,
-                flags        = fflags,
-                includes     = includes,
-                libs         = compile_libs,
-                libdirs      = libdirs,
-                dependencies = modules,
-                accelerators = accelerators)
-        parser.compile_obj = main_obj
+        # Change working directory back to starting point
+        os.chdir(base_dirpath)
+        return
 
-        #------------------------------------------------------
-        # TODO: collect dependencies and proceed recursively
-        # if recursive:
-        #     for dep in parser.sons:
-        #         # Call same function on 'dep'
-        #         pass
-        #------------------------------------------------------
+    compile_libs = [*libs, parser.metavars['libraries']] \
+                    if 'libraries' in parser.metavars else libs
+    mod_obj = CompileObj(file_name = fname,
+            folder       = pyccel_dirpath,
+            flags        = fflags,
+            includes     = includes,
+            libs         = compile_libs,
+            libdirs      = libdirs,
+            dependencies = modules,
+            accelerators = accelerators)
+    parser.compile_obj = mod_obj
 
-        # Iterate over the internal_libs list and determine if the printer
-        # requires an internal lib to be included.
-        l = codegen.get_printer_imports()
-        l.add("ndarrays")
-        for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
-            if lib_name in l and \
-                    lib_name not in internal_libs_name:
+    #------------------------------------------------------
+    # TODO: collect dependencies and proceed recursively
+    # if recursive:
+    #     for dep in parser.sons:
+    #         # Call same function on 'dep'
+    #         pass
+    #------------------------------------------------------
 
-                lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
+    # Iterate over the internal_libs list and determine if the printer
+    # requires an internal lib to be included.
+    for lib_name, (stdlib_folder, stdlib) in internal_libs.items():
+        if lib_name in codegen.get_printer_imports():
 
-                # stop after copying lib to __pyccel__ directory for
-                # convert only
-                if convert_only:
-                    continue
+            lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
 
-                # Pylint determines wrong type
-                stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
-                # get the include folder path and library files
-                recompile_object(stdlib,
-                                  compiler = src_compiler,
-                                  verbose  = verbose)
+            # stop after copying lib to __pyccel__ directory for
+            # convert only
+            if convert_only:
+                continue
 
-                main_obj.add_dependencies(stdlib)
+            # Pylint determines wrong type
+            stdlib.reset_folder(lib_dest_path) # pylint: disable=E1101
+            # get the include folder path and library files
+            recompile_object(stdlib,
+                              compiler = src_compiler,
+                              verbose  = verbose)
 
-                # Add internal lib to internal_libs_name set
-                internal_libs_name.add(lib_name)
+            mod_obj.add_dependencies(stdlib)
 
-        if convert_only:
-            continue
+    if convert_only:
+        # Change working directory back to starting point
+        os.chdir(base_dirpath)
+        return
 
-        deps = dict()
-        # ...
-        # Determine all .o files and all folders needed by executable
-        def get_module_dependencies(parser, deps):
-            mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
-            mod_base = os.path.basename(parser.filename)
+    deps = dict()
+    # ...
+    # Determine all .o files and all folders needed by executable
+    def get_module_dependencies(parser, deps):
+        mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
+        mod_base = os.path.basename(parser.filename)
 
-            # Stop conditions
-            if parser.metavars.get('module_name', None) == 'omp_lib':
-                return
+        # Stop conditions
+        if parser.metavars.get('module_name', None) == 'omp_lib':
+            return
 
-            if parser.compile_obj:
-                deps[mod_base] = parser.compile_obj
-            elif mod_base not in deps:
-                compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
-                no_target = parser.metavars.get('no_target',False) or \
-                        parser.metavars.get('ignore_at_import',False)
-                deps[mod_base] = CompileObj(mod_base,
-                                    folder          = mod_folder,
-                                    libs            = compile_libs,
-                                    has_target_file = not no_target)
+        if parser.compile_obj:
+            deps[mod_base] = parser.compile_obj
+        elif mod_base not in deps:
+            compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
+            no_target = parser.metavars.get('no_target',False) or \
+                    parser.metavars.get('ignore_at_import',False)
+            deps[mod_base] = CompileObj(mod_base,
+                                folder          = mod_folder,
+                                libs            = compile_libs,
+                                has_target_file = not no_target)
 
-            # Proceed recursively
-            for son in parser.sons:
-                get_module_dependencies(son, deps)
-
+        # Proceed recursively
         for son in parser.sons:
             get_module_dependencies(son, deps)
-        main_obj.add_dependencies(*deps.values())
 
-        # Compile code to modules
-        try:
-            src_compiler.compile_module(compile_obj=main_obj,
+    for son in parser.sons:
+        get_module_dependencies(son, deps)
+    mod_obj.add_dependencies(*deps.values())
+
+    # Compile code to modules
+    try:
+        src_compiler.compile_module(compile_obj=mod_obj,
+                output_folder=pyccel_dirpath,
+                verbose=verbose)
+    except Exception:
+        handle_error('Fortran compilation')
+        raise
+
+
+    try:
+        if codegen.is_program:
+            prog_obj = CompileObj(file_name = prog_name,
+                    folder       = pyccel_dirpath,
+                    dependencies = (mod_obj,),
+                    prog_target  = module_name)
+            generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
-        except Exception:
-            handle_error('Fortran compilation')
-            raise
+        # Create shared library
+        generated_filepath = create_shared_library(codegen,
+                                               mod_obj,
+                                               language,
+                                               wrapper_flags,
+                                               pyccel_dirpath,
+                                               src_compiler,
+                                               wrapper_compiler,
+                                               output_name,
+                                               verbose)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError(msg) from None
+    except PyccelError:
+        handle_error('code generation (wrapping)')
+        raise
+    except Exception:
+        handle_error('shared library generation')
+        raise
 
+    if errors.has_errors():
+        handle_error('code generation (wrapping)')
+        raise PyccelCodegenError('Code generation failed')
 
-        try:
-            if codegen.is_program:
-                generated_filepath = src_compiler.compile_program(compile_obj=main_obj,
-                        output_folder=pyccel_dirpath,
-                        verbose=verbose)
-            else:
-                # Create shared library
-                generated_filepath = create_shared_library(codegen,
-                                                       main_obj,
-                                                       language,
-                                                       wrapper_flags,
-                                                       pyccel_dirpath,
-                                                       src_compiler,
-                                                       wrapper_compiler,
-                                                       output_name,
-                                                       verbose)
-        except NotImplementedError as error:
-            msg = str(error)
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-                severity='error')
-            handle_error('code generation (wrapping)')
-            raise PyccelCodegenError(msg) from None
-        except PyccelError:
-            handle_error('code generation (wrapping)')
-            raise
-        except Exception:
-            handle_error('shared library generation')
-            raise
+    # Move shared library to folder directory
+    # (First construct absolute path of target location)
+    generated_filename = os.path.basename(generated_filepath)
+    target = os.path.join(folder, generated_filename)
+    shutil.move(generated_filepath, target)
+    generated_filepath = target
+    if verbose:
+        print( '> Shared library has been created: {}'.format(generated_filepath))
 
-        if errors.has_errors():
-            handle_error('code generation (wrapping)')
-            raise PyccelCodegenError('Code generation failed')
-
-        # Move shared library to folder directory
-        # (First construct absolute path of target location)
-        generated_filename = os.path.basename(generated_filepath)
-        target = os.path.join(folder, generated_filename)
-        shutil.move(generated_filepath, target)
-        generated_filepath = target
+    if codegen.is_program:
+        generated_program_filename = os.path.basename(generated_program_filepath)
+        target = os.path.join(folder, generated_program_filename)
+        shutil.move(generated_program_filepath, target)
+        generated_program_filepath = target
 
         if verbose:
-            if codegen.is_program:
-                print( '> Executable has been created: {}'.format(generated_filepath))
-            else:
-                print( '> Shared library has been created: {}'.format(generated_filepath))
+            print( '> Executable has been created: {}'.format(generated_program_filepath))
 
     # Print all warnings now
     if errors.has_warnings():

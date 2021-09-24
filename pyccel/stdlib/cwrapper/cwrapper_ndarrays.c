@@ -136,14 +136,13 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  */
 static bool _check_pyarray_order(PyArrayObject *a, int flag)
 {
-	char	order;
 
 	if (flag == NO_ORDER_CHECK)
 		return true;
 
 	if (!PyArray_CHKFLAGS(a, flag))
 	{
-		order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
+		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
 		PyErr_Format(PyExc_NotImplementedError,
 			"argument does not have the expected ordering (%c)", order);
 		return false;
@@ -183,7 +182,7 @@ static bool _check_pyarray_type(PyObject *a)
 
 
 /* converting numpy array to c nd array*/
-t_ndarray	pyarray_to_c_ndarray(PyArrayObject *a)
+t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
 {
 	t_ndarray		array;
 
@@ -248,7 +247,7 @@ int     nd_ndim(t_ndarray *a, int n)
 {
 	if (a == NULL)
 		return 0;
-	
+
 	return a->shape[n];
 }
 
@@ -271,6 +270,6 @@ void    *nd_data(t_ndarray *a)
 {
 	if (a == NULL)
 		return NULL;
-	
-	return a->data;
+
+	return a->raw_data;
 }

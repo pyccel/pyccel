@@ -30,4 +30,5 @@ def test_daxpy():
 
     daxpy(n, sa, sx, incx, sy, incy)
 
-test_daxpy()
+if __name__ == '__main__':
+    test_daxpy()

@@ -123,8 +123,3 @@ PyObject	*Float_to_PyDouble(float *d)
 {
 	return PyFloat_FromDouble((double)*d);
 }
-
-
-
-
-

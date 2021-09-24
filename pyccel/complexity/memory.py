@@ -38,6 +38,7 @@ from sympy import Poly, LT
 from pyccel.ast.basic        import Basic
 from pyccel.ast.builtins     import PythonTuple
 from pyccel.ast.core         import For, Assign, CodeBlock, FunctionDef
+from pyccel.ast.core         import Module, Program
 from pyccel.ast.internals    import PyccelSymbol
 from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
@@ -76,6 +77,12 @@ def count_access(expr, visual=True):
 
     elif isinstance(expr, CodeBlock):
         return sum(count_access(i, visual) for i in expr.body)
+
+    elif isinstance(expr, Module):
+        return count_access(expr.program, visual)
+
+    elif isinstance(expr, Program):
+        return count_access(expr.body, visual)
 
     elif isinstance(expr, For):
         s = pyccel_to_sympy(expr.iterable, symbol_map, used_names).size
