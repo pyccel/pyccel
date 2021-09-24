@@ -297,10 +297,10 @@ class Compiler:
 
         with FileLock(os.path.join(output_folder,'compiling.lock')):
             compile_obj.acquire_lock()
-            try:
-                self.run_command(cmd, verbose)
-            finally:
-                compile_obj.release_lock()
+        try:
+            self.run_command(cmd, verbose)
+        finally:
+            compile_obj.release_lock()
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
@@ -336,10 +336,10 @@ class Compiler:
 
         with FileLock(os.path.join(output_folder,'compiling.lock')):
             compile_obj.acquire_lock()
-            try:
-                self.run_command(cmd, verbose)
-            finally:
-                compile_obj.release_lock()
+        try:
+            self.run_command(cmd, verbose)
+        finally:
+            compile_obj.release_lock()
 
         return compile_obj.program_target
 
@@ -389,10 +389,10 @@ class Compiler:
 
         with FileLock(os.path.join(output_folder,'compiling.lock')):
             compile_obj.acquire_lock()
-            try:
-                self.run_command(cmd, verbose)
-            finally:
-                compile_obj.release_lock()
+        try:
+            self.run_command(cmd, verbose)
+        finally:
+            compile_obj.release_lock()
 
         return file_out
 
