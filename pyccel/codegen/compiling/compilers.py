@@ -295,11 +295,12 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
-        compile_obj.acquire_lock()
-        try:
-            self.run_command(cmd, verbose)
-        finally:
-            compile_obj.release_lock()
+        with FileLock(os.path.join(output_folder,'compiling.lock')):
+            compile_obj.acquire_lock()
+            try:
+                self.run_command(cmd, verbose)
+            finally:
+                compile_obj.release_lock()
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
@@ -333,11 +334,12 @@ class Compiler:
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
-        compile_obj.acquire_lock()
-        try:
-            self.run_command(cmd, verbose)
-        finally:
-            compile_obj.release_lock()
+        with FileLock(os.path.join(output_folder,'compiling.lock')):
+            compile_obj.acquire_lock()
+            try:
+                self.run_command(cmd, verbose)
+            finally:
+                compile_obj.release_lock()
 
         return compile_obj.program_target
 
@@ -385,11 +387,12 @@ class Compiler:
                 *m_code, compile_obj.module_target,
                 '-o', file_out, *libs_flags]
 
-        compile_obj.acquire_lock()
-        try:
-            self.run_command(cmd, verbose)
-        finally:
-            compile_obj.release_lock()
+        with FileLock(os.path.join(output_folder,'compiling.lock')):
+            compile_obj.acquire_lock()
+            try:
+                self.run_command(cmd, verbose)
+            finally:
+                compile_obj.release_lock()
 
         return file_out
 
