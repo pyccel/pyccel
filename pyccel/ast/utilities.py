@@ -31,9 +31,8 @@ from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants, NumpyArray,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .variable      import (Constant, Variable, ValuedVariable
-                            IndexedElement, InhomogeneousTupleVariable, VariableAddress,
-                            HomogeneousTupleVariable )
+from .variable      import (Constant, Variable, IndexedElement, InhomogeneousTupleVariable,
+                            VariableAddress, HomogeneousTupleVariable )
 
 errors = Errors()
 
