@@ -13,6 +13,8 @@ import shutil
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 
+from .compiling.basic     import CompileObj
+
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
 
@@ -20,6 +22,19 @@ __all__ = ['copy_internal_library','recompile_object']
 
 #==============================================================================
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
+
+#==============================================================================
+# map internal libraries to their folders inside pyccel/stdlib and their compile objects
+# The compile object folder will be in the pyccel dirpath
+internal_libs = {
+    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
+    "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
+}
+internal_libs["cwrapper_ndarrays"] = ("cwrapper", CompileObj("cwrapper_ndarrays.c",folder="cwrapper",
+                                                             accelerators = ('python',),
+                                                             dependencies = (internal_libs["ndarrays"][1],)))
 
 #==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
@@ -99,8 +114,8 @@ def recompile_object(compile_obj,
         outdated     = o_file_age < src_file_age
     else:
         outdated = True
+    compile_obj.release_lock()
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
                 verbose=verbose)
-    compile_obj.release_lock()
