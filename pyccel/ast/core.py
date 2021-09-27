@@ -2597,9 +2597,11 @@ class Interface(Basic):
                 dtype1 = str_dtype(call_arg.dtype)
                 dtype2 = str_dtype(func_arg.dtype)
                 found = found and (dtype1 in dtype2
-                                or dtype2 in dtype1)
-                found = found and call_arg.rank \
-                                == func_arg.rank
+                                or dtype2 in dtype1) \
+                              and (call_arg.rank \
+                                == func_arg.rank) \
+                              and call_arg.precision \
+                                == func_arg.precision
             if found:
                 break
 

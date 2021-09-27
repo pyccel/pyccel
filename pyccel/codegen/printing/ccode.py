@@ -8,7 +8,7 @@
 import functools
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint
+from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -736,6 +736,9 @@ class CCodePrinter(CodePrinter):
 
         for i, f in enumerate(orig_args):
             f = f.value
+            if isinstance(f, PythonType):
+                f = f.print_string
+
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
                 tmp_arg_format_list = []
