@@ -4,9 +4,9 @@ Note: before reading this you should have read [Installation and Command Line Us
 
 Functions as arguments is a regular feature in all the functional languages, this feature helps to write less code by passing directly functions as arguments to other ones, instead of storing the result in variables (which some times thier data types can be too complicated to re-store) then pass them to the target functions. And here is how pyccel converts this feature's code:
 
-this simple example shows the function `print` takes as argument the function `func1` that returns scalar `1`.
+This simple example shows the function `print` takes as argument the function `func1` that returns scalar `1`.
 
-this the python code to be translated:
+This is the python code to be converted:
 
 ```python
 def func1():
@@ -106,7 +106,7 @@ program prog_prog_boo
 end program prog_prog_boo
 ```
 
-in the next example we can see how functions-as-arguments feature can be useful.
+In the next example we can see how functions-as-arguments feature can be useful.
 
 Here, the function `print` takes as argument the function `sum` which does the sum of the results of the two functions `num_1` and `num_2`.
 
@@ -244,7 +244,7 @@ module boo
 end module boo
 ```
 
-this is the program fortran code:
+This is the program fortran code:
 
 ```fortran
 program prog_prog_boo
