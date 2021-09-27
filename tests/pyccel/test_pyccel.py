@@ -257,7 +257,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     if output_dir is None:
         if language=="python":
-            output_dir = get_abs_path('__pyccel__')
+            output_dir = os.path.join(get_abs_path(rel_test_dir),'__pyccel__')
 
     if dependencies:
         if isinstance(dependencies, str):
