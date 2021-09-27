@@ -36,7 +36,7 @@ def different_version(compiler):
             compiler['python_version'] != python_version
 
 compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
-with FileLock(compilers_folder+'.lock', timeout=1000):
+with FileLock(compilers_folder+'.lock'):
     # TODO: Add an additional search location for user provided compiler files
     available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
                                                         if f.endswith('.json')}
@@ -295,7 +295,7 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
-        with FileLock('.lock_acquisition.lock', timeout=1000):
+        with FileLock('.lock_acquisition.lock'):
             compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
@@ -334,7 +334,7 @@ class Compiler:
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
-        with FileLock('.lock_acquisition.lock', timeout=1000):
+        with FileLock('.lock_acquisition.lock'):
             compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
@@ -387,7 +387,7 @@ class Compiler:
                 *m_code, compile_obj.module_target,
                 '-o', file_out, *libs_flags]
 
-        with FileLock('.lock_acquisition.lock', timeout=1000):
+        with FileLock('.lock_acquisition.lock'):
             compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)

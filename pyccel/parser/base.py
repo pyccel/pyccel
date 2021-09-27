@@ -561,7 +561,7 @@ class BasicParser(object):
         # ...
 
         # we are only exporting the AST.
-        with FileLock(filename+'.lock', timeout=1000):
+        with FileLock(filename+'.lock'):
             try:
                 code = self.code.encode('utf-8')
                 hs   = hashlib.md5(code)
@@ -600,7 +600,7 @@ class BasicParser(object):
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
-        with FileLock(filename+'.lock', timeout=1000):
+        with FileLock(filename+'.lock'):
             try:
                 with open(filename, 'rb') as f:
                     hs, version, parser = pickle.load(f)
