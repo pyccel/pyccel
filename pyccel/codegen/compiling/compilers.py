@@ -295,7 +295,7 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
-        with FileLock(os.path.join(output_folder,'compiling.lock')):
+        with FileLock('.lock_acquisition.lock'):
             compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
@@ -334,7 +334,7 @@ class Compiler:
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
-        with FileLock(os.path.join(output_folder,'compiling.lock')):
+        with FileLock('.lock_acquisition.lock'):
             compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
@@ -387,7 +387,7 @@ class Compiler:
                 *m_code, compile_obj.module_target,
                 '-o', file_out, *libs_flags]
 
-        with FileLock(os.path.join(output_folder,'compiling.lock')):
+        with FileLock('.lock_acquisition.lock'):
             compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
