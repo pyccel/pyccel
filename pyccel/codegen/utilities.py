@@ -106,7 +106,7 @@ def recompile_object(compile_obj,
     """
 
     # compile library source files
-    compile_obj.acquire_lock()
+    compile_obj.acquire_simple_lock()
     if os.path.exists(compile_obj.module_target):
         # Check if source file has changed since last compile
         o_file_age   = os.path.getmtime(compile_obj.module_target)
@@ -114,7 +114,7 @@ def recompile_object(compile_obj,
         outdated     = o_file_age < src_file_age
     else:
         outdated = True
-    compile_obj.release_lock()
+    compile_obj.release_simple_lock()
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
