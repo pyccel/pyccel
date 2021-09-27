@@ -40,7 +40,7 @@ from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTern
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
-from pyccel.ast.builtins  import (PythonInt,
+from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
                                   PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
@@ -465,6 +465,9 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
+            if isinstance(f, PythonType):
+                f = f.print_string
+
             if isinstance(f, str):
                 args.append("'{}'".format(f))
             elif isinstance(f, PythonTuple):
