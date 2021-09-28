@@ -2904,11 +2904,14 @@ class SemanticParser(BasicParser):
         variables = [v for branch in var_shapes for v in branch]
 
         for v in variables:
-            shape_branch1 = var_shapes[0][v]
-            if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
-                    or not all(shape_branch1==branch_shapes[v] \
-                                for branch_shapes in var_shapes[1:]):
+            if v not in var_shapes[0]:
                 v.set_changeable_shape()
+            else:
+                shape_branch1 = var_shapes[0][v]
+                if not all(v in branch_shapes.keys() for branch_shapes in var_shapes) \
+                        or not all(shape_branch1==branch_shapes[v] \
+                                    for branch_shapes in var_shapes[1:]):
+                    v.set_changeable_shape()
 
         return If(*args)
 
