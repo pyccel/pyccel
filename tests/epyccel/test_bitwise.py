@@ -127,16 +127,16 @@ def test_bit_and_b_b_i(language, a, b, c):
     assert f1(a, b, c) == f2(a, b, c)
     assert(type(f1(a, b, c)) == type(f2(a, b, c))) # pylint: disable=unidiomatic-typecheck
 
-@pytest.mark.parametrize("a",[True, False])
-def test_invert_b(language, a):
+def test_invert_b(language):
     f1 = bitwise.invert_b
     f2 = epyccel( f1, language = language )
-    assert f1(a) == f2(a)
-    assert(type(f1(a)) == type(f2(a))) # pylint: disable=unidiomatic-typecheck
+    for a in [True,False]:
+        assert f1(a) == f2(a)
+        assert(type(f1(a)) == type(f2(a))) # pylint: disable=unidiomatic-typecheck
 
-@pytest.mark.parametrize("a",[1, 0])
-def test_invert_i(language, a):
+def test_invert_i(language):
     f1 = bitwise.invert_i
     f2 = epyccel( f1, language = language )
-    assert f1(a) == f2(a)
-    assert(type(f1(a)) == type(f2(a))) # pylint: disable=unidiomatic-typecheck
+    for a in [0, 1, 60, -45]:
+        assert f1(a) == f2(a)
+        assert(type(f1(a)) == type(f2(a))) # pylint: disable=unidiomatic-typecheck
