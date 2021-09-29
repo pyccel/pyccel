@@ -507,6 +507,9 @@ class FCodePrinter(CodePrinter):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
+            elif isinstance(f, PythonType):
+                args_format.append('A')
+                args.append(self._print(f.print_string))
             elif f.dtype is NativeString() and f != expr.expr[-1]:
                 args_format.append('A')
                 args.append(self._print(f))
