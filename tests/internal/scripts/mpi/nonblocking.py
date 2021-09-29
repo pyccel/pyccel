@@ -47,7 +47,7 @@ if __name__ == '__main__':
     after  = np.int32(rank + 1)
     if rank == 0:
         before = np.int32(sizes - 1)
-    if rank == size - 1:
+    if rank == sizes - 1:
         after  = np.int32(0)
 
     # ...
