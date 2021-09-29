@@ -40,7 +40,7 @@ from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTern
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall, FunctionCallArgument
 
-from pyccel.ast.builtins  import (PythonInt,
+from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
                                   PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs

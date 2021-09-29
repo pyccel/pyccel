@@ -284,10 +284,10 @@ def test_Assign_between_nested_If(lang):
         import numpy as np
         if b1:
             if b2:
+                n = 0
+            else:
                 x = np.zeros(3, dtype=int)
                 n = x.shape[0]
-            else:
-                n = 0
         else:
             x = np.zeros(4, dtype=int)
             n = x.shape[0]
