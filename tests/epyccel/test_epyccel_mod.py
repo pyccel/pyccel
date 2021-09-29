@@ -86,3 +86,6 @@ def test_modulo_multiple(language):
 
     assert allclose(f(x, y, z), modulo_multiple(x, y, z), rtol=RTOL, atol=ATOL)
     assert isinstance(f(x, y, z), type(modulo_multiple(x, y, z)))
+
+    x, y, z = (253, 9579.273902774681, 11)
+    assert allclose(f(x, y, z), modulo_multiple(x, y, z), rtol=RTOL, atol=ATOL)
