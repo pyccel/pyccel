@@ -19,7 +19,7 @@ if __name__ == '__main__':
     print('\a')
     print('\b')
     print('\f')
-    print('\r')
+    #print('\r')
     print("'")
     print('The last sentence.')
     print('Preventing\tLine\nBreaks')
