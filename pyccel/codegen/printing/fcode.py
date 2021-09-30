@@ -1737,7 +1737,8 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
 
         if expr.end_annotation:
-            epilog += expr.end_annotation
+            end_annotation = expr.end_annotation.replace("for", "do")
+            epilog += end_annotation
 
         return ('{prolog}'
                 '{body}'
