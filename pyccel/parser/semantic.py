@@ -87,7 +87,7 @@ from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct)
+                            OMP_Single_Construct, OMP_Parallel_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq
@@ -1807,12 +1807,10 @@ class SemanticParser(BasicParser):
                 index += 1
 
             if index < len(code.body) and isinstance(code.body[index], For):
-                end_expr = '!$omp end do'
-                if expr.txt.startswith(' simd'):
-                    end_expr += ' simd'
+                end_expr = ['!$omp', 'end', expr.name, expr.combined]
                 if expr.has_nowait:
                     end_expr += ' nowait'
-                code.body[index].end_annotation = end_expr+'\n'
+                code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
             else:
                 msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
                 errors.report(msg, symbol=expr,
