@@ -93,11 +93,21 @@ class OMP_Simd_Construct(OmpAnnotatedComment):
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'simd'
+
 class OMP_TaskLoop_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Taskloop construct"""
     __slots__ = ()
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'taskloop'
 
 class OMP_Distribute_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Distribute construct"""

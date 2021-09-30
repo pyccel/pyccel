@@ -1807,9 +1807,11 @@ class SemanticParser(BasicParser):
                 index += 1
 
             if index < len(code.body) and isinstance(code.body[index], For):
-                end_expr = ['!$omp', 'end', expr.name, expr.combined]
+                end_expr = ['!$omp', 'end', expr.name]
+                if expr.combined:
+                    end_expr.append(expr.combined)
                 if expr.has_nowait:
-                    end_expr += ' nowait'
+                    end_expr.append('nowait')
                 code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
             else:
                 msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
