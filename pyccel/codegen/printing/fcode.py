@@ -1736,8 +1736,9 @@ class FCodePrinter(CodePrinter):
 
         body = self._print(expr.body)
 
-        if expr.nowait_expr:
-            epilog += expr.nowait_expr
+        if expr.end_annotation:
+            epilog += expr.end_annotation
+
         return ('{prolog}'
                 '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
@@ -1767,46 +1768,6 @@ class FCodePrinter(CodePrinter):
             omp_expr += ' nowait'
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
-
-    # .....................................................
-    def _print_OMP_Parallel(self, expr):
-        clauses = ' '.join(self._print(i)  for i in expr.clauses)
-        body    = ''.join(self._print(i) for i in expr.body)
-
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end parallel\n'
-        # ...
-
-        # ...
-        code = ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
-        # ...
-
-        return self._get_statement(code)
-
-    def _print_OMP_For(self, expr):
-        # ...
-        loop    = self._print(expr.loop)
-        clauses = ' '.join(self._print(i)  for i in expr.clauses)
-
-        nowait  = ''
-        if not(expr.nowait is None):
-            nowait = 'nowait'
-        # ...
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end do {0}\n'.format(nowait)
-        # ...
-
-        # ...
-        code = ('{prolog}'
-                '{loop}'
-                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
-        # ...
-
-        return self._get_statement(code)
 
     def _print_OMP_NumThread(self, expr):
         return 'num_threads({})'.format(self._print(expr.num_threads))
