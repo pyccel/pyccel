@@ -76,6 +76,11 @@ class OmpAnnotatedComment(Basic):
         args = (self.txt, self.combined)
         return args
 
+    def __str__(self):
+        instruction = [self.name, self.combined, self.txt]
+        instruction = ' '.join(i for i in instruction if i)
+        return '#$ omp '+instruction
+
 class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     __slots__ = ()
