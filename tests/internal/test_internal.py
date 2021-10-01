@@ -29,6 +29,11 @@ def test_mpi(f):
     execute_pyccel(f, accelerators=['mpi'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('openmp'))
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+    )
+)
 def test_openmp(f, language):
     execute_pyccel(f, accelerators=['openmp'], language=language)
 
