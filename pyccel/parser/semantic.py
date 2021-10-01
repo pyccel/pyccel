@@ -1821,6 +1821,14 @@ class SemanticParser(BasicParser):
         expr.clear_user_nodes()
         return expr
 
+    def _visit_Omp_End_Clause(self, expr, **settings):
+        end_loop = any(c in expr.txt for c in ['for', 'distribute', 'taskloop', 'simd'])
+        if end_loop:
+            return EmptyNode()
+        else:
+            expr.clear_user_nodes()
+            return expr
+
     def _visit_Literal(self, expr, **settings):
         expr.clear_user_nodes()
         return expr
