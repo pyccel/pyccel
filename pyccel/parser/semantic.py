@@ -1824,6 +1824,8 @@ class SemanticParser(BasicParser):
     def _visit_Omp_End_Clause(self, expr, **settings):
         end_loop = any(c in expr.txt for c in ['for', 'distribute', 'taskloop', 'simd'])
         if end_loop:
+            errors.report("For loops do not require an end clause. This clause is ignored",
+                    severity='warning', symbol=expr)
             return EmptyNode()
         else:
             expr.clear_user_nodes()
