@@ -131,7 +131,7 @@ In this first example we create the simplest Python script `hello.py`, which pri
 We use the `pyccel` command to translate the Python code to a C program in file `hello.c`, which is placed in the new `__pyccel__` directory.
 By default Pyccel also compiles the C code into an executable named `hello`, which is placed in the same directory as the original file:
 ```bash
-$ echo 'print("Hello, world!\n")' > hello.py
+$ echo 'if __name__ == "__main__": \n print("Hello, world!\\n")' > hello.py
 $ python3 hello.py
 Hello, world!
 
