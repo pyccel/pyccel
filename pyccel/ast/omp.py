@@ -77,9 +77,8 @@ class OmpAnnotatedComment(Basic):
         return args
 
     def __str__(self):
-        instruction = [self.name, self.combined, self.txt]
-        instruction = ' '.join(i for i in instruction if i)
-        return '#$ omp '+instruction
+        instructions = [self.name, self.combined, self.txt]
+        return '#$ omp '+' '.join(i for i in instructions if i)
 
 class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
