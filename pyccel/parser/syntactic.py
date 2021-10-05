@@ -1034,6 +1034,7 @@ class SyntaxParser(BasicParser):
 
                 txt = com[1:].lstrip()
                 exprs.append(Comment(txt))
+            exprs[-1].set_fst(stmt)
 
         if len(exprs) == 1:
             return exprs[0]

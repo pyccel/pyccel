@@ -76,6 +76,10 @@ class OmpAnnotatedComment(Basic):
         args = (self.txt, self.combined)
         return args
 
+    def __str__(self):
+        instructions = [self.name, self.combined, self.txt]
+        return '#$ omp '+' '.join(i for i in instructions if i)
+
 class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     __slots__ = ()
@@ -93,11 +97,21 @@ class OMP_Simd_Construct(OmpAnnotatedComment):
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'simd'
+
 class OMP_TaskLoop_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Taskloop construct"""
     __slots__ = ()
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'taskloop'
 
 class OMP_Distribute_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Distribute construct"""
