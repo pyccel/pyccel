@@ -42,11 +42,11 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 OmpParallelConstruct:   'parallel'        combined=ParallelCombined? clauses*=AllOmpClauses;
 OmpLoopConstruct:       'for'             combinedsimd='simd'? clauses*=AllOmpClauses;
-OmpTaskLoopConstruct:   'taskloop'   clauses*=AllOmpClauses;
+OmpTaskLoopConstruct:   'taskloop'        clauses*=AllOmpClauses;
 OmpSingleConstruct:     'single'          clauses*=AllOmpClauses;
 OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
 OmpMaskedConstruct:     'masked'          combined=MaskedCombined? clauses*=AllOmpClauses;
-OmpSimdConstruct:       'simd'       clauses*=AllOmpClauses;
+OmpSimdConstruct:       'simd'            clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clauses were added (can't test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
