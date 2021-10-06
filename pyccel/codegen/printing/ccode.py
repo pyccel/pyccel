@@ -8,7 +8,7 @@
 import functools
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
-from pyccel.ast.builtins  import PythonPrint
+from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
@@ -736,6 +736,9 @@ class CCodePrinter(CodePrinter):
 
         for i, f in enumerate(orig_args):
             f = f.value
+            if isinstance(f, PythonType):
+                f = f.print_string
+
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
                 tmp_arg_format_list = []
@@ -1378,7 +1381,7 @@ class CCodePrinter(CodePrinter):
             unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
             if unneeded_var:
                 code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
-                return code + '\nreturn {};\n'.format(self._print(last_assign.rhs))
+                return code + 'return {};\n'.format(self._print(last_assign.rhs))
             else:
                 code = ''+self._print(expr.stmt)
                 self._additional_declare.append(last_assign.lhs)

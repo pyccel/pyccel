@@ -60,7 +60,7 @@ def compile_pyccel(path_dir,test_file, options = ""):
         options += " --output=__pyccel__"
     cmd = [shutil.which("pyccel"), "%s" % test_file]
     if options != "":
-        cmd += options.strip().split(' ')
+        cmd += options.strip().split()
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
@@ -257,7 +257,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     if output_dir is None:
         if language=="python":
-            output_dir = get_abs_path('__pyccel__')
+            output_dir = os.path.join(get_abs_path(rel_test_dir),'__pyccel__')
 
     if dependencies:
         if isinstance(dependencies, str):
@@ -724,6 +724,50 @@ def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
+
+def test_type_print( language ):
+    test_file = 'scripts/runtest_type_print.py'
+
+    test_file = os.path.normpath(test_file)
+
+    cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
+
+    test_file = get_abs_path(test_file)
+
+    pyccel_commands = "--language="+language
+
+    if language=="python":
+        output_dir = get_abs_path('__pyccel__')
+        pyccel_commands += " --output=" + output_dir
+        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+    else:
+        output_test_file = test_file
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+    lang_out = get_lang_output(output_test_file, language)
+    lang_out = lang_out.split('\n')
+    assert len(lang_out)>=5
+
+    if language=="python":
+        assert 'int16' in lang_out[0]
+        if sys.platform == "win32":
+            assert 'int' in lang_out[1]
+            assert 'int64' in lang_out[2]
+        else:
+            assert 'int32' in lang_out[1]
+            assert 'int' in lang_out[2]
+        assert 'float32' in lang_out[3]
+        assert 'float' in lang_out[4]
+    else:
+        assert 'int16' in lang_out[0]
+        assert 'int32' in lang_out[1]
+        assert 'int64' in lang_out[2]
+        # TODO: Change with issue #932
+        assert 'real32' in lang_out[3]
+        assert 'real64' in lang_out[4]
+
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
