@@ -1210,10 +1210,19 @@ class CCodePrinter(CodePrinter):
         return self._print(PyccelMod(*expr.args))
 
     def _print_NumpyLinspace(self, expr):
+        print(expr._user_nodes)
+        print(expr._user_nodes[0].lhs)
         if isinstance(expr.endpoint, LiteralFalse):
             template = '({start} + {index}*{step})'
         else:
-            template = '{cond} ? {stop} : ({start} + {index}*{step})'
+            template = '({start} + {index}*{step})'
+            #template = '{cond} ? {stop} : ({start} + {index}*{step})'
+            lhs = self._print(expr._user_nodes[0].lhs)
+            lhs = lhs.replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
+            if isinstance(expr.endpoint, LiteralTrue):
+                cond_template = lhs + ' = {stop}'
+            else:
+                cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
 
         if expr.stop.dtype != expr.dtype:
             if isinstance(expr.dtype, NativeComplex):
@@ -1223,18 +1232,19 @@ class CCodePrinter(CodePrinter):
             v = '({cast}){var}'.format(cast=self._print(type_name), var=self._print(expr.stop))
         else:
             v = self._print(expr.stop)
-        if isinstance(expr.endpoint, LiteralFalse):
-            cond = PyccelEq(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
-        else:
-            cond = PyccelAnd(PyccelEq(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
+        if not isinstance(expr.endpoint, LiteralFalse) and not isinstance(expr.endpoint, LiteralTrue):
+            cond = PyccelEq(expr.endpoint, LiteralTrue())
         init_value = template.format(
-            cond  = self._print(cond),
-            stop  = v,
             start = self._print(expr.start),
             step  = self._print(expr.step),
             index = self._print(expr.ind),
         )
-        code = init_value
+        if isinstance(expr.endpoint, LiteralFalse):
+            code = init_value
+        elif not isinstance(expr.endpoint, LiteralFalse) and not isinstance(expr.endpoint, LiteralTrue):
+            code = init_value + ';\n' + cond_template.format(cond=self._print(cond),stop = v)
+        else:
+            code = init_value + ';\n' + cond_template.format(stop = v)
 
         return code
 
