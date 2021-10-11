@@ -1030,6 +1030,7 @@ class SyntaxParser(BasicParser):
                     errors.report(PYCCEL_INVALID_HEADER,
                                   symbol = stmt,
                                   severity='error')
+                    continue
             else:
 
                 txt = com[1:].lstrip()
