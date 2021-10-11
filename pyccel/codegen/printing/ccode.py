@@ -1210,13 +1210,9 @@ class CCodePrinter(CodePrinter):
         return self._print(PyccelMod(*expr.args))
 
     def _print_NumpyLinspace(self, expr):
-        print(expr._user_nodes)
-        print(expr._user_nodes[0].lhs)
-        if isinstance(expr.endpoint, LiteralFalse):
+        template = '({start} + {index}*{step})'
+        if not isinstance(expr.endpoint, LiteralFalse):
             template = '({start} + {index}*{step})'
-        else:
-            template = '({start} + {index}*{step})'
-            #template = '{cond} ? {stop} : ({start} + {index}*{step})'
             lhs = self._print(expr._user_nodes[0].lhs)
             lhs = lhs.replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
             if isinstance(expr.endpoint, LiteralTrue):
