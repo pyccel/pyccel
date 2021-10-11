@@ -313,7 +313,7 @@ def execute_pyccel(fname, *,
     # ...
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, deps):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
+        mod_folder = os.path.dirname(parser.filename)
         mod_base = os.path.basename(parser.filename)
 
         # Stop conditions
@@ -324,12 +324,20 @@ def execute_pyccel(fname, *,
             deps[mod_base] = parser.compile_obj
         elif mod_base not in deps:
             compile_libs = (parser.metavars['libraries'],) if 'libraries' in parser.metavars else ()
-            no_target = parser.metavars.get('no_target',False) or \
-                    parser.metavars.get('ignore_at_import',False)
-            deps[mod_base] = CompileObj(mod_base,
-                                folder          = mod_folder,
-                                libs            = compile_libs,
-                                has_target_file = not no_target)
+            target_location = parser.metavars.get('target_location',None)
+            if target_location:
+                folder = os.path.abspath(os.path.join(mod_folder, target_location))
+                deps[mod_base] = CompileObj(mod_base,
+                                    folder          = folder,
+                                    libs            = compile_libs)
+            else:
+                no_target = parser.metavars.get('no_target',False) or \
+                        parser.metavars.get('ignore_at_import',False)
+                folder = os.path.join(mod_folder, "__pyccel__")
+                deps[mod_base] = CompileObj(mod_base,
+                                    folder          = folder,
+                                    libs            = compile_libs,
+                                    has_target_file = not no_target)
 
         # Proceed recursively
         for son in parser.sons:
