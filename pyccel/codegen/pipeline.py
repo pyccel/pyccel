@@ -137,8 +137,8 @@ def execute_pyccel(fname, *,
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
     # Copy list arguments to local lists to avoid unexpected behavior
-    includes = [*includes]
-    libdirs  = [*libdirs]
+    includes = list(map(os.path.abspath,includes))
+    libdirs  = list(map(os.path.abspath,libdirs))
     modules  = [*modules]
     libs     = [*libs]
 
