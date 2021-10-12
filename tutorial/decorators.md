@@ -329,7 +329,7 @@ def square(x):
 ```
 
 This decorator has no effect on the C code as the concept of a `pure` function does not exist in the language.
-On the other hand `pure` decorator affects the Python/Fortran conversion, since Fortran the function prefix `pure` which can affects the compilation of the generated fortran code. See more about [pure](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.):
+On the other hand, the `pure` decorator does affect the Python/Fortran conversion. The function prefix `pure`, which can affect the compilation of the generated Fortran code, is added. See [here](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.) for more information about the `pure` keyword in Fortran:
 
 ```Fortran
 module boo
