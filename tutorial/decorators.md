@@ -117,41 +117,46 @@ An example shows how pyccel handles negative indexes beween Python and C:
 
 ```python
 from pyccel.decorators import allow_negative_index
+from numpy import array
 
 @allow_negative_index('a')
-def fun1():
-    a = [1,2,3,4,5,6]
-    print(a[-1])
-
-    b = [1,2,3,4,5,6]
-    print(b[-1])
+def fun1(i : int, j : int):
+    #////////negative indexing allowed////////
+    a = array([1,2,3,4,5,6])
+    print(a[i - j])
+    #////////negative indexing disallowed. the generated can cause a crash/compilation error.////////
+    b = array([1,2,3,4,5,6])
+    print(b[i - j])
 ```
 
 This is the generated C code:
 
 ```C
-
 #include "boo.h"
-#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include "ndarrays.h"
 
 
 /*........................................*/
-void fun1(void)
+void fun1(int64_t i, int64_t j)
 {
     t_ndarray a;
     t_ndarray b;
+    /*////////negative indexing allowed////////*/
     a = array_create(1, (int64_t[]){6}, nd_int64);
     int64_t array_dummy_0001[] = {1, 2, 3, 4, 5, 6};
     memcpy(a.nd_int64, array_dummy_0001, a.buffer_size);
-    printf("%ld\n", GET_ELEMENT(a, nd_int64, 5));
+    printf("%ld\n", GET_ELEMENT(a, nd_int64, i - j < 0 ? 6 + (i - j) : i - j));
+    /*////////negative indexing disallowed. the generated can cause a crash/compilation error.////////*/
     b = array_create(1, (int64_t[]){6}, nd_int64);
     int64_t array_dummy_0002[] = {1, 2, 3, 4, 5, 6};
     memcpy(b.nd_int64, array_dummy_0002, b.buffer_size);
-    printf("%ld\n", GET_ELEMENT(b, nd_int64, 5));
+    printf("%ld\n", GET_ELEMENT(b, nd_int64, i - j));
+    free_array(a);
+    free_array(b);
 }
 /*........................................*/
 ```
@@ -168,19 +173,29 @@ module boo
   contains
 
   !........................................
-  subroutine fun1()
+  subroutine fun1(i, j)
 
     implicit none
 
+    integer(i64), value :: i
+    integer(i64), value :: j
     integer(i64), allocatable :: a(:)
     integer(i64), allocatable :: b(:)
 
+    !////////negative indexing allowed////////
     allocate(a(0:5_i64))
     a = [1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64]
-    print *, a(size(a, kind=i64) - 1_i64)
+    print *, a(merge(6_i64 + (i - j), i - j, i - j < 0_i64))
+    !////////negative indexing disallowed. the generated can cause a crash/compilation error.////////
     allocate(b(0:5_i64))
     b = [1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64]
-    print *, b(size(b, kind=i64) - 1_i64)
+    print *, b(i - j)
+    if (allocated(a)) then
+      deallocate(a)
+    end if
+    if (allocated(b)) then
+      deallocate(b)
+    end if
 
   end subroutine fun1
   !........................................
@@ -188,10 +203,9 @@ module boo
 end module boo
 ```
 
-## Elemental and pure decorators
+## Elemental
 
 The decorator `elemental`, indicates that the function below the decorator is an elemental one, an elemental function is a function with a single scalar operator and a scalar return value which can also be called on an array. When it is called on an array it returns the result of the function called elementwise on the array.
-The decorator `pure`, indicates that the function below the decorator is a pure one. So that function should return identical return values for identical arguments and has no side effects in its application.
 
 Here is a simple usage example:
 
@@ -206,7 +220,6 @@ def square(x):
     return s
 ```
 
-This is the C generated code, this code can be generated even without these two decorators due to the C language itself that has not the elementwise feature in the manipulation of the arrays nor a function prefix `pure`. So these decorators will not make a big difference in the Python/C conversion:
 
 ```C
 #include "boo.h"
@@ -228,7 +241,7 @@ Important note: using the `elemental` decorator above a function in C will not m
 Here is the python code:
 
 ```python
-from pyccel.decorators import elemental, pure
+from pyccel.decorators import elemental
 import numpy as np
 
 @elemental
@@ -279,7 +292,91 @@ void square_in_array(void)
 /*........................................*/
 ```
 
-In the other hand `pure` and `elemental` decorators has thier effects in the Python/Fortran conversion, since Fortran has the elementwise feature, so any function marked as an elemental one can be used in the arrays and the function prefix `pure`, see more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions) and [pure](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.):
+Fortran has the elementwise feature which is presented in the code as function prefix `elemental` which can affect the compilation). so any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
+
+```Fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : f64 => C_DOUBLE , i64 => &
+      C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  elemental function square(x) result(s)
+
+    implicit none
+
+    real(f64) :: s
+    real(f64), value :: x
+
+    s = x * x
+    return
+
+  end function square
+  !........................................
+
+  !........................................
+  subroutine square_in_array()
+
+    implicit none
+
+    real(f64), allocatable :: a(:)
+    real(f64), allocatable :: Dummy_0001(:)
+
+    allocate(a(0:4_i64))
+    a = 1.0_f64
+    allocate(Dummy_0001(0:4_i64))
+    Dummy_0001 = square(a)
+    if (allocated(a)) then
+      deallocate(a)
+    end if
+    if (allocated(Dummy_0001)) then
+      deallocate(Dummy_0001)
+    end if
+
+  end subroutine square_in_array
+  !........................................
+
+end module boo
+```
+
+# Pure
+
+The decorator `pure` indicates that the function below the decorator is a pure one. This means that the function should return identical return values for identical arguments and that it has no side effects (e.g. print) in its application.
+
+Here is a simple usage example:
+
+```python
+from pyccel.decorators import pure
+
+@pure
+@types(float)
+def square(x):
+    s = x*x
+    return s
+```
+
+This is the C generated code, this code can be generated even without this decorator due to the C language itself that has not a function prefix `pure`. So this decorator will not make a big difference in the Python/C conversion:
+
+```C
+#include "boo.h"
+#include <stdlib.h>
+
+
+/*........................................*/
+double square(double x)
+{
+    double s;
+    s = x * x;
+    return s;
+}
+/*........................................*/
+```
+
+On the other hand `pure` decorator affects the Python/Fortran conversion, since Fortran the function prefix `pure` which can affects the compilation of the generated fortran code. See more about [pure](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.):
 
 ```Fortran
 module boo
@@ -291,18 +388,28 @@ module boo
   contains
 
   !........................................
-  elemental pure function square(x) result(s)
+  pure function square(x) result(s)
 
-  implicit none
+    implicit none
 
-  real(f64) :: s
-  real(f64), value :: x
+    real(f64) :: s
+    real(f64), value :: x
 
-  s = x * x
-  return
+    s = x * x
+    return
 
-end function square
-!........................................
+  end function square
+  !........................................
 
 end module boo
 ```
+
+# Getting Help
+
+If you face problems with pyccel, please take the following steps:
+
+1.  Consult our documention in the tutorial directory;
+2.  Send an email message to pyccel@googlegroups.com;
+3.  Open an issue on GitHub.
+
+Thank you!
