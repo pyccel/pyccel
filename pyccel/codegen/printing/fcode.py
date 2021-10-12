@@ -689,33 +689,48 @@ class FCodePrinter(CodePrinter):
             v = self._print(expr.stop)
 
         if expr.rank > 1:
-            if isinstance(expr.endpoint, LiteralFalse):
-                template = '({start} + {index}*{step})'
-            else:
-                template = '(merge({stop}, ({start} + {index}*{step}), ({cond})))'
+            template = '({start} + {index}*{step})'
+            if not isinstance(expr.endpoint, LiteralFalse):
+                lhs = self._print(expr._user_nodes[0].lhs)
+                lhs = lhs.replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
+                if isinstance(expr.endpoint, LiteralTrue):
+                    cond_template = lhs + ' = {stop}'
+                else:
+                    cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
             var = Variable('int', str(expr.ind))
         else:
-            if isinstance(expr.endpoint, LiteralFalse):
-                template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
-            else:
-                template = '[(merge({stop}, ({start} + {index}*{step}), ({cond})),{index} = {zero},{end})]'
+            if not isinstance(expr.endpoint, LiteralFalse):
+                lhs = IndexedElement(expr._user_nodes[0].lhs, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+                if isinstance(expr.endpoint, LiteralTrue):
+                    cond_template = self._print(lhs) + ' = {stop}'
+                else:
+                    cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
+            template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
             self.add_vars_to_namespace(var)
 
-        if isinstance(expr.endpoint, LiteralTrue):
-            cond = PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
-        else:
-            cond = PyccelAnd(PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
+        #if isinstance(expr.endpoint, LiteralTrue):
+        #    cond = PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+        #else:
+        #    cond = PyccelAnd(PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
+        cond = PyccelEq(expr.endpoint, LiteralTrue())
         init_value = template.format(
-            stop  = v,
+            #stop  = v,
             start = self._print(expr.start),
-            step  = self._print(expr.step ),
+            step  = self._print(expr.step),
             index = self._print(var),
-            cond  = self._print(cond),
+            #cond  = self._print(cond),
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )
-        code = init_value
+        if not isinstance(expr.endpoint, LiteralFalse):
+            if isinstance(expr.endpoint, LiteralTrue):
+                code = init_value + '\n' + cond_template.format(stop=v)
+            else:
+                cond = PyccelEq(expr.endpoint, LiteralTrue())
+                code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(cond))
+        else:
+          code = init_value
 
         return code
 
