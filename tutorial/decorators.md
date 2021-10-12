@@ -207,6 +207,8 @@ end module boo
 
 The decorator `elemental`, indicates that the function below the decorator is an elemental one, an elemental function is a function with a single scalar operator and a scalar return value which can also be called on an array. When it is called on an array it returns the result of the function called elementwise on the array.
 
+Important note: applying the `elemental` decorator to a function will not make a difference to the C translation of the function definition itself since C doesn't have the elementwise feature. However, Pyccel implements the functionality by calling the function in a `for` loop when an array argument is passed. In the following example, we will use the function `square` where `@elemental` will be useful:
+
 Here is the python code:
 
 ```python
@@ -261,7 +263,7 @@ void square_in_array(void)
 /*........................................*/
 ```
 
-Fortran has the elementwise feature which is presented in the code as function prefix `elemental` which can affect the compilation. so any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
+Fortran has the elementwise feature which is presented in the code as function prefix `elemental` which can affect the compilation. So any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
 
 ```Fortran
 module boo
