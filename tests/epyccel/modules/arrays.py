@@ -615,6 +615,12 @@ def array_real_2d_1d_matmul(A, x, out):
     from numpy import matmul
     out[:] = matmul(A, x)
 
+@types('real[:,:], real[:]')
+def array_real_2d_1d_matmul_creation(A, x):
+    from numpy import matmul
+    out = matmul(A, x)
+    return out.sum()
+
 @types('real[:,:](order=F), real[:], real[:]')
 def array_real_2d_1d_matmul_order_F(A, x, out):
     from numpy import matmul
