@@ -206,7 +206,7 @@ def square(x):
     return s
 ```
 
-This is the C generated code, this code can be generated even without these two decorators due to the C language itself that has not the elemenwise feature in the manipulation of the arrays nor a function prefix `pure`. So these decorators will not make a big deffirence in the Python/C conversion:
+This is the C generated code, this code can be generated even without these two decorators due to the C language itself that has not the elementwise feature in the manipulation of the arrays nor a function prefix `pure`. So these decorators will not make a big difference in the Python/C conversion:
 
 ```C
 #include "boo.h"
@@ -219,6 +219,62 @@ double square(double x)
     double s;
     s = x * x;
     return s;
+}
+/*........................................*/
+```
+
+Important note: using the `elemental` decorator above a function in C will not make a difference in the translation of the function deffinition itself since C doesn't have the elementwise feature as mentioned earlier, but Pyccel makes that possible by making the function operates in a `for` loop, we will use the same function `square` where `@elemental` will be useful:
+
+Here is the python code:
+
+```python
+from pyccel.decorators import elemental, pure
+import numpy as np
+
+@elemental
+@types(float)
+def square(x):
+    s = x*x
+    return s
+
+
+def square_in_array():
+    a = np.ones(5)
+    square(a)
+```
+
+The generated C code:
+
+```C
+#include "boo.h"
+#include "ndarrays.h"
+#include <stdlib.h>
+#include <stdint.h>
+
+
+/*........................................*/
+double square(double x)
+{
+    double s;
+    s = x * x;
+    return s;
+}
+/*........................................*/
+/*........................................*/
+void square_in_array(void)
+{
+    t_ndarray a;
+    t_ndarray Dummy_0001;
+    int64_t i_0001;
+    a = array_create(1, (int64_t[]){5}, nd_double);
+    array_fill((double)1.0, a);
+    Dummy_0001 = array_create(1, (int64_t[]){5}, nd_double);
+    for (i_0001 = 0; i_0001 < 5; i_0001 += 1)
+    {
+        GET_ELEMENT(Dummy_0001, nd_double, i_0001) = square(GET_ELEMENT(a, nd_double, i_0001));
+    }
+    free_array(a);
+    free_array(Dummy_0001);
 }
 /*........................................*/
 ```
