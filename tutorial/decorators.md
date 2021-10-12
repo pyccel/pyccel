@@ -1,13 +1,13 @@
 # Decorators
 
-Because Pyccel is converting a dynamically typed language (Python) to statically typed ones, It has some *decorators* for the user to add in the code. those decorators have certain options in order to specify how the functions or the variables should be treated in the conversion. Here are the available decorators.
+As Pyccel converts a dynamically typed language (Python) to statically typed languages, it has some *decorators* which the user can add in the code to provide access to low level optimisations. Here are the available decorators.
 
 ## Stack array
 
 This decorator indicates that all arrays mentioned as arguments (of the decorator) should be stored
 on the stack.
 
-This example shows how the decorators can affect the conversion of the array between the supported languages, Pyccel here is told by the decorator `stack array` to store the array `array_in_stack` in the stack, For the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
+This example shows how the decorators can affect the conversion of the array between the supported languages. Pyccel here is told by the decorator `stack array` to store the array `array_in_stack` in the stack, for the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
 
 ```python
 from pyccel.decorators import stack_array
