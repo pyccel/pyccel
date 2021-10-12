@@ -106,7 +106,12 @@ end module boo
 
 ## Allow negative index
 
-This one indicates that all arrays mentioned as argements (of the decorator) can be accessed with negative indexes. unlike fortran you can't use negative indexes in arrays in C, But with Pyccel you can work comfotabally with them in the Python code, For the generated C code Pyccel will take care of that.
+In python negative indexes allow a user to index an array starting from the back (e.g. the index -1 is the
+last element of the array). Pyccel recreates this behaviour for literal indexes. However when an array is
+indexed with a variable or an expression, it is impossible to know at compile time whether the index is
+positive or negative. As a result an if block must be added. This implies a (potentially large) performance
+cost. Non-literal negative indexes are not especially common, therefore Pyccel does not add this costly
+if block unless it is specifically requested. This can be done using the `allow_negative_index` decorator.
 
 An example shows how pyccel handles negative indexes beween Python and C:
 
