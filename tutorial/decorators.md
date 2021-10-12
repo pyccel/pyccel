@@ -207,36 +207,6 @@ end module boo
 
 The decorator `elemental`, indicates that the function below the decorator is an elemental one, an elemental function is a function with a single scalar operator and a scalar return value which can also be called on an array. When it is called on an array it returns the result of the function called elementwise on the array.
 
-Here is a simple usage example:
-
-```python
-from pyccel.decorators import elemental, pure
-
-@pure
-@elemental
-@types(float)
-def square(x):
-    s = x*x
-    return s
-```
-
-```C
-#include "boo.h"
-#include <stdlib.h>
-
-
-/*........................................*/
-double square(double x)
-{
-    double s;
-    s = x * x;
-    return s;
-}
-/*........................................*/
-```
-
-Important note: using the `elemental` decorator above a function in C will not make a difference in the translation of the function deffinition itself since C doesn't have the elementwise feature as mentioned earlier, but Pyccel makes that possible by making the function operates in a `for` loop, we will use the same function `square` where `@elemental` will be useful:
-
 Here is the python code:
 
 ```python
@@ -358,23 +328,7 @@ def square(x):
     return s
 ```
 
-This is the C generated code, this code can be generated even without this decorator due to the C language itself that has not a function prefix `pure`. So this decorator will not make a big difference in the Python/C conversion:
-
-```C
-#include "boo.h"
-#include <stdlib.h>
-
-
-/*........................................*/
-double square(double x)
-{
-    double s;
-    s = x * x;
-    return s;
-}
-/*........................................*/
-```
-
+This decorator has no effect on the C code as the concept of a `pure` function does not exist in the language.
 On the other hand `pure` decorator affects the Python/Fortran conversion, since Fortran the function prefix `pure` which can affects the compilation of the generated fortran code. See more about [pure](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.):
 
 ```Fortran
