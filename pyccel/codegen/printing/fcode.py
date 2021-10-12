@@ -709,17 +709,11 @@ class FCodePrinter(CodePrinter):
             var = Variable('int', 'linspace_index')
             self.add_vars_to_namespace(var)
 
-        #if isinstance(expr.endpoint, LiteralTrue):
-        #    cond = PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
-        #else:
-        #    cond = PyccelAnd(PyccelEq(var, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)), PyccelEq(expr.endpoint, LiteralTrue()))
         cond = PyccelEq(expr.endpoint, LiteralTrue())
         init_value = template.format(
-            #stop  = v,
             start = self._print(expr.start),
             step  = self._print(expr.step),
             index = self._print(var),
-            #cond  = self._print(cond),
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )
