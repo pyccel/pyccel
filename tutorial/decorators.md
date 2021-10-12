@@ -261,7 +261,7 @@ void square_in_array(void)
 /*........................................*/
 ```
 
-Fortran has the elementwise feature which is presented in the code as function prefix `elemental` which can affect the compilation). so any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
+Fortran has the elementwise feature which is presented in the code as function prefix `elemental` which can affect the compilation. so any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
 
 ```Fortran
 module boo
