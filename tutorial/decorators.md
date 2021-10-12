@@ -190,8 +190,8 @@ end module boo
 
 ## Elemental and pure decorators
 
-This decorator indicates that the function bellow is an elemental one, An elemental function is a function with a single scalar operator and a scalar return value which can also be called on an array. When it is called on an array it returns the result of the function called elementwise on the array.
-This decorator `pure` indicates that the function bellow is a pure one. So that function should return identical return values for identical arguments and has no side effects in its application.
+The decorator `elemental`, indicates that the function below the decorator is an elemental one, an elemental function is a function with a single scalar operator and a scalar return value which can also be called on an array. When it is called on an array it returns the result of the function called elementwise on the array.
+The decorator `pure`, indicates that the function below the decorator is a pure one. So that function should return identical return values for identical arguments and has no side effects in its application.
 
 Here is a simple usage example:
 
