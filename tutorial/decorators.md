@@ -1,16 +1,17 @@
 # Decorators
 
-Because Pyccel is converting a dynamically typed language (Python) to statically types ones, It imposes some *restrictions* on the code. One of them is using decorators that have certain options in order to specify how the functions or the variables should be treated in the conversion, Here are the available decorators.
+Because Pyccel is converting a dynamically typed language (Python) to statically typed ones, It has some *decorators* for the user to add in the code. those decorators have certain options in order to specify how the functions or the variables should be treated in the conversion. Here are the available decorators.
 
 ## Stack array
 
-This decorator indicates that all arrays mentioned as argements (of the decorator) should be stored
+This decorator indicates that all arrays mentioned as arguments (of the decorator) should be stored
 on the stack.
 
-This example shows how the decorators can affect the conversion of the array between the supported languages, Pyccel here is told by the decorator `stack array` to store the array `arrat_in_stack` in the stack, For the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
+This example shows how the decorators can affect the conversion of the array between the supported languages, Pyccel here is told by the decorator `stack array` to store the array `array_in_stack` in the stack, For the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
 
 ```python
 from pyccel.decorators import stack_array
+import numpy as np
 
 @stack_array('array_in_stack')
 def fun1():
@@ -22,18 +23,17 @@ def fun1():
      #////////////////////////
      #array stored in the heap
      #////////////////////////
-     array_in_heap = [1,2,3]
+     array_in_heap = np.array([1,2,3])
 ```
 
 This the C generated code:
 
 ```C
-
 #include "boo.h"
-#include <stdint.h>
+#include <string.h>
 #include <stdlib.h>
 #include "ndarrays.h"
-#include <string.h>
+#include <stdint.h>
 
 
 /*........................................*/
@@ -61,6 +61,7 @@ void fun1(void)
     array_in_heap = array_create(1, (int64_t[]){3}, nd_int64);
     int64_t array_dummy_0002[] = {1, 2, 3};
     memcpy(array_in_heap.nd_int64, array_dummy_0002, array_in_heap.buffer_size);
+    free_array(array_in_heap);
 }
 /*........................................*/
 ```
@@ -93,6 +94,9 @@ module boo
     !////////////////////////
     allocate(array_in_heap(0:2_i64))
     array_in_heap = [1_i64, 2_i64, 3_i64]
+    if (allocated(array_in_heap)) then
+      deallocate(array_in_heap)
+    end if
 
   end subroutine fun1
   !........................................
