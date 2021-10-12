@@ -220,7 +220,6 @@ def square(x):
     return s
 ```
 
-
 ```C
 #include "boo.h"
 #include <stdlib.h>
@@ -343,7 +342,7 @@ module boo
 end module boo
 ```
 
-# Pure
+## Pure
 
 The decorator `pure` indicates that the function below the decorator is a pure one. This means that the function should return identical return values for identical arguments and that it has no side effects (e.g. print) in its application.
 
@@ -404,7 +403,7 @@ module boo
 end module boo
 ```
 
-# Getting Help
+## Getting Help
 
 If you face problems with pyccel, please take the following steps:
 
