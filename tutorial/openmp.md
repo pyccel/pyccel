@@ -42,6 +42,17 @@ hello from thread number: 3
 4
 ```
 
+### Supported Routines
+
+From the many routines defined in the [OpenMP 5.1 Standard](https://www.openmp.org/spec-html/5.1/openmp.html), Pyccel currently supports:
+
+-   All thread team routines except ``` omp\_get\_supported\_active\_levels ```
+-   All thread affinity routines except ``` omp\_set\_affinity\_format ```, ``` omp\_get\_affinity\_format ```, ``` omp\_display\_affinity ```, ``` omp\_capture\_affinity ```
+-   All tasking routines
+-   All device information routines except ``` omp\_get\_device\_num ```
+-   `omp\_get\_num\_teams`
+-   `omp\_get\_team\_num`
+
 ## Directives Usage on Pyccel
 
 Pyccel uses the same clauses as OpenMP, you can refer to the references below for more information on how to use them:
