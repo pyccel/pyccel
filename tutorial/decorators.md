@@ -7,7 +7,7 @@ As Pyccel converts a dynamically typed language (Python) to statically typed lan
 This decorator indicates that all arrays mentioned as arguments (of the decorator) should be stored
 on the stack.
 
-This example shows how the decorators can affect the conversion of the array between the supported languages. Pyccel here is told by the decorator `stack array` to store the array `array_in_stack` in the stack, for the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
+This example shows how the decorators can affect the conversion of the array between the supported languages. Pyccel here is told by the decorator `stack_array` to store the array `array_in_stack` in the stack, for the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
 
 ```python
 from pyccel.decorators import stack_array
@@ -19,7 +19,7 @@ def fun1():
      #/////////////////////////
      #array stored in the stack
      #////////////////////////
-     array_in_stack = [1,2,3]
+     array_in_stack = np.array([1,2,3])
      #////////////////////////
      #array stored in the heap
      #////////////////////////
@@ -30,10 +30,10 @@ This the C generated code:
 
 ```C
 #include "boo.h"
-#include <string.h>
 #include <stdlib.h>
 #include "ndarrays.h"
 #include <stdint.h>
+#include <string.h>
 
 
 /*........................................*/
@@ -124,7 +124,7 @@ def fun1(i : int, j : int):
     #////////negative indexing allowed////////
     a = array([1,2,3,4,5,6])
     print(a[i - j])
-    #////////negative indexing disallowed. the generated can cause a crash/compilation error.////////
+    #////////negative indexing disallowed. the generated code can cause a crash/compilation error.////////
     b = array([1,2,3,4,5,6])
     print(b[i - j])
 ```
@@ -205,7 +205,7 @@ end module boo
 
 ## Elemental
 
-The decorator `elemental`, indicates that the function below the decorator is an elemental one, an elemental function is a function with a single scalar operator and a scalar return value which can also be called on an array. When it is called on an array it returns the result of the function called elementwise on the array.
+The decorator `elemental` indicates that the decorated function has a single scalar operator and a scalar return value, and it can also be applied element-wise to an array.
 
 Important note: applying the `elemental` decorator to a function will not make a difference to the C translation of the function definition itself since C doesn't have the elementwise feature. However, Pyccel implements the functionality by calling the function in a `for` loop when an array argument is passed. In the following example, we will use the function `square` where `@elemental` will be useful:
 
@@ -316,7 +316,7 @@ end module boo
 
 ## Pure
 
-The decorator `pure` indicates that the function below the decorator is a pure one. This means that the function should return identical return values for identical arguments and that it has no side effects (e.g. print) in its application.
+The decorator `pure` indicates that the function below the decorator is a pure one. This means that the function should return identical output values for identical input arguments and that it has no side effects (e.g. print) in its application.
 
 Here is a simple usage example:
 
