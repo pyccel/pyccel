@@ -4,7 +4,7 @@ import numpy as np
 import modules.highorder_functions as mod
 from pyccel.epyccel import epyccel
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def modnew(language):
     return epyccel(mod, language = language)
 
