@@ -89,7 +89,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct, OMP_Parallel_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -756,7 +756,7 @@ class SemanticParser(BasicParser):
             d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-            d_var['is_stack_array'] = not d_var['allocatable'   ]
+            d_var['is_stack_array'] = not d_var['allocatable']
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -1239,6 +1239,22 @@ class SemanticParser(BasicParser):
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
+                
+                # We cannot allow the definition of a stack array from a shape with non-literal integers
+                if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
+                    for a in d_lhs['shape']:
+                        if isinstance(a, PyccelOperator):
+                            for arg in a.args:
+                                if isinstance(arg, Variable):
+                                    errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=name,
+                                    severity='error', blocker=False,
+                                    bounding_box=(self._current_fst_node.lineno,
+                                        self._current_fst_node.col_offset))
+                        elif isinstance(a, Variable):
+                            errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=name,
+                            severity='error', blocker=False,
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
 
                 # Create new variable
                 lhs = self._create_variable(name, dtype, rhs, d_lhs)
@@ -1284,13 +1300,6 @@ class SemanticParser(BasicParser):
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
-
-                # We cannot allow the definition of a stack array from a shape with non-literal integers
-                if lhs.is_stack_array and any(not isinstance(a, LiteralInteger) for a in lhs.shape):
-                        errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=name,
-                        severity='error', blocker=False,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset))
 
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self._namespace.is_loop:
