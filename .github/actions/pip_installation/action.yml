@@ -35,10 +35,6 @@ runs:
       shell: bash
       run:
         python -m pip install "pytest-xdist"
-    - name: Install pytest dependencies
-      shell: bash
-      run:
-        python -m pip install "pytest-dependency"
     - name: Install astunparse
       shell: bash
       run:

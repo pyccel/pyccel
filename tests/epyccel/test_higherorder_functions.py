@@ -4,110 +4,61 @@ import numpy as np
 import modules.highorder_functions as mod
 from pyccel.epyccel import epyccel
 
-available_languages = {"fortran" : pytest.mark.fortran,
-                       "c"       : pytest.mark.c,
-                       "python"  : pytest.mark.python}
+@pytest.fixture(scope="session")
+def modnew(language):
+    return epyccel(mod, language = language)
 
-modules = {}
-
-modparam = [
-    pytest.param(l, marks=[pytest.mark.dependency(name="test_compile_module[%s]" % l), m])
-    for l,m in available_languages.items()
-]
-testparam = [
-    pytest.param(l, marks=[pytest.mark.dependency(depends=["test_compile_module[%s]" % l]), m])
-    for l,m in available_languages.items()
-]
-
-
-@pytest.mark.parametrize( 'language', modparam )
-def test_compile_module(language):
-    modules[language] = epyccel(mod, language = language)
-
-@pytest.mark.parametrize( 'language', testparam )
-def test_int_1(language):
-    modnew = modules[language]
-
+def test_int_1(modnew):
     x_expected = mod.test_int_1()
     x = modnew.test_int_1()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_int_int_1(language):
-    modnew = modules[language]
-
+def test_int_int_1(modnew):
     x_expected = mod.test_int_int_1()
     x = modnew.test_int_int_1()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_real_1(language):
-    modnew = modules[language]
-
+def test_real_1(modnew):
     x_expected = mod.test_real_1()
     x = modnew.test_real_1()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_real_2(language):
-    modnew = modules[language]
-
+def test_real_2(modnew):
     x_expected = mod.test_real_2()
     x = modnew.test_real_2()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_real_3(language):
-    modnew = modules[language]
-
+def test_real_3(modnew):
     x_expected = mod.test_real_3()
     x = modnew.test_real_3()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_valuedarg_1(language):
-    modnew = modules[language]
-
+def test_valuedarg_1(modnew):
     x_expected = mod.test_valuedarg_1()
     x = modnew.test_valuedarg_1()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_real_real_int_1(language):
-    modnew = modules[language]
-
+def test_real_real_int_1(modnew):
     x_expected = mod.test_real_real_int_1()
     x = modnew.test_real_real_int_1()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_real_4(language):
-    modnew = modules[language]
-
+def test_real_4(modnew):
     x_expected = mod.test_real_4()
     x = modnew.test_real_4()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_valuedarg_2(language):
-    modnew = modules[language]
-
+def test_valuedarg_2(modnew):
     x_expected = mod.test_valuedarg_2()
     x = modnew.test_valuedarg_2()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_real_real_int_2(language):
-    modnew = modules[language]
-
+def test_real_real_int_2(modnew):
     x_expected = mod.test_real_real_int_2()
     x = modnew.test_real_real_int_2()
     assert x == x_expected
 
-@pytest.mark.parametrize( 'language', testparam )
-def test_euler(language):
-    modnew = modules[language]
-
+def test_euler(modnew):
     t0 = 0.0
     t1 = 2.0
     y0_l = np.array ( [ 5000., 100. ] )
