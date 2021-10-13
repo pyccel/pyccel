@@ -6,13 +6,12 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
-@fixture(scope="module")
+@pytest.fixture(scope="module")
 def Module_5(language):
     import modules.Module_5 as mod
 
     modnew = epyccel(mod, language = language)
     return mod, modnew
-    
 
 #------------------------------------------------------------------------------
 def test_f1(language):
