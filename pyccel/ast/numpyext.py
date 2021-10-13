@@ -637,7 +637,7 @@ class NumpyLinspace(NumpyNewArray):
         shape = broadcast(self._start.shape, self._stop.shape)
         self._shape = (self._num,) + shape
         self._rank  = len(self._shape)
-        self._ind = ''
+        self._ind = None
         super().__init__()
 
     @property
