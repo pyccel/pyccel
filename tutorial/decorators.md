@@ -205,7 +205,7 @@ end module boo
 
 ## Elemental
 
-The decorator `elemental` indicates that the decorated function has a single scalar operator and a scalar return value, and it can also be applied element-wise to an array.
+The decorator `elemental` indicates that the decorated function can be applied element-wise, That means it has to have a single return value and a single operation on its argumuents.
 
 Important note: applying the `elemental` decorator to a function will not make a difference to the C translation of the function definition itself since C doesn't have the elementwise feature. However, Pyccel implements the functionality by calling the function in a `for` loop when an array argument is passed. In the following example, we will use the function `square` where `@elemental` will be useful:
 
