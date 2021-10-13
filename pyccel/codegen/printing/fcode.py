@@ -689,7 +689,7 @@ class FCodePrinter(CodePrinter):
             v = self._print(expr.stop)
 
         if not isinstance(expr.endpoint, LiteralFalse):
-                lhs = expr._user_nodes[0].lhs
+                lhs = expr.get_user_nodes(Assign)[0].lhs
                 lhs = self._print(lhs).replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))) if expr.rank > 1 else self._print(IndexedElement(lhs, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
                 if isinstance(expr.endpoint, LiteralTrue):
                     cond_template = lhs + ' = {stop}'

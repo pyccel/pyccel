@@ -1213,7 +1213,7 @@ class CCodePrinter(CodePrinter):
         template = '({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
             template = '({start} + {index}*{step})'
-            lhs = self._print(expr._user_nodes[0].lhs)
+            lhs = self._print(expr.get_user_nodes(Assign)[0].lhs)
             lhs = lhs.replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
             if isinstance(expr.endpoint, LiteralTrue):
                 cond_template = lhs + ' = {stop}'
