@@ -688,23 +688,17 @@ class FCodePrinter(CodePrinter):
         else:
             v = self._print(expr.stop)
 
-        if expr.rank > 1:
-            template = '({start} + {index}*{step})'
-            if not isinstance(expr.endpoint, LiteralFalse):
-                lhs = self._print(expr._user_nodes[0].lhs)
-                lhs = lhs.replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
+        if not isinstance(expr.endpoint, LiteralFalse):
+                lhs = expr._user_nodes[0].lhs
+                lhs = self._print(lhs).replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))) if expr.rank > 1 else self._print(IndexedElement(lhs, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
                 if isinstance(expr.endpoint, LiteralTrue):
                     cond_template = lhs + ' = {stop}'
                 else:
                     cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
+        if expr.rank > 1:
+            template = '({start} + {index}*{step})'
             var = Variable('int', str(expr.ind))
         else:
-            if not isinstance(expr.endpoint, LiteralFalse):
-                lhs = IndexedElement(expr._user_nodes[0].lhs, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
-                if isinstance(expr.endpoint, LiteralTrue):
-                    cond_template = self._print(lhs) + ' = {stop}'
-                else:
-                    cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
             self.add_vars_to_namespace(var)
@@ -826,6 +820,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
+        print(expr.arg.dtype)
+        print(expr.arg)
+        print(expr)
         if (expr.arg.dtype is NativeBool()):
             code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
