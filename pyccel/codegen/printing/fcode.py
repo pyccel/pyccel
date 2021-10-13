@@ -820,9 +820,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        print(expr.arg.dtype)
-        print(expr.arg)
-        print(expr)
         if (expr.arg.dtype is NativeBool()):
             code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
