@@ -1285,6 +1285,13 @@ class SemanticParser(BasicParser):
                     self._allocs[-1].append(lhs)
                 # ...
 
+                # We cannot allow the definition of a stack array from a shape with non-literal integers
+                if lhs.is_stack_array and any(not isinstance(a, LiteralInteger) for a in lhs.shape):
+                        errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=name,
+                        severity='error', blocker=False,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset))
+
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self._namespace.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
