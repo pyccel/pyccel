@@ -145,7 +145,7 @@ def test_creation_in_loop_stack(language):
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
-    assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
+    assert error_info.message == STACK_ARRAY_NON_LITERAL_SHAPE
 
 #==============================================================================
 def test_creation_in_if_heap(language):
