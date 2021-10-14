@@ -378,30 +378,35 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     ```python
     from numpy import linspace
 
-    x = linspace(0, 10, 20, endpoint=False, dtype='float64')
-    print(x)
+    if __name__ == "__main__":
+        x = linspace(0, 10, 20, endpoint=False, dtype='float64')
+        print(x)
     ```
 
 -   fortran equivalent:
 
     ```fortran
-    program prog_example
 
-    use, intrinsic :: ISO_C_BINDING
+    program prog_prog_lin_doc
 
-    implicit none
+      use lin_doc
 
-    real(C_DOUBLE), allocatable :: x(:)
-    integer(C_INT64_T) :: linspace_index
+      use, intrinsic :: ISO_C_Binding, only : f64 => C_DOUBLE , i64 => &
+          C_INT64_T
+      implicit none
 
-    allocate(x(0:19_C_INT64_T))
-    x = [((0_C_INT64_T + linspace_index*Real((10_C_INT64_T - 0_C_INT64_T), &
-      C_DOUBLE) / 20.0_C_DOUBLE), linspace_index = 0_C_INT64_T, &
-      19_C_INT64_T)]
-    print *, x
+      real(f64), allocatable :: x(:)
+      integer(i64) :: linspace_index
 
-    end program prog_example
+      allocate(x(0:19_i64))
+      x = [((0_i64 + linspace_index*Real((10_i64 - 0_i64), f64) / 20.0_f64), &
+          linspace_index = 0_i64,19_i64)]
+      print *, x
+      if (allocated(x)) then
+        deallocate(x)
+      end if
 
+    end program prog_prog_lin_doc
     ```
 
 -   C equivalent:
