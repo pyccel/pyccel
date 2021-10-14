@@ -6,10 +6,10 @@ import subprocess
 
 TestInfo = namedtuple('TestInfo', 'name basename imports setup call')
 
-verbose = False
-latex_out = False
+verbose = True
+latex_out = True
 
-pyperf = False
+pyperf = True
 time_compliation = True
 
 test_cases = ['python']
@@ -20,12 +20,6 @@ test_cases += ['pyccel']
 #test_cases += ['pyccel_intel']
 #test_cases += ['pyccel_c']
 #test_cases += ['pyccel_intel_c']
-pypy           = False
-pyccel_intel   = False
-pyccel_c       = False
-pyccel_intel_c = False
-pythran        = True
-numba          = True
 
 tests = [
     TestInfo('Ackermann',
@@ -43,11 +37,6 @@ tests = [
         ['dijkstra_distance_test'],
         '',
         'dijkstra_distance_test()'),
-    TestInfo('M-D',
-        'md_mod.py',
-        ['test_md'],
-        '',
-        'test_md(3, 1000, 500, 0.1)'),
     TestInfo('Euler',
         'ode.py',
         ['euler_humps_test', 'humps_fun'],
@@ -113,7 +102,14 @@ tests = [
            p[:, 0] = 0; p[:, -1] = y;
            p[0, :] = p[1, :]; p[-1, :] = p[-2, :]''',
         'laplace_2d(p, y, dx, dy, l1norm_target)'),
+    TestInfo('M-D',
+        'md_mod.py',
+        ['test_md'],
+        '',
+        'test_md(3, 100, 500, 0.1)'),
 ]
+
+log_file = open("bench.log",'w')
 
 timeit_cmd = ['pyperf', 'timeit', '--copy-env'] if pyperf else ['timeit']
 
@@ -133,7 +129,7 @@ row_splitter = '\\\\\n\\hline\n' if latex_out else '\n'
 test_cases_row = cell_splitter.join('{0: <25}'.format(s) for s in ['Code']+test_cases)
 result_table = [test_cases_row]
 
-possible_units = ['s','ms','us','ns']
+possible_units = ['sec','ms','us','ns']
 latex_units = ['s','ms','\\textmu s','ns']
 
 start_dir = os.getcwd()
@@ -166,9 +162,9 @@ for t in tests:
                 testname = numba_testname if case == 'numba' else testname,
                 funcs = import_funcs)
         setup_cmd += t.setup.replace('\n','')
-        print("-------------------")
-        print("   ",case)
-        print("-------------------")
+        print("-------------------", file=log_file, flush=True)
+        print("   ",case, file=log_file, flush=True)
+        print("-------------------", file=log_file, flush=True)
         if case in accelerator_commands:
             cmd = accelerator_commands[case].copy()+[basename]
 
@@ -176,15 +172,15 @@ for t in tests:
                 cmd = ['time'] + cmd
 
             if verbose:
-                print(cmd)
+                print(cmd, file=log_file, flush=True)
 
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                     universal_newlines=True)
             out, err = p.communicate()
 
             if p.returncode != 0:
-                print("Compilation Error!")
-                print(err)
+                print("Compilation Error!", file=log_file, flush=True)
+                print(err, file=log_file, flush=True)
                 run_times.append(None)
                 run_units.append(None)
                 continue
@@ -195,28 +191,28 @@ for t in tests:
                 assert len(r) == 1
                 times = [float(ri) for ri in r[0]]
                 cpu_time = sum(times)
-                print("Compilation CPU time : ", cpu_time)
+                print("Compilation CPU time : ", cpu_time, file=log_file)
 
         cmd = ['pypy'] if case=='pypy' else ['python3']
         cmd += ['-m'] + timeit_cmd + ['-s', setup_cmd, exec_cmd]
 
         if verbose:
-            print(cmd)
+            print(cmd, file=log_file, flush=True)
 
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 universal_newlines=True)
         out, err = p.communicate()
 
         if p.returncode != 0:
-            print("Execution Error!")
+            print("Execution Error!", file=log_file, flush=True)
             run_times.append(None)
             run_units.append(None)
-            print(err)
+            print(err, file=log_file, flush=True)
         else:
             if verbose:
-                print(out)
+                print(out, file=log_file, flush=True)
             if pyperf:
-                regexp = re.compile('([0-9.]+) (\w\w?) \+- ([0-9.]+) (\w\w?)')
+                regexp = re.compile('([0-9.]+) (\w\w\w?) \+- ([0-9.]+) (\w\w\w?)')
                 r = regexp.search(out)
                 assert r.group(2) == r.group(4)
                 mean = float(r.group(1))
@@ -265,8 +261,12 @@ for t in tests:
 
     row = cell_splitter.join('{0: <25}'.format(s) for s in row)
     if verbose:
-        print(row)
+        print(row, file=log_file, flush=True)
     result_table.append(row)
     os.chdir(start_dir)
 
-print(row_splitter.join(result_table))
+log_file.close()
+
+result_file = open("bench.out",'w')
+print(row_splitter.join(result_table), file=result_file, flush=True)
+result_file.close()
