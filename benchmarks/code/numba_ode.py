@@ -178,7 +178,7 @@ def euler_humps_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     t1 = tspan[1]
 
     t = linspace ( t0, t1, n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     euler ( humps_deriv, tspan, y0, n, t, y )
 
@@ -192,7 +192,7 @@ def midpoint_explicit_humps_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     t1 = tspan[1]
 
     t = linspace ( t0, t1, n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     midpoint_explicit ( humps_deriv, tspan, y0, n, t, y )
 
@@ -203,7 +203,7 @@ def midpoint_explicit_predator_prey_test ( tspan: 'real[:]', y0: 'real[:]', n: i
     m = len ( y0 )
 
     t = zeros ( n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     midpoint_explicit ( predator_prey_deriv, tspan, y0, n, t, y )
 
@@ -217,7 +217,7 @@ def midpoint_fixed_humps_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     t1 = tspan[1]
 
     t = linspace ( t0, t1, n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     midpoint_fixed ( humps_deriv, tspan, y0, n, t, y )
 
@@ -228,7 +228,7 @@ def midpoint_fixed_predator_prey_test ( tspan: 'real[:]', y0: 'real[:]', n: int 
     m = len ( y0 )
 
     t = zeros ( n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     midpoint_fixed ( predator_prey_deriv, tspan, y0, n, t, y )
 
@@ -239,7 +239,7 @@ def leapfrog_shm_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     m = len ( y0 )
 
     t = zeros ( n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     leapfrog ( shm_deriv, tspan, y0, n, t, y )
 
@@ -250,7 +250,7 @@ def rk4_humps_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     m = len ( y0 )
 
     t = zeros ( n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     rk4 ( humps_deriv, tspan, y0, n, t, y )
 
@@ -261,6 +261,6 @@ def rk4_predator_prey_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     m = len ( y0 )
 
     t = zeros ( n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     rk4 ( predator_prey_deriv, tspan, y0, n, t, y )
