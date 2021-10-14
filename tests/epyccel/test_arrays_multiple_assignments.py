@@ -140,12 +140,15 @@ def test_creation_in_loop_stack(language):
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors()
-    assert errors.num_messages() == 1
+    assert errors.num_messages() == 2
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_NON_LITERAL_SHAPE
+    error_info = [*errors.error_info_map.values()][0][1]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
 
 #==============================================================================
 def test_creation_in_if_heap(language):
