@@ -7,7 +7,7 @@ import subprocess
 TestInfo = namedtuple('TestInfo', 'name basename imports setup call')
 
 verbose = False
-latex_out = True
+latex_out = False
 
 pyperf = False
 time_compliation = True
@@ -47,7 +47,7 @@ tests = [
         'md_mod.py',
         ['test_md'],
         '',
-        'test_md(p_num = 1000, step_num = 500)'),
+        'test_md(3, 1000, 500, 0.1)'),
     TestInfo('Euler',
         'ode.py',
         ['euler_humps_test', 'humps_fun'],
@@ -71,33 +71,48 @@ tests = [
     TestInfo('FD - L Convection',
         'cfd_python.py',
         ['linearconv_1d'],
-        'import numpy as np; nx = 501; nt = 1500; nu = 0.3; dx = 2 / (nx-1);
+        '''import numpy as np; nx=2001; nt=2000; c=1.; dt=0.0003;
+        dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
         u0 = np.ones(nx);
         u0[int(.5 / dx):int(1 / dx + 1)] = 2;
         u = u0.copy();
-        un = np.ones(nx)',
+        un = np.ones(nx);''',
         'linearconv_1d(u, un, nt, nx, dt, dx, c)'),
     TestInfo('FD - NL Convection',
         'cfd_python.py',
         ['nonlinearconv_1d'],
-        'import numpy as np; nx = 2001; c=1.; dt=0.00035; dx = 2 / (nx-1);
+        '''import numpy as np; nx = 2001; nt=2000; c=1.; dt=0.00035; dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
         u0 = np.ones(nx);
         u0[int(.5 / dx):int(1 / dx + 1)] = 2;
         u = u0.copy();
-        un = np.ones(nx)',
+        un = np.ones(nx)''',
         'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
-    TestInfo('FD - Poisson'
+    TestInfo('FD - Poisson',
         'cfd_python.py',
         ['poisson_2d'],
-        'import numpy as np; nx = 150; ny = 150; nt  = 100; dx = 2 / (nx-1);
-        grid = np.linspace(0,2,nx);
-        u0 = np.ones(nx);
-        u0[int(.5 / dx):int(1 / dx + 1)] = 2;
-        u = u0.copy();
-        un = np.ones(nx)',
-        'nonlinearconv_1d(u, un, nt, nx, dt, dx)')
+        '''import numpy as np; nx = 150; ny = 150; nt  = 100;
+           xmin = 0; xmax = 2; ymin = 0; ymax = 1;
+           dx = (xmax - xmin) / (nx - 1);
+           dy = (ymax - ymin) / (ny - 1);
+           p  = np.zeros((ny, nx));
+           pd = np.zeros((ny, nx));
+           b  = np.zeros((ny, nx));
+           x  = np.linspace(xmin, xmax, nx);
+           y  = np.linspace(xmin, xmax, ny);''',
+        'poisson_2d(p, pd, b, nx, ny, nt, dx, dy)'),
+    TestInfo('FD - Laplace',
+        'cfd_python.py',
+        ['laplace_2d'],
+        '''import numpy as np; nx = 31; ny = 31; c = 1.; l1norm_target=1.e-4;
+           dx = 2 / (nx - 1); dy = 2 / (ny - 1);
+           p = np.zeros((ny, nx));
+           x = np.linspace(0, 2, nx);
+           y = np.linspace(0, 1, ny);
+           p[:, 0] = 0; p[:, -1] = y;
+           p[0, :] = p[1, :]; p[-1, :] = p[-2, :]''',
+        'laplace_2d(p, y, dx, dy, l1norm_target)'),
 ]
 
 timeit_cmd = ['pyperf', 'timeit', '--copy-env'] if pyperf else ['timeit']
@@ -120,6 +135,8 @@ result_table = [test_cases_row]
 
 possible_units = ['s','ms','us','ns']
 latex_units = ['s','ms','\\textmu s','ns']
+
+start_dir = os.getcwd()
 
 for t in tests:
     basename = t.basename
@@ -148,11 +165,10 @@ for t in tests:
         setup_cmd = 'from {testname} import {funcs};'.format(
                 testname = numba_testname if case == 'numba' else testname,
                 funcs = import_funcs)
-        setup_cmd += t.setup
+        setup_cmd += t.setup.replace('\n','')
         print("-------------------")
         print("   ",case)
         print("-------------------")
-        run_test = True
         if case in accelerator_commands:
             cmd = accelerator_commands[case].copy()+[basename]
 
@@ -168,7 +184,8 @@ for t in tests:
             if p.returncode != 0:
                 print("Compilation Error!")
                 print(err)
-                run_test = False
+                run_times.append(None)
+                run_units.append(None)
                 continue
 
             if time_compliation:
@@ -190,17 +207,17 @@ for t in tests:
 
         if p.returncode != 0:
             print("Execution Error!")
-            bench_str = '-'
-            if verbose:
-                print(err)
+            run_times.append(None)
+            run_units.append(None)
+            print(err)
         else:
             print(out)
             if pyperf:
                 regexp = re.compile('([0-9.]+) (\w\w?) \+- ([0-9.]+) (\w\w?)')
                 r = regexp.search(out)
                 assert r.group(2) == r.group(4)
-                mean = r.group(1)
-                stddev = r.group(3)
+                mean = float(r.group(1))
+                stddev = float(r.group(3))
                 units = r.group(2)
 
                 bench_str = '{mean} $\pm$ {stddev}'.format(
@@ -210,7 +227,7 @@ for t in tests:
             else:
                 regexp = re.compile('([0-9]+) loops?, best of ([0-9]+): ([0-9.]+) (\w*)')
                 r = regexp.search(out)
-                best = r.group(3)
+                best = float(r.group(3))
                 units = r.group(4)[:-2]
                 bench_str = best
                 run_times.append(best)
@@ -220,23 +237,34 @@ for t in tests:
         if case in accelerator_commands:
             p = subprocess.Popen(['pyccel-clean', '-s'])
 
-    unit_index = round(sum(run_units)/len(run_units))
+    used_units = [u for u in run_units if u is not None]
+    unit_index = round(sum(used_units)/len(used_units))
     units = latex_units[unit_index]
     row = [t.name + ' ('+units+')']
 
-    mult_fact = [1000**(u-unit_index) for u in run_units]
+    mult_fact = [1000**(unit_index-u) if u is not None else None for u in run_units]
+
+    print(run_times)
 
     if pyperf:
         for time,f in zip(run_times,mult_fact):
-            mean,stddev = time
-            row.append('{mean} $\pm$ {stddev}'.format(
-                        mean=mean*f,
-                        stddev=stddev*f))
+            if time is None:
+                row.append('-')
+            else:
+                mean,stddev = time
+                row.append('{mean} $\pm$ {stddev}'.format(
+                            mean=mean*f,
+                            stddev=stddev*f))
     else:
         for time,f in zip(run_times,mult_fact):
-            row.append(str(time*f))
+            if time is None:
+                row.append('-')
+            else:
+                row.append(str(time*f))
 
     row = cell_splitter.join('{0: <25}'.format(s) for s in row)
+    print(row)
     result_table.append(row)
+    os.chdir(start_dir)
 
 print(row_splitter.join(result_table))
