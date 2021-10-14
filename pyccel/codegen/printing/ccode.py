@@ -1228,8 +1228,6 @@ class CCodePrinter(CodePrinter):
             v = '({cast}){var}'.format(cast=self._print(type_name), var=self._print(expr.stop))
         else:
             v = self._print(expr.stop)
-        if not isinstance(expr.endpoint, LiteralFalse) and not isinstance(expr.endpoint, LiteralTrue):
-            cond = PyccelEq(expr.endpoint, LiteralTrue())
         init_value = template.format(
             start = self._print(expr.start),
             step  = self._print(expr.step),
@@ -1238,7 +1236,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.endpoint, LiteralFalse):
             code = init_value
         elif not isinstance(expr.endpoint, LiteralFalse) and not isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + ';\n' + cond_template.format(cond=self._print(cond),stop = v)
+            code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
         else:
             code = init_value + ';\n' + cond_template.format(stop = v)
 
