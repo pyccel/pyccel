@@ -8,7 +8,7 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
                                     STACK_ARRAY_DEFINITION_IN_LOOP,
-                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE)
+                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE, STACK_ARRAY_NON_LITERAL_SHAPE)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
