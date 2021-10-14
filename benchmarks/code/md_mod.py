@@ -126,7 +126,7 @@ def md (d_num: int, p_num: int, step_num: int, dt: float,
         potential, kinetic = compute ( p_num, d_num, pos, vel, mass, force )
 
 # ================================================================
-# pythran export test_md()
+# pythran export test_md(int,int,int,float)
 def test_md ( d_num : int = 3, p_num : int = 100, step_num : int = 10, dt : float = 0.1 ):
 
     #  Velocities.
