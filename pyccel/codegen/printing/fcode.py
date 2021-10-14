@@ -690,7 +690,19 @@ class FCodePrinter(CodePrinter):
 
         if not isinstance(expr.endpoint, LiteralFalse):
                 lhs = expr.get_user_nodes(Assign)[0].lhs
-                lhs = self._print(lhs).replace(self._print(expr.ind), self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True))) if expr.rank > 1 else self._print(IndexedElement(lhs, PyccelMinus(expr.num, LiteralInteger(1), simplify = True)))
+
+
+                if expr.rank > 1:
+                    #expr.rank > 1, we need to replace the last indice of the loop with the last index of the array.
+                    lhs = self._print(lhs).replace(self._print(expr.ind),
+                                                   self._print(PyccelMinus(expr.num, LiteralInteger(1),
+                                                   simplify = True)))
+                else:
+                    #Since the expr.rank == 1, we modify the last element in the array.
+                    lhs = self._print(IndexedElement(lhs, 
+                                                     PyccelMinus(expr.num, LiteralInteger(1), 
+                                                     simplify = True)))
+
                 if isinstance(expr.endpoint, LiteralTrue):
                     cond_template = lhs + ' = {stop}'
                 else:
