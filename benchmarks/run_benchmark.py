@@ -175,7 +175,8 @@ for t in tests:
             if time_compliation:
                 cmd = ['time'] + cmd
 
-            print(cmd)
+            if verbose:
+                print(cmd)
 
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                     universal_newlines=True)
@@ -199,7 +200,8 @@ for t in tests:
         cmd = ['pypy'] if case=='pypy' else ['python3']
         cmd += ['-m'] + timeit_cmd + ['-s', setup_cmd, exec_cmd]
 
-        print(cmd)
+        if verbose:
+            print(cmd)
 
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 universal_newlines=True)
@@ -211,7 +213,8 @@ for t in tests:
             run_units.append(None)
             print(err)
         else:
-            print(out)
+            if verbose:
+                print(out)
             if pyperf:
                 regexp = re.compile('([0-9.]+) (\w\w?) \+- ([0-9.]+) (\w\w?)')
                 r = regexp.search(out)
@@ -244,8 +247,6 @@ for t in tests:
 
     mult_fact = [1000**(unit_index-u) if u is not None else None for u in run_units]
 
-    print(run_times)
-
     if pyperf:
         for time,f in zip(run_times,mult_fact):
             if time is None:
@@ -263,7 +264,8 @@ for t in tests:
                 row.append(str(time*f))
 
     row = cell_splitter.join('{0: <25}'.format(s) for s in row)
-    print(row)
+    if verbose:
+        print(row)
     result_table.append(row)
     os.chdir(start_dir)
 
