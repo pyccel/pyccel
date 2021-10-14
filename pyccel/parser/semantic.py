@@ -1243,14 +1243,8 @@ class SemanticParser(BasicParser):
                 # We cannot allow the definition of a stack array from a shape with non-literal integers
                 if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
                     for a in d_lhs['shape']:
-                        if isinstance(a, PyccelOperator):
-                            for arg in a.args:
-                                if isinstance(arg, Variable):
-                                    errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=name,
-                                    severity='error', blocker=False,
-                                    bounding_box=(self._current_fst_node.lineno,
-                                        self._current_fst_node.col_offset))
-                        elif isinstance(a, Variable):
+                        if isinstance(a, Variable) or (not isinstance(a, FunctionCall)
+                                        and a.get_attribute_nodes(Variable, excluded_nodes=FunctionCall)):
                             errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=name,
                             severity='error', blocker=False,
                             bounding_box=(self._current_fst_node.lineno,
