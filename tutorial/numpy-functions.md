@@ -412,10 +412,11 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 -   C equivalent:
 
     ```C
-    #include <stdint.h>
-    #include <stdio.h>
+    #include "lin_doc.h"
     #include <stdlib.h>
     #include "ndarrays.h"
+    #include <stdint.h>
+    #include <stdio.h>
     int main()
     {
         t_ndarray x;
@@ -424,14 +425,14 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         x = array_create(1, (int64_t[]){20}, nd_double);
         for (i_0001 = 0; i_0001 < 20; i_0001 += 1)
         {
-            x.nd_double[get_index(x, i_0001)] = (0 + i_0001*(double)((10 - 0)) / 20.0);
+            GET_ELEMENT(x, nd_double, i_0001) = (0 + i_0001*(double)((10 - 0)) / 20.0);
         }
         printf("%s", "[");
         for (i = 0; i < 19; i += 1)
         {
-            printf("%.12lf ", x.nd_double[get_index(x, i)]);
+            printf("%.12lf ", GET_ELEMENT(x, nd_double, i));
         }
-        printf("%.12lf]\n", x.nd_double[get_index(x, 19)]);
+        printf("%.12lf]\n", GET_ELEMENT(x, nd_double, 19));
         free_array(x);
         return 0;
     }
