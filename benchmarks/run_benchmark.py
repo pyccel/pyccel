@@ -4,17 +4,22 @@ import re
 import shutil
 import subprocess
 
-TestInfo = namedtuple('TestInfo', 'basename imports setup call')
+TestInfo = namedtuple('TestInfo', 'name basename imports setup call')
 
 verbose = False
+latex_out = True
 
-test_cases = ['python', 'pyccel']
+pyperf = False
+time_compliation = True
+
+test_cases = ['python']
 #test_cases += ['pypy']
+test_cases += ['pythran']
+test_cases += ['numba']
+test_cases += ['pyccel']
 #test_cases += ['pyccel_intel']
 #test_cases += ['pyccel_c']
 #test_cases += ['pyccel_intel_c']
-test_cases += ['pythran']
-test_cases += ['numba']
 pypy           = False
 pyccel_intel   = False
 pyccel_c       = False
@@ -22,43 +27,49 @@ pyccel_intel_c = False
 pythran        = True
 numba          = True
 
-pyperf = True
-time_compliation = True
-
 tests = [
-    TestInfo('ackermann_mod.py',
+    TestInfo('Ackermann',
+        'ackermann_mod.py',
         ['ackermann'],
         'import sys; sys.setrecursionlimit(3000)',
         'ackermann(3,8)'),
-    TestInfo('bellman_ford_mod.py',
+    TestInfo('Bellman Ford',
+        'bellman_ford_mod.py',
         ['bellman_ford_test'],
         '',
         'bellman_ford_test()'),
-    TestInfo('dijkstra.py',
+    TestInfo('Dijkstra',
+        'dijkstra.py',
         ['dijkstra_distance_test'],
         '',
         'dijkstra_distance_test()'),
-    TestInfo('md_mod.py',
+    TestInfo('M-D',
+        'md_mod.py',
         ['test_md'],
         '',
         'test_md(p_num = 1000, step_num = 500)'),
-    TestInfo('ode.py',
+    TestInfo('Euler',
+        'ode.py',
         ['euler_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'euler_humps_test(tspan, y0, 10000)'),
-    TestInfo('ode.py',
+    TestInfo('Midpoint Explicit',
+        'ode.py',
         ['midpoint_explicit_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'midpoint_explicit_humps_test(tspan, y0, 10000)'),
-    TestInfo('ode.py',
+    TestInfo('Midpoint Fixed',
+        'ode.py',
         ['midpoint_fixed_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'midpoint_fixed_humps_test(tspan, y0, 10000)'),
-    TestInfo('ode.py',
+    TestInfo('RK4',
+        'ode.py',
         ['rk4_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'rk4_humps_test(tspan, y0, 10000)'),
-    TestInfo('cfd_python.py',
+    TestInfo('FD - L Convection',
+        'cfd_python.py',
         ['linearconv_1d'],
         'import numpy as np; nx = 501; nt = 1500; nu = 0.3; dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
@@ -67,7 +78,8 @@ tests = [
         u = u0.copy();
         un = np.ones(nx)',
         'linearconv_1d(u, un, nt, nx, dt, dx, c)'),
-    TestInfo('cfd_python.py',
+    TestInfo('FD - NL Convection',
+        'cfd_python.py',
         ['nonlinearconv_1d'],
         'import numpy as np; nx = 2001; c=1.; dt=0.00035; dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
@@ -76,7 +88,8 @@ tests = [
         u = u0.copy();
         un = np.ones(nx)',
         'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
-    TestInfo('cfd_python.py',
+    TestInfo('FD - Poisson'
+        'cfd_python.py',
         ['poisson_2d'],
         'import numpy as np; nx = 150; ny = 150; nt  = 100; dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
@@ -99,6 +112,14 @@ accelerator_commands = {
         'pythran'        : ['pythran']+flags.split()
         }
 
+cell_splitter = ' & ' if latex_out else ' | '
+row_splitter = '\\\\\n\\hline\n' if latex_out else '\n'
+
+test_cases_row = cell_splitter.join('{0: <25}'.format(s) for s in ['Code']+test_cases)
+result_table = [test_cases_row]
+
+possible_units = ['s','ms','us','ns']
+latex_units = ['s','ms','\\textmu s','ns']
 
 for t in tests:
     basename = t.basename
@@ -120,6 +141,9 @@ for t in tests:
     import_funcs = ', '.join(t.imports)
     exec_cmd  = t.call
 
+    run_times = []
+    run_units = []
+
     for case in test_cases:
         setup_cmd = 'from {testname} import {funcs};'.format(
                 testname = numba_testname if case == 'numba' else testname,
@@ -134,6 +158,8 @@ for t in tests:
 
             if time_compliation:
                 cmd = ['time'] + cmd
+
+            print(cmd)
 
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                     universal_newlines=True)
@@ -168,8 +194,9 @@ for t in tests:
             if verbose:
                 print(err)
         else:
+            print(out)
             if pyperf:
-                regexp = re.compile('([0-9.]*) (..) \+- ([0-9.]*) (..)')
+                regexp = re.compile('([0-9.]+) (\w\w?) \+- ([0-9.]+) (\w\w?)')
                 r = regexp.search(out)
                 assert r.group(2) == r.group(4)
                 mean = r.group(1)
@@ -178,14 +205,38 @@ for t in tests:
 
                 bench_str = '{mean} $\pm$ {stddev}'.format(
                         mean=mean,
-                        stdev=stddev)
+                        stddev=stddev)
+                run_times.append((mean,stddev))
             else:
-                regexp = re.compile('([0-9]*) loops, best of ([0-9]*): ([0-9.]*) (\w*)')
+                regexp = re.compile('([0-9]+) loops?, best of ([0-9]+): ([0-9.]+) (\w*)')
                 r = regexp.search(out)
                 best = r.group(3)
-                units = r.group(4)
+                units = r.group(4)[:-2]
                 bench_str = best
+                run_times.append(best)
+
+            run_units.append(possible_units.index(units))
 
         if case in accelerator_commands:
             p = subprocess.Popen(['pyccel-clean', '-s'])
 
+    unit_index = round(sum(run_units)/len(run_units))
+    units = latex_units[unit_index]
+    row = [t.name + ' ('+units+')']
+
+    mult_fact = [1000**(u-unit_index) for u in run_units]
+
+    if pyperf:
+        for time,f in zip(run_times,mult_fact):
+            mean,stddev = time
+            row.append('{mean} $\pm$ {stddev}'.format(
+                        mean=mean*f,
+                        stddev=stddev*f))
+    else:
+        for time,f in zip(run_times,mult_fact):
+            row.append(str(time*f))
+
+    row = cell_splitter.join('{0: <25}'.format(s) for s in row)
+    result_table.append(row)
+
+print(row_splitter.join(result_table))
