@@ -2257,8 +2257,8 @@ class FunctionDef(Basic):
                 raise ValueError('Expecting booleans')
 
         else:
-            # TODO shall we keep this?
-            arguments_inout = [False for a in arguments]
+            arg_vars = [a.var for a in arguments]
+            arguments_inout = [a.rank>0 and not a.is_const if isinstance(a, Variable) else False for a in arg_vars]
 
         if functions:
             for i in functions:

@@ -133,3 +133,40 @@ def test_valuedarg_2():
 def test_real_real_int_2():
     x = high_real_real_int_2(f7, f4, f3)
     return x
+
+def euler (dydt: '()(float, const float[:], float[:])',
+           t0: 'float', t1: 'float', y0: 'float[:]', n: int,
+           t: 'float[:]', y: 'float[:,:]'):
+
+    dt = ( t1 - t0 ) / float ( n )
+    y[0] = y0[:]
+
+    for i in range ( n ):
+        dydt ( t[i], y[i,:], y[i+1,:] )
+        y[i+1,:] = y[i,:] + dt * y[i+1,:]
+
+def predator_prey_deriv ( t: 'float', rf: 'float[:]', out: 'float[:]' ):
+
+    r = rf[0]
+    f = rf[1]
+
+    drdt =    2.0 * r - 0.001 * r * f
+    dfdt = - 10.0 * f + 0.002 * r * f
+
+    out[0] = drdt
+    out[1] = dfdt
+
+def euler_test ( t0: 'float', t1 : 'float', y0: 'float[:]', n: int ):
+    from numpy import zeros
+    #from numpy import linspace
+
+    m = len ( y0 )
+
+    t = [t0+(t1-t0)*i/n for i in range(n+1)]
+    #TODO: Uncomment after PR #838
+    #t = linspace ( t0, t1, n + 1 )
+    y = zeros ( ( n + 1, m ) )
+
+    euler ( predator_prey_deriv, t0, t1, y0, n, t, y )
+
+    y0[:] = y[-1,:]
