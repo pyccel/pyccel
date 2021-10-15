@@ -723,7 +723,8 @@ _valid_Distribute_clauses = (OmpPrivate,
                              OmpLastPrivate,
                              OmpCollapse)
 
-_valid_simd_clauses = (OmpLinear,
+_valid_simd_clauses = (OmpPrivate,
+                       OmpLinear,
                        OmpReduction,
                        OmpCollapse,
                        OmpLastPrivate)
