@@ -42,6 +42,7 @@ __all__ = (
     'PythonZip',
     'PythonMax',
     'PythonMin',
+    'PythonRound',
     'python_builtin_datatype'
 )
 
@@ -318,6 +319,27 @@ class PythonFloat(PyccelAstNode):
 
     def __str__(self):
         return 'float({0})'.format(str(self.arg))
+
+# ===========================================================================
+class PythonRound(PyccelAstNode):
+    """ Represents a call to Python's native round() function.
+    """
+    __slots__ = ('_arg')
+    name = 'round'
+    _dtype = NativeReal()
+    _precision = default_precision['real']
+    _rank = 0
+    _shape = ()
+    _order = None
+    _attribute_nodes  = ('_arg',)
+
+    def __init__(self, arg):
+        self._arg = arg
+        super().__init__()
+
+    @property
+    def arg(self):
+        return self._arg
 
 #==============================================================================
 class PythonInt(PyccelAstNode):
@@ -861,4 +883,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'round'    : PythonRound,
 }

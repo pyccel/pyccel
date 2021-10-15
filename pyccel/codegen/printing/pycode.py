@@ -372,6 +372,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
+    def _print_PythonRound(self, expr):
+        return 'round({})'.format(self._print(expr.arg))
+
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
