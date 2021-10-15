@@ -260,6 +260,16 @@ class OmpFinal(OmpClauses):
 
         super().__init__(**kwargs)
 
+class OmpOrder(OmpClauses):
+    """Class representing the num_thread clause."""
+    def __init__(self, **kwargs):
+        thread = kwargs.pop('name')
+
+        self._expr = 'order({})'.format(thread)
+
+        super().__init__(**kwargs)
+
+
 class OmpNumThread(OmpClauses):
     """Class representing the num_thread clause."""
     def __init__(self, **kwargs):
@@ -727,6 +737,7 @@ _valid_simd_clauses = (OmpPrivate,
                        OmpLinear,
                        OmpReduction,
                        OmpCollapse,
+                       OmpOrder,
                        OmpLastPrivate)
 
 _valid_taskloop_clauses = (OmpShared,
@@ -790,6 +801,7 @@ omp_clauses = (OmpCollapse,
                OmpLastPrivate,
                OmpLinear,
                OmpOrdered,
+               OmpOrder,
                OmpNumThread,
                OmpDefault,
                OmpPrivate,
