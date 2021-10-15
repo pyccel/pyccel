@@ -749,6 +749,11 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonRound(self, expr):
+        self._additional_imports.add("math")
+        func = "round"
+        return "{}({})".format(func, self._print(expr.arg))
+
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
         if arg.dtype.primitive_type is PrimitiveFloatingPointType() and len(arg) == 2:

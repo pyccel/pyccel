@@ -507,6 +507,9 @@ class PythonCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("The shape access function seems to be poorly defined.")
 
+    def _print_PythonRound(self, expr):
+        return 'round({})'.format(self._print(expr.arg))
+
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
         name = self._get_numpy_name(expr)

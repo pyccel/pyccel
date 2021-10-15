@@ -1196,6 +1196,12 @@ class FCodePrinter(CodePrinter):
         arg_code = self._get_node_without_gFTL(expr.arg)
         return f"abs({arg_code})"
 
+    def _print_PythonRound(self, expr):
+        """ print the python builtin function round
+        args : variable
+        """
+        return "nint({})".format(self._print(expr.arg))
+
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
         if len(shape)>1:

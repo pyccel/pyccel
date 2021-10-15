@@ -53,6 +53,7 @@ __all__ = (
     'PythonPrint',
     'PythonRange',
     'PythonReal',
+    'PythonRound',
     'PythonSet',
     'PythonSetFunction',
     'PythonSum',
@@ -479,6 +480,27 @@ class PythonFloat(PyccelFunction):
 
     def __str__(self):
         return f'float({self.arg})'
+
+# ===========================================================================
+class PythonRound(PyccelAstNode):
+    """ Represents a call to Python's native round() function.
+    """
+    __slots__ = ('_arg')
+    name = 'round'
+    _dtype = NativeReal()
+    _precision = default_precision['real']
+    _rank = 0
+    _shape = ()
+    _order = None
+    _attribute_nodes  = ('_arg',)
+
+    def __init__(self, arg):
+        self._arg = arg
+        super().__init__()
+
+    @property
+    def arg(self):
+        return self._arg
 
 #==============================================================================
 class PythonInt(PyccelFunction):
@@ -1664,6 +1686,7 @@ builtin_functions_dict = {
     'min'      : PythonMin,
     'not'      : PyccelNot,
     'range'    : PythonRange,
+    'round'    : PythonRound,
     'set'      : PythonSetFunction,
     'str'      : LiteralString,
     'sum'      : PythonSum,
