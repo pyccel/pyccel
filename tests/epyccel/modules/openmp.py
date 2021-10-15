@@ -364,11 +364,9 @@ def omp_simd(n):
     from numpy import zeros
     result = 0
     arr = zeros(n, dtype=int)
-    #$ omp parallel num_threads(4)
     #$ omp simd
     for i in range(0, n):
         arr[i] = i
-    #$ omp end parallel
     for i in range(0, n):
         result = result + arr[i]
     return result
