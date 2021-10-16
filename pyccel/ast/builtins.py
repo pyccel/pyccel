@@ -485,7 +485,6 @@ class PythonFloat(PyccelFunction):
 class PythonRound(PyccelAstNode):
     """ Represents a call to Python's native round() function.
     """
-    __slots__ = ('_arg')
     name = 'round'
     _dtype = NativeReal()
     _precision = default_precision['real']
