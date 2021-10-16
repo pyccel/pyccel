@@ -93,6 +93,7 @@ AllOmpClauses:
     OmpAtomicClause
   | AtomicMemoryClause
   | OmpSafelen
+  | OmpSimdLen
   | OmpOrder
   | OmpPriority
   | OmpDefault
@@ -132,6 +133,7 @@ AllOmpClauses:
 ////////////////////////////////////////////////////
 OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
 OmpSafelen: 'safelen' '(' len=LenIndex ')';
+OmpSimdLen: 'simdlen' '(' len=LenIndex ')';
 OmpOrder: 'order' '(' name='concurrent' ')';
 OmpNumTeams: 'num_teams' '(' teams=TeamIndex ')';
 OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';

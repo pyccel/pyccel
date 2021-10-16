@@ -269,8 +269,17 @@ class OmpOrder(OmpClauses):
 
         super().__init__(**kwargs)
 
+class OmpSimdLen(OmpClauses):
+    """Class representing the simdlen clause."""
+    def __init__(self, **kwargs):
+        safelen = kwargs.pop('len')
+
+        self._expr = 'simdlen({})'.format(safelen)
+
+        super().__init__(**kwargs)
+
 class OmpSafelen(OmpClauses):
-    """Class representing the num_thread clause."""
+    """Class representing the safelen clause."""
     def __init__(self, **kwargs):
         safelen = kwargs.pop('len')
 
@@ -746,6 +755,7 @@ _valid_simd_clauses = (OmpPrivate,
                        OmpReduction,
                        OmpCollapse,
                        OmpSafelen,
+                       OmpSimdLen,
                        OmpOrder,
                        OmpLastPrivate)
 
@@ -811,6 +821,7 @@ omp_clauses = (OmpCollapse,
                OmpLinear,
                OmpOrdered,
                OmpSafelen,
+               OmpSimdLen,
                OmpOrder,
                OmpNumThread,
                OmpDefault,
