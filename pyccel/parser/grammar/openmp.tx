@@ -92,6 +92,7 @@ OmpTargetTeams: tname='teams' (dname='distribute' (sname='simd' | (pname='parall
 AllOmpClauses:
     OmpAtomicClause
   | AtomicMemoryClause
+  | OmpSafelen
   | OmpOrder
   | OmpPriority
   | OmpDefault
@@ -130,6 +131,7 @@ AllOmpClauses:
 //              Clauses definitions
 ////////////////////////////////////////////////////
 OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpSafelen: 'safelen' '(' len=LenIndex ')';
 OmpOrder: 'order' '(' name='concurrent' ')';
 OmpNumTeams: 'num_teams' '(' teams=TeamIndex ')';
 OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
@@ -180,6 +182,7 @@ AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');
 ThreadIndex: (ID | INT);
 TaskIndex: (ID | INT);
 TeamIndex: (ID | INT);
+LenIndex: INT;
 PriorityIndex: (ID | INT);
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
