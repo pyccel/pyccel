@@ -584,8 +584,8 @@ class NumpyLinspace(NumpyNewArray):
                         from start and stop, the calculated dtype will never be an integer.
     """
 
-    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind')
-    _attribute_nodes = ('_start', '_stop', '_index')
+    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind','_step')
+    _attribute_nodes = ('_start', '_stop', '_index', '_step')
     name = 'linspace'
     _order     = 'C'
 
@@ -638,6 +638,14 @@ class NumpyLinspace(NumpyNewArray):
         self._shape = (self._num,) + shape
         self._rank  = len(self._shape)
         self._ind = None
+
+
+        if isinstance(self.endpoint, LiteralFalse):
+            self._step = PyccelDiv(PyccelMinus(self._stop, self._start), self.num)
+        elif isinstance(self.endpoint, LiteralTrue):
+            self._step = PyccelDiv(PyccelMinus(self._stop, self._start), PyccelMinus(self.num, LiteralInteger(1)))
+        else:
+            self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
         super().__init__()
 
     @property
@@ -668,11 +676,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def step(self):
-        if isinstance(self.endpoint, LiteralFalse):
-            return PyccelDiv(PyccelMinus(self.stop, self.start), self.num)
-        elif isinstance(self.endpoint, LiteralTrue):
-            PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, LiteralInteger(1)))
-        return PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
+        return self._step
 
     @property
     def ind(self):
