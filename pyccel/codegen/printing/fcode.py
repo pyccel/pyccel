@@ -722,14 +722,14 @@ class FCodePrinter(CodePrinter):
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )
-        if not isinstance(expr.endpoint, LiteralFalse):
-            if isinstance(expr.endpoint, LiteralTrue):
-                code = init_value + '\n' + cond_template.format(stop=v)
-            else:
-                cond = PyccelEq(expr.endpoint, LiteralTrue())
-                code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
+
+        if isinstance(expr.endpoint, LiteralFalse):
+            code = init_value
+        elif isinstance(expr.endpoint, LiteralTrue):
+            code = init_value + '\n' + cond_template.format(stop=v)
         else:
-          code = init_value
+            cond = PyccelEq(expr.endpoint, LiteralTrue())
+            code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
 
         return code
 
