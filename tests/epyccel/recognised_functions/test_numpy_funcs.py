@@ -5172,7 +5172,6 @@ def test_numpy_linspace_array_like_2d(language):
                     out[i][j][k] = a[i][j][k]
 
     @types('complex128[:,:]', 'int', 'complex128[:,:,:]', 'bool')
-    @types('complex128[:,:]', 'complex128[:,:]', 'complex128[:,:,:]', 'bool')
     def test_linspace3(start, stop, out, endpoint):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
@@ -5183,8 +5182,17 @@ def test_numpy_linspace_array_like_2d(language):
                     out[i][j][k] = a[i][j][k]
 
     @types('int[:,:]', 'int[:,:]', 'float[:,:,:]', 'bool')
-    #@types('complex128[:,:]', 'complex128[:,:]', 'complex128[:,:,:]', 'bool')
     def test_linspace2(start, stop, out, endpoint):
+        from numpy import linspace
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                for k in range(len(out[i][j])):
+                    out[i][j][k] = a[i][j][k]
+
+    @types('complex128[:,:]', 'complex128[:,:]', 'complex128[:,:,:]', 'bool')
+    def test_linspace4(start, stop, out, endpoint):
         from numpy import linspace
         numberOfSamplesToGenerate = 7
         a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
@@ -5206,6 +5214,7 @@ def test_numpy_linspace_array_like_2d(language):
     epyccel_func = epyccel(test_linspace, language=language)
     epyccel_func3 = epyccel(test_linspace3, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)
+    epyccel_func4 = epyccel(test_linspace4, language=language)
 
     arr = linspace(integer, 5, 7)
     out = np.empty_like(arr)
@@ -5286,5 +5295,5 @@ def test_numpy_linspace_array_like_2d(language):
     cmplx2 = (np.random.random((2,5))*14) + (np.random.random((2,5))*15) * 1j
     arr = linspace(cmplx, cmplx2, 7)
     out = np.empty_like(arr)
-    epyccel_func3(cmplx, cmplx2, out, True)
+    epyccel_func4(cmplx, cmplx2, out, True)
     assert np.allclose(arr, out)
