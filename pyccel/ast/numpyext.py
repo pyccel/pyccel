@@ -639,7 +639,6 @@ class NumpyLinspace(NumpyNewArray):
         self._rank  = len(self._shape)
         self._ind = None
 
-
         if isinstance(self.endpoint, LiteralFalse):
             self._step = PyccelDiv(PyccelMinus(self._stop, self._start), self.num)
         elif isinstance(self.endpoint, LiteralTrue):

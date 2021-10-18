@@ -967,6 +967,7 @@ class CCodePrinter(CodePrinter):
         ------
             String
                 Return format string that contains the desired cast type
+                NB: You should insert the expression to be cast in the string after using this function.
         """
         if (expr.dtype != dtype or expr.precision != precision):
             cast=self.find_in_dtype_registry(self._print(dtype), precision)
@@ -1220,14 +1221,9 @@ class CCodePrinter(CodePrinter):
             else:
                 cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
 
-        if expr.stop.dtype != expr.dtype:
-            if isinstance(expr.dtype, NativeComplex):
-                type_name = self.find_in_dtype_registry('complex', expr.precision)
-            else:
-                type_name = self.find_in_dtype_registry('real', expr.precision)
-            v = '({cast}){var}'.format(cast=self._print(type_name), var=self._print(expr.stop))
-        else:
-            v = self._print(expr.stop)
+        dtype = self._print(expr.dtype)
+        v = self._cast_to(expr.stop, dtype, expr.precision).format(self._print(expr.stop))
+
         init_value = template.format(
             start = self._print(expr.start),
             step  = self._print(expr.step),
