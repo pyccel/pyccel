@@ -425,8 +425,8 @@ class PythonCodePrinter(CodePrinter):
             source = self._print(expr.source.name)
         else:
             source = self._print(expr.source)
-        if source in import_source_swap:
-            source = import_source_swap[source]
+
+        source = import_source_swap.get(source, source)
 
         if not expr.target:
             return 'import {source}\n'.format(source=source)

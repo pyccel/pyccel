@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+File providing functions to mimic OpenMP Runtime library routines to allow files to run
+in pure python mode
+"""
 
 def omp_set_num_threads(num_threads : int):
     """
@@ -85,7 +94,6 @@ def omp_set_nested(nested : bool):
     ----------
     nested : bool
     """
-    pass
 
 def omp_get_nested():
     """
