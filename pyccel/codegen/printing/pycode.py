@@ -45,6 +45,9 @@ import_target_swap = {
                    'full_like'  : 'full'},
         'numpy.random' : {'random' : 'rand'}
         }
+import_source_swap = {
+        'omp_lib' : 'pyccel.stdlib.internal.openmp'
+        }
 
 class PythonCodePrinter(CodePrinter):
     """A printer to convert pyccel expressions to strings of Python code"""
@@ -417,15 +420,17 @@ class PythonCodePrinter(CodePrinter):
             free_func = p.semantic_parser.ast.free_func
             if free_func:
                 free_func_name = free_func.name
-        if not expr.target:
+
+        if isinstance(expr.source, AsName):
+            source = self._print(expr.source.name)
+        else:
             source = self._print(expr.source)
+        if source in import_source_swap:
+            source = import_source_swap[source]
+
+        if not expr.target:
             return 'import {source}\n'.format(source=source)
         else:
-            if isinstance(expr.source, AsName):
-                source = self._print(expr.source.name)
-            else:
-                source = self._print(expr.source)
-
             if source in import_target_swap:
                 # If the source contains multiple names which reference the same object
                 # check if the target is referred to by another name in pyccel.
