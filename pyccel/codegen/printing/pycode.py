@@ -585,12 +585,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
-        return "{0}({1}, {2}, {3}, {4})".format(
+        arguments = "{0}, {1}, num={2}, endpoint={3}, dtype={4}".format(*expr.py_argument)
+        return "{0}({1})".format(
                 name,
-                self._print(expr.start),
-                self._print(expr.stop),
-                self._print(expr.num),
-                self._print(expr.endpoint))
+                arguments)
 
     def _print_NumpyMatmul(self, expr):
         name = self._aliases.get(type(expr), expr.name)

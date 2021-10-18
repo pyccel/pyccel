@@ -584,7 +584,7 @@ class NumpyLinspace(NumpyNewArray):
                         from start and stop, the calculated dtype will never be an integer.
     """
 
-    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind','_step')
+    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind','_step','_py_argument')
     _attribute_nodes = ('_start', '_stop', '_index', '_step')
     name = 'linspace'
     _order     = 'C'
@@ -645,7 +645,14 @@ class NumpyLinspace(NumpyNewArray):
             self._step = PyccelDiv(PyccelMinus(self._stop, self._start), PyccelMinus(self.num, LiteralInteger(1)))
         else:
             self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
+
+        self._py_argument = (start, stop, num, endpoint, dtype)
         super().__init__()
+
+    @property
+    def py_argument(self):
+        """Collect the original argument for pycode printer."""
+        return self._py_argument
 
     @property
     def endpoint(self):
