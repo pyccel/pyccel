@@ -1231,10 +1231,10 @@ class CCodePrinter(CodePrinter):
         )
         if isinstance(expr.endpoint, LiteralFalse):
             code = init_value
-        elif not isinstance(expr.endpoint, LiteralFalse) and not isinstance(expr.endpoint, LiteralTrue):
-            code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
-        else:
+        elif isinstance(expr.endpoint, LiteralTrue):
             code = init_value + ';\n' + cond_template.format(stop = v)
+        else:
+            code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
 
         return code
 
