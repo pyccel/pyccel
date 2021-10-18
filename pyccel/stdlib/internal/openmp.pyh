@@ -45,10 +45,10 @@
 
 #$ header function omp_get_num_places() results(int) 
 #$ header function omp_get_place_num_procs(int)  results(int) 
-#$ header function omp_get_place_proc_ids() results(int, int [:])
+#$ header function omp_get_place_proc_ids(int, int [:])
 #$ header function omp_get_place_num() results(int) 
 #$ header function omp_get_partition_num_places() results(int) 
-#$ header function omp_get_partition_place_nums() results(int [:])
+#$ header function omp_get_partition_place_nums(int [:])
 
 #$ header function omp_set_default_device(int)
 #$ header function omp_get_default_device() results(int)
