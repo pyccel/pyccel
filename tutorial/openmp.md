@@ -839,9 +839,9 @@ The output of this program is :
 result: 49995000
 ```
 
-## Supported Clauses
+## Supported Constructs
 
-All clauses in the OpenMP 5.1 standard are supported except:
+All constructs in the OpenMP 5.1 standard are supported except:
 -   scope
 -   workshare
 -   scan
