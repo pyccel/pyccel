@@ -155,3 +155,4 @@ ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallo
 TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'
 INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
+WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'

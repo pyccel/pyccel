@@ -28,6 +28,10 @@ from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, IndexedElement, Constant, HomogeneousTupleVariable)
 
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
+
+errors = Errors()
 
 __all__ = (
     'NumpyAbs',
@@ -631,7 +635,7 @@ class NumpyLinspace(NumpyNewArray):
             self._endpoint = LiteralFalse()
         else:
             if not isinstance(endpoint.dtype, NativeBool):
-                raise TypeError('endpoint argument must be boolean')
+                errors.report(WRONG_LINSPACE_ENDPOINT, symbol=endpoint, severity="fatal")
             self._endpoint = endpoint
 
         shape = broadcast(self._start.shape, self._stop.shape)
