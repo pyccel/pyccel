@@ -585,6 +585,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
+        for arg in expr.py_argument:
+            arg = self._print(arg)
         arguments = "{0}, {1}, num={2}, endpoint={3}, dtype={4}".format(*expr.py_argument)
         return "{0}({1})".format(
                 name,
@@ -876,6 +878,8 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
 
+    def _print_NoneType(self, expr):
+        return 'None'
     #------------------OmpAnnotatedComment Printer------------------
 
     def _print_OmpAnnotatedComment(self, expr):
