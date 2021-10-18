@@ -585,12 +585,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
-        for arg in expr.py_argument:
-            arg = self._print(arg)
-        arguments = "{0}, {1}, num={2}, endpoint={3}, dtype={4}".format(*expr.py_argument)
-        return "{0}({1})".format(
+        return "{0}({1}, {2}, num={3}, endpoint={4}, dtype={5})".format(
                 name,
-                arguments)
+                self._print(expr.start),
+                self._print(expr.stop),
+                self._print(expr.num),
+                self._print(expr.endpoint),
+                self._print(expr.dtype))
 
     def _print_NumpyMatmul(self, expr):
         name = self._aliases.get(type(expr), expr.name)
@@ -878,8 +879,6 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
 
-    def _print_NoneType(self, expr):
-        return 'None'
     #------------------OmpAnnotatedComment Printer------------------
 
     def _print_OmpAnnotatedComment(self, expr):
