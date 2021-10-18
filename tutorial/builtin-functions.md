@@ -4,12 +4,12 @@ Python contains a limited number of builtin functions defined [here](https://doc
 
 | Function | Supported |
 |----------|-----------|
-| **abs** | Yes |
+| **abs** | **Yes** |
 | all | No |
 | any | No |
 | ascii | No |
 | bin | No |
-| **bool** | Yes |
+| **bool** | **Yes** |
 | breakpoint | No |
 | bytearray | No |
 | bytes | No |
@@ -17,16 +17,16 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | chr | No |
 | classmethod | No |
 | compile | No |
-| **complex** | Yes |
+| **complex** | **Yes** |
 | delattr | No |
 | dict | No |
 | dir | No |
 | divmod | No |
-| **enumerate** | Yes |
+| **enumerate** | **Yes** |
 | eval | No |
 | exec | No |
 | filter | No |
-| **float** | Yes |
+| **float** | **Yes** |
 | format | No |
 | frozenset | No |
 | getattr | No |
@@ -37,14 +37,14 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | hex | No |
 | id | No |
 | input | No |
-| **int** | Yes |
+| **int** | **Yes** |
 | isinstance | No |
 | issubclass | No |
 | iter | No |
-| **len** | Yes |
-| *list* | Implemented as a tuple |
+| **len** | **Yes** |
+| *list* | implemented as a tuple |
 | locals | No |
-| **map** | Yes |
+| **map** | **Yes** |
 | **max** | Fortran-only |
 | memoryview | No |
 | **min** | Fortran-only |
@@ -54,9 +54,9 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | open | No |
 | ord | No |
 | pow | No |
-| **print** | Yes |
+| **print** | **Yes** |
 | property | No |
-| **range** | Yes |
+| **range** | **Yes** |
 | repr | No |
 | reversed | No |
 | round | No |
@@ -68,8 +68,8 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | str | No |
 | **sum** | Fortran-only |
 | super | No |
-| **tuple** | Yes |
-| **type** | Yes |
+| **tuple** | **Yes** |
+| **type** | **Yes** |
 | vars | No |
-| **zip** | Yes |
+| **zip** | **Yes** |
 | \_\_import\_\_ | No
