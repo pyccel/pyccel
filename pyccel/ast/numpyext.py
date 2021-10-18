@@ -646,13 +646,11 @@ class NumpyLinspace(NumpyNewArray):
         else:
             self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
 
-        self._py_argument = (self.start, self.stop, self.num, self.endpoint, dtype)
         super().__init__()
 
     @property
-    def py_argument(self):
-        """Collect arguments for pycode printer and keep the original dtype."""
-        return self._py_argument
+    def dtype(self):
+        return self._dtype
 
     @property
     def endpoint(self):
