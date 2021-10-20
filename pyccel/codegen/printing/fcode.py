@@ -33,7 +33,7 @@ from pyccel.ast.variable  import (Variable,
                              InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot, PyccelEq, PyccelAnd
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot, PyccelEq, PyccelAnd
 
 from pyccel.ast.operators      import PyccelMod
 
@@ -698,7 +698,7 @@ class FCodePrinter(CodePrinter):
                                                simplify = True)))
             else:
                 #Since the expr.rank == 1, we modify the last element in the array.
-                lhs = self._print(IndexedElement(lhs, 
+                lhs = self._print(IndexedElement(lhs,
                                                  PyccelMinus(expr.num, LiteralInteger(1),
                                                  simplify = True)))
 

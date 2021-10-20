@@ -7,6 +7,9 @@
 
 import numpy
 
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
+
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
@@ -27,9 +30,6 @@ from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, IndexedElement, Constant, HomogeneousTupleVariable)
-
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
 
 errors = Errors()
 
