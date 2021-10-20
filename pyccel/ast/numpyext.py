@@ -601,9 +601,8 @@ class NumpyLinspace(NumpyNewArray):
         if num.rank != 0 or not isinstance(num.dtype, NativeInteger):
             raise TypeError('Expecting positive integer num argument.')
 
-        for arg in (start, stop, num):
-            if not isinstance(arg, PyccelAstNode):
-                raise TypeError('Expecting valid args.')
+        if any(not isinstance(arg, PyccelAstNode) for arg in (start, stop, num)):
+            raise TypeError('Expecting valid args.')
 
         if dtype:
             self._dtype, self._precision = process_dtype(dtype)
@@ -658,7 +657,7 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def endpoint(self):
-        """Tells if the stop must be included or not."""
+        """Indicates if the stop must be included or not."""
         return self._endpoint
 
     @property
@@ -688,12 +687,11 @@ class NumpyLinspace(NumpyNewArray):
 
     @property
     def ind(self):
-        """Used to store the indice needed for the linspace function."""
+        """Used to store the index needed for the linspace function."""
         return self._ind
 
     @ind.setter
     def ind(self, value):
-        """Used to set the _ind var."""
         self._ind = value
 
     @property

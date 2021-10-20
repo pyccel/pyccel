@@ -5063,6 +5063,17 @@ def test_numpy_linspace_array_like_1d(language):
             for j in range(len(out[i])):
                 out[i][j] = a[i][j]
 
+    @types('int[:]', 'int', 'int32[:,:]', 'bool')
+    @types('float64[:]', 'int', 'int32[:,:]', 'bool')
+    def test_linspace_dtype(start, stop, out, endpoint):
+        from numpy import linspace
+        import numpy as np
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint, dtype=np.int32)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                out[i][j] = a[i][j]
+
     size = 5
     integer8 = randint(min_int8 / 2, max_int8 / 2, size=size, dtype=np.int8)
     integer16 = randint(min_int16 / 2, max_int16 / 2, size=size, dtype=np.int16)
@@ -5074,6 +5085,8 @@ def test_numpy_linspace_array_like_1d(language):
 
     epyccel_func = epyccel(test_linspace, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)
+
+    epyccel_func_dtype = epyccel(test_linspace_dtype, language=language)
 
     arr = linspace(integer, 5, 7)
     out = np.empty_like(arr)
