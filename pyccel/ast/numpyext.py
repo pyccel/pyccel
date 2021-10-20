@@ -606,7 +606,7 @@ class NumpyLinspace(NumpyNewArray):
                 raise TypeError('Expecting valid args.')
 
         if dtype:
-            self._dtype, self._precision = dtype_registry[dtype]
+            self._dtype, self._precision = process_dtype(dtype)
         else:
             args      = (start, stop)
             integers  = [e for e in args if e.dtype is NativeInteger()]
