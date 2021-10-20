@@ -75,17 +75,20 @@ Linux Debian/Ubuntu/Mint
 
 To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool::
 
+```sh
   sudo apt update
   sudo apt install gcc
   sudo apt install gfortran
   sudo apt install libblas-dev liblapack-dev
   sudo apt install libopenmpi-dev openmpi-bin
+```
 
 Linux Fedora/CentOS/RHEL
 ************************
 
 Install all requirements using the DNF software package manager::
 
+```sh
   su
   dnf check-update
   dnf install gcc
@@ -93,6 +96,7 @@ Install all requirements using the DNF software package manager::
   dnf install blas-devel lapack-devel
   dnf install openmpi-devel
   exit
+```
 
 Similar commands work on Linux openSUSE, just replace ``dnf`` with ``zypper``.
 
@@ -101,11 +105,13 @@ Mac OS X
 
 On an Apple Macintosh machine we recommend using Homebrew <https://brew.sh/>::
 
+```sh
   brew update
   brew install gcc
   brew install openblas
   brew install lapack
   brew install open-mpi
+```
 
 This requires that the Command Line Tools (CLT) for Xcode are installed.
 
