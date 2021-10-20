@@ -34,13 +34,12 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
   - [Linux Fedora/CentOS/RHEL](#Linux-Fedora\/CentOS\/RHEL)
   - [Mac OS X](#Mac-OS-X)
   - [Windows](#Windows)
-- [Installation](Installation)
+- [Installation](#Installation)
   - [From PyPi](#From-PyPi)
   - [From sources](#From-sources)
 - [Additional packages](#Additional-packages)
 - [Testing](#Testing)
 - [Pyccel Container Images](#Pyccel-Container-Images)
-
 
 ## Pyccel Installation Methods
 
