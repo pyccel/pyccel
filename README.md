@@ -198,7 +198,7 @@ for a system-wide installation.
 
 ### From sources
 
-  **Standard mode**:
+- **Standard mode**:
 
 ```sh
     git clone git@github.com:pyccel/pyccel.git
@@ -206,7 +206,7 @@ for a system-wide installation.
     pip3 install --user .
 ```
 
-  **Development mode**:
+-  **Development mode**:
 
 ```sh
     git clone git@github.com:pyccel/pyccel.git
