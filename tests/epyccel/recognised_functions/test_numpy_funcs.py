@@ -4984,8 +4984,13 @@ def test_numpy_linspace_scalar(language):
         return x
 
     @types('complex64', 'complex64')
-    @types('complex128', 'complex128')
     def test_linspace(start, end):
+        from numpy import linspace
+        x = linspace(start, end, 5)
+        return x[0], x[1], x[2], x[3], x[4]
+
+    @types('complex128', 'complex128')
+    def test_linspace2(start, end):
         from numpy import linspace
         x = linspace(start, end, 5)
         return x[0], x[1], x[2], x[3], x[4]
@@ -5031,9 +5036,12 @@ def test_numpy_linspace_scalar(language):
     assert matching_types(epyccel_func(fl64, x, 100), get_linspace(fl64, x, 100))
 
     epyccel_func1 = epyccel(test_linspace, language=language)
-    assert (epyccel_func1(3+6j, 5+1j) == test_linspace(3+6j, 5+1j))
-    assert (epyccel_func1(-3+6j, 5-1j) == test_linspace(-3+6j, 5-1j))
-    for pyc, pyt in zip(epyccel_func1(3+6j, 5+1j), test_linspace(3+6j, 5+1j)):
+    epyccel_func2 = epyccel(test_linspace2, language=language)
+    assert (epyccel_func1(np.complex64(3+6j), np.complex64(5+1j)) == test_linspace(np.complex64(3+6j), np.complex64(5+1j)))
+    assert (epyccel_func1(np.complex64(-3+6j), np.complex64(5-1j)) == test_linspace(np.complex64(-3+6j), np.complex64(5-1j)))
+    assert (epyccel_func2(3+6j, 5+1j) == test_linspace(3+6j, 5+1j))
+    assert (epyccel_func2(-3+6j, 5-1j) == test_linspace(-3+6j, 5-1j))
+    for pyc, pyt in zip(epyccel_func2(3+6j, 5+1j), test_linspace(3+6j, 5+1j)):
         assert matching_types(pyc, pyt)
 
 def test_numpy_linspace_array_like_1d(language):
