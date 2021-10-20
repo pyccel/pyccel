@@ -33,7 +33,7 @@ from pyccel.ast.variable  import (Variable,
                              InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot, PyccelEq, PyccelAnd
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
 
 from pyccel.ast.operators      import PyccelMod
 
