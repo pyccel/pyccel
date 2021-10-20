@@ -688,24 +688,24 @@ class FCodePrinter(CodePrinter):
             v = self._print(expr.stop)
 
         if not isinstance(expr.endpoint, LiteralFalse):
-                lhs = expr.get_user_nodes(Assign)[0].lhs
+            lhs = expr.get_user_nodes(Assign)[0].lhs
 
 
-                if expr.rank > 1:
-                    #expr.rank > 1, we need to replace the last indice of the loop with the last index of the array.
-                    lhs = self._print(lhs).replace(self._print(expr.ind),
-                                                   self._print(PyccelMinus(expr.num, LiteralInteger(1),
-                                                   simplify = True)))
-                else:
-                    #Since the expr.rank == 1, we modify the last element in the array.
-                    lhs = self._print(IndexedElement(lhs, 
-                                                     PyccelMinus(expr.num, LiteralInteger(1), 
-                                                     simplify = True)))
+            if expr.rank > 1:
+                #expr.rank > 1, we need to replace the last indice of the loop with the last index of the array.
+                lhs = self._print(lhs).replace(self._print(expr.ind),
+                                               self._print(PyccelMinus(expr.num, LiteralInteger(1),
+                                               simplify = True)))
+            else:
+                #Since the expr.rank == 1, we modify the last element in the array.
+                lhs = self._print(IndexedElement(lhs, 
+                                                 PyccelMinus(expr.num, LiteralInteger(1),
+                                                 simplify = True)))
 
-                if isinstance(expr.endpoint, LiteralTrue):
-                    cond_template = lhs + ' = {stop}'
-                else:
-                    cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
+            if isinstance(expr.endpoint, LiteralTrue):
+                cond_template = lhs + ' = {stop}'
+            else:
+                cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
         if expr.rank > 1:
             template = '({start} + {index}*{step})'
             var = Variable('int', str(expr.ind))
@@ -727,7 +727,6 @@ class FCodePrinter(CodePrinter):
         elif isinstance(expr.endpoint, LiteralTrue):
             code = init_value + '\n' + cond_template.format(stop=v)
         else:
-            cond = PyccelEq(expr.endpoint, LiteralTrue())
             code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
 
         return code
