@@ -30,8 +30,8 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 - [Pyccel Installation Methods](#Pyccel-Installation-Methods)
 - [Requirements](#Requirements)
   
-  - [Linux Debian/Ubuntu/Mint](#Linux-Debian\/Ubuntu\/Mint)
-  - [Linux Fedora/CentOS/RHEL](#Linux-Fedora\/CentOS\/RHEL)
+  - [Linux Debian, Ubuntu, Mint](#Linux-Debian,-Ubuntu,-Mint)
+  - [Linux Fedora, CentOS, RHEL](#Linux-Fedora,-CentOS,-RHEL)
   - [Mac OS X](#Mac-OS-X)
   - [Windows](#Windows)
 - [Installation](#Installation)
@@ -80,7 +80,7 @@ We recommend using GFortran/GCC and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires [Sphinx](http://www.sphinx-doc.org/).
 
-### Linux Debian/Ubuntu/Mint
+### Linux Debian, Ubuntu, Mint
 
 To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool:
 
@@ -92,7 +92,7 @@ To install all requirements on a Linux Ubuntu machine, just use APT, the Advance
   sudo apt install libopenmpi-dev openmpi-bin
   ```
 
-### Linux Fedora/CentOS/RHEL
+### Linux Fedora, CentOS, RHEL
 
 Install all requirements using the DNF software package manager:
 
