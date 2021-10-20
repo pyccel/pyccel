@@ -67,6 +67,7 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
+from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import expand_to_loops
@@ -679,12 +680,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        if expr.stop.dtype != expr.dtype:
-            if isinstance(expr.dtype, NativeComplex):
-                st = PythonComplex(expr.stop)
-                v = self._print(st)
-            else:
-                v = 'Real({0}, {1})'.format(self._print(expr.stop), self.print_kind(expr))
+        if expr.stop.dtype != expr.dtype or expr.precision != expr.stop.precision:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            st = cast_func(expr.stop)
+            v = self._print(st)
         else:
             v = self._print(expr.stop)
 
