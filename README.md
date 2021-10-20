@@ -25,6 +25,23 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md)
 
+## Table of contents
+
+- [Pyccel Installation Methods](#Pyccel-Installation-Methods)
+- [Requirements](#Requirements)
+  
+  - [Linux Debian/Ubuntu/Mint](#Linux-Debian/Ubuntu/Mint)
+  - [Linux Fedora/CentOS/RHEL](#Linux-Fedora/CentOS/RHEL)
+  - [Mac OS X](#Mac-OS-X)
+  - [Windows](#Windows)
+- [Installation](Installation)
+  - [From PyPi](#From-PyPi)
+  - [From sources](#From-sources)
+- [Additional packages](#Additional-packages)
+- [Testing](#Testing)
+- [Pyccel Container Images](#Pyccel-Container-Images)
+
+
 ## Pyccel Installation Methods
 
 Pyccel can be installed on virtually any machine that provides Python 3, the pip package manager, a C/Fortran compiler, and an Internet connection.
@@ -64,7 +81,7 @@ We recommend using GFortran/GCC and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires [Sphinx](http://www.sphinx-doc.org/).
 
-## Linux Debian/Ubuntu/Mint
+### Linux Debian/Ubuntu/Mint
 
 To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool:
 
@@ -76,7 +93,7 @@ To install all requirements on a Linux Ubuntu machine, just use APT, the Advance
   sudo apt install libopenmpi-dev openmpi-bin
   ```
 
-## Linux Fedora/CentOS/RHEL
+### Linux Fedora/CentOS/RHEL
 
 Install all requirements using the DNF software package manager:
 
@@ -92,7 +109,7 @@ Install all requirements using the DNF software package manager:
 
 Similar commands work on Linux openSUSE, just replace ``dnf`` with ``zypper``.
 
-## Mac OS X
+### Mac OS X
 
 On an Apple Macintosh machine we recommend using [Homebrew](https://brew.sh/):
 
@@ -106,7 +123,7 @@ On an Apple Macintosh machine we recommend using [Homebrew](https://brew.sh/):
 
 This requires that the Command Line Tools (CLT) for Xcode are installed.
 
-## Windows
+### Windows
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
 We recommend using [Chocolatey](https://chocolatey.org/) to speed up the process, and we provide commands that work in a git-bash sh.
