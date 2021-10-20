@@ -108,12 +108,12 @@ end module boo
 
 In python negative indexes allow a user to index an array starting from the back (e.g. the index -1 is the
 last element of the array). Pyccel recreates this behaviour for literal indexes. However when an array is
-indexed with a variable or an expression, it is impossible to know at compile time whether the index is
+indexed with a variable or an expression, it is impractical (and often impossible) to know at compile time whether the index is
 positive or negative. As a result an if block must be added. This implies a (potentially large) performance
 cost. Non-literal negative indexes are not especially common, therefore Pyccel does not add this costly
 if block unless it is specifically requested. This can be done using the `allow_negative_index` decorator.
 
-An example shows how pyccel handles negative indexes beween Python and C:
+An example shows how Pyccel handles negative indexes beween Python and C:
 
 ```python
 from pyccel.decorators import allow_negative_index
@@ -205,9 +205,9 @@ end module boo
 
 ## Elemental
 
-The decorator `elemental` indicates that the decorated function can be applied element-wise, That means it has to have a single return value and a single operation on its arguments.
+The decorator `elemental` indicates that the decorated function can be applied element-wise, That means it has to have a single.
 
-Important note: applying the `elemental` decorator to a function will not make a difference to the C translation of the function definition itself since C doesn't have the elementwise feature. However, Pyccel implements the functionality by calling the function in a `for` loop when an array argument is passed. In the following example, we will use the function `square` where `@elemental` will be useful:
+Important note: applying the `elemental` decorator to a function will not make a difference to the C translation of the function definition itself since C doesn't have the elementwise feature. However, Pyccel implements that functionality by calling the function in a `for` loop when an array argument is passed. In the following example, we will use the function `square` where `@elemental` will be useful:
 
 Here is the python code:
 
@@ -263,7 +263,7 @@ void square_in_array(void)
 /*........................................*/
 ```
 
-Fortran has the elementwise feature which is presented in the code as function prefix `elemental` which can affect the compilation. So any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
+Fortran has the elementwise feature which is presented in the code as function prefix `elemental`. So any function marked as an elemental one can be used to operate on the arrays. See more about [elemental](https://www.fortran90.org/src/best-practices.html#element-wise-operations-on-arrays-using-subroutines-functions).
 
 ```Fortran
 module boo
@@ -331,7 +331,7 @@ def square(x):
 ```
 
 This decorator has no effect on the C code as the concept of a `pure` function does not exist in the language.
-On the other hand, the `pure` decorator does affect the Python/Fortran conversion. The function prefix `pure`, which can affect the compilation of the generated Fortran code, is added. See [here](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.) for more information about the `pure` keyword in Fortran:
+On the other hand, the `pure` decorator does affect the Python/Fortran conversion. The function prefix `pure`, which may allow the Fortran compiler to generate faster machine code, is added. See [here](http://www.lahey.com/docs/lfpro79help/F95ARPURE.htm#:~:text=Fortran%20procedures%20can%20be%20specified,used%20in%20the%20procedure%20declaration.) for more information about the `pure` keyword in Fortran:
 
 ```Fortran
 module boo
