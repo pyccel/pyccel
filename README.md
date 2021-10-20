@@ -139,11 +139,13 @@ Generate static MS C runtime library from corresponding dynamic link library:
 
 Download MS MPI runtime and SDK, then install MPI:
 
+```sh
   WEB_ADDRESS=https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1
   curl -L $WEB_ADDRESS/msmpisetup.exe -o msmpisetup.exe
   curl -L $WEB_ADDRESS/msmpisdk.msi -o msmpisdk.msi
   ./msmpisetup.exe
   msiexec //i msmpisdk.msi
+```
 
 **At this point, close and reopen your terminal to refresh all environment variables!**
 
