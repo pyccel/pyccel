@@ -32,7 +32,7 @@ If you are eager to try Pyccel out, we recommend reading our `quick-start guide 
 - [Requirements](#Requirements)
   
   - [Linux-Debian-Ubuntu-Mint](#Linux-Debian-Ubuntu-Mint)
-  - [Linux Fedora CentOS RHEL](#Linux-Fedora-CentOS-RHEL)
+  - [Linux Fedora-CentOS-RHEL](#Linux-Fedora-CentOS-RHEL)
   - [Mac OS X](#Mac-OS-X)
   - [Windows](#Windows)
 - [Installation](#Installation)
