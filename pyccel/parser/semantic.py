@@ -1072,7 +1072,7 @@ class SemanticParser(BasicParser):
             if func is NumpyWhere:
                 if len(args) != 3:
                     errors.report(INVALID_WHERE_ARGUMENT,
-                        symbol=func, blocker=True,
+                        symbol=expr, blocker=True,
                         severity='fatal')
 
             try:
