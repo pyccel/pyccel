@@ -195,13 +195,13 @@ for a system-wide installation.
 From sources
 ************
 
-* **Standard mode**::
+- **Standard mode**:
 
     git clone git@github.com:pyccel/pyccel.git
     cd pyccel
     pip3 install --user .
 
-* **Development mode**::
+-  **Development mode**:
 
     git clone git@github.com:pyccel/pyccel.git
     cd pyccel
