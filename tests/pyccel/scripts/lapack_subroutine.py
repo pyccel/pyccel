@@ -17,12 +17,12 @@ def dgetri_test(A:'float64[:,:](order=F)'):
     n = int32(len(A))
 
     ipiv = zeros(n, dtype=int32,order='F')
-    
+
     lda = int32(n)
     info = int32(-1)
 
     dgetrf_test(A,ipiv)
-    
+
     lwork = int32(4 * n)
     work  = zeros(lwork,dtype=float64)
 
