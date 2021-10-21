@@ -7,13 +7,11 @@
 The aim of **Pyccel** is to provide a simple way to generate automatically, parallel low level code. The main uses would be:
 
 1.  Convert a _Python_ code (or project) into a Fortran or C code.
-
 2.  Accelerate _Python_ functions by converting them to _Fortran_ or _C_ functions.
 
 **Pyccel** can be viewed as:
 
 -   _Python-to-Fortran/C_ converter
-
 -   a compiler for a _Domain Specific Language_ with _Python_ syntax
 
 Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran/C. The following packages will be covered (partially):
