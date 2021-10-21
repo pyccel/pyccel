@@ -1,6 +1,6 @@
 # Welcome to Pyccel
 
- ![building status](https://github.com/pyccel/pyccel/workflows/master_tests/badge.svg) ![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)
+ [![master_tests](https://github.com/pyccel/pyccel/actions/workflows/master.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/master.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pyccel/pyccel&amp;utm_campaign=Badge_Grade)
 
 **Pyccel** stands for Python extension language using accelerators.
 
