@@ -3197,6 +3197,7 @@ class FuncAddressDeclare(Basic):
     def static(self):
         return self._static
 
+# ARA : issue-999 add is_external for external function exported through header files
 class Declare(Basic):
 
     """Represents a variable declaration in the code.
@@ -3214,6 +3215,8 @@ class Declare(Basic):
         variable value
     static: bool
         True for a static declaration of an array.
+    external: bool
+        True for a function declared through a header
 
     Examples
     --------
@@ -3224,7 +3227,7 @@ class Declare(Basic):
     Declare(NativeReal(), (x,), out)
     """
     __slots__ = ('_dtype','_variable','_intent','_value',
-                 '_static','_passed_from_dotted')
+                 '_static','_passed_from_dotted', '_external')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
@@ -3235,6 +3238,7 @@ class Declare(Basic):
         value=None,
         static=False,
         passed_from_dotted = False,
+        external = False,
         ):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -3256,12 +3260,16 @@ class Declare(Basic):
         if not isinstance(passed_from_dotted, bool):
             raise TypeError('Expecting a boolean for passed_from_dotted attribute')
 
+        if not isinstance(external, bool):
+            raise TypeError('Expecting a boolean for external attribute')
+
         self._dtype = dtype
         self._variable = variable
         self._intent = intent
         self._value = value
         self._static = static
         self._passed_from_dotted = passed_from_dotted
+        self._external = external
         super().__init__()
 
     @property
@@ -3289,6 +3297,10 @@ class Declare(Basic):
         """ Argument is the lhs of a DottedFunction
         """
         return self._passed_from_dotted
+
+    @property
+    def external(self):
+        return self._external
 
     def __repr__(self):
         return 'Declare({})'.format(repr(self.variable))
