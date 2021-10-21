@@ -29,13 +29,14 @@ def dgetri_test(A:'float64[:,:](order=F)'):
     dgetri(n, A, lda, ipiv, work, lwork, info)
 
 
-N = 4
+if __name__ == '__main__':
+    N = 4
 
-A = zeros((N,N),dtype=float64,order='F')
+    A = zeros((N,N),dtype=float64,order='F')
 
-for i in range(N):
-    A[i,i] = 1.0
+    for i in range(N):
+        A[i,i] = 1.0
 
-dgetri_test(A)
+    dgetri_test(A)
 
-print(A)
+    print(A)
