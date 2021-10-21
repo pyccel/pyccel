@@ -87,7 +87,7 @@ from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct)
+                            OMP_Single_Construct, OMP_Parallel_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq
@@ -1667,7 +1667,8 @@ class SemanticParser(BasicParser):
             pyccelised_imports = [imp for imp_name, imp in self._namespace.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
-            import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports]
+            import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports \
+                                if imp.source in self.d_parsers]
             import_frees = [f if f.name in imp.target else \
                              f.clone(next(i.target for i in imp.target \
                                         if isinstance(i, AsName) and i.name == f.name)) \
@@ -1802,28 +1803,34 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
                     OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
-            msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
-            if index == (len(code.body) - 1):
-                errors.report(msg, symbol=type(expr).__name__,
-                severity='fatal', blocker=self.blocking)
-
             index += 1
-            while isinstance(code.body[index], (Comment, CommentBlock, Pass)) and index < len(code.body):
+            while index < len(code.body) and isinstance(code.body[index], (Comment, CommentBlock, Pass)):
                 index += 1
 
             if index < len(code.body) and isinstance(code.body[index], For):
+                end_expr = ['!$omp', 'end', expr.name]
+                if expr.combined:
+                    end_expr.append(expr.combined)
                 if expr.has_nowait:
-                    nowait_expr = '!$omp end do'
-                    if expr.txt.startswith(' simd'):
-                        nowait_expr += ' simd'
-                    nowait_expr += ' nowait\n'
-                    code.body[index].nowait_expr = nowait_expr
+                    end_expr.append('nowait')
+                code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
             else:
-                errors.report(msg, symbol=type(code.body[index]).__name__,
+                msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
+                errors.report(msg, symbol=expr,
                     severity='fatal', blocker=self.blocking)
 
         expr.clear_user_nodes()
         return expr
+
+    def _visit_Omp_End_Clause(self, expr, **settings):
+        end_loop = any(c in expr.txt for c in ['for', 'distribute', 'taskloop', 'simd'])
+        if end_loop:
+            errors.report("For loops do not require an end clause. This clause is ignored",
+                    severity='warning', symbol=expr)
+            return EmptyNode()
+        else:
+            expr.clear_user_nodes()
+            return expr
 
     def _visit_Literal(self, expr, **settings):
         expr.clear_user_nodes()
@@ -2662,12 +2669,12 @@ class SemanticParser(BasicParser):
             for_expr = body
             for t, r in zip(target, iterable.get_range()):
                 for_expr = For(t, r, for_expr, local_vars=local_vars)
-                for_expr.nowait_expr = expr.nowait_expr
+                for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
         else:
             for_expr = For(target, iterable, body, local_vars=local_vars)
-            for_expr.nowait_expr = expr.nowait_expr
+            for_expr.end_annotation = expr.end_annotation
         return for_expr
 
 

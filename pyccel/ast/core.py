@@ -1570,7 +1570,7 @@ class For(Basic):
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
-    __slots__ = ('_target','_iterable','_body','_local_vars','_nowait_expr')
+    __slots__ = ('_target','_iterable','_body','_local_vars','_end_annotation')
     _attribute_nodes = ('_target','_iterable','_body','_local_vars')
 
     def __init__(
@@ -1595,16 +1595,16 @@ class For(Basic):
         self._iterable = iter_obj
         self._body = body
         self._local_vars = local_vars
-        self._nowait_expr = None
+        self._end_annotation = None
         super().__init__()
 
     @property
-    def nowait_expr(self):
-        return self._nowait_expr
+    def end_annotation(self):
+        return self._end_annotation
 
-    @nowait_expr.setter
-    def nowait_expr(self, expr):
-        self._nowait_expr = expr
+    @end_annotation.setter
+    def end_annotation(self, expr):
+        self._end_annotation = expr
 
     @property
     def target(self):
@@ -2257,8 +2257,8 @@ class FunctionDef(Basic):
                 raise ValueError('Expecting booleans')
 
         else:
-            # TODO shall we keep this?
-            arguments_inout = [False for a in arguments]
+            arg_vars = [a.var for a in arguments]
+            arguments_inout = [a.rank>0 and not a.is_const if isinstance(a, Variable) else False for a in arg_vars]
 
         if functions:
             for i in functions:
