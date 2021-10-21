@@ -28,18 +28,23 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 ## Table of contents
 
 -   [User docs index](#User-docs-index)
--   [Pyccel Installation Methods](#Pyccel-Installation-Methods)
--   [Requirements](#Requirements)
 
+-   [Pyccel Installation Methods](#Pyccel-Installation-Methods)
+
+-   [Requirements](#Requirements)
     -   [Linux-Debian-Ubuntu-Mint](#Linux-Debian-Ubuntu-Mint)
     -   [Linux Fedora-CentOS-RHEL](#Linux-Fedora-CentOS-RHEL)
     -   [Mac OS X](#Mac-OS-X)
     -   [Windows](#Windows)
+
 -   [Installation](#Installation)
     -   [From PyPi](#From-PyPi)
     -   [From sources](#From-sources)
+
 -   [Additional packages](#Additional-packages)
+
 -   [Testing](#Testing)
+
 -   [Pyccel Container Images](#Pyccel-Container-Images)
 
 ## User docs index
@@ -60,7 +65,7 @@ Pyccel can be installed on virtually any machine that provides Python 3, the pip
 Some advanced features of Pyccel require additional non-Python libraries to be installed, for which we provide detailed instructions below.
 
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
-For more information, please read the section on [Pyccel container images].
+For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
 
 ## Requirements
 
@@ -176,7 +181,7 @@ curl -L $WEB_ADDRESS/msmpisdk.msi -o msmpisdk.msi
 msiexec //i msmpisdk.msi
 ```
 
-**At this point, close and reopen your terminal to refresh all environment variables!**
+At this point, close and reopen your terminal to refresh all environment variables!
 
 In Administrator git-bash, generate mpi.mod for gfortran according to <https://abhilashreddy.com/writing/3/mpi_instructions.html>:
 
