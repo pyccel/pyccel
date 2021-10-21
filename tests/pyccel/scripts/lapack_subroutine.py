@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # Matrix inverse test using dgetri and dgetrf subroutines
 
 from pyccel.stdlib.internal.lapack import dgetrf
