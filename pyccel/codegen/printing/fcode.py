@@ -319,7 +319,7 @@ class FCodePrinter(CodePrinter):
         #       we look for external functions and declare their result type
         external_decs = OrderedDict()
         for key,f in self.parser.namespace.imports['functions'].items():
-            if f.is_header and ( len(f.results) == 1 ):
+            if f.is_external:
                 i = Variable(f.results[0].dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
                 external_decs[i] = dec
@@ -1581,7 +1581,7 @@ class FCodePrinter(CodePrinter):
         #       we look for external functions and declare their result type
         scope = self.parser.namespace._sons_scopes[name]
         for key,f in scope.imports['functions'].items():
-            if f.is_header and ( len(f.results) == 1 ):
+            if f.is_external:
                 i = Variable(f.results[0].dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
                 decs[i] = dec

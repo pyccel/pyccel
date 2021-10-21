@@ -2156,7 +2156,7 @@ class FunctionDef(Basic):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header','_arguments_inout',
-                 '_functions','_interfaces','_doc_string')
+                 '_functions','_interfaces','_doc_string', '_is_external')
     _attribute_nodes = ('_arguments','_results','_body','_local_vars',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2178,6 +2178,7 @@ class FunctionDef(Basic):
         is_elemental=False,
         is_private=False,
         is_header=False,
+        is_external=False,
         arguments_inout=(),
         functions=(),
         interfaces=(),
@@ -2249,6 +2250,11 @@ class FunctionDef(Basic):
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for header')
 
+        if not isinstance(is_external, bool):
+            raise TypeError('Expecting a boolean for external')
+        else:
+            is_external = is_external and is_header and ( len(results) == 1 )
+
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple)):
                 raise TypeError('Expecting a list or tuple ')
@@ -2281,6 +2287,7 @@ class FunctionDef(Basic):
         self._is_elemental    = is_elemental
         self._is_private      = is_private
         self._is_header       = is_header
+        self._is_external     = is_external
         self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
@@ -2393,6 +2400,12 @@ class FunctionDef(Basic):
         """ True if the implementation of the function body
         is not provided False otherwise """
         return self._is_header
+
+    @property
+    def is_external(self):
+        """ True if the function is exposed through a header file and coming
+        from a f77 module """
+        return self._is_external
 
     @property
     def arguments_inout(self):
