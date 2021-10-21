@@ -50,12 +50,16 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 ## User docs index
 
 -   [Quickstart](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md)
--   [Compiler](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/compiler.md)
--   [Header-files](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/header-files.md)
--   [Headers](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/headers.md)
--   [Ndarrays](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/ndarrays.md)
--   Supported libraries/APIs
 
+-   [Compiler](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/compiler.md)
+
+-   [Header-files](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/header-files.md)
+
+-   [Headers](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/headers.md)
+
+-   [Ndarrays](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/ndarrays.md)
+
+-   Supported libraries/APIs
     -   [OpenMP](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/openmp.md)
     -   [Numpy](https://github.com/pyccel/pyccel/blob/update-readme/tutorial/numpy-functions.md)
 
