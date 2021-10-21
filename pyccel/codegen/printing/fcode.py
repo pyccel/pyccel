@@ -315,9 +315,20 @@ class FCodePrinter(CodePrinter):
             name = '{prefix}_{name}'.format(prefix=self.prefix_module,
                                             name=name)
 
+        # ARA : issue-999
+        #       we look for external functions and declare their result type
+        external_decs = OrderedDict()
+        for key,f in self.parser.namespace.imports['functions'].items():
+            if f.is_header and ( len(f.results) == 1 ):
+                i = Variable(f.results[0].dtype, name=str(key))
+                dec = Declare(i.dtype, i, external=True)
+                external_decs[i] = dec
+
         imports = ''.join(self._print(i) for i in expr.imports)
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
+        # ARA : issue-999
+        decs   += ''.join(self._print(i) for i in external_decs.values())
         body    = ''
 
         # ... TODO add other elements
@@ -982,6 +993,7 @@ class FCodePrinter(CodePrinter):
         is_optional = var.is_optional
         is_private = var.is_private
         is_static = expr.static
+        is_external = expr.external
         intent = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
@@ -1036,6 +1048,7 @@ class FCodePrinter(CodePrinter):
         optionalstr    = ''
         privatestr     = ''
         rankstr        = ''
+        externalstr    = ''
 
         # Compute intent string
         if intent:
@@ -1066,6 +1079,10 @@ class FCodePrinter(CodePrinter):
         if is_private:
             privatestr = ', private'
 
+        # Compute external string
+        if is_external:
+            externalstr = ', external'
+
         # Compute rank string
         # TODO: improve
         if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
@@ -1095,7 +1112,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr
+        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr + externalstr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
@@ -1559,6 +1576,15 @@ class FCodePrinter(CodePrinter):
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[i] = dec
+
+        # ARA : issue-999
+        #       we look for external functions and declare their result type
+        scope = self.parser.namespace._sons_scopes[name]
+        for key,f in scope.imports['functions'].items():
+            if f.is_header and ( len(f.results) == 1 ):
+                i = Variable(f.results[0].dtype, name=str(key))
+                dec = Declare(i.dtype, i, external=True)
+                decs[i] = dec
 
         arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
