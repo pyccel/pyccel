@@ -16,7 +16,6 @@ from itertools import chain
 from collections import OrderedDict
 
 import functools
-import operator
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
@@ -27,7 +26,7 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName,
-                             If, IfSection)
+                             If, IfSection, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
@@ -41,7 +40,7 @@ from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTern
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
-from pyccel.ast.builtins  import (PythonInt,
+from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
                                   PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
@@ -171,7 +170,7 @@ python_builtin_datatypes = {
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
                r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
-               r'interface\b',r'module\b',r'program\b')
+               r'interface\b',r'module\b(?! *procedure)',r'program\b')
 inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
 
 end_keyword = ('do', 'if', 'type', 'function',
@@ -365,6 +364,10 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
+        self.parser.change_to_program_scope()
+        module_namespace = self._namespace
+        self._namespace = self.parser.namespace
+
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
         body    = self._print(expr.body)
@@ -398,6 +401,9 @@ class FCodePrinter(CodePrinter):
                  decs,
                  body,
                 'end program {}\n'.format(name)]
+
+        self.parser.change_to_module_scope()
+        self._namespace = module_namespace
 
         return '\n'.join(a for a in parts if a)
 
@@ -459,6 +465,9 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
+            if isinstance(f, PythonType):
+                f = f.print_string
+
             if isinstance(f, str):
                 args.append("'{}'".format(f))
             elif isinstance(f, PythonTuple):
@@ -971,6 +980,7 @@ class FCodePrinter(CodePrinter):
         is_const = var.is_const
         is_stack_array = var.is_stack_array
         is_optional = var.is_optional
+        is_private = var.is_private
         is_static = expr.static
         intent = expr.intent
 
@@ -1011,7 +1021,7 @@ class FCodePrinter(CodePrinter):
 
         code_value = ''
         if expr.value:
-            code_value = ' = {0}'.format(expr.value)
+            code_value = ' = {0}'.format(self._print(expr.value))
 
         vstr = self._print(expr.variable.name)
 
@@ -1024,6 +1034,7 @@ class FCodePrinter(CodePrinter):
         intentstr      = ''
         allocatablestr = ''
         optionalstr    = ''
+        privatestr     = ''
         rankstr        = ''
 
         # Compute intent string
@@ -1050,6 +1061,10 @@ class FCodePrinter(CodePrinter):
         # Compute optional string
         if is_optional:
             optionalstr = ', optional'
+
+        # Compute private string
+        if is_private:
+            privatestr = ', private'
 
         # Compute rank string
         # TODO: improve
@@ -1080,7 +1095,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr
+        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
@@ -1275,7 +1290,18 @@ class FCodePrinter(CodePrinter):
 
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
-        return ''
+        var = expr.variable
+        if isinstance(var, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in var)
+
+        if var.is_pointer:
+            return ''
+        else:
+            var_code = self._print(var)
+            code  = 'if (allocated({})) then\n'.format(var_code)
+            code += '  deallocate({})\n'     .format(var_code)
+            code += 'end if\n'
+            return code
 #------------------------------------------------------------------------------
 
     def _print_NativeBool(self, expr):
@@ -1710,8 +1736,10 @@ class FCodePrinter(CodePrinter):
 
         body = self._print(expr.body)
 
-        if expr.nowait_expr:
-            epilog += expr.nowait_expr
+        if expr.end_annotation:
+            end_annotation = expr.end_annotation.replace("for", "do")
+            epilog += end_annotation
+
         return ('{prolog}'
                 '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
@@ -1741,119 +1769,6 @@ class FCodePrinter(CodePrinter):
             omp_expr += ' nowait'
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
-
-    # .....................................................
-    def _print_OMP_Parallel(self, expr):
-        clauses = ' '.join(self._print(i)  for i in expr.clauses)
-        body    = ''.join(self._print(i) for i in expr.body)
-
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end parallel\n'
-        # ...
-
-        # ...
-        code = ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
-        # ...
-
-        return self._get_statement(code)
-
-    def _print_OMP_For(self, expr):
-        # ...
-        loop    = self._print(expr.loop)
-        clauses = ' '.join(self._print(i)  for i in expr.clauses)
-
-        nowait  = ''
-        if not(expr.nowait is None):
-            nowait = 'nowait'
-        # ...
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end do {0}\n'.format(nowait)
-        # ...
-
-        # ...
-        code = ('{prolog}'
-                '{loop}'
-                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
-        # ...
-
-        return self._get_statement(code)
-
-    def _print_OMP_NumThread(self, expr):
-        return 'num_threads({})'.format(self._print(expr.num_threads))
-
-    def _print_OMP_Default(self, expr):
-        status = expr.status
-        if status:
-            status = self._print(expr.status)
-        else:
-            status = ''
-        return 'default({})'.format(status)
-
-    def _print_OMP_ProcBind(self, expr):
-        status = expr.status
-        if status:
-            status = self._print(expr.status)
-        else:
-            status = ''
-        return 'proc_bind({})'.format(status)
-
-    def _print_OMP_Private(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'private({})'.format(args)
-
-    def _print_OMP_Shared(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'shared({})'.format(args)
-
-    def _print_OMP_FirstPrivate(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'firstprivate({})'.format(args)
-
-    def _print_OMP_LastPrivate(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'lastprivate({})'.format(args)
-
-    def _print_OMP_Copyin(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'copyin({})'.format(args)
-
-    def _print_OMP_Reduction(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        op   = self._print(expr.operation)
-        return "reduction({0}: {1})".format(op, args)
-
-    def _print_OMP_Schedule(self, expr):
-        kind = self._print(expr.kind)
-
-        chunk_size = ''
-        if expr.chunk_size:
-            chunk_size = ', {0}'.format(self._print(expr.chunk_size))
-
-        return 'schedule({0}{1})'.format(kind, chunk_size)
-
-    def _print_OMP_Ordered(self, expr):
-        n_loops = ''
-        if expr.n_loops:
-            n_loops = '({0})'.format(self._print(expr.n_loops))
-
-        return 'ordered{0}'.format(n_loops)
-
-    def _print_OMP_Collapse(self, expr):
-        n_loops = '{0}'.format(self._print(expr.n_loops))
-
-        return 'collapse({0})'.format(n_loops)
-
-    def _print_OMP_Linear(self, expr):
-        variables= ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        step = self._print(expr.step)
-        return "linear({0}: {1})".format(variables, step)
-
-    def _print_OMP_If(self, expr):
-        return 'if({})'.format(self._print(expr.test))
     # .....................................................
 
     # .....................................................

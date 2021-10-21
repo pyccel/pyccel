@@ -19,6 +19,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
 from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
+from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
 from .variable  import IndexedElement
@@ -37,6 +38,7 @@ __all__ = (
     'PythonMap',
     'PythonPrint',
     'PythonRange',
+    'PythonType',
     'PythonZip',
     'PythonMax',
     'PythonMin',
@@ -775,6 +777,51 @@ class Lambda(Basic):
                 expr = self.expr)
 
 #==============================================================================
+class PythonType(Basic):
+    """ Represents the python builtin type function
+    """
+    __slots__ = ('_dtype','_precision','_obj')
+    _attribute_nodes = ('_obj',)
+
+    def __init__(self, obj):
+        if not isinstance (obj, PyccelAstNode):
+            raise PyccelError("Python's type function is not implemented for {} object".format(type(obj)))
+        self._dtype = obj.dtype
+        self._precision = obj.precision
+        self._obj = obj
+
+        if obj.rank > 0:
+            raise PyccelError("Python's type function doesn't return enough information about this object for pyccel to fully define a type")
+        super().__init__()
+
+    @property
+    def dtype(self):
+        """ Returns the dtype of this type
+        """
+        return self._dtype
+
+    @property
+    def precision(self):
+        """ Returns the precision of this type
+        """
+        return self._precision
+
+    @property
+    def arg(self):
+        """ Returns the object for which the type is determined
+        """
+        return self._obj
+
+    @property
+    def print_string(self):
+        """ Return a literal string representing the type that
+        can be used in a print  statement
+        """
+        return LiteralString("<class '{dtype}{precision}'>".format(
+            dtype = str(self.dtype),
+            precision = self.precision*8 if self.precision else ''))
+
+#==============================================================================
 python_builtin_datatypes_dict = {
     'bool'   : PythonBool,
     'float'  : PythonFloat,
@@ -812,5 +859,6 @@ builtin_functions_dict = {
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
-    'map'      : PythonMap
+    'map'      : PythonMap,
+    'type'     : PythonType,
 }

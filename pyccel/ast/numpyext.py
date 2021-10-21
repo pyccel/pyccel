@@ -9,7 +9,8 @@ import numpy
 
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonImag, PythonList)
+                             PythonComplex, PythonReal, PythonImag, PythonList,
+                             PythonType)
 
 from .core           import process_shape
 
@@ -279,6 +280,9 @@ numpy_constants = {
 }
 
 def process_dtype(dtype):
+    if isinstance(dtype, PythonType):
+        return dtype.dtype, dtype.precision
+
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
@@ -532,10 +536,9 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = ()
         elif a.rank == 1 or b.rank == 1:
             self._rank = 1
-            self._shape = b.shape[1] if a.rank == 1 else a.shape[0]
+            self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
             self._rank = 2
-
 
 
         if a.order == b.order:
