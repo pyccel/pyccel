@@ -20,3 +20,42 @@ def test_dnrm2_1(modnew):
     err_pyccel   = modnew.blas_dnrm2(x)
     assert(np.abs(err_pyccel - err_expected) < 1.e-14)
     # ...
+
+# ==============================================================================
+def test_dasum_1(modnew):
+    np.random.seed(2021)
+
+    n = 10
+    x = np.random.random(n)
+
+    # ...
+    expected = sp_blas.dasum(x)
+    result   = modnew.blas_dasum (x)
+    assert(np.allclose(result, expected, 1.e-14))
+    # ...
+
+# ==============================================================================
+def test_ddot_1(modnew):
+    np.random.seed(2021)
+
+    n = 10
+    x = np.random.random(n)
+    y = np.random.random(n)
+
+    # ...
+    expected = sp_blas.ddot(x, y)
+    result   = modnew.blas_ddot (x, y)
+    assert(np.allclose(result, expected, 1.e-14))
+    # ...
+# ==============================================================================
+def test_idamax_1(modnew):
+    np.random.seed(2021)
+
+    n = 10
+    x = np.random.random(n)
+
+    # ...
+    expected = sp_blas.idamax(x)
+    result   = modnew.blas_idamax (x)
+    assert(result == expected)
+    # ...
