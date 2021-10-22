@@ -1,6 +1,4 @@
 # pyccel header for BLAS.
-#
-# TODO functions snrm2, etc must have results
 
 #$ header metavar module_version='3.8'
 #$ header metavar ignore_at_import=True
@@ -15,7 +13,7 @@
 #$ header function drotg(double, double, double, double)
 
 #$ header function srotmg(float, float, float, float, float[:])
-#$ header function drotmg(double, double, double, double, double)
+#$ header function drotmg(double, double, double, double, double[:])
 
 #$ header function srot(int, float [:], int, float [:], int, float, float)
 #$ header function drot(int, double [:], int, double [:], int, double, double)
@@ -29,11 +27,11 @@
 #$ header function sscal(int, float, float [:], int)
 #$ header function dscal(int, double, double [:], int)
 
-#$ header function sasum(int, float [:], int, float)
-#$ header function dasum(int, double [:], int, double)
+#$ header function sasum(int, float [:], int) results(float) 
+#$ header function dasum(int, double [:], int) results(double) 
 
-#$ header function isamax(int, float [:], int, int)
-#$ header function idamax(int, double [:], int, int)
+#$ header function isamax(int, float [:], int) results(int) 
+#$ header function idamax(int, double [:], int) results(int)
 
 #$ header function saxpy(int, float, float [:], int, float [:], int)
 #$ header function daxpy(int, double, double [:], int, double [:], int)
@@ -41,13 +39,13 @@
 #$ header function scopy(int, float [:], int, float [:], int)
 #$ header function dcopy(int, double [:], int, double [:], int)
 
-#$ header function sdot(int, float [:], int, float [:], int)
-#$ header function ddot(int, double [:], int, double [:], int)
+#$ header function sdot(int, float [:], int, float [:], int) results(float) 
+#$ header function ddot(int, double [:], int, double [:], int) results(double) 
 
-#$ header function sdsdot(int, float, float [:], int, float [:], int)
-#$ header function dsdot(int, double [:], int, double [:], int)
+#$ header function sdsdot(int, float, float [:], int, float [:], int) results(float)
+#$ header function dsdot(int, double [:], int, double [:], int)  results(double) 
 
-#$ header function snrm2(int, float [:], int)
+#$ header function snrm2(int, float [:], int) results(float) 
 #$ header function dnrm2(int, double [:], int) results(double)
 # .......................................
 
