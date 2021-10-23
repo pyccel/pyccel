@@ -1580,12 +1580,13 @@ class FCodePrinter(CodePrinter):
 
         # ARA : issue-999
         #       we look for external functions and declare their result type
-        scope = self.parser.namespace.sons_scopes[name]
-        for key,f in scope.imports['functions'].items():
-            if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].dtype, name=str(key))
-                dec = Declare(i.dtype, i, external=True)
-                decs[i] = dec
+        if name in self.parser.namespace.sons_scopes.keys():
+            scope = self.parser.namespace.sons_scopes[name]
+            for key,f in scope.imports['functions'].items():
+                if isinstance(f, FunctionDef) and f.is_external:
+                    i = Variable(f.results[0].dtype, name=str(key))
+                    dec = Declare(i.dtype, i, external=True)
+                    decs[i] = dec
 
         arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
