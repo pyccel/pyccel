@@ -19,6 +19,7 @@ import functools
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
+from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
@@ -1581,7 +1582,7 @@ class FCodePrinter(CodePrinter):
         #       we look for external functions and declare their result type
         scope = self.parser.namespace._sons_scopes[name]
         for key,f in scope.imports['functions'].items():
-            if f.is_external:
+            if isinstance(f, FunctionDef) and f.is_external:
                 i = Variable(f.results[0].dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
                 decs[i] = dec
