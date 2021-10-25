@@ -160,13 +160,13 @@ class SyntaxParser(BasicParser):
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
 
-    def _treat_comment_line(self, line):
+    def _treat_comment_line(self, line, stmt):
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
-                return omp_parse(stmts=line)
+                expr = omp_parse(stmts=line)
             elif env.startswith('acc'):
-                return acc_parse(stmts=line)
+                expr = acc_parse(stmts=line)
             elif env.startswith('header'):
                 expr = hdr_parse(stmts=line)
                 if isinstance(expr, MetaVariable):
@@ -176,17 +176,17 @@ class SyntaxParser(BasicParser):
 
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
-
-                return expr
             else:
 
-                errors.report(PYCCEL_INVALID_HEADER,
+                raise errors.report(PYCCEL_INVALID_HEADER,
                               symbol = stmt,
                               severity='error')
 
         else:
             txt = line[1:].lstrip()
-            return Comment(txt)
+            expr = Comment(txt)
+
+        expr.set_fst(stmt)
 
     #====================================================
     #                 _visit functions
@@ -1036,9 +1036,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_CommentMultiLine(self, stmt):
 
-        exprs = [self._treat_comment_line(com) for com in stmt.s.split('\n')]
-        for e in exprs:
-            e.set_fst(stmt)
+        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split('\n')]
 
         if len(exprs) == 1:
             return exprs[0]
@@ -1046,7 +1044,7 @@ class SyntaxParser(BasicParser):
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):
-        expr = self._treat_comment_line(stmt.s)
+        expr = self._treat_comment_line(stmt.s, stmt)
         expr.set_fst(stmt)
 
         return expr
