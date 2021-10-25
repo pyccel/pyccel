@@ -3594,10 +3594,6 @@ class SemanticParser(BasicParser):
             # Indicates the name of the fortran module containing the functions
             __module_name__ = p.metavars.get('module_name', None)
 
-            # TODO [EB 25.10.21] Can this unused metavar be deleted?
-            #                    If not what is it for?
-            __print__ = ('print' in p.metavars.keys())
-
             if len(expr.target) == 0 and isinstance(expr.source,AsName):
                 expr = Import(expr.source.name)
 
@@ -3635,13 +3631,6 @@ class SemanticParser(BasicParser):
 
             elif __module_name__:
                 expr = Import(__module_name__, expr.target)
-                container['imports'][source_target] = expr
-
-            # ...
-            elif __print__:
-                source = str(expr.source).split('.')[-1]
-                source = 'mod_' + source
-                expr   = Import(source, expr.target)
                 container['imports'][source_target] = expr
 
             elif not __ignore_at_import__:
