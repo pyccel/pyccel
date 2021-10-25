@@ -3555,15 +3555,6 @@ class SemanticParser(BasicParser):
                     severity='error')
         else:
 
-            # in some cases (blas, lapack, openmp and openacc level-0)
-            # the import should not appear in the final file
-            # all metavars here, will have a prefix and suffix = __
-
-            __ignore_at_import__ = False
-            __module_name__      = None
-            __import_all__       = False
-            __print__            = False
-
             # we need to use str here since source has been defined
             # using repr.
             # TODO shall we improve it?
@@ -3595,17 +3586,16 @@ class SemanticParser(BasicParser):
 
             # ... meta variables
 
-            if 'ignore_at_import' in list(p.metavars.keys()):
-                __ignore_at_import__ = p.metavars['ignore_at_import']
+            # in some cases (blas, lapack and openacc level-0)
+            # the import should not appear in the final file
+            # all metavars here, will have a prefix and suffix = __
+            __ignore_at_import__ = p.metavars.get('ignore_at_import', False)
 
-            if 'import_all' in list(p.metavars.keys()):
-                __import_all__ = p.metavars['import_all']
+            # Indicates that the module must be imported with the syntax 'from mod import *'
+            __import_all__ = p.metavars.get('import_all', False)
 
-            if 'module_name' in list(p.metavars.keys()):
-                __module_name__ = p.metavars['module_name']
-
-            if 'print' in list(p.metavars.keys()):
-                __print__ = True
+            # Indicates the name of the fortran module containing the functions
+            __module_name__ = p.metavars.get('module_name', None)
 
             if len(expr.target) == 0 and isinstance(expr.source,AsName):
                 expr = Import(expr.source.name)
@@ -3646,14 +3636,7 @@ class SemanticParser(BasicParser):
                 expr = Import(__module_name__, expr.target)
                 container['imports'][source_target] = expr
 
-            # ...
-            elif __print__ in p.metavars.keys():
-                source = str(expr.source).split('.')[-1]
-                source = 'mod_' + source
-                expr   = Import(source, expr.target)
-                container['imports'][source_target] = expr
             elif not __ignore_at_import__:
-
                 container['imports'][source_target] = expr
 
         return result
