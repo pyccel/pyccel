@@ -257,21 +257,20 @@ class SemanticParser(BasicParser):
             target = set(target)
             target_headers = target.intersection(self.namespace.headers.keys())
             # ARA : issue-999
-            if 'external' in self.metavars.keys():
-                is_external = self.metavars['external'].lower() == 'true'
-                for name in list(target_headers):
-                    v = self.namespace.headers[name][0]
-                    if isinstance(v, FunctionHeader) and not isinstance(v,
-                            MethodHeader):
-                        F = self.get_function(name)
-                        if F is None:
-                            interfaces = v.create_definition(is_external=is_external)
-                            for F in interfaces:
-                                self.insert_function(F)
-                        else:
-                            errors.report(IMPORTING_EXISTING_IDENTIFIED,
-                                    symbol=name, blocker=True,
-                                    severity='fatal')
+            is_external = self.metavars.get('external', False)
+            for name in list(target_headers):
+                v = self.namespace.headers[name][0]
+                if isinstance(v, FunctionHeader) and not isinstance(v,
+                        MethodHeader):
+                    F = self.get_function(name)
+                    if F is None:
+                        interfaces = v.create_definition(is_external=is_external)
+                        for F in interfaces:
+                            self.insert_function(F)
+                    else:
+                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
+                                symbol=name, blocker=True,
+                                severity='fatal')
 
         self._semantic_done = True
 
