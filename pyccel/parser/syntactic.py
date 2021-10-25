@@ -187,6 +187,7 @@ class SyntaxParser(BasicParser):
             expr = Comment(txt)
 
         expr.set_fst(stmt)
+        return expr
 
     #====================================================
     #                 _visit functions
@@ -1044,10 +1045,7 @@ class SyntaxParser(BasicParser):
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):
-        expr = self._treat_comment_line(stmt.s, stmt)
-        expr.set_fst(stmt)
-
-        return expr
+        return self._treat_comment_line(stmt.s, stmt)
 
     def _visit_Break(self, stmt):
         return Break()
