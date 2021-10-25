@@ -20,6 +20,7 @@ def blas_dasum(x: 'float64[:]',
                incx: 'int32' = 1,
               ):
     """
+    asum ← ||re(x)|| 1 + ||im(x)|| 1
     """
     import numpy as np
     from pyccel.stdlib.internal.blas import dasum
@@ -33,6 +34,8 @@ def blas_idamax(x: 'float64[:]',
                incx: 'int32' = 1,
               ):
     """
+    amax ← 1 st k ∋ |re(x k )| + |im(x k )|
+            = max(|re(x i )| + |im(x i )|)
     """
     import numpy as np
     from pyccel.stdlib.internal.blas import idamax
