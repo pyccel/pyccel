@@ -320,7 +320,7 @@ class FCodePrinter(CodePrinter):
         #       we look for external functions and declare their result type
         external_decs = OrderedDict()
         for key,f in self.parser.namespace.imports['functions'].items():
-            if f.is_external:
+            if isinstance(f, FunctionDef) and f.is_external:
                 i = Variable(f.results[0].dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
                 external_decs[i] = dec
