@@ -3583,12 +3583,19 @@ class SemanticParser(BasicParser):
 
             # ... meta variables
 
-            # in some cases (blas, lapack, openmp and openacc level-0)
+            # in some cases (blas, lapack and openacc level-0)
             # the import should not appear in the final file
             # all metavars here, will have a prefix and suffix = __
             __ignore_at_import__ = p.metavars.get('ignore_at_import', False)
+
+            # Indicates that the module must be imported with the syntax 'from mod import *'
             __import_all__ = p.metavars.get('import_all', False)
+
+            # Indicates the name of the fortran module containing the functions
             __module_name__ = p.metavars.get('module_name', None)
+
+            # TODO [EB 25.10.21] Can this unused metavar be deleted?
+            #                    If not what is it for?
             __print__ = ('print' in p.metavars.keys())
 
             if len(expr.target) == 0 and isinstance(expr.source,AsName):
