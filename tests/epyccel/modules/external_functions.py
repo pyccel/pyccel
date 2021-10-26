@@ -6,7 +6,7 @@ def blas_dnrm2(x: 'float64[:]',
                incx: 'int32' = 1,
               ):
     """
-    ||x||_2
+    Computes the Euclidean norm of a vector.
     """
     import numpy as np
     from pyccel.stdlib.internal.blas import dnrm2
@@ -20,7 +20,7 @@ def blas_dasum(x: 'float64[:]',
                incx: 'int32' = 1,
               ):
     """
-    asum ← ||re(x)|| 1 + ||im(x)|| 1
+    Computes the sum of magnitudes of the vector elements.
     """
     import numpy as np
     from pyccel.stdlib.internal.blas import dasum
@@ -34,8 +34,7 @@ def blas_idamax(x: 'float64[:]',
                incx: 'int32' = 1,
               ):
     """
-    amax ← 1 st k ∋ |re(x k )| + |im(x k )|
-            = max(|re(x i )| + |im(x i )|)
+    Finds the index of the element with maximum absolute value.
     """
     import numpy as np
     from pyccel.stdlib.internal.blas import idamax
@@ -53,7 +52,7 @@ def blas_ddot(x: 'float64[:]', y: 'float64[:]',
                incy: 'int32' = 1
               ):
     """
-    y ← x
+    Computes a vector-vector dot product.
     """
     import numpy as np
     from pyccel.stdlib.internal.blas import ddot
