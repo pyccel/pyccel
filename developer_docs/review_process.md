@@ -2,14 +2,14 @@
 
 The review process is the process through which a branch which solves an issue is merged into the master branch.
 
-When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary.
+When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the master branch.
 
 Once the pull request is opened 4 tests should be triggered they are: 
 
-- **Linux** : Runs the suite of tests on a linux machine
-- **MacOS** : Runs the suite of tests on a mac os machine
-- **Windows** : Runs the suite of tests on a windows machine
-- **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
+-   **Linux** : Runs the suite of tests on a linux machine
+-   **MacOS** : Runs the suite of tests on a mac os machine
+-   **Windows** : Runs the suite of tests on a windows machine
+-   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
 
 Once the pull request is open the tests will be triggered every time you push new changes to the branch. Please be mindful of this and try to avoid pushing multiple times in a row to save compute resources. If you do find you need to push repeatedly, don't hesitate to cancel concurrent jobs using the github "Actions" tab.
 
@@ -19,11 +19,11 @@ When the pull request is ready for review (ie. you are happy with it, and it is 
 
 To request the first stage of the review process you should add the label `needs_inital_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_inital_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
 
-- Unclear comments/docstrings
-- Missing/Incomplete tests
-- Code which could be faster (e.g. use of loops instead of list comprehensions)
-- Lack of `__slots__`
-- Unnecessary code duplication
+-   Unclear comments/docstrings
+-   Missing/Incomplete tests
+-   Code which could be faster (e.g. use of loops instead of list comprehensions)
+-   Lack of `__slots__`
+-   Unnecessary code duplication
 
 Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_inital_review` to `Ready_for_review`
 
