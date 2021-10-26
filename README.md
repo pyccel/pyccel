@@ -47,19 +47,19 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 ## User docs index
 
--   [Quickstart](tutorial/quickstart.md)
+-   [Quickstart](./tutorial/quickstart.md)
 
--   [Compiler](https://github.com/pyccel/pyccel/blob/master/tutorial/compiler.md)
+-   [Compiler](./tutorial/compiler.md)
 
--   [Header-files](https://github.com/pyccel/pyccel/blob/master/tutorial/header-files.md)
+-   [Header-files](./tutorial/header-files.md)
 
--   [Headers](https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md)
+-   [Headers](./tutorial/headers.md)
 
--   [Ndarrays](https://github.com/pyccel/pyccel/blob/master/tutorial/ndarrays.md)
+-   [Ndarrays](./tutorial/ndarrays.md)
 
 -   Supported libraries/APIs
-    -   [OpenMP](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md)
-    -   [Numpy](https://github.com/pyccel/pyccel/blob/master/tutorial/numpy-functions.md)
+    -   [OpenMP](./tutorial/openmp.md)
+    -   [Numpy](./tutorial/numpy-functions.md)
 
 ## Pyccel Installation Methods
 
