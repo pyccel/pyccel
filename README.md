@@ -1,5 +1,4 @@
-Welcome to Pyccel
-=================
+# Welcome to Pyccel
 
  [![master_tests](https://github.com/pyccel/pyccel/actions/workflows/master.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/master.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade)
 
@@ -70,23 +69,21 @@ Some advanced features of Pyccel require additional non-Python libraries to be i
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
 For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
 
-
-Requirements
-============
+## Requirements
 
 First of all, Pyccel requires a working Fortran/C compiler
 
 For Fortran it supports
 
--   GFortran <https://gcc.gnu.org/fortran/>
--   Intel® Fortran Compiler <https://software.intel.com/en-us/fortran-compilers>
--   PGI Fortran <https://www.pgroup.com/index.htm>
+-   [GFortran](https://gcc.gnu.org/fortran/)
+-   [Intel® Fortran Compiler](https://software.intel.com/en-us/fortran-compilers)
+-   [PGI Fortran](https://www.pgroup.com/index.htm)
 
 For C it supports
 
--   GCC <https://gcc.gnu.org/>
--   Intel® Compiler <https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html>
--   PGI <https://www.pgroup.com/index.htm>
+-   [GCC](https://gcc.gnu.org/)
+-   [Intel® Compiler](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html)
+-   [PGI](https://www.pgroup.com/index.htm)
 
 In order to perform fast linear algebra calculations, Pyccel uses the following libraries:
 
@@ -105,10 +102,7 @@ Pyccel also depends on several Python3 packages, which are automatically downloa
 
 ### Linux Debian-Ubuntu-Mint
 
-Linux Debian/Ubuntu/Mint
-************************
-
-To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool::
+To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool:
 
 ```sh
 sudo apt update
@@ -120,7 +114,7 @@ sudo apt install libopenmpi-dev openmpi-bin
 
 ### Linux Fedora-CentOS-RHEL
 
-Install all requirements using the DNF software package manager::
+Install all requirements using the DNF software package manager:
 
 ```sh
 su
@@ -136,7 +130,7 @@ Similar commands work on Linux openSUSE, just replace `dnf` with `zypper`.
 
 ### Mac OS X
 
-On an Apple Macintosh machine we recommend using Homebrew <https://brew.sh/>::
+On an Apple Macintosh machine we recommend using [Homebrew](https://brew.sh/):
 
 ```sh
 brew update
@@ -151,8 +145,8 @@ This requires that the Command Line Tools (CLT) for Xcode are installed.
 ### Windows
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
-We recommend using Chocolatey <https://chocolatey.org/> to speed up the process, and we provide commands that work in a git-bash shell.
-In an Administrator prompt install git-bash (if needed), a Python3 Anaconda distribution, and a GCC compiler::
+We recommend using [Chocolatey](https://chocolatey.org/) to speed up the process, and we provide commands that work in a git-bash sh.
+In an Administrator prompt install git-bash (if needed), a Python3 Anaconda distribution, and a GCC compiler:
 
 ```sh
 choco install git
@@ -169,7 +163,7 @@ curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
 curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
 ```
 
-Generate static MS C runtime library from corresponding dynamic link library::
+Generate static MS C runtime library from corresponding dynamic link library:
 
 ```sh
 cd "$LIBRARY_DIR"
@@ -179,7 +173,7 @@ dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
 cd -
 ```
 
-Download MS MPI runtime and SDK, then install MPI::
+Download MS MPI runtime and SDK, then install MPI:
 
 ```sh
 WEB_ADDRESS=https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1
@@ -201,7 +195,7 @@ gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
 cd -
 ```
 
-Generate static libmsmpi.a from msmpi.dll::
+Generate static libmsmpi.a from msmpi.dll:
 
 ```sh
 cd "$MSMPI_LIB64"
@@ -211,7 +205,7 @@ dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
 cd -
 ```
 
-Before installing Pyccel and using it, the Anaconda environment should be activated with::
+Before installing Pyccel and using it, the Anaconda environment should be activated with:
 
 ```sh
 source /c/tools/Anaconda3/etc/profile.d/conda.sh
@@ -220,19 +214,17 @@ conda activate
 
 On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of pyccel below.
 
-Installation
-============
+## Installation
 
-From PyPi
-*********
+### From PyPi
 
-Simply run, for a user-specific installation::
+Simply run, for a user-specific installation:
 
 ```sh
 pip3 install --user pyccel
 ```
 
-or::
+or:
 
 ```sh
 sudo pip3 install pyccel
@@ -240,8 +232,7 @@ sudo pip3 install pyccel
 
 for a system-wide installation.
 
-From sources
-************
+### From sources
 
 -   **Standard mode**:
 
@@ -262,11 +253,9 @@ From sources
 this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
 Any required Python packages will be installed automatically from PyPI.
 
+## Additional packages
 
-Additional packages
-===================
-
-In order to run the unit tests and to get a coverage report, a few additional Python packages should be installed:::
+In order to run the unit tests and to get a coverage report, a few additional Python packages should be installed:
 
 ```sh
 pip3 install --user scipy
@@ -277,22 +266,19 @@ pip3 install --user astunparse
 pip3 install --user coverage
 ```
 
-Most of the unit tests can also be run in parallel. This can be done by installing one additional package::
+Most of the unit tests can also be run in parallel. This can be done by installing one additional package:
 
 ```sh
 pip3 install --user pytest-xdist
 ```
 
-Testing
-=======
+## Testing
 
 To test your Pyccel installation please run the script _tests/run_tests_py3.sh_ (Unix), or _tests/run_tests.bat_ (Windows).
 
 Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
-
-Pyccel Container Images
-=======================
+## Pyccel Container Images
 
 Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
 
@@ -306,7 +292,7 @@ Image tags match pyccel releases.
 
 In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation.
 
-For example::
+For example:
 
 ```sh
 docker pull pyccel/pyccel:v1.0.0
@@ -315,13 +301,3 @@ docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
 
 If you are using SELinux, you will need to set the right context for your host based volume.
 Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
-
-.. |build-status| image:: https://github.com/pyccel/pyccel/workflows/master_tests/badge.svg
-    :alt: build status
-    :scale: 100%
-    :target: https://github.com/pyccel/pyccel/actions?query=workflow%3Amaster_tests
-
-.. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
-    :alt: Codacy Badge
-    :scale: 100%
-    :target: https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pyccel/pyccel&amp;utm_campaign=Badge_Grade
