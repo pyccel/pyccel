@@ -18,7 +18,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 
 -   numpy
 -   scipy
--   mpi4py
+-   mpi4py (not available yet)
 -   h5py (not available yet)
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
