@@ -47,7 +47,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 ## User docs index
 
--   [Quickstart](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md)
+-   [Quickstart](tutorial/quickstart.md)
 
 -   [Compiler](https://github.com/pyccel/pyccel/blob/master/tutorial/compiler.md)
 
