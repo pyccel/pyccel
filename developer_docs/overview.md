@@ -39,17 +39,12 @@ Suppose we want to generate the code for an object of the class `NumpyTanh`, fir
 ```
 Therefore the print functions which are acceptable for visiting this object are:
 
--   `_print_NumpyTanh`
-
--   `_print_NumpyUfuncUnary`
-
--   `_print_NumpyUfuncBase`
-
--   `_print_PyccelInternalFunction`
-
--   `_print_PyccelAstNode`
-
--   `_print_Basic`
+-   `_print_NumpyTanh` 
+-   `_print_NumpyUfuncUnary` 
+-   `_print_NumpyUfuncBase` 
+-   `_print_PyccelInternalFunction` 
+-   `_print_PyccelAstNode` 
+-   `_print_Basic` 
 
 We run through these possible functions choosing the one which is the most specialised. If none of these methods exist, then an error is raised.
 
