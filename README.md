@@ -21,7 +21,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 -   mpi4py
 -   h5py (not available yet)
 
-If you are eager to try Pyccel out, we recommend reading our [quick-start guide](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md)
+If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
 
 ## Table of contents
 
