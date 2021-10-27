@@ -5,6 +5,7 @@
 #$ header metavar ignore_at_import=True
 #$ header metavar libraries='${HDF5_LIBRARIES}'
 #$ header metavar save=True
+#$ header metavar external=False
 
 # .......................................
 #        H5: General Library Functions
