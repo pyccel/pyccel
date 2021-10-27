@@ -40,7 +40,7 @@ install_requires = [
     'numpy',
     'sympy>=1.2',
     'termcolor',
-    'textx>=1.6',
+    'textx>=2.2',
     'filelock'
 ]
 
