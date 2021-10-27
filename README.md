@@ -45,17 +45,17 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 -   [Pyccel Container Images](#Pyccel-Container-Images)
 
-## User docs index
+## User Documentation
 
--   [Quickstart](./tutorial/quickstart.md)
+-   [Quick-start Guide](./tutorial/quickstart.md)
 
--   [Compiler](./tutorial/compiler.md)
+-   [C/Fortran Compilers](./tutorial/compiler.md)
 
--   [Header-files](./tutorial/header-files.md)
+-   [Header Files](./tutorial/header-files.md)
 
--   [Headers](./tutorial/headers.md)
+-   [Templates](./tutorial/headers.md)
 
--   [Ndarrays](./tutorial/ndarrays.md)
+-   [N-dimensional Arrays](./tutorial/ndarrays.md)
 
 -   Supported libraries/APIs
     -   [OpenMP](./tutorial/openmp.md)
