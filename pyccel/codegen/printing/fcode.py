@@ -1785,7 +1785,15 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
         clauses += str(expr.txt).replace("cancel for", "cancel do")
         omp_expr = '{}{}\n'.format(omp_expr, clauses)
+        if len(omp_expr)>72:
+            txts = []
+            while len(omp_expr)>72:
+                txts.append(omp_expr[:72])
+                omp_expr  = omp_expr[72:]
+            if omp_expr:
+                txts.append(omp_expr)
 
+            omp_expr = '&\n!$omp &'.join(txt for txt in txts)
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
