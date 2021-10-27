@@ -1,14 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.stdlib.internal.blas import dgemv
-from numpy import zeros
+import numpy as np
 
 if __name__ == '__main__':
-    n = 4
-    m = 5
+    n = np.int32(4)
+    m = np.int32(5)
 
-    a = zeros((n,m), 'double')
-    x = zeros(m, 'double')
-    y = zeros(n, 'double')
+    a = np.zeros((n,m))
+    x = np.zeros(m)
+    y = np.zeros(n)
 
     # ...
     a[0,0] = 1.0
@@ -48,6 +48,6 @@ if __name__ == '__main__':
     alpha = 2.0
     beta  = 0.0
 
-    incx = 1
-    incy = 1
+    incx = np.int32(1)
+    incy = np.int32(1)
     dgemv('N', n, m, alpha, a, n, x, incx, beta, y, incy)
