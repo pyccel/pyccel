@@ -64,8 +64,8 @@
 #$ header function ssbmv (str, int32, int32, float32, float32[:,:](order=F), int32, float32[:], int32, float32, float32[:], int32)
 #$ header function dsbmv (str, int32, int32, float64, float64[:,:](order=F), int32, float64[:], int32, float64, float64[:], int32)
 
-#$ header function sspmv (str, int32, float32, float32[:,:](order=F), float32[:], int32, float32, float32[:], int32)
-#$ header function dspmv (str, int32, float64, float64[:,:](order=F), float64[:], int32, float64, float64[:], int32)
+#$ header function sspmv (str, int32, float32, float32[:], float32[:], int32, float32, float32[:], int32)
+#$ header function dspmv (str, int32, float64, float64[:], float64[:], int32, float64, float64[:], int32)
  
 #$ header function strmv (str,str,str, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtrmv (str,str,str, int32, float64[:,:](order=F), int32, float64[:], int32)
@@ -73,8 +73,8 @@
 #$ header function stbmv (str,str,str, int32, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtbmv (str,str,str, int32, int32, float64[:,:](order=F), int32, float64[:], int32)
 
-#$ header function stpmv (str,str,str, int32, float32[:,:](order=F), float32[:], int32)
-#$ header function dtpmv (str,str,str, int32, float64[:,:](order=F), float64[:], int32)
+#$ header function stpmv (str,str,str, int32, float32[:], float32[:], int32)
+#$ header function dtpmv (str,str,str, int32, float64[:], float64[:], int32)
 
 #$ header function strsv (str,str,str, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtrsv (str,str,str, int32, float64[:,:](order=F), int32, float64[:], int32)
@@ -82,8 +82,8 @@
 #$ header function stbsv (str,str,str, int32, int32, float32[:,:](order=F), int32, float32[:], int32)
 #$ header function dtbsv (str,str,str, int32, int32, float64[:,:](order=F), int32, float64[:], int32)
 
-#$ header function stpsv (str,str,str, int32, float32[:,:](order=F), float32[:], int32)
-#$ header function dtpsv (str,str,str, int32, float64[:,:](order=F), float64[:], int32)
+#$ header function stpsv (str,str,str, int32, float32[:], float32[:], int32)
+#$ header function dtpsv (str,str,str, int32, float64[:], float64[:], int32)
 
 #$ header function sger (int32, int32, float32, float32[:], int32, float32[:], int32, float32[:,:](order=F), int32)
 #$ header function dger (int32, int32, float64, float64[:], int32, float64[:], int32, float64[:,:](order=F), int32)
@@ -91,14 +91,14 @@
 #$ header function ssyr (str, int32, float32, float32[:], int32, float32[:,:](order=F), int32)
 #$ header function dsyr (str, int32, float64, float64[:], int32, float64[:,:](order=F), int32)
 
-#$ header function sspr (str, int32, float32, float32[:], int32, float32[:,:](order=F))
-#$ header function dspr (str, int32, float64, float64[:], int32, float64[:,:](order=F))
+#$ header function sspr (str, int32, float32, float32[:], int32, float32[:])
+#$ header function dspr (str, int32, float64, float64[:], int32, float64[:])
 
-#$ header function ssyr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:], int32)
-#$ header function dsyr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:], int32)
+#$ header function ssyr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:,:](order=F), int32)
+#$ header function dsyr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:,:](order=F), int32)
 
-#$ header function sspr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:], int32)
-#$ header function dspr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:], int32)
+#$ header function sspr2 (str, int32, float32, float32[:], int32, float32[:], int32, float32[:])
+#$ header function dspr2 (str, int32, float64, float64[:], int32, float64[:], int32, float64[:])
 # .......................................
 
 # .......................................
