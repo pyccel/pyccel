@@ -417,6 +417,19 @@ def test_omp_simd(language):
     f1 = epyccel(openmp.omp_simd, accelerators=['openmp'], language=language, verbose=True)
     assert openmp.omp_simd(1337) == f1(1337)
 
+def test_omp_long_line(language):
+    f1 = epyccel(openmp.omp_long_line, accelerators=['openmp'], language=language, verbose=True)
+    set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
+    set_num_threads(4)
+    from numpy import random
+    x1 = random.randint(20, size=(5))
+    x2 = random.randint(20, size=(5))
+    x3 = random.randint(20, size=(5))
+    x4 = random.randint(20, size=(5))
+    x5 = random.randint(20, size=(5))
+
+    assert f1(x1,x2,x3,x4,x5) == np.sum(x1+x2+x3+x4+x5)
+
 @pytest.mark.parametrize( 'language', (
     pytest.param('fortran', marks = pytest.mark.fortran),
     pytest.param('c'      , marks = pytest.mark.c),
