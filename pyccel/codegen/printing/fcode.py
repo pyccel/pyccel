@@ -2892,7 +2892,13 @@ class FCodePrinter(CodePrinter):
                      for line in code]
         decrease = [int(dec_regex.match(line) is not None)
                      for line in code]
-        continuation = [int(any(map(line.endswith, ['&', '&\n'])))
+
+        def continuation_cnd(line):
+            def cnd(s):
+                return line.endswith(s) and not line.strip().startswith('!')
+            return cnd
+
+        continuation = [int(any(map(continuation_cnd(line), ['&', '&\n'])))
                          for line in code]
 
         level = 0
