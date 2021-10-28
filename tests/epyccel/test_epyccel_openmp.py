@@ -7,6 +7,8 @@ import pytest
 import numpy as np
 import modules.openmp as openmp
 
+from numpy import random
+from numpy import matmul
 from pyccel.epyccel import epyccel
 #==============================================================================
 
@@ -272,7 +274,6 @@ def test_omp_matmul(language):
     f1 = epyccel(openmp.omp_matmul, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import matmul
     A1 = np.ones([3, 2])
     A1[1,0] = 2
     A2 = np.copy(A1)
@@ -296,7 +297,6 @@ def test_omp_matmul_single(language):
     f1 = epyccel(openmp.omp_matmul_single, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import matmul
     A1 = np.ones([3, 2])
     A1[1,0] = 2
     A2 = np.copy(A1)
@@ -313,7 +313,6 @@ def test_omp_matmul_2d_2d(language):
     f1 = epyccel(openmp.omp_matmul, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import matmul
     A1 = np.ones([3, 2])
     A1[1,0] = 2
     A2 = np.copy(A1)
@@ -331,7 +330,6 @@ def test_omp_nowait(language):
     f1 = epyccel(openmp.omp_nowait, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import random
     x = random.randint(20, size=(1000))
     y = np.zeros((1000,), dtype=int)
     z = np.zeros((1000,))
@@ -344,7 +342,6 @@ def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import random
     x = random.randint(20, size=(5))
 
     assert f1(x) == np.sum(x)
@@ -353,14 +350,12 @@ def test_omp_arraysum_combined(language):
     f1 = epyccel(openmp.omp_arraysum_combined, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import random
     x = random.randint(20, size=(5))
 
     assert f1(x) == np.sum(x)
 
 def test_omp_range_sum_critical(language):
     f1 = epyccel(openmp.omp_range_sum_critical, accelerators=['openmp'], language=language, verbose=True)
-    from numpy import random
 
     for _ in range(0, 4):
         x = random.randint(10, 1000)
@@ -370,7 +365,6 @@ def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(2)
-    from numpy import random
     x = random.randint(20, size=(10))
 
     assert f1(x) == np.sum(x)
@@ -389,7 +383,6 @@ def test_omp_master(language):
 )
 def test_omp_taskloop(language):
     f1 = epyccel(openmp.omp_taskloop, accelerators=['openmp'], language=language, verbose=True)
-    from numpy import random
 
     for _ in range(0, 4):
         x = random.randint(1, 4)
@@ -407,7 +400,6 @@ def test_omp_taskloop(language):
 )
 def test_omp_tasks(language):
     f1 = epyccel(openmp.omp_tasks, accelerators=['openmp'], language=language, verbose=True)
-    from numpy import random
 
     for _ in range(0, 4):
         x = random.randint(10, 20)
@@ -421,7 +413,6 @@ def test_omp_long_line(language):
     f1 = epyccel(openmp.omp_long_line, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
-    from numpy import random
     x1 = random.randint(20, size=(5))
     x2 = random.randint(20, size=(5))
     x3 = random.randint(20, size=(5))
