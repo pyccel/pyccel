@@ -798,6 +798,8 @@ class PythonCodePrinter(CodePrinter):
                         prog    = prog)
 
     def _print_ModuleHeader(self, expr):
+        name = "#$ header metavar module_name='{}'\n".format(
+                expr.module.name)
         # Collect functions which are not in an interface
         funcs = [f for f in expr.module.funcs if not (f is expr.module.init_func or f is expr.module.free_func)]
 
@@ -826,7 +828,7 @@ class PythonCodePrinter(CodePrinter):
         func_headers = ''.join(function_header(func) for func in funcs)
         classes = ''.join(class_header(c) for c in expr.module.classes)
 
-        return ''.join((func_headers, classes))
+        return ''.join((name, func_headers, classes))
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])
