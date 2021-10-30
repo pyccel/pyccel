@@ -1168,9 +1168,12 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Assign(self, expr):
+        rhs = expr.rhs
+
+        if isinstance(rhs, FunctionCall):
+            return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)
-        rhs = expr.rhs
         # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
@@ -1211,41 +1214,6 @@ class FCodePrinter(CodePrinter):
 
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})\n'.format(rhs_code, code_args)
-
-        if isinstance(rhs, FunctionCall):
-            func = rhs.funcdef
-            f_name = self._print(rhs.func_name if not rhs.interface else rhs.interface_name)
-            args = [a for a in rhs.args if not isinstance(a.value, Nil)]
-            code_args = [self._print(i) for i in args]
-            output_names = func.results
-            lhs_vars = dict(zip(output_names,expr.lhs))
-
-            # Make dummy variables to avoid forbidden aliasing
-            extra_assigns = []
-            for n,r in lhs_vars.items():
-                if any(r==call_arg.value for call_arg in args):
-                    var_name = self.parser.get_new_name()
-                    var      = r.clone(name = var_name)
-
-                    self.add_vars_to_namespace(var)
-
-                    extra_assigns.append(Assign(r,var))
-                    lhs_vars[n] = var
-
-            if len(output_names)>1:
-                lhs_code = [self._print(name) + ' = ' + self._print(l) for (name,l) in lhs_vars.items()]
-
-                call_args = ', '.join(code_args + lhs_code)
-
-                code = 'call {0}({1})\n'.format(f_name, call_args)
-            else:
-                lhs_code = self._print(expr.lhs)
-                call_args = ', '.join(code_args)
-                code = '{lhs} = {name}({args})\n'.format(
-                        lhs  = lhs_code,
-                        name = f_name,
-                        args = call_args)
-            return ''.join([code, *[self._print(a) for a in extra_assigns]])
 
         if (isinstance(expr.lhs, Variable) and
               expr.lhs.dtype == NativeSymbol()):
@@ -2561,46 +2529,64 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args = [a for a in expr.args if not isinstance(a.value, Nil)]
-        results = func.results
+        func_results = func.results
+        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
 
-        if len(results) == 1:
-            args = ['{}'.format(self._print(a)) for a in args]
+        if (not self._additional_code):
+            self._additional_code = ''
+        if parent_assign:
+            lhs = parent_assign[0].lhs
+            if len(func_results) == 1:
+                lhs_vars = {func_results[0]:lhs}
+            else:
+                lhs_vars = dict(zip(func_results,lhs))
+            newargs = []
+            for arg in args:
+                if arg in lhs_vars.values():
+                    var = arg.clone(self.parser.get_new_name())
+                    self.add_vars_to_namespace(var)
+                    self._additional_code += self._print(Assign(var,arg))
+                    newargs.append(var)
+                else:
+                    newargs.append(arg)
+            args = newargs
+            results = lhs_vars.values()
+            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                            for n,r in lhs_vars.items()]
 
-            args = ', '.join(args)
-            code = '{name}({args})'.format( name = f_name,
-                                            args = args)
-
-        elif len(results)>1:
-            if (not self._additional_code):
-                self._additional_code = ''
-            out_vars = []
-            for r in func.results:
-                var_name = self.parser.get_new_name()
-                var =  r.clone(name = var_name)
-
+        elif len(func_results)>1:
+            results = [r.clone(name = self.parser.get_new_name()) \
+                        for r in func_results]
+            for var in results:
                 self.add_vars_to_namespace(var)
 
-                out_vars.append(var)
+            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                            for n,r in zip(func_results, results)]
 
-            self._additional_code = self._additional_code + self._print(Assign(tuple(out_vars),expr)) + '\n'
-            return self._print(tuple(out_vars))
         else:
-            args    = ['{}'.format(self._print(a)) for a in args]
-            if not func.is_header:
-                results = ['{0}={0}'.format(self._print(a)) for a in results]
+            results_strs = []
+
+        args_strs = ['{}'.format(self._print(a)) for a in args]
+        args_code = ', '.join(args_strs+results_strs)
+        code = '{name}({args})'.format( name = f_name,
+                                        args = args_code )
+        if len(func_results) != 1:
+            code = 'call {}\n'.format(code)
+
+        if not parent_assign:
+            if len(func_results) <= 1:
+                return code
             else:
-                results = ['{}'.format(self._print(a)) for a in results]
-
-            newargs = ', '.join(args+results)
-
-            code = 'call {name}({args})\n'.format( name = f_name,
-                                                 args = newargs )
-        return code
+                self._additional_code += code
+                return self._print(tuple(results))
+        elif len(func_results) == 1:
+            return '{0} = {1}\n'.format(results_strs[0], code)
+        else:
+            return code
 
 #=======================================================================================
 
     def _print_DottedFunctionCall(self, expr):
-        print("_print_DottedFunctionCall : ",expr)
         if isinstance(expr.prefix, FunctionCall):
             base = expr.prefix.funcdef.results[0]
             if (not self._additional_code):
