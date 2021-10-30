@@ -99,11 +99,9 @@ default_precision = {'float': 8,
                     'int': numpy.dtype(int).alignment,
                     'integer': numpy.dtype(int).alignment,
                     'complex': 8,
-                    'bool':4,
-                    'float':8}
+                    'bool':4}
 dtype_and_precision_registry = { 'float':('float',default_precision['float']),
                                  'double':('float',default_precision['float']),
-                                 'float':('float',default_precision['float']),
                                  'pythonfloat':('float',default_precision['float']), # built-in float
                                  'float32':('float',4),
                                  'float64':('float',8),
