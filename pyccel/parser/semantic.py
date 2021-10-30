@@ -3151,7 +3151,9 @@ class SemanticParser(BasicParser):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    arg_new = FunctionDefArgument(a_new, value=a.value, kwonly=a.is_kwonly,
+                    arg_new = FunctionDefArgument(a_new,
+                                value=self._visit(a.value),
+                                kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
                     if additional_args:
