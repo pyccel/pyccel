@@ -70,9 +70,15 @@ def get_filename_from_import(module,input_folder=''):
     while filename.startswith('/'):
         filename = folder_above + filename[1:]
 
+    pyc_filename_pyh = '{}.pyh'.format(os.path.join(
+                        os.path.dirname(filename),
+                        '__pyccel__',
+                        os.path.basename(filename)))
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
 
+    if is_valid_filename_pyh(pyc_filename_pyh):
+        return os.path.abspath(pyc_filename_pyh)
     if is_valid_filename_pyh(filename_pyh):
         return os.path.abspath(filename_pyh)
     if is_valid_filename_py(filename_py):

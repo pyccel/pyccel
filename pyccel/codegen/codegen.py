@@ -15,7 +15,7 @@ from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.errors.errors import Errors
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h',  'python':'pyh'}
+_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
 printer_registry    = {
                         'fortran':FCodePrinter,
                         'c':CCodePrinter,
@@ -199,6 +199,12 @@ class Codegen(object):
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
+
+        filename_pyh = '{name}.pyh'.format(name=filename)
+        code = printer_registry['python']().doprint(ModuleHeader(self.ast))
+        with open(filename_pyh, 'w') as f:
+            for line in code:
+                f.write(line)
 
         # print module
         code = self._printer.doprint(self.ast)
