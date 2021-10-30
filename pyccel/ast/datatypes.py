@@ -102,6 +102,7 @@ default_precision = {'float': 8,
                     'bool':4}
 dtype_and_precision_registry = { 'float':('float',default_precision['float']),
                                  'double':('float',default_precision['float']),
+                                 'real':('float',default_precision['float']),
                                  'pythonfloat':('float',default_precision['float']), # built-in float
                                  'float32':('float',4),
                                  'float64':('float',8),
