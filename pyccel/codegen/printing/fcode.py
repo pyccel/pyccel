@@ -1214,7 +1214,7 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, FunctionCall):
             func = rhs.funcdef
-            rhs_code = func.name
+            f_name = self._print(rhs.func_name if not rhs.interface else rhs.interface_name)
             args = [a for a in rhs.args if not isinstance(a.value, Nil)]
             code_args = [self._print(i) for i in args]
             output_names = func.results
@@ -1237,13 +1237,13 @@ class FCodePrinter(CodePrinter):
 
                 call_args = ', '.join(code_args + lhs_code)
 
-                code = 'call {0}({1})\n'.format(rhs_code, call_args)
+                code = 'call {0}({1})\n'.format(f_name, call_args)
             else:
                 lhs_code = self._print(expr.lhs)
                 call_args = ', '.join(code_args)
                 code = '{lhs} = {name}({args})\n'.format(
                         lhs  = lhs_code,
-                        name = rhs_code,
+                        name = f_name,
                         args = call_args)
             return ''.join([code, *[self._print(a) for a in extra_assigns]])
 
