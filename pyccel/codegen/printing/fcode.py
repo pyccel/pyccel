@@ -2541,7 +2541,8 @@ class FCodePrinter(CodePrinter):
             else:
                 lhs_vars = dict(zip(func_results,lhs))
             newargs = []
-            for arg in args:
+            for a in args:
+                arg = a.value
                 if arg in lhs_vars.values():
                     var = arg.clone(self.parser.get_new_name())
                     self.add_vars_to_namespace(var)
