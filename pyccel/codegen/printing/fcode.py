@@ -2550,9 +2550,12 @@ class FCodePrinter(CodePrinter):
                 else:
                     newargs.append(arg)
             args = newargs
-            results = lhs_vars.values()
-            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
-                            for n,r in lhs_vars.items()]
+            results = list(lhs_vars.values())
+            if len(func_results) == 1:
+                results_strs = []
+            else:
+                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                                for n,r in lhs_vars.items()]
 
         elif len(func_results)>1:
             results = [r.clone(name = self.parser.get_new_name()) \
@@ -2560,8 +2563,11 @@ class FCodePrinter(CodePrinter):
             for var in results:
                 self.add_vars_to_namespace(var)
 
-            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
-                            for n,r in zip(func_results, results)]
+            if len(func_results) == 1:
+                results_strs = []
+            else:
+                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                                for n,r in zip(func_results, results)]
 
         else:
             results_strs = []
@@ -2580,7 +2586,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code += code
                 return self._print(tuple(results))
         elif len(func_results) == 1:
-            return '{0} = {1}\n'.format(results_strs[0], code)
+            return '{0} = {1}\n'.format(self._print(results[0]), code)
         else:
             return code
 
