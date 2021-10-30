@@ -3152,7 +3152,7 @@ class SemanticParser(BasicParser):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    value = self._visit(a.value)
+                    value = None if a.value is None else self._visit(a.value)
                     if isinstance(value, Literal) and \
                             value.dtype is a_new.dtype and \
                             value.precision != a_new.precision:
