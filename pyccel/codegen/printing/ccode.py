@@ -60,7 +60,7 @@ __all__ = ["CCodePrinter", "ccode"]
 
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
-numpy_ufunc_to_c_real = {
+numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
     'NumpyFabs'  : 'fabs',
     'NumpyMin'  : 'minval',
@@ -1084,7 +1084,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports.add('math')
         type_name = type(expr).__name__
         try:
-            func_name = numpy_ufunc_to_c_real[type_name]
+            func_name = numpy_ufunc_to_c_float[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []

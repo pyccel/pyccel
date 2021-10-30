@@ -35,7 +35,7 @@ ComplexClass = ClassDef('complex',
 
 #=======================================================================================
 
-RealClass = ClassDef('float',
+FloatClass = ClassDef('float',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
@@ -155,7 +155,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
 literal_classes = {
         NativeBool()    : BooleanClass,
         NativeInteger() : IntegerClass,
-        NativeFloat()    : RealClass,
+        NativeFloat()   : FloatClass,
         NativeComplex() : ComplexClass,
         NativeString()  : StringClass
 }

@@ -85,11 +85,11 @@ class PyccelBitOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in args if a.dtype is NativeFloat()]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
-        if strs or complexes or reals:
+        if strs or complexes or floats:
             raise TypeError('unsupported operand type(s): {}'.format(args))
         elif integers:
             return self._handle_integer_type(integers)

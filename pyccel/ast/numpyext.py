@@ -507,15 +507,15 @@ class NumpyMatmul(PyccelInternalFunction):
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger()]
         booleans  = [e for e in args if e.dtype is NativeBool()]
-        reals     = [e for e in args if e.dtype is NativeFloat()]
+        floats    = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
-        elif reals:
+        elif floats:
             self._dtype     = NativeFloat()
-            self._precision = max(e.precision for e in reals)
+            self._precision = max(e.precision for e in floats)
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(e.precision for e in integers)
@@ -1132,15 +1132,15 @@ class NumpyMod(NumpyUfuncBinary):
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeFloat()]
-        others    = [a for a in args if a not in integers+reals]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
+        others    = [a for a in args if a not in integers+floats]
 
         if others:
             raise TypeError('{} not supported'.format(others[0].dtype))
 
-        if reals:
+        if floats:
             self._dtype     = NativeFloat()
-            self._precision = max(a.precision for a in reals)
+            self._precision = max(a.precision for a in floats)
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(a.precision for a in integers)

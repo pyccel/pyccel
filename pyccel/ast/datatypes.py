@@ -52,7 +52,7 @@ __all__ = (
     'Generic',
     'Int',
     'Nil',
-    'Real',
+    'Float',
     'String',
     'Void',
 	'NativeNumeric',
@@ -147,7 +147,7 @@ class NativeInteger(DataType):
 
 class NativeFloat(DataType):
     __slots__ = ()
-    _name = 'Real'
+    _name = 'Float'
 
 class NativeComplex(DataType):
     __slots__ = ()
@@ -227,7 +227,7 @@ class FunctionType(DataType):
 
 Bool           = NativeBool()
 Int            = NativeInteger()
-Real           = NativeFloat()
+Float          = NativeFloat()
 Cmplx          = NativeComplex()
 Void           = NativeVoid()
 Nil            = NativeNil()
@@ -238,7 +238,7 @@ Generic        = NativeGeneric()
 dtype_registry = {'bool': Bool,
                   'int': Int,
                   'integer': Int,
-                  'float'   : Real,
+                  'float'   : Float,
                   'complex': Cmplx,
                   'void': Void,
                   'nil': Nil,
@@ -317,7 +317,7 @@ def is_with_construct_datatype(dtype):
     else:
         return False
 
-# TODO check the use of Reals
+# TODO check the use of Floats
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 

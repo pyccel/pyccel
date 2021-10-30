@@ -378,7 +378,7 @@ class PythonTuple(PyccelAstNode):
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             integers  = [a for a in args if a.dtype is NativeInteger()]
-            reals     = [a for a in args if a.dtype is NativeFloat()]
+            floats    = [a for a in args if a.dtype is NativeFloat()]
             complexes = [a for a in args if a.dtype is NativeComplex()]
             bools     = [a for a in args if a.dtype is NativeBool()]
             strs      = [a for a in args if a.dtype is NativeString()]
@@ -391,9 +391,9 @@ class PythonTuple(PyccelAstNode):
                 if complexes:
                     self._dtype     = NativeComplex()
                     self._precision = max(a.precision for a in complexes)
-                elif reals:
+                elif floats:
                     self._dtype     = NativeFloat()
-                    self._precision = max(a.precision for a in reals)
+                    self._precision = max(a.precision for a in floats)
                 elif integers:
                     self._dtype     = NativeInteger()
                     self._precision = max(a.precision for a in integers)
