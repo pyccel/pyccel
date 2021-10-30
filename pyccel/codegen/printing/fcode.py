@@ -1240,6 +1240,7 @@ class FCodePrinter(CodePrinter):
                 code = 'call {0}({1})\n'.format(rhs_code, call_args)
             else:
                 lhs_code = self._print(expr.lhs)
+                call_args = ', '.join(code_args)
                 code = '{lhs} = {name}({args})\n'.format(
                         lhs  = lhs_code,
                         name = rhs_code,
