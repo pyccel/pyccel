@@ -7,7 +7,7 @@ This module contains all types which define a python class which is automaticall
 """
 from .builtins  import PythonImag, PythonReal
 from .core      import ClassDef, FunctionDef
-from .datatypes import (NativeBool, NativeInteger, NativeReal,
+from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose)
@@ -28,18 +28,18 @@ ComplexClass = ClassDef('complex',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('real',[],[],body=[],
+            FunctionDef('float',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
             #conjugate
             ])
 
 #=======================================================================================
 
-RealClass = ClassDef('real',
+RealClass = ClassDef('float',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('real',[],[],body=[],
+            FunctionDef('float',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
             #conjugate
             #as_integer_ratio
@@ -54,7 +54,7 @@ IntegerClass = ClassDef('integer',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('real',[],[],body=[],
+            FunctionDef('float',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
             #as_integer_ratio
             #bit_length
@@ -147,7 +147,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
                 decorators={'numpy_wrapper':NumpyAmax}),
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
-            FunctionDef('real',[],[],body=[],
+            FunctionDef('float',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
 
 #=======================================================================================
@@ -155,7 +155,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
 literal_classes = {
         NativeBool()    : BooleanClass,
         NativeInteger() : IntegerClass,
-        NativeReal()    : RealClass,
+        NativeFloat()    : RealClass,
         NativeComplex() : ComplexClass,
         NativeString()  : StringClass
 }

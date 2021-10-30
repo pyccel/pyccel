@@ -13,7 +13,7 @@ In this module we implement some of them in alphabetical order.
 from pyccel.errors.errors import PyccelError
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (NativeInteger, NativeBool, NativeReal,
+from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction
@@ -57,7 +57,7 @@ class PythonComplexProperty(PyccelInternalFunction):
     arg : Variable, Literal
     """
     __slots__ = ('_precision')
-    _dtype = NativeReal()
+    _dtype = NativeFloat()
     _rank  = 0
     _shape = ()
     _order = None
@@ -294,8 +294,8 @@ class PythonFloat(PyccelAstNode):
     """
     __slots__ = ('_arg')
     name = 'float'
-    _dtype = NativeReal()
-    _precision = default_precision['real']
+    _dtype = NativeFloat()
+    _precision = default_precision['float']
     _rank = 0
     _shape = ()
     _order = None
@@ -378,7 +378,7 @@ class PythonTuple(PyccelAstNode):
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             integers  = [a for a in args if a.dtype is NativeInteger()]
-            reals     = [a for a in args if a.dtype is NativeReal()]
+            reals     = [a for a in args if a.dtype is NativeFloat()]
             complexes = [a for a in args if a.dtype is NativeComplex()]
             bools     = [a for a in args if a.dtype is NativeBool()]
             strs      = [a for a in args if a.dtype is NativeString()]
@@ -392,7 +392,7 @@ class PythonTuple(PyccelAstNode):
                     self._dtype     = NativeComplex()
                     self._precision = max(a.precision for a in complexes)
                 elif reals:
-                    self._dtype     = NativeReal()
+                    self._dtype     = NativeFloat()
                     self._precision = max(a.precision for a in reals)
                 elif integers:
                     self._dtype     = NativeInteger()
@@ -645,7 +645,7 @@ class PythonAbs(PyccelInternalFunction):
     def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
         super().__init__(x)

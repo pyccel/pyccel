@@ -9,7 +9,7 @@ These operators all have a precision as detailed here:
 They also have specific rules to determine the dtype, precision, rank, shape
 """
 from .builtins     import PythonInt
-from .datatypes    import (NativeBool, NativeInteger, NativeReal,
+from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
                            NativeComplex, NativeString)
 from .operators     import PyccelUnaryOperator, PyccelOperator
 
@@ -85,7 +85,7 @@ class PyccelBitOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in args if a.dtype is NativeReal()]
+        reals     = [a for a in args if a.dtype is NativeFloat()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 

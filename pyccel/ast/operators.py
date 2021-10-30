@@ -15,7 +15,7 @@ from ..errors.errors        import Errors, PyccelSemanticError
 
 from .basic                 import PyccelAstNode
 
-from .datatypes             import (NativeBool, NativeInteger, NativeReal,
+from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
                                     NativeComplex, NativeString, default_precision,
                                     NativeNumeric)
 
@@ -369,7 +369,7 @@ class PyccelBinaryOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in args if a.dtype is NativeReal()]
+        reals     = [a for a in args if a.dtype is NativeFloat()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
@@ -395,7 +395,7 @@ class PyccelBinaryOperator(PyccelOperator):
     @staticmethod
     def _handle_complex_type(complexes):
         """
-        Set dtype and precision when the result is complex
+        Set dtype and precision when the result is a complex
         """
         dtype = NativeComplex()
         precision = max(a.precision for a in complexes)
@@ -404,16 +404,16 @@ class PyccelBinaryOperator(PyccelOperator):
     @staticmethod
     def _handle_real_type(reals):
         """
-        Set dtype and precision when the result is real
+        Set dtype and precision when the result is a float
         """
-        dtype = NativeReal()
+        dtype = NativeFloat()
         precision = max(a.precision for a in reals)
         return dtype, precision
 
     @staticmethod
     def _handle_integer_type(integers):
         """
-        Set dtype and precision when the result is integer
+        Set dtype and precision when the result is an integer
         """
         dtype = NativeInteger()
         precision = max(a.precision for a in integers)
@@ -430,7 +430,7 @@ class PyccelBinaryOperator(PyccelOperator):
         """
         strs = [a for a in args if a.dtype is NativeString()]
         if strs:
-            other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeReal(), NativeComplex())]
+            other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeFloat(), NativeComplex())]
             assert len(other) == 0
             rank  = 0
             shape = ()
@@ -666,8 +666,8 @@ class PyccelDiv(PyccelArithmeticOperator):
 
     @staticmethod
     def _handle_integer_type(integers):
-        dtype = NativeReal()
-        precision = default_precision['real']
+        dtype = NativeFloat()
+        precision = default_precision['float']
         return dtype, precision
 
     def __repr__(self):
