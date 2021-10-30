@@ -1624,7 +1624,7 @@ class SemanticParser(BasicParser):
         body = self._visit(expr.program).body
         program_body      = []
         init_func_body    = []
-        mod_name = expr.name
+        mod_name = self.get_new_name(expr.name)
         prog_name = self.get_new_name('prog_'+expr.name)
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name)
