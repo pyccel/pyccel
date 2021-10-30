@@ -70,7 +70,7 @@ iso_c_binding = {
         4  : 'C_INT32_T',
         8  : 'C_INT64_T',
         16 : 'C_INT128_T'}, #no supported yet
-    "float"    : {
+    "real"    : {
         4  : 'C_FLOAT',
         8  : 'C_DOUBLE',
         16 : 'C_LONG_DOUBLE'},
