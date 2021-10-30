@@ -2564,17 +2564,38 @@ class FCodePrinter(CodePrinter):
         results = func.results
 
         if len(results) == 1:
-            args    = ', '.join('{}'.format(self._print(a)) for a in args)
+            args = ['{}'.format(self._print(a)) for a in args]
 
-            return '{name}({args})'.format( name = f_name,
-                                              args = args )
-        elif len(results) > 0:
-            raise RuntimeError("Function calls returning results should be handled in _print_Assign")
+            args = ', '.join(args)
+            code = '{name}({args})'.format( name = f_name,
+                                            args = args)
+
+        elif len(results)>1:
+            if (not self._additional_code):
+                self._additional_code = ''
+            out_vars = []
+            for r in func.results:
+                var_name = self.parser.get_new_name()
+                var =  r.clone(name = var_name)
+
+                self.add_vars_to_namespace(var)
+
+                out_vars.append(var)
+
+            self._additional_code = self._additional_code + self._print(Assign(tuple(out_vars),expr)) + '\n'
+            return self._print(tuple(out_vars))
         else:
-            args    = ', '.join('{}'.format(self._print(a)) for a in args)
+            args    = ['{}'.format(self._print(a)) for a in args]
+            if not func.is_header:
+                results = ['{0}={0}'.format(self._print(a)) for a in results]
+            else:
+                results = ['{}'.format(self._print(a)) for a in results]
 
-            return 'call {name}({args})\n'.format( name = f_name,
-                                                   args = args )
+            newargs = ', '.join(args+results)
+
+            code = 'call {name}({args})\n'.format( name = f_name,
+                                                 args = newargs )
+        return code
 
 #=======================================================================================
 
