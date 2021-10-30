@@ -1218,7 +1218,7 @@ class FCodePrinter(CodePrinter):
             args = rhs.args
             code_args = [self._print(i) for i in args]
             output_names = func.results
-            lhs_vars = {name: l for name,l in zip(output_names,expr.lhs)}
+            lhs_vars = dict(zip(output_names,expr.lhs))
 
             # Make dummy variables to avoid forbidden aliasing
             extra_assigns = []
@@ -1240,7 +1240,10 @@ class FCodePrinter(CodePrinter):
                 code = 'call {0}({1})\n'.format(rhs_code, call_args)
             else:
                 lhs_code = self._print(expr.lhs)
-                code = '{lhs} = {0}({1})\n'.format(lhs_code, rhs_code, call_args)
+                code = '{lhs} = {name}({args})\n'.format(
+                        lhs  = lhs_code,
+                        name = rhs_code,
+                        args = call_args)
             return ''.join([code, *[self._print(a) for a in extra_assigns]])
 
         if (isinstance(expr.lhs, Variable) and
