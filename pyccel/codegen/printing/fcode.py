@@ -1215,7 +1215,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, FunctionCall):
             func = rhs.funcdef
             rhs_code = func.name
-            args = rhs.args
+            args = [a for a in rhs.args if not isinstance(a.value, Nil)]
             code_args = [self._print(i) for i in args]
             output_names = func.results
             lhs_vars = dict(zip(output_names,expr.lhs))
