@@ -28,7 +28,7 @@ ComplexClass = ClassDef('complex',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('float',[],[],body=[],
+            FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
             #conjugate
             ])
@@ -39,7 +39,7 @@ FloatClass = ClassDef('float',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('float',[],[],body=[],
+            FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
             #conjugate
             #as_integer_ratio
@@ -54,7 +54,7 @@ IntegerClass = ClassDef('integer',
         methods=[
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('float',[],[],body=[],
+            FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
             #as_integer_ratio
             #bit_length
@@ -147,7 +147,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
                 decorators={'numpy_wrapper':NumpyAmax}),
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
-            FunctionDef('float',[],[],body=[],
+            FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
 
 #=======================================================================================
