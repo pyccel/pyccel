@@ -263,7 +263,7 @@ DtypePrecisionToCastFunction = {
         2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
-    'Real' : {
+    'Float' : {
         4 : NumpyFloat32,
         8 : NumpyFloat64},
     'Complex' : {
