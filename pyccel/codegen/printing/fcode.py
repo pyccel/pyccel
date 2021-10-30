@@ -2563,13 +2563,18 @@ class FCodePrinter(CodePrinter):
         args = [a for a in expr.args if not isinstance(a.value, Nil)]
         results = func.results
 
-        if len(results) > 0:
+        if len(results) == 1:
+            args    = ', '.join('{}'.format(self._print(a)) for a in args)
+
+            return '{name}({args})'.format( name = f_name,
+                                              args = args )
+        elif len(results) > 0:
             raise RuntimeError("Function calls returning results should be handled in _print_Assign")
+        else:
+            args    = ', '.join('{}'.format(self._print(a)) for a in args)
 
-        args    = ', '.join('{}'.format(self._print(a)) for a in args)
-
-        return 'call {name}({args})\n'.format( name = f_name,
-                                               args = args )
+            return 'call {name}({args})\n'.format( name = f_name,
+                                                   args = args )
 
 #=======================================================================================
 
