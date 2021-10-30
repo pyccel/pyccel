@@ -191,6 +191,7 @@ class Codegen(object):
 
         if filename is None: filename = self.name
         header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
+        filename_pyh = '{name}.pyh'.format(name=filename)
         filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         # print module header
@@ -200,7 +201,6 @@ class Codegen(object):
                 for line in code:
                     f.write(line)
 
-        filename_pyh = '{name}.pyh'.format(name=filename)
         code = printer_registry['python']().doprint(ModuleHeader(self.ast))
         with open(filename_pyh, 'w') as f:
             for line in code:
