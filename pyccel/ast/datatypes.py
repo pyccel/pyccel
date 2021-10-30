@@ -137,24 +137,29 @@ class DataType(metaclass=Singleton):
         return str(self.__class__.__name__)+'()'
 
 class NativeBool(DataType):
+    """Class representing boolean datatype"""
     __slots__ = ()
     _name = 'Bool'
 
 class NativeInteger(DataType):
+    """Class representing integer datatype"""
     __slots__ = ()
     _name = 'Int'
 
 class NativeFloat(DataType):
+    """Class representing float datatype"""
     __slots__ = ()
     _name = 'Float'
 
 class NativeComplex(DataType):
+    """Class representing complex datatype"""
     __slots__ = ()
     _name = 'Complex'
 
 NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
 
 class NativeString(DataType):
+    """Class representing string datatype"""
     __slots__ = ()
     _name = 'String'
 
