@@ -2603,7 +2603,9 @@ class FCodePrinter(CodePrinter):
             self.add_vars_to_namespace(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
+            user_node = expr.current_user_node
             expr = DottedFunctionCall(expr.funcdef, expr.args, var)
+            expr.set_current_user_node(user_node)
         return self._print_FunctionCall(expr)
 
 #=======================================================================================

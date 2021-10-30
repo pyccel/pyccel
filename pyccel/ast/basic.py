@@ -281,6 +281,13 @@ class Basic:
         """
         self._user_nodes.append(user_nodes)
 
+    @property
+    def current_user_node(self):
+        """ Get the user node for an object with only one user node
+        """
+        assert len(self._user_nodes) == 1
+        return self._user_nodes[0]
+
     def clear_user_nodes(self):
         """ Delete all information about user nodes. This is useful
         if the same node is used for the syntactic and semantic
