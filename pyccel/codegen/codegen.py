@@ -15,7 +15,7 @@ from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.errors.errors import Errors
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
+_header_extension_registry = {'fortran': None, 'c':'h',  'python':'pyh'}
 printer_registry    = {
                         'fortran':FCodePrinter,
                         'c':CCodePrinter,
