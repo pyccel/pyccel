@@ -202,7 +202,7 @@ class Codegen(object):
                 for line in code:
                     f.write(line)
 
-        code = PyhCodePrinter().doprint(self.ast)
+        code = PyhCodePrinter(os.path.dirname(filename), self.parser).doprint(self.ast)
         with open(filename_pyh, 'w') as f:
             for line in code:
                 f.write(line)
