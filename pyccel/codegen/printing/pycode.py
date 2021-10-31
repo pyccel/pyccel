@@ -11,8 +11,6 @@ from pyccel.decorators import __all__ as pyccel_decorators
 from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection
-from pyccel.ast.datatypes  import NativeBool, NativeInteger
-from pyccel.ast.datatypes  import NativeReal, NativeComplex
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -49,20 +47,6 @@ import_target_swap = {
         }
 import_source_swap = {
         'omp_lib' : 'pyccel.stdlib.internal.openmp'
-        }
-numpy_dtype_precision = {
-        NativeBool() : {4 : 'bool'},
-        NativeInteger() : {
-            1 : 'int8',
-            2 : 'int16',
-            4 : 'int32',
-            8 : 'int64'},
-        NativeReal() : {
-            4 : 'float32',
-            8 : 'float64'},
-        NativeComplex() : {
-            4 : 'complex64',
-            8 : 'complex128'}
         }
 
 
@@ -796,39 +780,6 @@ class PythonCodePrinter(CodePrinter):
                         imports = imports,
                         body    = body,
                         prog    = prog)
-
-    def _print_ModuleHeader(self, expr):
-        name = "#$ header metavar module_name='{}'\n".format(
-                expr.module.name)
-        # Collect functions which are not in an interface
-        funcs = [f for f in expr.module.funcs if not (f is expr.module.init_func or f is expr.module.free_func)]
-
-        def arg_annotation(var):
-            dtype = numpy_dtype_precision[var.dtype][var.precision]
-            if var.rank>0:
-                dtype += '[{}]'.format(','.join([':']*var.rank))
-            if var.rank>1:
-                dtype += '(order={})'.format(var.order)
-            return dtype
-
-        def function_header(func, func_type = 'function'):
-            name = func.name
-            arg_types = ', '.join(arg_annotation(a.var) for a in func.arguments)
-            res_types = ', '.join(arg_annotation(r) for r in func.results)
-            return '#$ header function {name}({arg_types}) results({result_types})\n'.format(
-                    name=name,
-                    arg_types=arg_types,
-                    result_types=res_types)
-
-        def class_header(cls):
-            head = '#$ header class {}(public)\n'.format(cls.name)
-            methods = ''.join(function_header(m, 'method') for m in cls.methods)
-            return head+methods
-
-        func_headers = ''.join(function_header(func) for func in funcs)
-        classes = ''.join(class_header(c) for c in expr.module.classes)
-
-        return ''.join((name, func_headers, classes))
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])

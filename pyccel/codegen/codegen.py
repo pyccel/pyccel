@@ -6,9 +6,10 @@
 #------------------------------------------------------------------------------------------#
 import os
 
-from pyccel.codegen.printing.fcode  import FCodePrinter
-from pyccel.codegen.printing.ccode  import CCodePrinter
-from pyccel.codegen.printing.pycode import PythonCodePrinter
+from pyccel.codegen.printing.fcode   import FCodePrinter
+from pyccel.codegen.printing.ccode   import CCodePrinter
+from pyccel.codegen.printing.pycode  import PythonCodePrinter
+from pyccel.codegen.printing.pyhcode import PyhCodePrinter
 
 from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
@@ -201,7 +202,7 @@ class Codegen(object):
                 for line in code:
                     f.write(line)
 
-        code = printer_registry['python']().doprint(ModuleHeader(self.ast))
+        code = PyhCodePrinter().doprint(self.ast)
         with open(filename_pyh, 'w') as f:
             for line in code:
                 f.write(line)
