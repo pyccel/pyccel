@@ -8,8 +8,10 @@
 Handles printing the pyh header file
 """
 from .codeprinter import CodePrinter
+from pyccel.ast.core       import FunctionAddress
 from pyccel.ast.datatypes  import NativeBool, NativeInteger
 from pyccel.ast.datatypes  import NativeReal, NativeComplex
+from pyccel.ast.datatypes  import CustomDataType
 
 numpy_dtype_precision = {
         NativeBool() : {4 : 'bool'},
@@ -49,13 +51,36 @@ class PyhCodePrinter(CodePrinter):
             return tab+lines.strip('\n').replace('\n','\n'+tab)+'\n'
 
     @classmethod
-    def _arg_annotation(self, var):
-        dtype = numpy_dtype_precision[var.dtype][var.precision]
+    def _var_annotation(self, var):
+        dtype = var.dtype
+        if isinstance(dtype, CustomDataType):
+            name   = dtype.__class__.__name__
+            prefix = dtype.prefix
+            alias  = dtype.alias
+
+            if alias is None:
+                dtype_code = name.replace(prefix, '')
+            else:
+                dtype_code = alias
+        else:
+            dtype_code = numpy_dtype_precision[var.dtype][var.precision]
+
         if var.rank>0:
-            dtype += '[{}]'.format(','.join([':']*var.rank))
+            dtype_code += '[{}]'.format(','.join([':']*var.rank))
         if var.rank>1:
-            dtype += '(order={})'.format(var.order)
-        return dtype
+            dtype_code += '(order={})'.format(var.order)
+        return dtype_code
+
+    def _function_address_annotation(self, expr):
+        arg_types = ', '.join(self._get_annotation(a.var) for a in expr.arguments)
+        res_types = ', '.join(self._get_annotation(r) for r in expr.results)
+        return '({})({})'.format(res_types, arg_types)
+
+    def _get_annotation(self, expr):
+        if isinstance(expr, FunctionAddress):
+            return self._function_address_annotation(expr)
+        else:
+            return self._var_annotation(expr)
 
     def _format_code(self, lines):
         return lines
@@ -79,8 +104,8 @@ class PyhCodePrinter(CodePrinter):
         type_name = 'method' if expr.cls_name is not None else 'function'
 
         name = expr.name
-        arg_types = ', '.join(self._arg_annotation(a.var) for a in expr.arguments)
-        res_types = ', '.join(self._arg_annotation(r) for r in expr.results)
+        arg_types = ', '.join(self._get_annotation(a.var) for a in expr.arguments)
+        res_types = ', '.join(self._get_annotation(r) for r in expr.results)
         return '#$ header {type_name} {name}({arg_types}) results({result_types})\n'.format(
                 type_name=type_name,
                 name=name,
@@ -95,7 +120,7 @@ class PyhCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return '#$ header variable {name} {dtype}\n'.format(
                 name  = expr.name,
-                dtype = self._arg_annotation(expr))
+                dtype = self._get_annotation(expr))
 
 
 #==============================================================================
