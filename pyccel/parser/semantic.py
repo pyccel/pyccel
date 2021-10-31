@@ -247,15 +247,7 @@ class SemanticParser(BasicParser):
         # FunctionDef etc ...
 
         if self.is_header_file:
-            target = []
-
-            for parent in self.parents:
-                for (key, item) in parent.imports.items():
-                    if get_filename_from_import(key) == self.filename:
-                        target += item
-
-            target = set(target)
-            target_headers = target.intersection(self.namespace.headers.keys())
+            target_headers = self.namespace.headers.keys()
             # ARA : issue-999
             is_external = self.metavars.get('external', False)
             for name in list(target_headers):
