@@ -35,8 +35,9 @@ class PyhCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    def __init__(self, parser=None):
+    def __init__(self, output_folder, parser=None):
         self._parser = parser
+        self._output_folder = output_folder
         super().__init__()
 
     def _indent_codestring(self, lines):
@@ -64,6 +65,7 @@ class PyhCodePrinter(CodePrinter):
     # .....................................................
 
     def _print_Module(self, expr):
+        output = "#$ header metavar compile_folder='{}'\n".format(self._output_folder)
         name = "#$ header metavar module_name='{}'\n".format(
                 expr.name)
         # Collect functions which are not in an interface
@@ -71,10 +73,10 @@ class PyhCodePrinter(CodePrinter):
         func_headers = ''.join(self._print(func) for func in funcs)
         classes = ''.join(self._print(c) for c in expr.classes)
 
-        return ''.join((name, func_headers, classes))
+        return ''.join((output, name, func_headers, classes))
 
     def _print_FunctionDef(self, expr):
-        type_name = 'function' if expr.cls_name is not None else 'method'
+        type_name = 'method' if expr.cls_name is not None else 'function'
 
         name = expr.name
         arg_types = ', '.join(self._arg_annotation(a.var) for a in expr.arguments)
