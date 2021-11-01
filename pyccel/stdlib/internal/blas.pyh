@@ -60,7 +60,7 @@
 #$ header function zdotu(int32, complex128 [:], int32, complex128 [:], int32) results(complex128) 
 
 #$ header function sdsdot(int32, float32, float32 [:], int32, float32 [:], int32) results(float32)
-#$ header function dsdot(int32, float64 [:], int32, float64 [:], int32)  results(float64) 
+#$ header function dsdot(int32, float32 [:], int32, float32 [:], int32)  results(float64) 
 
 #$ header function snrm2(int32, float32 [:], int32) results(float32) 
 #$ header function dnrm2(int32, float64 [:], int32) results(float64)
