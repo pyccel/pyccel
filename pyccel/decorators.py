@@ -10,7 +10,7 @@ This module contains all the provided decorator methods.
 #TODO use pycode and call exec after that in lambdify
 
 __all__ = (
-    'allow_negative_index'
+    'allow_negative_index',
     'bypass',
     'elemental',
     'inline',
