@@ -2,28 +2,26 @@
 # coding: utf-8
 
 import pytest
+import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import private, inline
 
-@pytest.fixture(params=[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('c'      , marks = pytest.mark.c)
-    ]
+@pytest.mark.parametrize( 'lang', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+    )
 )
-def language(request):
-    return request.param
-
-def test_private(language):
+def test_private(lang):
     @private
     def f():
         print("hidden")
 
-    g = epyccel(f, language=language)
+    g = epyccel(f, language=lang)
 
     with pytest.raises(NotImplementedError):
         g()
 
-def test_inline(language):
+def test_inline_1_out(language):
     def f():
         @inline
         def cube(s : int):
@@ -37,3 +35,21 @@ def test_inline(language):
     g = epyccel(f, language=language)
 
     assert f() == g()
+
+def test_inline_0_out(language):
+    def f(x : 'int[:]'):
+        @inline
+        def set_3(s : 'int[:]', i : int):
+            s[i] = 3
+        set_3(x, 0)
+        set_3(x, 1)
+
+    g = epyccel(f, language=language)
+
+    x = np.ones(4, dtype=int)
+    y = np.ones(4, dtype=int)
+
+    f(x)
+    g(y)
+
+    assert all(x == y)
