@@ -2079,7 +2079,11 @@ class Return(Basic):
         return args
 
     def __repr__(self):
-        return "Return({})".format(','.join([repr(e) for e in self.expr]))
+        if self.stmt:
+            code = repr(self.stmt)+';'
+        else:
+            code = ''
+        return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
 
 class FunctionDef(Basic):
 
