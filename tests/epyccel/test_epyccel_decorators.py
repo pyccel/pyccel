@@ -58,7 +58,7 @@ def test_inline_local(language):
     def f():
         @inline
         def power_4(s : int):
-            x = s * s 
+            x = s * s
             return x * x
         a = power_4(3)
         b = power_4(8+3)
@@ -75,7 +75,7 @@ def test_inline_local_name_clash(language):
     def f():
         @inline
         def power_4(s : int):
-            x = s * s 
+            x = s * s
             return x * x
         a = power_4(3)
         b = power_4(8+3)
