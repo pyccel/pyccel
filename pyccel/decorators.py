@@ -63,6 +63,11 @@ def private(f):
 def elemental(f):
     return f
 
+def inline(f):
+    """Indicates that function calls to this function should 
+    print the function body directly"""
+    return f
+
 def stack_array(f, *args):
     """
     Decorator indicates that all arrays mentioned as args should be stored
