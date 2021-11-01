@@ -2108,6 +2108,21 @@ class FunctionDef(Basic):
     cls_name: str
         Class name if the function is a method of cls_name
 
+    is_static: bool
+        True for static functions. Needed for iso_c_binding interface
+
+    imports: list, tuple
+        a list of needed imports
+
+    decorators: list, tuple
+        a list of proporties
+
+    headers: list,tuple
+        a list of headers describing the function
+
+    is_recursive: bool
+        True for a function which calls itself
+
     is_pure: bool
         True for a function without side effect
 
@@ -2117,14 +2132,23 @@ class FunctionDef(Basic):
     is_private: bool
         True for a function that is private
 
-    is_static: bool
-        True for static functions. Needed for iso_c_binding interface
+    is_header: bool
+        True for a function which has no body available
 
-    imports: list, tuple
-        a list of needed imports
+    is_external: bool
+        True for a function which cannot be explicitly imported or renamed
 
-    decorators: list, tuple
-        a list of proporties
+    arguments_inout: list, tuple
+        a list of booleans indicating if each argument is modified by the function
+
+    functions: list, tuple
+        a list of functions defined within this function
+
+    interfaces: list, tuple
+        a list of interfaces defined within this function
+
+    doc_string: str
+        The doc string of the function
 
     Examples
     --------
