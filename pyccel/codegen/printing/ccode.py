@@ -6,6 +6,7 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
+import re
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
@@ -22,6 +23,7 @@ from pyccel.ast.core      import create_incremented_string
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.operators import PyccelOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeReal, NativeTuple, datatype
@@ -404,6 +406,44 @@ class CCodePrinter(CodePrinter):
                             index = self._print(index),
                             lhs   = lhs,
                             dtype = dtype)
+        return code
+
+    def _handle_inline_func_call(self, expr):
+        """ Print a function call to an inline function
+        """
+        func = expr.funcdef
+        body = func.body
+
+        # Collect the function arguments and the expressions they will be replaced with
+        orig_arg_vars = [a.var for a in func.arguments]
+        new_arg_vars = [a.value for a in expr.args]
+        new_arg_vars = [PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
+                        else a for a in new_arg_vars]
+
+        # Replace the arguments in the code
+        body.substitute(orig_arg_vars, new_arg_vars, invalidate=False)
+
+        # Collect code but strip empty end
+        code = self._print(body).split('\n')[:-1]
+        return_regex = re.compile(r'\breturn\b')
+        has_results = [return_regex.search(l) is not None for l in code]
+        result_idx = has_results.index(True)
+        result_line = code[result_idx]
+
+        body_code = '\n'.join(code[:result_idx])+'\n'
+
+        if len(func.results) == 0:
+            code = '\n'.join(code[:result_idx])+'\n'
+        else:
+            self._additional_code += '\n'.join(code[:result_idx])+'\n'
+            if len(func.results) == 1:
+                # Strip return and ; from return statement
+                code = result_line[7:-1]
+            else:
+                code = self._print(tuple(func.results))
+
+        # Put back original arguments
+        body.substitute(new_arg_vars, orig_arg_vars)
         return code
 
     # ============ Elements ============ #
@@ -1276,6 +1316,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        if func.is_inline:
+            return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
