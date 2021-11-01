@@ -1626,7 +1626,7 @@ class FCodePrinter(CodePrinter):
         sig_parts = self.function_signature(expr, name)
         prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
-        functions = expr.functions
+        functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
