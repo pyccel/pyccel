@@ -312,6 +312,12 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
         body = func.body
 
+        old_local_vars = list(func.local_vars)
+        new_local_vars = [v.clone(self.parser.get_new_name(v.name)) \
+                            for v in old_local_vars]
+        for v in new_local_vars:
+            self.add_vars_to_namespace(v)
+
         # Collect the function arguments and the expressions they will be replaced with
         orig_arg_vars = [a.var for a in func.arguments]
         new_arg_vars = [a.value for a in expr.args]
@@ -319,7 +325,7 @@ class FCodePrinter(CodePrinter):
                         else a for a in new_arg_vars]
 
         # Replace the arguments in the code
-        body.substitute(orig_arg_vars, new_arg_vars, invalidate=False)
+        body.substitute(orig_arg_vars+old_local_vars, new_arg_vars + new_local_vars, invalidate=False)
 
         if len(func.results) == 0:
             # If there is no return then the code is already ok
@@ -353,7 +359,7 @@ class FCodePrinter(CodePrinter):
                 code = self._print(tuple(res_return_vars))
 
         # Put back original arguments
-        body.substitute(new_arg_vars, orig_arg_vars)
+        body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
         return code
 
     # ============ Elements ============ #
