@@ -23,6 +23,7 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.core import Return, EmptyNode
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
@@ -35,8 +36,8 @@ from pyccel.ast.variable  import (Variable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
-from pyccel.ast.operators      import PyccelMod
-
+from pyccel.ast.operators      import PyccelMod, PyccelAssociativeParenthesis
+from pyccel.ast.operators      import PyccelOperator
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
@@ -304,6 +305,58 @@ class FCodePrinter(CodePrinter):
         else:
             self._constantImports.add(constant_name)
         return constant_name
+
+    def _handle_inline_func_call(self, expr):
+        """ Print a function call to an inline function
+        """
+        func = expr.funcdef
+        body = func.body
+
+        # Collect the function arguments and the expressions they will be replaced with
+        orig_arg_vars = [a.var for a in func.arguments]
+        new_arg_vars = [a.value for a in expr.args]
+        new_arg_vars = [PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
+                        else a for a in new_arg_vars]
+
+        # Replace the arguments in the code
+        body.substitute(orig_arg_vars, new_arg_vars, invalidate=False)
+
+        if len(func.results) == 0:
+            # If there is no return then the code is already ok
+            code = self._print(body)
+        else:
+            # Search for the return and replace it with an empty node
+            result = body.get_attribute_nodes(Return, excluded_nodes = (FunctionDef,))[0]
+            empty_return = EmptyNode()
+            body.substitute(result, empty_return, invalidate = False)
+
+            # Everything before the return node needs handling before the line
+            # which calls the inline function is executed
+            if (not self._additional_code):
+                self._additional_code = ''
+            self._additional_code += self._print(body)
+
+            # Collect statements from results to return object
+            if result.stmt:
+                rhs_list = [i.rhs if isinstance(i, Assign) else None for i in result.stmt.body]
+                lhs_list = [i.lhs for i in result.stmt.body if isinstance(i, Assign)]
+                self._additional_code += ''.join([self._print(i) for i in result.stmt.body if not isinstance(i, Assign)])
+            else:
+                rhs_list = [None]*len(result.expr)
+                lhs_list = []
+            res_return_vars = [v if v not in lhs_list else rhs for v,rhs in zip(result.expr, rhs_list)]
+
+            # Put return statement back into function
+            body.substitute(empty_return, result)
+
+            if len(res_return_vars) == 1:
+                code = self._print(res_return_vars[0])
+            else:
+                code = self._print(tuple(res_return_vars))
+
+        # Put back original arguments
+        body.substitute(new_arg_vars, orig_arg_vars)
+        return code
 
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
@@ -2543,6 +2596,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        if func.is_inline:
+            return self._handle_inline_func_call(expr)
+
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args = [a for a in expr.args if not isinstance(a.value, Nil)]
         results = func.results
