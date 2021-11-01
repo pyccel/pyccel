@@ -63,7 +63,8 @@ def test_inline_local(language):
         a = power_4(3)
         b = power_4(8+3)
         c = power_4((b-a)//20)
-        d = power_4(a)
+        g = 4
+        d = power_4(g)
         return a,b,c,d
 
     g = epyccel(f, language=language)
