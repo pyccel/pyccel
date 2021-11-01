@@ -1947,6 +1947,12 @@ class SemanticParser(BasicParser):
                             imp.define_target(PyccelSymbol(rhs_name))
                         else:
                             imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
+                elif isinstance(rhs, FunctionCall):
+                    self.namespace.imports['functions'][new_name] = first[rhs_name]
+                elif isinstance(rhs, ConstructorCall):
+                    self.namespace.imports['classes'][new_name] = first[rhs_name]
+                elif isinstance(rhs, Variable):
+                    self.namespace.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
