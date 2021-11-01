@@ -62,7 +62,7 @@ def test_inline_local(language):
             return x * x
         a = power_4(3)
         b = power_4(8+3)
-        c = power_4((b-a)//20)
+        c = power_4((b-a)//2000)
         g = 4
         d = power_4(g)
         return a,b,c,d
@@ -79,7 +79,7 @@ def test_inline_local_name_clash(language):
             return x * x
         a = power_4(3)
         b = power_4(8+3)
-        c = power_4((b-a)//20)
+        c = power_4((b-a)//2000)
         x = 2
         d = power_4(x)
         return a,b,c,d,x
