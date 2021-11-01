@@ -780,7 +780,8 @@ class SyntaxParser(BasicParser):
 
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
+        returns = [i.expr for i in body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction, FunctionDef))]
         assert all(len(i) == len(returns[0]) for i in returns)
         if is_inline and len(returns)>1:
             errors.report("Inline functions cannot have multiple return statements",
