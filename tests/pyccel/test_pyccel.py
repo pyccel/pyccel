@@ -834,3 +834,7 @@ def test_module_init_collisions( language ):
         lang_out = get_lang_output(test_prog, language)
 
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
+
+#------------------------------------------------------------------------------
+def test_inline(language):
+    pyccel_test("scripts/decorators_inline.py", language = language)
