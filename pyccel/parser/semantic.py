@@ -3016,6 +3016,7 @@ class SemanticParser(BasicParser):
         is_pure         = expr.is_pure
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
+        is_inline       = expr.is_inline
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
         headers = []
 
@@ -3306,6 +3307,7 @@ class SemanticParser(BasicParser):
                     is_pure=is_pure,
                     is_elemental=is_elemental,
                     is_private=is_private,
+                    is_inline=is_inline,
                     imports=imports,
                     decorators=decorators,
                     is_recursive=is_recursive,

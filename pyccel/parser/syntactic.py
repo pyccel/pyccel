@@ -591,6 +591,7 @@ class SyntaxParser(BasicParser):
         is_pure      = False
         is_elemental = False
         is_private   = False
+        is_inline    = False
         imports      = []
         doc_string   = None
 
@@ -774,6 +775,9 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
+        if 'inline' in decorators.keys():
+            is_inline = True
+
         body = CodeBlock(body)
 
         returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
@@ -806,6 +810,7 @@ class SyntaxParser(BasicParser):
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
+               is_inline=is_inline,
                imports=imports,
                decorators=decorators,
                headers=headers,
