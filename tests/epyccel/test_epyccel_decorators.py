@@ -30,8 +30,9 @@ def test_inline(language):
             return s * s * s
         a = cube(3)
         b = cube(8+3)
-        c = cube(b-a)
-        return a,b,c
+        c = cube((b-a)//20)
+        d = cube(a)
+        return a,b,c,d
 
     g = epyccel(f, language=language)
 
