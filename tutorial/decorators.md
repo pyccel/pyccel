@@ -359,6 +359,64 @@ module boo
 end module boo
 ```
 
+## Inline
+
+The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
+
+Here is a simple usage example:
+```python
+def f():
+    @inline
+    def cube(s : int):
+        return s * s * s
+    a = power_4(3)
+    return a
+```
+
+The generated Fortran code:
+```fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  function f() result(a)
+
+    implicit none
+
+    integer(i64) :: a
+
+    a = 3_i64 * 3_i64 * 3_i64
+    return
+
+  end function f
+  !........................................
+
+end module boo
+```
+
+The generated C code:
+```c
+#include "boo.h"
+#include <stdlib.h>
+#include <stdint.h>
+
+
+/*........................................*/
+int64_t f(void)
+{
+    int64_t a;
+
+    a = 3 * 3 * 3;
+    return a;
+}
+/*........................................*/
+```
+
 ## Getting Help
 
 If you face problems with pyccel, please take the following steps:
