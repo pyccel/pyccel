@@ -10,17 +10,18 @@ This module contains all the provided decorator methods.
 #TODO use pycode and call exec after that in lambdify
 
 __all__ = (
+    'allow_negative_index'
+    'bypass',
+    'elemental',
+    'inline',
     'lambdify',
+    'private',
+    'pure',
     'python',
     'sympy',
-    'bypass',
+    'stack_array',
     'types',
     'template',
-    'pure',
-    'private',
-    'elemental',
-    'stack_array',
-    'allow_negative_index'
 )
 
 def lambdify(f):
