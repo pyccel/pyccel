@@ -424,23 +424,28 @@ class CCodePrinter(CodePrinter):
         body.substitute(orig_arg_vars, new_arg_vars, invalidate=False)
 
         # Collect code but strip empty end
-        code = self._print(body).split('\n')[:-1]
+        body_code = self._print(body)
+        code_lines = body_code.split('\n')[:-1]
         return_regex = re.compile(r'\breturn\b')
-        has_results = [return_regex.search(l) is not None for l in code]
-        result_idx = has_results.index(True)
-        result_line = code[result_idx]
+        has_results = [return_regex.search(l) is not None for l in code_lines]
 
-        body_code = '\n'.join(code[:result_idx])+'\n'
-
-        if len(func.results) == 0:
+        if len(func.results) == 0 and not any(has_results):
             code = body_code
         else:
-            self._additional_code += body_code
-            if len(func.results) == 1:
-                # Strip return and ; from return statement
-                code = result_line[7:-1]
+            result_idx = has_results.index(True)
+            result_line = code_lines[result_idx]
+
+            body_code = '\n'.join(code_lines[:result_idx])+'\n'
+
+            if len(func.results) == 0:
+                code = body_code
             else:
-                code = self._print(tuple(func.results))
+                self._additional_code += body_code
+                if len(func.results) == 1:
+                    # Strip return and ; from return statement
+                    code = result_line[7:-1]
+                else:
+                    code = self._print(tuple(func.results))
 
         # Put back original arguments
         body.substitute(new_arg_vars, orig_arg_vars)
