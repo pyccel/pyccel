@@ -2138,6 +2138,9 @@ class FunctionDef(Basic):
     is_external: bool
         True for a function which cannot be explicitly imported or renamed
 
+    is_inline: bool
+        True for a function which should never be printed explicitly
+
     arguments_inout: list, tuple
         a list of booleans indicating if each argument is modified by the function
 
@@ -2180,7 +2183,8 @@ class FunctionDef(Basic):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header','_arguments_inout',
-                 '_functions','_interfaces','_doc_string', '_is_external')
+                 '_functions','_interfaces','_doc_string', '_is_external',
+                 '_is_inline')
     _attribute_nodes = ('_arguments','_results','_body','_local_vars',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2203,6 +2207,7 @@ class FunctionDef(Basic):
         is_private=False,
         is_header=False,
         is_external=False,
+        is_inline=False,
         arguments_inout=(),
         functions=(),
         interfaces=(),
@@ -2312,6 +2317,7 @@ class FunctionDef(Basic):
         self._is_private      = is_private
         self._is_header       = is_header
         self._is_external     = is_external
+        self._is_inline       = is_inline
         self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
@@ -2430,6 +2436,11 @@ class FunctionDef(Basic):
         """ True if the function is exposed through a header file and coming
         from a f77 module """
         return self._is_external
+
+    @property
+    def is_inline(self):
+        """ True if the function should be printed inline """
+        return self._is_inline
 
     @property
     def arguments_inout(self):
