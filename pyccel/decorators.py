@@ -65,7 +65,7 @@ def elemental(f):
     return f
 
 def inline(f):
-    """Indicates that function calls to this function should 
+    """Indicates that function calls to this function should
     print the function body directly"""
     return f
 
