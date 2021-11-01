@@ -3,7 +3,7 @@
 
 import pytest
 from pyccel.epyccel import epyccel
-from pyccel.decorators import private
+from pyccel.decorators import private, inline
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -23,3 +23,16 @@ def test_private(language):
     with pytest.raises(NotImplementedError):
         g()
 
+def test_inline(language):
+    def f():
+        @inline
+        def cube(s : int):
+            return s * s * s
+        a = cube(3)
+        b = cube(8+3)
+        c = cube(b-a)
+        return a,b,c
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
