@@ -53,3 +53,36 @@ def test_inline_0_out(language):
     g(y)
 
     assert all(x == y)
+
+def test_inline_local(language):
+    def f():
+        @inline
+        def power_4(s : int):
+            x = s * s 
+            return x * x
+        a = power_4(3)
+        b = power_4(8+3)
+        c = power_4((b-a)//20)
+        d = power_4(a)
+        return a,b,c,d
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_local_name_clash(language):
+    def f():
+        @inline
+        def power_4(s : int):
+            x = s * s 
+            return x * x
+        a = power_4(3)
+        b = power_4(8+3)
+        c = power_4((b-a)//20)
+        x = 2
+        d = power_4(x)
+        return a,b,c,d,x
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
