@@ -433,9 +433,9 @@ class CCodePrinter(CodePrinter):
         body_code = '\n'.join(code[:result_idx])+'\n'
 
         if len(func.results) == 0:
-            code = '\n'.join(code[:result_idx])+'\n'
+            code = body_code
         else:
-            self._additional_code += '\n'.join(code[:result_idx])+'\n'
+            self._additional_code += body_code
             if len(func.results) == 1:
                 # Strip return and ; from return statement
                 code = result_line[7:-1]
