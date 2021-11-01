@@ -338,13 +338,11 @@ class FCodePrinter(CodePrinter):
 
             # Collect statements from results to return object
             if result.stmt:
-                rhs_list = [i.rhs if isinstance(i, Assign) else None for i in result.stmt.body]
-                lhs_list = [i.lhs for i in result.stmt.body if isinstance(i, Assign)]
+                assigns = {i.lhs: i.rhs for i in result.stmt.body if isinstance(i, Assign)}
                 self._additional_code += ''.join([self._print(i) for i in result.stmt.body if not isinstance(i, Assign)])
             else:
-                rhs_list = [None]*len(result.expr)
-                lhs_list = []
-            res_return_vars = [v if v not in lhs_list else rhs for v,rhs in zip(result.expr, rhs_list)]
+                assigns = {}
+            res_return_vars = [assigns.get(v,v) for v in result.expr]
 
             # Put return statement back into function
             body.substitute(empty_return, result)

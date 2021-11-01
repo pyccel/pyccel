@@ -260,14 +260,12 @@ class PythonCodePrinter(CodePrinter):
     def _print_Return(self, expr):
 
         if expr.stmt:
-            rhs_list = [i.rhs if isinstance(i, Assign) else None for i in expr.stmt.body]
-            lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)]
+            assigns = {i.lhs: i.rhs for i in expr.stmt.body if isinstance(i, Assign)}
             prelude  = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
         else:
-            rhs_list = [None]*len(expr.expr)
-            lhs_list = []
+            assigns = {}
             prelude  = ''
-        expr_return_vars = [a if a not in lhs_list else r for a,r in zip(expr.expr, rhs_list)]
+        expr_return_vars = [assigns.get(a,a) for a in expr.expr]
 
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
