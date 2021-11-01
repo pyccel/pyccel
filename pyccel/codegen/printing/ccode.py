@@ -420,6 +420,15 @@ class CCodePrinter(CodePrinter):
         new_arg_vars = [PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
                         else a for a in new_arg_vars]
 
+        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+        if parent_assign:
+            results = {a:l for a,l in zip(func.results, parent_assign[0].lhs)}
+            orig_res_vars = list(results.keys())
+            new_res_vars  = self._temporary_args
+            new_res_vars = [a.variable if isinstance(a, VariableAddress) else a for a in new_res_vars]
+            self._temporary_args = []
+            body.substitute(orig_res_vars, new_res_vars)
+
         # Replace the arguments in the code
         body.substitute(orig_arg_vars, new_arg_vars, invalidate=False)
 
@@ -437,18 +446,17 @@ class CCodePrinter(CodePrinter):
 
             body_code = '\n'.join(code_lines[:result_idx])+'\n'
 
-            if len(func.results) == 0:
+            if len(func.results) != 1:
                 code = body_code
             else:
                 self._additional_code += body_code
-                if len(func.results) == 1:
-                    # Strip return and ; from return statement
-                    code = result_line[7:-1]
-                else:
-                    code = self._print(tuple(func.results))
+                # Strip return and ; from return statement
+                code = result_line[7:-1]
 
         # Put back original arguments
         body.substitute(new_arg_vars, orig_arg_vars)
+        if parent_assign:
+            body.substitute(new_res_vars, orig_res_vars)
         return code
 
     # ============ Elements ============ #
@@ -1379,7 +1387,7 @@ class CCodePrinter(CodePrinter):
 
         if len(args) > 1:
             if expr.stmt:
-                return self._print(expr.stmt)+'\n'+'return 0;\n'
+                return self._print(expr.stmt)+'return 0;\n'
             return 'return 0;\n'
 
         if expr.stmt:
