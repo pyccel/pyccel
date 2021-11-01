@@ -414,6 +414,11 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
         body = func.body
 
+        old_local_vars = list(func.local_vars)
+        new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
+                            for v in old_local_vars]
+        self._additional_declare.extend(new_local_vars)
+
         # Collect the function arguments and the expressions they will be replaced with
         orig_arg_vars = [a.var for a in func.arguments]
         new_arg_vars = [a.value for a in expr.args]
@@ -430,7 +435,7 @@ class CCodePrinter(CodePrinter):
             body.substitute(orig_res_vars, new_res_vars)
 
         # Replace the arguments in the code
-        body.substitute(orig_arg_vars, new_arg_vars, invalidate=False)
+        body.substitute(orig_arg_vars + old_local_vars, new_arg_vars + new_local_vars)
 
         # Collect code but strip empty end
         body_code = self._print(body)
@@ -454,7 +459,7 @@ class CCodePrinter(CodePrinter):
                 code = result_line[7:-1]
 
         # Put back original arguments
-        body.substitute(new_arg_vars, orig_arg_vars)
+        body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
         if parent_assign:
             body.substitute(new_res_vars, orig_res_vars)
         return code
