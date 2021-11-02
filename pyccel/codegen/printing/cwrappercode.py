@@ -1036,17 +1036,20 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
+        funcs_to_wrap = [f for f in expr.funcs if not f.is_inline]
+
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
+
         if self._target_language == 'fortran':
-            static_funcs = [self.get_static_function(f) for f in expr.funcs]
+            static_funcs = [self.get_static_function(f) for f in funcs_to_wrap]
         else:
-            static_funcs = expr.funcs
+            static_funcs = funcs_to_wrap
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
-        funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
+        funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
 
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
