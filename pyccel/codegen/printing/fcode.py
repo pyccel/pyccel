@@ -209,6 +209,12 @@ class FCodePrinter(CodePrinter):
 
         self.prefix_module = prefix_module
 
+    def change_to_program_scope(self):
+        self._namespace = self.parser.program_namespace
+
+    def change_to_module_scope(self):
+        self._namespace = self.parser.namespace
+
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
         macro = "use, intrinsic :: ISO_C_Binding, only : "
@@ -315,21 +321,27 @@ class FCodePrinter(CodePrinter):
 
         n_up = 0
 
-        current_func = [] if self._current_function is None else \
-                        self._current_function.split('.')
-        # Walk up namespaces until inline function is available
-        while name not in self._namespace.sons_scopes:
-            self.set_current_function(None)
-            n_up+=1
+        current_namespace = self._namespace
+        current_function  = self._current_function
+
+        if self._current_function is None:
+            if name not in self._namespace.sons_scopes:
+                self.change_to_module_scope()
+                self._namespace = self.parser.namespace
+
+        else:
+            # Walk up namespaces until inline function is available
+            while name not in self._namespace.sons_scopes:
+                self.set_current_function(None)
+                n_up+=1
 
         # Get imported functions from inline function's namespace
         self.set_current_function(name)
         used_functions = self._namespace.imports['functions']
-        self.set_current_function(None)
 
-        # Walk back to current_function
-        for i in range(n_up):
-            self.set_current_function(current_func[-n_up+i])
+        # Put back namespace and function parameters to return to call environment
+        self._namespace = current_namespace
+        self._current_function  = current_function
 
         # Put functions into current namespace
         self._namespace.imports['functions'].update(used_functions)
@@ -465,9 +477,8 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        self.parser.change_to_program_scope()
         module_namespace = self._namespace
-        self._namespace = self.parser.namespace
+        self.change_to_program_scope()
 
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
@@ -503,7 +514,7 @@ class FCodePrinter(CodePrinter):
                  body,
                 'end program {}\n'.format(name)]
 
-        self.parser.change_to_module_scope()
+        self.change_to_module_scope()
         self._namespace = module_namespace
 
         return '\n'.join(a for a in parts if a)
