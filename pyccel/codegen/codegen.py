@@ -164,7 +164,7 @@ class Codegen(object):
 
 
         for i in namespace.functions.values():
-            if isinstance(i, FunctionDef) and not i.is_header:
+            if isinstance(i, FunctionDef) and not (i.is_header or i.is_inline):
                 funcs.append(i)
             elif isinstance(i, Interface):
                 interfaces.append(i)
