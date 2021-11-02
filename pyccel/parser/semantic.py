@@ -1030,7 +1030,6 @@ class SemanticParser(BasicParser):
             if incompatible(i_arg, f_arg):
                 expected = self.get_type_description(f_arg, not elemental)
                 received = '{} ({})'.format(i_arg, self.get_type_description(i_arg, not elemental))
-                print(type(expr))
 
                 errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
                         symbol = expr,
