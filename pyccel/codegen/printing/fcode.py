@@ -313,19 +313,25 @@ class FCodePrinter(CodePrinter):
         body = func.body
         name = func.name
 
-        # Put external functions into calling function's namespace
-        calling_function = self._current_function
-        self.set_current_function(None)
+        n_up = 0
+
+        current_func = self._current_function.split('.')
+        # Walk up namespaces until inline function is available
+        while name not in self._namespace.sons_scopes:
+            self.set_current_function(None)
+            n_up+=1
+
+        # Get imported functions from inline function's namespace
         self.set_current_function(name)
-
-        scope = self.parser.namespace.sons_scopes[name]
-        used_functions = scope.imports['functions']
-
+        used_functions = self._namespace.imports['functions']
         self.set_current_function(None)
-        self.set_current_function(calling_function)
 
-        scope = self.parser.namespace.sons_scopes[calling_function]
-        scope.imports['functions'].update(used_functions)
+        # Walk back to current_function
+        for i in range(n_up):
+            self.set_current_function(current_func[-n_up+i])
+
+        # Put functions into current namespace
+        self._namespace.imports['functions'].update(used_functions)
 
         # Create new local variables to ensure there are no name collisions
         old_local_vars = list(func.local_vars)
