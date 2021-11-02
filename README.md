@@ -51,6 +51,8 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 -   [C/Fortran Compilers](./tutorial/compiler.md)
 
+-   [Decorators](./tutorial/decorators.md)
+
 -   [Header Files](./tutorial/header-files.md)
 
 -   [Templates](./tutorial/headers.md)
