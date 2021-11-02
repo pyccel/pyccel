@@ -315,7 +315,8 @@ class FCodePrinter(CodePrinter):
 
         n_up = 0
 
-        current_func = self._current_function.split('.')
+        current_func = [] if self._current_function is None else \
+                        self._current_function.split('.')
         # Walk up namespaces until inline function is available
         while name not in self._namespace.sons_scopes:
             self.set_current_function(None)
