@@ -1018,7 +1018,7 @@ class SemanticParser(BasicParser):
                         i_arg.precision != f_arg.precision or
                         i_arg.rank != f_arg.rank)
 
-        for i_arg, f_arg in zip(input_args, func_args):
+        for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
             f_arg = f_arg.var
             # Ignore types which cannot be compared
@@ -1030,8 +1030,9 @@ class SemanticParser(BasicParser):
             if incompatible(i_arg, f_arg):
                 expected = self.get_type_description(f_arg, not elemental)
                 received = '{} ({})'.format(i_arg, self.get_type_description(i_arg, not elemental))
+                print(type(expr))
 
-                errors.report(INCOMPATIBLE_ARGUMENT.format(received, expected),
+                errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
                         symbol = expr,
                         severity='error')
 
