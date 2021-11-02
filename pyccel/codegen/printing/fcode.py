@@ -311,7 +311,23 @@ class FCodePrinter(CodePrinter):
         """
         func = expr.funcdef
         body = func.body
+        name = func.name
 
+        # Put external functions into calling function's namespace
+        calling_function = self._current_function
+        self.set_current_function(None)
+        self.set_current_function(name)
+
+        scope = self.parser.namespace.sons_scopes[name]
+        used_functions = scope.imports['functions']
+
+        self.set_current_function(None)
+        self.set_current_function(calling_function)
+
+        scope = self.parser.namespace.sons_scopes[calling_function]
+        scope.imports['functions'].update(used_functions)
+
+        # Create new local variables to ensure there are no name collisions
         old_local_vars = list(func.local_vars)
         new_local_vars = [v.clone(self.parser.get_new_name(v.name)) \
                             for v in old_local_vars]
@@ -360,6 +376,7 @@ class FCodePrinter(CodePrinter):
 
         # Put back original arguments
         body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
+
         return code
 
     # ============ Elements ============ #
