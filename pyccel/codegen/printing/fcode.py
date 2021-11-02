@@ -1584,7 +1584,6 @@ class FCodePrinter(CodePrinter):
             scope = self.parser.namespace.sons_scopes[name]
             for key,f in scope.imports['functions'].items():
                 if isinstance(f, FunctionDef) and f.is_external:
-#                    i = Variable(f.results[0].dtype, name=str(key))
                     i = f.results[0].clone(str(key))
                     dec = Declare(i.dtype, i, external=True)
                     decs[i] = dec
