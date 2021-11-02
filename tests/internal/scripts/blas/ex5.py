@@ -18,7 +18,7 @@ def g(vect1 : 'float64[:]', vect2 : 'float64[:]'):
 
 @inline
 def sasum(x: 'float32[:]',
-          incx: 'int64' = 1,
+          incx: 'int' = 1,
          ):
     import pyccel.stdlib.internal.blas as blas_mod
     n = np.int32(x.shape[0])
