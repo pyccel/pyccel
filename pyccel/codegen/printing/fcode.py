@@ -379,6 +379,19 @@ class FCodePrinter(CodePrinter):
 
         return code
 
+    def _get_external_declarations(self):
+        """
+        Look for external functions and declare their result type
+        """
+        decs = {}
+        for key,f in self._namespace.imports['functions'].items():
+            if isinstance(f, FunctionDef) and f.is_external:
+                i = Variable(f.results[0].dtype, name=str(key))
+                dec = Declare(i.dtype, i, external=True)
+                decs[i] = dec
+
+        return decs
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -392,12 +405,7 @@ class FCodePrinter(CodePrinter):
 
         # ARA : issue-999
         #       we look for external functions and declare their result type
-        external_decs = OrderedDict()
-        for key,f in self.parser.namespace.imports['functions'].items():
-            if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].dtype, name=str(key))
-                dec = Declare(i.dtype, i, external=True)
-                external_decs[i] = dec
+        external_decs = self._get_external_declarations()
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
@@ -1652,15 +1660,7 @@ class FCodePrinter(CodePrinter):
             dec = Declare(i.dtype, i)
             decs[i] = dec
 
-        # ARA : issue-999
-        #       we look for external functions and declare their result type
-        if name in self.parser.namespace.sons_scopes.keys():
-            scope = self.parser.namespace.sons_scopes[name]
-            for key,f in scope.imports['functions'].items():
-                if isinstance(f, FunctionDef) and f.is_external:
-                    i = f.results[0].clone(str(key))
-                    dec = Declare(i.dtype, i, external=True)
-                    decs[i] = dec
+        decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
