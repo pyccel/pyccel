@@ -1271,6 +1271,8 @@ class CCodePrinter(CodePrinter):
         return ""
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)

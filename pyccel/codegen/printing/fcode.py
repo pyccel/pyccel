@@ -1649,6 +1649,8 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
 
         name = self._print(expr.name)
         self.set_current_function(name)

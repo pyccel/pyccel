@@ -1694,7 +1694,7 @@ class SemanticParser(BasicParser):
         funcs = []
         interfaces = []
         for f in self.namespace.functions.values():
-            if isinstance(f, FunctionDef) and not (f.is_header or f.is_inline):
+            if isinstance(f, FunctionDef) and not f.is_header:
                 funcs.append(f)
             elif isinstance(f, Interface):
                 interfaces.append(f)
