@@ -55,7 +55,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 -   [Header Files](./tutorial/header-files.md)
 
--   [Templates](./tutorial/headers.md)
+-   [Templates](./tutorial/templates.md)
 
 -   [N-dimensional Arrays](./tutorial/ndarrays.md)
 
