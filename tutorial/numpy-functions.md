@@ -379,42 +379,42 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     from numpy import linspace
 
     if __name__ == "__main__":
-        x = linspace(0, 10, 20, endpoint=False, dtype='float64')
+        x = linspace(0, 10, 20, endpoint=True, dtype='float64')
         print(x)
     ```
 
 -   fortran equivalent:
 
     ```fortran
+    program prog_prog_test
 
-    program prog_prog_lin_doc
+      use test
 
-      use lin_doc
-
-      use, intrinsic :: ISO_C_Binding, only : f64 => C_DOUBLE , i64 => &
-          C_INT64_T
+      use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T , f64 => &
+          C_DOUBLE
       implicit none
 
       real(f64), allocatable :: x(:)
       integer(i64) :: linspace_index
 
       allocate(x(0:19_i64))
-      x = [((0_i64 + linspace_index*Real((10_i64 - 0_i64), f64) / 20.0_f64), &
-          linspace_index = 0_i64,19_i64)]
+      x = [((0_i64 + linspace_index*Real((10_i64 - 0_i64), f64) / Real(( &
+          20_i64 - 1_i64), f64)), linspace_index = 0_i64,19_i64)]
+      x(19_i64) = 10.0_f64
       print *, x
       if (allocated(x)) then
         deallocate(x)
       end if
 
-    end program prog_prog_lin_doc
+    end program prog_prog_test
     ```
 
 -   C equivalent:
 
     ```C
-    #include "lin_doc.h"
-    #include <stdlib.h>
+    #include "test.h"
     #include "ndarrays.h"
+    #include <stdlib.h>
     #include <stdint.h>
     #include <stdio.h>
     int main()
@@ -425,7 +425,8 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         x = array_create(1, (int64_t[]){20}, nd_double);
         for (i_0001 = 0; i_0001 < 20; i_0001 += 1)
         {
-            GET_ELEMENT(x, nd_double, i_0001) = (0 + i_0001*(double)((10 - 0)) / 20.0);
+            GET_ELEMENT(x, nd_double, i_0001) = (0 + i_0001*(double)((10 - 0)) / (double)((20 - 1)));
+            GET_ELEMENT(x, nd_double, 19) = (double)10;
         }
         printf("%s", "[");
         for (i = 0; i < 19; i += 1)
