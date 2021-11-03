@@ -112,6 +112,7 @@ sudo apt install gcc
 sudo apt install gfortran
 sudo apt install libblas-dev liblapack-dev
 sudo apt install libopenmpi-dev openmpi-bin
+sudo apt install libomp-dev libomp5
 ```
 
 ### Linux Fedora-CentOS-RHEL
@@ -125,6 +126,7 @@ dnf install gcc
 dnf install gfortran
 dnf install blas-devel lapack-devel
 dnf install openmpi-devel
+dnf install libgomp
 exit
 ```
 
@@ -140,6 +142,7 @@ brew install gcc
 brew install openblas
 brew install lapack
 brew install open-mpi
+brew install libomp
 ```
 
 This requires that the Command Line Tools (CLT) for Xcode are installed.
