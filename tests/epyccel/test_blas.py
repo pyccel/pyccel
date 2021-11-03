@@ -1754,7 +1754,7 @@ def test_dsyr2k_1():
 def test_ccopy_1():
     blas_ccopy = epyccel( mod.blas_ccopy, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 3
@@ -1774,7 +1774,7 @@ def test_ccopy_1():
 def test_cswap_1():
     blas_cswap = epyccel( mod.blas_cswap, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1796,7 +1796,7 @@ def test_cswap_1():
 def test_cscal_1():
     blas_cscal = epyccel( mod.blas_cscal, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1817,7 +1817,7 @@ def test_cscal_1():
 def test_scnrm2_1():
     blas_scnrm2 = epyccel( mod.blas_scnrm2, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1835,7 +1835,7 @@ def test_scnrm2_1():
 def test_scasum_1():
     blas_scasum = epyccel( mod.blas_scasum, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1853,7 +1853,7 @@ def test_scasum_1():
 def test_icamax_1():
     blas_icamax = epyccel( mod.blas_icamax, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1871,7 +1871,7 @@ def test_icamax_1():
 def test_caxpy_1():
     blas_caxpy = epyccel( mod.blas_caxpy, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1892,7 +1892,7 @@ def test_caxpy_1():
 def test_cdotc_1():
     blas_cdotc = epyccel( mod.blas_cdotc, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 3
@@ -1911,7 +1911,7 @@ def test_cdotc_1():
 def test_cdotu_1():
     blas_cdotu = epyccel( mod.blas_cdotu, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1936,7 +1936,7 @@ def test_cdotu_1():
 def test_cgemv_1():
     blas_cgemv = epyccel( mod.blas_cgemv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -1959,7 +1959,7 @@ def test_cgemv_1():
 def test_cgbmv_1():
     blas_cgbmv = epyccel( mod.blas_cgbmv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 5
@@ -1992,7 +1992,7 @@ def test_cgbmv_1():
 def test_chemv_1():
     blas_chemv = epyccel( mod.blas_chemv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2015,7 +2015,7 @@ def test_chemv_1():
 def test_chbmv_1():
     blas_chbmv = epyccel( mod.blas_chbmv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 5
@@ -2047,7 +2047,7 @@ def test_chbmv_1():
 def test_chpmv_1():
     blas_chpmv = epyccel( mod.blas_chpmv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2073,7 +2073,7 @@ def test_chpmv_1():
 def test_ctrmv_1():
     blas_ctrmv = epyccel( mod.blas_ctrmv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2095,7 +2095,7 @@ def test_ctrmv_1():
 def test_ctbmv_1():
     blas_ctbmv = epyccel( mod.blas_ctbmv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 5
@@ -2126,7 +2126,7 @@ def test_ctbmv_1():
 def test_ctpmv_1():
     blas_ctpmv = epyccel( mod.blas_ctpmv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2149,7 +2149,7 @@ def test_ctpmv_1():
 def test_ctrsv_1():
     blas_ctrsv = epyccel( mod.blas_ctrsv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2172,7 +2172,7 @@ def test_ctrsv_1():
 def test_ctbsv_1():
     blas_ctbsv = epyccel( mod.blas_ctbsv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 5
@@ -2200,7 +2200,7 @@ def test_ctbsv_1():
 def test_ctpsv_1():
     blas_ctpsv = epyccel( mod.blas_ctpsv, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2224,7 +2224,7 @@ def test_ctpsv_1():
 def test_cgeru_1():
     blas_cgeru = epyccel( mod.blas_cgeru, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2245,7 +2245,7 @@ def test_cgeru_1():
 def test_cgerc_1():
     blas_cgerc = epyccel( mod.blas_cgerc, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2266,7 +2266,7 @@ def test_cgerc_1():
 def test_cher_1():
     blas_cher = epyccel( mod.blas_cher, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2289,7 +2289,7 @@ def test_cher_1():
 def test_chpr_1():
     blas_chpr = epyccel( mod.blas_chpr, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2313,7 +2313,7 @@ def test_chpr_1():
 def test_cher2_1():
     blas_cher2 = epyccel( mod.blas_cher2, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2337,7 +2337,7 @@ def test_cher2_1():
 def test_chpr2_1():
     blas_chpr2 = epyccel( mod.blas_chpr2, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 10
@@ -2368,7 +2368,7 @@ def test_chpr2_1():
 def test_cgemm_1():
     blas_cgemm = epyccel( mod.blas_cgemm, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2390,7 +2390,7 @@ def test_cgemm_1():
 def test_csymm_1():
     blas_csymm = epyccel( mod.blas_csymm, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2416,7 +2416,7 @@ def test_csymm_1():
 def test_chemm_1():
     blas_chemm = epyccel( mod.blas_chemm, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2442,7 +2442,7 @@ def test_chemm_1():
 def test_csyrk_1():
     blas_csyrk = epyccel( mod.blas_csyrk, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2466,7 +2466,7 @@ def test_csyrk_1():
 def test_csyr2k_1():
     blas_csyr2k = epyccel( mod.blas_csyr2k, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2492,7 +2492,7 @@ def test_csyr2k_1():
 def test_cherk_1():
     blas_cherk = epyccel( mod.blas_cherk, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2516,7 +2516,7 @@ def test_cherk_1():
 def test_cher2k_1():
     blas_cher2k = epyccel( mod.blas_cher2k, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2542,7 +2542,7 @@ def test_cher2k_1():
 def test_ctrmm_1():
     blas_ctrmm = epyccel( mod.blas_ctrmm, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
@@ -2565,7 +2565,7 @@ def test_ctrmm_1():
 def test_ctrsm_1():
     blas_ctrsm = epyccel( mod.blas_ctrsm, language = 'fortran' )
 
-    TOL = 1.e-7
+    TOL = 1.e-6
     DTYPE = np.complex64
 
     n = 4
