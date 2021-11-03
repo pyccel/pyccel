@@ -57,6 +57,25 @@ def test_ddot_1():
     result   = blas_ddot (x, y)
     assert(np.allclose(result, expected, 1.e-14))
     # ...
+
+# ==============================================================================
+@pytest.mark.fortran
+@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
+def test_ddot_2():
+    blas_ddot = epyccel( mod.blas_ddot_in_func, language = 'fortran' )
+
+    np.random.seed(2021)
+
+    n = 10
+    x = np.random.random(n)
+    y = np.random.random(n)
+
+    # ...
+    expected = sp_blas.ddot(x, y)
+    result   = blas_ddot (x, y)
+    assert(np.allclose(result, expected, 1.e-14))
+    # ...
+
 # ==============================================================================
 @pytest.mark.fortran
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
