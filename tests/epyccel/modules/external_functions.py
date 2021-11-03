@@ -63,6 +63,7 @@ def blas_ddot(x: 'float64[:]', y: 'float64[:]',
 
 # ==============================================================================
 def blas_ddot_in_func(x: 'float64[:]', y: 'float64[:]'):
+    import numpy as np
     def blas_ddot(x: 'float64[:]', y: 'float64[:]',
                    incx: 'int32' = 1,
                    incy: 'int32' = 1
@@ -70,7 +71,6 @@ def blas_ddot_in_func(x: 'float64[:]', y: 'float64[:]'):
         """
         Computes a vector-vector dot product.
         """
-        import numpy as np
         from pyccel.stdlib.internal.blas import ddot
 
         n = np.int32(x.shape[0])
@@ -79,4 +79,4 @@ def blas_ddot_in_func(x: 'float64[:]', y: 'float64[:]'):
 
     incx = np.int32(1)
     incy = np.int32(1)
-    return blas_ddot(x,y)
+    return blas_ddot(x,y,incx,incy)
