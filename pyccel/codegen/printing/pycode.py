@@ -142,7 +142,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'int'
 
-    def _print_NativeReal(self, expr):
+    def _print_NativeFloat(self, expr):
         return 'float'
 
     def _print_NativeComplex(self, expr):
