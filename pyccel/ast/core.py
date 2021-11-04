@@ -1112,12 +1112,12 @@ class Module(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -1301,12 +1301,12 @@ class ModuleHeader(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -2129,8 +2129,8 @@ class FunctionDef(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Assign, Variable, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> args        = [x]
     >>> results     = [y]
     >>> body        = [Assign(y,x+1)]
@@ -2144,8 +2144,8 @@ class FunctionDef(Basic):
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n', value=4)
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2654,8 +2654,8 @@ class FunctionAddress(FunctionDef):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
 
     a function definition can have a FunctionAddress as an argument
 
@@ -2789,12 +2789,12 @@ class ClassDef(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -3151,8 +3151,8 @@ class FuncAddressDeclare(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
     __slots__ = ('_variable','_intent','_value','_static')
@@ -3236,8 +3236,8 @@ class Declare(Basic):
     >>> from pyccel.ast.core import Declare, Variable
     >>> Declare('int', Variable('int', 'n'))
     Declare(NativeInteger(), (n,), None)
-    >>> Declare('real', Variable('real', 'x'), intent='out')
-    Declare(NativeReal(), (x,), out)
+    >>> Declare('float', Variable('float', 'x'), intent='out')
+    Declare(NativeFloat(), (x,), out)
     """
     __slots__ = ('_dtype','_variable','_intent','_value',
                  '_static','_passed_from_dotted', '_external')
@@ -3390,7 +3390,7 @@ class Del(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('real', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Del([x])
     Del([x])
     """

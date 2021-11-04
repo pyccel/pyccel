@@ -44,7 +44,7 @@ __all__ = (
 )
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=pi),
+    'pi': Constant('float', 'pi', value=pi),
                   }
 
 #==============================================================================
