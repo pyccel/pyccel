@@ -197,8 +197,8 @@ c_library_headers = (
     "tgmath",
 )
 
-dtype_registry = {('float',8)    : 'double',
-                  ('float',4)    : 'float',
+dtype_registry = {('float',8)   : 'double',
+                  ('float',4)   : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int32_t',
@@ -207,8 +207,9 @@ dtype_registry = {('float',8)    : 'double',
                   ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
 
-ndarray_type_registry = {('float',8)    : 'nd_double',
-                  ('float',4)    : 'nd_float',
+ndarray_type_registry = {
+                  ('float',8)   : 'nd_double',
+                  ('float',4)   : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',
                   ('int',8)     : 'nd_int64',
@@ -683,8 +684,8 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
-        type_to_format = {('float',8)    : '%.12lf',
-                          ('float',4)    : '%.12f',
+        type_to_format = {('float',8)   : '%.12lf',
+                          ('float',4)   : '%.12f',
                           ('complex',8) : '(%.12lf + %.12lfj)',
                           ('complex',4) : '(%.12f + %.12fj)',
                           ('int',4)     : '%d',
