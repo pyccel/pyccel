@@ -10,7 +10,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
-from pyccel.ast.core       import IfSection
+from pyccel.ast.core       import IfSection, FunctionDef
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -142,7 +142,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'int'
 
-    def _print_NativeReal(self, expr):
+    def _print_NativeFloat(self, expr):
         return 'float'
 
     def _print_NativeComplex(self, expr):
@@ -153,7 +153,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDefArgument(self, expr):
         if expr.has_default:
-            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+            if isinstance(expr.value, FunctionDef):
+                return '{} = {}'.format(self._print(expr.name), self._print(expr.value.name))
+            else:
+                return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
         else:
             return self._print(expr.name)
 

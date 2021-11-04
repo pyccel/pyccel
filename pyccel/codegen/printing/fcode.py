@@ -48,7 +48,7 @@ from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
@@ -163,7 +163,7 @@ _default_methods = {
 
 python_builtin_datatypes = {
     'integer' : PythonInt,
-    'real'    : PythonFloat,
+    'float'   : PythonFloat,
     'bool'    : PythonBool,
     'complex' : PythonComplex
 }
@@ -305,6 +305,19 @@ class FCodePrinter(CodePrinter):
             self._constantImports.add(constant_name)
         return constant_name
 
+    def _get_external_declarations(self):
+        """
+        Look for external functions and declare their result type
+        """
+        decs = {}
+        for key,f in self._namespace.imports['functions'].items():
+            if isinstance(f, FunctionDef) and f.is_external:
+                i = Variable(f.results[0].dtype, name=str(key))
+                dec = Declare(i.dtype, i, external=True)
+                decs[i] = dec
+
+        return decs
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -318,12 +331,7 @@ class FCodePrinter(CodePrinter):
 
         # ARA : issue-999
         #       we look for external functions and declare their result type
-        external_decs = OrderedDict()
-        for key,f in self.parser.namespace.imports['functions'].items():
-            if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].dtype, name=str(key))
-                dec = Declare(i.dtype, i, external=True)
-                external_decs[i] = dec
+        external_decs = self._get_external_declarations()
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
@@ -628,6 +636,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
         return 'real({0})'.format(value)
+
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
@@ -868,12 +877,12 @@ class FCodePrinter(CodePrinter):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         if expr.low is None:
-            randreal = self._print(PyccelMul(expr.high, NumpyRand(), simplify = True))
+            randfloat = self._print(PyccelMul(expr.high, NumpyRand(), simplify = True))
         else:
-            randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low, simplify = True), NumpyRand(), simplify=True), expr.low, simplify = True))
+            randfloat = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low, simplify = True), NumpyRand(), simplify=True), expr.low, simplify = True))
 
         prec_code = self.print_kind(expr)
-        return 'floor({}, kind={})'.format(randreal, prec_code)
+        return 'floor({}, kind={})'.format(randfloat, prec_code)
 
     def _print_NumpyFull(self, expr):
 
@@ -934,7 +943,7 @@ class FCodePrinter(CodePrinter):
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                     severity='fatal')
 
-        elif dtype == 'real':
+        elif dtype == 'float':
             if prec==8:
                 return 'MPI_DOUBLE'
             if prec==4:
@@ -1328,7 +1337,7 @@ class FCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'integer'
 
-    def _print_NativeReal(self, expr):
+    def _print_NativeFloat(self, expr):
         return 'real'
 
     def _print_NativeComplex(self, expr):
@@ -1578,15 +1587,7 @@ class FCodePrinter(CodePrinter):
             dec = Declare(i.dtype, i)
             decs[i] = dec
 
-        # ARA : issue-999
-        #       we look for external functions and declare their result type
-        if name in self.parser.namespace.sons_scopes.keys():
-            scope = self.parser.namespace.sons_scopes[name]
-            for key,f in scope.imports['functions'].items():
-                if isinstance(f, FunctionDef) and f.is_external:
-                    i = Variable(f.results[0].dtype, name=str(key))
-                    dec = Declare(i.dtype, i, external=True)
-                    decs[i] = dec
+        decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
         vars_to_print = self.parser.get_variables(self._namespace)
@@ -2151,10 +2152,10 @@ class FCodePrinter(CodePrinter):
         return ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelMod(self, expr):
-        is_real  = expr.dtype is NativeReal()
+        is_float = expr.dtype is NativeFloat()
 
         def correct_type_arg(a):
-            if is_real and a.dtype is NativeInteger():
+            if is_float and a.dtype is NativeInteger():
                 return NumpyFloat(a)
             else:
                 return a
@@ -2168,9 +2169,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelFloorDiv(self, expr):
 
-        code   = self._print(expr.args[0])
-        adtype = expr.args[0].dtype
-        is_real  = expr.dtype is NativeReal()
+        code     = self._print(expr.args[0])
+        adtype   = expr.args[0].dtype
+        is_float = expr.dtype is NativeFloat()
         for b in expr.args[1:]:
             bdtype    = b.dtype
             if adtype is NativeInteger() and bdtype is NativeInteger():
@@ -2178,7 +2179,7 @@ class FCodePrinter(CodePrinter):
             c = self._print(b)
             adtype = bdtype
             code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr))
-            if is_real:
+            if is_float:
                 code = 'real({}, {})'.format(code, self.print_kind(expr))
         return code
 
