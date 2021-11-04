@@ -609,18 +609,18 @@ class NumpyLinspace(NumpyNewArray):
         else:
             args      = (start, stop)
             integers  = [e for e in args if e.dtype is NativeInteger()]
-            reals     = [e for e in args if e.dtype is NativeReal()]
+            floats    = [e for e in args if e.dtype is NativeFloat()]
             complexs  = [e for e in args if e.dtype is NativeComplex()]
 
             if complexs:
                 self._dtype     = NativeComplex()
                 self._precision = max(e.precision for e in complexs)
-            elif reals:
-                self._dtype     = NativeReal()
-                self._precision = max(e.precision for e in reals)
+            elif floats:
+                self._dtype     = NativeFloat()
+                self._precision = max(e.precision for e in floats)
             elif integers:
-                self._dtype     = NativeReal()
-                self._precision = default_precision['real']
+                self._dtype     = NativeFloat()
+                self._precision = default_precision['float']
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
 
