@@ -108,8 +108,8 @@ pytype_parse_registry = {
     (NativeInteger(), 8)       : 'l',
     (NativeInteger(), 2)       : 'h',
     (NativeInteger(), 1)       : 'b',
-    (NativeFloat(), 8)          : 'd',
-    (NativeFloat(), 4)          : 'f',
+    (NativeFloat(), 8)         : 'd',
+    (NativeFloat(), 4)         : 'f',
     (NativeComplex(), 4)       : 'O',
     (NativeComplex(), 8)       : 'O',
     (NativeBool(), 4)          : 'p',
@@ -307,8 +307,8 @@ py_to_c_registry = {
     (NativeInteger(), 2)   : 'PyInt16_to_Int16',
     (NativeInteger(), 4)   : 'PyInt32_to_Int32',
     (NativeInteger(), 8)   : 'PyInt64_to_Int64',
-    (NativeFloat(), 4)      : 'PyFloat_to_Float',
-    (NativeFloat(), 8)      : 'PyDouble_to_Double',
+    (NativeFloat(), 4)     : 'PyFloat_to_Float',
+    (NativeFloat(), 8)     : 'PyDouble_to_Double',
     (NativeComplex(), 4)   : 'PyComplex_to_Complex64',
     (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
 
@@ -343,8 +343,8 @@ c_to_py_registry = {
     (NativeInteger(), 2)   : 'Int16_to_PyLong',
     (NativeInteger(), 4)   : 'Int32_to_PyLong',
     (NativeInteger(), 8)   : 'Int64_to_PyLong',
-    (NativeFloat(), 4)      : 'Float_to_PyDouble',
-    (NativeFloat(), 8)      : 'Double_to_PyDouble',
+    (NativeFloat(), 4)     : 'Float_to_PyDouble',
+    (NativeFloat(), 8)     : 'Double_to_PyDouble',
     (NativeComplex(), 4)   : 'Complex64_to_PyComplex',
     (NativeComplex(), 8)   : 'Complex128_to_PyComplex'}
 
@@ -419,8 +419,8 @@ check_type_registry = {
     (NativeInteger(), 2)   : 'PyIs_Int16',
     (NativeInteger(), 4)   : 'PyIs_Int32',
     (NativeInteger(), 8)   : 'PyIs_Int64',
-    (NativeFloat(), 4)      : 'PyIs_Float',
-    (NativeFloat(), 8)      : 'PyIs_Double',
+    (NativeFloat(), 4)     : 'PyIs_Float',
+    (NativeFloat(), 8)     : 'PyIs_Double',
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
@@ -460,8 +460,8 @@ flags_registry = {
     (NativeInteger(), 8)       : 2,
     (NativeInteger(), 2)       : 3,
     (NativeInteger(), 1)       : 4,
-    (NativeFloat(), 8)          : 5,
-    (NativeFloat(), 4)          : 6,
+    (NativeFloat(), 8)         : 5,
+    (NativeFloat(), 4)         : 6,
     (NativeComplex(), 4)       : 7,
     (NativeComplex(), 8)       : 8,
     (NativeBool(), 4)          : 9,
