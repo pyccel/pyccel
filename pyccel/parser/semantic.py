@@ -74,6 +74,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString
+from pyccel.ast.literals import Literal, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants
 
@@ -3157,7 +3158,15 @@ class SemanticParser(BasicParser):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    arg_new = FunctionDefArgument(a_new, value=a.value, kwonly=a.is_kwonly,
+                    value = None if a.value is None else self._visit(a.value)
+                    if isinstance(value, Literal) and \
+                            value.dtype is a_new.dtype and \
+                            value.precision != a_new.precision:
+                        value = convert_to_literal(value.python_value, a_new.dtype, a_new.precision)
+
+                    arg_new = FunctionDefArgument(a_new,
+                                value=value,
+                                kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
                     if additional_args:

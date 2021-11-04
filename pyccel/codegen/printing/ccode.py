@@ -809,8 +809,6 @@ class CCodePrinter(CodePrinter):
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self._additional_imports.add('ndarrays')
                 dtype = 't_ndarray'
-                if expr.is_optional:
-                    errors.report("Optional arrays are not currently supported in C", symbol=expr, severity='error')
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
