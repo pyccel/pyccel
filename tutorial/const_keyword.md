@@ -67,7 +67,7 @@ def func1(arr: 'const int[:]', i: 'int', v: 'int', z:'int'):
     return 0
 ```
 
-Pyccel will recognize that a const array cannot ba changed and will raise an error similaire to:
+Pyccel will recognize that a const array cannot be changed and will raise an error similar to:
 ```
 ERROR at annotation (semantic) stage
 pyccel:
