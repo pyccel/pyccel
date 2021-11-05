@@ -40,7 +40,7 @@ class MemComplexity(Complexity):
 
     def _cost_Assign(self, expr, **settings):
         # TODO add other numpy array constructors
-        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes)):
+        if isinstance(expr.rhs, NumpyFull):
             shape = [pyccel_to_sympy(i, self._symbol_map, self._used_names) for i in expr.rhs.shape]
             size = 1
             for i in shape:

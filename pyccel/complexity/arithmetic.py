@@ -58,10 +58,7 @@ class OpComplexity(Complexity):
     def _cost_PyccelArraySize(self, expr, **settings):
         return 0
 
-    def _cost_NumpyZeros(self, expr, **settings):
-        return 0
-
-    def _cost_NumpyOnes(self, expr, **settings):
+    def _cost_NumpyFull(self, expr, **settings):
         return 0
 
     def _cost_Allocate(self, expr, **settings):
