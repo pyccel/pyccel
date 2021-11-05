@@ -17,7 +17,7 @@ from sympy import Symbol
 
 from pyccel.ast.internals    import Slice
 from pyccel.ast.literals     import Literal
-from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
+from pyccel.ast.numpyext     import NumpyFull
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 from pyccel.complexity.basic import SHAPE
