@@ -13,7 +13,7 @@ from pyccel.errors.errors import Errors
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
-                        NativeInteger, NativeBool, NativeReal,
+                        NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
@@ -27,7 +27,6 @@ __all__ = (
     'DottedVariable',
     'IndexedElement',
     'TupleVariable',
-    'ValuedVariable',
     'Variable',
     'VariableAddress'
 )
@@ -40,7 +39,7 @@ class Variable(PyccelAstNode):
     ----------
     dtype : str, DataType
         The type of the variable. Can be either a DataType,
-        or a str (bool, int, real).
+        or a str (bool, int, float).
 
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
@@ -85,6 +84,9 @@ class Variable(PyccelAstNode):
     is_const: bool
         if object is a const argument of a function [Default value: False]
 
+    is_private: bool
+        if object is private within a Module [Default value: False]
+
     is_temp: bool
         Indicates if this symbol represents a temporary variable created by Pyccel,
         and was not present in the original Python code [default value : False].
@@ -95,7 +97,7 @@ class Variable(PyccelAstNode):
     >>> Variable('int', 'n')
     n
     >>> n = 4
-    >>> Variable('real', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> Variable('float', 'x', rank=2, shape=(n,2), allocatable=True)
     x
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
@@ -103,7 +105,7 @@ class Variable(PyccelAstNode):
     __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
             '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order')
+            '_rank','_shape','_order','_is_private')
     _attribute_nodes = ()
 
     def __init__(
@@ -118,6 +120,7 @@ class Variable(PyccelAstNode):
         is_const=False,
         is_target=False,
         is_optional=False,
+        is_private=False,
         shape=None,
         cls_base=None,
         order='C',
@@ -169,6 +172,10 @@ class Variable(PyccelAstNode):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
 
+        if not isinstance(is_private, bool):
+            raise TypeError('is_private must be a boolean.')
+        self._is_private = is_private
+
         if not isinstance(allows_negative_indexes, bool):
             raise TypeError('allows_negative_indexes must be a boolean.')
         self._allows_negative_indexes = allows_negative_indexes
@@ -198,8 +205,8 @@ class Variable(PyccelAstNode):
         if not precision:
             if isinstance(dtype, NativeInteger):
                 precision = default_precision['int']
-            elif isinstance(dtype, NativeReal):
-                precision = default_precision['real']
+            elif isinstance(dtype, NativeFloat):
+                precision = default_precision['float']
             elif isinstance(dtype, NativeComplex):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
@@ -342,6 +349,13 @@ class Variable(PyccelAstNode):
         return self._is_optional
 
     @property
+    def is_private(self):
+        """ Indicates if the Variable is private
+        within the Module
+        """
+        return self._is_private
+
+    @property
     def is_stack_array(self):
         """ Indicates whether an array is allocated
         on the stack
@@ -382,13 +396,13 @@ class Variable(PyccelAstNode):
     def is_ndarray(self):
         """user friendly method to check if the variable is an ndarray:
             1. have a rank > 0
-            2. dtype is one among {int, bool, real, complex}
+            2. dtype is one among {int, bool, float, complex}
         """
 
         if self.rank == 0:
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
-                          NativeReal, NativeComplex))
+                          NativeFloat, NativeComplex))
 
     def __str__(self):
         return str(self.name)
@@ -536,44 +550,6 @@ class DottedName(Basic):
 
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
-
-class ValuedVariable(Variable):
-
-    """Represents a valued variable in the code.
-
-    Parameters
-    ----------
-    variable: Variable
-        A single variable
-    value: Variable, or instance of Native types
-        value associated to the variable
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import ValuedVariable
-    >>> n  = ValuedVariable('int', 'n', value=4)
-    >>> n
-    n := 4
-    """
-    __slots__ = ('_value',)
-    _attribute_nodes = ('_value',)
-
-    def __init__(self, *args, **kwargs):
-
-        # if value is not given, we set it to Nil
-        self._value = kwargs.pop('value', Nil())
-        super().__init__(*args, **kwargs)
-
-    @property
-    def value(self):
-        """ Default value of the variable
-        """
-        return self._value
-
-    def __str__(self):
-        name = str(self.name)
-        value = str(self.value)
-        return '{0}={1}'.format(name, value)
 
 class TupleVariable(Variable):
 
@@ -738,17 +714,44 @@ class InhomogeneousTupleVariable(TupleVariable):
             if var.rank > 0:
                 var.is_target = is_target
 
-class Constant(ValuedVariable):
+class Constant(Variable):
 
     """
+    Class for expressing constant values (e.g. pi)
+
+    Parameters
+    ----------
+    *args, **kwargs : See pyccel.ast.variable.Variable
+
+    value : Type matching dtype
+            The value that the constant represents
 
     Examples
     --------
+    >>> from pyccel.ast.variable import Constant
+    >>> import math
+    >>> Constant('float', 'pi' , value=math.pi )
+    Constant('pi', dtype=NativeFloat())
 
     """
-    __slots__ = ()
+    __slots__ = ('_value',)
     # The value of a constant is not a translated object
     _attribute_nodes = ()
+
+    def __init__(self, *args, value = Nil(), **kwargs):
+        self._value = value
+        super().__init__(*args, **kwargs)
+
+    @property
+    def value(self):
+        """ Immutable value of the constant
+        """
+        return self._value
+
+    def __str__(self):
+        name = str(self.name)
+        value = str(self.value)
+        return '{0}={1}'.format(name, value)
 
 
 

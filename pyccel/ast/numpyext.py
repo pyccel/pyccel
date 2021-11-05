@@ -9,13 +9,14 @@ import numpy
 
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonImag, PythonList)
+                             PythonComplex, PythonReal, PythonImag, PythonList,
+                             PythonType)
 
-from .core           import process_shape, ValuedArgument
+from .core           import process_shape
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeReal, NativeComplex, NativeBool, str_dtype,
+                             NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice
@@ -262,7 +263,7 @@ DtypePrecisionToCastFunction = {
         2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
-    'Real' : {
+    'Float' : {
         4 : NumpyFloat32,
         8 : NumpyFloat64},
     'Complex' : {
@@ -275,10 +276,13 @@ DtypePrecisionToCastFunction = {
 
 #==============================================================================
 numpy_constants = {
-    'pi': Constant('real', 'pi', value=numpy.pi),
+    'pi': Constant('float', 'pi', value=numpy.pi),
 }
 
 def process_dtype(dtype):
+    if isinstance(dtype, PythonType):
+        return dtype.dtype, dtype.precision
+
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
@@ -344,8 +348,6 @@ class NumpyArray(NumpyNewArray):
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
         # ... Determine ordering
-        if isinstance(order, ValuedArgument):
-            order = order.value
         order = str(order).strip("\'")
 
         if order not in ('K', 'A', 'C', 'F'):
@@ -505,15 +507,15 @@ class NumpyMatmul(PyccelInternalFunction):
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger()]
         booleans  = [e for e in args if e.dtype is NativeBool()]
-        reals     = [e for e in args if e.dtype is NativeReal()]
+        floats    = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
-        elif reals:
-            self._dtype     = NativeReal()
-            self._precision = max(e.precision for e in reals)
+        elif floats:
+            self._dtype     = NativeFloat()
+            self._precision = max(e.precision for e in floats)
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(e.precision for e in integers)
@@ -534,10 +536,9 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = ()
         elif a.rank == 1 or b.rank == 1:
             self._rank = 1
-            self._shape = b.shape[1] if a.rank == 1 else a.shape[0]
+            self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
             self._rank = 2
-
 
 
         if a.order == b.order:
@@ -571,8 +572,8 @@ class NumpyLinspace(NumpyNewArray):
     """
     __slots__ = ('_index','_start','_stop','_size','_shape', '_rank')
     name = 'linspace'
-    _dtype     = NativeReal()
-    _precision = default_precision['real']
+    _dtype     = NativeFloat()
+    _precision = default_precision['float']
     _order     = 'F'
 
     def __init__(self, start, stop, size):
@@ -648,8 +649,8 @@ class NumpyRand(PyccelInternalFunction):
     """
     __slots__ = ('_shape','_rank')
     name = 'rand'
-    _dtype = NativeReal()
-    _precision = default_precision['real']
+    _dtype = NativeFloat()
+    _precision = default_precision['float']
     _order = 'C'
 
     def __init__(self, *args):
@@ -795,7 +796,7 @@ class NumpyZeros(NumpyAutoFill):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = LiteralInteger(0, precision = self.precision)
-        elif isinstance(dtype, NativeReal):
+        elif isinstance(dtype, NativeFloat):
             value = LiteralFloat(0, precision = self.precision)
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(0., 0., precision = self.precision)
@@ -816,7 +817,7 @@ class NumpyOnes(NumpyAutoFill):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = LiteralInteger(1, precision = self.precision)
-        elif isinstance(dtype, NativeReal):
+        elif isinstance(dtype, NativeFloat):
             value = LiteralFloat(1., precision = self.precision)
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(1., 0., precision = self.precision)
@@ -891,11 +892,11 @@ class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     __slots__ = ('_shape','_rank','_order','_arg','_precision')
     name = 'norm'
-    _dtype = NativeReal()
+    _dtype = NativeFloat()
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
-        if not isinstance(arg.dtype, (NativeComplex, NativeReal)):
+        if not isinstance(arg.dtype, (NativeComplex, NativeFloat)):
             arg = NumpyFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
         self._precision = arg.precision
@@ -960,7 +961,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
 
     def _set_dtype_precision(self, x):
-        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeFloat()
         self._precision  = default_precision[str_dtype(self._dtype)]
 
     def _set_order(self, x):
@@ -983,8 +984,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank      = x1.rank   # TODO ^^
 
     def _set_dtype_precision(self, x1, x2):
-        self._dtype     = NativeReal()
-        self._precision = default_precision['real']
+        self._dtype     = NativeFloat()
+        self._precision = default_precision['float']
 
     def _set_order(self, x1, x2):
         if x1.order == x2.order:
@@ -1088,7 +1089,7 @@ class NumpyAbs(NumpyUfuncUnary):
     __slots__ = ()
     name = 'abs'
     def _set_dtype_precision(self, x):
-        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyFloor(NumpyUfuncUnary):
@@ -1096,7 +1097,7 @@ class NumpyFloor(NumpyUfuncUnary):
     __slots__ = ()
     name = 'floor'
     def _set_dtype_precision(self, x):
-        self._dtype     = NativeReal()
+        self._dtype     = NativeFloat()
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
@@ -1131,15 +1132,15 @@ class NumpyMod(NumpyUfuncBinary):
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        others    = [a for a in args if a not in integers+reals]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
+        others    = [a for a in args if a not in integers+floats]
 
         if others:
             raise TypeError('{} not supported'.format(others[0].dtype))
 
-        if reals:
-            self._dtype     = NativeReal()
-            self._precision = max(a.precision for a in reals)
+        if floats:
+            self._dtype     = NativeFloat()
+            self._precision = max(a.precision for a in floats)
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(a.precision for a in integers)

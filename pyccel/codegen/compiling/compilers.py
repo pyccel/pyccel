@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import sysconfig
+import platform
 import warnings
 from filelock import FileLock
 from pyccel import __version__ as pyccel_version
@@ -19,10 +20,11 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-# Set correct deployment target if on mac
-mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
-if mac_target:
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+if platform.system() == 'Darwin':
+    # Set correct deployment target if on mac
+    mac_target = platform.mac_ver()[0]
+    if mac_target:
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 python_version = sysconfig.get_python_version()
 def different_version(compiler):
@@ -293,7 +295,8 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
-        compile_obj.acquire_lock()
+        with FileLock('.lock_acquisition.lock'):
+            compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
         finally:
@@ -326,21 +329,19 @@ class Compiler:
         else:
             j_code = ()
 
-        if compile_obj.is_module:
-            flags.append('-c')
-
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.module_target,
-                '-o', compile_obj.target,
+                *m_code, compile_obj.source,
+                '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
-        compile_obj.acquire_lock()
+        with FileLock('.lock_acquisition.lock'):
+            compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
         finally:
             compile_obj.release_lock()
 
-        return compile_obj.target
+        return compile_obj.program_target
 
     def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
         """
@@ -383,10 +384,11 @@ class Compiler:
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
-                *libs_flags, *m_code, compile_obj.module_target,
-                '-o', file_out]
+                *m_code, compile_obj.module_target,
+                '-o', file_out, *libs_flags]
 
-        compile_obj.acquire_lock()
+        with FileLock('.lock_acquisition.lock'):
+            compile_obj.acquire_lock()
         try:
             self.run_command(cmd, verbose)
         finally:
