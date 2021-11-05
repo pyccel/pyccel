@@ -137,7 +137,7 @@ class Complexity(object):
         # ...
 
         # ... then we compute the complexity for the main program
-        expr = self._cost(self.ast)
+        expr = self._cost(self.ast.program)
 
         if simplify:
             expr = sp_simplify(expr)
@@ -162,6 +162,9 @@ class Complexity(object):
                 obj = getattr(self, method)(expr, **settings)
                 return obj
         raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
+
+    def _cost_Program(self, expr, **settings):
+        return self._cost(expr.body, **settings)
 
     def _cost_CodeBlock(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.body)
