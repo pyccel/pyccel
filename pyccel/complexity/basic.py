@@ -194,13 +194,14 @@ class Complexity(object):
         i = expr.target
         i = pyccel_to_sympy(i, self._symbol_map, self._used_names)
 
-        b = expr.iterable.start
+        iter_range = expr.iterable.get_range()
+        b = iter_range.start
         b = pyccel_to_sympy(b, self._symbol_map, self._used_names)
 
-        e = expr.iterable.stop
+        e = iter_range.stop
         e = pyccel_to_sympy(e, self._symbol_map, self._used_names)
 
-        step = expr.iterable.step
+        step = iter_range.step
         step = pyccel_to_sympy(step, self._symbol_map, self._used_names)
         # ...
 
