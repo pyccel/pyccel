@@ -53,12 +53,13 @@ def f3(A: 'double[:,:]',
 
 # ===================================================
 
-n = 5
+if __name__ == '__main__':
+    n = 5
 
-x = zeros((n,n))
-b = zeros((n,n))
-L = zeros((n,n))
+    x = zeros((n,n))
+    b = zeros((n,n))
+    L = zeros((n,n))
 
-f1(L,b,x)
-f2(L,b,x)
-f3(L,b)
+    f1(L,b,x)
+    f2(L,b,x)
+    f3(L,b)
