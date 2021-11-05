@@ -155,7 +155,7 @@ module boo
 end module boo
 ```
 
-Now, We will see an advnaced example of this feature with `const`  keyword and using multiple arguments function-type:
+Now, we will see an advanced example of this feature with `const`  keyword and using multiple arguments function-type:
 
 Here is the python code:
 
