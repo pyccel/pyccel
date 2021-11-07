@@ -4999,7 +4999,7 @@ def test_numpy_linspace_scalar(language):
     @types('int', 'int', 'int[:]')
     def test_linspace_type(start, end, result):
         from numpy import linspace
-        x = linspace(start, end, 15, dtype='int')
+        x = linspace(start + 4, end, 15, dtype='int')
         for i in range(len(x)):
             if x[i] != result[i]:
                 return 0
@@ -5008,7 +5008,7 @@ def test_numpy_linspace_scalar(language):
     @types('int', 'int', 'complex128[:]')
     def test_linspace_type2(start, end, result):
         from numpy import linspace
-        x = linspace(start, end, 15, dtype='complex128')
+        x = linspace(start, end * 2, 15, dtype='complex128')
         for i in range(len(x)):
             result[i] = x[i]
 
@@ -5027,9 +5027,9 @@ def test_numpy_linspace_scalar(language):
     epyccel_func_type = epyccel(test_linspace_type, language=language)
     epyccel_func_type2 = epyccel(test_linspace_type2, language=language)
 
-    x = linspace(0, 10, 15, dtype='int')
+    x = linspace(0 + 4, 10, 15, dtype='int')
     assert (epyccel_func_type(0, 10, x) == 1)
-    x = linspace(0, 10, 15, dtype='complex128')
+    x = linspace(0, 10 * 2, 15, dtype='complex128')
     out = np.empty_like(x)
     epyccel_func_type2(0, 10, out)
     assert (np.allclose(x, out))
