@@ -5103,7 +5103,7 @@ def test_numpy_linspace_array_like_1d(language):
         from numpy import linspace
         import numpy as np
         numberOfSamplesToGenerate = 7
-        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint, dtype=np.int32)
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=(endpoint == True), dtype=np.int32)
         for i in range(len(out)):
             for j in range(len(out[i])):
                 out[i][j] = a[i][j]
