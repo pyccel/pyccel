@@ -4965,6 +4965,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
 
 def test_numpy_linspace_scalar(language):
+    from numpy import linspace
 
     @types('int', 'int', 'int')
     @types('int8', 'int', 'int')
@@ -4995,6 +4996,22 @@ def test_numpy_linspace_scalar(language):
         x = linspace(start, end, 5)
         return x[0], x[1], x[2], x[3], x[4]
 
+    @types('int', 'int', 'int[:]')
+    def test_linspace_type(start, end, result):
+        from numpy import linspace
+        x = linspace(start, end, 15, dtype='int')
+        for i in range(len(x)):
+            if x[i] != result[i]:
+                return 0
+        return 1
+
+    @types('int', 'int', 'complex128[:]')
+    def test_linspace_type2(start, end, result):
+        from numpy import linspace
+        x = linspace(start, end, 15, dtype='complex128')
+        for i in range(len(x)):
+            result[i] = x[i]
+
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -5007,6 +5024,15 @@ def test_numpy_linspace_scalar(language):
     fl64 = uniform(min_float64 / 200, max_float64 / 200)
 
     epyccel_func = epyccel(get_linspace, language=language)
+    epyccel_func_type = epyccel(test_linspace_type, language=language)
+    epyccel_func_type2 = epyccel(test_linspace_type2, language=language)
+
+    x = linspace(0, 10, 15, dtype='int')
+    assert (epyccel_func_type(0, 10, x) == 1)
+    x = linspace(0, 10, 15, dtype='complex128')
+    out = np.empty_like(x)
+    epyccel_func_type2(0, 10, out)
+    assert (np.allclose(x, out))
     arr = np.zeros
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
