@@ -714,9 +714,9 @@ class FCodePrinter(CodePrinter):
 
             if expr.rank > 1:
                 #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
-                lhs = self._print(lhs).replace(self._print(expr.ind),
-                                               self._print(PyccelMinus(expr.num, LiteralInteger(1),
-                                               simplify = True)))
+                lhs_source = expr.get_user_nodes(Assign)[0].lhs
+                lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+                lhs = self._print(lhs_source)
             else:
                 #Since the expr.rank == 1, we modify the last element in the array.
                 lhs = self._print(IndexedElement(lhs,
