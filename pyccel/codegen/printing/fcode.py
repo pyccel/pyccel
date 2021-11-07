@@ -713,7 +713,7 @@ class FCodePrinter(CodePrinter):
 
 
             if expr.rank > 1:
-                #expr.rank > 1, we need to replace the last indice of the loop with the last index of the array.
+                #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
                 lhs = self._print(lhs).replace(self._print(expr.ind),
                                                self._print(PyccelMinus(expr.num, LiteralInteger(1),
                                                simplify = True)))
