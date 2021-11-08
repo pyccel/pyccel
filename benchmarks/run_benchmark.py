@@ -11,6 +11,7 @@ latex_out = True
 
 pyperf = True
 time_compliation = True
+time_execution = False
 
 test_cases = ['python']
 #test_cases += ['pypy']
@@ -25,7 +26,7 @@ tests = [
     TestInfo('Ackermann',
         'ackermann_mod.py',
         ['ackermann'],
-        'import sys; sys.setrecursionlimit(3000)',
+        'import sys; sys.setrecursionlimit(3000);',
         'ackermann(3,8)'),
     TestInfo('Bellman Ford',
         'bellman_ford_mod.py',
@@ -76,7 +77,7 @@ tests = [
         u0 = np.ones(nx);
         u0[int(.5 / dx):int(1 / dx + 1)] = 2;
         u = u0.copy();
-        un = np.ones(nx)''',
+        un = np.ones(nx);''',
         'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
     TestInfo('FD - Poisson',
         'cfd_python.py',
@@ -100,7 +101,7 @@ tests = [
            x = np.linspace(0, 2, nx);
            y = np.linspace(0, 1, ny);
            p[:, 0] = 0; p[:, -1] = y;
-           p[0, :] = p[1, :]; p[-1, :] = p[-2, :]''',
+           p[0, :] = p[1, :]; p[-1, :] = p[-2, :];''',
         'laplace_2d(p, y, dx, dy, l1norm_target)'),
     TestInfo('M-D',
         'md_mod.py',
@@ -135,6 +136,9 @@ latex_units = ['s','ms','\\textmu s','ns']
 start_dir = os.getcwd()
 
 for t in tests:
+    print("===========================================", file=log_file, flush=True)
+    print("   ",t.name, file=log_file, flush=True)
+    print("===========================================", file=log_file, flush=True)
     basename = t.basename
 
     test_file = os.path.join('code',basename)
@@ -193,80 +197,105 @@ for t in tests:
                 cpu_time = sum(times)
                 print("Compilation CPU time : ", cpu_time, file=log_file)
 
-        cmd = ['pypy'] if case=='pypy' else ['python3']
-        cmd += ['-m'] + timeit_cmd + ['-s', setup_cmd, exec_cmd]
+        if time_compliation and case == "numba":
+            cmd = ['pypy'] if case=='pypy' else ['python3']
+            run_str = "{setup}import time; t0 = time.process_time(); {run}; t1 = time.process_time(); {run}; t2 = time.process_time(); print(2*t1-t0-t2)".format(
+                    setup=setup_cmd,
+                    run=exec_cmd)
+            cmd += ['-c', run_str]
 
-        if verbose:
-            print(cmd, file=log_file, flush=True)
-
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                universal_newlines=True)
-        out, err = p.communicate()
-
-        if p.returncode != 0:
-            print("Execution Error!", file=log_file, flush=True)
-            run_times.append(None)
-            run_units.append(None)
-            print(err, file=log_file, flush=True)
-        else:
             if verbose:
-                print(out, file=log_file, flush=True)
-            if pyperf:
-                regexp = re.compile('([0-9.]+) (\w\w\w?) \+- ([0-9.]+) (\w\w\w?)')
-                r = regexp.search(out)
-                assert r.group(2) == r.group(4)
-                mean = float(r.group(1))
-                stddev = float(r.group(3))
-                units = r.group(2)
+                print(cmd, file=log_file, flush=True)
 
-                bench_str = '{mean} $\pm$ {stddev}'.format(
-                        mean=mean,
-                        stddev=stddev)
-                run_times.append((mean,stddev))
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    universal_newlines=True)
+            out, err = p.communicate()
+
+            if p.returncode != 0:
+                print("Execution Error!", file=log_file, flush=True)
+                run_times.append(None)
+                run_units.append(None)
+                print(err, file=log_file, flush=True)
             else:
-                regexp = re.compile('([0-9]+) loops?, best of ([0-9]+): ([0-9.]+) (\w*)')
-                r = regexp.search(out)
-                best = float(r.group(3))
-                units = r.group(4)[:-2]
-                bench_str = best
-                run_times.append(best)
+                print("Compilation Process time : ",out, file=log_file, flush=True)
 
-            run_units.append(possible_units.index(units))
+        if time_execution:
+            cmd = ['pypy'] if case=='pypy' else ['python3']
+            cmd += ['-m'] + timeit_cmd + ['-s', setup_cmd, exec_cmd]
+
+            if verbose:
+                print(cmd, file=log_file, flush=True)
+
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    universal_newlines=True)
+            out, err = p.communicate()
+
+            if p.returncode != 0:
+                print("Execution Error!", file=log_file, flush=True)
+                run_times.append(None)
+                run_units.append(None)
+                print(err, file=log_file, flush=True)
+            else:
+                if verbose:
+                    print(out, file=log_file, flush=True)
+                if pyperf:
+                    regexp = re.compile('([0-9.]+) (\w\w\w?) \+- ([0-9.]+) (\w\w\w?)')
+                    r = regexp.search(out)
+                    assert r.group(2) == r.group(4)
+                    mean = float(r.group(1))
+                    stddev = float(r.group(3))
+                    units = r.group(2)
+
+                    bench_str = '{mean} $\pm$ {stddev}'.format(
+                            mean=mean,
+                            stddev=stddev)
+                    run_times.append((mean,stddev))
+                else:
+                    regexp = re.compile('([0-9]+) loops?, best of ([0-9]+): ([0-9.]+) (\w*)')
+                    r = regexp.search(out)
+                    best = float(r.group(3))
+                    units = r.group(4)[:-2]
+                    bench_str = best
+                    run_times.append(best)
+
+                run_units.append(possible_units.index(units))
 
         if case in accelerator_commands:
             p = subprocess.Popen(['pyccel-clean', '-s'])
 
-    used_units = [u for u in run_units if u is not None]
-    unit_index = round(sum(used_units)/len(used_units))
-    units = latex_units[unit_index]
-    row = [t.name + ' ('+units+')']
+    if time_execution:
+        used_units = [u for u in run_units if u is not None]
+        unit_index = round(sum(used_units)/len(used_units))
+        units = latex_units[unit_index]
+        row = [t.name + ' ('+units+')']
 
-    mult_fact = [1000**(unit_index-u) if u is not None else None for u in run_units]
+        mult_fact = [1000**(unit_index-u) if u is not None else None for u in run_units]
 
-    if pyperf:
-        for time,f in zip(run_times,mult_fact):
-            if time is None:
-                row.append('-')
-            else:
-                mean,stddev = time
-                row.append('{mean} $\pm$ {stddev}'.format(
-                            mean=mean*f,
-                            stddev=stddev*f))
-    else:
-        for time,f in zip(run_times,mult_fact):
-            if time is None:
-                row.append('-')
-            else:
-                row.append(str(time*f))
+        if pyperf:
+            for time,f in zip(run_times,mult_fact):
+                if time is None:
+                    row.append('-')
+                else:
+                    mean,stddev = time
+                    row.append('{mean} $\pm$ {stddev}'.format(
+                                mean=mean*f,
+                                stddev=stddev*f))
+        else:
+            for time,f in zip(run_times,mult_fact):
+                if time is None:
+                    row.append('-')
+                else:
+                    row.append(str(time*f))
 
-    row = cell_splitter.join('{0: <25}'.format(s) for s in row)
-    if verbose:
-        print(row, file=log_file, flush=True)
-    result_table.append(row)
+        row = cell_splitter.join('{0: <25}'.format(s) for s in row)
+        if verbose:
+            print(row, file=log_file, flush=True)
+        result_table.append(row)
     os.chdir(start_dir)
 
 log_file.close()
 
-result_file = open("bench.out",'w')
-print(row_splitter.join(result_table), file=result_file, flush=True)
-result_file.close()
+if time_execution:
+    result_file = open("bench.out",'w')
+    print(row_splitter.join(result_table), file=result_file, flush=True)
+    result_file.close()
