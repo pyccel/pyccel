@@ -8,11 +8,12 @@
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
+from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.numpyext   import Shape as NumpyShape
-from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable
+from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -37,6 +38,7 @@ import_target_swap = {
                    'ones_like'  : 'ones',
                    'max'        : 'amax',
                    'min'        : 'amin',
+                   'T'          : 'transpose',
                    'full_like'  : 'full'},
         'numpy.random' : {'random' : 'rand'}
         }
@@ -85,6 +87,41 @@ class PythonCodePrinter(CodePrinter):
             src_info[0].update(import_obj.target)
             src_info[1].append(import_obj)
 
+    def _find_functional_expr_and_iterables(self, expr):
+        """
+        Traverse through the loop representing a FunctionalFor or GeneratorComprehension
+        to extract the central expression and the different iterable objects
+
+        Parameters
+        ----------
+        expr : FunctionalFor
+
+        Returns
+        -------
+        body      : PyccelAstNode
+                    The expression inside the for loops
+        iterables : list of Iterables
+                    The iterables over which the for loops iterate
+        """
+        dummy_var = expr.index
+        iterables = []
+        body = expr.loops[1]
+        while not isinstance(body, Assign):
+            if isinstance(body, CodeBlock):
+                body = body.body
+                if len(body) > 1:
+                    if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
+                        raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
+                body = body[0]
+            elif isinstance(body, For):
+                iterables.append(body.iterable)
+                body = body.body
+            else:
+                raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
+        return body, iterables
+
+    #----------------------------------------------------------------------
+
     def _print_tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
@@ -104,8 +141,17 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_ValuedArgument(self, expr):
-        return '{} = {}'.format(self._print(expr.argument), self._print(expr.value))
+    def _print_FunctionDefArgument(self, expr):
+        if expr.has_default:
+            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+        else:
+            return self._print(expr.name)
+
+    def _print_FunctionCallArgument(self, expr):
+        if expr.keyword:
+            return '{} = {}'.format(expr.keyword, self._print(expr.value))
+        else:
+            return self._print(expr.value)
 
     def _print_Idx(self, expr):
         return self._print(expr.name)
@@ -203,11 +249,17 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
 
-        rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
-        lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
+        if expr.stmt:
+            rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)]
+            lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)]
+            prelude  = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
+        else:
+            rhs_list = []
+            lhs_list = []
+            prelude  = ''
         expr_return_vars = [a for a in expr.expr if a not in lhs_list]
 
-        return 'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
+        return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
 
     def _print_Program(self, expr):
         imports  = ''.join(self._print(i) for i in expr.imports)
@@ -281,6 +333,9 @@ class PythonCodePrinter(CodePrinter):
         else:
             return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
+    def _print_Iterable(self, expr):
+        return self._print(expr.iterable)
+
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
                 start = self._print(expr.start),
@@ -288,8 +343,18 @@ class PythonCodePrinter(CodePrinter):
                 step  = self._print(expr.step ))
 
     def _print_PythonEnumerate(self, expr):
-        return 'enumerate({elem})'.format(
-                elem = self._print(expr.element))
+        if expr.start == 0:
+            return 'enumerate({elem})'.format(
+                    elem = self._print(expr.element))
+        else:
+            return 'enumerate({elem},{start})'.format(
+                    elem = self._print(expr.element),
+                    start = self._print(expr.start))
+
+    def _print_PythonMap(self, expr):
+        return 'map({func}, {args})'.format(
+                func = self._print(expr.func.name),
+                args = self._print(expr.func_args))
 
     def _print_PythonReal(self, expr):
         return '({}).real'.format(self._print(expr.internal_var))
@@ -378,26 +443,33 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_FunctionalFor(self, expr):
-        dummy_var = expr.index
-        iterators = []
-        body = expr.loops[1]
-        while not isinstance(body, Assign):
-            if isinstance(body, CodeBlock):
-                body = body.body
-                if len(body) > 1:
-                    if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
-                        raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
-                body = body[0]
-            elif isinstance(body, For):
-                iterators.append(body.iterable)
-                body = body.body
-            else:
-                raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
+        body, iterators = self._find_functional_expr_and_iterables(expr)
+        lhs = self._print(expr.lhs)
         body = self._print(body.rhs)
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
-        lhs = self._print(expr.lhs)
+
         return '{} = [{} {}]\n'.format(lhs, body, for_loops)
+
+    def _print_GeneratorComprehension(self, expr):
+        body, iterators = self._find_functional_expr_and_iterables(expr)
+
+        rhs = body.rhs
+        if isinstance(rhs, (PythonMax, PythonMin)):
+            args = rhs.args[0]
+            if body.lhs in args:
+                args = [a for a in args if a != body.lhs]
+                if len(args)==1:
+                    rhs = args[0]
+                else:
+                    rhs = type(body.rhs)(*args)
+
+        lhs = self._print(expr.lhs)
+        body = self._print(rhs)
+        for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
+                        for idx, iters in zip(expr.indices, iterators)])
+
+        return '{} = {}({} {})\n'.format(lhs, expr.name, body, for_loops)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
@@ -413,14 +485,26 @@ class PythonCodePrinter(CodePrinter):
         return 'continue\n'
 
     def _print_Assign(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        return'{0} = {1}\n'.format(lhs,rhs)
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, Variable) and lhs.rank>1 and rhs.order != lhs.order:
+            return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
+        else:
+            return'{0} = {1}\n'.format(lhs_code,rhs_code)
 
     def _print_AliasAssign(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        return'{0} = {1}\n'.format(lhs,rhs)
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        if isinstance(rhs, Variable) and rhs.order!= lhs.order:
+            return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
+        else:
+            return'{0} = {1}\n'.format(lhs_code,rhs_code)
 
     def _print_AugAssign(self, expr):
         lhs = self._print(expr.lhs)
@@ -447,12 +531,14 @@ class PythonCodePrinter(CodePrinter):
             factor = 16 if dtype == 'complex' else 8
             dtype += str(expr.precision*factor)
 
-        name = self._aliases.get(type(expr), expr.name)
-        return "{name}({arg}, dtype={dtype}, order='{order}')".format(
+        name  = self._aliases.get(type(expr), expr.name)
+        arg   = self._print(expr.arg)
+        dtype = "dtype={}".format(dtype)
+        order = "order='{}'".format(expr.order) if expr.order else ''
+        args  = [arg, dtype, order]
+        return "{name}({args})".format(
                 name  = name,
-                arg   = self._print(expr.arg),
-                dtype = dtype,
-                order = expr.order)
+                args  = ', '.join(a for a in args if a))
 
     def _print_NumpyAutoFill(self, expr):
         func_name = self._aliases.get(type(expr), expr.name)
@@ -462,11 +548,13 @@ class PythonCodePrinter(CodePrinter):
             factor = 16 if dtype == 'complex' else 8
             dtype += str(expr.precision*factor)
 
-        return "{func_name}({shape}, dtype={dtype}, order='{order}')".format(
+        shape = self._print(expr.shape)
+        dtype = "dtype={}".format(dtype)
+        order = "order='{}'".format(expr.order) if expr.order else ''
+        args  = [shape, dtype, order]
+        return "{func_name}({args})".format(
                 func_name = func_name,
-                shape = self._print(expr.shape),
-                dtype = dtype,
-                order = expr.order)
+                args  = ', '.join(a for a in args if a))
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
@@ -491,12 +579,14 @@ class PythonCodePrinter(CodePrinter):
             factor = 16 if dtype == 'complex' else 8
             dtype += str(expr.precision*factor)
 
-        return "{name}({shape}, {fill_value}, dtype={dtype}, order='{order}')".format(
+        shape      = self._print(expr.shape)
+        fill_value = self._print(expr.fill_value)
+        dtype      = "dtype={}".format(dtype)
+        order      = "order='{}'".format(expr.order) if expr.order else ''
+        args       = [shape, fill_value, dtype, order]
+        return "{name}({args})".format(
                 name  = name,
-                shape = self._print(expr.shape),
-                fill_value = self._print(expr.fill_value),
-                dtype = dtype,
-                order = expr.order)
+                args  = ', '.join(a for a in args if a))
 
     def _print_NumpyArange(self, expr):
         name = self._aliases.get(type(expr), expr.name)

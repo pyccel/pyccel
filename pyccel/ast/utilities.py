@@ -20,17 +20,18 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
                             Concatenate)
 
-from .builtins      import (builtin_functions_dict, PythonMap,
+from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants
-from .literals      import LiteralString, LiteralInteger, Literal, Nil
+from .literals      import LiteralInteger, Literal, Nil
 
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants, NumpyArray)
-from .operators     import PyccelAdd, PyccelMul, PyccelIs
-from .variable      import (Constant, Variable, ValuedVariable,
+                            numpy_random_functions, numpy_constants, NumpyArray,
+                            NumpyTranspose)
+from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
+from .variable      import (Constant, Variable,
                             IndexedElement, InhomogeneousTupleVariable, VariableAddress,
                             HomogeneousTupleVariable )
 
@@ -60,6 +61,9 @@ def builtin_function(expr, args=None):
 
     dic = builtin_functions_dict
 
+    # Unpack FunctionCallArguments
+    args = [a.value for a in args]
+
     if name in dic.keys() :
         try:
             return dic[name](*args)
@@ -67,9 +71,6 @@ def builtin_function(expr, args=None):
             errors.report(e,
                     symbol=expr,
                     severity='fatal')
-
-    if name == 'map':
-        return PythonMap(expr.args[0], *args[1:])
 
     if name == 'lambdify':
         return lambdify(expr, args)
@@ -160,16 +161,14 @@ def split_positional_keyword_arguments(*args):
     # Distinguish between positional and keyword arguments
     val_args = ()
     for i, a in enumerate(args):
-        if isinstance(a, ValuedVariable):
+        if a.has_keyword:
             args, val_args = args[:i], args[i:]
             break
 
+    # Collect values from args
+    args = [a.value for a in args]
     # Convert list of keyword arguments into dictionary
-    kwargs = {}
-    for v in val_args:
-        key   = str(v.name)
-        value = v.value
-        kwargs[key] = value
+    kwargs = {a.keyword: a.value for a in val_args}
 
     return args, kwargs
 
@@ -236,7 +235,9 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i, language_has_vectors = True)
     c := a + b
     """
-    if isinstance(expr, (Variable, VariableAddress)):
+    if expr.rank==0:
+        return expr
+    elif isinstance(expr, (Variable, VariableAddress)):
         if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
@@ -246,6 +247,19 @@ def insert_index(expr, pos, index_var):
         # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
         return IndexedElement(expr, *indexes)
+
+    elif isinstance(expr, NumpyTranspose):
+        if expr.rank==0 or -pos>expr.rank:
+            return expr
+        if expr.shape[pos]==1:
+            # If there is no dimension in this axis, reduce the rank
+            index_var = LiteralInteger(0)
+
+        # Add index at the required position
+        if expr.rank<2:
+            return insert_index(expr.internal_var, expr.rank-1+pos, index_var)
+        else:
+            return NumpyTranspose(insert_index(expr.internal_var, expr.rank-1+pos, index_var))
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
@@ -270,6 +284,10 @@ def insert_index(expr, pos, index_var):
 
         indices[pos] = index_var
         return IndexedElement(base, *indices)
+
+    elif isinstance(expr, PyccelArithmeticOperator):
+        return type(expr)(insert_index(expr.args[0], pos, index_var),
+                          insert_index(expr.args[1], pos, index_var))
 
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
@@ -320,12 +338,13 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
+                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental
+                                    and not isinstance(f, NumpyTranspose)))
     for line in block:
 
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (FunctionDef)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable
@@ -342,6 +361,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             notable_nodes = line.get_attribute_nodes((Variable,
                                                        IndexedElement,
                                                        VariableAddress,
+                                                       NumpyTranspose,
                                                        FunctionCall,
                                                        PyccelInternalFunction,
                                                        PyccelIs))
@@ -360,22 +380,28 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             variables      += [v for f in elemental_func_calls \
                                  for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
                                                             excluded_nodes = (FunctionDef))]
+            transposed_vars = [v for v in notable_nodes if isinstance(v, NumpyTranspose)] \
+                                + [v for f in elemental_func_calls \
+                                     for v in f.get_attribute_nodes(NumpyTranspose,
+                                                            excluded_nodes = (FunctionDef))]
 
             is_checks = [n for n in notable_nodes if isinstance(n, PyccelIs)]
 
             variables = list(set(variables))
 
             # Check if the expression is already satisfactory
-            if compatible_operation(*variables, *is_checks, language_has_vectors = language_has_vectors):
+            if compatible_operation(*variables, *transposed_vars, *is_checks,
+                                    language_has_vectors = language_has_vectors):
                 result.append(line)
                 current_level = 0
                 continue
 
             # Find function calls in this line
-            funcs           = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
+            funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
-            internal_funcs  = [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
-                                                            and not f.is_elemental)]
+            internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelInternalFunction) \
+                                                            and not f.is_elemental) \
+                                                            and not isinstance(f, NumpyTranspose)]
 
             # Collect all variables for which values other than the value indexed in the loop are important
             # E.g. x = np.sum(a) has a dependence on a
@@ -393,8 +419,8 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
 
             if any(len(f.funcdef.results)!=1 for f in funcs):
-                errors.report("Loop unravelling cannot handle function calls \
-                        which return tuples or None",
+                errors.report("Loop unravelling cannot handle function calls "\
+                        "which return tuples or None",
                         symbol=line, severity='fatal')
 
             func_vars2 = [f.funcdef.results[0].clone(new_index_name('tmp')) for f in funcs]
@@ -403,9 +429,9 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             if assigns:
                 # For now we do not handle memory allocation in loop unravelling
                 if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_vars1):
-                    errors.report("Loop unravelling cannot handle extraction of function calls \
-                            which return arrays as this requires allocation. Please place the function \
-                            call on its own line",
+                    errors.report("Loop unravelling cannot handle extraction of function calls "\
+                            "which return arrays as this requires allocation. Please place the function "\
+                            "call on its own line",
                             symbol=line, severity='fatal')
                 line.substitute(internal_funcs, func_vars1, excluded_nodes=(FunctionCall))
                 line.substitute(funcs, func_vars2)
@@ -417,6 +443,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             rank = line.lhs.rank
             shape = line.lhs.shape
             new_vars = variables
+            new_vars_t = transposed_vars
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
@@ -427,12 +454,15 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                     indices.append(Variable('int',new_index_name('i')))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
-                if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
+                new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
+                if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
                     break
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
+            line.substitute(transposed_vars, new_vars_t, excluded_nodes = (FunctionCall))
             _ = [f.substitute(variables, new_vars, excluded_nodes = (FunctionDef)) for f in elemental_func_calls]
+            _ = [f.substitute(transposed_vars, new_vars_t, excluded_nodes = (FunctionDef)) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
