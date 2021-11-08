@@ -13,7 +13,7 @@ from pyccel.errors.errors import Errors
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
-                        NativeInteger, NativeBool, NativeReal,
+                        NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
@@ -39,7 +39,7 @@ class Variable(PyccelAstNode):
     ----------
     dtype : str, DataType
         The type of the variable. Can be either a DataType,
-        or a str (bool, int, real).
+        or a str (bool, int, float).
 
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
@@ -97,7 +97,7 @@ class Variable(PyccelAstNode):
     >>> Variable('int', 'n')
     n
     >>> n = 4
-    >>> Variable('real', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> Variable('float', 'x', rank=2, shape=(n,2), allocatable=True)
     x
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
@@ -205,8 +205,8 @@ class Variable(PyccelAstNode):
         if not precision:
             if isinstance(dtype, NativeInteger):
                 precision = default_precision['int']
-            elif isinstance(dtype, NativeReal):
-                precision = default_precision['real']
+            elif isinstance(dtype, NativeFloat):
+                precision = default_precision['float']
             elif isinstance(dtype, NativeComplex):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
@@ -396,13 +396,13 @@ class Variable(PyccelAstNode):
     def is_ndarray(self):
         """user friendly method to check if the variable is an ndarray:
             1. have a rank > 0
-            2. dtype is one among {int, bool, real, complex}
+            2. dtype is one among {int, bool, float, complex}
         """
 
         if self.rank == 0:
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
-                          NativeReal, NativeComplex))
+                          NativeFloat, NativeComplex))
 
     def __str__(self):
         return str(self.name)
@@ -730,8 +730,8 @@ class Constant(Variable):
     --------
     >>> from pyccel.ast.variable import Constant
     >>> import math
-    >>> Constant('real', 'pi' , value=math.pi )
-    Constant('pi', dtype=NativeReal())
+    >>> Constant('float', 'pi' , value=math.pi )
+    Constant('pi', dtype=NativeFloat())
 
     """
     __slots__ = ('_value',)

@@ -60,7 +60,7 @@ from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
-                                  NativeReal, NativeString,
+                                  NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
@@ -74,11 +74,13 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString
+from pyccel.ast.literals import Literal, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
@@ -247,15 +249,7 @@ class SemanticParser(BasicParser):
         # FunctionDef etc ...
 
         if self.is_header_file:
-            target = []
-
-            for parent in self.parents:
-                for (key, item) in parent.imports.items():
-                    if get_filename_from_import(key) == self.filename:
-                        target += item
-
-            target = set(target)
-            target_headers = target.intersection(self.namespace.headers.keys())
+            target_headers = self.namespace.headers.keys()
             # ARA : issue-999
             is_external = self.metavars.get('external', False)
             for name in list(target_headers):
@@ -1069,6 +1063,13 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
+
+            if func is NumpyWhere:
+                if len(args) != 3:
+                    errors.report(INVALID_WHERE_ARGUMENT,
+                        symbol=expr, blocker=True,
+                        severity='fatal')
+
             try:
                 new_expr = func(*args, **kwargs)
             except TypeError:
@@ -1559,7 +1560,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr, FunctionalSum):
             val = LiteralInteger(0)
-            if str_dtype(dtype) in ['real', 'complex']:
+            if str_dtype(dtype) in ['float', 'complex']:
                 val = LiteralFloat(0.0)
         elif isinstance(expr, FunctionalMin):
             val = math_constants['inf']
@@ -1955,6 +1956,12 @@ class SemanticParser(BasicParser):
                             imp.define_target(PyccelSymbol(rhs_name))
                         else:
                             imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
+                elif isinstance(rhs, FunctionCall):
+                    self.namespace.imports['functions'][new_name] = first[rhs_name]
+                elif isinstance(rhs, ConstructorCall):
+                    self.namespace.imports['classes'][new_name] = first[rhs_name]
+                elif isinstance(rhs, Variable):
+                    self.namespace.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
@@ -3151,7 +3158,15 @@ class SemanticParser(BasicParser):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    arg_new = FunctionDefArgument(a_new, value=a.value, kwonly=a.is_kwonly,
+                    value = None if a.value is None else self._visit(a.value)
+                    if isinstance(value, Literal) and \
+                            value.dtype is a_new.dtype and \
+                            value.precision != a_new.precision:
+                        value = convert_to_literal(value.python_value, a_new.dtype, a_new.precision)
+
+                    arg_new = FunctionDefArgument(a_new,
+                                value=value,
+                                kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
                     if additional_args:
@@ -3484,7 +3499,7 @@ class SemanticParser(BasicParser):
             isinstance(var2.dtype, NativeBool)):
             return IsClass(var1, var2)
 
-        lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
+        lst = [NativeString(), NativeComplex(), NativeFloat(), NativeInteger()]
         if (var1.dtype in lst):
             errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
