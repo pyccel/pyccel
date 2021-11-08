@@ -1,6 +1,10 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 
+#$ header function function(int)
+def function(a):
+    return a
+
 #$ header function f1(int)
 def f1(a):
     return a
