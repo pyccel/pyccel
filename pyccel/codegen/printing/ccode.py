@@ -28,7 +28,7 @@ from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
@@ -966,6 +966,7 @@ class CCodePrinter(CodePrinter):
         ------
             String
                 Return format string that contains the desired cast type
+                NB: You should insert the expression to be cast in the string after using this function.
         """
         if (expr.dtype != dtype or expr.precision != precision):
             cast=self.find_in_dtype_registry(self._print(dtype), precision)
@@ -1207,6 +1208,36 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
+
+    def _print_NumpyLinspace(self, expr):
+        template = '({start} + {index}*{step})'
+        if not isinstance(expr.endpoint, LiteralFalse):
+            template = '({start} + {index}*{step})'
+            lhs_source = expr.get_user_nodes(Assign)[0].lhs
+            lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+            lhs = self._print(lhs_source)
+
+            if isinstance(expr.endpoint, LiteralTrue):
+                cond_template = lhs + ' = {stop}'
+            else:
+                cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
+
+        dtype = self._print(expr.dtype)
+        v = self._cast_to(expr.stop, dtype, expr.precision).format(self._print(expr.stop))
+
+        init_value = template.format(
+            start = self._print(expr.start),
+            step  = self._print(expr.step),
+            index = self._print(expr.ind),
+        )
+        if isinstance(expr.endpoint, LiteralFalse):
+            code = init_value
+        elif isinstance(expr.endpoint, LiteralTrue):
+            code = init_value + ';\n' + cond_template.format(stop = v)
+        else:
+            code = init_value + ';\n' + cond_template.format(cond=self._print(expr.endpoint),stop = v)
+
+        return code
 
     def _print_Interface(self, expr):
         return ""

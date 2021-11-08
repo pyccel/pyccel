@@ -162,13 +162,12 @@ def predator_prey_deriv ( t: 'float', rf: 'float[:]', out: 'float[:]' ):
 
 def euler_test ( t0: 'float', t1 : 'float', y0: 'float[:]', n: int ):
     from numpy import zeros
-    #from numpy import linspace
+    from numpy import linspace
 
     m = len ( y0 )
 
     t = [t0+(t1-t0)*i/n for i in range(n+1)]
-    #TODO: Uncomment after PR #838
-    #t = linspace ( t0, t1, n + 1 )
+    t = linspace ( t0, t1, n + 1 )
     y = zeros ( ( n + 1, m ) )
 
     euler ( predator_prey_deriv, t0, t1, y0, n, t, y )
