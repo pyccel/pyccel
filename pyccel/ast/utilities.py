@@ -29,11 +29,10 @@ from .literals      import LiteralInteger, Literal, Nil
 
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants, NumpyArray,
-                            NumpyTranspose)
+                            NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .variable      import (Constant, Variable,
-                            IndexedElement, InhomogeneousTupleVariable, VariableAddress,
-                            HomogeneousTupleVariable )
+from .variable      import (Constant, Variable, IndexedElement, InhomogeneousTupleVariable,
+                            VariableAddress, HomogeneousTupleVariable )
 
 errors = Errors()
 
@@ -45,7 +44,7 @@ __all__ = (
 )
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=pi),
+    'pi': Constant('float', 'pi', value=pi),
                   }
 
 #==============================================================================
@@ -193,7 +192,7 @@ def compatible_operation(*args, language_has_vectors = True):
     if language_has_vectors:
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
-        shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
+        shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
     else:
@@ -457,6 +456,10 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
                 if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
                     break
+
+            # TODO [NH]: get all indices when adding axis argument to linspace function
+            if isinstance(line.rhs, NumpyLinspace):
+                line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))

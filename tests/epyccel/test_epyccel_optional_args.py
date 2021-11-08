@@ -6,6 +6,13 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
+@pytest.fixture(scope="module")
+def Module_5(language):
+    import modules.Module_5 as mod
+
+    modnew = epyccel(mod, language = language)
+    return mod, modnew
+
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')
@@ -93,10 +100,8 @@ def test_f6(language):
     assert mod.call_optional_2(0) == modnew.call_optional_2(0)
     assert mod.call_optional_2() == modnew.call_optional_2()
 #------------------------------------------------------------------------------
-def test_f7(language):
-    import modules.Module_5 as mod
-
-    modnew = epyccel(mod, language = language)
+def test_f7(Module_5):
+    mod, modnew = Module_5
 
     # ...
     assert mod.call_optional_1(3) == modnew.call_optional_1(3)
@@ -104,10 +109,8 @@ def test_f7(language):
     assert mod.call_optional_3(3) == modnew.call_optional_3(3)
 
 #------------------------------------------------------------------------------
-def test_f9(language):
-    import modules.Module_5 as mod
-
-    modnew = epyccel(mod, language = language)
+def test_f9(Module_5):
+    mod, modnew = Module_5
 
     # ...
     assert mod.call_optional_4(3) == modnew.call_optional_4(3)
@@ -117,34 +120,22 @@ def test_f9(language):
     assert mod.call_optional_8() == modnew.call_optional_8()
 
 #------------------------------------------------------------------------------
-def test_f10(language):
-    import modules.Module_5 as mod
-
-    modnew = epyccel(mod, language = language)
+def test_f10(Module_5):
+    mod, modnew = Module_5
 
     # ...
     assert mod.call_optional_9() == modnew.call_optional_9()
     assert mod.call_optional_10() == modnew.call_optional_10()
 
 #------------------------------------------------------------------------------
-def test_f11(language):
-    import modules.Module_5 as mod
-
-    modnew = epyccel(mod, language = language)
+def test_f11(Module_5):
+    mod, modnew = Module_5
 
     # ...
     assert mod.call_optional_11() == modnew.call_optional_11()
     assert mod.call_optional_12() == modnew.call_optional_12()
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_optional_args_1d(language):
     @types( 'int[:]', 'int[:]')
     def f12(x, y = None):
@@ -163,14 +154,6 @@ def test_optional_args_1d(language):
     assert np.array_equal(x1, x2)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Arrays cannot be optional. See #757"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_optional_2d_F(language):
     @types('int32[:,:](order=F)', 'int32[:,:](order=F)')
     def f13(x, y = None):

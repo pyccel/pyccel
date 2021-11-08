@@ -20,7 +20,7 @@ from sympy.core import cache
 from pyccel.ast.basic import Basic, PyccelAstNode
 
 from pyccel.ast.core import FunctionCall, FunctionCallArgument
-from pyccel.ast.core import ParserResult
+from pyccel.ast.core import Module
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -56,7 +56,7 @@ from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import Header, MetaVariable
+from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
@@ -86,6 +86,8 @@ def get_name(a):
         return a.id
     elif isinstance(a, ast.arg):
         return a.arg
+    elif isinstance(a, ast.FunctionDef):
+        return a.name
     else:
         raise NotImplementedError()
 
@@ -130,7 +132,7 @@ class SyntaxParser(BasicParser):
 
         tree                = extend_tree(code)
         self._fst           = tree
-        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg, ast.FunctionDef)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
@@ -158,6 +160,39 @@ class SyntaxParser(BasicParser):
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
 
+    def _treat_comment_line(self, line, stmt):
+        if line.startswith('#$'):
+            env = line[2:].lstrip()
+            if env.startswith('omp'):
+                expr = omp_parse(stmts=line)
+            elif env.startswith('acc'):
+                expr = acc_parse(stmts=line)
+            elif env.startswith('header'):
+                expr = hdr_parse(stmts=line)
+                if isinstance(expr, MetaVariable):
+
+                    # a metavar will not appear in the semantic stage.
+                    # but can be used to modify the ast
+
+                    self._metavars[str(expr.name)] = expr.value
+                    expr = EmptyNode()
+            else:
+
+                raise errors.report(PYCCEL_INVALID_HEADER,
+                              symbol = stmt,
+                              severity='error')
+
+        else:
+            txt = line[1:].lstrip()
+            expr = Comment(txt)
+
+        expr.set_fst(stmt)
+        return expr
+
+    #====================================================
+    #                 _visit functions
+    #====================================================
+
     def _visit(self, stmt):
         """Creates AST from FST."""
 
@@ -181,83 +216,14 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        prog          = []
-        mod           = []
-        start         = []
-        current_file  = start
-        targets       = []
-        n_empty_lines = 0
-        is_prog       = False
         body          = [self._visit(v) for v in stmt.body]
 
-        # Define the names of the module and program
+        # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
-        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        prog_name = 'prog_' + current_mod_name
+        name = os.path.splitext(os.path.basename(self._filename))[0]
 
-        new_body      = []
-        for i in body:
-            if isinstance(i, CodeBlock):
-                new_body += list(i.body)
-            else:
-                new_body.append(i)
-
-        body = new_body
-        for v in body:
-
-            if n_empty_lines > 3:
-                current_file = start
-            if isinstance(v,(FunctionDef, ClassDef)):
-                # Functions and classes are always defined in a module
-                n_empty_lines = 0
-                mod.append(v)
-                targets.append(v.name)
-                current_file = mod
-                im = Import(source=current_mod_name, target = [v.name])
-                prog.append(im)
-            elif isinstance(v,(Header, Comment, CommentBlock)):
-                # Headers and Comments are defined in the same block as the following object
-                n_empty_lines = 0
-                current_file = start
-                current_file.append(v)
-            elif isinstance(v, EmptyNode):
-                # EmptyNodes are defined in the same block as the previous line
-                current_file.append(v)
-                n_empty_lines += 1
-            elif isinstance(v, Import):
-                # Imports are defined in both the module and the program
-                n_empty_lines = 0
-                mod.append(v)
-                prog.append(v)
-            else:
-                # Everything else is defined in a module
-                is_prog = True
-                n_empty_lines = 0
-                prog.append(v)
-                current_file = prog
-
-            # If the current file is now a program or a module. Add headers and comments before the line we just read
-            if len(start)>0 and current_file is not start:
-                current_file[-1:-1] = start
-                start = []
-        if len(start)>0:
-            mod.extend(start)
-
-        mod_code = CodeBlock(mod) if len(targets)>0 else None
-        if is_prog:
-            prog_code = CodeBlock(prog)
-            prog_code.set_fst(stmt)
-        else:
-            prog_code = None
-            # If the file only contains headers
-            if mod_code is None:
-                mod_code = CodeBlock(mod)
-        assert( mod_code is not None or prog_code is not None)
-        code = ParserResult(program   = prog_code,
-                            module    = mod_code,
-                            prog_name = prog_name,
-                            mod_name  = current_mod_name)
-        return code
+        body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
+        return Module(name, [], [], program = CodeBlock(body))
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
@@ -1071,36 +1037,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_CommentMultiLine(self, stmt):
 
-        exprs = []
-        # if annotated comment
-        for com in stmt.s.split('\n'):
-            if com.startswith('#$'):
-                env = com[2:].lstrip()
-                if env.startswith('omp'):
-                    exprs.append(omp_parse(stmts=com))
-                elif env.startswith('acc'):
-                    exprs.append(acc_parse(stmts=com))
-                elif env.startswith('header'):
-                    expr = hdr_parse(stmts=com)
-                    if isinstance(expr, MetaVariable):
-
-                        # a metavar will not appear in the semantic stage.
-                        # but can be used to modify the ast
-
-                        self._metavars[str(expr.name)] = str(expr.value)
-                        expr = EmptyNode()
-                    else:
-                        expr.set_fst(stmt)
-
-                    exprs.append(expr)
-                else:
-                    errors.report(PYCCEL_INVALID_HEADER,
-                                  symbol = stmt,
-                                  severity='error')
-            else:
-
-                txt = com[1:].lstrip()
-                exprs.append(Comment(txt))
+        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split('\n')]
 
         if len(exprs) == 1:
             return exprs[0]
@@ -1108,35 +1045,7 @@ class SyntaxParser(BasicParser):
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):
-
-        # if annotated comment
-
-        if stmt.s.startswith('#$'):
-            env = stmt.s[2:].lstrip()
-            if env.startswith('omp'):
-                return omp_parse(stmts=stmt.s)
-            elif env.startswith('acc'):
-                return acc_parse(stmts=stmt.s)
-            elif env.startswith('header'):
-                expr = hdr_parse(stmts=stmt.s)
-                if isinstance(expr, MetaVariable):
-
-                    # a metavar will not appear in the semantic stage.
-                    # but can be used to modify the ast
-
-                    self._metavars[str(expr.name)] = str(expr.value)
-                    expr = EmptyNode()
-
-                return expr
-            else:
-
-                errors.report(PYCCEL_INVALID_HEADER,
-                              symbol = stmt,
-                              severity='error')
-
-        else:
-            txt = stmt.s[1:].lstrip()
-            return Comment(txt)
+        return self._treat_comment_line(stmt.s, stmt)
 
     def _visit_Break(self, stmt):
         return Break()
