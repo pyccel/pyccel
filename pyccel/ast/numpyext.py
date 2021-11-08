@@ -572,7 +572,6 @@ class NumpyLinspace(NumpyNewArray):
 
     """
     Represents numpy.linspace which returns num evenly spaced samples, calculated over the interval [start, stop].
-
     Parameters
       ----------
       start           : list , tuple , PythonTuple, PythonList, Variable, Literals
@@ -623,23 +622,6 @@ class NumpyLinspace(NumpyNewArray):
                 self._precision = default_precision['float']
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
-
-        args      = (start, stop)
-        integers  = [e for e in args if e.dtype is NativeInteger()]
-        reals     = [e for e in args if e.dtype is NativeFloat()]
-        complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-        if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max(e.precision for e in complexs)
-        elif reals:
-            self._dtype     = NativeFloat()
-            self._precision = max(e.precision for e in reals)
-        elif integers:
-            self._dtype     = NativeFloat()
-            self._precision = default_precision['real']
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
@@ -734,15 +716,15 @@ class NumpyWhere(PyccelInternalFunction):
 
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
-        reals     = [e for e in args if e.dtype is NativeFloat()]
+        floats     = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
-        elif reals:
+        elif floats:
             self._dtype     = NativeFloat()
-            self._precision = max(e.precision for e in reals)
+            self._precision = max(e.precision for e in floats)
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(e.precision for e in integers)
@@ -789,11 +771,7 @@ class NumpyRand(PyccelInternalFunction):
     __slots__ = ('_shape','_rank')
     name = 'rand'
     _dtype = NativeFloat()
-<<<<<<< HEAD
-    _precision = default_precision['real']
-=======
     _precision = default_precision['float']
->>>>>>> 5bcd3be4dd128413c1abd2311f183e8a32395c8f
     _order = 'C'
 
     def __init__(self, *args):
@@ -1128,11 +1106,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
     def _set_dtype_precision(self, x1, x2):
         self._dtype     = NativeFloat()
-<<<<<<< HEAD
-        self._precision = default_precision['real']
-=======
         self._precision = default_precision['float']
->>>>>>> 5bcd3be4dd128413c1abd2311f183e8a32395c8f
 
     def _set_order(self, x1, x2):
         if x1.order == x2.order:
@@ -1279,26 +1253,15 @@ class NumpyMod(NumpyUfuncBinary):
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-<<<<<<< HEAD
-        reals     = [a for a in args if a.dtype is NativeFloat()]
-        others    = [a for a in args if a not in integers+reals]
-=======
         floats    = [a for a in args if a.dtype is NativeFloat()]
         others    = [a for a in args if a not in integers+floats]
->>>>>>> 5bcd3be4dd128413c1abd2311f183e8a32395c8f
 
         if others:
             raise TypeError('{} not supported'.format(others[0].dtype))
 
-<<<<<<< HEAD
-        if reals:
-            self._dtype     = NativeFloat()
-            self._precision = max(a.precision for a in reals)
-=======
         if floats:
             self._dtype     = NativeFloat()
             self._precision = max(a.precision for a in floats)
->>>>>>> 5bcd3be4dd128413c1abd2311f183e8a32395c8f
         elif integers:
             self._dtype     = NativeInteger()
             self._precision = max(a.precision for a in integers)
