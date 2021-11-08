@@ -15,7 +15,7 @@ from .core           import process_shape
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeReal, NativeComplex, NativeBool, str_dtype,
+                             NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice
@@ -503,14 +503,14 @@ class NumpyMatmul(PyccelInternalFunction):
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger()]
         booleans  = [e for e in args if e.dtype is NativeBool()]
-        reals     = [e for e in args if e.dtype is NativeReal()]
+        reals     = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
         elif reals:
-            self._dtype     = NativeReal()
+            self._dtype     = NativeFloat()
             self._precision = max(e.precision for e in reals)
         elif integers:
             self._dtype     = NativeInteger()
@@ -584,17 +584,17 @@ class NumpyLinspace(NumpyNewArray):
 
         args      = (start, stop)
         integers  = [e for e in args if e.dtype is NativeInteger()]
-        reals     = [e for e in args if e.dtype is NativeReal()]
+        reals     = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
         elif reals:
-            self._dtype     = NativeReal()
+            self._dtype     = NativeFloat()
             self._precision = max(e.precision for e in reals)
         elif integers:
-            self._dtype     = NativeReal()
+            self._dtype     = NativeFloat()
             self._precision = default_precision['real']
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
@@ -649,14 +649,14 @@ class NumpyWhere(PyccelInternalFunction):
 
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
-        reals     = [e for e in args if e.dtype is NativeReal()]
+        reals     = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
         elif reals:
-            self._dtype     = NativeReal()
+            self._dtype     = NativeFloat()
             self._precision = max(e.precision for e in reals)
         elif integers:
             self._dtype     = NativeInteger()
@@ -703,7 +703,7 @@ class NumpyRand(PyccelInternalFunction):
     """
     __slots__ = ('_shape','_rank')
     name = 'rand'
-    _dtype = NativeReal()
+    _dtype = NativeFloat()
     _precision = default_precision['real']
     _order = 'C'
 
@@ -850,7 +850,7 @@ class NumpyZeros(NumpyAutoFill):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = LiteralInteger(0, precision = self.precision)
-        elif isinstance(dtype, NativeReal):
+        elif isinstance(dtype, NativeFloat):
             value = LiteralFloat(0, precision = self.precision)
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(0., 0., precision = self.precision)
@@ -871,7 +871,7 @@ class NumpyOnes(NumpyAutoFill):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = LiteralInteger(1, precision = self.precision)
-        elif isinstance(dtype, NativeReal):
+        elif isinstance(dtype, NativeFloat):
             value = LiteralFloat(1., precision = self.precision)
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(1., 0., precision = self.precision)
@@ -946,11 +946,11 @@ class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     __slots__ = ('_shape','_rank','_order','_arg','_precision')
     name = 'norm'
-    _dtype = NativeReal()
+    _dtype = NativeFloat()
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
-        if not isinstance(arg.dtype, (NativeComplex, NativeReal)):
+        if not isinstance(arg.dtype, (NativeComplex, NativeFloat)):
             arg = NumpyFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
         self._precision = arg.precision
@@ -1015,7 +1015,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
 
     def _set_dtype_precision(self, x):
-        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeFloat()
         self._precision  = default_precision[str_dtype(self._dtype)]
 
     def _set_order(self, x):
@@ -1038,7 +1038,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank      = x1.rank   # TODO ^^
 
     def _set_dtype_precision(self, x1, x2):
-        self._dtype     = NativeReal()
+        self._dtype     = NativeFloat()
         self._precision = default_precision['real']
 
     def _set_order(self, x1, x2):
@@ -1143,7 +1143,7 @@ class NumpyAbs(NumpyUfuncUnary):
     __slots__ = ()
     name = 'abs'
     def _set_dtype_precision(self, x):
-        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyFloor(NumpyUfuncUnary):
@@ -1151,7 +1151,7 @@ class NumpyFloor(NumpyUfuncUnary):
     __slots__ = ()
     name = 'floor'
     def _set_dtype_precision(self, x):
-        self._dtype     = NativeReal()
+        self._dtype     = NativeFloat()
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
@@ -1186,14 +1186,14 @@ class NumpyMod(NumpyUfuncBinary):
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
+        reals     = [a for a in args if a.dtype is NativeFloat()]
         others    = [a for a in args if a not in integers+reals]
 
         if others:
             raise TypeError('{} not supported'.format(others[0].dtype))
 
         if reals:
-            self._dtype     = NativeReal()
+            self._dtype     = NativeFloat()
             self._precision = max(a.precision for a in reals)
         elif integers:
             self._dtype     = NativeInteger()
