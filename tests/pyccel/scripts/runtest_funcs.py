@@ -14,4 +14,5 @@ def sum_to_n(n):
         result = add2(result,i)
     return result
 
-print(sum_to_n(4))
+if __name__ == '__main__':
+    print(sum_to_n(4))

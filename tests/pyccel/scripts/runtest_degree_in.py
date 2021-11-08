@@ -11,8 +11,6 @@ def test_degree(degree : int):
         tmp[i]=0.
     return 1
 
-print(test_degree(3))
-
 @pure
 @stack_array('tmp')
 def test_degree2d(degree1 : int, degree2 : int):
@@ -24,5 +22,7 @@ def test_degree2d(degree1 : int, degree2 : int):
             tmp[i,j]=0.
     return 1
 
-print(test_degree(3))
-print(test_degree2d(3,4))
+if __name__ == '__main__':
+    print(test_degree(3))
+    print(test_degree(3))
+    print(test_degree2d(3,4))

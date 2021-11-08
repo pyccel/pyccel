@@ -158,6 +158,33 @@ class Type(BasicStmt):
             d_var['order'] = order
         return d_var
 
+class ShapedID(BasicStmt):
+    """class representing a ShapedID in the grammar.
+
+    Parameters
+    ----------
+    name: str
+        Name of the variable result
+
+    shape: list
+        A list representing the shape of the result
+    """
+
+    def __init__(self, **kwargs):
+        self._name   = kwargs.pop('name')
+        self._shape  = kwargs.pop('shape', [])
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """Returns a dictionary containing name and shape of result"""
+
+        shape = [i.expr if isinstance(i, MacroStmt) else PyccelSymbol(i) for i in self._shape]
+        d_var = {'name': self._name, 'shape': shape}
+
+        return d_var
+
 class TypeHeader(BasicStmt):
     pass
 
@@ -448,9 +475,7 @@ class FunctionMacroStmt(BasicStmt):
         """
 
         self.dotted_name = tuple(kwargs.pop('dotted_name'))
-        self.results = kwargs.pop('results',None)
-        if self.results:
-            self.results = [PyccelSymbol(r) for r in self.results]
+        self.results = kwargs.pop('results', [])
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -495,11 +520,8 @@ class FunctionMacroStmt(BasicStmt):
             else:
                 NotImplementedError("Unrecognised macro argument type")
 
-
-        results = self.results
-        if (results is None):
-            results = []
-
+        results = [PyccelSymbol(r.expr['name']) for r in self.results]
+        results_shapes = [r.expr['shape'] for r in self.results]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
@@ -509,7 +531,8 @@ class FunctionMacroStmt(BasicStmt):
             # so that we always have a name of type str
             args = list(name.name[:-1]) + list(args)
             name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args, results=results)
+        return MacroFunction(name, args, master_name, master_args, results=results,
+                             results_shapes=results_shapes)
 
 
 #################################################
@@ -519,6 +542,7 @@ class FunctionMacroStmt(BasicStmt):
 # lists.
 hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
+               ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,

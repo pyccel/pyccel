@@ -13,7 +13,8 @@ from pyccel.commands.pyccel_clean import pyccel_clean
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
-    ]
+    ],
+    scope = "session"
 )
 def language(request):
     return request.param
@@ -25,7 +26,7 @@ def move_coverage(path_dir):
                 shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
 
 def pytest_runtest_teardown(item, nextitem):
-    path_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.dirname(os.path.realpath(item.fspath))
     move_coverage(path_dir)
 
     config = item.config

@@ -175,3 +175,9 @@ def mix_complex_array_1(x, a):
 @types('float64')
 def dup_header(a):
     return a
+
+@template('T', types=[float,int])
+def zeros_type(a : 'T'):
+    from numpy import zeros
+    x = zeros(10,dtype= type(a))
+    return x[0]
