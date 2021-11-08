@@ -93,3 +93,12 @@ def test_f5(language):
     assert f(2.9+3j) == f5(2.9+3j)
     assert f()       == f5()
     # ...
+
+#------------------------------------------------------------------------------
+def test_changed_precision_arguments(language):
+    import modules.Module_8 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    assert mod.get_f() == modnew.get_f()
+    assert mod.get_g() == modnew.get_g()
