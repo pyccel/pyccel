@@ -157,16 +157,16 @@ end module boo
 
 Now, we will see a special case that is optimized by Pyccel:
 
-In this the python code Pyccel will recognize that `func1` doesn't change `arr`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `arr` providing a useful information
+In this the python code Pyccel will recognize that `foo` doesn't change `x`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `x` providing a useful information
 for C/Fortran compilers to make some optimizations on the code. Also:
 
 ```python
-def func1(x: 'int[:]', i: 'int'):
+def foo(x: 'int[:]', i: 'int'):
     #some code
     return x[0]
 
-def high_int_int_1(function2: '(int)(int[:], int)', a: 'int[:]', b: 'int', func : '(int)(int[:], int)' = func1):
-    x = func1(a, b)
+def func1(function2: '(int)(int[:], int)', a: 'int[:]', b: 'int', func_arg : '(int)(int[:], int)' = foo):
+    x = foo(a, b)
     y = function2(a, x)
     return x + y
 ```
@@ -174,26 +174,25 @@ def high_int_int_1(function2: '(int)(int[:], int)', a: 'int[:]', b: 'int', func 
 The C generated code (the opimization will be add soon to the C language):
 
 ```C
-
 #include "boo.h"
+#include "ndarrays.h"
 #include <stdint.h>
 #include <stdlib.h>
-#include "ndarrays.h"
 
 
 /*........................................*/
-int64_t func1(t_ndarray x, int64_t i)
+int64_t foo(t_ndarray x, int64_t i)
 {
     /*some code*/
     return GET_ELEMENT(x, nd_int64, 0);
 }
 /*........................................*/
 /*........................................*/
-int64_t high_int_int_1(int64_t (*function2)(t_ndarray , int64_t ), t_ndarray a, int64_t b, int64_t (*func)(t_ndarray , int64_t ))
+int64_t func1(int64_t (*function2)(t_ndarray , int64_t ), t_ndarray a, int64_t b, int64_t (*func_arg)(t_ndarray , int64_t ))
 {
     int64_t x;
     int64_t y;
-    x = func1(a, b);
+    x = foo(a, b);
     y = function2(a, x);
     return x + y;
 }
@@ -212,7 +211,7 @@ module boo
   contains
 
   !........................................
-  function func1(x, i) result(Out_0001)
+  function foo(x, i) result(Out_0001)
 
     implicit none
 
@@ -224,11 +223,11 @@ module boo
     Out_0001 = x(0_i64)
     return
 
-  end function func1
+  end function foo
   !........................................
 
   !........................................
-  function high_int_int_1(function2, a, b, func) result(Out_0002)
+  function func1(function2, a, b, func_arg) result(Out_0002)
 
     implicit none
 
@@ -246,21 +245,23 @@ module boo
         integer(i64), value :: in_0001
       end function function2
 
-      function func(in_0002, in_0003) result(out_0001)
+      function func_arg(in_0002, in_0003) result(out_0001)
         use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
         integer(i64) :: out_0001
         integer(i64), intent(inout) :: in_0002(0:)
         integer(i64), value :: in_0003
-      end function func
+      end function func_arg
     end interface
 
-    x = func1(a, b)
+    x = foo(a, b)
     y = function2(a, x)
     Out_0002 = x + y
     return
 
-  end function high_int_int_1
+  end function func1
   !........................................
+
+end module boo
 ```
 
 ## Getting Help
