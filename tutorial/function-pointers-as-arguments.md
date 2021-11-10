@@ -155,7 +155,7 @@ module boo
 end module boo
 ```
 
-Now, we will see a special case that is optimized by Pyccel:
+Now, we will see a special case that is optimized by Pyccel (not supported in C yet):
 
 In this the python code Pyccel will recognize that `foo` doesn't change `x`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `x`
 providing a useful information for C/Fortran compilers to make some optimizations on the code. Also:
@@ -168,34 +168,6 @@ def foo(x: 'int[:]', i: 'int'):
 def func1(a: 'int[:]', b: 'int', func_arg : '(int)(int[:], int)' = foo):
     x = foo(a, b)
     return x
-```
-
-The C generated code (the opimization will be add soon to the C language):
-
-```C
-#include "boo.h"
-#include "ndarrays.h"
-#include <stdint.h>
-#include <stdlib.h>
-
-
-/*........................................*/
-int64_t foo(t_ndarray x, int64_t i)
-{
-    /*some code*/
-    return GET_ELEMENT(x, nd_int64, 0);
-}
-/*........................................*/
-/*........................................*/
-int64_t func1(int64_t (*function2)(t_ndarray , int64_t ), t_ndarray a, int64_t b, int64_t (*func_arg)(t_ndarray , int64_t ))
-{
-    int64_t x;
-    int64_t y;
-    x = foo(a, b);
-    y = function2(a, x);
-    return x + y;
-}
-/*........................................*/
 ```
 
 The Fortran equivalent:
