@@ -157,18 +157,17 @@ end module boo
 
 Now, we will see a special case that is optimized by Pyccel:
 
-In this the python code Pyccel will recognize that `foo` doesn't change `x`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `x` providing a useful information
-for C/Fortran compilers to make some optimizations on the code. Also:
+In this the python code Pyccel will recognize that `foo` doesn't change `x`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `x`
+providing a useful information for C/Fortran compilers to make some optimizations on the code. Also:
 
 ```python
 def foo(x: 'int[:]', i: 'int'):
     #some code
-    return x[0]
+    return x[i]
 
-def func1(function2: '(int)(int[:], int)', a: 'int[:]', b: 'int', func_arg : '(int)(int[:], int)' = foo):
+def func1(a: 'int[:]', b: 'int', func_arg : '(int)(int[:], int)' = foo):
     x = foo(a, b)
-    y = function2(a, x)
-    return x + y
+    return x
 ```
 
 The C generated code (the opimization will be add soon to the C language):
@@ -220,48 +219,243 @@ module boo
     integer(i64), value :: i
 
     !some code
-    Out_0001 = x(0_i64)
+    Out_0001 = x(i)
     return
 
   end function foo
   !........................................
 
   !........................................
-  function func1(function2, a, b, func_arg) result(Out_0002)
+  function func1(a, b, func_arg) result(x)
 
     implicit none
 
-    integer(i64) :: Out_0002
-    integer(i64), intent(inout) :: a(0:)
-    integer(i64), value :: b
     integer(i64) :: x
-    integer(i64) :: y
+    integer(i64), intent(in) :: a(0:)
+    integer(i64), value :: b
 
     interface
-      function function2(in_0000, in_0001) result(out_0000)
+      function func_arg(in_0000, in_0001) result(out_0000)
         use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
         integer(i64) :: out_0000
         integer(i64), intent(inout) :: in_0000(0:)
         integer(i64), value :: in_0001
-      end function function2
-
-      function func_arg(in_0002, in_0003) result(out_0001)
-        use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
-        integer(i64) :: out_0001
-        integer(i64), intent(inout) :: in_0002(0:)
-        integer(i64), value :: in_0003
       end function func_arg
     end interface
 
     x = foo(a, b)
-    y = function2(a, x)
-    Out_0002 = x + y
     return
 
   end function func1
   !........................................
 
 end module boo
+```
+
+Note that the argument in the interface in `func1` has a differente [intent](https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap07/intent.html) the argument `x` in `foo` that shouldn't be `intent(in)`, But as Pyccel detected that `x` wont change in `foo` the perfect case for `x` is to be an `intent(in)` rather than `intent(inout)`.
+Now we will tell Pyccel to create a program by adding `if __name__ == '__main__':` to the Python code, and see what a mismatch in `intent` will cause:
+
+```python
+import numpy as np
+
+def foo(x: 'int[:]', i: 'int'):
+    #some code
+    return x[i]
+
+def func1(a: 'int[:]', b: 'int', func_arg : '(int)(int[:], int)' = foo):
+    x = foo(a, b)
+    return x
+
+if __name__ == '__main__':
+    a = np.ones(5, dtype=int)
+    b = 4
+    func1(a, b, foo)
+```
+
+After tryin to pycciliz the Python code above, here are the generated codes:
+
+The generated code of the Fortran module:
+
+```fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  function foo(x, i) result(Out_0001)
+
+    implicit none
+
+    integer(i64) :: Out_0001
+    integer(i64), intent(in) :: x(0:)
+    integer(i64), value :: i
+
+    !some code
+    Out_0001 = x(i)
+    return
+
+  end function foo
+  !........................................
+
+  !........................................
+  function func1(a, b, func_arg) result(x)
+
+    implicit none
+
+    integer(i64) :: x
+    integer(i64), intent(in) :: a(0:)
+    integer(i64), value :: b
+
+    interface
+      function func_arg(in_0000, in_0001) result(out_0000)
+        use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+        integer(i64) :: out_0000
+        integer(i64), intent(inout) :: in_0000(0:)
+        integer(i64), value :: in_0001
+      end function func_arg
+    end interface
+
+    x = foo(a, b)
+    return
+
+  end function func1
+  !........................................
+
+end module boo
+```
+
+The generated code of the Fortran program:
+
+```fortran
+program prog_prog_boo
+
+  use boo
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  integer(i64), allocatable :: a(:)
+  integer(i64) :: b
+  integer(i64) :: Dummy_0001
+
+  allocate(a(0:4_i64))
+  a = 1_i64
+  b = 4_i64
+  Dummy_0001 = func1(a, b, foo)
+  if (allocated(a)) then
+    deallocate(a)
+  end if
+
+end program prog_prog_boo
+```
+
+The output summary:
+
+```sh
+Error: Interface mismatch in dummy procedure 'func_arg' at (1): INTENT mismatch in argument 'in_0000'
+```
+
+the Fortran compiler couldn't make a program out of the generated code because of the mismatch of `intent` between the argument `in_0000` of the interface (function-pointer in C) in `func1`
+and the argument `x` (the correspondent of `in_000`) of `foo`. This error can be fixed by adding the `const` keyword to correspondent argument of the array `x` in `func_arg` in the Python code:
+
+```python
+import numpy as np
+
+def foo(x: 'int[:]', i: 'int'):
+    #some code
+    return x[i]
+
+def func1(a: 'int[:]', b: 'int', func_arg : '(int)(const int[:], int)' = foo):
+    x = foo(a, b)
+    return x
+
+if __name__ == '__main__':
+    a = np.ones(5, dtype=int)
+    b = 4
+    func1(a, b, foo)
+```
+
+The generated code of the Fortran module:
+
+```fortran
+module boo
+
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  contains
+
+  !........................................
+  function foo(x, i) result(Out_0001)
+
+    implicit none
+
+    integer(i64) :: Out_0001
+    integer(i64), intent(in) :: x(0:)
+    integer(i64), value :: i
+
+    !some code
+    Out_0001 = x(i)
+    return
+
+  end function foo
+  !........................................
+
+  !........................................
+  function func1(a, b, func_arg) result(x)
+
+    implicit none
+
+    integer(i64) :: x
+    integer(i64), intent(in) :: a(0:)
+    integer(i64), value :: b
+
+    interface
+      function func_arg(in_0000, in_0001) result(out_0000)
+        use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+        integer(i64) :: out_0000
+        integer(i64), intent(in) :: in_0000(0:)
+        integer(i64), value :: in_0001
+      end function func_arg
+    end interface
+
+    x = foo(a, b)
+    return
+
+  end function func1
+  !........................................
+
+end module boo
+```
+
+The generated code of the Fortran program:
+
+```fortran
+program prog_prog_boo
+
+  use boo
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  integer(i64), allocatable :: a(:)
+  integer(i64) :: b
+  integer(i64) :: Dummy_0001
+
+  allocate(a(0:4_i64))
+  a = 1_i64
+  b = 4_i64
+  Dummy_0001 = func1(a, b, foo)
+  if (allocated(a)) then
+    deallocate(a)
+  end if
+
+end program prog_prog_boo
 ```
 
 ## Getting Help
