@@ -2,7 +2,7 @@
 
 Note: before reading this you should have read [Installation and Command Line Usage](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md#installation)
 
-In order to support passing [function-pointers](https://en.wikipedia.org/wiki/Function_pointer) as arguments. Pyccel needs the user to define the type of the passed function-pointers, this can be done by using the following syntax `def function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)` or using a function-header `#$ header function function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)`. Here is how Pyccel converts that feature:
+In order to support passing [function-pointers](https://en.wikipedia.org/wiki/Function_pointer) as arguments. Pyccel needs the user to define the type of the passed function-pointers, this can be done by using the following syntax `def function_name(func1_name : '(func1_return_type)(func1_arguments_types)', func2_name : '(func2_return_type)(func2_arguments_types)', ..., arg1, arg2, ...)` or using a function-header `#$ header function function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)`. Here is how Pyccel converts that feature:
 
 In this example we will use short syntax for this feature:
 
@@ -155,6 +155,8 @@ module boo
 end module boo
 ```
 
+## Optimizec case by Pyccel
+
 Now, we will see a special case that is optimized by Pyccel (not supported in C yet):
 
 In this the python code Pyccel will recognize that `foo` doesn't change `x`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `x`
@@ -224,8 +226,9 @@ module boo
 end module boo
 ```
 
-Note that the argument in the interface in `func1` has a differente [intent](https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap07/intent.html) the argument `x` in `foo` that shouldn't be `intent(in)`, But as Pyccel detected that `x` wont change in `foo` the perfect case for `x` is to be an `intent(in)` rather than `intent(inout)`.
-Now we will tell Pyccel to create a program by adding `if __name__ == '__main__':` to the Python code, and see what a mismatch in `intent` will cause:
+Note that the argument in the interface in `func1` has a differente  the argument `x` in `foo` that shouldn't be `intent(in)`, But as Pyccel detected that `x` wont change in `foo` the perfect case for `x` is to be an `intent(in)` rather than `intent(inout)`.
+Note that the argument in the interface in `func1` has a different [intent](https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap07/intent.html). The argument `x` in `foo` shouldn't be `intent(in)`, but rather `intent(inout)`. However as Pyccel detected that `x` wont change in `foo`, the perfect case for `x` is to be an `intent(in)` rather than `intent(inout)`
+Now we will tell Pyccel to create a program by adding `if __name__ == '__main__':` to the Python code, and see what problem a mismatch in intent will cause:
 
 ```python
 import numpy as np
@@ -244,7 +247,7 @@ if __name__ == '__main__':
     func1(a, b, foo)
 ```
 
-After tryin to pycciliz the Python code above, here are the generated codes:
+After trying to pyccelize the Python code above, here are the generated codes:
 
 The generated code of the Fortran module:
 
@@ -331,7 +334,7 @@ The output summary:
 Error: Interface mismatch in dummy procedure 'func_arg' at (1): INTENT mismatch in argument 'in_0000'
 ```
 
-the Fortran compiler couldn't make a program out of the generated code because of the mismatch of `intent` between the argument `in_0000` of the interface (function-pointer in C) in `func1`
+The Fortran compiler couldn't make a program out of the generated code because of the mismatch of `intent` between the argument `in_0000` of the interface (function-pointer in C) in `func1`
 and the argument `x` (the correspondent of `in_000`) of `foo`. This error can be fixed by adding the `const` keyword to correspondent argument of the array `x` in `func_arg` in the Python code:
 
 ```python
