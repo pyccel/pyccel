@@ -593,11 +593,18 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
-        return "{0}({1}, {2}, {3})".format(
+        dtype = self._print(expr.dtype)
+        factor = 16 if dtype == 'complex' else 8
+        dtype += str(expr.precision*factor)
+
+        self.insert_new_import(source = 'numpy', target = dtype)
+        return "{0}({1}, {2}, num={3}, endpoint={4}, dtype={5})".format(
                 name,
                 self._print(expr.start),
                 self._print(expr.stop),
-                self._print(expr.size))
+                self._print(expr.num),
+                self._print(expr.endpoint),
+                dtype)
 
     def _print_NumpyMatmul(self, expr):
         name = self._aliases.get(type(expr), expr.name)
