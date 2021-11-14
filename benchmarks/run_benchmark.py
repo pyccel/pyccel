@@ -59,7 +59,7 @@ tests = [
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'rk4_humps_test(tspan, y0, 10000)'),
     TestInfo('FD - L Convection',
-        'cfd_python.py',
+        'linearconv_1d.py',
         ['linearconv_1d'],
         '''import numpy as np; nx=2001; nt=2000; c=1.; dt=0.0003;
         dx = 2 / (nx-1);
@@ -70,7 +70,7 @@ tests = [
         un = np.ones(nx);''',
         'linearconv_1d(u, un, nt, nx, dt, dx, c)'),
     TestInfo('FD - NL Convection',
-        'cfd_python.py',
+        'nonlinearconv_1d.py',
         ['nonlinearconv_1d'],
         '''import numpy as np; nx = 2001; nt=2000; c=1.; dt=0.00035; dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
@@ -80,7 +80,7 @@ tests = [
         un = np.ones(nx);''',
         'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
     TestInfo('FD - Poisson',
-        'cfd_python.py',
+        'poisson_2d.py',
         ['poisson_2d'],
         '''import numpy as np; nx = 150; ny = 150; nt  = 100;
            xmin = 0; xmax = 2; ymin = 0; ymax = 1;
@@ -93,7 +93,7 @@ tests = [
            y  = np.linspace(xmin, xmax, ny);''',
         'poisson_2d(p, pd, b, nx, ny, nt, dx, dy)'),
     TestInfo('FD - Laplace',
-        'cfd_python.py',
+        'laplace_2d.py',
         ['laplace_2d'],
         '''import numpy as np; nx = 31; ny = 31; c = 1.; l1norm_target=1.e-4;
            dx = 2 / (nx - 1); dy = 2 / (ny - 1);
