@@ -25,7 +25,9 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 ## Table of contents
 
--   [User docs index](#User-docs-index)
+-   [User Documentation](#User-documentation)
+
+-   [Developer Documentation](#Developer-documentation)
 
 -   [Pyccel Installation Methods](#Pyccel-Installation-Methods)
 
@@ -279,7 +281,7 @@ pip3 install --user pytest-xdist
 
 ## Testing
 
-To test your Pyccel installation please run the script _tests/run_tests_py3.sh_ (Unix), or _tests/run_tests.bat_ (Windows).
+To test your Pyccel installation please run the script _tests/run\_tests\_py3.sh_ (Unix), or _tests/run\_tests.bat_ (Windows).
 
 Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
@@ -306,3 +308,14 @@ docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
 
 If you are using SELinux, you will need to set the right context for your host based volume.
 Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
+
+## Developer Documentation
+
+-   [Overview](./developer_docs/overview.md)
+
+-   [How to solve an issue](./developer_docs/how_to_solve_an_issue.md)
+
+-   [Review Process](./developer_docs/review_process.md)
+
+-   [Tips and Tricks](./developer_docs/tips_and_tricks.md)
+
