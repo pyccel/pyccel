@@ -312,10 +312,6 @@ Alternatively you may have docker or podman set the context using -v $PWD:/data:
 ## Developer Documentation
 
 -   [Overview](./developer_docs/overview.md)
-
 -   [How to solve an issue](./developer_docs/how_to_solve_an_issue.md)
-
 -   [Review Process](./developer_docs/review_process.md)
-
 -   [Tips and Tricks](./developer_docs/tips_and_tricks.md)
-
