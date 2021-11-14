@@ -1,26 +1,46 @@
+from argparse import ArgumentParser
 from collections import namedtuple
 import os
 import re
 import shutil
 import subprocess
+import sys
 
 TestInfo = namedtuple('TestInfo', 'name basename imports setup call')
 
-verbose = True
-output_format = 'latex'
+parser = ArgumentParser(description='Run the benchmarks to compare pyccel with pure python, pythran and numba')
 
-pyperf = True
-time_compliation = True
-time_execution = False
+parser.add_argument('--pyperf', action='store_true', \
+                        help='Runs timing tests with pyperf (more acurate but much slower).')
+parser.add_argument('--no_compilation', action='store_false', dest='compilation', \
+                        help="Don't time the compilation step")
+parser.add_argument('--no_execution', action='store_false', dest='execution', \
+                        help="Don't time the execution step")
+parser.add_argument('--intel', action='store_true', help='Run test cases with intel compiler')
+parser.add_argument('--pypy', action='store_true', help='Run test cases with pypy')
+parser.add_argument('--output', choices=('latex', 'markdown'), \
+                        help='Format of the output table (default=markdown)',default='markdown')
+parser.add_argument('--verbose', action='store_true', help='Enables verbose mode.')
+
+args = parser.parse_args()
+
+verbose = args.verbose
+output_format = args.output
+
+pyperf = args.pyperf
+time_compliation = args.compilation
+time_execution = args.execution
 
 test_cases = ['python']
-#test_cases += ['pypy']
+if args.pypy:
+    test_cases += ['pypy']
 test_cases += ['pythran']
 test_cases += ['numba']
 test_cases += ['pyccel']
-#test_cases += ['pyccel_intel']
-#test_cases += ['pyccel_c']
-#test_cases += ['pyccel_intel_c']
+test_cases += ['pyccel_c']
+if args.intel:
+    test_cases += ['pyccel_intel']
+    test_cases += ['pyccel_intel_c']
 
 tests = [
     TestInfo('Ackermann',
@@ -39,27 +59,27 @@ tests = [
         '',
         'dijkstra_distance_test()'),
     TestInfo('Euler',
-        'euler.py',
+        'euler_mod.py',
         ['euler_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'euler_humps_test(tspan, y0, 10000)'),
     TestInfo('Midpoint Explicit',
-        'midpoint_explicit.py',
+        'midpoint_explicit_mod.py',
         ['midpoint_explicit_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'midpoint_explicit_humps_test(tspan, y0, 10000)'),
     TestInfo('Midpoint Fixed',
-        'midpoint_fixed.py',
+        'midpoint_fixed_mod.py',
         ['midpoint_fixed_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'midpoint_fixed_humps_test(tspan, y0, 10000)'),
     TestInfo('RK4',
-        'rk4.py',
+        'rk4_mod.py',
         ['rk4_humps_test', 'humps_fun'],
         'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
         'rk4_humps_test(tspan, y0, 10000)'),
     TestInfo('FD - L Convection',
-        'linearconv_1d.py',
+        'linearconv_1d_mod.py',
         ['linearconv_1d'],
         '''import numpy as np; nx=2001; nt=2000; c=1.; dt=0.0003;
         dx = 2 / (nx-1);
@@ -70,7 +90,7 @@ tests = [
         un = np.ones(nx);''',
         'linearconv_1d(u, un, nt, nx, dt, dx, c)'),
     TestInfo('FD - NL Convection',
-        'nonlinearconv_1d.py',
+        'nonlinearconv_1d_mod.py',
         ['nonlinearconv_1d'],
         '''import numpy as np; nx = 2001; nt=2000; c=1.; dt=0.00035; dx = 2 / (nx-1);
         grid = np.linspace(0,2,nx);
@@ -80,7 +100,7 @@ tests = [
         un = np.ones(nx);''',
         'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
     TestInfo('FD - Poisson',
-        'poisson_2d.py',
+        'poisson_2d_mod.py',
         ['poisson_2d'],
         '''import numpy as np; nx = 150; ny = 150; nt  = 100;
            xmin = 0; xmax = 2; ymin = 0; ymax = 1;
@@ -93,7 +113,7 @@ tests = [
            y  = np.linspace(xmin, xmax, ny);''',
         'poisson_2d(p, pd, b, nx, ny, nt, dx, dy)'),
     TestInfo('FD - Laplace',
-        'laplace_2d.py',
+        'laplace_2d_mod.py',
         ['laplace_2d'],
         '''import numpy as np; nx = 31; ny = 31; c = 1.; l1norm_target=1.e-4;
            dx = 2 / (nx - 1); dy = 2 / (ny - 1);
@@ -110,7 +130,10 @@ tests = [
         'test_md(3, 100, 500, 0.1)'),
 ]
 
-log_file = open("bench.log",'w')
+if verbose:
+    log_file = sys.stdout
+else:
+    log_file = open("bench.log",'w')
 
 timeit_cmd = ['pyperf', 'timeit', '--copy-env'] if pyperf else ['timeit']
 
@@ -125,12 +148,13 @@ accelerator_commands = {
         }
 
 cell_splitter = {'latex'    : ' & ',
-                 'readable' : ' | '}
+                 'markdown' : ' | '}
 row_splitter  = {'latex'    : '\\\\\n\\hline\n',
-                 'readable' : '\n'
+                 'markdown' : '\n'}
 
 test_cases_row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in ['Code']+test_cases)
-result_table = [test_cases_row]
+comp_result_table = [test_cases_row]
+exec_result_table = [test_cases_row]
 
 possible_units = ['sec','ms','us','ns']
 latex_units = ['s','ms','\\textmu s','ns']
@@ -159,6 +183,8 @@ for t in tests:
 
     import_funcs = ', '.join(t.imports)
     exec_cmd  = t.call
+
+    comp_times = []
 
     run_times = []
     run_units = []
@@ -198,6 +224,7 @@ for t in tests:
                 times = [float(ri) for ri in r[0]]
                 cpu_time = sum(times)
                 print("Compilation CPU time : ", cpu_time, file=log_file)
+                comp_times.append(float(cpu_time))
 
         if time_compliation and case == "numba":
             cmd = ['pypy'] if case=='pypy' else ['python3']
@@ -265,6 +292,12 @@ for t in tests:
         if case in accelerator_commands:
             p = subprocess.Popen(['pyccel-clean', '-s'])
 
+    if time_compilation:
+        row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in comp_times)
+        if verbose:
+            print(row, file=log_file, flush=True)
+        comp_result_table.append(row)
+
     if time_execution:
         used_units = [u for u in run_units if u is not None]
         unit_index = round(sum(used_units)/len(used_units))
@@ -292,12 +325,15 @@ for t in tests:
         row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in row)
         if verbose:
             print(row, file=log_file, flush=True)
-        result_table.append(row)
+        exec_result_table.append(row)
     os.chdir(start_dir)
 
 log_file.close()
 
+result_file = open("bench.out",'w')
+if time_compilation:
+    print(row_splitter[output_format].join(comp_result_table), file=result_file, flush=True)
+
 if time_execution:
-    result_file = open("bench.out",'w')
-    print(row_splitter[output_format].join(result_table), file=result_file, flush=True)
-    result_file.close()
+    print(row_splitter[output_format].join(exec_result_table), file=result_file, flush=True)
+result_file.close()
