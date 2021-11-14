@@ -28,7 +28,7 @@ verbose = args.verbose
 output_format = args.output
 
 pyperf = args.pyperf
-time_compliation = args.compilation
+time_compilation = args.compilation
 time_execution = args.execution
 
 test_cases = ['python']
@@ -184,7 +184,7 @@ for t in tests:
     import_funcs = ', '.join(t.imports)
     exec_cmd  = t.call
 
-    comp_times = []
+    comp_times = [t.name]
 
     run_times = []
     run_units = []
@@ -200,7 +200,7 @@ for t in tests:
         if case in accelerator_commands:
             cmd = accelerator_commands[case].copy()+[basename]
 
-            if time_compliation:
+            if time_compilation:
                 cmd = ['time'] + cmd
 
             if verbose:
@@ -213,11 +213,12 @@ for t in tests:
             if p.returncode != 0:
                 print("Compilation Error!", file=log_file, flush=True)
                 print(err, file=log_file, flush=True)
+                comp_times.append('-')
                 run_times.append(None)
                 run_units.append(None)
                 continue
 
-            if time_compliation:
+            if time_compilation:
                 regexp = re.compile('([0-9.]*)user\s*([0-9.]*)system')
                 r = regexp.findall(err)
                 assert len(r) == 1
@@ -226,7 +227,7 @@ for t in tests:
                 print("Compilation CPU time : ", cpu_time, file=log_file)
                 comp_times.append(float(cpu_time))
 
-        if time_compliation and case == "numba":
+        elif time_compilation and case == "numba":
             cmd = ['pypy'] if case=='pypy' else ['python3']
             run_str = "{setup}import time; t0 = time.process_time(); {run}; t1 = time.process_time(); {run}; t2 = time.process_time(); print(2*t1-t0-t2)".format(
                     setup=setup_cmd,
@@ -242,11 +243,15 @@ for t in tests:
 
             if p.returncode != 0:
                 print("Execution Error!", file=log_file, flush=True)
+                comp_times.append('-')
                 run_times.append(None)
                 run_units.append(None)
                 print(err, file=log_file, flush=True)
             else:
                 print("Compilation Process time : ",out, file=log_file, flush=True)
+                comp_times.append(float(out))
+        else:
+            comp_times.append('-')
 
         if time_execution:
             cmd = ['pypy'] if case=='pypy' else ['python3']
@@ -283,7 +288,9 @@ for t in tests:
                     regexp = re.compile('([0-9]+) loops?, best of ([0-9]+): ([0-9.]+) (\w*)')
                     r = regexp.search(out)
                     best = float(r.group(3))
-                    units = r.group(4)[:-2]
+                    units = r.group(4)
+                    if units!= 'sec':
+                        units = units[:-2]
                     bench_str = best
                     run_times.append(best)
 
