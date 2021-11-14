@@ -55,7 +55,7 @@ def rk4_humps_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     m = len ( y0 )
 
     t = zeros ( n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     rk4 ( humps_deriv, tspan, y0, n, t, y )
 

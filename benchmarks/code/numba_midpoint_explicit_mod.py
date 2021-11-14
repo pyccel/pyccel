@@ -53,7 +53,7 @@ def midpoint_explicit_humps_test ( tspan: 'real[:]', y0: 'real[:]', n: int ):
     t1 = tspan[1]
 
     t = linspace ( t0, t1, n + 1 )
-    y = zeros ( [ n + 1, m ] )
+    y = zeros ( ( n + 1, m ) )
 
     midpoint_explicit ( humps_deriv, tspan, y0, n, t, y )
 
