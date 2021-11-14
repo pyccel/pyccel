@@ -9,7 +9,7 @@ Handling the transitions between python code and C code using (Numpy/C Api).
 
 import numpy as np
 
-from .datatypes         import (NativeInteger, NativeReal, NativeComplex,
+from .datatypes         import (NativeInteger, NativeFloat, NativeComplex,
                                 NativeBool, NativeGeneric, NativeVoid)
 
 from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
@@ -161,9 +161,9 @@ numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
                         ('int',4)      : numpy_num_to_type[numpy_int_type_precision_map[4]],
                         ('int',8)      : numpy_num_to_type[numpy_int_type_precision_map[8]],
                         ('int',16)     : numpy_longlong_type,
-                        ('real',4)     : numpy_float_type,
-                        ('real',8)     : numpy_double_type,
-                        ('real',16)    : numpy_longdouble_type,
+                        ('float',4)    : numpy_float_type,
+                        ('float',8)    : numpy_double_type,
+                        ('float',16)   : numpy_longdouble_type,
                         ('complex',4)  : numpy_cfloat_type,
                         ('complex',8)  : numpy_cdouble_type,
                         ('complex',16) : numpy_clongdouble_type}
@@ -184,8 +184,8 @@ numpy_type_check_registry = {
     (NativeInteger(), 8)       : Numpy_Int64_ref,
     (NativeInteger(), 2)       : Numpy_Int16_ref,
     (NativeInteger(), 1)       : Numpy_Int8_ref,
-    (NativeReal(), 8)          : Numpy_Double_ref,
-    (NativeReal(), 4)          : Numpy_Float_ref,
+    (NativeFloat(), 8)         : Numpy_Double_ref,
+    (NativeFloat(), 4)         : Numpy_Float_ref,
     (NativeComplex(), 4)       : Numpy_Complex64_ref,
     (NativeComplex(), 8)       : Numpy_Complex128_ref,
     (NativeBool(), 4)          : Numpy_Bool_ref
