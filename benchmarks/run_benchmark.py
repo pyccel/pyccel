@@ -7,7 +7,7 @@ import subprocess
 TestInfo = namedtuple('TestInfo', 'name basename imports setup call')
 
 verbose = True
-latex_out = True
+output_format = 'latex'
 
 pyperf = True
 time_compliation = True
@@ -124,10 +124,12 @@ accelerator_commands = {
         'pythran'        : ['pythran']+flags.split()
         }
 
-cell_splitter = ' & ' if latex_out else ' | '
-row_splitter = '\\\\\n\\hline\n' if latex_out else '\n'
+cell_splitter = {'latex'    : ' & ',
+                 'readable' : ' | '}
+row_splitter  = {'latex'    : '\\\\\n\\hline\n',
+                 'readable' : '\n'
 
-test_cases_row = cell_splitter.join('{0: <25}'.format(s) for s in ['Code']+test_cases)
+test_cases_row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in ['Code']+test_cases)
 result_table = [test_cases_row]
 
 possible_units = ['sec','ms','us','ns']
@@ -287,7 +289,7 @@ for t in tests:
                 else:
                     row.append(str(time*f))
 
-        row = cell_splitter.join('{0: <25}'.format(s) for s in row)
+        row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in row)
         if verbose:
             print(row, file=log_file, flush=True)
         result_table.append(row)
@@ -297,5 +299,5 @@ log_file.close()
 
 if time_execution:
     result_file = open("bench.out",'w')
-    print(row_splitter.join(result_table), file=result_file, flush=True)
+    print(row_splitter[output_format].join(result_table), file=result_file, flush=True)
     result_file.close()
