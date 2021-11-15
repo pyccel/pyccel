@@ -34,7 +34,7 @@ def conditional_alloc(b1 : bool, b2 : bool):
     else:
         x = zeros(4, dtype=int)
         n = x.shape[0]
-    return 5
+    return n
 
 # testing garbage collecting in a Function
 
