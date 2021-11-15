@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-from numpy import array
+from numpy import array, zeros
 
 def create_array():
     a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])# pylint: disable=unused-variable
@@ -24,6 +24,18 @@ def pointer_reassign():
     b = a[1:]
     b = c
 
+def conditional_alloc(b1 : bool, b2 : bool):
+    if b1:
+        if b2:
+            x = zeros(3, dtype=int)
+            n = x.shape[0]
+        else:
+            n = 0
+    else:
+        x = zeros(4, dtype=int)
+        n = x.shape[0]
+    return 5
+
 # testing garbage collecting in a Function
 
 if __name__ == '__main__':
@@ -32,6 +44,9 @@ if __name__ == '__main__':
     view_assign()
     pointer_to_pointer()
     pointer_reassign()
+    conditional_alloc(True,True)
+    conditional_alloc(True,False)
+    conditional_alloc(False,False)
 
     # testing garbage collecting in a Program
 
