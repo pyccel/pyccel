@@ -29,11 +29,10 @@ from .literals      import LiteralInteger, Literal, Nil
 
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants, NumpyArray,
-                            NumpyTranspose)
+                            NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .variable      import (Constant, Variable,
-                            IndexedElement, InhomogeneousTupleVariable, VariableAddress,
-                            HomogeneousTupleVariable )
+from .variable      import (Constant, Variable, IndexedElement, InhomogeneousTupleVariable,
+                            VariableAddress, HomogeneousTupleVariable )
 
 errors = Errors()
 
@@ -45,7 +44,7 @@ __all__ = (
 )
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=pi),
+    'pi': Constant('float', 'pi', value=pi),
                   }
 
 #==============================================================================
@@ -457,6 +456,10 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
                 if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
                     break
+
+            # TODO [NH]: get all indices when adding axis argument to linspace function
+            if isinstance(line.rhs, NumpyLinspace):
+                line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
