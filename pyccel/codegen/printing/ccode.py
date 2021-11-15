@@ -845,6 +845,9 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
+        elif declaration_type == 't_ndarray':
+            preface = ''
+            init    = ' = {.shape = NULL}'
         else:
             preface = ''
             init    = ''
