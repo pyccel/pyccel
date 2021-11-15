@@ -10,7 +10,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
-from pyccel.ast.core       import IfSection
+from pyccel.ast.core       import IfSection, FunctionDef
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -142,7 +142,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'int'
 
-    def _print_NativeReal(self, expr):
+    def _print_NativeFloat(self, expr):
         return 'float'
 
     def _print_NativeComplex(self, expr):
@@ -153,7 +153,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDefArgument(self, expr):
         if expr.has_default:
-            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+            if isinstance(expr.value, FunctionDef):
+                return '{} = {}'.format(self._print(expr.name), self._print(expr.value.name))
+            else:
+                return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
         else:
             return self._print(expr.name)
 
@@ -590,11 +593,18 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
-        return "{0}({1}, {2}, {3})".format(
+        dtype = self._print(expr.dtype)
+        factor = 16 if dtype == 'complex' else 8
+        dtype += str(expr.precision*factor)
+
+        self.insert_new_import(source = 'numpy', target = dtype)
+        return "{0}({1}, {2}, num={3}, endpoint={4}, dtype={5})".format(
                 name,
                 self._print(expr.start),
                 self._print(expr.stop),
-                self._print(expr.size))
+                self._print(expr.num),
+                self._print(expr.endpoint),
+                dtype)
 
     def _print_NumpyMatmul(self, expr):
         name = self._aliases.get(type(expr), expr.name)

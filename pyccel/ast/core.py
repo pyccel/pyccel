@@ -1112,12 +1112,12 @@ class Module(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -1301,12 +1301,12 @@ class ModuleHeader(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -2129,8 +2129,8 @@ class FunctionDef(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Assign, Variable, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> args        = [x]
     >>> results     = [y]
     >>> body        = [Assign(y,x+1)]
@@ -2144,8 +2144,8 @@ class FunctionDef(Basic):
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n', value=4)
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2156,7 +2156,7 @@ class FunctionDef(Basic):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header','_arguments_inout',
-                 '_functions','_interfaces','_doc_string')
+                 '_functions','_interfaces','_doc_string', '_is_external')
     _attribute_nodes = ('_arguments','_results','_body','_local_vars',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2178,6 +2178,7 @@ class FunctionDef(Basic):
         is_elemental=False,
         is_private=False,
         is_header=False,
+        is_external=False,
         arguments_inout=(),
         functions=(),
         interfaces=(),
@@ -2249,6 +2250,11 @@ class FunctionDef(Basic):
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for header')
 
+        if not isinstance(is_external, bool):
+            raise TypeError('Expecting a boolean for external')
+        else:
+            is_external = is_external and is_header and ( len(results) == 1 )
+
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple)):
                 raise TypeError('Expecting a list or tuple ')
@@ -2281,6 +2287,7 @@ class FunctionDef(Basic):
         self._is_elemental    = is_elemental
         self._is_private      = is_private
         self._is_header       = is_header
+        self._is_external     = is_external
         self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
@@ -2393,6 +2400,12 @@ class FunctionDef(Basic):
         """ True if the implementation of the function body
         is not provided False otherwise """
         return self._is_header
+
+    @property
+    def is_external(self):
+        """ True if the function is exposed through a header file and coming
+        from a f77 module """
+        return self._is_external
 
     @property
     def arguments_inout(self):
@@ -2641,8 +2654,8 @@ class FunctionAddress(FunctionDef):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
 
     a function definition can have a FunctionAddress as an argument
 
@@ -2776,12 +2789,12 @@ class ClassDef(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -3138,8 +3151,8 @@ class FuncAddressDeclare(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
     __slots__ = ('_variable','_intent','_value','_static')
@@ -3197,6 +3210,7 @@ class FuncAddressDeclare(Basic):
     def static(self):
         return self._static
 
+# ARA : issue-999 add is_external for external function exported through header files
 class Declare(Basic):
 
     """Represents a variable declaration in the code.
@@ -3214,17 +3228,19 @@ class Declare(Basic):
         variable value
     static: bool
         True for a static declaration of an array.
+    external: bool
+        True for a function declared through a header
 
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
     >>> Declare('int', Variable('int', 'n'))
     Declare(NativeInteger(), (n,), None)
-    >>> Declare('real', Variable('real', 'x'), intent='out')
-    Declare(NativeReal(), (x,), out)
+    >>> Declare('float', Variable('float', 'x'), intent='out')
+    Declare(NativeFloat(), (x,), out)
     """
     __slots__ = ('_dtype','_variable','_intent','_value',
-                 '_static','_passed_from_dotted')
+                 '_static','_passed_from_dotted', '_external')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
@@ -3235,6 +3251,7 @@ class Declare(Basic):
         value=None,
         static=False,
         passed_from_dotted = False,
+        external = False,
         ):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -3256,12 +3273,16 @@ class Declare(Basic):
         if not isinstance(passed_from_dotted, bool):
             raise TypeError('Expecting a boolean for passed_from_dotted attribute')
 
+        if not isinstance(external, bool):
+            raise TypeError('Expecting a boolean for external attribute')
+
         self._dtype = dtype
         self._variable = variable
         self._intent = intent
         self._value = value
         self._static = static
         self._passed_from_dotted = passed_from_dotted
+        self._external = external
         super().__init__()
 
     @property
@@ -3289,6 +3310,10 @@ class Declare(Basic):
         """ Argument is the lhs of a DottedFunction
         """
         return self._passed_from_dotted
+
+    @property
+    def external(self):
+        return self._external
 
     def __repr__(self):
         return 'Declare({})'.format(repr(self.variable))
@@ -3365,7 +3390,7 @@ class Del(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('real', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Del([x])
     Del([x])
     """

@@ -20,7 +20,7 @@ from pyccel.ast.core import AugAssign
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, str_dtype
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
 from pyccel.ast.datatypes import datatype
 
 from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
@@ -182,7 +182,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return AliasAssign(arg, Nil())
         elif func_arg.is_optional:
             return AliasAssign(arg, Py_None)
-        elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
+        elif isinstance(arg.dtype, (NativeFloat, NativeInteger, NativeBool)):
             return Assign(arg, value)
         elif isinstance(arg.dtype, PyccelPyObject):
             return AliasAssign(arg, Py_None)

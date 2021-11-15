@@ -60,7 +60,7 @@ from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
-                                  NativeReal, NativeString,
+                                  NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
@@ -74,11 +74,13 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString
+from pyccel.ast.literals import Literal, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
@@ -247,22 +249,16 @@ class SemanticParser(BasicParser):
         # FunctionDef etc ...
 
         if self.is_header_file:
-            target = []
-
-            for parent in self.parents:
-                for (key, item) in parent.imports.items():
-                    if get_filename_from_import(key) == self.filename:
-                        target += item
-
-            target = set(target)
-            target_headers = target.intersection(self.namespace.headers.keys())
+            target_headers = self.namespace.headers.keys()
+            # ARA : issue-999
+            is_external = self.metavars.get('external', False)
             for name in list(target_headers):
                 v = self.namespace.headers[name][0]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
                         MethodHeader):
                     F = self.get_function(name)
                     if F is None:
-                        interfaces = v.create_definition()
+                        interfaces = v.create_definition(is_external=is_external)
                         for F in interfaces:
                             self.insert_function(F)
                     else:
@@ -1067,6 +1063,13 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
+
+            if func is NumpyWhere:
+                if len(args) != 3:
+                    errors.report(INVALID_WHERE_ARGUMENT,
+                        symbol=expr, blocker=True,
+                        severity='fatal')
+
             try:
                 new_expr = func(*args, **kwargs)
             except TypeError:
@@ -1557,7 +1560,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr, FunctionalSum):
             val = LiteralInteger(0)
-            if str_dtype(dtype) in ['real', 'complex']:
+            if str_dtype(dtype) in ['float', 'complex']:
                 val = LiteralFloat(0.0)
         elif isinstance(expr, FunctionalMin):
             val = math_constants['inf']
@@ -1953,6 +1956,12 @@ class SemanticParser(BasicParser):
                             imp.define_target(PyccelSymbol(rhs_name))
                         else:
                             imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
+                elif isinstance(rhs, FunctionCall):
+                    self.namespace.imports['functions'][new_name] = first[rhs_name]
+                elif isinstance(rhs, ConstructorCall):
+                    self.namespace.imports['classes'][new_name] = first[rhs_name]
+                elif isinstance(rhs, Variable):
+                    self.namespace.imports['variables'][new_name] = rhs
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
@@ -3149,7 +3158,15 @@ class SemanticParser(BasicParser):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, a.name, **d_var)
 
-                    arg_new = FunctionDefArgument(a_new, value=a.value, kwonly=a.is_kwonly,
+                    value = None if a.value is None else self._visit(a.value)
+                    if isinstance(value, Literal) and \
+                            value.dtype is a_new.dtype and \
+                            value.precision != a_new.precision:
+                        value = convert_to_literal(value.python_value, a_new.dtype, a_new.precision)
+
+                    arg_new = FunctionDefArgument(a_new,
+                                value=value,
+                                kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
                     if additional_args:
@@ -3482,7 +3499,7 @@ class SemanticParser(BasicParser):
             isinstance(var2.dtype, NativeBool)):
             return IsClass(var1, var2)
 
-        lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
+        lst = [NativeString(), NativeComplex(), NativeFloat(), NativeInteger()]
         if (var1.dtype in lst):
             errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -3552,15 +3569,6 @@ class SemanticParser(BasicParser):
                     severity='error')
         else:
 
-            # in some cases (blas, lapack, openmp and openacc level-0)
-            # the import should not appear in the final file
-            # all metavars here, will have a prefix and suffix = __
-
-            __ignore_at_import__ = False
-            __module_name__      = None
-            __import_all__       = False
-            __print__            = False
-
             # we need to use str here since source has been defined
             # using repr.
             # TODO shall we improve it?
@@ -3592,17 +3600,16 @@ class SemanticParser(BasicParser):
 
             # ... meta variables
 
-            if 'ignore_at_import' in list(p.metavars.keys()):
-                __ignore_at_import__ = p.metavars['ignore_at_import']
+            # in some cases (blas, lapack and openacc level-0)
+            # the import should not appear in the final file
+            # all metavars here, will have a prefix and suffix = __
+            __ignore_at_import__ = p.metavars.get('ignore_at_import', False)
 
-            if 'import_all' in list(p.metavars.keys()):
-                __import_all__ = p.metavars['import_all']
+            # Indicates that the module must be imported with the syntax 'from mod import *'
+            __import_all__ = p.metavars.get('import_all', False)
 
-            if 'module_name' in list(p.metavars.keys()):
-                __module_name__ = p.metavars['module_name']
-
-            if 'print' in list(p.metavars.keys()):
-                __print__ = True
+            # Indicates the name of the fortran module containing the functions
+            __module_name__ = p.metavars.get('module_name', None)
 
             if len(expr.target) == 0 and isinstance(expr.source,AsName):
                 expr = Import(expr.source.name)
@@ -3643,14 +3650,7 @@ class SemanticParser(BasicParser):
                 expr = Import(__module_name__, expr.target)
                 container['imports'][source_target] = expr
 
-            # ...
-            elif __print__ in p.metavars.keys():
-                source = str(expr.source).split('.')[-1]
-                source = 'mod_' + source
-                expr   = Import(source, expr.target)
-                container['imports'][source_target] = expr
             elif not __ignore_at_import__:
-
                 container['imports'][source_target] = expr
 
         return result

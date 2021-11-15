@@ -160,6 +160,39 @@ class SyntaxParser(BasicParser):
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
 
+    def _treat_comment_line(self, line, stmt):
+        if line.startswith('#$'):
+            env = line[2:].lstrip()
+            if env.startswith('omp'):
+                expr = omp_parse(stmts=line)
+            elif env.startswith('acc'):
+                expr = acc_parse(stmts=line)
+            elif env.startswith('header'):
+                expr = hdr_parse(stmts=line)
+                if isinstance(expr, MetaVariable):
+
+                    # a metavar will not appear in the semantic stage.
+                    # but can be used to modify the ast
+
+                    self._metavars[str(expr.name)] = expr.value
+                    expr = EmptyNode()
+            else:
+
+                raise errors.report(PYCCEL_INVALID_HEADER,
+                              symbol = stmt,
+                              severity='error')
+
+        else:
+            txt = line[1:].lstrip()
+            expr = Comment(txt)
+
+        expr.set_fst(stmt)
+        return expr
+
+    #====================================================
+    #                 _visit functions
+    #====================================================
+
     def _visit(self, stmt):
         """Creates AST from FST."""
 
@@ -1004,37 +1037,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_CommentMultiLine(self, stmt):
 
-        exprs = []
-        # if annotated comment
-        for com in stmt.s.split('\n'):
-            if com.startswith('#$'):
-                env = com[2:].lstrip()
-                if env.startswith('omp'):
-                    exprs.append(omp_parse(stmts=com))
-                elif env.startswith('acc'):
-                    exprs.append(acc_parse(stmts=com))
-                elif env.startswith('header'):
-                    expr = hdr_parse(stmts=com)
-                    if isinstance(expr, MetaVariable):
-
-                        # a metavar will not appear in the semantic stage.
-                        # but can be used to modify the ast
-
-                        self._metavars[str(expr.name)] = str(expr.value)
-                        expr = EmptyNode()
-                    else:
-                        expr.set_fst(stmt)
-
-                    exprs.append(expr)
-                else:
-                    errors.report(PYCCEL_INVALID_HEADER,
-                                  symbol = stmt,
-                                  severity='error')
-            else:
-
-                txt = com[1:].lstrip()
-                exprs.append(Comment(txt))
-            exprs[-1].set_fst(stmt)
+        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split('\n')]
 
         if len(exprs) == 1:
             return exprs[0]
@@ -1042,35 +1045,7 @@ class SyntaxParser(BasicParser):
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):
-
-        # if annotated comment
-
-        if stmt.s.startswith('#$'):
-            env = stmt.s[2:].lstrip()
-            if env.startswith('omp'):
-                return omp_parse(stmts=stmt.s)
-            elif env.startswith('acc'):
-                return acc_parse(stmts=stmt.s)
-            elif env.startswith('header'):
-                expr = hdr_parse(stmts=stmt.s)
-                if isinstance(expr, MetaVariable):
-
-                    # a metavar will not appear in the semantic stage.
-                    # but can be used to modify the ast
-
-                    self._metavars[str(expr.name)] = str(expr.value)
-                    expr = EmptyNode()
-
-                return expr
-            else:
-
-                errors.report(PYCCEL_INVALID_HEADER,
-                              symbol = stmt,
-                              severity='error')
-
-        else:
-            txt = stmt.s[1:].lstrip()
-            return Comment(txt)
+        return self._treat_comment_line(stmt.s, stmt)
 
     def _visit_Break(self, stmt):
         return Break()
