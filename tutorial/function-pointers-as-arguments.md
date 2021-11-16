@@ -157,9 +157,9 @@ end module boo
 
 ## Pyccel Optimization Case
 
-Now, we will see a special case that is optimized by Pyccel (not supported in C yet):
+Now, we will see a special case that is optimized by Pyccel (not optimized in C yet):
 
-In this example, Pyccel will recognize that foo doesn't change x, so it will automatically add const or intent (depending on the language: C/Fortran) to the data type of x. This provides useful information for C/Fortran compilers to make optimizations to the code::
+In this example, Pyccel will recognize that foo doesn't change `x`, so it will automatically add `const` or `intent` (depending on the language: C/Fortran) to the data type of `x`. This provides useful information for C/Fortran compilers to make optimizations to the code:
 
 ```python
 def foo(x: 'int[:]', i: 'int'):
