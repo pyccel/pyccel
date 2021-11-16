@@ -155,12 +155,11 @@ module boo
 end module boo
 ```
 
-## Optimizec case by Pyccel
+## Pyccel Optimization Case
 
 Now, we will see a special case that is optimized by Pyccel (not supported in C yet):
 
-In this the python code Pyccel will recognize that `foo` doesn't change `x`, so it will automatically add `const` or `intent` (depanding on the language C/Fortran) to the data type of `x`
-providing a useful information for C/Fortran compilers to make some optimizations on the code. Also:
+In this example, Pyccel will recognize that foo doesn't change x, so it will automatically add const or intent (depending on the language: C/Fortran) to the data type of x. This provides useful information for C/Fortran compilers to make optimizations to the code::
 
 ```python
 def foo(x: 'int[:]', i: 'int'):
@@ -226,7 +225,6 @@ module boo
 end module boo
 ```
 
-Note that the argument in the interface in `func1` has a differente  the argument `x` in `foo` that shouldn't be `intent(in)`, But as Pyccel detected that `x` wont change in `foo` the perfect case for `x` is to be an `intent(in)` rather than `intent(inout)`.
 Note that the argument in the interface in `func1` has a different [intent](https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap07/intent.html). The argument `x` in `foo` shouldn't be `intent(in)`, but rather `intent(inout)`. However as Pyccel detected that `x` wont change in `foo`, the perfect case for `x` is to be an `intent(in)` rather than `intent(inout)`
 Now we will tell Pyccel to create a program by adding `if __name__ == '__main__':` to the Python code, and see what problem a mismatch in intent will cause:
 
