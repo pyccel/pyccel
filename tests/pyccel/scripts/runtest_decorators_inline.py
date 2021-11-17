@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from decorators_inline import power_4, get_powers, f, sin_base_1
 
 def g(s : int):
