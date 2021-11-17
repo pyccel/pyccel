@@ -68,7 +68,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -173,6 +173,7 @@ class SemanticParser(BasicParser):
         self._ast = parser._ast
 
         self._filename  = parser._filename
+        self._mod_name  = ''
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = OrderedDict()
@@ -1626,6 +1627,7 @@ class SemanticParser(BasicParser):
         program_body      = []
         init_func_body    = []
         mod_name = expr.name
+        self._mod_name = mod_name
         prog_name = self.get_new_name('prog_'+expr.name)
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name)
@@ -3312,6 +3314,14 @@ class SemanticParser(BasicParser):
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
+
+            if is_inline:
+                local_targets  = [f.name for f in body.get_attribute_nodes((FunctionDef, PyccelInternalFunction)) \
+                                    if f not in sub_funcs]
+                local_targets += [c.name for c in body.get_attribute_nodes(ClassDef)]
+                local_targets += [g.name for g in global_vars]
+                if local_targets:
+                    imports += [Import(self._mod_name, local_targets)]
 
             func = FunctionDef(name,
                     args,
