@@ -165,6 +165,89 @@ class Basic:
         self._recursion_in_progress = False
         return results
 
+    def search_user_nodes(self, search_node, excluded_nodes = ()):
+        """ Identifies whether this object exists within the object search_node
+
+        Parameters
+        ----------
+        search_node : Basic
+                      The object which we are looking for
+        excluded_nodes : tuple of types
+                      Types for which get_user_nodes should not be called
+
+        Results
+        -------
+        bool
+        """
+        if self._recursion_in_progress or len(self._user_nodes) == 0:
+            return []
+        else:
+            self._recursion_in_progress = True
+
+            if any(p is search_node for p in self._user_nodes):
+                self._recursion_in_progress = False
+                return True
+
+            for p in self._user_nodes:
+                if not self.ignore(p) and not isinstance(p, excluded_nodes):
+                    res = p.search_user_nodes(search_node, excluded_nodes = excluded_nodes)
+                    if res:
+                        self._recursion_in_progress = False
+                        return True
+
+            self._recursion_in_progress = False
+            return False
+
+    def search_for_attribute_node(self, search_node, excluded_nodes = ()):
+        """ Identifies whether this object contains the object search_node
+
+        Parameters
+        ----------
+        search_node : Basic
+                      The object which we are looking for
+        excluded_nodes : tuple of types
+                      Types for which search_for_attribute_node should not be called
+
+        Results
+        -------
+        bool
+        """
+        if self._recursion_in_progress:
+            return []
+        self._recursion_in_progress = True
+
+        for n in self._my_attribute_nodes:
+            v = getattr(self, n)
+
+            if v is search_node:
+                self._recursion_in_progress = False
+                return True
+
+            elif isinstance(v, excluded_nodes):
+                continue
+
+            elif isinstance(v, tuple):
+                for vi in v:
+                    if vi is search_node:
+                        self._recursion_in_progress = False
+                        return True
+                    elif isinstance(vi, excluded_nodes):
+                        continue
+                    elif not self.ignore(vi):
+                        res = vi.search_for_attribute_node(search_node, excluded_nodes=excluded_nodes)
+                        if res:
+                            self._recursion_in_progress = False
+                            return True
+
+            elif not self.ignore(v):
+                res = v.search_for_attribute_node(search_node, excluded_nodes=excluded_nodes)
+                if res:
+                    self._recursion_in_progress = False
+                    return True
+
+        self._recursion_in_progress = False
+        return False
+
     def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
         """
         Substitute object 'original' for object 'replacement' in the code.
