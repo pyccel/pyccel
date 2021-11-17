@@ -3221,6 +3221,7 @@ class SemanticParser(BasicParser):
             # Determine local and global variables
             local_vars  = [v for v in self.get_variables(self.namespace)              if v not in arg_vars + results]
             global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in arg_vars + results + local_vars]
+            global_vars = [g for g in global_vars if body.search_for_attribute_node(g)]
 
             # get the imports
             imports   = self.namespace.imports['imports'].values()
