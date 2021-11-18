@@ -2,7 +2,7 @@
 
 Note: before reading this you should have read [Installation and Command Line Usage](https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md#installation)
 
-In order to support passing [function-pointers](https://en.wikipedia.org/wiki/Function_pointer) as arguments. Pyccel needs the user to define the type of the passed function-pointers, this can be done by using the following syntax `def function_name(func1_name : '(func1_return_type)(func1_arguments_types)', func2_name : '(func2_return_type)(func2_arguments_types)', ..., arg1, arg2, ...)` or using a function-header `#$ header function function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)`. Here is how Pyccel converts that feature:
+In order to support passing [function-pointers](https://en.wikipedia.org/wiki/Function_pointer) as arguments, Pyccel needs the user to define the type of the passed function-pointers. This can be done by using the syntax `def function_name(func1_name : '(func1_return_type)(func1_arguments_types)', func2_name : '(func2_return_type)(func2_arguments_types)', ..., arg1, arg2, ...)` or using a function-header `#$ header function function_name((func1_return_type)(func1_arguments), (func2_return_type)(func2_arguments), ..., var1_type, var2_type, ...)`. Here is how Pyccel converts that feature:
 
 In this example we will use short syntax for this feature:
 
