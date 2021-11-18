@@ -368,6 +368,30 @@ class FCodePrinter(CodePrinter):
         # Replace the arguments in the code
         body.substitute(orig_arg_vars+old_local_vars, new_arg_vars + new_local_vars, invalidate=False)
 
+        # Look for if blocks and replace present(x) statements
+        if_blocks = body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
+        if_block_replacements = [[], []]
+        for i in if_blocks:
+            blocks = []
+            for c,e in i.blocks:
+                if isinstance(c, PyccelIs):
+                    if c.eval() is True:
+                        blocks.append((LiteralTrue(), e))
+                        break
+                    elif c.eval() is False:
+                        continue
+                blocks.append((c, e))
+            if len(blocks) == 0:
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(EmptyNode())
+            elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(blocks[0][1])
+            elif len(blocks) != len(expr.blocks):
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(If(*blocks))
+        body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
+
         if len(func.results) == 0:
             # If there is no return then the code is already ok
             code = self._print(body)
@@ -404,6 +428,7 @@ class FCodePrinter(CodePrinter):
                     code = self._print(tuple(res_return_vars))
 
         # Put back original arguments
+        body.substitute(if_block_replacements[1], if_block_replacements[0])
         body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
 
         return code
@@ -2233,22 +2258,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         lines = []
-        blocks = []
-        for c,e in expr.blocks:
-            if isinstance(c, PyccelIs):
-                if c.eval() is True:
-                    blocks.append((LiteralTrue(), e))
-                    break
-                elif c.eval() is False:
-                    continue
-            blocks.append((c, e))
 
-        if len(blocks) == 0:
-            return ''
-        elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
-            return self._print(blocks[0][1])
-
-        for i, (c, e) in enumerate(blocks):
+        for i, (c, e) in enumerate(expr.blocks):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
