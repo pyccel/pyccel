@@ -93,12 +93,14 @@ def test_inline_optional(language):
         @inline
         def get_val(x : int = None , y : int = None):
             if x is None :
-                x = 3
-            if y is not None :
-                y = 4
+                a = 3
             else:
-                y = 5
-            return x + y
+                a = x
+            if y is not None :
+                b = 4
+            else:
+                b = 5
+            return a + b
         a = get_val(2,7)
         b = get_val()
         c = get_val(6)
