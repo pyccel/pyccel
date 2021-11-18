@@ -992,7 +992,7 @@ class PyccelIs(PyccelBooleanOperator):
         - False
         - unknown
         """
-        if self.rhs is Nil() and self.lhs is not NilArgument():
+        if self.rhs is Nil() and not isinstance(self.lhs, NilArgument):
             return False
         elif self.rhs is Nil():
             return True
@@ -1027,7 +1027,7 @@ class PyccelIsNot(PyccelIs):
         - False
         - unknown
         """
-        if self.rhs is Nil() and self.lhs is NilArgument():
+        if self.rhs is Nil() and isinstance(self.lhs, NilArgument):
             return False
         elif self.rhs is Nil():
             return True

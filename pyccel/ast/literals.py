@@ -239,7 +239,7 @@ class Nil(Basic, metaclass=Singleton):
         return hash('Nil')+hash(None)
 
 #------------------------------------------------------------------------------
-class LiteralTrueArgument(Literal, metaclass = ArgumentSingleton):
+class LiteralTrueArgument(Literal):
     """Represents the python value True when passed as an argument
     to an inline function. This class is necessary as to avoid
     accidental substitution due to Singletons"""
@@ -254,7 +254,7 @@ class LiteralTrueArgument(Literal, metaclass = ArgumentSingleton):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalseArgument(Literal, metaclass = ArgumentSingleton):
+class LiteralFalseArgument(Literal):
     """Represents the python value False when passed as an argument
     to an inline function. This class is necessary as to avoid
     accidental substitution due to Singletons"""
@@ -270,7 +270,7 @@ class LiteralFalseArgument(Literal, metaclass = ArgumentSingleton):
 
 #------------------------------------------------------------------------------
 
-class NilArgument(Basic, metaclass=Singleton):
+class NilArgument(Basic):
     """Represents the python value None when passed as an argument
     to an inline function. This class is necessary as to avoid
     accidental substitution due to Singletons"""
