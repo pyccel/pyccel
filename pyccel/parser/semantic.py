@@ -3315,14 +3315,6 @@ class SemanticParser(BasicParser):
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
-            if is_inline:
-                local_targets  = [f.name for f in body.get_attribute_nodes((FunctionDef, PyccelInternalFunction)) \
-                                    if f not in sub_funcs]
-                local_targets += [c.name for c in body.get_attribute_nodes(ClassDef)]
-                local_targets += [g.name for g in global_vars]
-                if local_targets:
-                    imports += [Import(self._mod_name, local_targets)]
-
             func = FunctionDef(name,
                     args,
                     results,
