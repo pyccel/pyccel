@@ -240,7 +240,9 @@ class Nil(Basic, metaclass=Singleton):
 
 #------------------------------------------------------------------------------
 class LiteralTrueArgument(Literal, metaclass = ArgumentSingleton):
-    """Represents the python value True"""
+    """Represents the python value True when passed as an argument
+    to an inline function. This class is necessary as to avoid
+    accidental substitution due to Singletons"""
     __slots__ = ()
     _dtype     = NativeBool()
 
@@ -253,7 +255,9 @@ class LiteralTrueArgument(Literal, metaclass = ArgumentSingleton):
 
 #------------------------------------------------------------------------------
 class LiteralFalseArgument(Literal, metaclass = ArgumentSingleton):
-    """Represents the python value False"""
+    """Represents the python value False when passed as an argument
+    to an inline function. This class is necessary as to avoid
+    accidental substitution due to Singletons"""
     __slots__ = ()
     _dtype     = NativeBool()
 
@@ -267,10 +271,9 @@ class LiteralFalseArgument(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 
 class NilArgument(Basic, metaclass=Singleton):
-
-    """
-    class for None object in the code.
-    """
+    """Represents the python value None when passed as an argument
+    to an inline function. This class is necessary as to avoid
+    accidental substitution due to Singletons"""
     __slots__ = ()
     _attribute_nodes = ()
 
