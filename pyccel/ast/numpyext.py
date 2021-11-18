@@ -696,6 +696,8 @@ class NumpyLinspace(NumpyNewArray):
 
     @ind.setter
     def ind(self, value):
+        assert self._ind is None
+        value.set_current_user_node(self)
         self._ind = value
 
     @property
