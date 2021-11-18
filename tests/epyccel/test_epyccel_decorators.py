@@ -111,12 +111,12 @@ def test_inline_optional(language):
 
 def test_inline_array(language):
     def f():
-        import numpy as np
+        from numpy import empty
         @inline
         def fill_array(a : 'float[:]'):
             for i in range(a.shape[0]):
                 a[i] = 3.14
-        arr = np.empty(4)
+        arr = empty(4)
         fill_array(arr)
         return arr[0], arr[-1]
 
