@@ -985,6 +985,13 @@ class PyccelIs(PyccelBooleanOperator):
         return '{} is {}'.format(self.args[0], self.args[1])
 
     def eval(self):
+        """ Indicates the result in an inlined function with optional arguments
+
+        Possible results:
+        - True
+        - False
+        - unknown
+        """
         if self.rhs is Nil() and self.lhs is not NilArgument():
             return False
         elif self.rhs is Nil():
@@ -1013,6 +1020,13 @@ class PyccelIsNot(PyccelIs):
         return '{} is not {}'.format(self.args[0], self.args[1])
 
     def eval(self):
+        """ Indicates the result in an inlined function with optional arguments
+
+        Possible results:
+        - True
+        - False
+        - unknown
+        """
         if self.rhs is Nil() and self.lhs is NilArgument():
             return False
         elif self.rhs is Nil():
