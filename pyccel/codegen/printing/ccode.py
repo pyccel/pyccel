@@ -903,6 +903,9 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
+        elif declaration_type == 't_ndarray ':
+            preface = ''
+            init    = ' = {.shape = NULL}'
         else:
             preface = ''
             init    = ''
@@ -1436,18 +1439,19 @@ class CCodePrinter(CodePrinter):
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
-                return 'return {0};\n'.format(self._print(args[0]))
-
-            # make sure that stmt contains one assign node.
-            last_assign = last_assign[-1]
-            variables = last_assign.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-            unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
-            if unneeded_var:
-                code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
-                return code + 'return {};\n'.format(self._print(last_assign.rhs))
-            else:
                 code = ''+self._print(expr.stmt)
-                self._additional_declare.append(last_assign.lhs)
+            else:
+                # make sure that stmt contains one assign node.
+                last_assign = last_assign[-1]
+                variables = last_assign.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+                unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
+                if unneeded_var:
+                    code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
+                    return code + 'return {};\n'.format(self._print(last_assign.rhs))
+                else:
+                    code = ''+self._print(expr.stmt)
+                    self._additional_declare.append(last_assign.lhs)
+
         return code + 'return {0};\n'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
