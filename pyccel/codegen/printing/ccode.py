@@ -32,7 +32,8 @@ from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, NilArgument
+from pyccel.ast.literals  import LiteralTrueArgument, LiteralFalseArgument
 
 from pyccel.ast.mathext  import math_constants
 
@@ -423,7 +424,11 @@ class CCodePrinter(CodePrinter):
         # Collect the function arguments and the expressions they will be replaced with
         orig_arg_vars = [a.var for a in func.arguments]
         new_arg_vars = [a.value for a in expr.args]
-        new_arg_vars = [PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
+        # We cannot replace with singletons as this cannot be reversed
+        new_arg_vars = [NilArgument() if a is Nil() else \
+                        LiteralTrueArgument() if isinstance(a, LiteralTrue) else \
+                        LiteralFalseArgument() if isinstance(a, LiteralFalse) else \
+                        PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
                         else a for a in new_arg_vars]
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))

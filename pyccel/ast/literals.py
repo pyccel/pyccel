@@ -239,6 +239,54 @@ class Nil(Basic, metaclass=Singleton):
         return hash('Nil')+hash(None)
 
 #------------------------------------------------------------------------------
+class LiteralTrueArgument(Literal, metaclass = ArgumentSingleton):
+    """Represents the python value True"""
+    __slots__ = ()
+    _dtype     = NativeBool()
+
+    def __init__(self, precision = default_precision['bool']):
+        super().__init__(precision)
+
+    @property
+    def python_value(self):
+        return True
+
+#------------------------------------------------------------------------------
+class LiteralFalseArgument(Literal, metaclass = ArgumentSingleton):
+    """Represents the python value False"""
+    __slots__ = ()
+    _dtype     = NativeBool()
+
+    def __init__(self, precision = default_precision['bool']):
+        super().__init__(precision)
+
+    @property
+    def python_value(self):
+        return False
+
+#------------------------------------------------------------------------------
+
+class NilArgument(Basic, metaclass=Singleton):
+
+    """
+    class for None object in the code.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+    def __str__(self):
+        return 'Argument(None)'
+
+    def __bool__(self):
+        return False
+
+    def __eq__(self, other):
+        return isinstance(other, Nil)
+
+    def __hash__(self):
+        return hash('NilArg')+hash(None)
+
+#------------------------------------------------------------------------------
 
 def get_default_literal_value(dtype):
     """Returns the default value of a native datatype."""
