@@ -317,9 +317,6 @@ class FCodePrinter(CodePrinter):
         """ Print a function call to an inline function
         """
         func = expr.funcdef
-        name = func.name
-
-        n_up = 0
 
         # Put functions into current namespace
         for entry in ['variables', 'classes', 'functions']:
