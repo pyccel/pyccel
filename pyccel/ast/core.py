@@ -3735,6 +3735,9 @@ class IfSection(Basic):
     def __iter__(self):
         return iter((self.condition, self.body))
 
+    def __str__(self):
+        return "IfSec({},{})".format(str(self.condition), str(self.body))
+
 class If(Basic):
 
     """Represents a if statement in the code.
@@ -3775,6 +3778,9 @@ class If(Basic):
     @property
     def bodies(self):
         return [b.body for b in self._blocks]
+
+    def __str__(self):
+        return "If({})".format(','.join(str(b) for b in self.blocks))
 
 class StarredArguments(Basic):
     __slots__ = ('_starred_obj',)
