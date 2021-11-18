@@ -361,7 +361,14 @@ end module boo
 
 ## Inline
 
-The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation. However, beware, as the function itself is never called, it is not printed and is therefore not exposed to the user (this allows inline functions to call external functions with the same name, which is useful for wrapping external libraries)
+The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
+
+### Current Restrictions
+Currently `inline` functions cannot be imported. This should be fixed shortly.
+
+Due to this restriction, the function cannot be included in the python wrapper. It is therefore not currently exposed to the user in a non-translated file.
+
+### Basic Example
 
 Here is a simple usage example:
 ```python
@@ -415,6 +422,28 @@ int64_t f(void)
     return a;
 }
 /*........................................*/
+```
+
+### Complex Example
+
+The following complicated example shows the handling of arrays and local variables
+
+```python
+from pyccel.decorators import inline
+
+pi = 3.14159
+
+@inline
+def fill_pi(a : 'float[:]'):
+    pi = 3.14159
+    for i in range(a.shape[0]):
+        a[i] = pi
+
+def f():
+    a = np.empty(4)
+    fill_pi(a)
+    pi = 3.14
+    print(a,pi)
 ```
 
 ## Getting Help
