@@ -380,6 +380,10 @@ class PythonCodePrinter(CodePrinter):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
         name = self._aliases.get(NumpyShape, expr.name)
+        if name == expr.name:
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = expr.name)
         return '{0}({1})[{2}]'.format(name, arg, index)
 
     def _print_Comment(self, expr):
