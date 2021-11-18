@@ -2215,9 +2215,6 @@ class FCodePrinter(CodePrinter):
                       symbol=expr, severity='fatal')
 
     def _print_PyccelIsNot(self, expr):
-        if expr.eval() == True:
-            return self._print(LiteralTrue())
-
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
