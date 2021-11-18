@@ -23,7 +23,8 @@ def sin_base_1(d : float):
 
 if __name__ == '__main__':
     print(get_powers(3))
-    print(get_powers(4))
+    a,b,c = get_powers(4)
+    print(a,b,c)
     print(power_4(5))
     print(f(3))
     print(sin_base_1(0.5))
