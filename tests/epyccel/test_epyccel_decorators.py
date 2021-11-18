@@ -87,3 +87,39 @@ def test_inline_local_name_clash(language):
     g = epyccel(f, language=language)
 
     assert f() == g()
+
+def test_inline_optional(language):
+    def f():
+        @inline
+        def get_val(x : int = None , y : int = None):
+            if x is None :
+                x = 3
+            if y is not None :
+                y = 4
+            else:
+                y = 5
+            return x + y
+        a = get_val(2,7)
+        b = get_val()
+        c = get_val(6)
+        d = get_val(y=0)
+        return a,b,c,d
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()
+
+def test_inline_array(language):
+    def f():
+        import numpy as np
+        @inline
+        def fill_array(a : 'float[:]'):
+            for i in range(a.shape[0]):
+                a[i] = 3.14
+        arr = np.empty(4)
+        fill_array(arr)
+        return arr[0], arr[-1]
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()

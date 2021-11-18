@@ -21,6 +21,12 @@ def f(s : int):
 def sin_base_1(d : float):
     return np.sin(2*pi*d)
 
+@inline
+def fill_pi(a : 'float[:]'):
+    pi = 3.14159
+    for i in range(a.shape[0]):
+        a[i] = pi
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
@@ -29,3 +35,6 @@ if __name__ == '__main__':
     print(f(3))
     print(sin_base_1(0.5))
     print(sin_base_1(0.7))
+    arr = np.empty(4)
+    fill_pi(arr)
+    print(arr)
