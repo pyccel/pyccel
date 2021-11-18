@@ -34,7 +34,7 @@ from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument
-from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import ConstructorCall, InlineFunctionDef
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
@@ -3315,24 +3315,34 @@ class SemanticParser(BasicParser):
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
-            func = FunctionDef(name,
-                    args,
-                    results,
-                    body,
-                    local_vars=local_vars,
-                    global_vars=global_vars,
-                    cls_name=cls_name,
-                    is_pure=is_pure,
-                    is_elemental=is_elemental,
-                    is_private=is_private,
-                    is_inline=is_inline,
-                    imports=imports,
-                    decorators=decorators,
-                    is_recursive=is_recursive,
-                    arguments_inout=args_inout,
-                    functions = sub_funcs,
-                    interfaces = func_interfaces,
-                    doc_string = doc_string)
+            func_kwargs = {
+                    'local_vars':local_vars,
+                    'global_vars':global_vars,
+                    'cls_name':cls_name,
+                    'is_pure':is_pure,
+                    'is_elemental':is_elemental,
+                    'is_private':is_private,
+                    'imports':imports,
+                    'decorators':decorators,
+                    'is_recursive':is_recursive,
+                    'arguments_inout':args_inout,
+                    'functions': sub_funcs,
+                    'interfaces': func_interfaces,
+                    'doc_string': doc_string
+                    }
+            if is_inline:
+                func = InlineFunctionDef(name,
+                        args,
+                        results,
+                        body,
+                        **func_kwargs,
+                        namespace_funcs = self._namespace.imports['functions'])
+            else:
+                func = FunctionDef(name,
+                        args,
+                        results,
+                        body,
+                        **func_kwargs)
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
 

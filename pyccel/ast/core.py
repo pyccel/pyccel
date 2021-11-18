@@ -2145,9 +2145,6 @@ class FunctionDef(Basic):
     is_external: bool
         True for a function which cannot be explicitly imported or renamed
 
-    is_inline: bool
-        True for a function which should never be printed explicitly
-
     arguments_inout: list, tuple
         a list of booleans indicating if each argument is modified by the function
 
@@ -2190,8 +2187,7 @@ class FunctionDef(Basic):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header','_arguments_inout',
-                 '_functions','_interfaces','_doc_string', '_is_external',
-                 '_is_inline')
+                 '_functions','_interfaces','_doc_string', '_is_external')
     _attribute_nodes = ('_arguments','_results','_body','_local_vars',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2214,7 +2210,6 @@ class FunctionDef(Basic):
         is_private=False,
         is_header=False,
         is_external=False,
-        is_inline=False,
         arguments_inout=(),
         functions=(),
         interfaces=(),
@@ -2324,7 +2319,6 @@ class FunctionDef(Basic):
         self._is_private      = is_private
         self._is_header       = is_header
         self._is_external     = is_external
-        self._is_inline       = is_inline
         self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
@@ -2447,7 +2441,7 @@ class FunctionDef(Basic):
     @property
     def is_inline(self):
         """ True if the function should be printed inline """
-        return self._is_inline
+        return False
 
     @property
     def arguments_inout(self):
@@ -2578,6 +2572,23 @@ class FunctionDef(Basic):
     @property
     def is_unused(self):
         return False
+
+class InlineFunctionDef(FunctionDef):
+    __slots__ = '_namespace_funcs'
+    def __init__(self, *args, namespace_funcs = None, **kwargs):
+        self._namespace_funcs = namespace_funcs
+        super().__init__(*args, **kwargs)
+
+    @property
+    def is_inline(self):
+        """ True if the function should be printed inline """
+        return True
+
+    @property
+    def namespace_funcs(self):
+        return self._namespace_funcs
+
+    #def swap_in_
 
 class Interface(Basic):
 

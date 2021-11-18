@@ -25,7 +25,7 @@ from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
@@ -805,21 +805,31 @@ class SyntaxParser(BasicParser):
 
             results.append(result_name)
 
-        func = FunctionDef(
-               name,
-               arguments,
-               results,
-               body,
-               local_vars=local_vars,
-               global_vars=global_vars,
-               is_pure=is_pure,
-               is_elemental=is_elemental,
-               is_private=is_private,
-               is_inline=is_inline,
-               imports=imports,
-               decorators=decorators,
-               headers=headers,
-               doc_string=doc_string)
+        kwargs = {
+               'local_vars':local_vars,
+               'global_vars':global_vars,
+               'is_pure':is_pure,
+               'is_elemental':is_elemental,
+               'is_private':is_private,
+               'imports':imports,
+               'decorators':decorators,
+               'headers':headers,
+               'doc_string':doc_string
+               }
+        if is_inline:
+            func = InlineFunctionDef(
+                   name,
+                   arguments,
+                   results,
+                   body,
+                   **kwargs)
+        else:
+            func = FunctionDef(
+                   name,
+                   arguments,
+                   results,
+                   body,
+                   **kwargs)
 
         return func
 
