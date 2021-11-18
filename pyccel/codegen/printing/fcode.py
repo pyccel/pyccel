@@ -313,7 +313,7 @@ class FCodePrinter(CodePrinter):
             self._constantImports.add(constant_name)
         return constant_name
 
-    def _handle_inline_func_call(self, expr):
+    def _handle_inline_func_call(self, expr, assign_lhs = None):
         """ Print a function call to an inline function
         """
         func = expr.funcdef
@@ -384,15 +384,19 @@ class FCodePrinter(CodePrinter):
                 self._additional_code += ''.join([self._print(i) for i in result.stmt.body if not isinstance(i, Assign)])
             else:
                 assigns = {}
-            res_return_vars = [assigns.get(v,v) for v in result.expr]
 
             # Put return statement back into function
             body.substitute(empty_return, result)
 
-            if len(res_return_vars) == 1:
-                code = self._print(res_return_vars[0])
+            if assign_lhs:
+                assigns = [Assign(l, r) for l,r in zip(assign_lhs, assigns.values())]
+                code = ''.join([self._print(a) for a in assigns])
             else:
-                code = self._print(tuple(res_return_vars))
+                res_return_vars = [assigns.get(v,v) for v in result.expr]
+                if len(res_return_vars) == 1:
+                    code = self._print(res_return_vars[0])
+                else:
+                    code = self._print(tuple(res_return_vars))
 
         # Put back original arguments
         body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
@@ -1358,11 +1362,13 @@ class FCodePrinter(CodePrinter):
             # we should append them to the procedure arguments
             if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)) \
                     or (isinstance(expr.lhs, HomogeneousTupleVariable) and expr.lhs.is_stack_array):
+                func = rhs.funcdef
+                if func.is_inline:
+                    return self._handle_inline_func_call(rhs, expr.lhs)
 
-                rhs_code = rhs.funcdef.name
+                rhs_code = func.name
                 args = rhs.args
                 code_args = [self._print(i) for i in args]
-                func = rhs.funcdef
                 output_names = func.results
                 lhs_code = [self._print(name) + ' = ' + self._print(i) for (name,i) in zip(output_names,expr.lhs)]
 
