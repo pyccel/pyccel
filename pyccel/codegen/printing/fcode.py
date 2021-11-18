@@ -323,30 +323,8 @@ class FCodePrinter(CodePrinter):
 
         n_up = 0
 
-        current_namespace = self._namespace
-        current_function  = self._current_function
-
-        if self._current_function is None:
-            if name not in self._namespace.sons_scopes:
-                self.change_to_module_scope()
-                self._namespace = self.parser.namespace
-
-        else:
-            # Walk up namespaces until inline function is available
-            while name not in self._namespace.sons_scopes:
-                self.set_current_function(None)
-                n_up+=1
-
-        # Get imported functions from inline function's namespace
-        self.set_current_function(name)
-        used_functions = self._namespace.imports['functions']
-
-        # Put back namespace and function parameters to return to call environment
-        self._namespace = current_namespace
-        self._current_function  = current_function
-
         # Put functions into current namespace
-        self._namespace.imports['functions'].update(used_functions)
+        self._namespace.imports['functions'].update(func.namespace_funcs)
 
         # Create new local variables to ensure there are no name collisions
         old_local_vars = list(func.local_vars)
