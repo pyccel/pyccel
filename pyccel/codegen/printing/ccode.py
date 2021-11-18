@@ -23,7 +23,7 @@ from pyccel.ast.core      import create_incremented_string
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
-from pyccel.ast.operators import PyccelOperator
+from pyccel.ast.operators import PyccelOperator, PyccelIs
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
@@ -609,7 +609,23 @@ class CCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.blocks):
+        blocks = []
+        for c,e in expr.blocks:
+            if isinstance(c, PyccelIs):
+                if c.eval() is True:
+                    blocks.append((LiteralTrue(), e))
+                    break
+                elif c.eval() is False:
+                    continue
+            blocks.append((c, e))
+
+        if len(blocks) == 0:
+            return ''
+
+        elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
+            return self._print(blocks[0][1])
+
+        for i, (c, e) in enumerate(blocks):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{\n" % self._print(c))
@@ -1464,6 +1480,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_Nil(self, expr):
         return 'NULL'
+
+    def _print_NilArgument(self, expr):
+        raise errors.report("Trying to use optional argument in inline function without provided a variable",
+                symbol=expr,
+                severity='fatal')
 
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)

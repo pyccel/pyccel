@@ -37,7 +37,7 @@ from pyccel.ast.variable  import (Variable,
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
 from pyccel.ast.operators      import PyccelMod, PyccelAssociativeParenthesis
-from pyccel.ast.operators      import PyccelOperator
+from pyccel.ast.operators      import PyccelOperator, PyccelIs
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
@@ -1764,6 +1764,11 @@ class FCodePrinter(CodePrinter):
     def _print_Nil(self, expr):
         return ''
 
+    def _print_NilArgument(self, expr):
+        raise errors.report("Trying to use optional argument in inline function without provided a variable",
+                symbol=expr,
+                severity='fatal')
+
     def _print_Return(self, expr):
         code = ''
         if expr.stmt:
@@ -2210,6 +2215,9 @@ class FCodePrinter(CodePrinter):
                       symbol=expr, severity='fatal')
 
     def _print_PyccelIsNot(self, expr):
+        if expr.eval() == True:
+            return self._print(LiteralTrue())
+
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
@@ -2228,8 +2236,22 @@ class FCodePrinter(CodePrinter):
         # ...
 
         lines = []
+        blocks = []
+        for c,e in expr.blocks:
+            if isinstance(c, PyccelIs):
+                if c.eval() is True:
+                    blocks.append((LiteralTrue(), e))
+                    break
+                elif c.eval() is False:
+                    continue
+            blocks.append((c, e))
 
-        for i, (c, e) in enumerate(expr.blocks):
+        if len(blocks) == 0:
+            return ''
+        elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
+            return self._print(blocks[0][1])
+
+        for i, (c, e) in enumerate(blocks):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))

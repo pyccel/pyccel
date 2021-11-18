@@ -19,7 +19,8 @@ from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
                                     NativeComplex, NativeString, default_precision,
                                     NativeNumeric)
 
-from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
+from .literals              import Nil, NilArgument
 from .literals              import convert_to_literal
 
 errors = Errors()
@@ -983,6 +984,14 @@ class PyccelIs(PyccelBooleanOperator):
     def __repr__(self):
         return '{} is {}'.format(self.args[0], self.args[1])
 
+    def eval(self):
+        if self.rhs is Nil() and self.lhs is not NilArgument():
+            return False
+        elif self.rhs is Nil():
+            return True
+        else:
+            return "unknown"
+
 #==============================================================================
 
 class PyccelIsNot(PyccelIs):
@@ -1003,6 +1012,13 @@ class PyccelIsNot(PyccelIs):
     def __repr__(self):
         return '{} is not {}'.format(self.args[0], self.args[1])
 
+    def eval(self):
+        if self.rhs is Nil() and self.lhs is NilArgument():
+            return False
+        elif self.rhs is Nil():
+            return True
+        else:
+            return "unknown"
 
 #==============================================================================
 
