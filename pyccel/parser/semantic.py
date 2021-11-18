@@ -3243,6 +3243,7 @@ class SemanticParser(BasicParser):
             if func_args:
                 func_interfaces.append(Interface('', func_args, is_argument = True))
 
+            namespace_imports = self._namespace.imports
             self.exit_function_scope()
 
             # ... computing inout arguments
@@ -3336,7 +3337,7 @@ class SemanticParser(BasicParser):
                         results,
                         body,
                         **func_kwargs,
-                        namespace_imports = self._namespace.imports)
+                        namespace_imports = namespace_imports)
             else:
                 func = FunctionDef(name,
                         args,
