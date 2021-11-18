@@ -59,8 +59,7 @@ from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
-from pyccel.ast.literals  import Nil, NilArgument
-from pyccel.ast.literals  import LiteralTrueArgument, LiteralFalseArgument
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
@@ -318,7 +317,6 @@ class FCodePrinter(CodePrinter):
         """ Print a function call to an inline function
         """
         func = expr.funcdef
-        body = func.body
         name = func.name
 
         n_up = 0
@@ -328,48 +326,16 @@ class FCodePrinter(CodePrinter):
             self._namespace.imports[entry].update(func.namespace_imports[entry])
 
         # Create new local variables to ensure there are no name collisions
-        old_local_vars = list(func.local_vars)
         new_local_vars = [v.clone(self.parser.get_new_name(v.name)) \
-                            for v in old_local_vars]
+                            for v in func.local_vars]
         for v in new_local_vars:
             self.add_vars_to_namespace(v)
 
-        # Collect the function arguments and the expressions they will be replaced with
-        orig_arg_vars = [a.var for a in func.arguments]
-        new_arg_vars = [a.value for a in expr.args]
-        # We cannot replace with singletons as this cannot be reversed
-        new_arg_vars = [NilArgument() if a is Nil() else \
-                        LiteralTrueArgument() if isinstance(a, LiteralTrue) else \
-                        LiteralFalseArgument() if isinstance(a, LiteralFalse) else \
-                        PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
-                        else a for a in new_arg_vars]
+        func.swap_in_args(expr.args, new_local_vars)
 
-        # Replace the arguments in the code
-        body.substitute(orig_arg_vars+old_local_vars, new_arg_vars + new_local_vars, invalidate=False)
+        func.remove_presence_checks()
 
-        # Look for if blocks and replace present(x) statements
-        if_blocks = body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
-        if_block_replacements = [[], []]
-        for i in if_blocks:
-            blocks = []
-            for c,e in i.blocks:
-                if isinstance(c, PyccelIs):
-                    if c.eval() is True:
-                        blocks.append((LiteralTrue(), e))
-                        break
-                    elif c.eval() is False:
-                        continue
-                blocks.append((c, e))
-            if len(blocks) == 0:
-                if_block_replacements[0].append(i)
-                if_block_replacements[1].append(EmptyNode())
-            elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
-                if_block_replacements[0].append(i)
-                if_block_replacements[1].append(blocks[0][1])
-            elif len(blocks) != len(expr.blocks):
-                if_block_replacements[0].append(i)
-                if_block_replacements[1].append(If(*blocks))
-        body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
+        body = func.body
 
         if len(func.results) == 0:
             # If there is no return then the code is already ok
@@ -407,8 +373,8 @@ class FCodePrinter(CodePrinter):
                     code = self._print(tuple(res_return_vars))
 
         # Put back original arguments
-        body.substitute(if_block_replacements[1], if_block_replacements[0])
-        body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
+        func.reinstate_presence_checks()
+        func.swap_out_args()
 
         return code
 

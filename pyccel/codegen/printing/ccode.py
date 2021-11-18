@@ -416,20 +416,9 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
         body = func.body
 
-        old_local_vars = list(func.local_vars)
         new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
-                            for v in old_local_vars]
+                            for v in func.local_vars]
         self._additional_declare.extend(new_local_vars)
-
-        # Collect the function arguments and the expressions they will be replaced with
-        orig_arg_vars = [a.var for a in func.arguments]
-        new_arg_vars = [a.value for a in expr.args]
-        # We cannot replace with singletons as this cannot be reversed
-        new_arg_vars = [NilArgument() if a is Nil() else \
-                        LiteralTrueArgument() if isinstance(a, LiteralTrue) else \
-                        LiteralFalseArgument() if isinstance(a, LiteralFalse) else \
-                        PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
-                        else a for a in new_arg_vars]
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         if parent_assign:
@@ -441,31 +430,9 @@ class CCodePrinter(CodePrinter):
             body.substitute(orig_res_vars, new_res_vars)
 
         # Replace the arguments in the code
-        body.substitute(orig_arg_vars + old_local_vars, new_arg_vars + new_local_vars)
+        func.swap_in_args(expr.args, new_local_vars)
 
-        # Look for if blocks and replace present(x) statements
-        if_blocks = body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
-        if_block_replacements = [[], []]
-        for i in if_blocks:
-            blocks = []
-            for c,e in i.blocks:
-                if isinstance(c, PyccelIs):
-                    if c.eval() is True:
-                        blocks.append((LiteralTrue(), e))
-                        break
-                    elif c.eval() is False:
-                        continue
-                blocks.append((c, e))
-            if len(blocks) == 0:
-                if_block_replacements[0].append(i)
-                if_block_replacements[1].append(EmptyNode())
-            elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
-                if_block_replacements[0].append(i)
-                if_block_replacements[1].append(blocks[0][1])
-            elif len(blocks) != len(expr.blocks):
-                if_block_replacements[0].append(i)
-                if_block_replacements[1].append(If(*blocks))
-        body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
+        func.remove_presence_checks()
 
         # Collect code but strip empty end
         body_code = self._print(body)
@@ -489,8 +456,8 @@ class CCodePrinter(CodePrinter):
                 code = result_line[7:-1]
 
         # Put back original arguments
-        body.substitute(if_block_replacements[1], if_block_replacements[0])
-        body.substitute(new_arg_vars+new_local_vars, orig_arg_vars+old_local_vars)
+        func.reinstate_presence_checks()
+        func.swap_out_args()
         if parent_assign:
             body.substitute(new_res_vars, orig_res_vars)
         return code

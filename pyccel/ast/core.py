@@ -22,9 +22,11 @@ from .datatypes import (datatype, DataType, NativeSymbol,
 from .internals      import Slice, PyccelSymbol
 
 from .literals       import LiteralInteger, Nil, convert_to_literal, LiteralFalse
+from .literals       import NilArgument, LiteralTrue, LiteralTrueArgument, LiteralFalseArgument
 from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
+from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable
@@ -2574,10 +2576,11 @@ class FunctionDef(Basic):
         return False
 
 class InlineFunctionDef(FunctionDef):
-    __slots__ = '_namespace_imports'
+    __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements')
     def __init__(self, *args, namespace_imports = None, **kwargs):
         self._namespace_imports = namespace_imports
         super().__init__(*args, **kwargs)
+        self._orig_args = tuple([a.var for a in self.arguments])
 
     @property
     def is_inline(self):
@@ -2588,7 +2591,55 @@ class InlineFunctionDef(FunctionDef):
     def namespace_imports(self):
         return self._namespace_imports
 
-    #def swap_in_
+    def swap_in_args(self, args, new_local_vars):
+        # Collect the function arguments and the expressions they will be replaced with
+        self._new_args  = [a.value for a in args]
+        self._new_local_vars = tuple(new_local_vars)
+
+        # We cannot replace with singletons as this cannot be reversed
+        self._new_args  = tuple([NilArgument() if a is Nil() else \
+                        LiteralTrueArgument() if isinstance(a, LiteralTrue) else \
+                        LiteralFalseArgument() if isinstance(a, LiteralFalse) else \
+                        PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
+                        else a for a in self._new_args])
+
+        # Replace the arguments in the code
+        self.body.substitute(self._orig_args+self.local_vars, self._new_args+self._new_local_vars, invalidate=False)
+
+    def swap_out_args(self):
+        self.body.substitute(self._new_args+self._new_local_vars, self._orig_args+self.local_vars, invalidate=False)
+        self._new_args = None
+        self._new_local_vars = None
+
+    def remove_presence_checks(self):
+        # Look for if blocks and replace present(x) statements
+        if_blocks = self.body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
+        if_block_replacements = [[], []]
+        for i in if_blocks:
+            blocks = []
+            for c,e in i.blocks:
+                if isinstance(c, PyccelIs):
+                    if c.eval() is True:
+                        blocks.append((LiteralTrue(), e))
+                        break
+                    elif c.eval() is False:
+                        continue
+                blocks.append((c, e))
+            if len(blocks) == 0:
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(EmptyNode())
+            elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(blocks[0][1])
+            elif len(blocks) != len(expr.blocks):
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(If(*blocks))
+        self._if_block_replacements = if_block_replacements
+        self.body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
+
+    def reinstate_presence_checks(self):
+        self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
+        self._if_block_replacements = None
 
 class Interface(Basic):
 
