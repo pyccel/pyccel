@@ -324,7 +324,8 @@ class FCodePrinter(CodePrinter):
         n_up = 0
 
         # Put functions into current namespace
-        self._namespace.imports['functions'].update(func.namespace_funcs)
+        for entry in ['variables', 'classes', 'functions']:
+            self._namespace.imports[entry].update(func.namespace_imports[entry])
 
         # Create new local variables to ensure there are no name collisions
         old_local_vars = list(func.local_vars)

@@ -2574,9 +2574,9 @@ class FunctionDef(Basic):
         return False
 
 class InlineFunctionDef(FunctionDef):
-    __slots__ = '_namespace_funcs'
-    def __init__(self, *args, namespace_funcs = None, **kwargs):
-        self._namespace_funcs = namespace_funcs
+    __slots__ = '_namespace_imports'
+    def __init__(self, *args, namespace_imports = None, **kwargs):
+        self._namespace_imports = namespace_imports
         super().__init__(*args, **kwargs)
 
     @property
@@ -2585,8 +2585,8 @@ class InlineFunctionDef(FunctionDef):
         return True
 
     @property
-    def namespace_funcs(self):
-        return self._namespace_funcs
+    def namespace_imports(self):
+        return self._namespace_imports
 
     #def swap_in_
 

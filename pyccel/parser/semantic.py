@@ -3336,7 +3336,7 @@ class SemanticParser(BasicParser):
                         results,
                         body,
                         **func_kwargs,
-                        namespace_funcs = self._namespace.imports['functions'])
+                        namespace_imports = self._namespace.imports)
             else:
                 func = FunctionDef(name,
                         args,
