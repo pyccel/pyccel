@@ -333,7 +333,7 @@ Error: Interface mismatch in dummy procedure 'func_arg' at (1): INTENT mismatch 
 ```
 
 The Fortran compiler couldn't make a program out of the generated code because of the mismatch of `intent` between the argument `in_0000` of the interface (function-pointer in C) in `func1`
-and the argument `x` (the correspondent of `in_000`) of `foo`. This error can be fixed by adding the `const` keyword to correspondent argument of the array `x` in `func_arg` in the Python code:
+and the argument `x` (the correspondent of `in_000`) of `foo`. This error can be fixed by adding the `const` keyword to the correspondent argument of the array `x` in `func_arg` in the Python code:
 
 ```python
 import numpy as np
