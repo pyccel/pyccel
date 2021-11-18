@@ -634,23 +634,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        blocks = []
-        for c,e in expr.blocks:
-            if isinstance(c, PyccelIs):
-                if c.eval() is True:
-                    blocks.append((LiteralTrue(), e))
-                    break
-                elif c.eval() is False:
-                    continue
-            blocks.append((c, e))
 
-        if len(blocks) == 0:
-            return ''
-
-        elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
-            return self._print(blocks[0][1])
-
-        for i, (c, e) in enumerate(blocks):
+        for i, (c, e) in enumerate(expr.blocks):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{\n" % self._print(c))
