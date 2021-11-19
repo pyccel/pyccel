@@ -2576,11 +2576,24 @@ class FunctionDef(Basic):
         return False
 
 class InlineFunctionDef(FunctionDef):
+    """
+    Represents a function definition for an inline function.
+
+    Parameters
+    ----------
+    See FunctionDef
+
+    namespace_imports : Scope
+                        The objects in the scope which are available due to imports
+    """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements')
+
     def __init__(self, *args, namespace_imports = None, **kwargs):
         self._namespace_imports = namespace_imports
         super().__init__(*args, **kwargs)
-        self._orig_args = tuple([a.var for a in self.arguments])
+        self._orig_args = tuple(a.var for a in self.arguments)
+        self._new_args  = None
+        self._new_local_vars = None
 
     @property
     def is_inline(self):
@@ -2589,29 +2602,39 @@ class InlineFunctionDef(FunctionDef):
 
     @property
     def namespace_imports(self):
+        """ The objects in the scope which are available due to imports
+        """
         return self._namespace_imports
 
     def swap_in_args(self, args, new_local_vars):
+        """ Modify the body of the function by replacing the argument and local Variables
+        with the provided argument and local Variables
+        """
         # Collect the function arguments and the expressions they will be replaced with
         self._new_args  = [a.value for a in args]
         self._new_local_vars = tuple(new_local_vars)
 
         # We cannot replace with singletons as this cannot be reversed
-        self._new_args  = tuple([NilArgument() if a is Nil() else \
+        self._new_args  = tuple(NilArgument() if a is Nil() else \
                         LiteralTrueArgument() if isinstance(a, LiteralTrue) else \
                         LiteralFalseArgument() if isinstance(a, LiteralFalse) else \
                         PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
-                        else a for a in self._new_args])
+                        else a for a in self._new_args)
 
         # Replace the arguments in the code
         self.body.substitute(self._orig_args+self.local_vars, self._new_args+self._new_local_vars, invalidate=False)
 
     def swap_out_args(self):
+        """ Modify the body of the function by reinstating the original argument and local Variables
+        """
         self.body.substitute(self._new_args+self._new_local_vars, self._orig_args+self.local_vars, invalidate=False)
         self._new_args = None
         self._new_local_vars = None
 
     def remove_presence_checks(self):
+        """ Modify the body by replacing all expressions checking for the presence of an optional
+        variable. Either the If is removed or the check is replaced with its literal result
+        """
         # Look for if blocks and replace present(x) statements
         if_blocks = self.body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
         if_block_replacements = [[], []]
@@ -2624,6 +2647,15 @@ class InlineFunctionDef(FunctionDef):
                         break
                     elif c.eval() is False:
                         continue
+                else:
+                    presence_checks = c.search_for_attribute_node(PyccelIs)
+                    for pi in presence_checks:
+                        if pi.eval() is True:
+                            if_block_replacements[0].append(pi)
+                            if_block_replacements[1].append(LiteralTrue())
+                        elif pi.eval() is False:
+                            if_block_replacements[0].append(pi)
+                            if_block_replacements[1].append(LiteralFalse())
                 blocks.append((c, e))
             if len(blocks) == 0:
                 if_block_replacements[0].append(i)
@@ -2631,17 +2663,17 @@ class InlineFunctionDef(FunctionDef):
             elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
                 if_block_replacements[0].append(i)
                 if_block_replacements[1].append(blocks[0][1])
-            elif len(blocks) != len(expr.blocks):
+            elif len(blocks) != len(i.blocks):
                 if_block_replacements[0].append(i)
                 if_block_replacements[1].append(If(*blocks))
         self._if_block_replacements = if_block_replacements
         self.body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
 
     def reinstate_presence_checks(self):
-        self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0], invalidate=False)
-        for i in self._if_block_replacements:
-            if isinstance(i, If):
-                i.remove_user_node(self)
+        """ Modify the body by reinstating all expressions checking for the presence of an optional
+        variable
+        """
+        self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
         self._if_block_replacements = None
 
 class Interface(Basic):
