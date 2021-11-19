@@ -376,7 +376,7 @@ def f():
     @inline
     def cube(s : int):
         return s * s * s
-    a = power_4(3)
+    a = cube(3) + 2
     return a
 ```
 
@@ -397,7 +397,7 @@ module boo
 
     integer(i64) :: a
 
-    a = 3_i64 * 3_i64 * 3_i64
+    a = 3_i64 * 3_i64 * 3_i64 + 2_i64
     return
 
   end function f
@@ -418,7 +418,7 @@ int64_t f(void)
 {
     int64_t a;
 
-    a = 3 * 3 * 3;
+    a = 3 * 3 * 3 + 2;
     return a;
 }
 /*........................................*/
