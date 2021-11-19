@@ -2647,7 +2647,7 @@ class InlineFunctionDef(FunctionDef):
                     elif c.eval() is False:
                         continue
                 else:
-                    presence_checks = c.search_for_attribute_node(PyccelIs)
+                    presence_checks = c.get_attribute_node(PyccelIs, excluded_nodes = (FunctionDef,))
                     for pi in presence_checks:
                         if pi.eval() is True:
                             if_block_replacements[0].append(pi)
