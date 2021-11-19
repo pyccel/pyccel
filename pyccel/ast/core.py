@@ -2638,7 +2638,10 @@ class InlineFunctionDef(FunctionDef):
         self.body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
 
     def reinstate_presence_checks(self):
-        self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
+        self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0], invalidate=False)
+        for i in self._if_block_replacements:
+            if isinstance(i, If):
+                i.remove_user_node(self)
         self._if_block_replacements = None
 
 class Interface(Basic):
