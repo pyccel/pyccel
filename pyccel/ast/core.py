@@ -20,7 +20,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
 from .internals      import Slice, PyccelSymbol
 
 from .literals       import LiteralInteger, Nil, LiteralFalse
-from .literals       import NilArgument, LiteralTrue, LiteralTrueArgument, LiteralFalseArgument
+from .literals       import NilArgument, LiteralTrue
 from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
