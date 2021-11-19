@@ -5,8 +5,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from collections     import OrderedDict
-
 from sympy.logic.boolalg      import And as sp_And
 
 
@@ -21,7 +19,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeTuple, str_dtype)
 from .internals      import Slice, PyccelSymbol
 
-from .literals       import LiteralInteger, Nil, convert_to_literal, LiteralFalse
+from .literals       import LiteralInteger, Nil, LiteralFalse
 from .literals       import NilArgument, LiteralTrue, LiteralTrueArgument, LiteralFalseArgument
 from .itertoolsext   import Product
 
