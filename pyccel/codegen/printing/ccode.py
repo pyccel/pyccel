@@ -599,7 +599,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         lines = []
-
         for i, (c, e) in enumerate(expr.blocks):
             var = self._print(e)
             if i == 0:
