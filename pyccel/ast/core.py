@@ -2593,6 +2593,7 @@ class InlineFunctionDef(FunctionDef):
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
         self._new_local_vars = None
+        self._if_block_replacements = None
 
     @property
     def is_inline(self):
