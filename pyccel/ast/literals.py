@@ -19,6 +19,9 @@ __all__ = (
     'LiteralImaginaryUnit',
     'LiteralString',
     'Nil',
+    'LiteralTrueArgument',
+    'LiteralFalseArgument',
+    'NilArgument',
     'get_default_literal_value'
 )
 
@@ -282,12 +285,6 @@ class NilArgument(Basic):
 
     def __bool__(self):
         return False
-
-    def __eq__(self, other):
-        return isinstance(other, Nil)
-
-    def __hash__(self):
-        return hash('NilArg')+hash(None)
 
 #------------------------------------------------------------------------------
 
