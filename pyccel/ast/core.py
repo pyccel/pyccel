@@ -66,6 +66,7 @@ __all__ = (
     'FunctionDefArgument',
     'If',
     'Import',
+    'InlineFunctionDef',
     'InProgram',
     'Interface',
     'Module',
