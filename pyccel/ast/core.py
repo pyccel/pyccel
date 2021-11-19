@@ -2535,7 +2535,10 @@ class FunctionDef(Basic):
         'is_private':self._is_private,
         'is_header':self._is_header,
         'arguments_inout':self._arguments_inout,
-        'functions':self._functions}
+        'functions':self._functions,
+        'is_external':self._is_external,
+        'interfaces':self._interfaces,
+        'doc_string':self._doc_string}
         return args, kwargs
 
     def __reduce_ex__(self, i):
