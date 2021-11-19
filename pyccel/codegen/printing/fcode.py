@@ -36,8 +36,7 @@ from pyccel.ast.variable  import (Variable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
-from pyccel.ast.operators      import PyccelMod, PyccelAssociativeParenthesis
-from pyccel.ast.operators      import PyccelOperator, PyccelIs
+from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall

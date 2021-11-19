@@ -23,7 +23,7 @@ from pyccel.ast.core      import create_incremented_string
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
-from pyccel.ast.operators import PyccelOperator, PyccelIs
+from pyccel.ast.operators import PyccelOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
@@ -32,8 +32,7 @@ from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
-from pyccel.ast.literals  import Nil, NilArgument
-from pyccel.ast.literals  import LiteralTrueArgument, LiteralFalseArgument
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
