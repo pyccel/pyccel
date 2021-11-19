@@ -19,8 +19,6 @@ __all__ = (
     'LiteralImaginaryUnit',
     'LiteralString',
     'Nil',
-    'LiteralTrueArgument',
-    'LiteralFalseArgument',
     'NilArgument',
     'get_default_literal_value'
 )
@@ -68,7 +66,7 @@ class Literal(PyccelAstNode):
         return hash(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal, metaclass = ArgumentSingleton):
+class LiteralTrue(Literal):
     """Represents the python value True"""
     __slots__ = ()
     _dtype     = NativeBool()
@@ -81,7 +79,7 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal, metaclass = ArgumentSingleton):
+class LiteralFalse(Literal):
     """Represents the python value False"""
     __slots__ = ()
     _dtype     = NativeBool()
@@ -240,36 +238,6 @@ class Nil(Basic, metaclass=Singleton):
 
     def __hash__(self):
         return hash('Nil')+hash(None)
-
-#------------------------------------------------------------------------------
-class LiteralTrueArgument(Literal):
-    """Represents the python value True when passed as an argument
-    to an inline function. This class is necessary as to avoid
-    accidental substitution due to Singletons"""
-    __slots__ = ()
-    _dtype     = NativeBool()
-
-    def __init__(self, precision = default_precision['bool']):
-        super().__init__(precision)
-
-    @property
-    def python_value(self):
-        return True
-
-#------------------------------------------------------------------------------
-class LiteralFalseArgument(Literal):
-    """Represents the python value False when passed as an argument
-    to an inline function. This class is necessary as to avoid
-    accidental substitution due to Singletons"""
-    __slots__ = ()
-    _dtype     = NativeBool()
-
-    def __init__(self, precision = default_precision['bool']):
-        super().__init__(precision)
-
-    @property
-    def python_value(self):
-        return False
 
 #------------------------------------------------------------------------------
 

@@ -2616,8 +2616,6 @@ class InlineFunctionDef(FunctionDef):
 
         # We cannot replace with singletons as this cannot be reversed
         self._new_args  = tuple(NilArgument() if a is Nil() else \
-                        LiteralTrueArgument() if isinstance(a, LiteralTrue) else \
-                        LiteralFalseArgument() if isinstance(a, LiteralFalse) else \
                         PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
                         else a for a in self._new_args)
 
