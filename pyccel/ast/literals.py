@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
-from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
+from pyccel.utilities.metaclasses import Singleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeFloat,
