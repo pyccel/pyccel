@@ -994,7 +994,7 @@ class PyccelIs(PyccelBooleanOperator):
         """
         if self.rhs is Nil() and not isinstance(self.lhs, NilArgument):
             return False
-        elif self.rhs is Nil():
+        elif self.rhs is Nil() and not getattr(self.lhs, 'self.lhs.is_optional', False):
             return True
         else:
             return "unknown"
@@ -1029,7 +1029,7 @@ class PyccelIsNot(PyccelIs):
         """
         if self.rhs is Nil() and isinstance(self.lhs, NilArgument):
             return False
-        elif self.rhs is Nil():
+        elif self.rhs is Nil() and not getattr(self.lhs, 'self.lhs.is_optional', False):
             return True
         else:
             return "unknown"
