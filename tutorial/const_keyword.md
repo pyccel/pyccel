@@ -68,7 +68,8 @@ def func1(arr: 'const int[:]', i: 'int', v: 'int', z:'int'):
 ```
 
 Pyccel will recognize that a const array cannot be changed and will raise an error similar to:
-```
+
+```sh
 ERROR at annotation (semantic) stage
 pyccel:
  |fatal [semantic]: boo.py [1]| Cannot modify 'const' argument (arr)
