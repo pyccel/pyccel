@@ -18,7 +18,7 @@ from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate)
+                            Concatenate, Decorator)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
@@ -127,12 +127,16 @@ def builtin_import(expr):
         source = str(expr.source)
 
     if source == 'pyccel.decorators':
-        funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
+        funcs = dict(inspect.getmembers(pyccel_decorators, inspect.isfunction))
+        targets = []
         for target in expr.target:
             search_target = target.name if isinstance(target, AsName) else target
-            if search_target not in funcs:
+            if search_target not in funcs.keys():
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
+            else:
+                targets.append([search_target, AsName(Decorator(search_target), search_target)])
+        return targets
 
     elif source in builtin_import_registery:
         return collect_relevant_imports(builtin_import_registery[source], expr.target)
