@@ -257,6 +257,9 @@ class AsName(Basic):
     _attribute_nodes = ()
 
     def __init__(self, name, target):
+        if PyccelAstNode.stage != "syntactic":
+            assert isinstance(name, Basic) and \
+                    not isinstance(name, PyccelSymbol)
         self._name = name
         self._target = target
         super().__init__()
@@ -3194,11 +3197,16 @@ class Import(Basic):
         self._source = source
         self._target = set()
         self._ignore_at_print = ignore_at_print
-        if isinstance(target, (str, DottedName, AsName)):
-            self._target = set([Import._format(target)])
-        elif iterable(target):
+        if target is None:
+            target = []
+        elif not iterable(target):
+            target = [target]
+        if PyccelAstNode.stage == "syntactic":
             for i in target:
                 self._target.add(Import._format(i))
+        else:
+            for i in target:
+                assert isinstance(i, AsName)
         super().__init__()
 
     @staticmethod
