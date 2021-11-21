@@ -3207,6 +3207,7 @@ class Import(Basic):
         else:
             for i in target:
                 assert isinstance(i, AsName)
+                self._target.add(i)
         super().__init__()
 
     @staticmethod
@@ -3904,6 +3905,16 @@ class InProgram(PyccelAstNode):
     __slots__ = ()
 
 # ...
+
+class Decorator(Basic):
+    __slots__ = ('_name',)
+
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
 # ... TODO: improve and make it recursive
 
