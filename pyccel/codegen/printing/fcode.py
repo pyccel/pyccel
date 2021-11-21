@@ -520,20 +520,22 @@ class FCodePrinter(CodePrinter):
 
         code = ''
         for i in expr.target:
-            if isinstance(i, AsName):
-                target = '{target} => {name}'.format(target=self._print(i.target),
-                                                     name=self._print(i.name))
+            old_name = i.name.name
+            new_name = i.target
+            if old_name != new_name:
+                target = '{target} => {name}'.format(target=new_name,
+                                                     name=old_name)
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
-            elif isinstance(i, DottedName):
-                target = '_'.join(self._print(j) for j in i.name)
+            elif isinstance(new_name, DottedName):
+                target = '_'.join(self._print(j) for j in new_name.name)
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
-            elif isinstance(i, str):
+            elif isinstance(new_name, str):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=i)
+                                                  target=new_name)
 
             else:
                 raise TypeError('Expecting str, PyccelSymbol, DottedName or AsName, '

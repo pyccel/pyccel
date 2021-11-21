@@ -53,6 +53,7 @@ from pyccel.ast.core import Duplicate
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
 from pyccel.ast.core import InProgram
+from pyccel.ast.core import Decorator
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -3570,13 +3571,16 @@ class SemanticParser(BasicParser):
                                 severity='error')
                 for (name, atom) in imports:
                     if not name is None:
-                        if isinstance(atom, Constant):
+                        if isinstance(atom, Decorator):
+                            continue
+                        elif isinstance(atom, Constant):
                             _insert_obj('variables', name, atom)
                         else:
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
-            self.insert_import(expr.source, expr.target)
+
+            self.insert_import(expr.source, dict(imports).values())
 
         elif source in python_builtin_libs:
             errors.report("Module {} is not currently supported by pyccel".format(source),
@@ -3592,17 +3596,22 @@ class SemanticParser(BasicParser):
             import_init = p.semantic_parser.ast.init_func if source_target not in container['imports'] else None
             import_free = p.semantic_parser.ast.free_func if source_target not in container['imports'] else None
             if expr.target:
-                targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
+                targets = {i.target if isinstance(i,AsName) else i:None for i in expr.target}
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
                 for entry in ['variables', 'classes', 'functions']:
                     d_son = getattr(p.namespace, entry)
-                    for t,n in zip(targets,names):
+                    for t,n in zip(targets.keys(),names):
                         if n in d_son:
                             e = d_son[n]
                             if t == n:
                                 container[entry][t] = e
                             else:
                                 container[entry][t] = e.clone(t)
+                            targets[t] = e
+                if None in targets.values():
+                    errors.report("Import target {} could not be found",
+                            severity="warning", symbol=expr)
+                targets = [AsName(v,k) for k,v in targets.items() if v is not None]
             else:
                 imported_dict = []
                 for entry in ['variables', 'classes', 'functions']:
@@ -3631,29 +3640,25 @@ class SemanticParser(BasicParser):
 
             if source_target in container['imports']:
                 targets = container['imports'][source_target].target.union(expr.target)
-            else:
-                targets = expr.target
 
             if import_init:
                 old_name = import_init.name
                 new_name = self.get_new_name(old_name)
 
-                if new_name == old_name:
-                    targets.add(old_name)
-                else:
+                if new_name != old_name:
                     import_init = import_init.clone(new_name)
-                    targets.add(AsName(old_name, new_name))
 
+                targets.append(AsName(import_init, new_name))
                 result  = FunctionCall(import_init,[],[])
 
             if import_free:
                 old_name = import_free.name
                 new_name = self.get_new_name(old_name)
 
-                if new_name == old_name:
-                    targets.add(old_name)
-                else:
-                    targets.add(AsName(old_name, new_name))
+                if new_name != old_name:
+                    import_init = import_free.clone(new_name)
+
+                targets.append(AsName(import_free, new_name))
 
             expr = Import(expr.source, targets)
 
@@ -3662,7 +3667,7 @@ class SemanticParser(BasicParser):
                 container['imports'][source_target] = expr
 
             elif __module_name__:
-                expr = Import(__module_name__, expr.target)
+                expr = Import(__module_name__, targets)
                 container['imports'][source_target] = expr
 
             elif not __ignore_at_import__:
@@ -3754,7 +3759,7 @@ class SemanticParser(BasicParser):
         return StarredArguments([var[i] for i in range(size)])
 
     def _visit_NumpyMatmul(self, expr, **settings):
-        self.insert_import('numpy', 'matmul')
+        self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
         a = self._visit(expr.a)
         b = self._visit(expr.b)
         return NumpyMatmul(a, b)
