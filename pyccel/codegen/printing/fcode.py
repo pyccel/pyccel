@@ -23,7 +23,7 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return, EmptyNode
+from pyccel.ast.core import Return
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
@@ -40,7 +40,6 @@ from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
-from pyccel.ast.core      import FunctionCallArgument
 
 from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
