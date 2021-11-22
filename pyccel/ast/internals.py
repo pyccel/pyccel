@@ -213,6 +213,11 @@ class PrecomputedCode(Basic):
     This class should be avoided if at all possible as it may break code which
     searches through attribute nodes, where possible use Basic's methods,
     e.g. substitute
+
+    Parameters
+    ----------
+    code : str
+           A string containing the precomputed code
     """
     __slots__ = ('_code',)
     _attribute_nodes = ()
@@ -226,6 +231,8 @@ class PrecomputedCode(Basic):
 
     @property
     def code(self):
+        """ The string containing the precomputed code
+        """
         return self._code
 
 def symbols(names):
