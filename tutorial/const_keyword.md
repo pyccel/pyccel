@@ -1,6 +1,6 @@
 # Const keyword
 
-In case if you want to make sure that an argument will not change inside its function, Pyccel provides a `const` keyword which is a qualifier of the data type of the variable and which will be converted to its equivalents in C/Fortran, Here is a simple example of its usage:
+If you want to make sure that an argument will not change inside its function, Pyccel provides a `const` keyword which is a qualifier of the data type of the variable and which will be converted to its equivalents in the target language, Here is a simple example of its usage:
 
 Here is a working Python code with `const` keyword:
 
