@@ -40,6 +40,7 @@ from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
+from pyccel.ast.core      import FunctionCallArgument
 
 from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
@@ -54,7 +55,7 @@ from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import CustomDataType
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PrecomputedCode
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
@@ -317,9 +318,16 @@ class FCodePrinter(CodePrinter):
         """
         func = expr.funcdef
 
-        # Put functions into current namespace
-        for entry in ['variables', 'classes', 'functions']:
-            self._namespace.imports[entry].update(func.namespace_imports[entry])
+        # Print any arguments using the same inline function
+        # As the function definition is modified directly this function
+        # cannot be called recursively with the same FunctionDef
+        args = []
+        for a in expr.args:
+            if a.search_for_attribute_node(func):
+                code = PrecomputedCode(self._print(a))
+                args.append(code)
+            else:
+                args.append(a.value)
 
         # Create new local variables to ensure there are no name collisions
         new_local_vars = [v.clone(self.parser.get_new_name(v.name)) \
@@ -327,7 +335,11 @@ class FCodePrinter(CodePrinter):
         for v in new_local_vars:
             self.add_vars_to_namespace(v)
 
-        func.swap_in_args(expr.args, new_local_vars)
+        # Put functions into current namespace
+        for entry in ['variables', 'classes', 'functions']:
+            self._namespace.imports[entry].update(func.namespace_imports[entry])
+
+        func.swap_in_args(args, new_local_vars)
 
         func.remove_presence_checks()
 
@@ -2720,6 +2732,11 @@ class FCodePrinter(CodePrinter):
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)
+
+#=======================================================================================
+
+    def _print_PrecomputedCode(self, expr):
+        return expr.code
 
 #=======================================================================================
 
