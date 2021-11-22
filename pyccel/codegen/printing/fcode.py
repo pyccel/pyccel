@@ -337,16 +337,15 @@ class FCodePrinter(CodePrinter):
             # If there is no return then the code is already ok
             code = self._print(body)
         else:
-            # Search for the return and replace it with an empty node
-            result = body.get_attribute_nodes(Return, excluded_nodes = (FunctionDef,))[0]
-            empty_return = EmptyNode()
-            body.substitute(result, empty_return, invalidate = False)
-
             # Everything before the return node needs handling before the line
             # which calls the inline function is executed
             if (not self._additional_code):
                 self._additional_code = ''
-            self._additional_code += self._print(body)
+            for l in body.body:
+                if not isinstance(l, Return):
+                    self._additional_code += self._print(l)
+                else:
+                    result = l
 
             # Collect statements from results to return object
             if result.stmt:
@@ -354,9 +353,6 @@ class FCodePrinter(CodePrinter):
                 self._additional_code += ''.join([self._print(i) for i in result.stmt.body if not isinstance(i, Assign)])
             else:
                 assigns = {}
-
-            # Put return statement back into function
-            body.substitute(empty_return, result)
 
             if assign_lhs:
                 assigns = [Assign(l, r) for l,r in zip(assign_lhs, assigns.values())]
