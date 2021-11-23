@@ -75,8 +75,8 @@ class Basic:
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.
-        This will allow it to remove itself from its children's users.
-        If a child subsequently has no users, invalidate_node is called recursively
+        This will allow it to remove itself from its attributes' users.
+        If an attribute subsequently has no users, invalidate_node is called recursively
         """
         for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
@@ -165,7 +165,59 @@ class Basic:
         self._recursion_in_progress = False
         return results
 
-    def substitute(self, original, replacement, excluded_nodes = ()):
+    def is_attribute_of(self, node):
+        """ Identifies whether this object is an attribute of node.
+        The function searches recursively down the attribute tree.
+
+        Parameters
+        ----------
+        node : Basic
+               The object whose attributes we are interested in
+
+        Results
+        -------
+        bool
+        """
+        return node.is_user_of(self)
+
+    def is_user_of(self, node, excluded_nodes = ()):
+        """ Identifies whether this object is a user of node.
+        The function searches recursively up the user tree
+
+        Parameters
+        ----------
+        node           : Basic
+                      The object whose users we are interested in
+        excluded_nodes : tuple of types
+                      Types for which is_user_of should not be called
+
+        Results
+        -------
+        bool
+        """
+        if node.recursion_in_progress:
+            return []
+        node.toggle_recursion()
+
+        for v in node.get_all_user_nodes():
+
+            if v is self:
+                node.toggle_recursion()
+                return True
+
+            elif isinstance(v, excluded_nodes):
+                continue
+
+            elif not self.ignore(v):
+                res = self.is_user_of(v, excluded_nodes=excluded_nodes)
+                if res:
+                    node.toggle_recursion()
+                    return True
+
+        node.toggle_recursion()
+        return False
+
+    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
         """
         Substitute object 'original' for object 'replacement' in the code.
         Any types in excluded_nodes will not be visited
@@ -178,6 +230,9 @@ class Basic:
                       The object which will be inserted instead
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
+        invalidate : bool
+                    Indicates whether the removed object should
+                    be invalidated
         """
         if self._recursion_in_progress:
             return
@@ -201,7 +256,7 @@ class Basic:
                 if not self.ignore(rep):
                     rep.set_current_user_node(self)
             if not self.ignore(found_node):
-                found_node.remove_user_node(self)
+                found_node.remove_user_node(self, invalidate)
             return rep
 
         for n in self._my_attribute_nodes:
@@ -221,14 +276,14 @@ class Basic:
                         if vi in original:
                             new_vi = prepare_sub(vi)
                         elif not self.ignore(vi):
-                            vi.substitute(original, replacement, excluded_nodes)
+                            vi.substitute(original, replacement, excluded_nodes, invalidate)
                     if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif not self.ignore(v):
-                v.substitute(original, replacement, excluded_nodes)
+                v.substitute(original, replacement, excluded_nodes, invalidate)
         self._recursion_in_progress = False
 
     @property
@@ -263,6 +318,23 @@ class Basic:
         else:
             return None
 
+    def toggle_recursion(self):
+        """ Change the recursion state
+        """
+        self._recursion_in_progress = not self._recursion_in_progress
+
+    @property
+    def recursion_in_progress(self):
+        """ Recursion state used to avoid infinite loops
+        """
+        return self._recursion_in_progress
+
+    def get_all_user_nodes(self):
+        """ Returns all the objects user nodes.
+        This function should only be called in Basic
+        """
+        return self._user_nodes
+
     def get_direct_user_nodes(self, condition):
         """ For an object with multiple user nodes
         Get the objects which satisfy a given
@@ -295,7 +367,7 @@ class Basic:
         """
         self._user_nodes = []
 
-    def remove_user_node(self, user_node):
+    def remove_user_node(self, user_node, invalidate = True):
         """ Indicate that the current node is no longer used
         by the user_node. This function is usually called by
         the substitute method
@@ -304,10 +376,13 @@ class Basic:
         ----------
         user_node : Basic
                     Node which previously used the current node
+        invalidate : bool
+                    Indicates whether the removed object should
+                    be invalidated
         """
         assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
-        if self.is_unused:
+        if self.is_unused and invalidate:
             self.invalidate_node()
 
     @property

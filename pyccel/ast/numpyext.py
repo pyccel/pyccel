@@ -29,7 +29,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
-from .variable       import (Variable, IndexedElement, Constant, HomogeneousTupleVariable)
+from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 errors = Errors()
 
@@ -696,6 +696,8 @@ class NumpyLinspace(NumpyNewArray):
 
     @ind.setter
     def ind(self, value):
+        assert self._ind is None
+        value.set_current_user_node(self)
         self._ind = value
 
     @property

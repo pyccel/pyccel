@@ -25,7 +25,7 @@ from .builtins      import (builtin_functions_dict,
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants
-from .literals      import LiteralInteger, Literal, Nil
+from .literals      import LiteralInteger, Nil
 
 from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants, NumpyArray,
