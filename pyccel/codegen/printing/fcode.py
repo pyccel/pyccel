@@ -377,7 +377,14 @@ class FCodePrinter(CodePrinter):
             else:
                 res_return_vars = [assigns.get(v,v) for v in result.expr]
                 if len(res_return_vars) == 1:
-                    code = self._print(res_return_vars[0])
+                    return_val = res_return_vars[0]
+                    parent_assign = return_val.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+                    if parent_assign:
+                        return_val.remove_user_node(parent_assign[0], invalidate = False)
+                        code = self._print(return_val)
+                        return_val.set_current_user_node(parent_assign[0])
+                    else:
+                        code = self._print(return_val)
                 else:
                     code = self._print(tuple(res_return_vars))
 
