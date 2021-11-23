@@ -35,6 +35,7 @@ from pyccel.ast.variable  import (Variable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
+
 from pyccel.ast.operators      import PyccelMod
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
@@ -57,7 +58,7 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
-from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
@@ -67,6 +68,7 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
+from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import expand_to_loops
@@ -699,16 +701,54 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        template = '[({start} + {index}*{step},{index} = {zero},{end})]'
+        if expr.stop.dtype != expr.dtype or expr.precision != expr.stop.precision:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            st = cast_func(expr.stop)
+            v = self._print(st)
+        else:
+            v = self._print(expr.stop)
+
+        if not isinstance(expr.endpoint, LiteralFalse):
+            lhs = expr.get_user_nodes(Assign)[0].lhs
+
+
+            if expr.rank > 1:
+                #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
+                lhs_source = expr.get_user_nodes(Assign)[0].lhs
+                lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+                lhs = self._print(lhs_source)
+            else:
+                #Since the expr.rank == 1, we modify the last element in the array.
+                lhs = self._print(IndexedElement(lhs,
+                                                 PyccelMinus(expr.num, LiteralInteger(1),
+                                                 simplify = True)))
+
+            if isinstance(expr.endpoint, LiteralTrue):
+                cond_template = lhs + ' = {stop}'
+            else:
+                cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
+        if expr.rank > 1:
+            template = '({start} + {index}*{step})'
+            var = Variable('int', str(expr.ind))
+        else:
+            template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
+            var = Variable('int', 'linspace_index')
+            self.add_vars_to_namespace(var)
 
         init_value = template.format(
             start = self._print(expr.start),
-            step  = self._print(expr.step ),
-            index = self._print(expr.index),
+            step  = self._print(expr.step),
+            index = self._print(var),
             zero  = self._print(LiteralInteger(0)),
-            end   = self._print(PyccelMinus(expr.size, LiteralInteger(1), simplify = True)),
+            end   = self._print(PyccelMinus(expr.num, LiteralInteger(1), simplify = True)),
         )
-        code = init_value
+
+        if isinstance(expr.endpoint, LiteralFalse):
+            code = init_value
+        elif isinstance(expr.endpoint, LiteralTrue):
+            code = init_value + '\n' + cond_template.format(stop=v)
+        else:
+            code = init_value + '\n' + cond_template.format(stop=v, lhs=lhs, cond=self._print(expr.endpoint))
 
         return code
 
