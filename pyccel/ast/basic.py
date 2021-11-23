@@ -171,10 +171,8 @@ class Basic:
 
         Parameters
         ----------
-        node           : Basic
-                      The object which we are looking for
-        excluded_nodes : tuple of types
-                      Types for which get_user_nodes should not be called
+        node : Basic
+               The object whose attributes we are interested in
 
         Results
         -------
@@ -189,7 +187,7 @@ class Basic:
         Parameters
         ----------
         node           : Basic
-                      The object which we are looking for
+                      The object whose users we are interested in
         excluded_nodes : tuple of types
                       Types for which is_user_of should not be called
 
