@@ -2613,8 +2613,8 @@ class InlineFunctionDef(FunctionDef):
         return self._namespace_imports
 
     def swap_in_args(self, args, new_local_vars):
-        """ Modify the body of the function by replacing the argument and local Variables
-        with the provided argument and local Variables
+        """ Modify the body of the function by replacing the arguments
+        and local variables with the provided arguments and local variables
         """
         assert self._new_args is None
         assert self._new_local_vars is None
@@ -2630,7 +2630,7 @@ class InlineFunctionDef(FunctionDef):
         self.body.substitute(self._orig_args+self.local_vars, self._new_args+self._new_local_vars, invalidate=False)
 
     def swap_out_args(self):
-        """ Modify the body of the function by reinstating the original argument and local Variables
+        """ Modify the body of the function by reinstating the original arguments and local variables
         """
         self.body.substitute(self._new_args+self._new_local_vars, self._orig_args+self.local_vars, invalidate=False)
         self._new_args = None
