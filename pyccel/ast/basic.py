@@ -166,8 +166,8 @@ class Basic:
         return results
 
     def is_attribute_of(self, search_node, excluded_nodes = ()):
-        """ Identifies whether the object search_node is an attribute of
-        this object or one of its attributes
+        """ Identifies whether this object is an attribute of search_node.
+        The function searches recursively down the attribute tree.
 
         Parameters
         ----------
