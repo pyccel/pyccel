@@ -6,6 +6,7 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
+import re
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
@@ -26,7 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PrecomputedCode
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -405,6 +406,69 @@ class CCodePrinter(CodePrinter):
                             index = self._print(index),
                             lhs   = lhs,
                             dtype = dtype)
+        return code
+
+    def _handle_inline_func_call(self, expr):
+        """ Print a function call to an inline function
+        """
+        func = expr.funcdef
+        body = func.body
+
+        # Print any arguments using the same inline function
+        # As the function definition is modified directly this function
+        # cannot be called recursively with the same FunctionDef
+        args = []
+        for a in expr.args:
+            if a.is_user_of(func):
+                code = PrecomputedCode(self._print(a))
+                args.append(code)
+            else:
+                args.append(a.value)
+
+        new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
+                            for v in func.local_vars]
+        self._additional_declare.extend(new_local_vars)
+
+        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+        if parent_assign:
+            results = dict(zip(func.results, parent_assign[0].lhs))
+            orig_res_vars = list(results.keys())
+            new_res_vars  = self._temporary_args
+            new_res_vars = [a.variable if isinstance(a, VariableAddress) else a for a in new_res_vars]
+            self._temporary_args = []
+            body.substitute(orig_res_vars, new_res_vars)
+
+        # Replace the arguments in the code
+        func.swap_in_args(args, new_local_vars)
+
+        func.remove_presence_checks()
+
+        # Collect code but strip empty end
+        body_code = self._print(body)
+        code_lines = body_code.split('\n')[:-1]
+        return_regex = re.compile(r'\breturn\b')
+        has_results = [return_regex.search(l) is not None for l in code_lines]
+
+        if len(func.results) == 0 and not any(has_results):
+            code = body_code
+        else:
+            result_idx = has_results.index(True)
+            result_line = code_lines[result_idx]
+
+            body_code = '\n'.join(code_lines[:result_idx])+'\n'
+
+            if len(func.results) != 1:
+                code = body_code
+            else:
+                self._additional_code += body_code
+                # Strip return and ; from return statement
+                code = result_line[7:-1]
+
+        # Put back original arguments
+        func.reinstate_presence_checks()
+        func.swap_out_args()
+        if parent_assign:
+            body.substitute(new_res_vars, orig_res_vars)
         return code
 
     # ============ Elements ============ #
@@ -1246,6 +1310,8 @@ class CCodePrinter(CodePrinter):
         return ""
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
@@ -1309,6 +1375,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        if func.is_inline:
+            return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
@@ -1365,7 +1433,7 @@ class CCodePrinter(CodePrinter):
 
         if len(args) > 1:
             if expr.stmt:
-                return self._print(expr.stmt)+'\n'+'return 0;\n'
+                return self._print(expr.stmt)+'return 0;\n'
             return 'return 0;\n'
 
         if expr.stmt:
@@ -1397,6 +1465,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_Nil(self, expr):
         return 'NULL'
+
+    def _print_NilArgument(self, expr):
+        raise errors.report("Trying to use optional argument in inline function without providing a variable",
+                symbol=expr,
+                severity='fatal')
 
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)
@@ -1807,6 +1880,8 @@ class CCodePrinter(CodePrinter):
             return self._print(functools.reduce(
                 lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
+    def _print_PrecomputedCode(self, expr):
+        return expr.code
 
 
     def indent_code(self, code):

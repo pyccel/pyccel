@@ -23,10 +23,11 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.core import Return
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
-                             CodeBlock, AsName,
+                             CodeBlock, AsName, EmptyNode,
                              If, IfSection, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
@@ -35,9 +36,7 @@ from pyccel.ast.variable  import (Variable,
                              DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
-
 from pyccel.ast.operators      import PyccelMod
-
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
@@ -55,7 +54,7 @@ from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import CustomDataType
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PrecomputedCode
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
@@ -210,6 +209,12 @@ class FCodePrinter(CodePrinter):
 
         self.prefix_module = prefix_module
 
+    def change_to_program_scope(self):
+        self._namespace = self.parser.program_namespace
+
+    def change_to_module_scope(self):
+        self._namespace = self.parser.namespace
+
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
         macro = "use, intrinsic :: ISO_C_Binding, only : "
@@ -307,6 +312,80 @@ class FCodePrinter(CodePrinter):
             self._constantImports.add(constant_name)
         return constant_name
 
+    def _handle_inline_func_call(self, expr, assign_lhs = None):
+        """ Print a function call to an inline function
+        """
+        func = expr.funcdef
+
+        # Print any arguments using the same inline function
+        # As the function definition is modified directly this function
+        # cannot be called recursively with the same FunctionDef
+        args = []
+        for a in expr.args:
+            if a.is_user_of(func):
+                code = PrecomputedCode(self._print(a))
+                args.append(code)
+            else:
+                args.append(a.value)
+
+        # Create new local variables to ensure there are no name collisions
+        new_local_vars = [v.clone(self.parser.get_new_name(v.name)) \
+                            for v in func.local_vars]
+        for v in new_local_vars:
+            self.add_vars_to_namespace(v)
+
+        # Put functions into current namespace
+        for entry in ['variables', 'classes', 'functions']:
+            self._namespace.imports[entry].update(func.namespace_imports[entry])
+
+        func.swap_in_args(args, new_local_vars)
+
+        func.remove_presence_checks()
+
+        body = func.body
+
+        if len(func.results) == 0:
+            # If there is no return then the code is already ok
+            code = self._print(body)
+        else:
+            # Search for the return and replace it with an empty node
+            result = body.get_attribute_nodes(Return, excluded_nodes = (FunctionDef,))[0]
+            empty_return = EmptyNode()
+            body.substitute(result, empty_return, invalidate = False)
+
+            # Everything before the return node needs handling before the line
+            # which calls the inline function is executed
+            code = self._print(body)
+            if (not self._additional_code):
+                self._additional_code = ''
+            self._additional_code += code
+
+            # Collect statements from results to return object
+            if result.stmt:
+                assigns = {i.lhs: i.rhs for i in result.stmt.body if isinstance(i, Assign)}
+                self._additional_code += ''.join([self._print(i) for i in result.stmt.body if not isinstance(i, Assign)])
+            else:
+                assigns = {}
+
+            # Put return statement back into function
+            body.substitute(empty_return, result)
+
+            if assign_lhs:
+                assigns = [Assign(l, r) for l,r in zip(assign_lhs, assigns.values())]
+                code = ''.join([self._print(a) for a in assigns])
+            else:
+                res_return_vars = [assigns.get(v,v) for v in result.expr]
+                if len(res_return_vars) == 1:
+                    code = self._print(res_return_vars[0])
+                else:
+                    code = self._print(tuple(res_return_vars))
+
+        # Put back original arguments
+        func.reinstate_presence_checks()
+        func.swap_out_args()
+
+        return code
+
     def _get_external_declarations(self):
         """
         Look for external functions and declare their result type
@@ -386,9 +465,8 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        self.parser.change_to_program_scope()
         module_namespace = self._namespace
-        self._namespace = self.parser.namespace
+        self.change_to_program_scope()
 
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
@@ -424,7 +502,7 @@ class FCodePrinter(CodePrinter):
                  body,
                 'end program {}\n'.format(name)]
 
-        self.parser.change_to_module_scope()
+        self.change_to_module_scope()
         self._namespace = module_namespace
 
         return '\n'.join(a for a in parts if a)
@@ -1267,11 +1345,13 @@ class FCodePrinter(CodePrinter):
             # we should append them to the procedure arguments
             if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)) \
                     or (isinstance(expr.lhs, HomogeneousTupleVariable) and expr.lhs.is_stack_array):
+                func = rhs.funcdef
+                if func.is_inline:
+                    return self._handle_inline_func_call(rhs, expr.lhs)
 
-                rhs_code = rhs.funcdef.name
+                rhs_code = func.name
                 args = rhs.args
                 code_args = [self._print(i) for i in args]
-                func = rhs.funcdef
                 output_names = func.results
                 lhs_code = [self._print(name) + ' = ' + self._print(i) for (name,i) in zip(output_names,expr.lhs)]
 
@@ -1598,6 +1678,8 @@ class FCodePrinter(CodePrinter):
         return parts
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
 
         name = self._print(expr.name)
         self.set_current_function(name)
@@ -1618,7 +1700,7 @@ class FCodePrinter(CodePrinter):
         sig_parts = self.function_signature(expr, name)
         prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
-        functions = expr.functions
+        functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
@@ -1659,6 +1741,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_Nil(self, expr):
         return ''
+
+    def _print_NilArgument(self, expr):
+        raise errors.report("Trying to use optional argument in inline function without providing a variable",
+                symbol=expr,
+                severity='fatal')
 
     def _print_Return(self, expr):
         code = ''
@@ -2584,6 +2671,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        if func.is_inline:
+            return self._handle_inline_func_call(expr)
+
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args = [a for a in expr.args if not isinstance(a.value, Nil)]
         results = func.results
@@ -2646,6 +2736,11 @@ class FCodePrinter(CodePrinter):
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)
+
+#=======================================================================================
+
+    def _print_PrecomputedCode(self, expr):
+        return expr.code
 
 #=======================================================================================
 
