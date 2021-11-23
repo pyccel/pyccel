@@ -63,6 +63,8 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 -   [Function-pointers as arguments](./tutorial/function-pointers-as-arguments.md)
 
+-   [Const keyword](./tutorial/const_keyword.md)
+
 -   Supported libraries/APIs
     -   [OpenMP](./tutorial/openmp.md)
     -   [Numpy](./tutorial/numpy-functions.md)
