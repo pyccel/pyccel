@@ -28,7 +28,7 @@ int64_t func1(t_ndarray arr)
 /*........................................*/
 ```
 
-The fortran equevalent:
+The fortran equivalent:
 
 ```fortran
 module boo
