@@ -419,7 +419,7 @@ class CCodePrinter(CodePrinter):
         # cannot be called recursively with the same FunctionDef
         args = []
         for a in expr.args:
-            if a.search_for_attribute_node(func):
+            if a.is_user_of(func):
                 code = PrecomputedCode(self._print(a))
                 args.append(code)
             else:

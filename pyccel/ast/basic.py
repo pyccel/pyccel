@@ -165,8 +165,9 @@ class Basic:
         self._recursion_in_progress = False
         return results
 
-    def search_user_nodes(self, search_node, excluded_nodes = ()):
-        """ Identifies whether this object exists within the object search_node
+    def is_attribute_of(self, search_node, excluded_nodes = ()):
+        """ Identifies whether the object search_node is an attribute of
+        this object or one of its attributes
 
         Parameters
         ----------
@@ -190,7 +191,7 @@ class Basic:
 
             for p in self._user_nodes:
                 if not self.ignore(p) and not isinstance(p, excluded_nodes):
-                    res = p.search_user_nodes(search_node, excluded_nodes = excluded_nodes)
+                    res = p.is_attribute_of(search_node, excluded_nodes = excluded_nodes)
                     if res:
                         self._recursion_in_progress = False
                         return True
@@ -198,15 +199,16 @@ class Basic:
             self._recursion_in_progress = False
             return False
 
-    def search_for_attribute_node(self, search_node, excluded_nodes = ()):
-        """ Identifies whether this object contains the object search_node
+    def is_user_of(self, search_node, excluded_nodes = ()):
+        """ Identifies whether the object search_node is a user
+        of this object. The function searches recursively up the user tree
 
         Parameters
         ----------
         search_node : Basic
                       The object which we are looking for
         excluded_nodes : tuple of types
-                      Types for which search_for_attribute_node should not be called
+                      Types for which is_user_of should not be called
 
         Results
         -------
@@ -234,13 +236,13 @@ class Basic:
                     elif isinstance(vi, excluded_nodes):
                         continue
                     elif not self.ignore(vi):
-                        res = vi.search_for_attribute_node(search_node, excluded_nodes=excluded_nodes)
+                        res = vi.is_user_of(search_node, excluded_nodes=excluded_nodes)
                         if res:
                             self._recursion_in_progress = False
                             return True
 
             elif not self.ignore(v):
-                res = v.search_for_attribute_node(search_node, excluded_nodes=excluded_nodes)
+                res = v.is_user_of(search_node, excluded_nodes=excluded_nodes)
                 if res:
                     self._recursion_in_progress = False
                     return True
