@@ -264,10 +264,10 @@ class PythonCodePrinter(CodePrinter):
 
         if expr.stmt:
             assigns = {i.lhs: i.rhs for i in expr.stmt.body if isinstance(i, Assign)}
-            prelude  = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
+            prelude = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
         else:
             assigns = {}
-            prelude  = ''
+            prelude = ''
         expr_return_vars = [assigns.get(a,a) for a in expr.expr]
 
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))

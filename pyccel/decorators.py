@@ -18,10 +18,10 @@ __all__ = (
     'private',
     'pure',
     'python',
-    'sympy',
     'stack_array',
-    'types',
+    'sympy',
     'template',
+    'types',
 )
 
 def lambdify(f):

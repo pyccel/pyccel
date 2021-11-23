@@ -2126,7 +2126,7 @@ class FunctionDef(Basic):
         a list of needed imports
 
     decorators: list, tuple
-        a list of proporties
+        a list of properties
 
     headers: list,tuple
         a list of headers describing the function
@@ -2616,14 +2616,15 @@ class InlineFunctionDef(FunctionDef):
         """ Modify the body of the function by replacing the argument and local Variables
         with the provided argument and local Variables
         """
+        assert self._new_args is None
+        assert self._new_local_vars is None
         # Collect the function arguments and the expressions they will be replaced with
-        self._new_args  = [a.value for a in args]
         self._new_local_vars = tuple(new_local_vars)
 
         # We cannot replace with singletons as this cannot be reversed
         self._new_args  = tuple(NilArgument() if a is Nil() else \
                         PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
-                        else a for a in self._new_args)
+                        else a for a in args)
 
         # Replace the arguments in the code
         self.body.substitute(self._orig_args+self.local_vars, self._new_args+self._new_local_vars, invalidate=False)
@@ -2639,6 +2640,7 @@ class InlineFunctionDef(FunctionDef):
         """ Modify the body by replacing all expressions checking for the presence of an optional
         variable. Either the If is removed or the check is replaced with its literal result
         """
+        assert self._if_block_replacements is None
         # Look for if blocks and replace present(x) statements
         if_blocks = self.body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
         if_block_replacements = [[], []]

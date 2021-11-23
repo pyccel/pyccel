@@ -125,3 +125,24 @@ def test_inline_array(language):
     g = epyccel(f, language=language)
 
     assert f() == g()
+
+def test_nested_inline_call(language):
+    def f():
+        @inline
+        def get_val(x : int = None , y : int = None):
+            if x is None :
+                a = 3
+            else:
+                a = x
+            if y is not None :
+                b = 4
+            else:
+                b = 5
+            return a + b
+
+        a = get_val(get_val(2)+3,7)
+        return a
+
+    g = epyccel(f, language=language)
+
+    assert f() == g()

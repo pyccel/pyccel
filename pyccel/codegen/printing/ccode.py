@@ -27,7 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PrecomputedCode
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -414,6 +414,17 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
         body = func.body
 
+        # Print any arguments using the same inline function
+        # As the function definition is modified directly this function
+        # cannot be called recursively with the same FunctionDef
+        args = []
+        for a in expr.args:
+            if a.search_for_attribute_node(func):
+                code = PrecomputedCode(self._print(a))
+                args.append(code)
+            else:
+                args.append(a.value)
+
         new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
                             for v in func.local_vars]
         self._additional_declare.extend(new_local_vars)
@@ -428,7 +439,7 @@ class CCodePrinter(CodePrinter):
             body.substitute(orig_res_vars, new_res_vars)
 
         # Replace the arguments in the code
-        func.swap_in_args(expr.args, new_local_vars)
+        func.swap_in_args(args, new_local_vars)
 
         func.remove_presence_checks()
 
@@ -1456,7 +1467,7 @@ class CCodePrinter(CodePrinter):
         return 'NULL'
 
     def _print_NilArgument(self, expr):
-        raise errors.report("Trying to use optional argument in inline function without provided a variable",
+        raise errors.report("Trying to use optional argument in inline function without providing a variable",
                 symbol=expr,
                 severity='fatal')
 
@@ -1869,6 +1880,8 @@ class CCodePrinter(CodePrinter):
             return self._print(functools.reduce(
                 lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
+    def _print_PrecomputedCode(self, expr):
+        return expr.code
 
 
     def indent_code(self, code):
