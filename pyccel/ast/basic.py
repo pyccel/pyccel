@@ -165,7 +165,7 @@ class Basic:
         self._recursion_in_progress = False
         return results
 
-    def is_attribute_of(self, search_node, excluded_nodes = ()):
+    def is_attribute_of(self, search_node):
         """ Identifies whether this object is an attribute of search_node.
         The function searches recursively down the attribute tree.
 
@@ -180,24 +180,7 @@ class Basic:
         -------
         bool
         """
-        if self._recursion_in_progress or len(self._user_nodes) == 0:
-            return []
-        else:
-            self._recursion_in_progress = True
-
-            if any(p is search_node for p in self._user_nodes):
-                self._recursion_in_progress = False
-                return True
-
-            for p in self._user_nodes:
-                if not self.ignore(p) and not isinstance(p, excluded_nodes):
-                    res = p.is_attribute_of(search_node, excluded_nodes = excluded_nodes)
-                    if res:
-                        self._recursion_in_progress = False
-                        return True
-
-            self._recursion_in_progress = False
-            return False
+        return node.is_user_of(self)
 
     def is_user_of(self, search_node, excluded_nodes = ()):
         """ Identifies whether this object is a user of search_node.
@@ -214,40 +197,26 @@ class Basic:
         -------
         bool
         """
-        if self._recursion_in_progress:
+        if search_node._recursion_in_progress:
             return []
-        self._recursion_in_progress = True
+        search_node._recursion_in_progress = True
 
-        for n in self._my_attribute_nodes:
-            v = getattr(self, n)
+        for v in search_node._user_nodes:
 
-            if v is search_node:
-                self._recursion_in_progress = False
+            if v is self:
+                search_node._recursion_in_progress = False
                 return True
 
             elif isinstance(v, excluded_nodes):
                 continue
 
-            elif isinstance(v, tuple):
-                for vi in v:
-                    if vi is search_node:
-                        self._recursion_in_progress = False
-                        return True
-                    elif isinstance(vi, excluded_nodes):
-                        continue
-                    elif not self.ignore(vi):
-                        res = vi.is_user_of(search_node, excluded_nodes=excluded_nodes)
-                        if res:
-                            self._recursion_in_progress = False
-                            return True
-
             elif not self.ignore(v):
-                res = v.is_user_of(search_node, excluded_nodes=excluded_nodes)
+                res = self.is_user_of(v, excluded_nodes=excluded_nodes)
                 if res:
-                    self._recursion_in_progress = False
+                    search_node._recursion_in_progress = False
                     return True
 
-        self._recursion_in_progress = False
+        search_node._recursion_in_progress = False
         return False
 
     def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
