@@ -3577,7 +3577,7 @@ class SemanticParser(BasicParser):
             else:
                 _insert_obj('variables', source_target, imports)
 
-            self.insert_import(expr.source, dict(imports).values())
+            self.insert_import(expr.source, [AsName(v,n) for n,v in imports])
 
         elif source in python_builtin_libs:
             errors.report("Module {} is not currently supported by pyccel".format(source),
