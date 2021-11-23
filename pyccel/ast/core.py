@@ -2123,7 +2123,7 @@ class FunctionDef(Basic):
         a list of needed imports
 
     decorators: list, tuple
-        a list of proporties
+        a list of properties
 
     headers: list,tuple
         a list of headers describing the function
