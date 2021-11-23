@@ -200,8 +200,8 @@ class Basic:
             return False
 
     def is_user_of(self, search_node, excluded_nodes = ()):
-        """ Identifies whether the object search_node is a user
-        of this object. The function searches recursively up the user tree
+        """ Identifies whether this object is a user of search_node.
+        The function searches recursively up the user tree
 
         Parameters
         ----------
