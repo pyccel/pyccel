@@ -258,8 +258,10 @@ class AsName(Basic):
 
     def __init__(self, name, target):
         if PyccelAstNode.stage != "syntactic":
-            assert isinstance(name, Basic) and \
-                    not isinstance(name, PyccelSymbol)
+            assert (isinstance(name, Basic) and \
+                    not isinstance(name, PyccelSymbol)) or \
+                   (isinstance(name, type) and \
+                   Basic in name.__mro__)
         self._name = name
         self._target = target
         super().__init__()
@@ -2681,6 +2683,15 @@ class InlineFunctionDef(FunctionDef):
         """
         self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
         self._if_block_replacements = None
+
+class PyccelFunctionDef(FunctionDef):
+    def __init__(self, name, func_class):
+        assert isinstance(func_class, type) and PyccelInternalFunction in func_class.__mro__
+        arguments = ()
+        results = ()
+        body = ()
+        super().__init__(name, arguments, results, body)
+        self._cls_name = func_class
 
 class Interface(Basic):
 

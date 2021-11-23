@@ -10,7 +10,7 @@ import numpy
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
 
-from .basic          import PyccelAstNode
+from .basic          import PyccelAstNode, Basic
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType)
@@ -561,11 +561,12 @@ class NumpyMatmul(PyccelInternalFunction):
 
 #==============================================================================
 
-def Shape(arg):
-    if isinstance(arg.shape, PythonTuple):
-        return arg.shape
-    else:
-        return PythonTuple(*arg.shape)
+class Shape(Basic):
+    def __new__(self, arg):
+        if isinstance(arg.shape, PythonTuple):
+            return arg.shape
+        else:
+            return PythonTuple(*arg.shape)
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -912,7 +913,7 @@ class NumpyOnes(NumpyAutoFill):
         return value
 
 #=======================================================================================
-class NumpyFullLike:
+class NumpyFullLike(Basic):
     """ Represents a call to numpy.full_like for code generation.
     """
     __slots__ = ()
@@ -926,7 +927,7 @@ class NumpyFullLike:
         return NumpyFull(shape, fill_value, dtype, order)
 
 #=======================================================================================
-class NumpyEmptyLike:
+class NumpyEmptyLike(Basic):
     """ Represents a call to numpy.empty_like for code generation.
     """
     __slots__ = ()
@@ -941,7 +942,7 @@ class NumpyEmptyLike:
         return NumpyEmpty(shape, dtype, order)
 
 #=======================================================================================
-class NumpyOnesLike:
+class NumpyOnesLike(Basic):
     """ Represents a call to numpy.ones_like for code generation.
     """
     __slots__ = ()
@@ -956,7 +957,7 @@ class NumpyOnesLike:
         return NumpyOnes(shape, dtype, order)
 
 #=======================================================================================
-class NumpyZerosLike:
+class NumpyZerosLike(Basic):
     """ Represents a call to numpy.zeros_like for code generation.
     """
     __slots__ = ()
