@@ -22,6 +22,7 @@ from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.core import Return
 from pyccel.ast.internals    import PyccelInternalFunction
@@ -312,7 +313,7 @@ class FCodePrinter(CodePrinter):
             self._constantImports.add(constant_name)
         return constant_name
 
-    def _handle_inline_func_call(self, expr, assign_lhs = None):
+    def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
         """ Print a function call to an inline function
         """
         func = expr.funcdef
@@ -321,7 +322,7 @@ class FCodePrinter(CodePrinter):
         # As the function definition is modified directly this function
         # cannot be called recursively with the same FunctionDef
         args = []
-        for a in expr.args:
+        for a in provided_args:
             if a.is_user_of(func):
                 code = PrecomputedCode(self._print(a))
                 args.append(code)
@@ -2655,8 +2656,8 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        args = [a for a in expr.args if not isinstance(a.value, Nil)]
-        func_results = func.results
+        args   = expr.args
+        func_results  = func.results
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
 
         if (not self._additional_code):
@@ -2667,17 +2668,18 @@ class FCodePrinter(CodePrinter):
                 lhs_vars = {func_results[0]:lhs}
             else:
                 lhs_vars = dict(zip(func_results,lhs))
-            newargs = []
-            for a in args:
+            args = []
+            for a in expr.args:
+                key = a.keyword
                 arg = a.value
                 if arg in lhs_vars.values():
                     var = arg.clone(self.parser.get_new_name())
                     self.add_vars_to_namespace(var)
                     self._additional_code += self._print(Assign(var,arg))
-                    newargs.append(var)
+                    newarg = var
                 else:
-                    newargs.append(arg)
-            args = newargs
+                    newarg = arg
+                args.append(FunctionCallArgument(newarg, key))
             results = list(lhs_vars.values())
             if len(func_results) == 1:
                 results_strs = []
@@ -2701,9 +2703,12 @@ class FCodePrinter(CodePrinter):
             results_strs = []
 
         if func.is_inline:
-            code = self._handle_inline_func_call(expr)
+            if len(func_results)>1:
+                code = self._handle_inline_func_call(expr, args, assign_lhs = results)
+            else:
+                code = self._handle_inline_func_call(expr, args)
         else:
-            args_strs = ['{}'.format(self._print(a)) for a in args]
+            args_strs = ['{}'.format(self._print(a)) for a in args if not isinstance(a.value, Nil)]
             args_code = ', '.join(args_strs+results_strs)
             code = '{name}({args})'.format( name = f_name,
                                             args = args_code )
