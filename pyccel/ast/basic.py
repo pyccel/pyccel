@@ -165,13 +165,13 @@ class Basic:
         self._recursion_in_progress = False
         return results
 
-    def is_attribute_of(self, search_node):
-        """ Identifies whether this object is an attribute of search_node.
+    def is_attribute_of(self, node):
+        """ Identifies whether this object is an attribute of node.
         The function searches recursively down the attribute tree.
 
         Parameters
         ----------
-        search_node : Basic
+        node           : Basic
                       The object which we are looking for
         excluded_nodes : tuple of types
                       Types for which get_user_nodes should not be called
@@ -182,13 +182,13 @@ class Basic:
         """
         return node.is_user_of(self)
 
-    def is_user_of(self, search_node, excluded_nodes = ()):
-        """ Identifies whether this object is a user of search_node.
+    def is_user_of(self, node, excluded_nodes = ()):
+        """ Identifies whether this object is a user of node.
         The function searches recursively up the user tree
 
         Parameters
         ----------
-        search_node : Basic
+        node           : Basic
                       The object which we are looking for
         excluded_nodes : tuple of types
                       Types for which is_user_of should not be called
@@ -197,14 +197,14 @@ class Basic:
         -------
         bool
         """
-        if search_node._recursion_in_progress:
+        if node.recursion_in_progress:
             return []
-        search_node._recursion_in_progress = True
+        node.toggle_recursion()
 
-        for v in search_node._user_nodes:
+        for v in node.get_all_user_nodes():
 
             if v is self:
-                search_node._recursion_in_progress = False
+                node.toggle_recursion()
                 return True
 
             elif isinstance(v, excluded_nodes):
@@ -213,10 +213,10 @@ class Basic:
             elif not self.ignore(v):
                 res = self.is_user_of(v, excluded_nodes=excluded_nodes)
                 if res:
-                    search_node._recursion_in_progress = False
+                    node.toggle_recursion()
                     return True
 
-        search_node._recursion_in_progress = False
+        node.toggle_recursion()
         return False
 
     def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
@@ -319,6 +319,23 @@ class Basic:
             return self._fst[0]
         else:
             return None
+
+    def toggle_recursion(self):
+        """ Change the recursion state
+        """
+        self._recursion_in_progress = not self._recursion_in_progress
+
+    @property
+    def recursion_in_progress(self):
+        """ Recursion state used to avoid infinite loops
+        """
+        return self._recursion_in_progress
+
+    def get_all_user_nodes(self):
+        """ Returns all the objects user nodes.
+        This function should only be called in Basic
+        """
+        return self._user_nodes
 
     def get_direct_user_nodes(self, condition):
         """ For an object with multiple user nodes
