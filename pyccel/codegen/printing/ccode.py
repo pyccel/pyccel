@@ -1467,7 +1467,7 @@ class CCodePrinter(CodePrinter):
         return 'NULL'
 
     def _print_NilArgument(self, expr):
-        raise errors.report("Trying to use optional argument in inline function without provided a variable",
+        raise errors.report("Trying to use optional argument in inline function without providing a variable",
                 symbol=expr,
                 severity='fatal')
 
