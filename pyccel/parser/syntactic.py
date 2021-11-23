@@ -805,31 +805,21 @@ class SyntaxParser(BasicParser):
 
             results.append(result_name)
 
-        kwargs = {
-               'local_vars':local_vars,
-               'global_vars':global_vars,
-               'is_pure':is_pure,
-               'is_elemental':is_elemental,
-               'is_private':is_private,
-               'imports':imports,
-               'decorators':decorators,
-               'headers':headers,
-               'doc_string':doc_string
-               }
-        if is_inline:
-            func = InlineFunctionDef(
-                   name,
-                   arguments,
-                   results,
-                   body,
-                   **kwargs)
-        else:
-            func = FunctionDef(
-                   name,
-                   arguments,
-                   results,
-                   body,
-                   **kwargs)
+        cls = InlineFunctionDef if is_inline else FunctionDef
+        func = cls(
+               name,
+               arguments,
+               results,
+               body,
+               local_vars=local_vars,
+               global_vars=global_vars,
+               is_pure=is_pure,
+               is_elemental=is_elemental,
+               is_private=is_private,
+               imports=imports,
+               decorators=decorators,
+               headers=headers,
+               doc_string=doc_string)
 
         return func
 
