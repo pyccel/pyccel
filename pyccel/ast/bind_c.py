@@ -9,6 +9,7 @@ from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
 from pyccel.ast.variable import Variable
 
 __all__ = (
@@ -161,9 +162,9 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
 
     # from module import func
     if imports is None:
-        local_imports = [Import(target=func.name, source=mod_name)]
+        local_imports = [Import(target=AsName(func, func.name), source=mod_name)]
     else:
-        imports.append(Import(target=func.name, source=mod_name))
+        imports.append(Import(target=AsName(func, func.name), source=mod_name))
         local_imports = ()
 
     # function arguments
