@@ -3316,24 +3316,30 @@ class SemanticParser(BasicParser):
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
-            cls = InlineFunctionDef if is_inline else FunctionDef
+            func_kwargs = {
+                    'local_vars':local_vars,
+                    'global_vars':global_vars,
+                    'cls_name':cls_name,
+                    'is_pure':is_pure,
+                    'is_elemental':is_elemental,
+                    'is_private':is_private,
+                    'imports':imports,
+                    'decorators':decorators,
+                    'is_recursive':is_recursive,
+                    'arguments_inout':args_inout,
+                    'functions': sub_funcs,
+                    'interfaces': func_interfaces,
+                    'doc_string': doc_string
+                    }
+            if is_inline:
+                func_kwargs['namespace_imports'] = namespace_imports
+                cls = InlineFunctionDef
+            else:
+                cls = FunctionDef
             func = cls(name,
                     args,
                     results,
                     body,
-                    local_vars=local_vars,
-                    global_vars=global_vars,
-                    cls_name=cls_name,
-                    is_pure=is_pure,
-                    is_elemental=is_elemental,
-                    is_private=is_private,
-                    imports=imports,
-                    decorators=decorators,
-                    is_recursive=is_recursive,
-                    arguments_inout=args_inout,
-                    functions = sub_funcs,
-                    interfaces = func_interfaces,
-                    doc_string = doc_string
                     **func_kwargs)
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
