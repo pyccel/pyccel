@@ -1308,6 +1308,10 @@ class Module(Basic):
             result = result[key]
         return result
 
+    def __contains__(self, arg):
+        assert isinstance(arg, str)
+        return arg in self._internal_dictionary
+
     def keys(self):
         return self._internal_dictionary.keys()
 
