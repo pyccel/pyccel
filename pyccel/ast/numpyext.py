@@ -563,6 +563,8 @@ class NumpyMatmul(PyccelInternalFunction):
 #==============================================================================
 
 class Shape(PyccelInternalFunction):
+    __slots__ = ()
+    name = 'shape'
     def __new__(self, arg):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
