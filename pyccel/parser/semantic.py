@@ -1970,7 +1970,7 @@ class SemanticParser(BasicParser):
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
-                        if hasattr(func, 'clone'):
+                        if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
                             func  = func.clone(new_name)
                     return self._handle_function(expr, func, args, **settings)
                 elif isinstance(rhs, Constant):
