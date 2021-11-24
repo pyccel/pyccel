@@ -3349,6 +3349,8 @@ class SemanticParser(BasicParser):
                     }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
+                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.get_function(f.name)]
+                func_kwargs['global_funcs'] = global_funcs
                 cls = InlineFunctionDef
             else:
                 cls = FunctionDef

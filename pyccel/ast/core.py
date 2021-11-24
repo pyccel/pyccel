@@ -2645,10 +2645,12 @@ class InlineFunctionDef(FunctionDef):
     namespace_imports : Scope
                         The objects in the scope which are available due to imports
     """
-    __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements')
+    __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
+            '_global_funcs')
 
-    def __init__(self, *args, namespace_imports = None, **kwargs):
+    def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
         self._namespace_imports = namespace_imports
+        self._global_funcs = global_funcs
         super().__init__(*args, **kwargs)
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
@@ -2735,6 +2737,11 @@ class InlineFunctionDef(FunctionDef):
         """
         self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
         self._if_block_replacements = None
+
+    @property
+    def global_funcs(self):
+        """ List of global functions used in the function """
+        return self._global_funcs
 
 class PyccelFunctionDef(FunctionDef):
     def __init__(self, name, func_class):

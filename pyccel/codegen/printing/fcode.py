@@ -19,11 +19,12 @@ import functools
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.core import Return, Module
+from pyccel.ast.core import Import
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
@@ -205,7 +206,7 @@ class FCodePrinter(CodePrinter):
         self._current_class    = None
 
         self._additional_code = None
-        self._additional_imports = set([])
+        self._additional_imports = set()
 
         self.prefix_module = prefix_module
 
@@ -384,6 +385,14 @@ class FCodePrinter(CodePrinter):
         func.reinstate_presence_checks()
         func.swap_out_args()
 
+        self._additional_imports.update(func.imports)
+        if func.global_vars or func.global_funcs:
+            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                for v in (*func.global_vars, *func.global_funcs)]))
+            for v in (*func.global_vars, *func.global_funcs):
+                self.parser.used_names.add(v.name)
+
         return code
 
     def _get_external_declarations(self):
@@ -450,7 +459,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        imports += "\n".join('use ' + lib for lib in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports)
         imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
                  imports,
@@ -493,7 +502,7 @@ class FCodePrinter(CodePrinter):
 
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
-        imports += "\n".join('use ' + lib for lib in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports)
         imports += "\n" + self.print_constant_imports()
         parts = ['program {}\n'.format(name),
                  imports,
@@ -529,6 +538,10 @@ class FCodePrinter(CodePrinter):
 
         if len(targets) == 0:
             return 'use {}\n'.format(source)
+
+        targets = [t for t in expr.target if not isinstance(t.object, InlineFunctionDef)]
+        if len(targets) == 0:
+            return ''
 
         prefix = 'use {}, only:'.format(source)
 
@@ -2469,7 +2482,7 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math_f90')
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
