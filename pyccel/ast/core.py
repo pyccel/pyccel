@@ -1223,7 +1223,8 @@ class Module(Basic):
         self._internal_dictionary.update({f.name:f for f in funcs})
         self._internal_dictionary.update({i.name:i for i in interfaces})
         self._internal_dictionary.update({c.name:c for c in classes})
-        self._internal_dictionary.update({i.source:i for i in imports})
+        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
         if init_func:
             init_if = init_func.body.body[0]
@@ -1318,7 +1319,17 @@ class Module(Basic):
 
     def __contains__(self, arg):
         assert isinstance(arg, str)
-        return arg in self._internal_dictionary
+        args = arg.split('.')
+        current_pos = self._internal_dictionary
+        key = args[0]
+        result = key in self._internal_dictionary
+        i = 1
+        while i<len(args) and result:
+            current_pos = current_pos[key]
+            key = args[i]
+            result = key in self._internal_dictionary
+            i += 1
+        return result
 
     def keys(self):
         return self._internal_dictionary.keys()
@@ -3256,7 +3267,10 @@ class Import(Basic):
         else:
             for i in target:
                 assert isinstance(i, (AsName, Module))
-                self._target.add(i)
+                if isinstance(i, Module):
+                    self._target.add(AsName(i,source))
+                else:
+                    self._target.add(i)
         super().__init__()
 
     @staticmethod
