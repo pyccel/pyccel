@@ -283,6 +283,8 @@ DtypePrecisionToCastFunction = {
 def process_dtype(dtype):
     if isinstance(dtype, PythonType):
         return dtype.dtype, dtype.precision
+    if isinstance(dtype, PyccelFunctionDef):
+        dtype = dtype.cls_name
 
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
