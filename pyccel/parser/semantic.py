@@ -2024,8 +2024,8 @@ class SemanticParser(BasicParser):
             for i in methods:
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():
-                        self.insert_import('numpy', rhs_name)
                         func = i.decorators['numpy_wrapper']
+                        self.insert_import('numpy', AsName(func, rhs_name))
                         return func(visited_lhs, *args)
                     else:
                         return DottedFunctionCall(i, args, prefix = visited_lhs,
@@ -2055,7 +2055,7 @@ class SemanticParser(BasicParser):
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
-                            self.insert_import('numpy', rhs)
+                            self.insert_import('numpy', AsName(func, rhs))
                             return func(visited_lhs)
                         else:
                             return DottedFunctionCall(i, [], prefix = visited_lhs,
