@@ -456,7 +456,7 @@ class PythonCodePrinter(CodePrinter):
 
             target = list(set(target))
             if source in pyccel_builtin_import_registery:
-                self._aliases.update([(pyccel_builtin_import_registery[source][t.name], t.target) for t in target if t.name != t.target])
+                self._aliases.update([(pyccel_builtin_import_registery[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
 
             target_names = {t.name:t.object for t in target}
             if init_func_name in target_names:
