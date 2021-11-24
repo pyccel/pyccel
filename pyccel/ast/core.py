@@ -3225,7 +3225,7 @@ class Import(Basic):
     __slots__ = ('_source','_target','_ignore_at_print')
     _attribute_nodes = ()
 
-    def __init__(self, source, target, ignore_at_print = False):
+    def __init__(self, source, target = None, ignore_at_print = False):
 
         if not source is None:
             source = Import._format(source)
@@ -3233,7 +3233,12 @@ class Import(Basic):
         self._source = source
         self._target = set()
         self._ignore_at_print = ignore_at_print
-        if not iterable(target):
+        if target is None:
+            if PyccelAstNode.stage == "syntactic":
+                target = []
+            else:
+                raise KeyError("Missing argument 'target'")
+        elif not iterable(target):
             target = [target]
         if PyccelAstNode.stage == "syntactic":
             for i in target:
