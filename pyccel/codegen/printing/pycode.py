@@ -458,12 +458,12 @@ class PythonCodePrinter(CodePrinter):
             if source in pyccel_builtin_import_registery:
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name], t.target) for t in target if t.name != t.target])
 
-            target_name = dict((t.name,t.target) if isinstance(t, AsName) else (t,t) for t in target)
-            if init_func_name in target_name:
-                self._ignore_funcs.append(target_name[init_func_name])
-            if free_func_name in target_name:
-                self._ignore_funcs.append(target_name[free_func_name])
-            target = [self._print(i) for n,i in zip(target_name, target) if n not in (init_func_name, free_func_name)]
+            target_names = {t.name:t.object for t in target}
+            if init_func_name in target_names:
+                self._ignore_funcs.append(target_names[init_func_name])
+            if free_func_name in target_names:
+                self._ignore_funcs.append(target_names[free_func_name])
+            target = [self._print(t) for t in target if t.object not in (init_func_name, free_func_name)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
 
