@@ -27,8 +27,7 @@ from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants
 from .literals      import LiteralInteger, Nil
 
-from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants, NumpyArray,
+from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .variable      import (Constant, Variable, IndexedElement, InhomogeneousTupleVariable,
@@ -78,14 +77,7 @@ def builtin_function(expr, args=None):
 
 
 # TODO add documentation
-builtin_import_registery = {'numpy': {
-                                      **numpy_functions,
-                                      **numpy_constants,
-                                      'linalg':numpy_linalg_functions,
-                                      'random':numpy_random_functions
-                                      },
-                            'numpy.linalg': numpy_linalg_functions,
-                            'numpy.random': numpy_random_functions,
+builtin_import_registery = {'numpy': numpy_mod,
                             'scipy.constants': scipy_constants,
                             'itertools': {'product': Product},
                             'math': {**math_functions, ** math_constants},
@@ -98,9 +90,9 @@ else:
 recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 #==============================================================================
-def collect_relevant_imports(func_dictionary, targets):
+def collect_relevant_imports(func_module, targets):
     if len(targets) == 0:
-        return func_dictionary
+        return [(func_module.name, func_module)]
 
     imports = []
     for target in targets:
@@ -111,8 +103,8 @@ def collect_relevant_imports(func_dictionary, targets):
             import_name = target
             code_name = import_name
 
-        if import_name in func_dictionary.keys():
-            imports.append((code_name, func_dictionary[import_name]))
+        if import_name in func_module.keys():
+            imports.append((code_name, func_module[import_name]))
     return imports
 
 def builtin_import(expr):

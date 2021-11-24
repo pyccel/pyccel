@@ -10,12 +10,12 @@ import numpy
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
 
-from .basic          import PyccelAstNode, Basic
+from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType)
 
-from .core           import process_shape
+from .core           import process_shape, Module, Import, AsName, PyccelFunctionDef
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -279,9 +279,6 @@ DtypePrecisionToCastFunction = {
 }
 
 #==============================================================================
-numpy_constants = {
-    'pi': Constant('float', 'pi', value=numpy.pi),
-}
 
 def process_dtype(dtype):
     if isinstance(dtype, PythonType):
@@ -561,7 +558,7 @@ class NumpyMatmul(PyccelInternalFunction):
 
 #==============================================================================
 
-class Shape(Basic):
+class Shape(PyccelInternalFunction):
     def __new__(self, arg):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
@@ -913,7 +910,7 @@ class NumpyOnes(NumpyAutoFill):
         return value
 
 #=======================================================================================
-class NumpyFullLike(Basic):
+class NumpyFullLike(PyccelInternalFunction):
     """ Represents a call to numpy.full_like for code generation.
     """
     __slots__ = ()
@@ -927,7 +924,7 @@ class NumpyFullLike(Basic):
         return NumpyFull(shape, fill_value, dtype, order)
 
 #=======================================================================================
-class NumpyEmptyLike(Basic):
+class NumpyEmptyLike(PyccelInternalFunction):
     """ Represents a call to numpy.empty_like for code generation.
     """
     __slots__ = ()
@@ -942,7 +939,7 @@ class NumpyEmptyLike(Basic):
         return NumpyEmpty(shape, dtype, order)
 
 #=======================================================================================
-class NumpyOnesLike(Basic):
+class NumpyOnesLike(PyccelInternalFunction):
     """ Represents a call to numpy.ones_like for code generation.
     """
     __slots__ = ()
@@ -957,7 +954,7 @@ class NumpyOnesLike(Basic):
         return NumpyOnes(shape, dtype, order)
 
 #=======================================================================================
-class NumpyZerosLike(Basic):
+class NumpyZerosLike(PyccelInternalFunction):
     """ Represents a call to numpy.zeros_like for code generation.
     """
     __slots__ = ()
@@ -1312,81 +1309,92 @@ class NumpyTranspose(NumpyUfuncUnary):
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
-numpy_functions = {
+
+numpy_linalg_mod = Module('linalg', (),
+    [PyccelFunctionDef('norm', NumpyNorm)])
+
+numpy_random_mod = Module('random', (),
+    [PyccelFunctionDef('rand'   , NumpyRand),
+     PyccelFunctionDef('random' , NumpyRand),
+     PyccelFunctionDef('randint', NumpyRandint)])
+
+numpy_constants = [
+    Constant('float', 'pi', value=numpy.pi),
+]
+
+numpy_funcs = [
     # ... array creation routines
-    'full'      : NumpyFull,
-    'empty'     : NumpyEmpty,
-    'zeros'     : NumpyZeros,
-    'ones'      : NumpyOnes,
-    'full_like' : NumpyFullLike,
-    'empty_like': NumpyEmptyLike,
-    'zeros_like': NumpyZerosLike,
-    'ones_like' : NumpyOnesLike,
-    'array'     : NumpyArray,
-    'arange'    : NumpyArange,
+    PyccelFunctionDef('full'      , NumpyFull),
+    PyccelFunctionDef('empty'     , NumpyEmpty),
+    PyccelFunctionDef('zeros'     , NumpyZeros),
+    PyccelFunctionDef('ones'      , NumpyOnes),
+    PyccelFunctionDef('full_like' , NumpyFullLike),
+    PyccelFunctionDef('empty_like', NumpyEmptyLike),
+    PyccelFunctionDef('zeros_like', NumpyZerosLike),
+    PyccelFunctionDef('ones_like' , NumpyOnesLike),
+    PyccelFunctionDef('array'     , NumpyArray),
+    PyccelFunctionDef('arange'    , NumpyArange),
     # ...
-    'shape'     : Shape,
-    'norm'      : NumpyNorm,
-    'int'       : NumpyInt,
-    'real'      : NumpyReal,
-    'imag'      : NumpyImag,
-    'float'     : NumpyFloat,
-    'double'    : NumpyFloat64,
-    'mod'       : NumpyMod,
-    'float32'   : NumpyFloat32,
-    'float64'   : NumpyFloat64,
-    'bool'      : NumpyBool,
-    'int8'      : NumpyInt8,
-    'int16'     : NumpyInt16,
-    'int32'     : NumpyInt32,
-    'int64'     : NumpyInt64,
-    'complex'   : NumpyComplex,
-    'complex128': NumpyComplex128,
-    'complex64' : NumpyComplex64,
-    'matmul'    : NumpyMatmul,
-    'sum'       : NumpySum,
-    'max'       : NumpyAmax,
-    'amax'      : NumpyAmax,
-    'min'       : NumpyAmin,
-    'amin'      : NumpyAmin,
-    'prod'      : NumpyProduct,
-    'product'   : NumpyProduct,
-    'linspace'  : NumpyLinspace,
-    'where'     : NumpyWhere,
+    PyccelFunctionDef('shape'     , Shape),
+    PyccelFunctionDef('norm'      , NumpyNorm),
+    PyccelFunctionDef('int'       , NumpyInt),
+    PyccelFunctionDef('real'      , NumpyReal),
+    PyccelFunctionDef('imag'      , NumpyImag),
+    PyccelFunctionDef('float'     , NumpyFloat),
+    PyccelFunctionDef('double'    , NumpyFloat64),
+    PyccelFunctionDef('mod'       , NumpyMod),
+    PyccelFunctionDef('float32'   , NumpyFloat32),
+    PyccelFunctionDef('float64'   , NumpyFloat64),
+    PyccelFunctionDef('bool'      , NumpyBool),
+    PyccelFunctionDef('int8'      , NumpyInt8),
+    PyccelFunctionDef('int16'     , NumpyInt16),
+    PyccelFunctionDef('int32'     , NumpyInt32),
+    PyccelFunctionDef('int64'     , NumpyInt64),
+    PyccelFunctionDef('complex'   , NumpyComplex),
+    PyccelFunctionDef('complex128', NumpyComplex128),
+    PyccelFunctionDef('complex64' , NumpyComplex64),
+    PyccelFunctionDef('matmul'    , NumpyMatmul),
+    PyccelFunctionDef('sum'       , NumpySum),
+    PyccelFunctionDef('max'       , NumpyAmax),
+    PyccelFunctionDef('amax'      , NumpyAmax),
+    PyccelFunctionDef('min'       , NumpyAmin),
+    PyccelFunctionDef('amin'      , NumpyAmin),
+    PyccelFunctionDef('prod'      , NumpyProduct),
+    PyccelFunctionDef('product'   , NumpyProduct),
+    PyccelFunctionDef('linspace'  , NumpyLinspace),
+    PyccelFunctionDef('where'     , NumpyWhere),
     # ---
-    'abs'       : NumpyAbs,
-    'floor'     : NumpyFloor,
-    'absolute'  : NumpyAbs,
-    'fabs'      : NumpyFabs,
-    'exp'       : NumpyExp,
-    'log'       : NumpyLog,
-    'sqrt'      : NumpySqrt,
+    PyccelFunctionDef('abs'       , NumpyAbs),
+    PyccelFunctionDef('floor'     , NumpyFloor),
+    PyccelFunctionDef('absolute'  , NumpyAbs),
+    PyccelFunctionDef('fabs'      , NumpyFabs),
+    PyccelFunctionDef('exp'       , NumpyExp),
+    PyccelFunctionDef('log'       , NumpyLog),
+    PyccelFunctionDef('sqrt'      , NumpySqrt),
     # ---
-    'sin'       : NumpySin,
-    'cos'       : NumpyCos,
-    'tan'       : NumpyTan,
-    'arcsin'    : NumpyArcsin,
-    'arccos'    : NumpyArccos,
-    'arctan'    : NumpyArctan,
-    'arctan2'   : NumpyArctan2,
-    # 'hypot'     : NumpyHypot,
-    'sinh'      : NumpySinh,
-    'cosh'      : NumpyCosh,
-    'tanh'      : NumpyTanh,
-    'arcsinh'   : NumpyArcsinh,
-    'arccosh'   : NumpyArccosh,
-    'arctanh'   : NumpyArctanh,
-    # 'deg2rad'   : NumpyDeg2rad,
-    # 'rad2deg'   : NumpyRad2deg,
-    'transpose' : NumpyTranspose,
-}
+    PyccelFunctionDef('sin'       , NumpySin),
+    PyccelFunctionDef('cos'       , NumpyCos),
+    PyccelFunctionDef('tan'       , NumpyTan),
+    PyccelFunctionDef('arcsin'    , NumpyArcsin),
+    PyccelFunctionDef('arccos'    , NumpyArccos),
+    PyccelFunctionDef('arctan'    , NumpyArctan),
+    PyccelFunctionDef('arctan2'   , NumpyArctan2),
+    # PyccelFunctionDef('hypot'     , NumpyHypot),
+    PyccelFunctionDef('sinh'      , NumpySinh),
+    PyccelFunctionDef('cosh'      , NumpyCosh),
+    PyccelFunctionDef('tanh'      , NumpyTanh),
+    PyccelFunctionDef('arcsinh'   , NumpyArcsinh),
+    PyccelFunctionDef('arccosh'   , NumpyArccosh),
+    PyccelFunctionDef('arctanh'   , NumpyArctanh),
+    # PyccelFunctionDef('deg2rad'   , NumpyDeg2rad),
+    # PyccelFunctionDef('rad2deg'   , NumpyRad2deg),
+    PyccelFunctionDef('transpose' , NumpyTranspose),
+]
 
-numpy_linalg_functions = {
-    'norm'      : NumpyNorm,
-}
-
-numpy_random_functions = {
-    'rand'      : NumpyRand,
-    'random'    : NumpyRand,
-    'randint'   : NumpyRandint,
-}
+numpy_mod = Module('numpy',
+    variables = numpy_constants,
+    funcs = numpy_funcs,
+    imports = [
+        Import('linalg', numpy_linalg_mod),
+        Import('random', numpy_random_mod),
+        ])
