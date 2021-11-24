@@ -532,7 +532,7 @@ class FCodePrinter(CodePrinter):
 
         code = ''
         for i in expr.target:
-            old_name = i.name.name
+            old_name = i.name
             new_name = i.target
             if old_name != new_name:
                 target = '{target} => {name}'.format(target=new_name,

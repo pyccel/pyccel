@@ -248,31 +248,35 @@ class AsName(Basic):
 
     Parameters
     ==========
-    name   : str
-             original name of variable or function
+    obj    : Basic or BasicType
+             The variable, function, or module being renamed
     target : str
              name of variable or function in this context
     """
-    __slots__ = ('_name', '_target')
+    __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
 
-    def __init__(self, name, target):
+    def __init__(self, obj, target):
         if PyccelAstNode.stage != "syntactic":
-            assert (isinstance(name, Basic) and \
-                    not isinstance(name, PyccelSymbol)) or \
-                   (isinstance(name, type) and \
-                   Basic in name.__mro__)
-        self._name = name
+            assert (isinstance(obj, Basic) and \
+                    not isinstance(obj, PyccelSymbol)) or \
+                   (isinstance(obj, type) and \
+                   Basic in obj.__mro__)
+        self._obj = obj
         self._target = target
         super().__init__()
 
     @property
     def name(self):
-        return self._name
+        return self._obj.name
 
     @property
     def target(self):
         return self._target
+
+    @property
+    def object(self):
+        return self._obj
 
     def __repr__(self):
         return '{0} as {1}'.format(str(self.name), str(self.target))
