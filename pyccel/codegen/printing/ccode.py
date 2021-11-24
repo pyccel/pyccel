@@ -1840,7 +1840,8 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        imports = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = [*expr.imports,
+                   *map(lambda i: Import(i, Module(i,(),())), self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('{imports}'
