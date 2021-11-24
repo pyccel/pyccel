@@ -77,11 +77,15 @@ pyccel_mod = Module('pyccel',(),(),
         imports = [Import('decorators', decorators_mod)])
 
 # TODO add documentation
-builtin_import_registery = {'numpy': numpy_mod,
-                            'scipy': scipy_mod,
-                            'itertools': itertools_mod,
-                            'math': math_mod,
-                            'pyccel': pyccel_mod}
+builtin_import_registery = Module('__main__',
+        (),(),
+        imports = [
+            Import('numpy', AsName(numpy_mod,'numpy')),
+            Import('scipy', AsName(scipy_mod,'scipy')),
+            Import('itertools', AsName(itertools_mod,'itertools')),
+            Import('math', AsName(math_mod,'math')),
+            Import('pyccel', AsName(pyccel_mod,'pyccel'))
+            ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
 else:
