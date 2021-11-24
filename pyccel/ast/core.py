@@ -3280,9 +3280,7 @@ class Import(Basic):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName)):
-            return i
-        elif isinstance(i, PyccelSymbol):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
             return i
         else:
             raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
