@@ -1945,7 +1945,7 @@ class SemanticParser(BasicParser):
         attr_name = []
 
         # Handle case of imported module
-        if isinstance(first, dict):
+        if isinstance(first, Module):
 
             if rhs_name in first:
                 imp = self.get_import(_get_name(lhs))
@@ -1957,10 +1957,7 @@ class SemanticParser(BasicParser):
                         new_name = self.get_new_name(rhs_name)
 
                         # Save the import target that has been used
-                        if new_name == rhs_name:
-                            imp.define_target(PyccelSymbol(rhs_name))
-                        else:
-                            imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
+                        imp.define_target(AsName(first[rhs_name], PyccelSymbol(new_name)))
                 elif isinstance(rhs, FunctionCall):
                     self.namespace.imports['functions'][new_name] = first[rhs_name]
                 elif isinstance(rhs, ConstructorCall):
@@ -3578,9 +3575,12 @@ class SemanticParser(BasicParser):
                         else:
                             _insert_obj('functions', name, atom)
             else:
-                _insert_obj('variables', source_target, imports)
+                assert len(imports) == 1
+                mod = imports[0][1]
+                assert isinstance(mod, Module)
+                _insert_obj('variables', source_target, mod)
 
-            self.insert_import(expr.source, [AsName(v,n) for n,v in imports])
+            self.insert_import(source, [AsName(v,n) for n,v in imports])
 
         elif source in python_builtin_libs:
             errors.report("Module {} is not currently supported by pyccel".format(source),
