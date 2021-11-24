@@ -91,9 +91,6 @@ recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 #==============================================================================
 def collect_relevant_imports(func_module, targets):
-    if len(targets) == 0:
-        return [(func_module.name, func_module)]
-
     imports = []
     for target in targets:
         if isinstance(target, AsName):
@@ -131,7 +128,10 @@ def builtin_import(expr):
         return targets
 
     elif source in builtin_import_registery:
-        return collect_relevant_imports(builtin_import_registery[source], expr.target)
+        if expr.target:
+            return collect_relevant_imports(builtin_import_registery[source], expr.target)
+        else:
+            return [(expr.source.target, builtin_import_registery[source])]
 
     return []
 
