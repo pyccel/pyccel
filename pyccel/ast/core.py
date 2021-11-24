@@ -1327,7 +1327,7 @@ class Module(Basic):
         while i<len(args) and result:
             current_pos = current_pos[key]
             key = args[i]
-            result = key in self._internal_dictionary
+            result = key in current_pos
             i += 1
         return result
 
