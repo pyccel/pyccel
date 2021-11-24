@@ -1136,7 +1136,7 @@ class Module(Basic):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits')
+                 '_program','_variable_inits','_internal_dictionary')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1210,6 +1210,12 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+
+        self._internal_dictionary = {v.name:v for v in variables}
+        self._internal_dictionary.update({f.name:f for f in funcs})
+        self._internal_dictionary.update({i.name:i for i in interfaces})
+        self._internal_dictionary.update({c.name:c for c in classes})
+        self._internal_dictionary.update({i.source:i for i in imports})
 
         if init_func:
             init_if = init_func.body.body[0]
@@ -1293,6 +1299,14 @@ class Module(Basic):
         """ Function for changing the name of a module
         """
         self._name = new_name
+
+    def __getitem__(self, arg):
+        assert isinstance(arg, str)
+        args = arg.split('.')
+        result = self._internal_dictionary[args[0]]
+        for key in args[1:]:
+            result = result[key]
+        return result
 
 class ModuleHeader(Basic):
 
