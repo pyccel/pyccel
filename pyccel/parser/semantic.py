@@ -3671,7 +3671,7 @@ class SemanticParser(BasicParser):
 
                 targets.append(AsName(import_free, new_name))
 
-            expr = Import(expr.source, targets)
+            expr = Import(source, targets)
 
             if __import_all__:
                 mod = p.semantic_parser.ast
