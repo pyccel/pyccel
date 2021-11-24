@@ -21,7 +21,6 @@ from .internals      import Slice, PyccelSymbol, PyccelInternalFunction
 
 from .literals       import LiteralInteger, Nil, LiteralFalse
 from .literals       import NilArgument, LiteralTrue
-from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
@@ -1468,13 +1467,15 @@ class Iterable(Basic):
     iterable : acceptable_iterator_type
                 The iterator being wrapped
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
     def __init__(self, iterable):
         self._iterable = iterable
         self._indices  = None
+
+        from .itertoolsext   import Product
+        acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
 
         if isinstance(iterable, PythonRange):
             self._num_indices_required = 0
