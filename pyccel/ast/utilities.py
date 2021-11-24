@@ -94,7 +94,7 @@ else:
 recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 def recognised_source(source_name):
-    source = source_name.split('.')
+    source = str(source_name).split('.')
     if source[0] in python_builtin_libs and source[0] not in builtin_import_registery.keys():
         return True
     else:
@@ -129,8 +129,10 @@ def builtin_import(expr):
     if source in builtin_import_registery:
         if expr.target:
             return collect_relevant_imports(builtin_import_registery[source], expr.target)
-        else:
+        elif isinstance(expr.source, AsName):
             return [(expr.source.target, builtin_import_registery[source])]
+        else:
+            return [(expr.source, builtin_import_registery[source])]
 
     return []
 

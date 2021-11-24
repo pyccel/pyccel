@@ -268,11 +268,10 @@ class AsName(Basic):
     @property
     def name(self):
         obj = self._obj
-        if isinstance(obj, (Basic, type)):
-            return obj.name
-        else:
-            # If saved in syntactic stage, obj can be a PyccelSymbol
+        if isinstance(obj, (str, PyccelSymbol, DottedName)):
             return obj
+        else:
+            return obj.name
 
     @property
     def target(self):
@@ -1323,8 +1322,8 @@ class Module(Basic):
         return result
 
     def __contains__(self, arg):
-        assert isinstance(arg, str)
-        args = arg.split('.')
+        assert isinstance(arg, (str, PyccelSymbol, DottedName))
+        args = str(arg).split('.')
         current_pos = self._internal_dictionary
         key = args[0]
         result = key in self._internal_dictionary
