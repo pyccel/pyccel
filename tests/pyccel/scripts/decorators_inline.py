@@ -27,6 +27,13 @@ def fill_pi(a : 'float[:]'):
     for i in range(a.shape[0]):
         a[i] = pi
 
+def not_inline():
+    return 1.602e-19
+
+@inline
+def positron_charge():
+    return -not_inline()
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
