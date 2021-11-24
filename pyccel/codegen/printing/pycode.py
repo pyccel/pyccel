@@ -14,7 +14,7 @@ from pyccel.ast.core       import IfSection, FunctionDef, Module
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.numpyext   import Shape as NumpyShape
+from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities  import builtin_import_registery as pyccel_builtin_import_registery
@@ -34,6 +34,7 @@ errors = Errors()
 # The keys are modules from which the target is imported
 # The values are a dictionary whose keys are object aliases and whose values
 # are the names used in pyccel
+import_object_swap = { 'numpy': numpy_target_swap}
 import_target_swap = {
         'numpy' : {'double'     : 'float64',
                    'prod'       : 'product',
@@ -444,12 +445,14 @@ class PythonCodePrinter(CodePrinter):
         if not target:
             return 'import {source}\n'.format(source=source)
         else:
+            if source in import_object_swap:
+                target = [AsName(import_object_swap[source].get(i.object,i.object), i.target) for i in target]
             if source in import_target_swap:
                 # If the source contains multiple names which reference the same object
                 # check if the target is referred to by another name in pyccel.
                 # Print the name used by pyccel (either the value from import_target_swap
                 # or the original name from the import
-                target = [AsName(i.object, import_target_swap[source].get(i.name,i.target)) for i in target]
+                target = [AsName(i.object, import_target_swap[source].get(i.target,i.target)) for i in target]
 
             target = list(set(target))
             if source in pyccel_builtin_import_registery:
