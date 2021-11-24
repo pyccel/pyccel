@@ -18,6 +18,7 @@ from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
+from pyccel.ast.core      import Module
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -562,7 +563,8 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, *map(Import, self._additional_imports)]
+        imports = [*expr.module.imports, \
+                   *map(lambda i: Import(i, Module(i,(),())), self._additional_imports)]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('#ifndef {name}_H\n'
@@ -585,7 +587,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(expr.name), *map(Import, self._additional_imports)]
+        imports = [Import(i, Module(i,(),())) for i in [expr.name, *self._additional_imports]]
         imports = ''.join(self._print(i) for i in imports)
 
         code = ('{imports}\n'
