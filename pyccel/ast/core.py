@@ -291,8 +291,13 @@ class AsName(Basic):
     def __eq__(self, string):
         if isinstance(string, str):
             return string == self.target
+        elif isinstance(string, AsName):
+            return string.target == self.target
         else:
             return self is string
+
+    def __ne__(self, string):
+        return not self == string
 
     def __hash__(self):
         return hash(self.target)
