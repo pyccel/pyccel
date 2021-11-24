@@ -530,13 +530,27 @@ class SemanticParser(BasicParser):
 
         return None
 
-    def insert_import(self, name, target):
+    def insert_import(self, name, target, storage_name = None):
         """
-            Create and insert a new import in namespace if it's not defined
-            otherwise append target to existing import.
+        Create and insert a new import in namespace if it's not defined
+        otherwise append target to existing import.
+
+        Parameters
+        ----------
+        name : str-like
+               The source from which the object is imported
+        target : AsName
+               The imported object
+        storage_name : str-like
+                The name which will be used to identify the Import in the
+                container
         """
         source = _get_name(name)
+        if storage_name is None:
+            storage_name = source
         imp = self.get_import(source)
+        if imp is None:
+            imp = self.get_import(storage_name)
 
         if imp is not None:
             imp_source = imp.source
@@ -549,7 +563,7 @@ class SemanticParser(BasicParser):
                               severity='fatal')
         else:
             container = self.namespace.imports
-            container['imports'][source] = Import(source, target, True)
+            container['imports'][storage_name] = Import(source, target, True)
 
     def insert_macro(self, macro):
         """."""
@@ -1948,7 +1962,7 @@ class SemanticParser(BasicParser):
         if isinstance(first, Module):
 
             if rhs_name in first:
-                imp = self.get_import(_get_name(first.name))
+                imp = self.get_import(_get_name(lhs))
 
                 new_name = rhs_name
                 if imp is not None:
@@ -3580,7 +3594,7 @@ class SemanticParser(BasicParser):
                 assert isinstance(mod, Module)
                 _insert_obj('variables', source_target, mod)
 
-            self.insert_import(source, [AsName(v,n) for n,v in imports])
+            self.insert_import(source, [AsName(v,n) for n,v in imports], source_target)
 
         elif recognised_source(source):
             errors.report("Module {} is not currently supported by pyccel".format(source),
@@ -3613,11 +3627,9 @@ class SemanticParser(BasicParser):
                             severity="warning", symbol=expr)
                 targets = [AsName(v,k) for k,v in targets.items() if v is not None]
             else:
-                imported_dict = []
-                for entry in ['variables', 'classes', 'functions']:
-                    d_son = getattr(p.namespace, entry)
-                    imported_dict.extend(d_son.items())
-                container['variables'][source_target] = dict(imported_dict)
+                mod = p.semantic_parser.ast
+                container['variables'][source_target] = mod
+                targets = [AsName(mod, source_target)]
 
             self.namespace.cls_constructs.update(p.namespace.cls_constructs)
             self.namespace.macros.update(p.namespace.macros)
@@ -3635,11 +3647,8 @@ class SemanticParser(BasicParser):
             # Indicates the name of the fortran module containing the functions
             __module_name__ = p.metavars.get('module_name', None)
 
-            if len(expr.target) == 0 and isinstance(expr.source,AsName):
-                expr = Import(expr.source.name)
-
             if source_target in container['imports']:
-                targets = container['imports'][source_target].target.union(expr.target)
+                targets = list(container['imports'][source_target].target.union(targets))
 
             if import_init:
                 old_name = import_init.name
@@ -3663,7 +3672,8 @@ class SemanticParser(BasicParser):
             expr = Import(expr.source, targets)
 
             if __import_all__:
-                expr = Import(__module_name__)
+                mod = p.semantic_parser.ast
+                expr = Import(source_target, AsName(mod, __module_name__))
                 container['imports'][source_target] = expr
 
             elif __module_name__:
