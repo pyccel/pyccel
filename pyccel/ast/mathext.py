@@ -327,7 +327,7 @@ _base_classes = (
     'MathFunctionBool'
 )
 
-math_functions = [PyccelFunctionDef(k, v) for k, v in globals().copy().items() \
+math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().items() \
         if k.startswith('Math') and (k not in _base_classes)]
 
 #==============================================================================

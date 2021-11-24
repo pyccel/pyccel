@@ -551,6 +551,15 @@ class DottedName(Basic):
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
 
+    def __eq__(self, other):
+        return str(self) == other
+
+    def __ne__(self, other):
+        return str(self) != other
+
+    def __hash__(self):
+        return hash(str(self))
+
 class TupleVariable(Variable):
 
     """Represents a tuple variable in the code.
