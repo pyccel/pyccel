@@ -23,7 +23,7 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return
+from pyccel.ast.core import Return, Module
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
@@ -525,13 +525,15 @@ class FCodePrinter(CodePrinter):
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
 
-        if len(expr.target) == 0:
+        targets = [t for t in expr.target if not isinstance(t.object, Module)]
+
+        if len(targets) == 0:
             return 'use {}\n'.format(source)
 
         prefix = 'use {}, only:'.format(source)
 
         code = ''
-        for i in expr.target:
+        for i in targets:
             old_name = i.name
             new_name = i.target
             if old_name != new_name:
