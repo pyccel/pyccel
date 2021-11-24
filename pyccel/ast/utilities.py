@@ -126,19 +126,7 @@ def builtin_import(expr):
     else:
         source = str(expr.source)
 
-    if source == 'pyccel.decorators':
-        funcs = dict(inspect.getmembers(pyccel_decorators, inspect.isfunction))
-        targets = []
-        for target in expr.target:
-            search_target = target.name if isinstance(target, AsName) else target
-            if search_target not in funcs.keys():
-                errors.report("{} does not exist in pyccel.decorators".format(target),
-                        symbol = expr, severity='error')
-            else:
-                targets.append([search_target, AsName(Decorator(search_target), search_target)])
-        return targets
-
-    elif source in builtin_import_registery:
+    if source in builtin_import_registery:
         if expr.target:
             return collect_relevant_imports(builtin_import_registery[source], expr.target)
         else:
