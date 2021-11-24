@@ -15,7 +15,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import Import
+from pyccel.ast.core import Import, Module
 from pyccel.ast.core import AugAssign
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
@@ -43,6 +43,10 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
 dtype_registry = {('pyobject'     , 0) : 'PyObject',
                   ('pyarrayobject', 0) : 'PyArrayObject'}
+
+module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
+            Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
+            Import('cwrapper', Module('cwrapper',(),()))]
 
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
@@ -1102,8 +1106,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     init_call = init_call))
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports  = [Import('numpy_version'), Import('numpy/arrayobject'), Import('cwrapper')]
-        imports += [Import(s) for s in self._additional_imports]
+        imports  = module_imports.copy()
+        imports += [Import(s, Module(s, (), ())) for s in self._additional_imports]
         imports  = ''.join(self._print(i) for i in imports)
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
