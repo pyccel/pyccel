@@ -517,11 +517,11 @@ class BasicParser(object):
                 name   = str(expr.source)
                 source = name
 
-            if source not in recognised_libs:
+            if source.split('.')[0] not in recognised_libs:
                 container[name] = []
         else:
             source = str(expr.source)
-            if source not in recognised_libs:
+            if source.split('.')[0] not in recognised_libs:
                 if not source in container.keys():
                     container[source] = []
                 container[source] += expr.target
