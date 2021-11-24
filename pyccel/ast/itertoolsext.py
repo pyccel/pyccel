@@ -5,9 +5,11 @@
 """
 This module represent a call to the itertools functions for code generation.
 """
+from .core      import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
 
 __all__ = (
+    'itertools_mod',
     'Product',
 )
 
@@ -39,3 +41,7 @@ class Product(PyccelInternalFunction):
 
     def __getitem__(self, indices):
         return [elem[idx] for idx, elem in zip(indices, self.elements)]
+
+#==============================================================================
+itertools_mod = Module('itertools',(),
+        funcs = [PyccelFunctionDef('product',Product)])

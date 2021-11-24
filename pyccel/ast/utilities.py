@@ -10,27 +10,26 @@ import sys
 from itertools import chain
 from collections import namedtuple
 
-from numpy import pi
-
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Decorator)
+                            Concatenate, Decorator, Module, PyccelFunctionDef)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .internals     import PyccelInternalFunction, Slice
-from .itertoolsext  import Product
-from .mathext       import math_functions, math_constants
+from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
+from .mathext       import math_mod
 
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .variable      import (Constant, Variable, IndexedElement, InhomogeneousTupleVariable,
+from .scipyext      import scipy_mod
+from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable,
                             VariableAddress, HomogeneousTupleVariable )
 
 errors = Errors()
@@ -41,10 +40,6 @@ __all__ = (
     'builtin_import_registery',
     'split_positional_keyword_arguments',
 )
-
-scipy_constants = {
-    'pi': Constant('float', 'pi', value=pi),
-                  }
 
 #==============================================================================
 def builtin_function(expr, args=None):
@@ -75,13 +70,18 @@ def builtin_function(expr, args=None):
 
     return None
 
+#==============================================================================
+decorators_mod = Module('decorators',(),
+        funcs = [PyccelFunctionDef(d, PyccelInternalFunction) for d in pyccel_decorators.__all__])
+pyccel_mod = Module('pyccel',(),(),
+        imports = [Import('decorators', decorators_mod)])
 
 # TODO add documentation
 builtin_import_registery = {'numpy': numpy_mod,
-                            'scipy.constants': scipy_constants,
-                            'itertools': {'product': Product},
-                            'math': {**math_functions, ** math_constants},
-                            'pyccel.decorators': pyccel_decorators.__all__}
+                            'scipy': scipy_mod,
+                            'itertools': itertools_mod,
+                            'math': math_mod,
+                            'pyccel': pyccel_mod}
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
 else:
