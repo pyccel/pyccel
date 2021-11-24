@@ -17,7 +17,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange, default_precision,
                         NativeTuple, str_dtype)
-from .internals      import Slice, PyccelSymbol
+from .internals      import Slice, PyccelSymbol, PyccelInternalFunction
 
 from .literals       import LiteralInteger, Nil, LiteralFalse
 from .literals       import NilArgument, LiteralTrue
@@ -1307,6 +1307,9 @@ class Module(Basic):
         for key in args[1:]:
             result = result[key]
         return result
+
+    def keys(self):
+        return self._internal_dictionary.keys()
 
 class ModuleHeader(Basic):
 
@@ -2700,7 +2703,9 @@ class InlineFunctionDef(FunctionDef):
 
 class PyccelFunctionDef(FunctionDef):
     def __init__(self, name, func_class):
-        assert isinstance(func_class, type) and PyccelInternalFunction in func_class.__mro__
+        assert isinstance(func_class, type) and \
+                (PyccelInternalFunction in func_class.__mro__ or \
+                 PyccelAstNode in func_class.__mro__)
         arguments = ()
         results = ()
         body = ()
@@ -3216,7 +3221,7 @@ class Import(Basic):
     __slots__ = ('_source','_target','_ignore_at_print')
     _attribute_nodes = ()
 
-    def __init__(self, source, target = None, ignore_at_print = False):
+    def __init__(self, source, target, ignore_at_print = False):
 
         if not source is None:
             source = Import._format(source)
@@ -3224,16 +3229,14 @@ class Import(Basic):
         self._source = source
         self._target = set()
         self._ignore_at_print = ignore_at_print
-        if target is None:
-            target = []
-        elif not iterable(target):
+        if not iterable(target):
             target = [target]
         if PyccelAstNode.stage == "syntactic":
             for i in target:
                 self._target.add(Import._format(i))
         else:
             for i in target:
-                assert isinstance(i, AsName)
+                assert isinstance(i, (AsName, Module))
                 self._target.add(i)
         super().__init__()
 
