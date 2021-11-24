@@ -1629,8 +1629,6 @@ class SemanticParser(BasicParser):
         mod_name = expr.name
         self._mod_name = mod_name
         prog_name = self.get_new_name('prog_'+expr.name)
-        container = self._program_namespace.imports
-        container['imports'][mod_name] = Import(mod_name)
 
         for b in body:
             if isinstance(b, If):
@@ -1710,7 +1708,7 @@ class SemanticParser(BasicParser):
             elif isinstance(f, Interface):
                 interfaces.append(f)
 
-        return Module(mod_name,
+        mod = Module(mod_name,
                     variables,
                     funcs,
                     init_func = init_func,
@@ -1719,6 +1717,9 @@ class SemanticParser(BasicParser):
                     interfaces=interfaces,
                     classes=self.namespace.classes.values(),
                     imports=self._namespace.imports['imports'].values())
+        container = self._program_namespace.imports
+        container['imports'][mod_name] = Import(mod_name, mod)
+        return mod
 
     def _visit_tuple(self, expr, **settings):
         return tuple(self._visit(i, **settings) for i in expr)
