@@ -18,7 +18,7 @@ from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module
+from pyccel.ast.core      import Module, AsName
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -253,7 +253,12 @@ class CCodePrinter(CodePrinter):
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
-        return self._additional_imports
+        return [i.source if isinstance(i, Import) else i for i in self._additional_imports]
+
+    def get_additional_import_objects(self):
+        """return the additional imports collected in printing stage"""
+        return [i if isinstance(i, Import) else Import(i, Module(i, (),())) \
+                for i in self._additional_imports]
 
     def _get_statement(self, codestring):
         return "%s;\n" % codestring
@@ -470,6 +475,14 @@ class CCodePrinter(CodePrinter):
         func.swap_out_args()
         if parent_assign:
             body.substitute(new_res_vars, orig_res_vars)
+
+        if func.global_vars or func.global_funcs:
+            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                for v in (*func.global_vars, *func.global_funcs)]))
+            for v in (*func.global_vars, *func.global_funcs):
+                self._parser.used_names.add(v.name)
+
         return code
 
     # ============ Elements ============ #
@@ -563,8 +576,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, \
-                   *map(lambda i: Import(i, Module(i,(),())), self._additional_imports)]
+        imports = [*expr.module.imports, *self.get_additional_import_objects()]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('#ifndef {name}_H\n'
@@ -587,7 +599,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(i, Module(i,(),())) for i in [expr.name, *self._additional_imports]]
+        imports = [Import(expr.name, Module(expr.name,(),())), *self.get_additional_import_objects()]
         imports = ''.join(self._print(i) for i in imports)
 
         code = ('{imports}\n'
@@ -1840,8 +1852,7 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        imports = [*expr.imports,
-                   *map(lambda i: Import(i, Module(i,(),())), self._additional_imports)]
+        imports = [*expr.imports, *self.get_additional_import_objects()]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('{imports}'
