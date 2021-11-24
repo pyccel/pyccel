@@ -54,6 +54,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import Iterable
 from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
+from pyccel.ast.core import PyccelFunctionDef
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -1056,7 +1057,8 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
-        if not isinstance(func, (FunctionDef, Interface)):
+        if isinstance(func, PyccelFunctionDef):
+            func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
             for a in args:
                 if getattr(a,'dtype',None) == 'tuple':
