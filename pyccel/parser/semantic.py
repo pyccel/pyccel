@@ -3541,7 +3541,9 @@ class SemanticParser(BasicParser):
             source        = str(expr.source)
             source_target = source
 
-        if source in pyccel_builtin_import_registery:
+        source_module = source.split('.')[0]
+
+        if source_module in pyccel_builtin_import_registery:
             imports = pyccel_builtin_import(expr)
 
             def _insert_obj(location, target, obj):
@@ -3582,7 +3584,7 @@ class SemanticParser(BasicParser):
 
             self.insert_import(source, [AsName(v,n) for n,v in imports])
 
-        elif source in python_builtin_libs:
+        elif source_module in python_builtin_libs:
             errors.report("Module {} is not currently supported by pyccel".format(source),
                     symbol=expr,
                     severity='error')
