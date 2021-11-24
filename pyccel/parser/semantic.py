@@ -1703,19 +1703,6 @@ class SemanticParser(BasicParser):
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
-        if program_body:
-            if init_func:
-                import_init  = FunctionCall(init_func,[],[])
-                program_body = [import_init, *program_body]
-            if free_func:
-                import_free  = FunctionCall(free_func,[],[])
-                program_body = [*program_body, import_free]
-            container = self._program_namespace
-            program = Program(prog_name,
-                            self.get_variables(container),
-                            program_body,
-                            container.imports['imports'].values())
-
         funcs = []
         interfaces = []
         for f in self.namespace.functions.values():
@@ -1729,12 +1716,27 @@ class SemanticParser(BasicParser):
                     funcs,
                     init_func = init_func,
                     free_func = free_func,
-                    program = program,
                     interfaces=interfaces,
                     classes=self.namespace.classes.values(),
                     imports=self._namespace.imports['imports'].values())
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name, mod)
+
+        if program_body:
+            if init_func:
+                import_init  = FunctionCall(init_func,[],[])
+                program_body = [import_init, *program_body]
+            if free_func:
+                import_free  = FunctionCall(free_func,[],[])
+                program_body = [*program_body, import_free]
+            container = self._program_namespace
+            program = Program(prog_name,
+                            self.get_variables(container),
+                            program_body,
+                            container.imports['imports'].values())
+
+            mod.program = program
+
         return mod
 
     def _visit_tuple(self, expr, **settings):

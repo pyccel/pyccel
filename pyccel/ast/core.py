@@ -1271,6 +1271,12 @@ class Module(Basic):
         """
         return self._program
 
+    @program.setter
+    def program(self, prog):
+        assert self._program is None
+        self._program = prog
+        self._program.set_current_user_node(self)
+
     @property
     def funcs(self):
         """ Any functions defined in the module
