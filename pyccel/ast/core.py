@@ -267,7 +267,12 @@ class AsName(Basic):
 
     @property
     def name(self):
-        return self._obj.name
+        obj = self._obj
+        if isinstance(obj, (Basic, type)):
+            return obj.name
+        else:
+            # If saved in syntactic stage, obj can be a PyccelSymbol
+            return obj
 
     @property
     def target(self):
