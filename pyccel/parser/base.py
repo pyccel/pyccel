@@ -25,7 +25,7 @@ from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
 from pyccel.ast.core import create_incremented_string, create_variable
 
-from pyccel.ast.utilities import recognised_libs
+from pyccel.ast.utilities import recognised_source
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
@@ -517,11 +517,11 @@ class BasicParser(object):
                 name   = str(expr.source)
                 source = name
 
-            if source.split('.')[0] not in recognised_libs:
+            if not recognised_source(source):
                 container[name] = []
         else:
             source = str(expr.source)
-            if source.split('.')[0] not in recognised_libs:
+            if not recognised_source(source):
                 if not source in container.keys():
                     container[source] = []
                 container[source] += expr.target

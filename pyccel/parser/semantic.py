@@ -103,6 +103,7 @@ from pyccel.ast.utilities import python_builtin_libs
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import split_positional_keyword_arguments
+from pyccel.ast.utilities import recognised_source
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
@@ -3541,9 +3542,7 @@ class SemanticParser(BasicParser):
             source        = str(expr.source)
             source_target = source
 
-        source_module = source.split('.')[0]
-
-        if source_module in pyccel_builtin_import_registery:
+        if source in pyccel_builtin_import_registery:
             imports = pyccel_builtin_import(expr)
 
             def _insert_obj(location, target, obj):
@@ -3584,7 +3583,7 @@ class SemanticParser(BasicParser):
 
             self.insert_import(source, [AsName(v,n) for n,v in imports])
 
-        elif source_module in python_builtin_libs:
+        elif recognised_source(source):
             errors.report("Module {} is not currently supported by pyccel".format(source),
                     symbol=expr,
                     severity='error')
