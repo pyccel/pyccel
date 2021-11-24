@@ -281,8 +281,8 @@ class Errors(metaclass = Singleton):
                 fst = symbol.fst
 
         if fst:
-            line   = fst.lineno
-            column = fst.col_offset
+            line   = getattr(fst, 'lineno', None)
+            column = getattr(fst, 'col_offset', None)
 
         traceback = None
         if self.mode == 'developer':
