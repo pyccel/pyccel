@@ -1470,8 +1470,13 @@ class Iterable(Basic):
     Paramaters
     ----------
     iterable : acceptable_iterator_type
-                The iterator being wrapped
+               The iterator being wrapped
+               The type must be in acceptable_iterator_types or the class must
+               implement the following functions:
+               - n_indices
+               - to_range
     """
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
@@ -1480,16 +1485,15 @@ class Iterable(Basic):
         self._indices  = None
 
         from .itertoolsext   import Product
-        acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
 
         if isinstance(iterable, PythonRange):
             self._num_indices_required = 0
         elif isinstance(iterable, PythonEnumerate):
             self._num_indices_required = int(iterable.start != 0)
-        elif isinstance(iterable, Product):
-            self._num_indices_required = len(iterable.elements)
         elif isinstance(iterable, self.acceptable_iterator_types):
             self._num_indices_required = 1
+        elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
+            self._num_indices_required = iterable.n_indices
         else:
             raise TypeError("Unknown iterator type {}".format(type(iterable)))
 
@@ -1556,12 +1560,8 @@ class Iterable(Basic):
         """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
-        elif isinstance(self._iterable, Product):
-            prod = self._iterable
-            lengths = [getattr(e, '__len__',
-                    getattr(e, 'length', PythonLen(e))) for e in prod.elements]
-            lengths = [l() if callable(l) else l for l in lengths]
-            return [PythonRange(l) for l in lengths]
+        elif hasattr(self._iterable, 'to_range'):
+            return self._iterable.to_range()
         else:
             length = getattr(self._iterable, '__len__',
                     getattr(self._iterable, 'length', PythonLen(self._iterable)))

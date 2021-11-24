@@ -5,6 +5,7 @@
 """
 This module represent a call to the itertools functions for code generation.
 """
+from .builtins  import PythonLen, PythonRange
 from .core      import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
 
@@ -41,6 +42,18 @@ class Product(PyccelInternalFunction):
 
     def __getitem__(self, indices):
         return [elem[idx] for idx, elem in zip(indices, self.elements)]
+
+    def to_range(self):
+        lengths = [getattr(e, '__len__',
+                getattr(e, 'length', PythonLen(e))) for e in self.elements]
+        lengths = [l() if callable(l) else l for l in lengths]
+        return [PythonRange(l) for l in lengths]
+
+    @property
+    def n_indices(self):
+        """ Number of indices required
+        """
+        return len(self._elements)
 
 #==============================================================================
 itertools_mod = Module('itertools',(),
