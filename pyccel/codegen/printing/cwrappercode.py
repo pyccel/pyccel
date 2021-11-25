@@ -48,6 +48,8 @@ module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
             Import('cwrapper', Module('cwrapper',(),()))]
 
+cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
+
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
     an interface between python and an implementation of the module in c"""
@@ -870,7 +872,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return 'pyobject'
 
     def _print_PyccelPyArrayObject(self, expr):
-        self._additional_imports.add("cwrapper_ndarrays")
+        self._additional_imports.add(cwrapper_ndarray_import)
         return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):

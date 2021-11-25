@@ -222,6 +222,18 @@ ndarray_type_registry = {
 
 import_dict = {'omp_lib' : 'omp' }
 
+c_imports = {n : Import(n, Module(n, (), ())) for n in 
+                ['stdlib',
+                 'math',
+                 'string',
+                 'ndarrays',
+                 'math',
+                 'complex',
+                 'stdint',
+                 'pyc_math_c',
+                 'stdio',
+                 'stdbool']}
+
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
@@ -253,12 +265,7 @@ class CCodePrinter(CodePrinter):
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
-        return [i.source if isinstance(i, Import) else i for i in self._additional_imports]
-
-    def get_additional_import_objects(self):
-        """return the additional imports collected in printing stage"""
-        return [i if isinstance(i, Import) else Import(i, Module(i, (),())) \
-                for i in self._additional_imports]
+        return [i.source for i in self._additional_imports]
 
     def _get_statement(self, codestring):
         return "%s;\n" % codestring
@@ -302,7 +309,7 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
 
-        self._additional_imports.add('string')
+        self._additional_imports.add(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
@@ -373,7 +380,7 @@ class CCodePrinter(CodePrinter):
         array_init = array_init.format(np_dtype, dummy_array_name,
                     shape_init, strides_init, len(var.shape), 'false')
         array_init += 'stack_array_init(&{})'.format(self._print(var))
-        self._additional_imports.add("ndarrays")
+        self._additional_imports.add(c_imports['ndarrays'])
         return buffer_array, array_init
 
     def fill_NumpyArange(self, expr, lhs):
@@ -489,10 +496,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
-            self._additional_imports.add("math")
+            self._additional_imports.add(c_imports['math'])
             func = "fabs"
         elif expr.arg.dtype is NativeComplex():
-            self._additional_imports.add("complex")
+            self._additional_imports.add(c_imports['complex'])
             func = "cabs"
         else:
             func = "labs"
@@ -501,7 +508,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonMin(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeFloat() and len(arg) == 2:
-            self._additional_imports.add("math")
+            self._additional_imports.add(c_imports['math'])
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         else:
@@ -511,7 +518,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonMax(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeFloat() and len(arg) == 2:
-            self._additional_imports.add("math")
+            self._additional_imports.add(c_imports['math'])
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         else:
@@ -524,7 +531,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
-        self._additional_imports.add('stdint')
+        self._additional_imports.add(c_imports['stdint'])
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
@@ -553,7 +560,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
-        self._additional_imports.add("complex")
+        self._additional_imports.add(c_imports['complex'])
         return '_Complex_I'
 
     def _print_PythonLen(self, expr):
@@ -576,7 +583,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, *self.get_additional_import_objects()]
+        imports = [*expr.module.imports, *self._additional_imports]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('#ifndef {name}_H\n'
@@ -599,7 +606,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(expr.name, Module(expr.name,(),())), *self.get_additional_import_objects()]
+        imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports]
         imports = ''.join(self._print(i) for i in imports)
 
         code = ('{imports}\n'
@@ -690,8 +697,8 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_PyccelMod(self, expr):
-        self._additional_imports.add("math")
-        self._additional_imports.add("pyc_math_c")
+        self._additional_imports.add(c_imports['math'])
+        self._additional_imports.add(c_imports['pyc_math_c'])
 
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
@@ -712,10 +719,10 @@ class CCodePrinter(CodePrinter):
         if expr.dtype is NativeComplex():
             b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
             e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
-            self._additional_imports.add("complex")
+            self._additional_imports.add(c_imports['complex'])
             return 'cpow({}, {})'.format(b, e)
 
-        self._additional_imports.add("math")
+        self._additional_imports.add(c_imports['math'])
         b = self._print(b if b.dtype is NativeFloat() else NumpyFloat(b))
         e = self._print(e if e.dtype is NativeFloat() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
@@ -789,7 +796,7 @@ class CCodePrinter(CodePrinter):
         return tmp_list
 
     def _print_PythonPrint(self, expr):
-        self._additional_imports.add("stdio")
+        self._additional_imports.add(c_imports['stdio'])
         end = '\n'
         sep = ' '
         code = ''
@@ -879,13 +886,13 @@ class CCodePrinter(CodePrinter):
         prec  = expr.precision
         rank  = expr.rank
         if isinstance(expr.dtype, NativeInteger):
-            self._additional_imports.add('stdint')
+            self._additional_imports.add(c_imports['stdint'])
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                self._additional_imports.add('ndarrays')
+                self._additional_imports.add(c_imports['ndarrays'])
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
@@ -938,7 +945,7 @@ class CCodePrinter(CodePrinter):
         return preface + declaration
 
     def _print_NativeBool(self, expr):
-        self._additional_imports.add('stdbool')
+        self._additional_imports.add(c_imports['stdbool'])
         return 'bool'
 
     def _print_NativeInteger(self, expr):
@@ -951,7 +958,7 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def _print_NativeComplex(self, expr):
-        self._additional_imports.add('complex')
+        self._additional_imports.add(c_imports['complex'])
         return 'complex'
     def _print_NativeString(self, expr):
         return 'string'
@@ -1120,7 +1127,7 @@ class CCodePrinter(CodePrinter):
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
-        self._additional_imports.add('ndarrays')
+        self._additional_imports.add(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
@@ -1162,7 +1169,7 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self._additional_imports.add('math')
+        self._additional_imports.add(c_imports['math'])
         type_name = type(expr).__name__
         try:
             func_name = numpy_ufunc_to_c_float[type_name]
@@ -1171,7 +1178,7 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype is NativeComplex():
-                self._additional_imports.add('complex')
+                self._additional_imports.add(c_imports['complex'])
                 try:
                     func_name = numpy_ufunc_to_c_complex[type_name]
                     args.append(self._print(arg))
@@ -1212,12 +1219,12 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math_c')
+            self._additional_imports.add(c_imports['pyc_math_c'])
         else:
             if expr.dtype is NativeComplex():
-                self._additional_imports.add('cmath')
+                self._additional_imports.add(c_imports['cmath'])
             else:
-                self._additional_imports.add('math')
+                self._additional_imports.add(c_imports['math'])
         args = []
         for arg in expr.args:
             if arg.dtype != NativeFloat() and not func_name.startswith("pyc"):
@@ -1234,7 +1241,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math isfinite function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self._additional_imports.add(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1246,7 +1253,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math isinf function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self._additional_imports.add(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1258,7 +1265,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math isnan function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self._additional_imports.add(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1270,7 +1277,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math trunc function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self._additional_imports.add(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1505,7 +1512,7 @@ class CCodePrinter(CodePrinter):
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelFloorDiv(self, expr):
-        self._additional_imports.add("math")
+        self._additional_imports.add(c_imports['math'])
         # the result type of the floor division is dependent on the arguments
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
@@ -1761,13 +1768,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_Constant(self, expr):
         if expr == math_constants['inf']:
-            self._additional_imports.add("math")
+            self._additional_imports.add(c_imports['math'])
             return 'HUGE_VAL'
         elif expr == math_constants['pi']:
-            self._additional_imports.add("math")
+            self._additional_imports.add(c_imports['math'])
             return 'M_PI'
         elif expr == math_constants['e']:
-            self._additional_imports.add("math")
+            self._additional_imports.add(c_imports['math'])
             return 'M_E'
         else:
             raise NotImplementedError("Constant not implemented")
@@ -1852,7 +1859,7 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        imports = [*expr.imports, *self.get_additional_import_objects()]
+        imports = [*expr.imports, *self._additional_imports]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('{imports}'
