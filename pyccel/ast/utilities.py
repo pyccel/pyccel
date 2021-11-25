@@ -94,6 +94,9 @@ else:
 recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
 
 def recognised_source(source_name):
+    """ Determine whether the imported source is recognised by pyccel.
+    If it is not recognised then it should be imported and translated
+    """
     source = str(source_name).split('.')
     if source[0] in python_builtin_libs and source[0] not in builtin_import_registery.keys():
         return True
@@ -102,6 +105,9 @@ def recognised_source(source_name):
 
 #==============================================================================
 def collect_relevant_imports(func_module, targets):
+    """
+    Extract all objects necessary to create imports from a module given a list of targets
+    """
     imports = []
     for target in targets:
         if isinstance(target, AsName):

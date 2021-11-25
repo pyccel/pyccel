@@ -563,9 +563,11 @@ class NumpyMatmul(PyccelInternalFunction):
 #==============================================================================
 
 class Shape(PyccelInternalFunction):
+    """ Represents a call to numpy.shape for code generation
+    """
     __slots__ = ()
     name = 'shape'
-    def __new__(self, arg):
+    def __new__(cls, arg):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
         else:

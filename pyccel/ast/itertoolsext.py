@@ -44,6 +44,8 @@ class Product(PyccelInternalFunction):
         return [elem[idx] for idx, elem in zip(indices, self.elements)]
 
     def to_range(self):
+        """ Get the range iterator(s) needed to access all elements of Product
+        """
         lengths = [getattr(e, '__len__',
                 getattr(e, 'length', PythonLen(e))) for e in self.elements]
         lengths = [l() if callable(l) else l for l in lengths]
