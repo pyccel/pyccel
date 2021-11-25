@@ -263,8 +263,7 @@ class AsName(Basic):
         if PyccelAstNode.stage != "syntactic":
             assert (isinstance(obj, Basic) and \
                     not isinstance(obj, PyccelSymbol)) or \
-                   (isinstance(obj, type) and \
-                   Basic in obj.__mro__)
+                   (isinstance(obj, type) and issubclass(obj, Basic))
         self._obj = obj
         self._target = target
         super().__init__()
@@ -2768,8 +2767,7 @@ class PyccelFunctionDef(FunctionDef):
     """
     def __init__(self, name, func_class):
         assert isinstance(func_class, type) and \
-                (PyccelInternalFunction in func_class.__mro__ or \
-                 PyccelAstNode in func_class.__mro__)
+                issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
         arguments = ()
         results = ()
         body = ()
