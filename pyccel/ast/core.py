@@ -241,9 +241,13 @@ class AsName(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import AsName
-    >>> AsName('old', 'new')
+    >>> from pyccel.ast.core import AsName, FunctionDef
+    >>> from pyccel.ast.numpyext import NumpyFull
+    >>> func = FunctionDef('old', (), (), ())
+    >>> AsName(func, 'new')
     old as new
+    >>> AsName(NumpyFull, 'fill_func')
+    full as fill_func
 
     Parameters
     ==========
