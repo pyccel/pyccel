@@ -1040,7 +1040,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        funcs_to_wrap = [f for f in expr.funcs if not f.is_inline]
+        funcs_to_wrap = expr.funcs
 
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
