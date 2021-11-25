@@ -248,27 +248,6 @@ class SemanticParser(BasicParser):
 
         self._ast = ast
 
-        # in the case of a header file, we need to convert all headers to
-        # FunctionDef etc ...
-
-        if self.is_header_file:
-            target_headers = self.namespace.headers.keys()
-            # ARA : issue-999
-            is_external = self.metavars.get('external', False)
-            for name in list(target_headers):
-                v = self.namespace.headers[name][0]
-                if isinstance(v, FunctionHeader) and not isinstance(v,
-                        MethodHeader):
-                    F = self.get_function(name)
-                    if F is None:
-                        interfaces = v.create_definition(is_external=is_external)
-                        for F in interfaces:
-                            self.insert_function(F)
-                    else:
-                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
-                                symbol=name, blocker=True,
-                                severity='fatal')
-
         self._semantic_done = True
 
         return ast
@@ -1706,10 +1685,34 @@ class SemanticParser(BasicParser):
         funcs = []
         interfaces = []
         for f in self.namespace.functions.values():
-            if isinstance(f, FunctionDef) and not f.is_header:
+            if isinstance(f, FunctionDef):
                 funcs.append(f)
             elif isinstance(f, Interface):
                 interfaces.append(f)
+
+        # in the case of a header file, we need to convert all headers to
+        # FunctionDef etc ...
+
+        if self.is_header_file:
+            # ARA : issue-999
+            is_external = self.metavars.get('external', False)
+            for name, headers in self.namespace.headers.items():
+                if all(isinstance(v, FunctionHeader) and \
+                        not isinstance(v, MethodHeader) for v in headers):
+                    F = self.get_function(name)
+                    if F is None:
+                        func_defs = [vi for v in headers for vi in v.create_definition(is_external=is_external)]
+                        if len(func_defs) == 1:
+                            F = func_defs[0]
+                            funcs.append(F)
+                        else:
+                            F = Interface(name, func_defs)
+                            interfaces.append(F)
+                        self.insert_function(F)
+                    else:
+                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
+                                symbol=name, blocker=True,
+                                severity='fatal')
 
         mod = Module(mod_name,
                     variables,
