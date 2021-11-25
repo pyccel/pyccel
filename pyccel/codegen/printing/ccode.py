@@ -222,7 +222,7 @@ ndarray_type_registry = {
 
 import_dict = {'omp_lib' : 'omp' }
 
-c_imports = {n : Import(n, Module(n, (), ())) for n in 
+c_imports = {n : Import(n, Module(n, (), ())) for n in
                 ['stdlib',
                  'math',
                  'string',
