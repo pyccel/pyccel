@@ -17,7 +17,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType)
 
-from .core           import process_shape, Module, Import, AsName, PyccelFunctionDef
+from .core           import process_shape, Module, Import, PyccelFunctionDef
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
