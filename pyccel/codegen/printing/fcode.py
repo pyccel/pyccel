@@ -22,6 +22,7 @@ from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.core import Return, Module
 from pyccel.ast.core import Import
@@ -313,7 +314,7 @@ class FCodePrinter(CodePrinter):
             self._constantImports.add(constant_name)
         return constant_name
 
-    def _handle_inline_func_call(self, expr, assign_lhs = None):
+    def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
         """ Print a function call to an inline function
         """
         func = expr.funcdef
@@ -322,7 +323,7 @@ class FCodePrinter(CodePrinter):
         # As the function definition is modified directly this function
         # cannot be called recursively with the same FunctionDef
         args = []
-        for a in expr.args:
+        for a in provided_args:
             if a.is_user_of(func):
                 code = PrecomputedCode(self._print(a))
                 args.append(code)
@@ -377,7 +378,14 @@ class FCodePrinter(CodePrinter):
             else:
                 res_return_vars = [assigns.get(v,v) for v in result.expr]
                 if len(res_return_vars) == 1:
-                    code = self._print(res_return_vars[0])
+                    return_val = res_return_vars[0]
+                    parent_assign = return_val.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+                    if parent_assign:
+                        return_val.remove_user_node(parent_assign[0], invalidate = False)
+                        code = self._print(return_val)
+                        return_val.set_current_user_node(parent_assign[0])
+                    else:
+                        code = self._print(return_val)
                 else:
                     code = self._print(tuple(res_return_vars))
 
@@ -1312,9 +1320,12 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Assign(self, expr):
+        rhs = expr.rhs
+
+        if isinstance(rhs, FunctionCall):
+            return self._print(rhs)
 
         lhs_code = self._print(expr.lhs)
-        rhs = expr.rhs
         # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, PyccelUnarySub) and rhs.args[0] == INF:
@@ -1355,27 +1366,6 @@ class FCodePrinter(CodePrinter):
 
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})\n'.format(rhs_code, code_args)
-
-        if isinstance(rhs, FunctionCall):
-
-            # in the case of a function that returns a list,
-            # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, PythonTuple, InhomogeneousTupleVariable)) \
-                    or (isinstance(expr.lhs, HomogeneousTupleVariable) and expr.lhs.is_stack_array):
-                func = rhs.funcdef
-                if func.is_inline:
-                    return self._handle_inline_func_call(rhs, expr.lhs)
-
-                rhs_code = func.name
-                args = rhs.args
-                code_args = [self._print(i) for i in args]
-                output_names = func.results
-                lhs_code = [self._print(name) + ' = ' + self._print(i) for (name,i) in zip(output_names,expr.lhs)]
-
-                call_args = ', '.join(code_args + lhs_code)
-
-                code = 'call {0}({1})\n'.format(rhs_code, call_args)
-                return self._get_statement(code)
 
         if (isinstance(expr.lhs, Variable) and
               expr.lhs.dtype == NativeSymbol()):
@@ -2707,46 +2697,77 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        if func.is_inline:
-            return self._handle_inline_func_call(expr)
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        args = [a for a in expr.args if not isinstance(a.value, Nil)]
-        results = func.results
+        args   = expr.args
+        func_results  = func.results
+        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
 
-        if len(results) == 1:
-            args = ['{}'.format(self._print(a)) for a in args]
+        if (not self._additional_code):
+            self._additional_code = ''
+        if parent_assign:
+            lhs = parent_assign[0].lhs
+            if len(func_results) == 1:
+                lhs_vars = {func_results[0]:lhs}
+            else:
+                lhs_vars = dict(zip(func_results,lhs))
+            args = []
+            for a in expr.args:
+                key = a.keyword
+                arg = a.value
+                if arg in lhs_vars.values():
+                    var = arg.clone(self.parser.get_new_name())
+                    self.add_vars_to_namespace(var)
+                    self._additional_code += self._print(Assign(var,arg))
+                    newarg = var
+                else:
+                    newarg = arg
+                args.append(FunctionCallArgument(newarg, key))
+            results = list(lhs_vars.values())
+            if len(func_results) == 1:
+                results_strs = []
+            else:
+                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                                for n,r in lhs_vars.items()]
 
-            args = ', '.join(args)
-            code = '{name}({args})'.format( name = f_name,
-                                            args = args)
-
-        elif len(results)>1:
-            if (not self._additional_code):
-                self._additional_code = ''
-            out_vars = []
-            for r in func.results:
-                var_name = self.parser.get_new_name()
-                var =  r.clone(name = var_name)
-
+        elif len(func_results)>1:
+            results = [r.clone(name = self.parser.get_new_name()) \
+                        for r in func_results]
+            for var in results:
                 self.add_vars_to_namespace(var)
 
-                out_vars.append(var)
-
-            self._additional_code = self._additional_code + self._print(Assign(tuple(out_vars),expr)) + '\n'
-            return self._print(tuple(out_vars))
-        else:
-            args    = ['{}'.format(self._print(a)) for a in args]
-            if not func.is_header:
-                results = ['{0}={0}'.format(self._print(a)) for a in results]
+            if len(func_results) == 1:
+                results_strs = []
             else:
-                results = ['{}'.format(self._print(a)) for a in results]
+                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                                for n,r in zip(func_results, results)]
 
-            newargs = ', '.join(args+results)
+        else:
+            results_strs = []
 
-            code = 'call {name}({args})\n'.format( name = f_name,
-                                                 args = newargs )
-        return code
+        if func.is_inline:
+            if len(func_results)>1:
+                code = self._handle_inline_func_call(expr, args, assign_lhs = results)
+            else:
+                code = self._handle_inline_func_call(expr, args)
+        else:
+            args_strs = ['{}'.format(self._print(a)) for a in args if not isinstance(a.value, Nil)]
+            args_code = ', '.join(args_strs+results_strs)
+            code = '{name}({args})'.format( name = f_name,
+                                            args = args_code )
+            if len(func_results) != 1:
+                code = 'call {}\n'.format(code)
+
+        if not parent_assign:
+            if len(func_results) <= 1:
+                return code
+            else:
+                self._additional_code += code
+                return self._print(tuple(results))
+        elif len(func_results) == 1:
+            return '{0} = {1}\n'.format(self._print(results[0]), code)
+        else:
+            return code
 
 #=======================================================================================
 
@@ -2761,7 +2782,9 @@ class FCodePrinter(CodePrinter):
             self.add_vars_to_namespace(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
+            user_node = expr.current_user_node
             expr = DottedFunctionCall(expr.funcdef, expr.args, var)
+            expr.set_current_user_node(user_node)
         return self._print_FunctionCall(expr)
 
 #=======================================================================================
