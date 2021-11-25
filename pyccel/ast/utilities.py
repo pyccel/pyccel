@@ -104,9 +104,22 @@ def recognised_source(source_name):
         return source_name in builtin_import_registery
 
 #==============================================================================
-def collect_relevant_imports(func_module, targets):
+def collect_relevant_imports(module, targets):
     """
     Extract all objects necessary to create imports from a module given a list of targets
+
+    Parameters
+    ----------
+    module  : Module
+              The module from which we want to collect the targets
+    targets : list of str/AsName
+              The names of the objects which we would like to import from the module
+
+    Results
+    -------
+    imports : list of tuples
+              A list where each element is a tuple containing the name which
+              will be used to refer to the object in the code, and the object
     """
     imports = []
     for target in targets:
@@ -117,8 +130,8 @@ def collect_relevant_imports(func_module, targets):
             import_name = target
             code_name = import_name
 
-        if import_name in func_module.keys():
-            imports.append((code_name, func_module[import_name]))
+        if import_name in module.keys():
+            imports.append((code_name, module[import_name]))
     return imports
 
 def builtin_import(expr):
