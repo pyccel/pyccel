@@ -226,8 +226,8 @@ class FCodePrinter(CodePrinter):
         return macro
 
     def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
-        return self._additional_imports
+        """return the additional modules collected for importing in printing stage"""
+        return [i.source for i in self._additional_imports]
 
     def set_current_class(self, name):
 
