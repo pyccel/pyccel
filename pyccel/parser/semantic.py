@@ -34,7 +34,7 @@ from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument
-from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import ConstructorCall, InlineFunctionDef
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
@@ -80,6 +80,7 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
@@ -88,7 +89,7 @@ from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct, OMP_Parallel_Construct)
+                            OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq
@@ -115,7 +116,6 @@ from pyccel.errors.errors import PyccelSemanticError
 from pyccel.errors.messages import *
 
 from pyccel.parser.base      import BasicParser, Scope
-from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
 import pyccel.decorators as def_decorators
@@ -172,6 +172,7 @@ class SemanticParser(BasicParser):
         self._ast = parser._ast
 
         self._filename  = parser._filename
+        self._mod_name  = ''
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = OrderedDict()
@@ -1019,7 +1020,7 @@ class SemanticParser(BasicParser):
                         i_arg.precision != f_arg.precision or
                         i_arg.rank != f_arg.rank)
 
-        for i_arg, f_arg in zip(input_args, func_args):
+        for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
             f_arg = f_arg.var
             # Ignore types which cannot be compared
@@ -1032,7 +1033,7 @@ class SemanticParser(BasicParser):
                 expected = self.get_type_description(f_arg, not elemental)
                 received = '{} ({})'.format(i_arg, self.get_type_description(i_arg, not elemental))
 
-                errors.report(INCOMPATIBLE_ARGUMENT.format(received, expected),
+                errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
                         symbol = expr,
                         severity='error')
 
@@ -1062,6 +1063,13 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
+
+            if func is NumpyWhere:
+                if len(args) != 3:
+                    errors.report(INVALID_WHERE_ARGUMENT,
+                        symbol=expr, blocker=True,
+                        severity='fatal')
+
             try:
                 new_expr = func(*args, **kwargs)
             except TypeError:
@@ -1618,6 +1626,7 @@ class SemanticParser(BasicParser):
         program_body      = []
         init_func_body    = []
         mod_name = expr.name
+        self._mod_name = mod_name
         prog_name = self.get_new_name('prog_'+expr.name)
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name)
@@ -3015,6 +3024,7 @@ class SemanticParser(BasicParser):
         is_pure         = expr.is_pure
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
+        is_inline       = expr.is_inline
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
         headers = []
 
@@ -3212,6 +3222,7 @@ class SemanticParser(BasicParser):
             # Determine local and global variables
             local_vars  = [v for v in self.get_variables(self.namespace)              if v not in arg_vars + results]
             global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in arg_vars + results + local_vars]
+            global_vars = [g for g in global_vars if body.is_user_of(g)]
 
             # get the imports
             imports   = self.namespace.imports['imports'].values()
@@ -3231,6 +3242,7 @@ class SemanticParser(BasicParser):
             if func_args:
                 func_interfaces.append(Interface('', func_args, is_argument = True))
 
+            namespace_imports = self._namespace.imports
             self.exit_function_scope()
 
             # ... computing inout arguments
@@ -3303,23 +3315,31 @@ class SemanticParser(BasicParser):
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
-            func = FunctionDef(name,
+            func_kwargs = {
+                    'local_vars':local_vars,
+                    'global_vars':global_vars,
+                    'cls_name':cls_name,
+                    'is_pure':is_pure,
+                    'is_elemental':is_elemental,
+                    'is_private':is_private,
+                    'imports':imports,
+                    'decorators':decorators,
+                    'is_recursive':is_recursive,
+                    'arguments_inout':args_inout,
+                    'functions': sub_funcs,
+                    'interfaces': func_interfaces,
+                    'doc_string': doc_string
+                    }
+            if is_inline:
+                func_kwargs['namespace_imports'] = namespace_imports
+                cls = InlineFunctionDef
+            else:
+                cls = FunctionDef
+            func = cls(name,
                     args,
                     results,
                     body,
-                    local_vars=local_vars,
-                    global_vars=global_vars,
-                    cls_name=cls_name,
-                    is_pure=is_pure,
-                    is_elemental=is_elemental,
-                    is_private=is_private,
-                    imports=imports,
-                    decorators=decorators,
-                    is_recursive=is_recursive,
-                    arguments_inout=args_inout,
-                    functions = sub_funcs,
-                    interfaces = func_interfaces,
-                    doc_string = doc_string)
+                    **func_kwargs)
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
 

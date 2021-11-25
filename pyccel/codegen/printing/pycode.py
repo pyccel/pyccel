@@ -263,16 +263,14 @@ class PythonCodePrinter(CodePrinter):
     def _print_Return(self, expr):
 
         if expr.stmt:
-            rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)]
-            lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)]
-            prelude  = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
+            assigns = {i.lhs: i.rhs for i in expr.stmt.body if isinstance(i, Assign)}
+            prelude = ''.join([self._print(i) for i in expr.stmt.body if not isinstance(i, Assign)])
         else:
-            rhs_list = []
-            lhs_list = []
-            prelude  = ''
-        expr_return_vars = [a for a in expr.expr if a not in lhs_list]
+            assigns = {}
+            prelude = ''
+        expr_return_vars = [assigns.get(a,a) for a in expr.expr]
 
-        return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars + rhs_list))
+        return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
     def _print_Program(self, expr):
         imports  = ''.join(self._print(i) for i in expr.imports)
@@ -382,6 +380,10 @@ class PythonCodePrinter(CodePrinter):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
         name = self._aliases.get(NumpyShape, expr.name)
+        if name == expr.name:
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = expr.name)
         return '{0}({1})[{2}]'.format(name, arg, index)
 
     def _print_Comment(self, expr):
@@ -593,11 +595,18 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
-        return "{0}({1}, {2}, {3})".format(
+        dtype = self._print(expr.dtype)
+        factor = 16 if dtype == 'complex' else 8
+        dtype += str(expr.precision*factor)
+
+        self.insert_new_import(source = 'numpy', target = dtype)
+        return "{0}({1}, {2}, num={3}, endpoint={4}, dtype={5})".format(
                 name,
                 self._print(expr.start),
                 self._print(expr.stop),
-                self._print(expr.size))
+                self._print(expr.num),
+                self._print(expr.endpoint),
+                dtype)
 
     def _print_NumpyMatmul(self, expr):
         name = self._aliases.get(type(expr), expr.name)

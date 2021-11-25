@@ -164,7 +164,8 @@ class Codegen(object):
 
 
         for i in namespace.functions.values():
-            if isinstance(i, FunctionDef) and not i.is_header:
+            # TODO [EB 18.11.2021] Remove is_inline check when inline importing is fixed
+            if isinstance(i, FunctionDef) and not (i.is_header or i.is_inline):
                 funcs.append(i)
             elif isinstance(i, Interface):
                 interfaces.append(i)

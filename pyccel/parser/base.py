@@ -435,7 +435,7 @@ class BasicParser(object):
             self.used_names.add(current_name)
             return current_name
 
-        if current_name is not None:
+        if current_name is None:
             new_name, self._dummy_counter = create_incremented_string(self.used_names, prefix = current_name, counter = self._dummy_counter)
         else:
             new_name,_ = create_incremented_string(self.used_names, prefix = current_name)
