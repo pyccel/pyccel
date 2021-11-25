@@ -835,10 +835,12 @@ def test_module_init_collisions( language ):
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),
