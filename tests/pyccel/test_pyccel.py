@@ -834,6 +834,10 @@ def test_module_init_collisions( language ):
 
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
 
+def test_function_aliasing():
+    pyccel_test("scripts/runtest_function_alias.py",
+            language = 'fortran')
+
 #------------------------------------------------------------------------------
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
