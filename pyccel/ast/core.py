@@ -267,6 +267,8 @@ class AsName(Basic):
 
     @property
     def name(self):
+        """ The original name of the object
+        """
         obj = self._obj
         if isinstance(obj, (str, PyccelSymbol, DottedName)):
             return obj
@@ -275,10 +277,14 @@ class AsName(Basic):
 
     @property
     def target(self):
+        """ The target name of the object
+        """
         return self._target
 
     @property
     def object(self):
+        """ The underlying object described by this AsName
+        """
         return self._obj
 
     def __repr__(self):
@@ -1342,6 +1348,8 @@ class Module(Basic):
         return result
 
     def keys(self):
+        """ Returns the names of all objects accessible directly in this module
+        """
         return self._internal_dictionary.keys()
 
 class ModuleHeader(Basic):
@@ -2742,6 +2750,18 @@ class InlineFunctionDef(FunctionDef):
         return self._global_funcs
 
 class PyccelFunctionDef(FunctionDef):
+    """ Class inheriting from FunctionDef which can store a pointer
+    to a class type defined by pyccel for treating internal functions.
+    This is useful for importing builtin functions
+
+    Parameters
+    ----------
+    name : str
+           The name of the function
+    func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
+                 The class which should be instantiated upon a FunctionCall
+                 to this FunctionDef object
+    """
     def __init__(self, name, func_class):
         assert isinstance(func_class, type) and \
                 (PyccelInternalFunction in func_class.__mro__ or \
@@ -3983,13 +4003,24 @@ class InProgram(PyccelAstNode):
 # ...
 
 class Decorator(Basic):
+    """ Class representing a function decorator.
+    For now this is just designed to handle the pyccel decorators
+
+    Parameters
+    ----------
+    name : str
+            The name of the decorator
+    """
     __slots__ = ('_name',)
 
     def __init__(self, name):
         self._name = name
+        super().__init__()
 
     @property
     def name(self):
+        """ Return the name of the decorator
+        """
         return self._name
 
 # ... TODO: improve and make it recursive
