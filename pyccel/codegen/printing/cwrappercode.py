@@ -866,10 +866,6 @@ class CWrapperCodePrinter(CCodePrinter):
             local_vars = [])
         return check_func_def
 
-    def _print_IndexedElement(self, expr):
-        assert(len(expr.indices)==1)
-        return '{}[{}]'.format(self._print(expr.base), self._print(expr.indices[0]))
-
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
 
@@ -1107,7 +1103,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = module_imports.copy()
-        imports += [Import(s, Module(s, (), ())) for s in self._additional_imports]
+        imports += self.get_additional_import_objects()
         imports  = ''.join(self._print(i) for i in imports)
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
