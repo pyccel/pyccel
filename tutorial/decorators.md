@@ -363,11 +363,6 @@ end module boo
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
 
-### Current Restrictions
-Currently `inline` functions cannot be imported. This should be fixed shortly.
-
-Due to this restriction, the function cannot be included in the python wrapper. It is therefore not currently exposed to the user in a non-translated file.
-
 ### Basic Example
 
 Here is a simple usage example:
