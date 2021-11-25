@@ -1505,8 +1505,6 @@ class Iterable(Basic):
         self._iterable = iterable
         self._indices  = None
 
-        from .itertoolsext   import Product
-
         if isinstance(iterable, PythonRange):
             self._num_indices_required = 0
         elif isinstance(iterable, PythonEnumerate):
