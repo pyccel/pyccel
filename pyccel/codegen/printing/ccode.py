@@ -250,7 +250,7 @@ class CCodePrinter(CodePrinter):
 
         super().__init__()
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib'])
+        self._additional_imports = set([c_imports['stdlib']])
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
