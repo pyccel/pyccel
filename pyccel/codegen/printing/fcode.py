@@ -539,7 +539,7 @@ class FCodePrinter(CodePrinter):
         if len(targets) == 0:
             return 'use {}\n'.format(source)
 
-        targets = [t for t in expr.target if not isinstance(t.object, InlineFunctionDef)]
+        targets = [t for t in targets if not isinstance(t.object, InlineFunctionDef)]
         if len(targets) == 0:
             return ''
 
