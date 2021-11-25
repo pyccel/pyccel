@@ -1192,7 +1192,7 @@ class Module(Basic):
             raise TypeError('interfaces must be an iterable')
         for i in interfaces:
             if not isinstance(i, Interface):
-                raise TypeError('Only a Inteface instance is allowed.')
+                raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
         if not isinstance(init_func, (NoneType, FunctionDef)):
