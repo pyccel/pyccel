@@ -784,7 +784,7 @@ class PythonCodePrinter(CodePrinter):
         if free_func:
             self._ignore_funcs.append(free_func.name)
 
-        body = ''.join((init_body, interfaces, funcs, classes))
+        body = ''.join((interfaces, funcs, classes, init_body))
 
         if expr.program:
             expr.program.remove_import(expr.name)
