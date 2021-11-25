@@ -552,10 +552,10 @@ class DottedName(Basic):
         return """.""".join(str(n) for n in self.name)
 
     def __eq__(self, other):
-        return str(self) == other
+        return str(self) == str(other)
 
     def __ne__(self, other):
-        return str(self) != other
+        return str(self) != str(other)
 
     def __hash__(self):
         return hash(str(self))
