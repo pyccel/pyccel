@@ -72,11 +72,6 @@ def get_filename_from_import(module,input_folder=''):
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
-
-    if is_valid_filename_pyh(filename_pyh):
-        return os.path.abspath(filename_pyh)
-    if is_valid_filename_py(filename_py):
-        return os.path.abspath(filename_py)
     folders = input_folder.split(""".""")
     for i in range(len(folders)):
         poss_dirname      = os.path.join( *folders[:i+1] )
