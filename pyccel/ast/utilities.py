@@ -91,7 +91,7 @@ if sys.version_info < (3, 10):
 else:
     python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
 
-recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
+recognised_libs = python_builtin_libs | builtin_import_registery.keys()
 
 def recognised_source(source_name):
     """ Determine whether the imported source is recognised by pyccel.
