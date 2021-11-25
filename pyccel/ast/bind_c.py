@@ -24,7 +24,7 @@ def sanitize_arguments(args):
     _args = []
     for a in args:
         if isinstance(a.var, (Variable, FunctionAddress)):
-            _args.append(a)
+            _args.append(a.var)
 
         else:
             raise NotImplementedError('TODO for {}'.format(type(a)))
@@ -177,7 +177,7 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
     body    = [stmt]
 
     # new function declaration
-    new_func = FunctionDef(func.name, list(args), func.results, body,
+    new_func = FunctionDef(func.name, func.arguments, func.results, body,
                        arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,

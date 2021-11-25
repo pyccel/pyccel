@@ -1572,26 +1572,43 @@ class FCodePrinter(CodePrinter):
     def _print_BindCFunctionDef(self, expr):
         name = self._print(expr.name)
         results   = list(expr.results)
-        arguments = list(expr.arguments)
-        if any(isinstance(a.var, FunctionAddress) for a in arguments):
+        arguments = [a.var for a in expr.arguments]
+        if any(isinstance(a, FunctionAddress) for a in arguments):
             # Functions with function addresses as arguments cannot be
             # exposed to python so there is no need to print their signature
             return ''
+
+        self.parser.create_new_function_scope(name, {})
+        self.parser.exit_function_scope()
+        self.parser.insert_function(expr)
+        self.set_current_function(name)
+
+        body = self._print(expr.body)
+
         arguments_inout = expr.arguments_inout
-        args_decs = OrderedDict()
+        decs = OrderedDict()
         for i,arg in enumerate(arguments):
             if arguments_inout[i]:
                 intent='inout'
             else:
                 intent='in'
 
-            arg = arg.var
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            args_decs[arg] = dec
+            decs[arg] = dec
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
-            args_decs[result] = dec
+            decs[result] = dec
+
+        decs.update(self._get_external_declarations())
+
+        for i in expr.local_vars:
+            dec = Declare(i.dtype, i)
+            decs[i] = dec
+        vars_to_print = self.parser.get_variables(self._namespace)
+        for v in vars_to_print:
+            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
+                decs[v] = Declare(v.dtype,v)
 
         if len(results) != 1:
             func_type = 'subroutine'
@@ -1601,14 +1618,16 @@ class FCodePrinter(CodePrinter):
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
             dec = Declare(result.dtype, result, static=True)
-            args_decs[result] = dec
+            decs[result] = dec
+
+        self.set_current_function(None)
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
-        prelude   = ''.join(self._print(i) for i in args_decs.values())
-        body_code = self._print(expr.body)
+        prelude   = ''.join(self._print(i) for i in decs.values())
+        body_code = body
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
         parts = [doc_string,
