@@ -2,17 +2,20 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" Module containing objects from the math module understood by pyccel
+"""
 
 import math
 
-from pyccel.ast.variable  import Constant
-from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeFloat,
                                   default_precision)
+from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.variable  import Constant
 
 __all__ = (
+    'math_mod',
     'math_constants',
-    'math_functions',
     # ---
     'MathFunctionBase',
     'MathFunctionFloat',
@@ -69,17 +72,6 @@ __all__ = (
     'MathFrexp', # TODO
     'MathModf',  # TODO
 )
-
-#==============================================================================
-# Constants
-#==============================================================================
-math_constants = {
-    'e'  : Constant('float', 'e'  , value=math.e  ),
-    'pi' : Constant('float', 'pi' , value=math.pi ),
-    'inf': Constant('float', 'inf', value=math.inf),
-    'nan': Constant('float', 'nan', value=math.nan),
-    'tau': Constant('float', 'tau', value=2.*math.pi),
-}
 
 #==============================================================================
 # Base classes
@@ -335,7 +327,20 @@ _base_classes = (
     'MathFunctionBool'
 )
 
-math_functions = {}
-for k, v in globals().copy().items():
-    if k.startswith('Math') and (k not in _base_classes):
-        math_functions[v.name] = v
+math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().items() \
+        if k.startswith('Math') and (k not in _base_classes)]
+
+#==============================================================================
+# Constants
+#==============================================================================
+math_constants = {
+    'e'  : Constant('float', 'e'  , value=math.e  ),
+    'pi' : Constant('float', 'pi' , value=math.pi ),
+    'inf': Constant('float', 'inf', value=math.inf),
+    'nan': Constant('float', 'nan', value=math.nan),
+    'tau': Constant('float', 'tau', value=2.*math.pi),
+}
+
+math_mod = Module('math',
+        variables = math_constants.values(),
+        funcs     = math_functions)

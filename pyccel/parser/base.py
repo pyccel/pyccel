@@ -25,7 +25,7 @@ from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
 from pyccel.ast.core import create_incremented_string, create_variable
 
-from pyccel.ast.utilities import recognised_libs
+from pyccel.ast.utilities import recognised_source
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
@@ -72,11 +72,6 @@ def get_filename_from_import(module,input_folder=''):
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
-
-    if is_valid_filename_pyh(filename_pyh):
-        return os.path.abspath(filename_pyh)
-    if is_valid_filename_py(filename_py):
-        return os.path.abspath(filename_py)
     folders = input_folder.split(""".""")
     for i in range(len(folders)):
         poss_dirname      = os.path.join( *folders[:i+1] )
@@ -517,11 +512,11 @@ class BasicParser(object):
                 name   = str(expr.source)
                 source = name
 
-            if source not in recognised_libs:
+            if not recognised_source(source):
                 container[name] = []
         else:
             source = str(expr.source)
-            if source not in recognised_libs:
+            if not recognised_source(source):
                 if not source in container.keys():
                     container[source] = []
                 container[source] += expr.target

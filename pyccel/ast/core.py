@@ -17,11 +17,10 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange, default_precision,
                         NativeTuple, str_dtype)
-from .internals      import Slice, PyccelSymbol
+from .internals      import Slice, PyccelSymbol, PyccelInternalFunction
 
 from .literals       import LiteralInteger, Nil, LiteralFalse
 from .literals       import NilArgument, LiteralTrue
-from .itertoolsext   import Product
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
@@ -242,32 +241,54 @@ class AsName(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import AsName
-    >>> AsName('old', 'new')
+    >>> from pyccel.ast.core import AsName, FunctionDef
+    >>> from pyccel.ast.numpyext import NumpyFull
+    >>> func = FunctionDef('old', (), (), ())
+    >>> AsName(func, 'new')
     old as new
+    >>> AsName(NumpyFull, 'fill_func')
+    full as fill_func
 
     Parameters
     ==========
-    name   : str
-             original name of variable or function
+    obj    : Basic or BasicType
+             The variable, function, or module being renamed
     target : str
              name of variable or function in this context
     """
-    __slots__ = ('_name', '_target')
+    __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
 
-    def __init__(self, name, target):
-        self._name = name
+    def __init__(self, obj, target):
+        if PyccelAstNode.stage != "syntactic":
+            assert (isinstance(obj, Basic) and \
+                    not isinstance(obj, PyccelSymbol)) or \
+                   (isinstance(obj, type) and issubclass(obj, Basic))
+        self._obj = obj
         self._target = target
         super().__init__()
 
     @property
     def name(self):
-        return self._name
+        """ The original name of the object
+        """
+        obj = self._obj
+        if isinstance(obj, (str, PyccelSymbol, DottedName)):
+            return obj
+        else:
+            return obj.name
 
     @property
     def target(self):
+        """ The target name of the object
+        """
         return self._target
+
+    @property
+    def object(self):
+        """ The underlying object described by this AsName
+        """
+        return self._obj
 
     def __repr__(self):
         return '{0} as {1}'.format(str(self.name), str(self.target))
@@ -278,8 +299,13 @@ class AsName(Basic):
     def __eq__(self, string):
         if isinstance(string, str):
             return string == self.target
+        elif isinstance(string, AsName):
+            return string.target == self.target
         else:
             return self is string
+
+    def __ne__(self, string):
+        return not self == string
 
     def __hash__(self):
         return hash(self.target)
@@ -1131,7 +1157,7 @@ class Module(Basic):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits')
+                 '_program','_variable_inits','_internal_dictionary')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1175,7 +1201,7 @@ class Module(Basic):
             raise TypeError('interfaces must be an iterable')
         for i in interfaces:
             if not isinstance(i, Interface):
-                raise TypeError('Only a Inteface instance is allowed.')
+                raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
         if not isinstance(init_func, (NoneType, FunctionDef)):
@@ -1205,6 +1231,13 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+
+        self._internal_dictionary = {v.name:v for v in variables}
+        self._internal_dictionary.update({f.name:f for f in funcs})
+        self._internal_dictionary.update({i.name:i for i in interfaces})
+        self._internal_dictionary.update({c.name:c for c in classes})
+        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
         if init_func:
             init_if = init_func.body.body[0]
@@ -1247,6 +1280,12 @@ class Module(Basic):
         """
         return self._program
 
+    @program.setter
+    def program(self, prog):
+        assert self._program is None
+        self._program = prog
+        self._program.set_current_user_node(self)
+
     @property
     def funcs(self):
         """ Any functions defined in the module
@@ -1288,6 +1327,33 @@ class Module(Basic):
         """ Function for changing the name of a module
         """
         self._name = new_name
+
+    def __getitem__(self, arg):
+        assert isinstance(arg, str)
+        args = arg.split('.')
+        result = self._internal_dictionary[args[0]]
+        for key in args[1:]:
+            result = result[key]
+        return result
+
+    def __contains__(self, arg):
+        assert isinstance(arg, (str, PyccelSymbol, DottedName))
+        args = str(arg).split('.')
+        current_pos = self._internal_dictionary
+        key = args[0]
+        result = key in self._internal_dictionary
+        i = 1
+        while i<len(args) and result:
+            current_pos = current_pos[key]
+            key = args[i]
+            result = key in current_pos
+            i += 1
+        return result
+
+    def keys(self):
+        """ Returns the names of all objects accessible directly in this module
+        """
+        return self._internal_dictionary.keys()
 
 class ModuleHeader(Basic):
 
@@ -1436,9 +1502,13 @@ class Iterable(Basic):
     Paramaters
     ----------
     iterable : acceptable_iterator_type
-                The iterator being wrapped
+               The iterator being wrapped
+               The type must be in acceptable_iterator_types or the class must
+               implement the following functions:
+               - n_indices
+               - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
@@ -1450,10 +1520,10 @@ class Iterable(Basic):
             self._num_indices_required = 0
         elif isinstance(iterable, PythonEnumerate):
             self._num_indices_required = int(iterable.start != 0)
-        elif isinstance(iterable, Product):
-            self._num_indices_required = len(iterable.elements)
         elif isinstance(iterable, self.acceptable_iterator_types):
             self._num_indices_required = 1
+        elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
+            self._num_indices_required = iterable.n_indices
         else:
             raise TypeError("Unknown iterator type {}".format(type(iterable)))
 
@@ -1520,12 +1590,8 @@ class Iterable(Basic):
         """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
-        elif isinstance(self._iterable, Product):
-            prod = self._iterable
-            lengths = [getattr(e, '__len__',
-                    getattr(e, 'length', PythonLen(e))) for e in prod.elements]
-            lengths = [l() if callable(l) else l for l in lengths]
-            return [PythonRange(l) for l in lengths]
+        elif hasattr(self._iterable, 'to_range'):
+            return self._iterable.to_range()
         else:
             length = getattr(self._iterable, '__len__',
                     getattr(self._iterable, 'length', PythonLen(self._iterable)))
@@ -2588,10 +2654,12 @@ class InlineFunctionDef(FunctionDef):
     namespace_imports : Scope
                         The objects in the scope which are available due to imports
     """
-    __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements')
+    __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
+            '_global_funcs')
 
-    def __init__(self, *args, namespace_imports = None, **kwargs):
+    def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
         self._namespace_imports = namespace_imports
+        self._global_funcs = global_funcs
         super().__init__(*args, **kwargs)
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
@@ -2678,6 +2746,33 @@ class InlineFunctionDef(FunctionDef):
         """
         self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
         self._if_block_replacements = None
+
+    @property
+    def global_funcs(self):
+        """ List of global functions used in the function """
+        return self._global_funcs
+
+class PyccelFunctionDef(FunctionDef):
+    """ Class inheriting from FunctionDef which can store a pointer
+    to a class type defined by pyccel for treating internal functions.
+    This is useful for importing builtin functions
+
+    Parameters
+    ----------
+    name : str
+           The name of the function
+    func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
+                 The class which should be instantiated upon a FunctionCall
+                 to this FunctionDef object
+    """
+    def __init__(self, name, func_class):
+        assert isinstance(func_class, type) and \
+                issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
+        arguments = ()
+        results = ()
+        body = ()
+        super().__init__(name, arguments, results, body)
+        self._cls_name = func_class
 
 class Interface(Basic):
 
@@ -3196,11 +3291,23 @@ class Import(Basic):
         self._source = source
         self._target = set()
         self._ignore_at_print = ignore_at_print
-        if isinstance(target, (str, DottedName, AsName)):
-            self._target = set([Import._format(target)])
-        elif iterable(target):
+        if target is None:
+            if PyccelAstNode.stage == "syntactic":
+                target = []
+            else:
+                raise KeyError("Missing argument 'target'")
+        elif not iterable(target):
+            target = [target]
+        if PyccelAstNode.stage == "syntactic":
             for i in target:
                 self._target.add(Import._format(i))
+        else:
+            for i in target:
+                assert isinstance(i, (AsName, Module))
+                if isinstance(i, Module):
+                    self._target.add(AsName(i,source))
+                else:
+                    self._target.add(i)
         super().__init__()
 
     @staticmethod
@@ -3210,9 +3317,7 @@ class Import(Basic):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName)):
-            return i
-        elif isinstance(i, PyccelSymbol):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
             return i
         else:
             raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
@@ -3898,6 +4003,27 @@ class InProgram(PyccelAstNode):
     __slots__ = ()
 
 # ...
+
+class Decorator(Basic):
+    """ Class representing a function decorator.
+    For now this is just designed to handle the pyccel decorators
+
+    Parameters
+    ----------
+    name : str
+            The name of the decorator
+    """
+    __slots__ = ('_name',)
+
+    def __init__(self, name):
+        self._name = name
+        super().__init__()
+
+    @property
+    def name(self):
+        """ Return the name of the decorator
+        """
+        return self._name
 
 # ... TODO: improve and make it recursive
 

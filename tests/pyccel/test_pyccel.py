@@ -839,11 +839,12 @@ def test_function_aliasing():
             language = 'fortran')
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
 #------------------------------------------------------------------------------
-@pytest.mark.xfail(reason="Imported inline functions cannot import objects required for their contents")
+@pytest.mark.xdist_incompatible
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),

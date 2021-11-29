@@ -19,12 +19,13 @@ import functools
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return
+from pyccel.ast.core import Return, Module
+from pyccel.ast.core import Import
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
@@ -206,7 +207,7 @@ class FCodePrinter(CodePrinter):
         self._current_class    = None
 
         self._additional_code = None
-        self._additional_imports = set([])
+        self._additional_imports = set()
 
         self.prefix_module = prefix_module
 
@@ -226,8 +227,8 @@ class FCodePrinter(CodePrinter):
         return macro
 
     def get_additional_imports(self):
-        """return the additional imports collected in printing stage"""
-        return self._additional_imports
+        """return the additional modules collected for importing in printing stage"""
+        return [i.source for i in self._additional_imports]
 
     def set_current_class(self, name):
 
@@ -392,6 +393,14 @@ class FCodePrinter(CodePrinter):
         func.reinstate_presence_checks()
         func.swap_out_args()
 
+        self._additional_imports.update(func.imports)
+        if func.global_vars or func.global_funcs:
+            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                for v in (*func.global_vars, *func.global_funcs)]))
+            for v in (*func.global_vars, *func.global_funcs):
+                self.parser.used_names.add(v.name)
+
         return code
 
     def _get_external_declarations(self):
@@ -458,7 +467,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-        imports += "\n".join('use ' + lib for lib in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports)
         imports += "\n" + self.print_constant_imports()
         parts = ['module {}\n'.format(name),
                  imports,
@@ -501,7 +510,7 @@ class FCodePrinter(CodePrinter):
 
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
-        imports += "\n".join('use ' + lib for lib in self._additional_imports)
+        imports += ''.join(self._print(i) for i in self._additional_imports)
         imports += "\n" + self.print_constant_imports()
         parts = ['program {}\n'.format(name),
                  imports,
@@ -533,27 +542,35 @@ class FCodePrinter(CodePrinter):
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
 
-        if len(expr.target) == 0:
+        targets = [t for t in expr.target if not isinstance(t.object, Module)]
+
+        if len(targets) == 0:
             return 'use {}\n'.format(source)
+
+        targets = [t for t in targets if not isinstance(t.object, InlineFunctionDef)]
+        if len(targets) == 0:
+            return ''
 
         prefix = 'use {}, only:'.format(source)
 
         code = ''
-        for i in expr.target:
-            if isinstance(i, AsName):
-                target = '{target} => {name}'.format(target=self._print(i.target),
-                                                     name=self._print(i.name))
+        for i in targets:
+            old_name = i.name
+            new_name = i.target
+            if old_name != new_name:
+                target = '{target} => {name}'.format(target=new_name,
+                                                     name=old_name)
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
-            elif isinstance(i, DottedName):
-                target = '_'.join(self._print(j) for j in i.name)
+            elif isinstance(new_name, DottedName):
+                target = '_'.join(self._print(j) for j in new_name.name)
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
-            elif isinstance(i, str):
+            elif isinstance(new_name, str):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=i)
+                                                  target=new_name)
 
             else:
                 raise TypeError('Expecting str, PyccelSymbol, DottedName or AsName, '
@@ -1545,26 +1562,43 @@ class FCodePrinter(CodePrinter):
     def _print_BindCFunctionDef(self, expr):
         name = self._print(expr.name)
         results   = list(expr.results)
-        arguments = list(expr.arguments)
-        if any(isinstance(a.var, FunctionAddress) for a in arguments):
+        arguments = [a.var for a in expr.arguments]
+        if any(isinstance(a, FunctionAddress) for a in arguments):
             # Functions with function addresses as arguments cannot be
             # exposed to python so there is no need to print their signature
             return ''
+
+        self.parser.create_new_function_scope(name, {})
+        self.parser.exit_function_scope()
+        self.parser.insert_function(expr)
+        self.set_current_function(name)
+
+        body = self._print(expr.body)
+
         arguments_inout = expr.arguments_inout
-        args_decs = OrderedDict()
+        decs = OrderedDict()
         for i,arg in enumerate(arguments):
             if arguments_inout[i]:
                 intent='inout'
             else:
                 intent='in'
 
-            arg = arg.var
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            args_decs[arg] = dec
+            decs[arg] = dec
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
-            args_decs[result] = dec
+            decs[result] = dec
+
+        decs.update(self._get_external_declarations())
+
+        for i in expr.local_vars:
+            dec = Declare(i.dtype, i)
+            decs[i] = dec
+        vars_to_print = self.parser.get_variables(self._namespace)
+        for v in vars_to_print:
+            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
+                decs[v] = Declare(v.dtype,v)
 
         if len(results) != 1:
             func_type = 'subroutine'
@@ -1574,14 +1608,16 @@ class FCodePrinter(CodePrinter):
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
             dec = Declare(result.dtype, result, static=True)
-            args_decs[result] = dec
+            decs[result] = dec
+
+        self.set_current_function(None)
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
-        prelude   = ''.join(self._print(i) for i in args_decs.values())
-        body_code = self._print(expr.body)
+        prelude   = ''.join(self._print(i) for i in decs.values())
+        body_code = body
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
         parts = [doc_string,
@@ -2455,7 +2491,7 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math_f90')
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
