@@ -25,7 +25,7 @@ from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
@@ -159,6 +159,39 @@ class SyntaxParser(BasicParser):
 
     def _treat_iterable(self, stmt):
         return (self._visit(i) for i in stmt)
+
+    def _treat_comment_line(self, line, stmt):
+        if line.startswith('#$'):
+            env = line[2:].lstrip()
+            if env.startswith('omp'):
+                expr = omp_parse(stmts=line)
+            elif env.startswith('acc'):
+                expr = acc_parse(stmts=line)
+            elif env.startswith('header'):
+                expr = hdr_parse(stmts=line)
+                if isinstance(expr, MetaVariable):
+
+                    # a metavar will not appear in the semantic stage.
+                    # but can be used to modify the ast
+
+                    self._metavars[str(expr.name)] = expr.value
+                    expr = EmptyNode()
+            else:
+
+                raise errors.report(PYCCEL_INVALID_HEADER,
+                              symbol = stmt,
+                              severity='error')
+
+        else:
+            txt = line[1:].lstrip()
+            expr = Comment(txt)
+
+        expr.set_fst(stmt)
+        return expr
+
+    #====================================================
+    #                 _visit functions
+    #====================================================
 
     def _visit(self, stmt):
         """Creates AST from FST."""
@@ -379,7 +412,7 @@ class SyntaxParser(BasicParser):
         for name in stmt.names:
             imp = self._visit(name)
             if isinstance(imp, AsName):
-                source = AsName(self._treat_import_source(imp.name, 0), imp.target)
+                source = AsName(self._treat_import_source(imp.object, 0), imp.target)
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
@@ -558,6 +591,7 @@ class SyntaxParser(BasicParser):
         is_pure      = False
         is_elemental = False
         is_private   = False
+        is_inline    = False
         imports      = []
         doc_string   = None
 
@@ -741,10 +775,18 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
+        if 'inline' in decorators.keys():
+            is_inline = True
+
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
+        returns = [i.expr for i in body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction, FunctionDef))]
         assert all(len(i) == len(returns[0]) for i in returns)
+        if is_inline and len(returns)>1:
+            errors.report("Inline functions cannot have multiple return statements",
+                    symbol = stmt,
+                    severity = 'error')
         results = []
         result_counter = 1
 
@@ -763,7 +805,8 @@ class SyntaxParser(BasicParser):
 
             results.append(result_name)
 
-        func = FunctionDef(
+        cls = InlineFunctionDef if is_inline else FunctionDef
+        func = cls(
                name,
                arguments,
                results,
@@ -1004,37 +1047,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_CommentMultiLine(self, stmt):
 
-        exprs = []
-        # if annotated comment
-        for com in stmt.s.split('\n'):
-            if com.startswith('#$'):
-                env = com[2:].lstrip()
-                if env.startswith('omp'):
-                    exprs.append(omp_parse(stmts=com))
-                elif env.startswith('acc'):
-                    exprs.append(acc_parse(stmts=com))
-                elif env.startswith('header'):
-                    expr = hdr_parse(stmts=com)
-                    if isinstance(expr, MetaVariable):
-
-                        # a metavar will not appear in the semantic stage.
-                        # but can be used to modify the ast
-
-                        self._metavars[str(expr.name)] = str(expr.value)
-                        expr = EmptyNode()
-                    else:
-                        expr.set_fst(stmt)
-
-                    exprs.append(expr)
-                else:
-                    errors.report(PYCCEL_INVALID_HEADER,
-                                  symbol = stmt,
-                                  severity='error')
-            else:
-
-                txt = com[1:].lstrip()
-                exprs.append(Comment(txt))
-            exprs[-1].set_fst(stmt)
+        exprs = [self._treat_comment_line(com, stmt) for com in stmt.s.split('\n')]
 
         if len(exprs) == 1:
             return exprs[0]
@@ -1042,35 +1055,7 @@ class SyntaxParser(BasicParser):
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):
-
-        # if annotated comment
-
-        if stmt.s.startswith('#$'):
-            env = stmt.s[2:].lstrip()
-            if env.startswith('omp'):
-                return omp_parse(stmts=stmt.s)
-            elif env.startswith('acc'):
-                return acc_parse(stmts=stmt.s)
-            elif env.startswith('header'):
-                expr = hdr_parse(stmts=stmt.s)
-                if isinstance(expr, MetaVariable):
-
-                    # a metavar will not appear in the semantic stage.
-                    # but can be used to modify the ast
-
-                    self._metavars[str(expr.name)] = str(expr.value)
-                    expr = EmptyNode()
-
-                return expr
-            else:
-
-                errors.report(PYCCEL_INVALID_HEADER,
-                              symbol = stmt,
-                              severity='error')
-
-        else:
-            txt = stmt.s[1:].lstrip()
-            return Comment(txt)
+        return self._treat_comment_line(stmt.s, stmt)
 
     def _visit_Break(self, stmt):
         return Break()

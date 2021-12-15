@@ -10,16 +10,6 @@ import modules.openmp as openmp
 from pyccel.epyccel import epyccel
 #==============================================================================
 
-@pytest.fixture(params=[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('c'      , marks = pytest.mark.c),
-    pytest.param("python", marks = [
-    pytest.mark.skip(reason="OpenMP Routines can't run in python, https://github.com/pyccel/pyccel/issues/855"),
-    pytest.mark.python])
-    ]
-)
-def language(request):
-    return request.param
 
 #==============================================================================
 
@@ -30,6 +20,14 @@ def test_directive_in_else(language):
     assert f1(32) == 496
     assert f1(40) == 780
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_module_1(language):
     f1 = epyccel(openmp.f1, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
@@ -49,6 +47,14 @@ def test_module_1(language):
     assert f1(5) == 5
     set_num_threads(4)
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_modules_10(language):
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(1)
@@ -57,10 +63,26 @@ def test_modules_10(language):
     assert f1() == 0
     set_num_threads(4)
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_module_2(language):
     f1 = epyccel(openmp.test_omp_number_of_procs, accelerators=['openmp'], language=language, verbose=True)
     assert f1() == multiprocessing.cpu_count()
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_module_3(language):
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
@@ -116,11 +138,27 @@ def test_modules_6(language):
     #When the env var is not set, the number of threads limit is MAX INT
     assert f1() >= 0
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_modules_9(language):
     f1 = epyccel(openmp.test_omp_get_active_level, accelerators=['openmp'], language=language, verbose=True)
 
     assert f1() == 1
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_modules_7(language):
     f1 = epyccel(openmp.test_omp_get_set_max_active_levels, accelerators=['openmp'], language=language, verbose=True)
 
@@ -128,11 +166,27 @@ def test_modules_7(language):
     #if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT) as result
     assert f1(max_active_level) == max_active_level
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_modules_8(language):
     f1 = epyccel(openmp.test_omp_get_level, accelerators=['openmp'], language=language, verbose=True)
 
     assert f1() == 2
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_modules_11(language):
     set_num_threads = epyccel(openmp.set_num_threads, accelerators=['openmp'], language=language, verbose=True)
     set_num_threads(4)
@@ -363,6 +417,14 @@ def test_omp_simd(language):
     f1 = epyccel(openmp.omp_simd, accelerators=['openmp'], language=language, verbose=True)
     assert openmp.omp_simd(1337) == f1(1337)
 
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="No parallelisation leads to different results"),
+        pytest.mark.python])
+    )
+)
 def test_omp_flush(language):
     f1 = epyccel(openmp.omp_flush, accelerators=['openmp'], language=language, verbose=True)
     assert 2 == f1()

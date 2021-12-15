@@ -53,6 +53,18 @@ def test_sum_var3(language):
 
     assert f(x) == f_epyc(x)
 
+def test_sum_var4(language):
+    def f(a : 'int[:]'):
+        s = 3
+        return sum(ai for ai in a),s
+
+    n = randint(1,50)
+    x = randint(100,size=n)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert f(x) == f_epyc(x)
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [

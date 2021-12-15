@@ -10,6 +10,7 @@
 #$ header metavar ignore_at_import=True
 #$ header metavar import_all=True
 #$ header metavar save=True
+#$ header metavar external=False
 #
 
 # ............................................................

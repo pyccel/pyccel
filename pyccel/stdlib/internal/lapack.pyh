@@ -4,21 +4,13 @@
 #$ header metavar ignore_at_import=True
 #$ header metavar libraries='lapack'
 #$ header metavar save=True
+#$ header metavar external=True
 
 # .......................................
 # change subroutines str dtype to char
 # .......................................
 #             
 # .......................................
-
-#$ header function dgetrf(int, int, double [:,:](order=F), int, int [:], int)
-#$ header function dgetri(int, double [:,:](order=F), int, int [:], double [:], int, int)
-
-#$ header function dgetrs(str, int, int, double [:,:](order=F), int, int [:], double [:,:](order=F), int, int)
-#$ header function dgecon(str, int, double [:,:](order=F), int, double, double, double [:], int [:], int)
-
-
-#...............................................................
 
 
 #$ header function sgesv(int, int, float [:,:](order=F), int, int [:], float [:,:](order=F), int, int)
@@ -292,11 +284,11 @@
 #............................................................
 #Lineaire equation
 #............................................................
-#$ header function sgetrf(int, int, float [:,:](order=F), int, float [:], int)
-#$ header function dgetrf(int, int, double [:,:](order=F), int, double [:], int)
+#$ header function sgetrf(int, int, float [:,:](order=F), int, int [:], int)
+#$ header function dgetrf(int, int, double [:,:](order=F), int, int [:], int)
 
-#$ header function sgetrs(str, int, int, float [:,:](order=F), int, float [:], float [:,:](order=F), int, int)
-#$ header function dgetrs(str, int, int, double [:,:](order=F), int, double [:], double [:,:](order=F), int, int)
+#$ header function sgetrs(str, int, int, float [:,:](order=F), int, int [:], float [:,:](order=F), int, int)
+#$ header function dgetrs(str, int, int, double [:,:](order=F), int, int [:], double [:,:](order=F), int, int)
 
 
 #$ header function sgecon(str, int, float [:,:](order=F), int, float, float, float [:], int [:], int)

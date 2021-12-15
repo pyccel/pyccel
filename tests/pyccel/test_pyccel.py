@@ -764,9 +764,8 @@ def test_type_print( language ):
         assert 'int16' in lang_out[0]
         assert 'int32' in lang_out[1]
         assert 'int64' in lang_out[2]
-        # TODO: Change with issue #932
-        assert 'real32' in lang_out[3]
-        assert 'real64' in lang_out[4]
+        assert 'float32' in lang_out[3]
+        assert 'float64' in lang_out[4]
 
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
@@ -834,3 +833,19 @@ def test_module_init_collisions( language ):
         lang_out = get_lang_output(test_prog, language)
 
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
+
+def test_function_aliasing():
+    pyccel_test("scripts/runtest_function_alias.py",
+            language = 'fortran')
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_inline(language):
+    pyccel_test("scripts/decorators_inline.py", language = language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_inline_import(language):
+    pyccel_test("scripts/runtest_decorators_inline.py",
+            dependencies = ("scripts/decorators_inline.py"),
+                language = language)

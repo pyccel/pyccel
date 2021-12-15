@@ -359,6 +359,86 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     end program prog_test_matmul
     ```
 
+## [linspace](https://numpy.org/doc/stable/reference/generated/numpy.linspace.html)
+
+-   Supported languages: C, fortran
+
+-   Supported parameters:
+
+    start, stop: array_like,
+
+    num: int, optional (Default is 50)
+
+    endpoint: bool, optional (Default is True)
+
+    dtype: dtype, optional
+
+-   python code:
+
+    ```python
+    from numpy import linspace
+
+    if __name__ == "__main__":
+        x = linspace(0, 10, 20, endpoint=True, dtype='float64')
+        print(x)
+    ```
+
+-   fortran equivalent:
+
+    ```fortran
+    program prog_prog_test
+
+      use test
+
+      use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T , f64 => &
+          C_DOUBLE
+      implicit none
+
+      real(f64), allocatable :: x(:)
+      integer(i64) :: linspace_index
+
+      allocate(x(0:19_i64))
+      x = [((0_i64 + linspace_index*Real((10_i64 - 0_i64), f64) / Real(( &
+          20_i64 - 1_i64), f64)), linspace_index = 0_i64,19_i64)]
+      x(19_i64) = 10.0_f64
+      print *, x
+      if (allocated(x)) then
+        deallocate(x)
+      end if
+
+    end program prog_prog_test
+    ```
+
+-   C equivalent:
+
+    ```C
+    #include "test.h"
+    #include "ndarrays.h"
+    #include <stdlib.h>
+    #include <stdint.h>
+    #include <stdio.h>
+    int main()
+    {
+        t_ndarray x;
+        int64_t i_0001;
+        int64_t i;
+        x = array_create(1, (int64_t[]){20}, nd_double);
+        for (i_0001 = 0; i_0001 < 20; i_0001 += 1)
+        {
+            GET_ELEMENT(x, nd_double, i_0001) = (0 + i_0001*(double)((10 - 0)) / (double)((20 - 1)));
+            GET_ELEMENT(x, nd_double, 19) = (double)10;
+        }
+        printf("%s", "[");
+        for (i = 0; i < 19; i += 1)
+        {
+            printf("%.12lf ", GET_ELEMENT(x, nd_double, i));
+        }
+        printf("%.12lf]\n", GET_ELEMENT(x, nd_double, 19));
+        free_array(x);
+        return 0;
+    }
+    ```
+
 ## Other functions
 
 -   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):

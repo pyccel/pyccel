@@ -218,8 +218,40 @@ class Errors(metaclass = Singleton):
                symbol = None,
                filename = None,
                verbose = False):
-        """Report message at the given line using the current error context.
+        """
+        Report message at the given line using the current error context.
         stage: 'syntax', 'semantic' or 'codegen'
+
+        Parameters
+        ----------
+        message : str
+                  The message to be displayed to the user
+        line    : int
+                  The line at which the error can be found
+                  Default: If a symbol is provided with a known line number
+                  then this line number is used
+        column  : int
+                  The column at which the error can be found
+                  Default: If a symbol is provided with a known column
+                  then this column is used
+        bounding_box : tuple
+                  An optional tuple containing the line and column
+        blocker : bool
+                  Indicates whether this error should prevent further execution
+                  of any code
+                  Default: False unless severity is 'fatal'
+        severity : str
+                  Indicates the seriousness of the error. Should be one of:
+                  'warning', 'error', 'fatal'
+                  Default: 'error'
+        symbol   : pyccel.ast.Basic
+                  The Basic object which caused the error to need to be raised.
+                  This object is printed in the error message
+        filename : str
+                  The file which was being treated when the error was found
+        verbose  : bool
+                  Flag to add verbosity
+                  Default: False
         """
         # filter internal errors
         if (self.mode == 'user') and (severity == 'internal'):
@@ -249,8 +281,8 @@ class Errors(metaclass = Singleton):
                 fst = symbol.fst
 
         if fst:
-            line   = fst.lineno
-            column = fst.col_offset
+            line   = getattr(fst, 'lineno', None)
+            column = getattr(fst, 'col_offset', None)
 
         traceback = None
         if self.mode == 'developer':

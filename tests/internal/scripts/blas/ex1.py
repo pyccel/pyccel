@@ -8,17 +8,17 @@
 # TODO add saxpy test
 
 from pyccel.stdlib.internal.blas import daxpy
-from numpy import zeros
+import numpy as np
 
 def test_daxpy():
-    n = 5
+    n = np.int32(5)
     sa = 1.0
 
-    incx = 1
-    sx = zeros(n)
+    incx = np.int32(1)
+    sx = np.zeros(n)
 
-    incy = 1
-    sy = zeros(n)
+    incy = np.int32(1)
+    sy = np.zeros(n)
 
     sx[0] = 1.0
     sx[1] = 3.0

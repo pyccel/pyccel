@@ -4,11 +4,11 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
-from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
+from pyccel.utilities.metaclasses import Singleton
 
 from .basic              import PyccelAstNode, Basic
-from .datatypes          import (NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeString, default_precision, NativeReal)
+from .datatypes          import (NativeInteger, NativeBool, NativeFloat,
+                                  NativeComplex, NativeString, default_precision, NativeFloat)
 
 __all__ = (
     'LiteralTrue',
@@ -19,6 +19,7 @@ __all__ = (
     'LiteralImaginaryUnit',
     'LiteralString',
     'Nil',
+    'NilArgument',
     'get_default_literal_value'
 )
 
@@ -65,7 +66,7 @@ class Literal(PyccelAstNode):
         return hash(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal, metaclass = ArgumentSingleton):
+class LiteralTrue(Literal):
     """Represents the python value True"""
     __slots__ = ()
     _dtype     = NativeBool()
@@ -78,7 +79,7 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal, metaclass = ArgumentSingleton):
+class LiteralFalse(Literal):
     """Represents the python value False"""
     __slots__ = ()
     _dtype     = NativeBool()
@@ -114,7 +115,7 @@ class LiteralInteger(Literal):
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
     __slots__ = ('_value',)
-    _dtype     = NativeReal()
+    _dtype     = NativeFloat()
 
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -240,11 +241,26 @@ class Nil(Basic, metaclass=Singleton):
 
 #------------------------------------------------------------------------------
 
+class NilArgument(Basic):
+    """Represents the python value None when passed as an argument
+    to an inline function. This class is necessary as to avoid
+    accidental substitution due to Singletons"""
+    __slots__ = ()
+    _attribute_nodes = ()
+
+    def __str__(self):
+        return 'Argument(None)'
+
+    def __bool__(self):
+        return False
+
+#------------------------------------------------------------------------------
+
 def get_default_literal_value(dtype):
     """Returns the default value of a native datatype."""
     if isinstance(dtype, NativeInteger):
         value = LiteralInteger(0)
-    elif isinstance(dtype, NativeReal):
+    elif isinstance(dtype, NativeFloat):
         value = LiteralFloat(0.0)
     elif isinstance(dtype, NativeComplex):
         value = LiteralComplex(0.0, 0.0)
@@ -284,7 +300,7 @@ def convert_to_literal(value, dtype = None, precision = None):
         if isinstance(value, int):
             dtype = NativeInteger()
         elif isinstance(value, float):
-            dtype = NativeReal()
+            dtype = NativeFloat()
         elif isinstance(value, complex):
             dtype = NativeComplex()
         elif isinstance(value, bool):
@@ -302,7 +318,7 @@ def convert_to_literal(value, dtype = None, precision = None):
             literal_val = LiteralInteger(value, precision)
         else:
             literal_val = PyccelUnarySub(LiteralInteger(-value, precision))
-    elif isinstance(dtype, NativeReal):
+    elif isinstance(dtype, NativeFloat):
         literal_val = LiteralFloat(value, precision=precision)
     elif isinstance(dtype, NativeComplex):
         literal_val = LiteralComplex(value.real, value.imag, precision)
