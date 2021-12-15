@@ -15,7 +15,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import Import
+from pyccel.ast.core import Import, Module
 from pyccel.ast.core import AugAssign
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
@@ -43,6 +43,12 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
 dtype_registry = {('pyobject'     , 0) : 'PyObject',
                   ('pyarrayobject', 0) : 'PyArrayObject'}
+
+module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
+            Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
+            Import('cwrapper', Module('cwrapper',(),()))]
+
+cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
 
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
@@ -862,15 +868,11 @@ class CWrapperCodePrinter(CCodePrinter):
             local_vars = [])
         return check_func_def
 
-    def _print_IndexedElement(self, expr):
-        assert(len(expr.indices)==1)
-        return '{}[{}]'.format(self._print(expr.base), self._print(expr.indices[0]))
-
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
 
     def _print_PyccelPyArrayObject(self, expr):
-        self._additional_imports.add("cwrapper_ndarrays")
+        self._additional_imports.add(cwrapper_ndarray_import)
         return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
@@ -1036,17 +1038,20 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
+        funcs_to_wrap = expr.funcs
+
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
+
         if self._target_language == 'fortran':
-            static_funcs = [self.get_static_function(f) for f in expr.funcs]
+            static_funcs = [self.get_static_function(f) for f in funcs_to_wrap]
         else:
-            static_funcs = expr.funcs
+            static_funcs = funcs_to_wrap
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
-        funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
+        funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
 
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
@@ -1099,8 +1104,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     init_call = init_call))
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports  = [Import('numpy_version'), Import('numpy/arrayobject'), Import('cwrapper')]
-        imports += [Import(s) for s in self._additional_imports]
+        imports  = module_imports.copy()
+        imports += self._additional_imports
         imports  = ''.join(self._print(i) for i in imports)
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'

@@ -205,6 +205,36 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
+class PrecomputedCode(Basic):
+    """
+    Internal helper class for storing code which must be defined by the printer
+    before it is needed chronologically (e.g. for inline functions as arguments
+    to the same function).
+    This class should be avoided if at all possible as it may break code which
+    searches through attribute nodes, where possible use Basic's methods,
+    e.g. substitute
+
+    Parameters
+    ----------
+    code : str
+           A string containing the precomputed code
+    """
+    __slots__ = ('_code',)
+    _attribute_nodes = ()
+
+    def __init__(self, code):
+        self._code = code
+        super().__init__()
+
+    def __str__(self):
+        return self._code
+
+    @property
+    def code(self):
+        """ The string containing the precomputed code
+        """
+        return self._code
+
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
