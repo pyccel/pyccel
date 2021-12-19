@@ -59,6 +59,7 @@ def matching_types(pyccel_result, python_result):
     if isinstance(pyccel_result, np.generic):
         return isinstance(pyccel_result.item(), type(python_result))
     else:
+        return isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
         #TODO: Remove when #735 is fixed
         return isinstance(python_result, np.generic) and isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
 
