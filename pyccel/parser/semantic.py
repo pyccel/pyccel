@@ -985,7 +985,7 @@ class SemanticParser(BasicParser):
         """
         descr = '{dtype}(kind={precision})'.format(
                         dtype     = var.dtype,
-                        precision = var.precision)
+                        precision = get_final_precision(var))
         if include_rank and var.rank>0:
             descr += '[{}]'.format(','.join(':'*var.rank))
         return descr
