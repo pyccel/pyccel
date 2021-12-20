@@ -67,10 +67,20 @@ double complex	PyComplex_to_Complex128(PyObject *object)
 
 PyObject	*Complex128_to_PyComplex(double complex *c)
 {
+	double		real_part;
+	double		imag_part;
+
+	real_part = creal(*c);
+	imag_part = cimag(*c);
+	return PyComplex_FromDoubles(real_part, imag_part);
+}
+//-----------------------------------------------------//
+PyObject	*Complex128_to_NumpyComplex(double complex *c)
+{
     return PyArray_Scalar(c, PyArray_DescrFromType(NPY_COMPLEX128), NULL);
 }
 //-----------------------------------------------------//
-PyObject	*Complex64_to_PyComplex(float complex *c)
+PyObject	*Complex64_to_NumpyComplex(float complex *c)
 {
     return PyArray_Scalar(c, PyArray_DescrFromType(NPY_COMPLEX64), NULL);
 }
@@ -82,30 +92,45 @@ PyObject	*Bool_to_PyBool(bool *b)
 //-----------------------------------------------------//
 PyObject	*Int64_to_PyLong(int64_t *i)
 {
-    return PyArray_Scalar(i, PyArray_DescrFromType(NPY_INT64), NULL);
+	return PyLong_FromLongLong((long long) *i);
 }
 //-----------------------------------------------------//
 PyObject	*Int32_to_PyLong(int32_t *i)
 {
+	return PyLong_FromLongLong((long long) *i);
+}
+//-----------------------------------------------------//
+PyObject	*Int64_to_NumpyLong(int64_t *i)
+{
+    return PyArray_Scalar(i, PyArray_DescrFromType(NPY_INT64), NULL);
+}
+//-----------------------------------------------------//
+PyObject	*Int32_to_NumpyLong(int32_t *i)
+{
     return PyArray_Scalar(i, PyArray_DescrFromType(NPY_INT32), NULL);
 }
 //-----------------------------------------------------//
-PyObject	*Int16_to_PyLong(int16_t *i)
+PyObject	*Int16_to_NumpyLong(int16_t *i)
 {
     return PyArray_Scalar(i, PyArray_DescrFromType(NPY_INT16), NULL);
 }
 //--------------------------------------------------------//
-PyObject	*Int8_to_PyLong(int8_t *i)
+PyObject	*Int8_to_NumpyLong(int8_t *i)
 {
     return PyArray_Scalar(i, PyArray_DescrFromType(NPY_INT8), NULL);
 }
 //--------------------------------------------------------//
 PyObject	*Double_to_PyDouble(double *d)
 {
+	return PyFloat_FromDouble(*d);
+}
+//--------------------------------------------------------//
+PyObject	*Double_to_NumpyDouble(double *d)
+{
     return PyArray_Scalar(d, PyArray_DescrFromType(NPY_DOUBLE), NULL);
 }
 //--------------------------------------------------------//
-PyObject	*Float_to_PyDouble(float *d)
+PyObject	*Float_to_NumpyDouble(float *d)
 {
     return PyArray_Scalar(d, PyArray_DescrFromType(NPY_FLOAT), NULL);
 }

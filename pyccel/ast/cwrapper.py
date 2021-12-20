@@ -13,7 +13,7 @@ from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
 
-from .datatypes import DataType
+from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
 
@@ -342,16 +342,16 @@ def C_to_Python(c_object):
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 c_to_py_registry = {
     (NativeBool(), 4)      : 'Bool_to_PyBool',
-    (NativeInteger(), -1)  : 'Int_to_PyLong',
-    (NativeInteger(), 1)   : 'Int8_to_PyLong',
-    (NativeInteger(), 2)   : 'Int16_to_PyLong',
-    (NativeInteger(), 4)   : 'Int32_to_PyLong',
-    (NativeInteger(), 8)   : 'Int64_to_PyLong',
-    (NativeFloat(), 4)     : 'Float_to_PyDouble',
-    (NativeFloat(), 8)     : 'Double_to_PyDouble',
+    (NativeInteger(), -1)  : 'Int'+str(default_precision['int']*8)+'_to_PyLong',
+    (NativeInteger(), 1)   : 'Int8_to_NumpyLong',
+    (NativeInteger(), 2)   : 'Int16_to_NumpyLong',
+    (NativeInteger(), 4)   : 'Int32_to_NumpyLong',
+    (NativeInteger(), 8)   : 'Int64_to_NumpyLong',
+    (NativeFloat(), 4)     : 'Float_to_NumpyDouble',
+    (NativeFloat(), 8)     : 'Double_to_NumpyDouble',
     (NativeFloat(), -1)    : 'Double_to_PyDouble',
-    (NativeComplex(), 4)   : 'Complex64_to_PyComplex',
-    (NativeComplex(), 8)   : 'Complex128_to_PyComplex',
+    (NativeComplex(), 4)   : 'Complex64_to_NumpyComplex',
+    (NativeComplex(), 8)   : 'Complex128_to_NumpyComplex',
     (NativeComplex(), -1)  : 'Complex128_to_PyComplex'}
 
 

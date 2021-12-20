@@ -99,17 +99,21 @@ static inline double	PyDouble_to_Double(PyObject *object)
  *     boolean : python object
  */
 PyObject	*Complex128_to_PyComplex(double complex *c);
-PyObject	*Complex64_to_PyComplex(float complex *c);
+PyObject	*Complex128_to_NumpyComplex(double complex *c);
+PyObject	*Complex64_to_NumpyComplex(float complex *c);
 
 PyObject	*Bool_to_PyBool(bool *b);
 
 PyObject	*Int64_to_PyLong(int64_t *i);
 PyObject	*Int32_to_PyLong(int32_t *i);
-PyObject	*Int16_to_PyLong(int16_t *i);
-PyObject	*Int8_to_PyLong(int8_t *i);
+PyObject	*Int64_to_NumpyLong(int64_t *i);
+PyObject	*Int32_to_NumpyLong(int32_t *i);
+PyObject	*Int16_to_NumpyLong(int16_t *i);
+PyObject	*Int8_to_NumpyLong(int8_t *i);
 
 PyObject	*Double_to_PyDouble(double *d);
-PyObject	*Float_to_PyDouble(float *d);
+PyObject	*Double_to_NumpyDouble(double *d);
+PyObject	*Float_to_NumpyDouble(float *d);
 
 /*
  * Functions : Type check functions
