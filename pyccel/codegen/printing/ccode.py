@@ -876,6 +876,8 @@ class CCodePrinter(CodePrinter):
                     severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
         try :
             return ndarray_type_registry[(dtype, prec)]
         except KeyError:
