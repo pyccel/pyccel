@@ -12,8 +12,13 @@ from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
 __all__ = (
+    'PrecomputedCode',
+    'PyccelArraySize',
     'PyccelInternalFunction',
-    'PyccelArraySize'
+    'PyccelSymbol',
+    'Slice',
+    'max_precision',
+    'get_final_precision'
 )
 
 
@@ -262,3 +267,31 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
+def max_precision(objs : list, dtype = None):
+    """
+    Returns the largest precision of an object in the list
+
+    Parameters
+    ----------
+    objs : list
+           A list of PyccelAstNodes
+    dtype : Dtype class
+            If this argument is provided then only the
+            precision of objects with this dtype are
+            considered
+    """
+    if all(o.precision == -1 for o in objs):
+        return -1
+    elif dtype:
+        def_prec = default_precision[dtype]
+        return max(def_prec if o.precision == -1 \
+                else o.precision for o in objs if o.dtype is dtype)
+    else:
+        return max(default_precision[o.dtype] if o.precision == -1 \
+                else o.precision for o in objs)
+
+def get_final_precision(obj):
+    """
+    Get the usable precision of an object
+    """
+    return default_precision[str(obj.dtype)] if obj.precision == -1 else obj.precision

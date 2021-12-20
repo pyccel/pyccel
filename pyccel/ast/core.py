@@ -15,7 +15,7 @@ from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeBool, NativeRange, default_precision,
+                        NativeBool, NativeRange,
                         NativeTuple, str_dtype)
 from .internals      import Slice, PyccelSymbol, PyccelInternalFunction
 
@@ -3995,7 +3995,7 @@ class InProgram(PyccelAstNode):
     __name__ == '__main__'
     """
     _dtype = NativeBool()
-    _precision = default_precision['bool']
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
