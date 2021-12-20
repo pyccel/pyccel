@@ -70,7 +70,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -1008,11 +1008,11 @@ class SemanticParser(BasicParser):
         if elemental:
             incompatible = lambda i_arg, f_arg: \
                         (i_arg.dtype is not f_arg.dtype or \
-                        i_arg.precision != f_arg.precision)
+                        get_final_precision(i_arg) != get_final_precision(f_arg))
         else:
             incompatible = lambda i_arg, f_arg: \
                         (i_arg.dtype is not f_arg.dtype or \
-                        i_arg.precision != f_arg.precision or
+                        get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
