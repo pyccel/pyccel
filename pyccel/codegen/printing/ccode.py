@@ -26,7 +26,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
-from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
+from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 
 from pyccel.ast.internals import Slice, PrecomputedCode
 
@@ -866,6 +866,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def find_in_dtype_registry(self, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:

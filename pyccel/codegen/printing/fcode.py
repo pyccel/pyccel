@@ -26,7 +26,7 @@ from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.core import Return, Module
 from pyccel.ast.core import Import
-from pyccel.ast.internals    import PyccelInternalFunction
+from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName, EmptyNode,
@@ -305,7 +305,8 @@ class FCodePrinter(CodePrinter):
         """
         Prints the kind(precision) of a literal value or its shortcut if possible
         """
-        constant_name = iso_c_binding[self._print(expr.dtype)][expr.precision]
+        precision = get_final_precision(expr)
+        constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.parser.used_names and constant_name != constant_shortcut:
             self._constantImports.add((constant_shortcut, constant_name))
