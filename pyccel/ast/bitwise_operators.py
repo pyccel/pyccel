@@ -180,7 +180,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         else:
             dtype = NativeInteger()
             self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
-        precision = max_precision(a, NativeInteger())
+        precision = max_precision(integers, NativeInteger())
         return dtype, precision
 
 #==============================================================================

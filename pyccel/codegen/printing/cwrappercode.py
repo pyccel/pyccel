@@ -9,19 +9,13 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
-from pyccel.ast.literals  import Nil
+from pyccel.ast.bind_c   import as_static_function
 
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import Import, Module
 from pyccel.ast.core import AugAssign
-
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
-
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
-from pyccel.ast.datatypes import datatype
 
 from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import PyArgKeywords
@@ -31,11 +25,19 @@ from pyccel.ast.cwrapper    import scalar_object_check, flags_registry
 from pyccel.ast.cwrapper    import PyccelPyArrayObject, PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
+from pyccel.ast.datatypes import datatype
+
+from pyccel.ast.internals import get_final_precision
+
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
+from pyccel.ast.literals  import Nil
+
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
-from pyccel.ast.bind_c   import as_static_function
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
 
 from pyccel.ast.variable  import VariableAddress, Variable
 
@@ -851,7 +853,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(elem[0])
             flags -= 4
-            error = ' or '.join(['{} bit {}'.format(v.precision * 8 , str_dtype(v.dtype)) if not isinstance(v.dtype, NativeBool)
+            error = ' or '.join(['{} bit {}'.format(v.precision * 8 if v.precision != -1 else 'native',
+                                                    str_dtype(v.dtype))
+                            if not isinstance(v.dtype, NativeBool)
                             else  str_dtype(v.dtype) for v in types])
             body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]

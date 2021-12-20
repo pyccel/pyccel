@@ -468,10 +468,13 @@ flags_registry = {
     (NativeInteger(), 8)       : 2,
     (NativeInteger(), 2)       : 3,
     (NativeInteger(), 1)       : 4,
-    (NativeFloat(), 8)         : 5,
-    (NativeFloat(), 4)         : 6,
-    (NativeComplex(), 4)       : 7,
-    (NativeComplex(), 8)       : 8,
-    (NativeBool(), 4)          : 9,
-    (NativeString(), 0)        : 10
+    (NativeInteger(), -1)      : 5,
+    (NativeFloat(), 8)         : 6,
+    (NativeFloat(), 4)         : 7,
+    (NativeFloat(), -1)        : 8,
+    (NativeComplex(), 4)       : 9,
+    (NativeComplex(), 8)       : 10,
+    (NativeComplex(), -1)      : 11,
+    (NativeBool(), 4)          : 12,
+    (NativeString(), 0)        : 13
 }

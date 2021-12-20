@@ -1089,7 +1089,7 @@ class IfTernaryOperator(PyccelOperator):
         else:
             dtype = value_true.dtype
 
-        precision = max_precision([value_true.precision, value_false.precision])
+        precision = max_precision([value_true, value_false])
         return dtype, precision
 
     @staticmethod
