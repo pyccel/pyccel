@@ -265,18 +265,22 @@ class NumpyComplex128(NumpyComplex):
 
 DtypePrecisionToCastFunction = {
     'Int' : {
+       -1 : PythonInt,
         1 : NumpyInt8,
         2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Float' : {
+       -1 : PythonFloat,
         4 : NumpyFloat32,
         8 : NumpyFloat64},
     'Complex' : {
+       -1 : PythonComplex,
         4 : NumpyComplex64,
         8 : NumpyComplex,
         16 : NumpyComplex128,},
     'Bool':  {
+       -1 : PythonBool,
         4 : NumpyBool}
 }
 
@@ -284,7 +288,7 @@ DtypePrecisionToCastFunction = {
 
 def process_dtype(dtype):
     if isinstance(dtype, PythonType):
-        return dtype.dtype, dtype.precision
+        return dtype.dtype, get_final_precision(dtype)
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
 
@@ -298,6 +302,8 @@ def process_dtype(dtype):
     else:
         dtype            = str(dtype).replace('\'', '').lower()
     dtype, precision = dtype_registry[dtype]
+    if precision == -1:
+        precision        = default_precision[dtype]
     dtype            = datatype(dtype)
 
     return dtype, precision
@@ -836,7 +842,7 @@ class NumpyFull(NumpyNewArray):
 
         # Cast fill_value to correct type
         if fill_value:
-            if fill_value.dtype != dtype or get_final_precision(fill_value) != precision:
+            if fill_value.dtype != dtype or fill_value != precision:
                 cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
                 fill_value = cast_func(fill_value)
         self._shape = shape
