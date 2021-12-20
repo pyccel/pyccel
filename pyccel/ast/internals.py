@@ -64,7 +64,7 @@ class PyccelArraySize(PyccelInternalFunction):
     name   = 'shape'
     _attribute_nodes = ('_arg', '_index')
     _dtype = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
