@@ -56,12 +56,7 @@ def matching_types(pyccel_result, python_result):
     """
     if type(pyccel_result) is type(python_result):
         return True
-    if isinstance(pyccel_result, np.generic):
-        return isinstance(pyccel_result.item(), type(python_result))
-    else:
-        return isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
-        #TODO: Remove when #735 is fixed
-        return isinstance(python_result, np.generic) and isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
+    return isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
 
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
