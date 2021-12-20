@@ -780,7 +780,7 @@ class CCodePrinter(CodePrinter):
                           ('bool',4)    : '%s',
                           ('string', 0) : '%s'}
         try:
-            arg_format = type_to_format[(self._print(var.dtype), var.precision)]
+            arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
         except KeyError:
             errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
         if var.dtype is NativeComplex():
