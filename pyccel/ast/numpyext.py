@@ -24,7 +24,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction, Slice, max_precision
+from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -481,7 +481,7 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
-                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
+                    (isinstance(arg.dtype, NativeInteger) and get_final_precision(self._arg) < default_precision['int']))\
                     else self._arg
         self._dtype = self._arg.dtype
         self._precision = self._arg.precision
@@ -836,7 +836,7 @@ class NumpyFull(NumpyNewArray):
 
         # Cast fill_value to correct type
         if fill_value:
-            if fill_value.dtype != dtype or fill_value.precision != precision:
+            if fill_value.dtype != dtype or get_final_precision(fill_value) != precision:
                 cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
                 fill_value = cast_func(fill_value)
         self._shape = shape
