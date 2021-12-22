@@ -44,7 +44,8 @@ import_target_swap = {
                    'max'        : 'amax',
                    'min'        : 'amin',
                    'T'          : 'transpose',
-                   'full_like'  : 'full'},
+                   'full_like'  : 'full',
+                   'absolute'   : 'abs'},
         'numpy.random' : {'random' : 'rand'}
         }
 import_source_swap = {
