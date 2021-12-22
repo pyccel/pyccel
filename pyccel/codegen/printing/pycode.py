@@ -312,7 +312,6 @@ class PythonCodePrinter(CodePrinter):
         cls       = type(expr)
         type_name = cls.__name__.lower()
         is_numpy  = type_name.startswith('numpy')
-        precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(cls, expr.name)
         if is_numpy and name == expr.name:
             self.insert_new_import(
@@ -324,7 +323,6 @@ class PythonCodePrinter(CodePrinter):
         cls       = type(expr)
         type_name = cls.__name__.lower()
         is_numpy  = type_name.startswith('numpy')
-        precision = str(expr.precision*8) if is_numpy else ''
         name = self._aliases.get(cls, expr.name)
         if is_numpy and name == expr.name:
             self.insert_new_import(
@@ -341,12 +339,14 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyComplex(self, expr):
         cls       = type(expr)
-        precision = str(expr.precision*16)
-        name = self._aliases.get(cls, expr.name)
-        if name == expr.name:
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(cls, expr.name))
+        if expr.precision != -1:
+            name = self._aliases.get(cls, expr.name)
+            if name == expr.name:
+                self.insert_new_import(
+                        source = 'numpy',
+                        target = AsName(cls, expr.name))
+        else:
+            name = 'complex'
         if expr.is_cast:
             return '{}({})'.format(name, self._print(expr.internal_var))
         else:
