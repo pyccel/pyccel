@@ -853,7 +853,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(elem[0])
             flags -= 4
-            error = ' or '.join(['{} bit {}'.format(v.precision * 8 if v.precision != -1 else 'native',
+            error = ' or '.join(['{} {}'.format(str(v.precision * 8)+' bit' if v.precision != -1 else 'native',
                                                     str_dtype(v.dtype))
                             if not isinstance(v.dtype, NativeBool)
                             else  str_dtype(v.dtype) for v in types])

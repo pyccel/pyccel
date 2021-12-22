@@ -424,12 +424,15 @@ def generate_datatype_error(variable):
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
     (NativeBool(), 4)      : 'PyIs_Bool',
+    (NativeInteger(), -1)  : 'PyIs_NativeInt',
     (NativeInteger(), 1)   : 'PyIs_Int8',
     (NativeInteger(), 2)   : 'PyIs_Int16',
     (NativeInteger(), 4)   : 'PyIs_Int32',
     (NativeInteger(), 8)   : 'PyIs_Int64',
+    (NativeFloat(), -1)    : 'PyIs_NativeFloat',
     (NativeFloat(), 4)     : 'PyIs_Float',
     (NativeFloat(), 8)     : 'PyIs_Double',
+    (NativeComplex(), -1)  : 'PyIs_NativeComplex',
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
@@ -450,7 +453,7 @@ def scalar_object_check(py_object, c_object):
     """
 
     try :
-        check_type = check_type_registry[c_object.dtype, get_final_precision(c_object)]
+        check_type = check_type_registry[c_object.dtype, c_object.precision]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
