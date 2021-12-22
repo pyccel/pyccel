@@ -308,9 +308,9 @@ def test_multiple_returns_f14(language):
 def test_decorator_f15(language):
     @types('bool', 'int8', 'int16', 'int32', 'int64')
     def f15(a,b,c,d,e):
-        import numpy as np
+        from numpy import int64
         if a:
-            return np.int64(b + c)
+            return int64(b + c)
         else:
             return d + e
 
