@@ -267,7 +267,7 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
-def max_precision(objs : list, dtype = None):
+def max_precision(objs : list, dtype = None, allow_native = True):
     """
     Returns the largest precision of an object in the list
 
@@ -280,7 +280,7 @@ def max_precision(objs : list, dtype = None):
             precision of objects with this dtype are
             considered
     """
-    if all(o.precision == -1 for o in objs):
+    if allow_native and all(o.precision == -1 for o in objs):
         return -1
     elif dtype:
         def_prec = default_precision[dtype]

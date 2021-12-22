@@ -626,10 +626,10 @@ class NumpyLinspace(NumpyNewArray):
 
             if complexs:
                 self._dtype     = NativeComplex()
-                self._precision = max_precision(complexs)
+                self._precision = max_precision(complexs, allow_native = False)
             elif floats:
                 self._dtype     = NativeFloat()
-                self._precision = max_precision(floats)
+                self._precision = max_precision(floats, allow_native = False)
             elif integers:
                 self._dtype     = NativeFloat()
                 self._precision = default_precision['float']
