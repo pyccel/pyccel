@@ -60,7 +60,7 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
-from pyccel.ast.datatypes import DataTypeFactory
+from pyccel.ast.datatypes import DataTypeFactory, default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex)
@@ -1306,6 +1306,7 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
                 precision = d_var.get('precision',None)
+                internal_precision = default_precision[str(dtype)] if precision == -1 else precision
 
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
@@ -1338,7 +1339,8 @@ class SemanticParser(BasicParser):
                     # to remove memory leaks
                     new_expressions.append(Deallocate(var))
 
-                elif not is_augassign and str(dtype) != str(var.dtype) or precision != var.precision:
+                elif not is_augassign and (str(dtype) != str(var.dtype) or \
+                        internal_precision != get_final_precision(var)):
                     # Get type name from cast function (handles precision implicitly)
                     try:
                         d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
@@ -1431,6 +1433,9 @@ class SemanticParser(BasicParser):
                             new_expressions.append(Allocate(var,
                                 shape=d_var['shape'], order=d_var['order'],
                                 status=status))
+
+                if var.precision == -1 and precision != var.precision:
+                    var.use_exact_precision()
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.

@@ -429,6 +429,10 @@ class Variable(PyccelAstNode):
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
 
+    def use_exact_precision(self):
+        if self._is_argument:
+            self._precision = get_final_precision(self)
+
     def clone(self, name, new_class = None, **kwargs):
         """
         Create a new Variable object of the chosen class
