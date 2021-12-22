@@ -17,10 +17,10 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, str_dtype)
-from .internals      import Slice, PyccelSymbol, PyccelInternalFunction
+from .internals import Slice, PyccelSymbol, PyccelInternalFunction, get_final_precision
 
-from .literals       import LiteralInteger, Nil, LiteralFalse
-from .literals       import NilArgument, LiteralTrue
+from .literals  import LiteralInteger, Nil, LiteralFalse
+from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
@@ -2833,10 +2833,24 @@ class Interface(Basic):
     def doc_string(self):
         return self._functions[0].doc_string
 
-    def point(self, args):
+    def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
+
+        if use_final_precision:
+            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
+                    (dtype1 in dtype2 or dtype2 in dtype1) \
+                    and (call_arg.rank == func_arg.rank) \
+                    and get_final_precision(call_arg) == \
+                        get_final_precision(func_arg)
+        else:
+            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
+                    (dtype1 in dtype2 or dtype2 in dtype1) \
+                    and (call_arg.rank == func_arg.rank) \
+                    and call_arg.precision == func_arg.precision
+
+
         j = -1
         for i in fs_args:
             j += 1
@@ -2846,12 +2860,7 @@ class Interface(Basic):
                 call_arg = y.value
                 dtype1 = str_dtype(call_arg.dtype)
                 dtype2 = str_dtype(func_arg.dtype)
-                found = found and (dtype1 in dtype2
-                                or dtype2 in dtype1) \
-                              and (call_arg.rank \
-                                == func_arg.rank) \
-                              and call_arg.precision \
-                                == func_arg.precision
+                found = found and type_match(dtype1, dtype2, call_arg, func_arg)
             if found:
                 break
 

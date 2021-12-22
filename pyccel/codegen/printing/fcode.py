@@ -1497,9 +1497,13 @@ class FCodePrinter(CodePrinter):
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
+        funcs = [f for f in expr.functions if f is \
+                expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
+                    for i,a in enumerate(f.arguments)], use_final_precision = True)]
+
         if expr.is_argument:
             funcs_sigs = []
-            for f in expr.functions:
+            for f in funcs:
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
                         self.print_constant_imports()+'\n',
@@ -1509,7 +1513,7 @@ class FCodePrinter(CodePrinter):
             interface = 'interface\n' + '\n'.join(a for a in funcs_sigs) + 'end interface\n'
             return interface
 
-        if expr.functions[0].cls_name:
+        if funcs[0].cls_name:
             for k, m in list(_default_methods.items()):
                 name = name.replace(k, m)
             cls_name = expr.cls_name
@@ -1521,7 +1525,7 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
         interface = 'interface ' + name +'\n'
-        for f in expr.functions:
+        for f in funcs:
             interface += 'module procedure ' + str(f.name)+'\n'
         interface += 'end interface\n'
         return interface
