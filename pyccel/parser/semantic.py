@@ -88,6 +88,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose
 from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -1304,6 +1305,7 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+                precision = d_var.get('precision',None)
 
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
@@ -1336,9 +1338,18 @@ class SemanticParser(BasicParser):
                     # to remove memory leaks
                     new_expressions.append(Deallocate(var))
 
-                elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
+                elif not is_augassign and str(dtype) != str(var.dtype) or precision != var.precision:
+                    # Get type name from cast function (handles precision implicitly)
+                    try:
+                        d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
+                    except KeyError:
+                        d1 = str(var.dtype)
+                    try:
+                        d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
+                    except KeyError:
+                        d2 = str(var.dtype)
 
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.dtype, dtype),
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
                         symbol='{}={}'.format(name, str(rhs)),
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=False)
