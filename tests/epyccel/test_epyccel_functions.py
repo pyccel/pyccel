@@ -375,7 +375,7 @@ def test_decorator_f22(language):
         b = a
         return b
     f = epyccel(f22, language=language)
-    assert f(complex(1, 2.2)) == f22(complex(1, 2.2))
+    assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

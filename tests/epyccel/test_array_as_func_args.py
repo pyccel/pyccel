@@ -65,9 +65,11 @@ def test_array_complex_1d_scalar_add(language):
 
     for t in float_types:
         size = randint(1, 30)
-        x1 = uniform(np.finfo(t).max / 4, size=size) + uniform(np.finfo(t).max / 4, size=size) * 1j
+        x1 = uniform(np.finfo(t).max / 4, size=size).astype(t) + \
+                uniform(np.finfo(t).max / 4, size=size).astype(t) * 1j
         x2 = np.copy(x1)
-        a = uniform(np.finfo(t).max / 4) + uniform(np.finfo(t).max / 4) * 1j
+        a = (uniform(np.finfo(t).max / 4,size=1).astype(t) + \
+                uniform(np.finfo(t).max / 4,size=1).astype(t) * 1j)[0]
 
         f1(x1, a, size)
         f2(x2, a, size)
