@@ -283,7 +283,7 @@ def max_precision(objs : list, dtype = None, allow_native = True):
     if allow_native and all(o.precision == -1 for o in objs):
         return -1
     elif dtype:
-        def_prec = default_precision[dtype]
+        def_prec = default_precision[str(dtype)]
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
