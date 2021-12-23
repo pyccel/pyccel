@@ -1239,7 +1239,11 @@ class NumpyMod(NumpyUfuncBinary):
             self._precision = max_precision(floats, allow_native = False)
         elif integers:
             self._dtype     = NativeInteger()
-            self._precision = max_precision(integers, allow_native = False)
+            integers  = [a for a in args if a.dtype is NativeInteger()]
+            if integers:
+                self._precision = max_precision(integers, NativeInteger(), allow_native = False)
+            else:
+                self._precision = 1
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
