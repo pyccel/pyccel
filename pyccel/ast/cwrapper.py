@@ -423,6 +423,7 @@ def generate_datatype_error(variable):
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
+    (NativeBool(), -1)     : 'PyIs_Bool',
     (NativeBool(), 4)      : 'PyIs_Bool',
     (NativeInteger(), -1)  : 'PyIs_NativeInt',
     (NativeInteger(), 1)   : 'PyIs_Int8',
