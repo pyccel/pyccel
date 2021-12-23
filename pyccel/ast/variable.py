@@ -430,7 +430,7 @@ class Variable(PyccelAstNode):
         print( '<<<')
 
     def use_exact_precision(self):
-        if self._is_argument:
+        if not self._is_argument:
             self._precision = get_final_precision(self)
 
     def clone(self, name, new_class = None, **kwargs):
