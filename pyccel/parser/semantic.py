@@ -1341,7 +1341,6 @@ class SemanticParser(BasicParser):
 
                 elif not is_augassign and (str(dtype) != str(var.dtype) or \
                         internal_precision != get_final_precision(var)):
-                elif not is_augassign and (str(dtype) != str(var.dtype) or precision != var.precision):
                     # Get type name from cast function (handles precision implicitly)
                     try:
                         d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
