@@ -430,6 +430,10 @@ class Variable(PyccelAstNode):
         print( '<<<')
 
     def use_exact_precision(self):
+        """
+        Change precision from default python precision to
+        equivalent numpy precision
+        """
         if not self._is_argument:
             self._precision = get_final_precision(self)
 
