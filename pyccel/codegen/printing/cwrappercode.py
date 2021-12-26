@@ -28,8 +28,6 @@ from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
 from pyccel.ast.datatypes import datatype
 
-from pyccel.ast.internals import get_final_precision
-
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
 
