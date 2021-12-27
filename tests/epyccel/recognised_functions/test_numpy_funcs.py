@@ -56,8 +56,9 @@ def matching_types(pyccel_result, python_result):
     """
     if type(pyccel_result) is type(python_result):
         return True
-    print(type(pyccel_result), type(python_result))
-    return isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
+    return (isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)) \
+            or \
+           (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))
 
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
