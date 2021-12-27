@@ -16,7 +16,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction, max_precision, get_final_precision
+from .internals import PyccelInternalFunction, max_precision
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .literals  import LiteralString
