@@ -1351,13 +1351,12 @@ class CCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         if self._additional_args :
             self._additional_args.pop()
-        imports = ''.join(self._print(i) for i in expr.imports)
+        self._additional_imports.update(expr.imports)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
         parts = [sep,
                  doc_string,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
-                 imports,
                  decs,
                  body,
                  '}\n',
