@@ -978,7 +978,7 @@ class FCodePrinter(CodePrinter):
             return '({})'.format(arg_code)
 
         prec = expr.precision
-        prec_code = self.print_kind(prec)
+        prec_code = self.print_kind(expr)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
     def _print_PythonComplex(self, expr):
