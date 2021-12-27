@@ -56,6 +56,7 @@ def matching_types(pyccel_result, python_result):
     """
     if type(pyccel_result) is type(python_result):
         return True
+    print(type(pyccel_result), type(python_result))
     return isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)
 
 #-------------------------------- Fabs function ------------------------------#
@@ -3779,7 +3780,7 @@ def test_numpy_mod_scalar(language):
     assert matching_types(f_bl_true_output, test_bool_true_output)
 
     def test_int(min_int, max_int, dtype):
-        integer = randint(min_int, max_int, dtype=dtype) or 1
+        integer = dtype(randint(min_int, max_int, dtype=dtype) or 1)
 
         f_integer_output = epyccel_func(integer)
         test_int_output  = get_mod(integer)
