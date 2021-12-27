@@ -817,10 +817,14 @@ class PythonType(Basic):
         """ Return a literal string representing the type that
         can be used in a print  statement
         """
-        prec = get_final_precision(self)
-        return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = prec*8 if prec else ''))
+        prec = self.precision
+        if prec == -1:
+            return LiteralString("<class '{dtype}'>".format(
+                dtype = str(self.dtype)))
+        else:
+            return LiteralString("<class '{dtype}{precision}'>".format(
+                dtype = str(self.dtype),
+                precision = prec*8 if prec else ''))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
