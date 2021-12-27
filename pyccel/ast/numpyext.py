@@ -764,7 +764,7 @@ class NumpyRandint(PyccelInternalFunction):
     __slots__ = ('_rand','_low','_high','_shape','_rank')
     name = 'randint'
     _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _order     = 'C'
     _attribute_nodes = ('_low', '_high')
 
