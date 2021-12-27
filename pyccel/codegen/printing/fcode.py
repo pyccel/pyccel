@@ -1497,9 +1497,12 @@ class FCodePrinter(CodePrinter):
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
-        funcs = [f for f in expr.functions if f is \
-                expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
-                    for i,a in enumerate(f.arguments)], use_final_precision = True)]
+        if all(isinstance(f, FunctionAddress) for f in expr.functions):
+            funcs = expr.functions
+        else:
+            funcs = [f for f in expr.functions if f is \
+                    expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
+                        for i,a in enumerate(f.arguments)], use_final_precision = True)]
 
         if expr.is_argument:
             funcs_sigs = []
