@@ -727,7 +727,11 @@ class CWrapperCodePrinter(CCodePrinter):
                       name       = tmp_var_name,
                       is_pointer = True)
 
-        vars_to_wrap = [v for v in expr.variables if not v.is_private]
+        if self._target_language == 'fortran':
+            vars_to_wrap = [v.clone(v.name.lower()) for v in expr.variables if not v.is_private]
+        else:
+            vars_to_wrap = [v for v in expr.variables if not v.is_private]
+
         body = [l for v in vars_to_wrap for l in self.insert_constant(mod_var_name, v, tmp_var)]
 
         decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
@@ -1122,8 +1126,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Module(self, expr):
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
-        vars_to_wrap_decs = [d for v,d in zip(expr.variables,expr.declarations) \
-                                if not v.is_private and v.rank == 0]
+        if self._target_language == 'fortran':
+            vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
+                                    for v in expr.variables if not v.is_private and v.rank == 0]
+        else:
+            vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
+                                    for v in expr.variables if not v.is_private and v.rank == 0]
 
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
