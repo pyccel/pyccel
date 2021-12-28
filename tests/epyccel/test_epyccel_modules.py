@@ -114,6 +114,6 @@ def test_module_6(language):
             'method', 'compl', 'tiny')
     for att in atts:
         mod_att = getattr(mod, att)
-        modnew_att = getattr(mod, att)
+        modnew_att = getattr(modnew, att)
         assert mod_att == modnew_att
         assert type(mod_att) is type(modnew_att)
