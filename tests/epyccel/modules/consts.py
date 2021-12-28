@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
 g = np.float64(9.81)
