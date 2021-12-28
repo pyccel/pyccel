@@ -41,6 +41,10 @@ from pyccel.ast.bind_c   import as_static_function
 
 from pyccel.ast.variable  import VariableAddress, Variable
 
+from pyccel.errors.errors   import Errors
+
+errors = Errors()
+
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
 dtype_registry = {('pyobject'     , 0) : 'PyObject',
@@ -687,6 +691,11 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var : Variable
                       A PyObject* variable to store temporaries
         """
+        if var.rank != 0:
+            errors.report("Arrays cannot currently be exposed to Python",
+                    severity='warning', symbol=var)
+            return []
+
         collect_value = Assign(VariableAddress(collect_var),
                                 FunctionCall(C_to_Python(var), [VariableAddress(var)]))
         add_expr = PyModule_AddObject(mod_name, var.name, collect_var)
@@ -702,8 +711,10 @@ class CWrapperCodePrinter(CCodePrinter):
                       name       = tmp_var_name,
                       is_pointer = True)
 
-        vars_to_wrap  = [v for v in expr.variables if not v.is_private]
+        vars_to_wrap = [v for v in expr.variables if not v.is_private]
         body = [l for v in vars_to_wrap for l in self.insert_constant(mod_var_name, v, tmp_var)]
+
+        decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
 
         init_call = ''
         if expr.init_func:
@@ -721,7 +732,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{body}'
                 '}}\n').format(name = exec_func_name,
                         mod_var = mod_var_name,
-                        decs = self._print(Declare(tmp_var.dtype, tmp_var)),
+                        decs = decs,
                         body = body_str)
 
     #--------------------------------------------------------------------
@@ -1097,7 +1108,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Module(self, expr):
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
-        vars_to_wrap_decs = [d for v,d in zip(expr.variables,expr.declarations) if not v.is_private]
+        vars_to_wrap_decs = [d for v,d in zip(expr.variables,expr.declarations) \
+                                if not v.is_private and v.rank == 0]
 
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
