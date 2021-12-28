@@ -1314,7 +1314,8 @@ class Module(Basic):
     def declarations(self):
         """ Returns the declarations of the variables
         """
-        return [Declare(i.dtype, i, value=v) for i,v in zip(self.variables, self._variable_inits)]
+        return [Declare(i.dtype, i, value=v, module_variable=True) \
+                for i,v in zip(self.variables, self._variable_inits)]
 
     @property
     def body(self):
@@ -3487,7 +3488,8 @@ class Declare(Basic):
     Declare(NativeFloat(), (x,), out)
     """
     __slots__ = ('_dtype','_variable','_intent','_value',
-                 '_static','_passed_from_dotted', '_external')
+                 '_static','_passed_from_dotted', '_external',
+                 '_module_variable')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
@@ -3499,6 +3501,7 @@ class Declare(Basic):
         static=False,
         passed_from_dotted = False,
         external = False,
+        module_variable = False
         ):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -3523,6 +3526,9 @@ class Declare(Basic):
         if not isinstance(external, bool):
             raise TypeError('Expecting a boolean for external attribute')
 
+        if not isinstance(module_variable, bool):
+            raise TypeError('Expecting a boolean for module_variable attribute')
+
         self._dtype = dtype
         self._variable = variable
         self._intent = intent
@@ -3530,6 +3536,7 @@ class Declare(Basic):
         self._static = static
         self._passed_from_dotted = passed_from_dotted
         self._external = external
+        self._module_variable = module_variable
         super().__init__()
 
     @property
@@ -3561,6 +3568,10 @@ class Declare(Basic):
     @property
     def external(self):
         return self._external
+
+    @property
+    def module_variable(self):
+        return self._module_variable
 
     def __repr__(self):
         return 'Declare({})'.format(repr(self.variable))
