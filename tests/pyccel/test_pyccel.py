@@ -771,6 +771,9 @@ def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
 
+    # Unset stdout so standard c stdout is used
+    os.environ["PYTHONUNBUFFERED"] = "1"
+
     output_dir   = get_abs_path('scripts/__pyccel__')
     output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
 
@@ -811,6 +814,9 @@ def test_module_init( language ):
 def test_module_init_collisions( language ):
     test_mod  = get_abs_path("scripts/module_init2.py")
     test_prog = get_abs_path("scripts/runtest_module_init2.py")
+
+    # Unset stdout so standard c stdout is used
+    os.environ["PYTHONUNBUFFERED"] = "1"
 
     output_dir   = get_abs_path('scripts/__pyccel__')
     output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
