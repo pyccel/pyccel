@@ -11,7 +11,7 @@ between python code and C code (using Python/C Api and cwrapper.c).
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic
+from .basic     import Basic, PyccelAstNode
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
@@ -20,7 +20,7 @@ from .datatypes import NativeBool, NativeString, NativeGeneric
 from .core      import FunctionDefArgument
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
-from .variable  import Variable
+from .variable  import Variable, VariableAddress
 
 
 errors = Errors()
@@ -256,6 +256,38 @@ class PyBuildValueNode(Basic):
     @property
     def args(self):
         return self._result_args
+
+#-------------------------------------------------------------------
+class PyModule_AddObject(PyccelAstNode):
+    __slots__ = ('_mod_name','_name','_var')
+    _attribute_nodes = ('_name','_var')
+    _dtype = NativeInteger()
+    _precision = 4
+    _rank = 0
+    _shape = ()
+
+    def __init__(self, mod_name, name, variable):
+        if not isinstance(name, str):
+            raise TypeError("Name must be a string")
+        if not isinstance(variable, Variable) or \
+                variable.dtype not in (PyccelPyObject(), PyccelPyArrayObject()):
+            raise TypeError("Variable must be a PyObject Variable")
+        self._mod_name = mod_name
+        self._name = name
+        self._var = VariableAddress(variable)
+        super().__init__()
+
+    @property
+    def mod_name(self):
+        return self._mod_name
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def variable(self):
+        return self._var
 
 #-------------------------------------------------------------------
 #                      Python.h Constants

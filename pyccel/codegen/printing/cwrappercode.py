@@ -15,10 +15,11 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import Import, Module
-from pyccel.ast.core import AugAssign
+from pyccel.ast.core import Import, Module, Declare
+from pyccel.ast.core import AugAssign, CodeBlock
 
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis, PyccelIsNot
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
 from pyccel.ast.datatypes import datatype
@@ -30,6 +31,7 @@ from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
 from pyccel.ast.cwrapper    import scalar_object_check, flags_registry
 from pyccel.ast.cwrapper    import PyccelPyArrayObject, PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
+from pyccel.ast.cwrapper    import PyModule_AddObject
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
@@ -672,6 +674,56 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return collect_var, cast_function
 
+    def insert_constant(self, mod_name, var, collect_var):
+        """
+        Insert a variable into the module
+
+        Parameters
+        ----------
+        mod_name    : str
+                      The name of the module variable
+        var         : Variable
+                      The module variable
+        collect_var : Variable
+                      A PyObject* variable to store temporaries
+        """
+        collect_value = Assign(VariableAddress(collect_var),
+                                FunctionCall(C_to_Python(var), [VariableAddress(var)]))
+        add_expr = PyModule_AddObject(mod_name, var.name, collect_var)
+        if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
+                        [FunctionCall(Py_DECREF, [collect_var]),
+                         Return([PyccelUnarySub(LiteralInteger(1))])]))
+        return [collect_value, if_expr]
+
+    def get_module_exec_function(self, expr, exec_func_name):
+        mod_var_name = self.get_new_name(self._global_names, 'm')
+        tmp_var_name = self.get_new_name(self._global_names, 'tmp')
+        tmp_var = Variable(dtype = PyccelPyObject(),
+                      name       = tmp_var_name,
+                      is_pointer = True)
+
+        vars_to_wrap  = [v for v in expr.variables if not v.is_private]
+        body = [l for v in vars_to_wrap for l in self.insert_constant(mod_var_name, v, tmp_var)]
+
+        init_call = ''
+        if expr.init_func:
+            used_names = set()
+            static_function = self.get_static_function(expr.init_func)
+            body.insert(0,FunctionCall(static_function,[],[]))
+
+        body.append(Return([LiteralInteger(0)]))
+
+        body_str = self._print(CodeBlock(body))
+
+        return ('static int {name}(PyObject* {mod_var})\n'
+                '{{\n'
+                '{decs}'
+                '{body}'
+                '}}\n').format(name = exec_func_name,
+                        mod_var = mod_var_name,
+                        decs = self._print(Declare(tmp_var.dtype, tmp_var)),
+                        body = body_str)
+
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
@@ -917,6 +969,12 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
+    def _print_PyModule_AddObject(self, expr):
+        return 'PyModule_AddObject({}, {}, {})'.format(
+                expr.mod_name,
+                self._print(expr.name),
+                self._print(expr.variable))
+
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments]
@@ -1038,21 +1096,23 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        funcs_to_wrap = expr.funcs
+        funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
+        vars_to_wrap_decs = [d for v,d in zip(expr.variables,expr.declarations) if not v.is_private]
 
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
 
         if self._target_language == 'fortran':
-            static_funcs = [self.get_static_function(f) for f in funcs_to_wrap]
+            static_funcs = [self.get_static_function(f) for f in expr.funcs]
         else:
-            static_funcs = funcs_to_wrap
+            static_funcs = expr.funcs
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
 
+        decs = ''.join('extern '+self._print(d) for d in vars_to_wrap_decs)
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n'.join(CCodePrinter._print_FunctionDef(self, f)
@@ -1069,6 +1129,14 @@ class CWrapperCodePrinter(CCodePrinter):
                                                         if f.doc_string else '""')
                                      for f in funcs if f is not expr.init_func)
 
+        slots_name = self.get_new_name(self._global_names, '{}_slots'.format(expr.name))
+        exec_func_name = self.get_new_name(self._global_names, 'exec_func')
+        slots_def = ('static PyModuleDef_Slot {name}[] = {{\n'
+                     '{{Py_mod_exec, {exec_func}}},\n'
+                     '{{0, NULL}},\n'
+                     '}};\n').format(name = slots_name,
+                             exec_func = exec_func_name)
+
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                         '{method_def_func}'
@@ -1083,25 +1151,21 @@ class CWrapperCodePrinter(CCodePrinter):
                 '/* module documentation, may be NULL */\n'
                 'NULL,\n' #TODO: Add documentation
                 '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
-                '-1,\n'
-                '{method_def_name}\n'
-                '}};\n'.format(module_def_name = module_def_name, mod_name = expr.name, method_def_name = method_def_name))
+                '0,\n'
+                '{method_def_name},\n'
+                '{slots_name}\n'
+                '}};\n'.format(module_def_name = module_def_name,
+                    mod_name = expr.name,
+                    method_def_name = method_def_name,
+                    slots_name = slots_name))
 
-        init_call = ''
-        if expr.init_func:
-            used_names = set()
-            static_function = self.get_static_function(expr.init_func)
-            init_call = self._print(FunctionCall(static_function,[],[]))
+        exec_func = self.get_module_exec_function(expr, exec_func_name)
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
-                'PyObject *m;\n'
-                '{init_call}'
                 'import_array();\n'
-                'm = PyModule_Create(&{module_def_name});\n'
-                'if (m == NULL) return NULL;\n'
-                'return m;\n}}\n'.format(mod_name=expr.name,
-                    module_def_name = module_def_name,
-                    init_call = init_call))
+                'return PyModuleDef_Init(&{module_def_name});\n'
+                '}}\n'.format(mod_name=expr.name,
+                    module_def_name = module_def_name))
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = module_imports.copy()
@@ -1110,22 +1174,30 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
                 '{imports}\n'
+                '{variable_declarations}\n'
                 '{function_signatures}\n'
                 '{sep}\n'
                 '{cast_functions}\n'
                 '{sep}\n'
                 '{function_defs}\n'
+                '{exec_func}\n'
+                '{sep}\n'
                 '{method_def}\n'
+                '{sep}\n'
+                '{slots_def}\n'
                 '{sep}\n'
                 '{module_def}\n'
                 '{sep}\n'
                 '{init_func}'.format(
                     imports = imports,
+                    variable_declarations = decs,
                     function_signatures = function_signatures,
                     sep = sep,
                     cast_functions = cast_functions,
                     function_defs = function_defs,
+                    exec_func = exec_func,
                     method_def = method_def,
+                    slots_def  = slots_def,
                     module_def = module_def,
                     init_func = init_func))
 
