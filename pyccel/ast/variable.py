@@ -418,7 +418,7 @@ class Variable(PyccelAstNode):
         print('>>> Variable')
         print( '  name           = {}'.format(self.name))
         print( '  dtype          = {}'.format(self.dtype))
-        print( '  precision      = {}'.format(get_final_precision(self.precision)))
+        print( '  precision      = {}'.format(get_final_precision(self)))
         print( '  rank           = {}'.format(self.rank))
         print( '  order          = {}'.format(self.order))
         print( '  allocatable    = {}'.format(self.allocatable))
