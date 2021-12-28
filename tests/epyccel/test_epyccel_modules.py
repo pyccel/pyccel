@@ -104,3 +104,16 @@ def test_module_5(language):
     max_pyt = mod.get_sum2()
     max_pyc = modnew.get_sum2()
     assert np.isclose( max_pyt, max_pyc, rtol=1e-14, atol=1e-14 )
+
+def test_module_6(language):
+    import modules.consts as mod
+
+    modnew = epyccel(mod, language=language)
+
+    atts = ('g', 'R0', 'rMin', 'rMax', 'skip_centre',
+            'method', 'compl', 'tiny')
+    for att in atts:
+        mod_att = getattr(mod, att)
+        modnew_att = getattr(mod, att)
+        assert mod_att == modnew_att
+        assert type(mod_att) is type(modnew_att)
