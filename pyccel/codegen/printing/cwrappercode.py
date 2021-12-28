@@ -705,8 +705,24 @@ class CWrapperCodePrinter(CCodePrinter):
         return [collect_value, if_expr]
 
     def get_module_exec_function(self, expr, exec_func_name):
-        mod_var_name = self.get_new_name(self._global_names, 'm')
-        tmp_var_name = self.get_new_name(self._global_names, 'tmp')
+        """
+        Create the function which executes any statements which happen
+        when the module is loaded
+
+        Parameters
+        ----------
+        expr           : Module
+                         The module being wrapped
+        exec_func_name : str
+                         The name of the function
+
+        Result
+        ------
+        str
+        """
+        used_names = set([exec_func_name] + [v.name for v in expr.variables])
+        mod_var_name = self.get_new_name(used_names, 'm')
+        tmp_var_name = self.get_new_name(used_names, 'tmp')
         tmp_var = Variable(dtype = PyccelPyObject(),
                       name       = tmp_var_name,
                       is_pointer = True)
@@ -716,9 +732,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
 
-        init_call = ''
         if expr.init_func:
-            used_names = set()
             static_function = self.get_static_function(expr.init_func)
             body.insert(0,FunctionCall(static_function,[],[]))
 
