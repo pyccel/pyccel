@@ -138,7 +138,7 @@ PyObject	*Float_to_NumpyDouble(float *d);
 //--------------------------------------------------------//
 static inline bool    PyIs_NativeInt(PyObject *o)
 {
-    return PyLong_Check(o) && !PyBool_Check(o);
+    return PyLong_CheckExact(o);
 }
 //--------------------------------------------------------//
 static inline bool    PyIs_Int8(PyObject *o)
