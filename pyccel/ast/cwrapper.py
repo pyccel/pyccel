@@ -259,6 +259,19 @@ class PyBuildValueNode(Basic):
 
 #-------------------------------------------------------------------
 class PyModule_AddObject(PyccelAstNode):
+    """
+    Represents a call to the function from Python.h which adds a
+    PythonObject to a module
+
+    Parameters
+    ---------
+    mod_name : str
+                The name of the variable containing the module
+    name : str
+                The name of the variable being added to the module
+    variable : Variable
+                The variable containing the PythonObject
+    """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
     _dtype = NativeInteger()
@@ -279,14 +292,20 @@ class PyModule_AddObject(PyccelAstNode):
 
     @property
     def mod_name(self):
+        """ The name of the variable containing the module
+        """
         return self._mod_name
 
     @property
     def name(self):
+        """ The name of the variable being added to the module
+        """
         return self._name
 
     @property
     def variable(self):
+        """ The variable containing the PythonObject
+        """
         return self._var
 
 #-------------------------------------------------------------------
