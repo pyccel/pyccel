@@ -15,6 +15,7 @@ from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
+from pyccel.ast.numpyext   import NumpyArray
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities  import builtin_import_registery as pyccel_builtin_import_registery
@@ -652,6 +653,15 @@ class PythonCodePrinter(CodePrinter):
         name = self._aliases.get(type(expr),expr.name)
         args = ', '.join(self._print(a) for a in expr.args)
         return "{}({})".format(name, args)
+
+    def _print_NumpyArray(self, expr):
+        name = self._aliases.get(type(expr),'array')
+        if name == 'array':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyArray, 'array'))
+        arg = self._print(expr.arg)
+        return "{}({})".format(name, arg)
 
     def _print_NumpyRandint(self, expr):
         name = self._aliases.get(type(expr), expr.name)
