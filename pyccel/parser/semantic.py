@@ -82,7 +82,7 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
-from pyccel.ast.numpyext import NumpyWhere
+from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
@@ -1908,12 +1908,12 @@ class SemanticParser(BasicParser):
                 ls = []
                 for j,a in enumerate(new_args):
                     if hasattr(a,'__getitem__'):
-                        ls.append(args[j][i])
+                        ls.append(a[i])
                     else:
-                        ls.append(args[j])
+                        ls.append(a)
                 new_expr_args.append(ls)
 
-            return tuple(var[a] for a in new_expr_args)
+            return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
         else:
             args = new_args
             len_args = len(args)
