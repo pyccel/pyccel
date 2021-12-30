@@ -2370,12 +2370,12 @@ class FCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' .and. '.join(a for a in args)
+        args = [a if a.dtype is NativeBool() else PythonBool(a) for a in expr.args]
+        return ' .and. '.join(self._print(a) for a in args)
 
     def _print_PyccelOr(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' .or. '.join(a for a in args)
+        args = [a if a.dtype is NativeBool() else PythonBool(a) for a in expr.args]
+        return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])
