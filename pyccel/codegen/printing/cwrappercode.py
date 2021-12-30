@@ -678,7 +678,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return collect_var, cast_function
 
-    def insert_constant(self, mod_name, var, collect_var):
+    def insert_constant(self, mod_name, var_name, var, collect_var):
         """
         Insert a variable into the module
 
@@ -698,7 +698,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         collect_value = Assign(VariableAddress(collect_var),
                                 FunctionCall(C_to_Python(var), [VariableAddress(var)]))
-        add_expr = PyModule_AddObject(mod_name, var.name, collect_var)
+        add_expr = PyModule_AddObject(mod_name, var_name, collect_var)
         if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
                         [FunctionCall(Py_DECREF, [collect_var]),
                          Return([PyccelUnarySub(LiteralInteger(1))])]))
@@ -731,8 +731,9 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap = [v.clone(v.name.lower()) for v in expr.variables if not v.is_private]
         else:
             vars_to_wrap = [v for v in expr.variables if not v.is_private]
+        var_names = [v.name for v in expr.variables if not v.is_private]
 
-        body = [l for v in vars_to_wrap for l in self.insert_constant(mod_var_name, v, tmp_var)]
+        body = [l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var)]
 
         decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
 
