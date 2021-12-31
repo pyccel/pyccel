@@ -13,6 +13,7 @@ import os
 import re
 from collections import OrderedDict
 from filelock import FileLock
+from .scope import Scope
 
 #==============================================================================
 from pyccel.version import __version__
@@ -31,10 +32,9 @@ from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors import Errors
 
-# TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
+# TODO - use OrderedDict whenever it is possible
 
-from pyccel.errors.messages import *
+from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 #==============================================================================
 
@@ -110,138 +110,6 @@ def get_filename_from_import(module,input_folder=''):
     errors = Errors()
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
-
-
-#==============================================================================
-
-class Scope(object):
-    """."""
-
-    def __init__(self, *, headers=None, decorators=None, templates=None):
-
-        self._imports = OrderedDict()
-
-        self._imports['functions'] = OrderedDict()
-        self._imports['variables'] = OrderedDict()
-        self._imports['classes'  ] = OrderedDict()
-        self._imports['imports'  ] = OrderedDict()
-
-        self._imports['python_functions'  ] = OrderedDict()
-        self._imports['symbolic_functions'] = OrderedDict()
-
-        self._variables = OrderedDict()
-        self._classes   = OrderedDict()
-        self._functions = OrderedDict()
-        self._macros    = OrderedDict()
-        self._templates = templates or OrderedDict()
-        self._headers   = headers    or OrderedDict()
-        self._decorators= decorators or OrderedDict()
-
-        # TODO use another name for headers
-        #      => reserved keyword, or use __
-        self.parent_scope        = None
-        self._sons_scopes        = OrderedDict()
-        self._static_functions   = []
-        self._cls_constructs     = OrderedDict()
-        self._symbolic_functions = OrderedDict()
-        self._python_functions   = OrderedDict()
-
-        self._is_loop = False
-        # scoping for loops
-        self._loops = []
-
-    def new_child_scope(self, name, **kwargs):
-        """
-        Create a new child Scope object which has the current object as parent.
-
-        The parent scope can access the child scope through the '_sons_scopes'
-        dictionary, using the provided name as key. Conversely, the child scope
-        can access the parent scope through the 'parent_scope' attribute.
-
-        Parameters
-        ----------
-        name : str
-            Name of the new scope, used as a key to retrieve the new scope.
-
-        kwargs : dict
-            Keyword arguments passed to __init__() for object initialization.
-
-        Returns
-        -------
-        child : Scope
-            New child scope, which has the current object as parent.
-
-        """
-
-        child = Scope(**kwargs)
-
-        self._sons_scopes[name] = child
-        child.parent_scope = self
-
-        return child
-
-    @property
-    def imports(self):
-        return self._imports
-
-    @property
-    def variables(self):
-        return self._variables
-
-    @property
-    def classes(self):
-        return self._classes
-
-    @property
-    def functions(self):
-        return self._functions
-
-    @property
-    def macros(self):
-        return self._macros
-
-    @property
-    def headers(self):
-        return self._headers
-
-    @property
-    def templates(self):
-        """A dictionary of user defined templates applied to all the functions in this scope"""
-        return self._templates
-
-    @property
-    def decorators(self):
-        """Dictionary of Pyccel decorators applied to a function definition."""
-        return self._decorators
-
-    @property
-    def static_functions(self):
-        return self._static_functions
-
-    @property
-    def cls_constructs(self):
-        return self._cls_constructs
-
-    @property
-    def sons_scopes(self):
-        return self._sons_scopes
-
-    @property
-    def symbolic_functions(self):
-        return self._symbolic_functions
-
-    @property
-    def python_functions(self):
-        return self._python_functions
-
-    @property
-    def is_loop(self):
-        return self._is_loop
-
-    @property
-    def loops(self):
-        return self._loops
-
 
 
 
