@@ -45,15 +45,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Python 3.9
+      - name: Setup Python 3.7
         uses: actions/setup-python@v2
         with:
-            # A non-default version is used as
+            # The second most recent version is used as
             # setup-python installs the most recent patch
             # which leads to linking problems as there are
             # 2 versions of python3X.a and the wrong one
             # is chosen
-            python-version: 3.9
+            python-version: 3.7
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
