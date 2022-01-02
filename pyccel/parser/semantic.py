@@ -649,6 +649,8 @@ class SemanticParser(BasicParser):
             name = DottedName(self._current_function, name)
         self._current_function = name
 
+        return child
+
     def exit_function_scope(self):
 
         self._namespace = self._namespace.parent_scope
@@ -1667,8 +1669,9 @@ class SemanticParser(BasicParser):
             init_func_name = self.get_new_name(expr.name+'__init')
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
+            scope = self.create_new_function_scope(init_func_name, [])
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
-                    global_vars = variables)
+                    global_vars = variables, scope=scope)
             # Ensure that the function is correctly defined within the namespaces
             self.create_new_function_scope(init_func_name, [])
             self.exit_function_scope()
@@ -1693,8 +1696,9 @@ class SemanticParser(BasicParser):
                 import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
+                scope = self.create_new_function_scope(free_func_name, [])
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
-                                    global_vars = variables)
+                                    global_vars = variables, scope = scope)
                 # Ensure that the function is correctly defined within the namespaces
                 self.create_new_function_scope(free_func_name, [])
                 self.exit_function_scope()
@@ -3141,7 +3145,7 @@ class SemanticParser(BasicParser):
 
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
-            self.create_new_function_scope(name, decorators)
+            scope = self.create_new_function_scope(name, decorators)
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
@@ -3351,7 +3355,8 @@ class SemanticParser(BasicParser):
                     'arguments_inout':args_inout,
                     'functions': sub_funcs,
                     'interfaces': func_interfaces,
-                    'doc_string': doc_string
+                    'doc_string': doc_string,
+                    'scope': scope
                     }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
