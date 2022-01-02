@@ -664,11 +664,8 @@ class SemanticParser(BasicParser):
         self._current_function = name
 
     def create_new_loop_scope(self):
-        new_scope = Scope(decorators=self._namespace.decorators)
-        new_scope._is_loop = True
-        new_scope.parent_scope = self._namespace
-        self._namespace._loops.append(new_scope)
-        self._namespace = new_scope
+        self._namespace = self._namespace.create_new_loop_scope()
+        return self._namespace
 
     def exit_loop_scope(self):
         self._namespace = self._namespace.parent_scope
@@ -2653,7 +2650,7 @@ class SemanticParser(BasicParser):
 
     def _visit_For(self, expr, **settings):
 
-        self.create_new_loop_scope()
+        scope = self.create_new_loop_scope()
 
         # treatment of the index/indices
         iterable = Iterable(self._visit(expr.iterable, **settings))
@@ -2704,12 +2701,12 @@ class SemanticParser(BasicParser):
         if isinstance(iterable.iterable, Product):
             for_expr = body
             for t, r in zip(target, iterable.get_range()):
-                for_expr = For(t, r, for_expr, local_vars=local_vars)
+                for_expr = For(t, r, for_expr, local_vars=local_vars, scope=scope)
                 for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
         else:
-            for_expr = For(target, iterable, body, local_vars=local_vars)
+            for_expr = For(target, iterable, body, local_vars=local_vars, scope=scope)
             for_expr.end_annotation = expr.end_annotation
         return for_expr
 
@@ -2891,13 +2888,13 @@ class SemanticParser(BasicParser):
 
     def _visit_While(self, expr, **settings):
 
-        self.create_new_loop_scope()
+        scope = self.create_new_loop_scope()
         test = self._visit(expr.test, **settings)
         body = self._visit(expr.body, **settings)
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
 
-        return While(test, body, local_vars)
+        return While(test, body, local_vars=local_vars, scope=scope)
 
     def _visit_IfSection(self, expr, **settings):
         condition = expr.condition

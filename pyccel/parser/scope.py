@@ -11,8 +11,11 @@ class Scope(object):
                  A dictionary of any decorators which operate on
                  objects in this scope
     """
+    __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
+            '_used_symbols','_is_loop','_loops')
 
-    def __init__(self, *, decorators=None):
+    def __init__(self, *, decorators=None, is_loop = False,
+                    parent_scope = None):
 
         keys = ('functions','variables','classes',
                 'imports','python_functions','symbolic_functions',
@@ -28,12 +31,12 @@ class Scope(object):
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
-        self.parent_scope        = None
+        self.parent_scope        = parent_scope
         self._sons_scopes        = OrderedDict()
 
         self._used_symbols = {}
 
-        self._is_loop = False
+        self._is_loop = is_loop
         # scoping for loops
         self._loops = []
 
@@ -60,7 +63,7 @@ class Scope(object):
 
         """
 
-        child = Scope(**kwargs)
+        child = Scope(**kwargs, parent_scope = self)
 
         self._sons_scopes[name] = child
         child.parent_scope = self
@@ -167,4 +170,10 @@ class Scope(object):
     @property
     def loops(self):
         return self._loops
+
+    def create_new_loop_scope(self):
+        new_scope = Scope(decorators=self.decorators, is_loop = True,
+                        parent_scope = self)
+        self._loops.append(new_scope)
+        return new_scope
 
