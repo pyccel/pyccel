@@ -20,7 +20,7 @@ class Scope(object):
                     parent_scope = None):
 
         keys = ('functions','variables','classes',
-                'imports','python_functions','symbolic_functions',
+                'imports','symbolic_functions',
                 'macros','templates','headers','decorators',
                 'static_functions','cls_constructs')
 
@@ -147,12 +147,6 @@ class Scope(object):
         """ 
         """
         return self._locals['symbolic_functions']
-
-    @property
-    def python_functions(self):
-        """ 
-        """
-        return self._locals['python_functions']
 
     def find_in_scope(self, name, location):
         """ Find the specified object in the scope

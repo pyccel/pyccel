@@ -426,22 +426,6 @@ class SemanticParser(BasicParser):
 
         return None
 
-    def get_python_function(self, name):
-        """."""
-
-        # TODO shall we keep the elif in _imports?
-        container = self.namespace
-        while container:
-            if name in container.python_functions:
-                return container.python_functions[name]
-
-            if name in container.imports['python_functions']:
-                return container.imports['python_functions'][name]
-
-            container = container.parent_scope
-
-        return None
-
     def get_macro(self, name):
         """."""
 
