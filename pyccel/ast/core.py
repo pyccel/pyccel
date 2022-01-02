@@ -11,7 +11,7 @@ from sympy.logic.boolalg      import And as sp_And
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
-from .basic     import Basic, PyccelAstNode, iterable
+from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -916,7 +916,7 @@ class AugAssign(Assign):
                 like   = self.like)
 
 
-class While(Basic):
+class While(ScopedNode):
 
     """Represents a 'while' statement in the code.
 
@@ -971,7 +971,7 @@ class While(Basic):
         return self._local_vars
 
 
-class With(Basic):
+class With(ScopedNode):
 
     """Represents a 'with' statement in the code.
 
@@ -1039,7 +1039,7 @@ class With(Basic):
 
 # TODO add a name to a block?
 
-class Block(Basic):
+class Block(ScopedNode):
 
     """Represents a block in the code. A block consists of the following inputs
 
@@ -1104,7 +1104,7 @@ class Block(Basic):
 
 
 
-class Module(Basic):
+class Module(ScopedNode):
 
     """Represents a module in the code. A block consists of the following inputs
 
@@ -1406,7 +1406,7 @@ class ModuleHeader(Basic):
     def module(self):
         return self._module
 
-class Program(Basic):
+class Program(ScopedNode):
 
     """Represents a Program in the code. A block consists of the following inputs
 
@@ -1620,7 +1620,7 @@ class Iterable(Basic):
 
 #==============================================================================
 
-class For(Basic):
+class For(ScopedNode):
 
     """Represents a 'for-loop' in the code.
 
@@ -2162,7 +2162,7 @@ class Return(Basic):
             code = ''
         return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
 
-class FunctionDef(Basic):
+class FunctionDef(ScopedNode):
 
     """Represents a function definition.
 
@@ -3014,7 +3014,7 @@ class BindCFunctionDef(FunctionDef):
         return self._original_function
 
 
-class ClassDef(Basic):
+class ClassDef(ScopedNode):
 
     """Represents a class definition.
 

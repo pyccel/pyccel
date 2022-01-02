@@ -442,3 +442,15 @@ class PyccelAstNode(Basic):
         self._precision = x.precision
         self._order     = x.order
 
+
+#------------------------------------------------------------------------------
+class ScopedNode(Basic):
+    __slots__ = ('_scope',)
+
+    def __init__(self, scope = None):
+        self._scope = scope
+        super().__init__()
+
+    @property
+    def scope(self):
+        return self._scope
