@@ -212,3 +212,31 @@ class Scope(object):
             self._temporary_variables.append(var)
             #TODO: make lower if case-sensitive
             self._used_symbols.add(var.name)
+
+    def remove_variable(self, var, name = None, python_scoping = True):
+        """ Remove a variable from anywhere in scope
+
+        Parameters
+        ----------
+        var  : Variable
+                The variable to be removed
+        name : str
+                The name of the variable in the python code
+                Default : var.name
+        python_scope : bool
+                If true then we assume that python scoping applies.
+                In this case variables declared in loops exist beyond
+                the end of the loop. Otherwise variables may be local
+                to loops
+                Default : True
+        """
+        if name is None:
+            name = var.name
+
+        if name in self._locals['variables']:
+            self._locals['variables'].pop(name)
+            self._used_symbols.remove(name)
+        elif self.parent_scope:
+            self.parent_scope.remove_variable(var, name, python_scoping)
+        else:
+            raise RuntimeError("Variable not found in scope")

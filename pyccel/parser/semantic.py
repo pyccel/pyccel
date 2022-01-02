@@ -487,16 +487,6 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError('Expected a macro')
 
-    def remove_variable(self, name):
-        """."""
-
-        container = self.namespace
-        while container:
-            if name in container.variables:
-                container.pop(name)
-                break
-            container = container.parent_scope
-
     def get_header(self, name):
         """."""
         container = self.namespace
@@ -1470,7 +1460,7 @@ class SemanticParser(BasicParser):
                     loop_elem = loop.body.body[0]
             loop = loop_elem
         # Remove the throw-away variable from the namespace
-        self.remove_variable(index)
+        self.namespace.remove_variable(index)
 
         # Visit result expression (correctly defined as iterator
         # objects exist in the scope despite not being defined)
