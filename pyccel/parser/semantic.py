@@ -1885,16 +1885,12 @@ class SemanticParser(BasicParser):
 
     def _visit_IndexedElement(self, expr, **settings):
         var = self._visit(expr.base)
-
-         # TODO check consistency of indices with shape/rank
-
-        args = list(expr.indices)
-
-        new_args = [self._visit(arg, **settings) for arg in args]
+        # TODO check consistency of indices with shape/rank
+        new_args = [self._visit(arg, **settings) for arg in expr.indices]
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
-            len_args = len(new_args[0])
-            args = [new_args[0][i] for i in range(len_args)]
+            args = (*new_args[0],)
+
         elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
             n_exprs = None
             for a in new_args:
@@ -1912,11 +1908,10 @@ class SemanticParser(BasicParser):
                     else:
                         ls.append(a)
                 new_expr_args.append(ls)
-
             return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+
         else:
             args = new_args
-            len_args = len(args)
 
         return self._extract_indexed_from_var(var, args)
 
