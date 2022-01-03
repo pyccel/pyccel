@@ -954,7 +954,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return 'pyobject'
 
     def _print_PyccelPyArrayObject(self, expr):
-        self._additional_imports.add(cwrapper_ndarray_import)
+        self.add_import(cwrapper_ndarray_import)
         return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
@@ -1204,7 +1204,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = module_imports.copy()
-        imports += self._additional_imports
+        imports += self._additional_imports.values()
         imports  = ''.join(self._print(i) for i in imports)
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
