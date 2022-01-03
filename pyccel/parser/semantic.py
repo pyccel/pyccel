@@ -1886,32 +1886,22 @@ class SemanticParser(BasicParser):
     def _visit_IndexedElement(self, expr, **settings):
         var = self._visit(expr.base)
         # TODO check consistency of indices with shape/rank
-        new_args = [self._visit(arg, **settings) for arg in expr.indices]
+        args = [self._visit(idx, **settings) for idx in expr.indices]
 
-        if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
-            args = new_args[0]
+        if (len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple))):
+            args = args[0]
 
-        elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
+        elif any(isinstance(a, (TupleVariable, PythonTuple)) for a in args):
             n_exprs = None
-            for a in new_args:
-                if hasattr(a,'__len__'):
+            for a in args:
+                if hasattr(a, '__len__'):
                     if n_exprs:
                         assert n_exprs == len(a)
                     else:
                         n_exprs = len(a)
-            new_expr_args = []
-            for i in range(n_exprs):
-                ls = []
-                for a in new_args:
-                    if hasattr(a,'__getitem__'):
-                        ls.append(a[i])
-                    else:
-                        ls.append(a)
-                new_expr_args.append(ls)
+            new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
+                             for i in range(n_exprs)]
             return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
-
-        else:
-            args = new_args
 
         return self._extract_indexed_from_var(var, args)
 
