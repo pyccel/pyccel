@@ -1889,20 +1889,20 @@ class SemanticParser(BasicParser):
         new_args = [self._visit(arg, **settings) for arg in expr.indices]
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
-            args = (*new_args[0],)
+            args = new_args[0]
 
         elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
             n_exprs = None
             for a in new_args:
                 if hasattr(a,'__len__'):
                     if n_exprs:
-                        assert(n_exprs)==len(a)
+                        assert n_exprs == len(a)
                     else:
                         n_exprs = len(a)
             new_expr_args = []
             for i in range(n_exprs):
                 ls = []
-                for j,a in enumerate(new_args):
+                for a in new_args:
                     if hasattr(a,'__getitem__'):
                         ls.append(a[i])
                     else:
