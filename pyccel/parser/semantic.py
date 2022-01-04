@@ -60,7 +60,7 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
-from pyccel.ast.datatypes import DataTypeFactory
+from pyccel.ast.datatypes import DataTypeFactory, default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex)
@@ -70,7 +70,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -986,7 +986,7 @@ class SemanticParser(BasicParser):
         """
         descr = '{dtype}(kind={precision})'.format(
                         dtype     = var.dtype,
-                        precision = var.precision)
+                        precision = get_final_precision(var))
         if include_rank and var.rank>0:
             descr += '[{}]'.format(','.join(':'*var.rank))
         return descr
@@ -1009,11 +1009,11 @@ class SemanticParser(BasicParser):
         if elemental:
             incompatible = lambda i_arg, f_arg: \
                         (i_arg.dtype is not f_arg.dtype or \
-                        i_arg.precision != f_arg.precision)
+                        get_final_precision(i_arg) != get_final_precision(f_arg))
         else:
             incompatible = lambda i_arg, f_arg: \
                         (i_arg.dtype is not f_arg.dtype or \
-                        i_arg.precision != f_arg.precision or
+                        get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
@@ -1306,6 +1306,7 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
                 precision = d_var.get('precision',None)
+                internal_precision = default_precision[str(dtype)] if precision == -1 else precision
 
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
@@ -1338,7 +1339,8 @@ class SemanticParser(BasicParser):
                     # to remove memory leaks
                     new_expressions.append(Deallocate(var))
 
-                elif not is_augassign and (str(dtype) != str(var.dtype) or precision != var.precision):
+                elif not is_augassign and (str(dtype) != str(var.dtype) or \
+                        internal_precision != get_final_precision(var)):
                     # Get type name from cast function (handles precision implicitly)
                     try:
                         d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
@@ -1431,6 +1433,9 @@ class SemanticParser(BasicParser):
                             new_expressions.append(Allocate(var,
                                 shape=d_var['shape'], order=d_var['order'],
                                 status=status))
+
+                if var.precision == -1 and precision != var.precision:
+                    var.use_exact_precision()
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.

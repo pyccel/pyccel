@@ -45,7 +45,8 @@ import_target_swap = {
                    'max'        : 'amax',
                    'min'        : 'amin',
                    'T'          : 'transpose',
-                   'full_like'  : 'full'},
+                   'full_like'  : 'full',
+                   'absolute'   : 'abs'},
         'numpy.random' : {'random' : 'rand'}
         }
 import_source_swap = {
@@ -309,27 +310,27 @@ class PythonCodePrinter(CodePrinter):
         return 'bool({})'.format(self._print(expr.arg))
 
     def _print_PythonInt(self, expr):
-        cls       = type(expr)
-        type_name = cls.__name__.lower()
-        is_numpy  = type_name.startswith('numpy')
-        precision = str(expr.precision*8) if is_numpy else ''
-        name = self._aliases.get(cls, expr.name)
-        if is_numpy and name == expr.name:
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(cls, expr.name))
+        name = 'int'
+        if expr.precision != -1:
+            type_name = name + str(expr.precision*8)
+            cls       = type(expr)
+            name = self._aliases.get(cls, type_name)
+            if name == type_name:
+                self.insert_new_import(
+                        source = 'numpy',
+                        target = AsName(cls, name))
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
-        cls       = type(expr)
-        type_name = cls.__name__.lower()
-        is_numpy  = type_name.startswith('numpy')
-        precision = str(expr.precision*8) if is_numpy else ''
-        name = self._aliases.get(cls, expr.name)
-        if is_numpy and name == expr.name:
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(cls, expr.name))
+        name = 'float'
+        if expr.precision != -1:
+            type_name = name + str(expr.precision*8)
+            cls       = type(expr)
+            name = self._aliases.get(cls, type_name)
+            if name == type_name:
+                self.insert_new_import(
+                        source = 'numpy',
+                        target = AsName(cls, name))
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
@@ -340,13 +341,15 @@ class PythonCodePrinter(CodePrinter):
             return '{}({}, {})'.format(name, self._print(expr.real), self._print(expr.imag))
 
     def _print_NumpyComplex(self, expr):
-        cls       = type(expr)
-        precision = str(expr.precision*16)
-        name = self._aliases.get(cls, expr.name)
-        if name == expr.name:
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(cls, expr.name))
+        if expr.precision != -1:
+            cls       = type(expr)
+            name = self._aliases.get(cls, expr.name)
+            if name == expr.name:
+                self.insert_new_import(
+                        source = 'numpy',
+                        target = AsName(cls, expr.name))
+        else:
+            name = 'complex'
         if expr.is_cast:
             return '{}({})'.format(name, self._print(expr.internal_var))
         else:

@@ -8,7 +8,7 @@ from pyccel.utilities.metaclasses import Singleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeFloat,
-                                  NativeComplex, NativeString, default_precision, NativeFloat)
+                                  NativeComplex, NativeString, NativeFloat)
 
 __all__ = (
     'LiteralTrue',
@@ -71,7 +71,7 @@ class LiteralTrue(Literal):
     __slots__ = ()
     _dtype     = NativeBool()
 
-    def __init__(self, precision = default_precision['bool']):
+    def __init__(self, precision = -1):
         super().__init__(precision)
 
     @property
@@ -84,7 +84,7 @@ class LiteralFalse(Literal):
     __slots__ = ()
     _dtype     = NativeBool()
 
-    def __init__(self, precision = default_precision['bool']):
+    def __init__(self, precision = -1):
         super().__init__(precision)
 
     @property
@@ -97,7 +97,7 @@ class LiteralInteger(Literal):
     __slots__ = ('_value',)
     _dtype     = NativeInteger()
 
-    def __init__(self, value, precision = default_precision['integer']):
+    def __init__(self, value, precision = -1):
         super().__init__(precision)
         assert(value >= 0)
         if not isinstance(value, int):
@@ -117,7 +117,7 @@ class LiteralFloat(Literal):
     __slots__ = ('_value',)
     _dtype     = NativeFloat()
 
-    def __init__(self, value, *, precision = default_precision['float']):
+    def __init__(self, value, *, precision = -1):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
@@ -137,7 +137,7 @@ class LiteralComplex(Literal):
     __slots__ = ('_real_part','_imag_part')
     _dtype     = NativeComplex()
 
-    def __new__(cls, real, imag, precision = default_precision['complex']):
+    def __new__(cls, real, imag, precision = -1):
         if cls is LiteralImaginaryUnit:
             return super().__new__(cls)
         real_part = cls._collect_python_val(real)
@@ -147,7 +147,7 @@ class LiteralComplex(Literal):
         else:
             return super().__new__(cls)
 
-    def __init__(self, real, imag, precision = default_precision['complex']):
+    def __init__(self, real, imag, precision = -1):
         super().__init__(precision)
         self._real_part = LiteralFloat(self._collect_python_val(real))
         self._imag_part = LiteralFloat(self._collect_python_val(imag))
@@ -182,7 +182,7 @@ class LiteralImaginaryUnit(LiteralComplex):
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
-    def __init__(self, real=0, imag=1, precision = default_precision['complex']):
+    def __init__(self, real=0, imag=1, precision = -1):
         super().__init__(0, 1)
 
     @property
@@ -311,7 +311,7 @@ def convert_to_literal(value, dtype = None, precision = None):
             raise TypeError('Unknown type')
 
     if precision is None and dtype is not NativeString():
-        precision = default_precision[str(dtype)]
+        precision = -1
 
     if isinstance(dtype, NativeInteger):
         if value >= 0:

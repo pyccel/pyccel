@@ -24,7 +24,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction, Slice
+from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -265,18 +265,22 @@ class NumpyComplex128(NumpyComplex):
 
 DtypePrecisionToCastFunction = {
     'Int' : {
+       -1 : PythonInt,
         1 : NumpyInt8,
         2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Float' : {
+       -1 : PythonFloat,
         4 : NumpyFloat32,
         8 : NumpyFloat64},
     'Complex' : {
+       -1 : PythonComplex,
         4 : NumpyComplex64,
         8 : NumpyComplex,
         16 : NumpyComplex128,},
     'Bool':  {
+       -1 : PythonBool,
         4 : NumpyBool}
 }
 
@@ -284,7 +288,7 @@ DtypePrecisionToCastFunction = {
 
 def process_dtype(dtype):
     if isinstance(dtype, PythonType):
-        return dtype.dtype, dtype.precision
+        return dtype.dtype, get_final_precision(dtype)
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
 
@@ -298,6 +302,8 @@ def process_dtype(dtype):
     else:
         dtype            = str(dtype).replace('\'', '').lower()
     dtype, precision = dtype_registry[dtype]
+    if precision == -1:
+        precision        = default_precision[dtype]
     dtype            = datatype(dtype)
 
     return dtype, precision
@@ -415,7 +421,7 @@ class NumpyArange(NumpyNewArray):
 
         if dtype is None:
             self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
-            self._precision = max([i.precision for i in self.arg])
+            self._precision = max_precision(self.arg, allow_native=False)
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
@@ -457,7 +463,7 @@ class NumpySum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = arg.dtype
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(arg)
 
     @property
     def arg(self):
@@ -481,10 +487,10 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
-                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
+                    (isinstance(arg.dtype, NativeInteger) and get_final_precision(self._arg) < default_precision['int']))\
                     else self._arg
         self._dtype = self._arg.dtype
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(self._arg)
 
     @property
     def arg(self):
@@ -517,16 +523,16 @@ class NumpyMatmul(PyccelInternalFunction):
 
         if complexs:
             self._dtype     = NativeComplex()
-            self._precision = max(e.precision for e in complexs)
+            self._precision = max_precision(complexs, allow_native = False)
         elif floats:
             self._dtype     = NativeFloat()
-            self._precision = max(e.precision for e in floats)
+            self._precision = max_precision(floats, allow_native = False)
         elif integers:
             self._dtype     = NativeInteger()
-            self._precision = max(e.precision for e in integers)
+            self._precision = max_precision(integers, allow_native = False)
         elif booleans:
             self._dtype     = NativeBool()
-            self._precision = max(e.precision for e in booleans)
+            self._precision = max_precision(booleans, allow_native = False)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -620,10 +626,10 @@ class NumpyLinspace(NumpyNewArray):
 
             if complexs:
                 self._dtype     = NativeComplex()
-                self._precision = max(e.precision for e in complexs)
+                self._precision = max_precision(complexs, allow_native = False)
             elif floats:
                 self._dtype     = NativeFloat()
-                self._precision = max(e.precision for e in floats)
+                self._precision = max_precision(floats, allow_native = False)
             elif integers:
                 self._dtype     = NativeFloat()
                 self._precision = default_precision['float']
@@ -758,7 +764,7 @@ class NumpyRandint(PyccelInternalFunction):
     __slots__ = ('_rand','_low','_high','_shape','_rank')
     name = 'randint'
     _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _order     = 'C'
     _attribute_nodes = ('_low', '_high')
 
@@ -836,7 +842,7 @@ class NumpyFull(NumpyNewArray):
 
         # Cast fill_value to correct type
         if fill_value:
-            if fill_value.dtype != dtype or fill_value.precision != precision:
+            if fill_value.dtype != dtype or get_final_precision(fill_value) != precision:
                 cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
                 fill_value = cast_func(fill_value)
         self._shape = shape
@@ -989,7 +995,7 @@ class NumpyNorm(PyccelInternalFunction):
         if not isinstance(arg.dtype, (NativeComplex, NativeFloat)):
             arg = NumpyFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
-        self._precision = arg.precision
+        self._precision = get_final_precision(arg)
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
@@ -1230,10 +1236,14 @@ class NumpyMod(NumpyUfuncBinary):
 
         if floats:
             self._dtype     = NativeFloat()
-            self._precision = max(a.precision for a in floats)
+            self._precision = max_precision(floats, allow_native = False)
         elif integers:
             self._dtype     = NativeInteger()
-            self._precision = max(a.precision for a in integers)
+            integers  = [a for a in args if a.dtype is NativeInteger()]
+            if integers:
+                self._precision = max_precision(integers, NativeInteger(), allow_native = False)
+            else:
+                self._precision = 1
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -1247,7 +1257,7 @@ class NumpyAmin(NumpyUfuncUnary):
 
     def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
-        self._precision = x.precision
+        self._precision = get_final_precision(x)
 
     @property
     def is_elemental(self):
@@ -1263,7 +1273,7 @@ class NumpyAmax(NumpyUfuncUnary):
 
     def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
-        self._precision = x.precision
+        self._precision = get_final_precision(x)
 
     @property
     def is_elemental(self):
@@ -1301,7 +1311,7 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     def _set_dtype_precision(self, x):
         self._dtype      = x.dtype
-        self._precision  = x.precision
+        self._precision  = get_final_precision(x)
 
     def _set_shape_rank(self, x):
         self._shape      = tuple(reversed(x.shape))

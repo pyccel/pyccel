@@ -26,9 +26,9 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
-from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
+from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 
-from pyccel.ast.internals import Slice, PrecomputedCode
+from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -784,7 +784,7 @@ class CCodePrinter(CodePrinter):
                           ('bool',4)    : '%s',
                           ('string', 0) : '%s'}
         try:
-            arg_format = type_to_format[(self._print(var.dtype), var.precision)]
+            arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
         except KeyError:
             errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
         if var.dtype is NativeComplex():
@@ -870,6 +870,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def find_in_dtype_registry(self, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
@@ -878,6 +880,8 @@ class CCodePrinter(CodePrinter):
                     severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
         try :
             return ndarray_type_registry[(dtype, prec)]
         except KeyError:

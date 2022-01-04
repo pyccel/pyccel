@@ -8,7 +8,6 @@
 This module contains all classes and functions used for handling macros.
 """
 from .basic          import PyccelAstNode
-from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
 from .internals      import PyccelSymbol
 from .variable       import Variable
@@ -49,7 +48,7 @@ class MacroShape(Macro):
     __slots__ = ('_index','_rank','_shape')
     _name      = 'shape'
     _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _order     = None
 
     def __init__(self, argument, index=None):
@@ -96,7 +95,7 @@ class MacroCount(Macro):
     __slots__ = ()
     _name      = 'count'
     _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _rank      = 0
     _shape     = ()
     _order     = None
