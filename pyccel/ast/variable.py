@@ -14,8 +14,8 @@ from pyccel.errors.errors import Errors
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, default_precision)
-from .internals import PyccelArraySize, Slice
+                        NativeComplex)
+from .internals import PyccelArraySize, Slice, get_final_precision
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -203,14 +203,8 @@ class Variable(PyccelAstNode):
             shape = tuple(None for i in range(rank))
 
         if not precision:
-            if isinstance(dtype, NativeInteger):
-                precision = default_precision['int']
-            elif isinstance(dtype, NativeFloat):
-                precision = default_precision['float']
-            elif isinstance(dtype, NativeComplex):
-                precision = default_precision['complex']
-            elif isinstance(dtype, NativeBool):
-                precision = default_precision['bool']
+            if isinstance(dtype, (NativeInteger, NativeFloat, NativeComplex, NativeBool)):
+                precision = -1
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
@@ -424,7 +418,7 @@ class Variable(PyccelAstNode):
         print('>>> Variable')
         print( '  name           = {}'.format(self.name))
         print( '  dtype          = {}'.format(self.dtype))
-        print( '  precision      = {}'.format(self.precision))
+        print( '  precision      = {}'.format(get_final_precision(self)))
         print( '  rank           = {}'.format(self.rank))
         print( '  order          = {}'.format(self.order))
         print( '  allocatable    = {}'.format(self.allocatable))
@@ -434,6 +428,14 @@ class Variable(PyccelAstNode):
         print( '  is_target      = {}'.format(self.is_target))
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
+
+    def use_exact_precision(self):
+        """
+        Change precision from default python precision to
+        equivalent numpy precision
+        """
+        if not self._is_argument:
+            self._precision = get_final_precision(self)
 
     def clone(self, name, new_class = None, **kwargs):
         """

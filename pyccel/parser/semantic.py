@@ -60,7 +60,7 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
-from pyccel.ast.datatypes import DataTypeFactory
+from pyccel.ast.datatypes import DataTypeFactory, default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex)
@@ -70,7 +70,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -82,12 +82,13 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
-from pyccel.ast.numpyext import NumpyWhere
+from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose
 from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -985,7 +986,7 @@ class SemanticParser(BasicParser):
         """
         descr = '{dtype}(kind={precision})'.format(
                         dtype     = var.dtype,
-                        precision = var.precision)
+                        precision = get_final_precision(var))
         if include_rank and var.rank>0:
             descr += '[{}]'.format(','.join(':'*var.rank))
         return descr
@@ -1008,11 +1009,11 @@ class SemanticParser(BasicParser):
         if elemental:
             incompatible = lambda i_arg, f_arg: \
                         (i_arg.dtype is not f_arg.dtype or \
-                        i_arg.precision != f_arg.precision)
+                        get_final_precision(i_arg) != get_final_precision(f_arg))
         else:
             incompatible = lambda i_arg, f_arg: \
                         (i_arg.dtype is not f_arg.dtype or \
-                        i_arg.precision != f_arg.precision or
+                        get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
@@ -1304,6 +1305,8 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+                precision = d_var.get('precision',None)
+                internal_precision = default_precision[str(dtype)] if precision == -1 else precision
 
                 # TODO improve check type compatibility
                 if not hasattr(var, 'dtype'):
@@ -1336,9 +1339,19 @@ class SemanticParser(BasicParser):
                     # to remove memory leaks
                     new_expressions.append(Deallocate(var))
 
-                elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
+                elif not is_augassign and (str(dtype) != str(var.dtype) or \
+                        internal_precision != get_final_precision(var)):
+                    # Get type name from cast function (handles precision implicitly)
+                    try:
+                        d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
+                    except KeyError:
+                        d1 = str(var.dtype)
+                    try:
+                        d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
+                    except KeyError:
+                        d2 = str(var.dtype)
 
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.dtype, dtype),
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
                         symbol='{}={}'.format(name, str(rhs)),
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=False)
@@ -1420,6 +1433,9 @@ class SemanticParser(BasicParser):
                             new_expressions.append(Allocate(var,
                                 shape=d_var['shape'], order=d_var['order'],
                                 status=status))
+
+                if var.precision == -1 and precision != var.precision:
+                    var.use_exact_precision()
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1885,38 +1901,23 @@ class SemanticParser(BasicParser):
 
     def _visit_IndexedElement(self, expr, **settings):
         var = self._visit(expr.base)
+        # TODO check consistency of indices with shape/rank
+        args = [self._visit(idx, **settings) for idx in expr.indices]
 
-         # TODO check consistency of indices with shape/rank
+        if (len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple))):
+            args = args[0]
 
-        args = list(expr.indices)
-
-        new_args = [self._visit(arg, **settings) for arg in args]
-
-        if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
-            len_args = len(new_args[0])
-            args = [new_args[0][i] for i in range(len_args)]
-        elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
+        elif any(isinstance(a, (TupleVariable, PythonTuple)) for a in args):
             n_exprs = None
-            for a in new_args:
-                if hasattr(a,'__len__'):
+            for a in args:
+                if hasattr(a, '__len__'):
                     if n_exprs:
-                        assert(n_exprs)==len(a)
+                        assert n_exprs == len(a)
                     else:
                         n_exprs = len(a)
-            new_expr_args = []
-            for i in range(n_exprs):
-                ls = []
-                for j,a in enumerate(new_args):
-                    if hasattr(a,'__getitem__'):
-                        ls.append(args[j][i])
-                    else:
-                        ls.append(args[j])
-                new_expr_args.append(ls)
-
-            return tuple(var[a] for a in new_expr_args)
-        else:
-            args = new_args
-            len_args = len(args)
+            new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
+                             for i in range(n_exprs)]
+            return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
 
         return self._extract_indexed_from_var(var, args)
 

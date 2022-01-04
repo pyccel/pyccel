@@ -26,7 +26,7 @@ from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.core import Return, Module
 from pyccel.ast.core import Import
-from pyccel.ast.internals    import PyccelInternalFunction
+from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName, EmptyNode,
@@ -305,7 +305,8 @@ class FCodePrinter(CodePrinter):
         """
         Prints the kind(precision) of a literal value or its shortcut if possible
         """
-        constant_name = iso_c_binding[self._print(expr.dtype)][expr.precision]
+        precision = get_final_precision(expr)
+        constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.parser.used_names and constant_name != constant_shortcut:
             self._constantImports.add((constant_shortcut, constant_name))
@@ -977,7 +978,7 @@ class FCodePrinter(CodePrinter):
             return '({})'.format(arg_code)
 
         prec = expr.precision
-        prec_code = self._print(prec)
+        prec_code = self.print_kind(expr)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
     def _print_PythonComplex(self, expr):
@@ -1500,9 +1501,16 @@ class FCodePrinter(CodePrinter):
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
+        if all(isinstance(f, FunctionAddress) for f in expr.functions):
+            funcs = expr.functions
+        else:
+            funcs = [f for f in expr.functions if f is \
+                    expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
+                        for i,a in enumerate(f.arguments)], use_final_precision = True)]
+
         if expr.is_argument:
             funcs_sigs = []
-            for f in expr.functions:
+            for f in funcs:
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
                         self.print_constant_imports()+'\n',
@@ -1512,7 +1520,7 @@ class FCodePrinter(CodePrinter):
             interface = 'interface\n' + '\n'.join(a for a in funcs_sigs) + 'end interface\n'
             return interface
 
-        if expr.functions[0].cls_name:
+        if funcs[0].cls_name:
             for k, m in list(_default_methods.items()):
                 name = name.replace(k, m)
             cls_name = expr.cls_name
@@ -1524,7 +1532,7 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
         interface = 'interface ' + name +'\n'
-        for f in expr.functions:
+        for f in funcs:
             interface += 'module procedure ' + str(f.name)+'\n'
         interface += 'end interface\n'
         return interface
@@ -2374,12 +2382,12 @@ class FCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' .and. '.join(a for a in args)
+        args = [a if a.dtype is NativeBool() else PythonBool(a) for a in expr.args]
+        return ' .and. '.join(self._print(a) for a in args)
 
     def _print_PyccelOr(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' .or. '.join(a for a in args)
+        args = [a if a.dtype is NativeBool() else PythonBool(a) for a in expr.args]
+        return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])

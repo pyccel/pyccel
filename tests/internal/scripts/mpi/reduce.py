@@ -29,7 +29,7 @@ if __name__ == '__main__':
     root = np.int32(0)
 
     if rank == 0:
-        value = 1000
+        value = np.int32(1000)
     else:
         value = rank
 
