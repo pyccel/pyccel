@@ -3487,6 +3487,8 @@ class Declare(Basic):
         True for a static declaration of an array.
     external: bool
         True for a function declared through a header
+    module_variable : bool
+        True for a variable which belongs to a module
 
     Examples
     --------
@@ -3580,6 +3582,9 @@ class Declare(Basic):
 
     @property
     def module_variable(self):
+        """ Indicates whether the variable is scoped to
+        a module
+        """
         return self._module_variable
 
     def __repr__(self):
