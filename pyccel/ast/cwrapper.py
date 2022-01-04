@@ -407,7 +407,7 @@ def generate_datatype_error(variable):
     dtype     = variable.dtype
 
     if variable.precision == -1:
-        precision = 'navive '
+        precision = 'native '
     elif isinstance(dtype, NativeBool):
         precision = ''
     elif isinstance(dtype, NativeComplex):
