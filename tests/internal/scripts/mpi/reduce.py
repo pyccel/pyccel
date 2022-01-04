@@ -31,7 +31,7 @@ if __name__ == '__main__':
     if rank == 0:
         value = np.int32(1000)
     else:
-        value = int(rank)
+        value = rank
 
     sum_value = 0
     count = np.int32(1)
