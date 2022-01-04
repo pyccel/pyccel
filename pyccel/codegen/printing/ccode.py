@@ -6,6 +6,7 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
+import re
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
@@ -17,6 +18,7 @@ from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
+from pyccel.ast.core      import Module, AsName
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
@@ -24,9 +26,9 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
-from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype
+from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -220,6 +222,18 @@ ndarray_type_registry = {
 
 import_dict = {'omp_lib' : 'omp' }
 
+c_imports = {n : Import(n, Module(n, (), ())) for n in
+                ['stdlib',
+                 'math',
+                 'string',
+                 'ndarrays',
+                 'math',
+                 'complex',
+                 'stdint',
+                 'pyc_math_c',
+                 'stdio',
+                 'stdbool']}
+
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
@@ -236,7 +250,7 @@ class CCodePrinter(CodePrinter):
 
         super().__init__()
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib'])
+        self._additional_imports = {'stdlib':c_imports['stdlib']}
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -251,7 +265,11 @@ class CCodePrinter(CodePrinter):
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
-        return self._additional_imports
+        return self._additional_imports.keys()
+
+    def add_import(self, import_obj):
+        if import_obj.source not in self._additional_imports:
+            self._additional_imports[import_obj.source] = import_obj
 
     def _get_statement(self, codestring):
         return "%s;\n" % codestring
@@ -295,7 +313,7 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
 
-        self._additional_imports.add('string')
+        self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
@@ -366,7 +384,7 @@ class CCodePrinter(CodePrinter):
         array_init = array_init.format(np_dtype, dummy_array_name,
                     shape_init, strides_init, len(var.shape), 'false')
         array_init += 'stack_array_init(&{})'.format(self._print(var))
-        self._additional_imports.add("ndarrays")
+        self.add_import(c_imports['ndarrays'])
         return buffer_array, array_init
 
     def fill_NumpyArange(self, expr, lhs):
@@ -407,14 +425,85 @@ class CCodePrinter(CodePrinter):
                             dtype = dtype)
         return code
 
+    def _handle_inline_func_call(self, expr):
+        """ Print a function call to an inline function
+        """
+        func = expr.funcdef
+        body = func.body
+
+        # Print any arguments using the same inline function
+        # As the function definition is modified directly this function
+        # cannot be called recursively with the same FunctionDef
+        args = []
+        for a in expr.args:
+            if a.is_user_of(func):
+                code = PrecomputedCode(self._print(a))
+                args.append(code)
+            else:
+                args.append(a.value)
+
+        new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
+                            for v in func.local_vars]
+        self._additional_declare.extend(new_local_vars)
+
+        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+        if parent_assign:
+            results = dict(zip(func.results, parent_assign[0].lhs))
+            orig_res_vars = list(results.keys())
+            new_res_vars  = self._temporary_args
+            new_res_vars = [a.variable if isinstance(a, VariableAddress) else a for a in new_res_vars]
+            self._temporary_args = []
+            body.substitute(orig_res_vars, new_res_vars)
+
+        # Replace the arguments in the code
+        func.swap_in_args(args, new_local_vars)
+
+        func.remove_presence_checks()
+
+        # Collect code but strip empty end
+        body_code = self._print(body)
+        code_lines = body_code.split('\n')[:-1]
+        return_regex = re.compile(r'\breturn\b')
+        has_results = [return_regex.search(l) is not None for l in code_lines]
+
+        if len(func.results) == 0 and not any(has_results):
+            code = body_code
+        else:
+            result_idx = has_results.index(True)
+            result_line = code_lines[result_idx]
+
+            body_code = '\n'.join(code_lines[:result_idx])+'\n'
+
+            if len(func.results) != 1:
+                code = body_code
+            else:
+                self._additional_code += body_code
+                # Strip return and ; from return statement
+                code = result_line[7:-1]
+
+        # Put back original arguments
+        func.reinstate_presence_checks()
+        func.swap_out_args()
+        if parent_assign:
+            body.substitute(new_res_vars, orig_res_vars)
+
+        if func.global_vars or func.global_funcs:
+            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            self.add_import(Import(mod.name, [AsName(v, v.name) \
+                for v in (*func.global_vars, *func.global_funcs)]))
+            for v in (*func.global_vars, *func.global_funcs):
+                self._parser.used_names.add(v.name)
+
+        return code
+
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
-            self._additional_imports.add("math")
+            self.add_import(c_imports['math'])
             func = "fabs"
         elif expr.arg.dtype is NativeComplex():
-            self._additional_imports.add("complex")
+            self.add_import(c_imports['complex'])
             func = "cabs"
         else:
             func = "labs"
@@ -423,7 +512,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonMin(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeFloat() and len(arg) == 2:
-            self._additional_imports.add("math")
+            self.add_import(c_imports['math'])
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         else:
@@ -433,7 +522,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonMax(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeFloat() and len(arg) == 2:
-            self._additional_imports.add("math")
+            self.add_import(c_imports['math'])
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         else:
@@ -446,7 +535,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
-        self._additional_imports.add('stdint')
+        self.add_import(c_imports['stdint'])
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
@@ -475,7 +564,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
-        self._additional_imports.add("complex")
+        self.add_import(c_imports['complex'])
         return '_Complex_I'
 
     def _print_PythonLen(self, expr):
@@ -498,7 +587,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, *map(Import, self._additional_imports)]
+        imports = [*expr.module.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('#ifndef {name}_H\n'
@@ -521,7 +610,7 @@ class CCodePrinter(CodePrinter):
         global_variables = ''.join([self._print(d) for d in expr.declarations])
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [Import(expr.name), *map(Import, self._additional_imports)]
+        imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
         code = ('{imports}\n'
@@ -612,8 +701,8 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_PyccelMod(self, expr):
-        self._additional_imports.add("math")
-        self._additional_imports.add("pyc_math_c")
+        self.add_import(c_imports['math'])
+        self.add_import(c_imports['pyc_math_c'])
 
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
@@ -634,10 +723,10 @@ class CCodePrinter(CodePrinter):
         if expr.dtype is NativeComplex():
             b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
             e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
-            self._additional_imports.add("complex")
+            self.add_import(c_imports['complex'])
             return 'cpow({}, {})'.format(b, e)
 
-        self._additional_imports.add("math")
+        self.add_import(c_imports['math'])
         b = self._print(b if b.dtype is NativeFloat() else NumpyFloat(b))
         e = self._print(e if e.dtype is NativeFloat() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
@@ -695,7 +784,7 @@ class CCodePrinter(CodePrinter):
                           ('bool',4)    : '%s',
                           ('string', 0) : '%s'}
         try:
-            arg_format = type_to_format[(self._print(var.dtype), var.precision)]
+            arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
         except KeyError:
             errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
         if var.dtype is NativeComplex():
@@ -711,7 +800,7 @@ class CCodePrinter(CodePrinter):
         return tmp_list
 
     def _print_PythonPrint(self, expr):
-        self._additional_imports.add("stdio")
+        self.add_import(c_imports['stdio'])
         end = '\n'
         sep = ' '
         code = ''
@@ -781,6 +870,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def find_in_dtype_registry(self, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
@@ -789,6 +880,8 @@ class CCodePrinter(CodePrinter):
                     severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
         try :
             return ndarray_type_registry[(dtype, prec)]
         except KeyError:
@@ -801,13 +894,13 @@ class CCodePrinter(CodePrinter):
         prec  = expr.precision
         rank  = expr.rank
         if isinstance(expr.dtype, NativeInteger):
-            self._additional_imports.add('stdint')
+            self.add_import(c_imports['stdint'])
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
-                self._additional_imports.add('ndarrays')
+                self.add_import(c_imports['ndarrays'])
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
@@ -860,7 +953,7 @@ class CCodePrinter(CodePrinter):
         return preface + declaration
 
     def _print_NativeBool(self, expr):
-        self._additional_imports.add('stdbool')
+        self.add_import(c_imports['stdbool'])
         return 'bool'
 
     def _print_NativeInteger(self, expr):
@@ -873,7 +966,7 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def _print_NativeComplex(self, expr):
-        self._additional_imports.add('complex')
+        self.add_import(c_imports['complex'])
         return 'complex'
     def _print_NativeString(self, expr):
         return 'string'
@@ -1042,7 +1135,7 @@ class CCodePrinter(CodePrinter):
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
-        self._additional_imports.add('ndarrays')
+        self.add_import(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
@@ -1084,7 +1177,7 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self._additional_imports.add('math')
+        self.add_import(c_imports['math'])
         type_name = type(expr).__name__
         try:
             func_name = numpy_ufunc_to_c_float[type_name]
@@ -1093,7 +1186,7 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype is NativeComplex():
-                self._additional_imports.add('complex')
+                self.add_import(c_imports['complex'])
                 try:
                     func_name = numpy_ufunc_to_c_complex[type_name]
                     args.append(self._print(arg))
@@ -1134,12 +1227,12 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
         if func_name.startswith("pyc"):
-            self._additional_imports.add('pyc_math_c')
+            self.add_import(c_imports['pyc_math_c'])
         else:
             if expr.dtype is NativeComplex():
-                self._additional_imports.add('cmath')
+                self.add_import(c_imports['cmath'])
             else:
-                self._additional_imports.add('math')
+                self.add_import(c_imports['math'])
         args = []
         for arg in expr.args:
             if arg.dtype != NativeFloat() and not func_name.startswith("pyc"):
@@ -1156,7 +1249,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math isfinite function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self.add_import(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1168,7 +1261,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math isinf function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self.add_import(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1180,7 +1273,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math isnan function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self.add_import(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1192,7 +1285,7 @@ class CCodePrinter(CodePrinter):
         """Convert a Python expression with a math trunc function call to C
         function call"""
         # add necessary include
-        self._additional_imports.add('math')
+        self.add_import(c_imports['math'])
         arg = expr.args[0]
         if arg.dtype is NativeInteger():
             code_arg = self._print(NumpyFloat(arg))
@@ -1253,6 +1346,8 @@ class CCodePrinter(CodePrinter):
         return ""
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
@@ -1271,13 +1366,13 @@ class CCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         if self._additional_args :
             self._additional_args.pop()
-        imports = ''.join(self._print(i) for i in expr.imports)
+        for i in expr.imports:
+            self.add_import(i)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
         parts = [sep,
                  doc_string,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
-                 imports,
                  decs,
                  body,
                  '}\n',
@@ -1316,6 +1411,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        if func.is_inline:
+            return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
@@ -1372,7 +1469,7 @@ class CCodePrinter(CodePrinter):
 
         if len(args) > 1:
             if expr.stmt:
-                return self._print(expr.stmt)+'\n'+'return 0;\n'
+                return self._print(expr.stmt)+'return 0;\n'
             return 'return 0;\n'
 
         if expr.stmt:
@@ -1405,6 +1502,11 @@ class CCodePrinter(CodePrinter):
     def _print_Nil(self, expr):
         return 'NULL'
 
+    def _print_NilArgument(self, expr):
+        raise errors.report("Trying to use optional argument in inline function without providing a variable",
+                symbol=expr,
+                severity='fatal')
+
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)
 
@@ -1425,7 +1527,7 @@ class CCodePrinter(CodePrinter):
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelFloorDiv(self, expr):
-        self._additional_imports.add("math")
+        self.add_import(c_imports['math'])
         # the result type of the floor division is dependent on the arguments
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
@@ -1681,13 +1783,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_Constant(self, expr):
         if expr == math_constants['inf']:
-            self._additional_imports.add("math")
+            self.add_import(c_imports['math'])
             return 'HUGE_VAL'
         elif expr == math_constants['pi']:
-            self._additional_imports.add("math")
+            self.add_import(c_imports['math'])
             return 'M_PI'
         elif expr == math_constants['e']:
-            self._additional_imports.add("math")
+            self.add_import(c_imports['math'])
             return 'M_E'
         else:
             raise NotImplementedError("Constant not implemented")
@@ -1772,7 +1874,7 @@ class CCodePrinter(CodePrinter):
         decs    = ''.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        imports = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = [*expr.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
         return ('{imports}'
@@ -1814,6 +1916,8 @@ class CCodePrinter(CodePrinter):
             return self._print(functools.reduce(
                 lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
+    def _print_PrecomputedCode(self, expr):
+        return expr.code
 
 
     def indent_code(self, code):
