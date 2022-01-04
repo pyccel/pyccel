@@ -740,7 +740,7 @@ class PythonCodePrinter(CodePrinter):
         precision = expr.precision
 
         if not isinstance(expr, (LiteralInteger, LiteralFloat, LiteralComplex)) or \
-                precision == default_precision[self._print(dtype)]:
+                precision == -1:
             return repr(expr.python_value)
         else:
             cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
