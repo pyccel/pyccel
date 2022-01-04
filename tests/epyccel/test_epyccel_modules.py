@@ -116,8 +116,6 @@ def test_module_6(language):
         mod_att = getattr(mod, att)
         modnew_att = getattr(modnew, att)
         assert mod_att == modnew_att
-        #TODO: Remove .item() when #735 is fixed
-        assert type(mod_att) is type(modnew_att) or \
-                type(mod_att.item()) is type(modnew_att)
+        assert type(mod_att) is type(modnew_att)
 
 
