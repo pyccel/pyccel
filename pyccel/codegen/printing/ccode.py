@@ -257,6 +257,7 @@ class CCodePrinter(CodePrinter):
         self._additional_args = []
         self._temporary_args = []
         self._current_module = None
+        self._in_header = False
         # Dictionary linking optional variables to their
         # temporary counterparts which provide allocated
         # memory
@@ -580,6 +581,7 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def _print_ModuleHeader(self, expr):
+        self._in_header = True
         name = expr.module.name
         # TODO: Add classes and interfaces
         funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
@@ -590,6 +592,7 @@ class CCodePrinter(CodePrinter):
         imports = [*expr.module.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
+        self._in_header = False
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n'
@@ -938,7 +941,7 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
-        elif declaration_type == 't_ndarray ':
+        elif declaration_type == 't_ndarray ' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
         else:
