@@ -1265,8 +1265,12 @@ class FCodePrinter(CodePrinter):
 #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
 #                severity='fatal')
 
+        mod_str = ''
+        if expr.module_variable and not is_private and (rank == 0):
+            mod_str = ', bind(c)'
+
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr + externalstr
+        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr + externalstr + mod_str
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
