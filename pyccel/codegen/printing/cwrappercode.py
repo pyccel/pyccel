@@ -695,13 +695,18 @@ class CWrapperCodePrinter(CCodePrinter):
                       The module variable
         collect_var : Variable
                       A PyObject* variable to store temporaries
+
+        Returns
+        -------
+        list : A list of PyccelAstNodes to be appended to the body of the
+                pymodule initialisation function
         """
         if var.rank != 0:
             if var.fst:
                 symbol = var
             else:
                 symbol = var.get_user_nodes(Assign)[0]
-            errors.report("Arrays cannot currently be exposed to Python",
+            errors.report("Global arrays (defined at the module level) cannot currently be exposed to Python",
                     severity='warning', symbol=symbol)
             return []
 
