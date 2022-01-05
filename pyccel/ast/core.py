@@ -726,6 +726,12 @@ class CodeBlock(Basic):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
+    def set_fst(self, fst):
+        super().set_fst(fst)
+        for l in self.body:
+            if not l.fst:
+                l.set_fst(fst)
+
 class AliasAssign(Basic):
 
     """Represents aliasing for code generation. An alias is any statement of the
