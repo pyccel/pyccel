@@ -1664,6 +1664,7 @@ class SemanticParser(BasicParser):
         comment_types = (Header, MacroFunction, EmptyNode, Comment, CommentBlock)
 
         if not all(isinstance(l, comment_types) for l in init_func_body):
+            # If there are any initialisation statements then create an initialisation function
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
             init_func_name = self.get_new_name(expr.name+'__init')
@@ -1671,6 +1672,7 @@ class SemanticParser(BasicParser):
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
                     global_vars = variables)
+            # Ensure that the function is correctly defined within the namespaces
             self.create_new_function_scope(init_func_name, [])
             self.exit_function_scope()
             self.insert_function(init_func)
@@ -1689,11 +1691,14 @@ class SemanticParser(BasicParser):
                             for f,imp in zip(import_frees, pyccelised_imports) if f]
 
             if deallocs or import_frees:
+                # If there is anything that needs deallocating when the module goes out of scope
+                # create a deallocation function
                 import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
                                     global_vars = variables)
+                # Ensure that the function is correctly defined within the namespaces
                 self.create_new_function_scope(free_func_name, [])
                 self.exit_function_scope()
                 self.insert_function(free_func)
