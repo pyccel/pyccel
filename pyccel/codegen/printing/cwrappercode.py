@@ -697,8 +697,12 @@ class CWrapperCodePrinter(CCodePrinter):
                       A PyObject* variable to store temporaries
         """
         if var.rank != 0:
+            if var.fst:
+                symbol = var
+            else:
+                symbol = var.get_user_nodes(Assign)[0]
             errors.report("Arrays cannot currently be exposed to Python",
-                    severity='warning', symbol=var)
+                    severity='warning', symbol=symbol)
             return []
 
         collect_value = Assign(VariableAddress(collect_var),
@@ -732,11 +736,15 @@ class CWrapperCodePrinter(CCodePrinter):
                       name       = tmp_var_name,
                       is_pointer = True)
 
+        orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
         if self._target_language == 'fortran':
-            vars_to_wrap = [v.clone(v.name.lower()) for v in expr.variables if not v.is_private]
+            vars_to_wrap = [v.clone(v.name.lower()) for v in orig_vars_to_wrap]
+            for v,w in zip(orig_vars_to_wrap,vars_to_wrap):
+                assign = v.get_user_nodes(Assign)[0]
+                w.set_fst(assign.fst)
         else:
-            vars_to_wrap = [v for v in expr.variables if not v.is_private]
-        var_names = [v.name for v in expr.variables if not v.is_private]
+            vars_to_wrap = orig_vars_to_wrap
+        var_names = [v.name for v in orig_vars_to_wrap]
 
         body = [l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var)]
 
