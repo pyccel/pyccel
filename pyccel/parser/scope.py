@@ -148,20 +148,22 @@ class Scope(object):
         """
         return self._locals['symbolic_functions']
 
-    def find_in_scope(self, name, location):
-        """ Find the specified object in the scope
+    def find_in_scope(self, name, location = None):
+        """ Find and return the specified object in the scope
+        If the object cannot be found then None is returned
         """
-        if name in self._locals[location]:
-            return self._locals[location][name]
+        for l in ([location] if location else self._locals.keys()):
+            if name in self._locals[l]:
+                return self._locals[l][name]
 
-        if name in self.imports[location]:
-            return self.imports[location][name]
+            if name in self.imports[l]:
+                return self.imports[l][name]
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope:
             return self.parent_scope.find_in_scope(name, location)
         else:
-            raise RuntimeError("Variable not found in scope")
+            None
 
     @property
     def is_loop(self):
@@ -240,3 +242,25 @@ class Scope(object):
             self.parent_scope.remove_variable(var, name, python_scoping)
         else:
             raise RuntimeError("Variable not found in scope")
+
+    def insert_class(self, cls):
+        """ Add a class to the current scope
+
+        Parameters
+        ----------
+        cls  : ClassDef
+                The class to be inserted into the current scope
+        """
+        if not isinstance(cls, ClassDef):
+            raise TypeError('class must be of type ClassDef')
+
+        name = cls.name
+
+        if self.is_loop:
+            self.parent_scope.insert_class(cls)
+        else:
+            if name in self._locals['classes']:
+                raise RuntimeError('New class already exists in scope')
+            self._locals['classes'][name] = cls
+            #TODO: make lower if case-sensitive
+            self._used_symbols.add(name)

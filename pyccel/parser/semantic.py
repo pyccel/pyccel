@@ -278,10 +278,7 @@ class SemanticParser(BasicParser):
                     var = i
                     return var
         else:
-            try:
-                return self.namespace.find_in_scope(name, 'variables')
-            except RuntimeError:
-                return None
+            return self.namespace.find_in_scope(name, 'variables')
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -315,34 +312,6 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return funcs
 
-
-    def get_class(self, name):
-        """."""
-
-        container = self.namespace
-
-        while container:
-            if name in container.classes:
-                return container.classes[name]
-            elif name in container.imports['classes']:
-                return container.imports['classes'][name]
-
-            container = container.parent_scope
-        return None
-
-
-    def insert_class(self, cls, parent=False):
-        """."""
-
-        if isinstance(cls, ClassDef):
-            name = cls.name
-            container = self.namespace
-            if parent:
-                container = container.parent_scope
-            container.classes[name] = cls
-        else:
-            raise TypeError('Expected A class definition ')
-
     def insert_template(self, expr):
         """append the scope's templates with the given template"""
         self.namespace.templates[expr.name] = expr
@@ -369,27 +338,6 @@ class SemanticParser(BasicParser):
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
             raise TypeError(msg)
-
-    def get_function(self, name):
-        """."""
-
-        # TODO shall we keep the elif in _imports?
-
-        func = None
-
-        container = self.namespace
-        while container:
-            if name in container.functions:
-                func = container.functions[name]
-                break
-
-            if name in container.imports['functions']:
-                func =  container.imports['functions'][name]
-                break
-            container = container.parent_scope
-
-        return func
-
 
     def get_import(self, name):
         """
@@ -744,7 +692,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, ConstructorCall):
             cls_name = expr.func.cls_name
-            cls = self.get_class(cls_name)
+            cls = self.namespace.find_in_scope(cls_name, 'classes')
 
             dtype = self.get_class_construct(cls_name)()
 
@@ -1370,7 +1318,7 @@ class SemanticParser(BasicParser):
 
                 cls      = self.get_variable('self')
                 cls_name = str(cls.cls_base.name)
-                cls      = self.get_class(cls_name)
+                cls      = self.namespace.find_in_scope(cls_name, 'classes')
 
                 attributes = cls.attributes
                 parent     = cls.superclass
@@ -1380,7 +1328,7 @@ class SemanticParser(BasicParser):
                 # update the self variable with the new attributes
 
                 dt       = self.get_class_construct(cls_name)()
-                cls_base = self.get_class(cls_name)
+                cls_base = self.namespace.find_in_scope(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 d_lhs    = d_var.copy()
                 self.namespace.insert_variable(var)
@@ -1395,7 +1343,7 @@ class SemanticParser(BasicParser):
                 # update the attributes of the class and push it to the namespace
                 attributes += [member]
                 new_cls = ClassDef(cls_name, attributes, [], superclass=parent)
-                self.insert_class(new_cls, parent=True)
+                self.namespace.parent_scope.insert_class(new_cls)
             else:
                 lhs = self._visit(lhs, **settings)
         else:
@@ -1640,7 +1588,7 @@ class SemanticParser(BasicParser):
             for name, headers in self.namespace.headers.items():
                 if all(isinstance(v, FunctionHeader) and \
                         not isinstance(v, MethodHeader) for v in headers):
-                    F = self.get_function(name)
+                    F = self.namespace.find_in_scope(name, 'functions')
                     if F is None:
                         func_defs = [vi for v in headers for vi in v.create_definition(is_external=is_external)]
                         if len(func_defs) == 1:
@@ -1852,7 +1800,7 @@ class SemanticParser(BasicParser):
         var = self.check_for_variable(name)
 
         if var is None:
-            var = self.get_function(name)
+            var = self.namespace.find_in_scope(name, 'functions')
         if var is None:
             var = self.get_symbolic_function(name)
         if var is None:
@@ -2095,7 +2043,7 @@ class SemanticParser(BasicParser):
         if hasattr(self, annotation_method):
             return getattr(self, annotation_method)(expr, **settings)
 
-        func     = self.get_function(name)
+        func     = self.namespace.find_in_scope(name, 'functions')
 
         args = self._handle_function_args(expr.args, **settings)
 
@@ -2111,7 +2059,7 @@ class SemanticParser(BasicParser):
             # TODO improve the test
             # we must not invoke the namespace like this
 
-            cls = self.get_class(name)
+            cls = self.namespace.find_in_scope(name, 'classes')
             d_methods = cls.methods_as_dict
             method = d_methods.pop('__init__', None)
 
@@ -2143,7 +2091,7 @@ class SemanticParser(BasicParser):
                 name = _get_name(func.name)
                 args = macro.apply(args)
             else:
-                func = self.get_function(name)
+                func = self.namespace.find_in_scope(name, 'functions')
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -2372,7 +2320,7 @@ class SemanticParser(BasicParser):
         elif isinstance(rhs, PythonMap):
 
             name = str(rhs.args[0])
-            func = self.get_function(name)
+            func = self.namespace.find_in_scope(name, 'functions')
 
             if func is None:
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
@@ -2399,7 +2347,7 @@ class SemanticParser(BasicParser):
 
                 if name.startswith('Pyccel'):
                     name = name[6:]
-                    d['cls_base'] = self.get_class(name)
+                    d['cls_base'] = self.namespace.find_in_scope(name, 'classes')
                     #TODO: Avoid writing the default variables here
                     d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
 
@@ -2939,7 +2887,7 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        return_vars = self.get_function(f_name).results
+        return_vars = self.namespace.find_in_scope(f_name, 'functions').results
         assigns     = []
         for v,r in zip(return_vars, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
@@ -3009,7 +2957,7 @@ class SemanticParser(BasicParser):
         if len(headers) == 0:
             # check if a header is imported from a header file
             # TODO improve in the case of multiple headers ( interface )
-            func       = self.get_function(name)
+            func       = self.namespace.find_in_scope(name, 'functions')
             if func and func.is_header:
                 interfaces = [func]
 
@@ -3070,7 +3018,7 @@ class SemanticParser(BasicParser):
                 arg       = arguments[0]
                 arguments = arguments[1:]
                 dt        = self.get_class_construct(cls_name)()
-                cls_base  = self.get_class(cls_name)
+                cls_base  = self.namespace.find_in_scope(cls_name, 'classes')
                 var       = Variable(dt, 'self', cls_base=cls_base)
                 self.namespace.insert_variable(var)
 
@@ -3159,7 +3107,7 @@ class SemanticParser(BasicParser):
 
             if arg and cls_name:
                 dt       = self.get_class_construct(cls_name)()
-                cls_base = self.get_class(cls_name)
+                cls_base = self.namespace.find_in_scope(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args
 
@@ -3231,7 +3179,7 @@ class SemanticParser(BasicParser):
                     while not(intent) and i_fa < n_fa:
                         fa = d_apps[a][i_fa]
                         f_name = fa.funcdef.name
-                        func = self.get_function(f_name)
+                        func = self.namespace.find_in_scope(f_name, 'functions')
 
                         j = list(fa.args).index(a)
                         intent = func.arguments_inout[j]
@@ -3279,7 +3227,7 @@ class SemanticParser(BasicParser):
                     }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
-                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.get_function(f.name)]
+                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.namespace.find_in_scope(f.name, 'functions')]
                 func_kwargs['global_funcs'] = global_funcs
                 cls = InlineFunctionDef
             else:
@@ -3293,12 +3241,12 @@ class SemanticParser(BasicParser):
                 recursive_func_obj.invalidate_node()
 
             if cls_name:
-                cls = self.get_class(cls_name)
+                cls = self.namespace.find_in_scope(cls_name, 'classes')
                 methods = list(cls.methods) + [func]
 
                 # update the class methods
 
-                self.insert_class(ClassDef(cls_name, cls.attributes,
+                self.namespace.insert_class(ClassDef(cls_name, cls.attributes,
                         methods, superclass=cls.superclass))
 
             funcs += [func]
@@ -3373,7 +3321,7 @@ class SemanticParser(BasicParser):
 
         # remove quotes for str representation
         cls = ClassDef(name, [], [], superclass=parent)
-        self.insert_class(cls)
+        self.namespace.insert_class(cls)
         const = None
 
         for (i, method) in enumerate(methods):
@@ -3407,7 +3355,7 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='fatal', blocker=self.blocking)
 
-        attributes = self.get_class(name).attributes
+        attributes = self.namespace.find_in_scope(cls_name, 'classes').attributes
 
         for i in methods:
             if isinstance(i, Interface):
@@ -3416,7 +3364,7 @@ class SemanticParser(BasicParser):
 
         cls = ClassDef(name, attributes, methods,
               interfaces=interfaces, superclass=parent)
-        self.insert_class(cls)
+        self.namespace.insert_class(cls)
 
         return EmptyNode()
 
@@ -3493,9 +3441,7 @@ class SemanticParser(BasicParser):
             imports = pyccel_builtin_import(expr)
 
             def _insert_obj(location, target, obj):
-                F = self.check_for_variable(target)
-                if F is None:
-                    F = self.get_function(target)
+                F = self.namespace.find_in_scope(target)
 
                 if obj is F:
                     errors.report(FOUND_DUPLICATED_IMPORT,
@@ -3640,7 +3586,7 @@ class SemanticParser(BasicParser):
         f_name = expr.master
         header = self.get_header(f_name)
         if not header:
-            func = self.get_function(f_name)
+            func = self.namespace.find_in_scope(f_name, 'functions')
             if func is None:
                 errors.report(MACRO_MISSING_HEADER_OR_FUNC,
                 symbol=f_name,severity='error', blocker=self.blocking,
