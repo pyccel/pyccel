@@ -359,34 +359,6 @@ class SemanticParser(BasicParser):
         return imp
 
 
-    def get_symbolic_function(self, name):
-        """."""
-
-        # TODO shall we keep the elif in _imports?
-        container = self.namespace
-        while container:
-            if name in container.symbolic_functions:
-                return container.symbolic_functions[name]
-
-            if name in container.imports['symbolic_functions']:
-                return container.imports['symbolic_functions'][name]
-            container = container.parent_scope
-
-        return None
-
-    def get_macro(self, name):
-        """."""
-
-        # TODO shall we keep the elif in _imports?
-
-        container = self.namespace
-        while container:
-            if name in container.macros:
-                return container.macros[name]
-            container = container.parent_scope
-
-        return None
-
     def insert_import(self, name, target, storage_name = None):
         """
         Create and insert a new import in namespace if it's not defined
@@ -458,22 +430,11 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return templates
 
-    def find_class_construct(self, name):
-        """Returns the class datatype for name if it exists.
-        Returns None otherwise
-        """
-        container = self.namespace
-        while container:
-            if name in container.cls_constructs:
-                return container.cls_constructs[name]
-            container = container.parent_scope
-        return None
-
     def get_class_construct(self, name):
         """Returns the class datatype for name if it exists.
         Raises an error otherwise
         """
-        result = self.find_class_construct(name)
+        result = self.namespace.find_in_scope(name, 'cls_constructs')
 
         if result:
             return result
@@ -1802,7 +1763,7 @@ class SemanticParser(BasicParser):
         if var is None:
             var = self.namespace.find_in_scope(name, 'functions')
         if var is None:
-            var = self.get_symbolic_function(name)
+            var = self.namespace.find_in_scope(name, 'symbolic_functions')
         if var is None:
             var = python_builtin_datatype(name)
 
@@ -1902,7 +1863,7 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                         severity='fatal')
-            macro = self.get_macro(rhs_name)
+            macro = self.namespace.find_in_scope(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
                 name = macro.name
@@ -1957,7 +1918,7 @@ class SemanticParser(BasicParser):
         # look for a macro
         else:
 
-            macro = self.get_macro(rhs_name)
+            macro = self.namespace.find_in_scope(rhs_name, 'macros')
 
             # Macro
             if isinstance(macro, MacroVariable):
@@ -2023,7 +1984,7 @@ class SemanticParser(BasicParser):
         funcs = expr.expr.get_attribute_nodes(FunctionCall)
         for func in funcs:
             name = _get_name(func)
-            f = self.get_symbolic_function(name)
+            f = self.namespace.find_in_scope(name, 'symbolic_functions')
             if f is None:
                 errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -2048,13 +2009,13 @@ class SemanticParser(BasicParser):
         args = self._handle_function_args(expr.args, **settings)
 
         if name == 'lambdify':
-            args = self.get_symbolic_function(str(expr.args[0]))
+            args = self.namespace.find_in_scope(str(expr.args[0]), 'symbolic_functions')
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:
             return F
 
-        elif self.find_class_construct(name):
+        elif self.namespace.find_in_scope(name, 'cls_constructs'):
 
             # TODO improve the test
             # we must not invoke the namespace like this
@@ -2085,7 +2046,7 @@ class SemanticParser(BasicParser):
             # first we check if it is a macro, in this case, we will create
             # an appropriate FunctionCall
 
-            macro = self.get_macro(name)
+            macro = self.namespace.find_in_scope(name, 'macros')
             if macro is not None:
                 func = macro.master.funcdef
                 name = _get_name(func.name)
@@ -2143,7 +2104,7 @@ class SemanticParser(BasicParser):
         # Visit object
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
-            macro = self.get_macro(name)
+            macro = self.namespace.find_in_scope(name, 'macros')
             if macro is None:
                 rhs = self._visit(rhs, **settings)
             elif isinstance(lhs, PyccelSymbol) and lhs.is_temp:
@@ -2195,7 +2156,7 @@ class SemanticParser(BasicParser):
         elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
             name = _get_name(var)
-            macro = self.get_macro(name)
+            macro = self.namespace.find_in_scope(name, 'macros')
             if macro is None:
                 rhs = self._visit(rhs, **settings)
             else:
@@ -2503,7 +2464,7 @@ class SemanticParser(BasicParser):
                 # in a symbolic assign, the rhs can be a lambda expression
                 # it is then treated as a def node
 
-                F = self.get_symbolic_function(l)
+                F = self.namespace.find_in_scope(l, 'symbolic_functions')
                 if F is None:
                     self.insert_symbolic_function(new_expr)
                 else:
@@ -2528,21 +2489,27 @@ class SemanticParser(BasicParser):
         body     = list(expr.body.body)
         iterator = expr.target
 
+        new_expr = []
+
+        start = LiteralInteger(0)
+        iterator_d_var = self._infere_type(start)
+
         if iterable.num_loop_counters_required:
-            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
+            indices = [self._assign_lhs_variable(iterator, iterator_d_var,
+                                rhs=start, new_expressions=new_expr,
+                                is_augassign=False, **settings) \
+                        for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
                 iterator = iterator[0]
             index = self.check_for_variable(iterator)
             if index is None:
-                index = Variable('int', iterator, is_temp = iterator.is_temp)
+                index = self._assign_lhs_variable(iterator, iterator_d_var,
+                                rhs=start, new_expressions=new_expr,
+                                is_augassign=False, **settings)
                 self.namespace.insert_variable(index)
             iterable.set_loop_counter(index)
-
-        new_expr = []
-
-        iterator = expr.target
 
         if isinstance(iterator, PyccelSymbol):
             iterator_rhs = iterable.get_target_from_range()
@@ -3296,7 +3263,7 @@ class SemanticParser(BasicParser):
         if is_symbolic(args[0]):
             _args = []
             for a in args:
-                f = self.get_symbolic_function(a.name)
+                f = self.namespace.find_in_scope(a.name, 'symbolic_functions')
                 if f is None:
                     _args.append(a)
                 else:
