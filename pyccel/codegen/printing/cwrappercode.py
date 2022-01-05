@@ -686,6 +686,11 @@ class CWrapperCodePrinter(CCodePrinter):
         ----------
         mod_name    : str
                       The name of the module variable
+        var_name    : str
+                      The name which will be used to identify the
+                      variable in python. (This is usually var.name,
+                      however it may differ due to the case-insensitivity
+                      of fortran)
         var         : Variable
                       The module variable
         collect_var : Variable
