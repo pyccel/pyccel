@@ -301,17 +301,6 @@ class SemanticParser(BasicParser):
         return variables
 
 
-    def get_parent_functions(self):
-        container = self.namespace
-        funcs = container.functions.copy()
-        container = container.parent_scope
-        while container:
-            for i in container.functions:
-                if not i in funcs:
-                    funcs[i] = container.functions[i]
-            container = container.parent_scope
-        return funcs
-
     def insert_template(self, expr):
         """append the scope's templates with the given template"""
         self.namespace.templates[expr.name] = expr
@@ -3127,7 +3116,7 @@ class SemanticParser(BasicParser):
             local_assign     = [i.name for i in all_assigned]
 
             apps = [i for i in calls if (i.funcdef.name
-                    in self.get_parent_functions())]
+                    not in sub_funcs)]
 
             d_apps = OrderedDict((a, []) for a in args)
             for f in apps:
