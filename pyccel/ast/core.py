@@ -5,8 +5,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from collections     import OrderedDict
-
 from sympy.logic.boolalg      import And as sp_And
 
 
@@ -17,14 +15,15 @@ from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeBool, NativeRange, default_precision,
+                        NativeBool, NativeRange,
                         NativeTuple, str_dtype)
-from .internals      import Slice, PyccelSymbol
+from .internals import Slice, PyccelSymbol, PyccelInternalFunction, get_final_precision
 
-from .literals       import LiteralInteger, Nil, convert_to_literal, LiteralFalse
-from .itertoolsext   import Product
+from .literals  import LiteralInteger, Nil, LiteralFalse
+from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
+from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
 from .variable import Variable
@@ -64,6 +63,7 @@ __all__ = (
     'FunctionDefArgument',
     'If',
     'Import',
+    'InlineFunctionDef',
     'InProgram',
     'Interface',
     'Module',
@@ -241,32 +241,54 @@ class AsName(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import AsName
-    >>> AsName('old', 'new')
+    >>> from pyccel.ast.core import AsName, FunctionDef
+    >>> from pyccel.ast.numpyext import NumpyFull
+    >>> func = FunctionDef('old', (), (), ())
+    >>> AsName(func, 'new')
     old as new
+    >>> AsName(NumpyFull, 'fill_func')
+    full as fill_func
 
     Parameters
     ==========
-    name   : str
-             original name of variable or function
+    obj    : Basic or BasicType
+             The variable, function, or module being renamed
     target : str
              name of variable or function in this context
     """
-    __slots__ = ('_name', '_target')
+    __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
 
-    def __init__(self, name, target):
-        self._name = name
+    def __init__(self, obj, target):
+        if PyccelAstNode.stage != "syntactic":
+            assert (isinstance(obj, Basic) and \
+                    not isinstance(obj, PyccelSymbol)) or \
+                   (isinstance(obj, type) and issubclass(obj, Basic))
+        self._obj = obj
         self._target = target
         super().__init__()
 
     @property
     def name(self):
-        return self._name
+        """ The original name of the object
+        """
+        obj = self._obj
+        if isinstance(obj, (str, PyccelSymbol, DottedName)):
+            return obj
+        else:
+            return obj.name
 
     @property
     def target(self):
+        """ The target name of the object
+        """
         return self._target
+
+    @property
+    def object(self):
+        """ The underlying object described by this AsName
+        """
+        return self._obj
 
     def __repr__(self):
         return '{0} as {1}'.format(str(self.name), str(self.target))
@@ -277,8 +299,13 @@ class AsName(Basic):
     def __eq__(self, string):
         if isinstance(string, str):
             return string == self.target
+        elif isinstance(string, AsName):
+            return string.target == self.target
         else:
             return self is string
+
+    def __ne__(self, string):
+        return not self == string
 
     def __hash__(self):
         return hash(self.target)
@@ -699,6 +726,12 @@ class CodeBlock(Basic):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
+    def set_fst(self, fst):
+        super().set_fst(fst)
+        for l in self.body:
+            if not l.fst:
+                l.set_fst(fst)
+
 class AliasAssign(Basic):
 
     """Represents aliasing for code generation. An alias is any statement of the
@@ -1112,12 +1145,12 @@ class Module(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -1130,7 +1163,7 @@ class Module(Basic):
     """
     __slots__ = ('_name','_variables','_funcs','_interfaces',
                  '_classes','_imports','_init_func','_free_func',
-                 '_program','_variable_inits')
+                 '_program','_variable_inits','_internal_dictionary')
     _attribute_nodes = ('_variables','_funcs','_interfaces',
                         '_classes','_imports','_init_func',
                         '_free_func','_program','_variable_inits')
@@ -1174,7 +1207,7 @@ class Module(Basic):
             raise TypeError('interfaces must be an iterable')
         for i in interfaces:
             if not isinstance(i, Interface):
-                raise TypeError('Only a Inteface instance is allowed.')
+                raise TypeError('Only a Interface instance is allowed.')
 
         NoneType = type(None)
         if not isinstance(init_func, (NoneType, FunctionDef)):
@@ -1204,6 +1237,13 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+
+        self._internal_dictionary = {v.name:v for v in variables}
+        self._internal_dictionary.update({f.name:f for f in funcs})
+        self._internal_dictionary.update({i.name:i for i in interfaces})
+        self._internal_dictionary.update({c.name:c for c in classes})
+        import_mods = {i.source: [t.object for t in i.target if isinstance(t.object, Module)] for i in imports}
+        self._internal_dictionary.update({v:t[0] for v,t in import_mods.items() if t})
 
         if init_func:
             init_if = init_func.body.body[0]
@@ -1246,6 +1286,12 @@ class Module(Basic):
         """
         return self._program
 
+    @program.setter
+    def program(self, prog):
+        assert self._program is None
+        self._program = prog
+        self._program.set_current_user_node(self)
+
     @property
     def funcs(self):
         """ Any functions defined in the module
@@ -1274,7 +1320,8 @@ class Module(Basic):
     def declarations(self):
         """ Returns the declarations of the variables
         """
-        return [Declare(i.dtype, i, value=v) for i,v in zip(self.variables, self._variable_inits)]
+        return [Declare(i.dtype, i, value=v, module_variable=True) \
+                for i,v in zip(self.variables, self._variable_inits)]
 
     @property
     def body(self):
@@ -1287,6 +1334,33 @@ class Module(Basic):
         """ Function for changing the name of a module
         """
         self._name = new_name
+
+    def __getitem__(self, arg):
+        assert isinstance(arg, str)
+        args = arg.split('.')
+        result = self._internal_dictionary[args[0]]
+        for key in args[1:]:
+            result = result[key]
+        return result
+
+    def __contains__(self, arg):
+        assert isinstance(arg, (str, PyccelSymbol, DottedName))
+        args = str(arg).split('.')
+        current_pos = self._internal_dictionary
+        key = args[0]
+        result = key in self._internal_dictionary
+        i = 1
+        while i<len(args) and result:
+            current_pos = current_pos[key]
+            key = args[i]
+            result = key in current_pos
+            i += 1
+        return result
+
+    def keys(self):
+        """ Returns the names of all objects accessible directly in this module
+        """
+        return self._internal_dictionary.keys()
 
 class ModuleHeader(Basic):
 
@@ -1301,12 +1375,12 @@ class ModuleHeader(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -1435,9 +1509,13 @@ class Iterable(Basic):
     Paramaters
     ----------
     iterable : acceptable_iterator_type
-                The iterator being wrapped
+               The iterator being wrapped
+               The type must be in acceptable_iterator_types or the class must
+               implement the following functions:
+               - n_indices
+               - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, Product, PythonRange)
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
@@ -1449,10 +1527,10 @@ class Iterable(Basic):
             self._num_indices_required = 0
         elif isinstance(iterable, PythonEnumerate):
             self._num_indices_required = int(iterable.start != 0)
-        elif isinstance(iterable, Product):
-            self._num_indices_required = len(iterable.elements)
         elif isinstance(iterable, self.acceptable_iterator_types):
             self._num_indices_required = 1
+        elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
+            self._num_indices_required = iterable.n_indices
         else:
             raise TypeError("Unknown iterator type {}".format(type(iterable)))
 
@@ -1470,6 +1548,9 @@ class Iterable(Basic):
         These are iterators generated by pyccel so are not
         needed for
         """
+        assert self._indices is None
+        for i in indices:
+            i.set_current_user_node(self)
         self._indices = indices
 
     def get_assigns(self, target):
@@ -1516,12 +1597,8 @@ class Iterable(Basic):
         """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
-        elif isinstance(self._iterable, Product):
-            prod = self._iterable
-            lengths = [getattr(e, '__len__',
-                    getattr(e, 'length', PythonLen(e))) for e in prod.elements]
-            lengths = [l() if callable(l) else l for l in lengths]
-            return [PythonRange(l) for l in lengths]
+        elif hasattr(self._iterable, 'to_range'):
+            return self._iterable.to_range()
         else:
             length = getattr(self._iterable, '__len__',
                     getattr(self._iterable, 'length', PythonLen(self._iterable)))
@@ -2079,7 +2156,11 @@ class Return(Basic):
         return args
 
     def __repr__(self):
-        return "Return({})".format(','.join([repr(e) for e in self.expr]))
+        if self.stmt:
+            code = repr(self.stmt)+';'
+        else:
+            code = ''
+        return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
 
 class FunctionDef(Basic):
 
@@ -2108,6 +2189,21 @@ class FunctionDef(Basic):
     cls_name: str
         Class name if the function is a method of cls_name
 
+    is_static: bool
+        True for static functions. Needed for iso_c_binding interface
+
+    imports: list, tuple
+        a list of needed imports
+
+    decorators: list, tuple
+        a list of properties
+
+    headers: list,tuple
+        a list of headers describing the function
+
+    is_recursive: bool
+        True for a function which calls itself
+
     is_pure: bool
         True for a function without side effect
 
@@ -2117,20 +2213,29 @@ class FunctionDef(Basic):
     is_private: bool
         True for a function that is private
 
-    is_static: bool
-        True for static functions. Needed for iso_c_binding interface
+    is_header: bool
+        True for a function which has no body available
 
-    imports: list, tuple
-        a list of needed imports
+    is_external: bool
+        True for a function which cannot be explicitly imported or renamed
 
-    decorators: list, tuple
-        a list of proporties
+    arguments_inout: list, tuple
+        a list of booleans indicating if each argument is modified by the function
+
+    functions: list, tuple
+        a list of functions defined within this function
+
+    interfaces: list, tuple
+        a list of interfaces defined within this function
+
+    doc_string: str
+        The doc string of the function
 
     Examples
     --------
     >>> from pyccel.ast.core import Assign, Variable, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> args        = [x]
     >>> results     = [y]
     >>> body        = [Assign(y,x+1)]
@@ -2144,8 +2249,8 @@ class FunctionDef(Basic):
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n', value=4)
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2408,6 +2513,11 @@ class FunctionDef(Basic):
         return self._is_external
 
     @property
+    def is_inline(self):
+        """ True if the function should be printed inline """
+        return False
+
+    @property
     def arguments_inout(self):
         """ List of variables which are the modifiable function arguments """
         return self._arguments_inout
@@ -2498,7 +2608,10 @@ class FunctionDef(Basic):
         'is_private':self._is_private,
         'is_header':self._is_header,
         'arguments_inout':self._arguments_inout,
-        'functions':self._functions}
+        'functions':self._functions,
+        'is_external':self._is_external,
+        'interfaces':self._interfaces,
+        'doc_string':self._doc_string}
         return args, kwargs
 
     def __reduce_ex__(self, i):
@@ -2536,6 +2649,137 @@ class FunctionDef(Basic):
     @property
     def is_unused(self):
         return False
+
+class InlineFunctionDef(FunctionDef):
+    """
+    Represents a function definition for an inline function.
+
+    Parameters
+    ----------
+    See FunctionDef
+
+    namespace_imports : Scope
+                        The objects in the scope which are available due to imports
+    """
+    __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
+            '_global_funcs')
+
+    def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
+        self._namespace_imports = namespace_imports
+        self._global_funcs = global_funcs
+        super().__init__(*args, **kwargs)
+        self._orig_args = tuple(a.var for a in self.arguments)
+        self._new_args  = None
+        self._new_local_vars = None
+        self._if_block_replacements = None
+
+    @property
+    def is_inline(self):
+        """ True if the function should be printed inline """
+        return True
+
+    @property
+    def namespace_imports(self):
+        """ The objects in the scope which are available due to imports
+        """
+        return self._namespace_imports
+
+    def swap_in_args(self, args, new_local_vars):
+        """ Modify the body of the function by replacing the arguments
+        and local variables with the provided arguments and local variables
+        """
+        assert self._new_args is None
+        assert self._new_local_vars is None
+        # Collect the function arguments and the expressions they will be replaced with
+        self._new_local_vars = tuple(new_local_vars)
+
+        # We cannot replace with singletons as this cannot be reversed
+        self._new_args  = tuple(NilArgument() if a is Nil() else \
+                        PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOperator) \
+                        else a for a in args)
+
+        # Replace the arguments in the code
+        self.body.substitute(self._orig_args+self.local_vars, self._new_args+self._new_local_vars, invalidate=False)
+
+    def swap_out_args(self):
+        """ Modify the body of the function by reinstating the original arguments and local variables
+        """
+        self.body.substitute(self._new_args+self._new_local_vars, self._orig_args+self.local_vars, invalidate=False)
+        self._new_args = None
+        self._new_local_vars = None
+
+    def remove_presence_checks(self):
+        """ Modify the body by replacing all expressions checking for the presence of an optional
+        variable. Either the If is removed or the check is replaced with its literal result
+        """
+        assert self._if_block_replacements is None
+        # Look for if blocks and replace present(x) statements
+        if_blocks = self.body.get_attribute_nodes(If, excluded_nodes=(FunctionDef,))
+        if_block_replacements = [[], []]
+        for i in if_blocks:
+            blocks = []
+            for c,e in i.blocks:
+                if isinstance(c, PyccelIs):
+                    if c.eval() is True:
+                        blocks.append((LiteralTrue(), e))
+                        break
+                    elif c.eval() is False:
+                        continue
+                else:
+                    presence_checks = c.get_attribute_nodes(PyccelIs, excluded_nodes = (FunctionDef,))
+                    for pi in presence_checks:
+                        if pi.eval() is True:
+                            if_block_replacements[0].append(pi)
+                            if_block_replacements[1].append(LiteralTrue())
+                        elif pi.eval() is False:
+                            if_block_replacements[0].append(pi)
+                            if_block_replacements[1].append(LiteralFalse())
+                blocks.append((c, e))
+            if len(blocks) == 0:
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(EmptyNode())
+            elif len(blocks) == 1 and isinstance(blocks[0][0], LiteralTrue):
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(blocks[0][1])
+            elif len(blocks) != len(i.blocks):
+                if_block_replacements[0].append(i)
+                if_block_replacements[1].append(If(*blocks))
+        self._if_block_replacements = if_block_replacements
+        self.body.substitute(if_block_replacements[0], if_block_replacements[1], invalidate=False)
+
+    def reinstate_presence_checks(self):
+        """ Modify the body by reinstating all expressions checking for the presence of an optional
+        variable
+        """
+        self.body.substitute(self._if_block_replacements[1], self._if_block_replacements[0])
+        self._if_block_replacements = None
+
+    @property
+    def global_funcs(self):
+        """ List of global functions used in the function """
+        return self._global_funcs
+
+class PyccelFunctionDef(FunctionDef):
+    """ Class inheriting from FunctionDef which can store a pointer
+    to a class type defined by pyccel for treating internal functions.
+    This is useful for importing builtin functions
+
+    Parameters
+    ----------
+    name : str
+           The name of the function
+    func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
+                 The class which should be instantiated upon a FunctionCall
+                 to this FunctionDef object
+    """
+    def __init__(self, name, func_class):
+        assert isinstance(func_class, type) and \
+                issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
+        arguments = ()
+        results = ()
+        body = ()
+        super().__init__(name, arguments, results, body)
+        self._cls_name = func_class
 
 class Interface(Basic):
 
@@ -2596,10 +2840,24 @@ class Interface(Basic):
     def doc_string(self):
         return self._functions[0].doc_string
 
-    def point(self, args):
+    def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
+
+        if use_final_precision:
+            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
+                    (dtype1 in dtype2 or dtype2 in dtype1) \
+                    and (call_arg.rank == func_arg.rank) \
+                    and get_final_precision(call_arg) == \
+                        get_final_precision(func_arg)
+        else:
+            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
+                    (dtype1 in dtype2 or dtype2 in dtype1) \
+                    and (call_arg.rank == func_arg.rank) \
+                    and call_arg.precision == func_arg.precision
+
+
         j = -1
         for i in fs_args:
             j += 1
@@ -2609,12 +2867,7 @@ class Interface(Basic):
                 call_arg = y.value
                 dtype1 = str_dtype(call_arg.dtype)
                 dtype2 = str_dtype(func_arg.dtype)
-                found = found and (dtype1 in dtype2
-                                or dtype2 in dtype1) \
-                              and (call_arg.rank \
-                                == func_arg.rank) \
-                              and call_arg.precision \
-                                == func_arg.precision
+                found = found and type_match(dtype1, dtype2, call_arg, func_arg)
             if found:
                 break
 
@@ -2654,8 +2907,8 @@ class FunctionAddress(FunctionDef):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
 
     a function definition can have a FunctionAddress as an argument
 
@@ -2789,12 +3042,12 @@ class ClassDef(Basic):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> z = Variable('float', 'z')
+    >>> t = Variable('float', 't')
+    >>> a = Variable('float', 'a')
+    >>> b = Variable('float', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -3054,11 +3307,23 @@ class Import(Basic):
         self._source = source
         self._target = set()
         self._ignore_at_print = ignore_at_print
-        if isinstance(target, (str, DottedName, AsName)):
-            self._target = set([Import._format(target)])
-        elif iterable(target):
+        if target is None:
+            if PyccelAstNode.stage == "syntactic":
+                target = []
+            else:
+                raise KeyError("Missing argument 'target'")
+        elif not iterable(target):
+            target = [target]
+        if PyccelAstNode.stage == "syntactic":
             for i in target:
                 self._target.add(Import._format(i))
+        else:
+            for i in target:
+                assert isinstance(i, (AsName, Module))
+                if isinstance(i, Module):
+                    self._target.add(AsName(i,source))
+                else:
+                    self._target.add(i)
         super().__init__()
 
     @staticmethod
@@ -3068,9 +3333,7 @@ class Import(Basic):
                 return DottedName(*i.split('.'))
             else:
                 return PyccelSymbol(i)
-        if isinstance(i, (DottedName, AsName)):
-            return i
-        elif isinstance(i, PyccelSymbol):
+        if isinstance(i, (DottedName, AsName, PyccelSymbol)):
             return i
         else:
             raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
@@ -3151,8 +3414,8 @@ class FuncAddressDeclare(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
     __slots__ = ('_variable','_intent','_value','_static')
@@ -3230,17 +3493,20 @@ class Declare(Basic):
         True for a static declaration of an array.
     external: bool
         True for a function declared through a header
+    module_variable : bool
+        True for a variable which belongs to a module
 
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
     >>> Declare('int', Variable('int', 'n'))
     Declare(NativeInteger(), (n,), None)
-    >>> Declare('real', Variable('real', 'x'), intent='out')
-    Declare(NativeReal(), (x,), out)
+    >>> Declare('float', Variable('float', 'x'), intent='out')
+    Declare(NativeFloat(), (x,), out)
     """
     __slots__ = ('_dtype','_variable','_intent','_value',
-                 '_static','_passed_from_dotted', '_external')
+                 '_static','_passed_from_dotted', '_external',
+                 '_module_variable')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
@@ -3252,6 +3518,7 @@ class Declare(Basic):
         static=False,
         passed_from_dotted = False,
         external = False,
+        module_variable = False
         ):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -3276,6 +3543,9 @@ class Declare(Basic):
         if not isinstance(external, bool):
             raise TypeError('Expecting a boolean for external attribute')
 
+        if not isinstance(module_variable, bool):
+            raise TypeError('Expecting a boolean for module_variable attribute')
+
         self._dtype = dtype
         self._variable = variable
         self._intent = intent
@@ -3283,6 +3553,7 @@ class Declare(Basic):
         self._static = static
         self._passed_from_dotted = passed_from_dotted
         self._external = external
+        self._module_variable = module_variable
         super().__init__()
 
     @property
@@ -3314,6 +3585,13 @@ class Declare(Basic):
     @property
     def external(self):
         return self._external
+
+    @property
+    def module_variable(self):
+        """ Indicates whether the variable is scoped to
+        a module
+        """
+        return self._module_variable
 
     def __repr__(self):
         return 'Declare({})'.format(repr(self.variable))
@@ -3390,7 +3668,7 @@ class Del(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('real', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Del([x])
     Del([x])
     """
@@ -3682,6 +3960,9 @@ class IfSection(Basic):
     def __iter__(self):
         return iter((self.condition, self.body))
 
+    def __str__(self):
+        return "IfSec({},{})".format(str(self.condition), str(self.body))
+
 class If(Basic):
 
     """Represents a if statement in the code.
@@ -3723,6 +4004,9 @@ class If(Basic):
     def bodies(self):
         return [b.body for b in self._blocks]
 
+    def __str__(self):
+        return "If({})".format(','.join(str(b) for b in self.blocks))
+
 class StarredArguments(Basic):
     __slots__ = ('_starred_obj',)
     _attribute_nodes = ('_starred_obj',)
@@ -3742,7 +4026,7 @@ class InProgram(PyccelAstNode):
     __name__ == '__main__'
     """
     _dtype = NativeBool()
-    _precision = default_precision['bool']
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
@@ -3750,6 +4034,27 @@ class InProgram(PyccelAstNode):
     __slots__ = ()
 
 # ...
+
+class Decorator(Basic):
+    """ Class representing a function decorator.
+    For now this is just designed to handle the pyccel decorators
+
+    Parameters
+    ----------
+    name : str
+            The name of the decorator
+    """
+    __slots__ = ('_name',)
+
+    def __init__(self, name):
+        self._name = name
+        super().__init__()
+
+    @property
+    def name(self):
+        """ Return the name of the decorator
+        """
+        return self._name
 
 # ... TODO: improve and make it recursive
 
