@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from pyccel.ast.core import create_incremented_string
 from pyccel.ast.headers import MacroFunction, MacroVariable
 from pyccel.ast.variable import Variable, DottedName
 
