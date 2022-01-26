@@ -383,18 +383,6 @@ class SemanticParser(BasicParser):
             container = self.namespace.imports
             container['imports'][storage_name] = Import(source, target, True)
 
-    def insert_macro(self, macro):
-        """."""
-
-        container = self.namespace.macros
-
-        if isinstance(macro, (MacroFunction, MacroVariable)):
-            name = macro.name
-            if isinstance(macro.name, DottedName):
-                name = name.name[-1]
-            container[name] = macro
-        else:
-            raise TypeError('Expected a macro')
 
     def get_header(self, name):
         """."""
@@ -3570,7 +3558,7 @@ class SemanticParser(BasicParser):
         master = FunctionCall(func, master_args)
         macro   = MacroFunction(name, args, master, master_args,
                                 results=expr.results, results_shapes=expr.results_shapes)
-        self.insert_macro(macro)
+        self.namespace.insert_macro(macro)
 
         return macro
 
@@ -3594,7 +3582,7 @@ class SemanticParser(BasicParser):
                 # TODO -> Said: must handle interface
 
         expr = MacroVariable(expr.name, var)
-        self.insert_macro(expr)
+        self.namespace.insert_macro(expr)
         return expr
 
     def _visit_StarredArguments(self, expr, **settings):

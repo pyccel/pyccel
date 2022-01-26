@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from pyccel.ast.core import create_incremented_string
-from pyccel.ast.variable import Variable
+from pyccel.ast.headers import MacroFunction, MacroVariable
+from pyccel.ast.variable import Variable, DottedName
 
 
 class Scope(object):
@@ -258,3 +259,16 @@ class Scope(object):
             if name in self._locals['classes']:
                 raise RuntimeError('New class already exists in scope')
             self._locals['classes'][name] = cls
+
+    def insert_macro(self, macro):
+        """ Add a macro to the current scope
+        """
+
+        if not isinstance(macro, (MacroFunction, MacroVariable)):
+            raise TypeError('Expected a macro')
+
+        name = macro.name
+        if isinstance(macro.name, DottedName):
+            name = name.name[-1]
+
+        self._locals['variables'][name] = macro
