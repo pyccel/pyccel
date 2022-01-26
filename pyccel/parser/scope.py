@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from pyccel.ast.core import create_incremented_string
+from pyccel.ast.variable import Variable
 
 
 class Scope(object):
@@ -12,7 +14,7 @@ class Scope(object):
                  objects in this scope
     """
     __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
-            '_used_symbols','_is_loop','_loops')
+            '_used_symbols','_is_loop','_loops','_temporary_variables')
 
     def __init__(self, *, decorators=None, is_loop = False,
                     parent_scope = None):
@@ -26,6 +28,8 @@ class Scope(object):
 
         self._locals  = OrderedDict((k,OrderedDict()) for k in keys)
 
+        self._temporary_variables = []
+
         if decorators:
             self._locals['decorators'].update(decorators)
 
@@ -34,7 +38,7 @@ class Scope(object):
         self.parent_scope        = parent_scope
         self._sons_scopes        = OrderedDict()
 
-        self._used_symbols = {}
+        self._used_symbols = set()
 
         self._is_loop = is_loop
         # scoping for loops
@@ -151,6 +155,8 @@ class Scope(object):
         return self._locals['python_functions']
 
     def find_in_scope(self, name, location):
+        """ Find the specified object in the scope
+        """
         if name in self._locals[location]:
             return self._locals[location][name]
 
@@ -159,7 +165,7 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope:
-            return self.parent_scope.find_variable(name)
+            return self.parent_scope.find_in_scope(name, location)
         else:
             raise RuntimeError("Variable not found in scope")
 
@@ -172,8 +178,43 @@ class Scope(object):
         return self._loops
 
     def create_new_loop_scope(self):
+        """ Create a new Scope within the current scope describing
+        a loop (For/While/etc)
+        """
         new_scope = Scope(decorators=self.decorators, is_loop = True,
                         parent_scope = self)
         self._loops.append(new_scope)
         return new_scope
 
+    def insert_variable(self, var, name = None, python_scoping = True):
+        """ Add a variable to the current scope
+
+        Parameters
+        ----------
+        var  : Variable
+                The variable to be inserted into the current scope
+        name : str
+                The name of the variable in the python code
+                Default : var.name
+        python_scope : bool
+                If true then we assume that python scoping applies.
+                In this case variables declared in loops exist beyond
+                the end of the loop. Otherwise variables may be local
+                to loops
+                Default : True
+        """
+        if not isinstance(var, Variable):
+            raise TypeError('variable must be of type Variable')
+
+        if name is None:
+            name = var.name
+
+        if python_scoping and self.is_loop:
+            self.parent_scope.insert_variable(var, name, python_scoping)
+        else:
+            if name in self._locals['variables']:
+                raise RuntimeError('New variable already exists in scope')
+            self._locals['variables'][name] = var
+            self._temporary_variables.append(var)
+            #TODO: make lower if case-sensitive
+            self._used_symbols.add(var.name)

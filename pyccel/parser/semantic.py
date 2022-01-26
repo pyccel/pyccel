@@ -266,40 +266,6 @@ class SemanticParser(BasicParser):
         self._program_namespace = self._namespace
         self._namespace = self._module_namespace
 
-    def get_variable_from_scope(self, name):
-        """
-        Search for a Variable object with the given name inside the local Python scope.
-        If not found, return None.
-        """
-        # Walk up nested loops (if any)
-        container = self.namespace
-        while container.is_loop:
-            container = container.parent_scope
-
-        var = self._get_variable_from_scope(name, container)
-
-        return var
-
-    def _get_variable_from_scope(self, name, container):
-        """
-        Search for a Variable object with the given name in the given Python scope.
-        This is a recursive function because it searches inside nested loops, where
-        OpenMP variables could be defined.
-        """
-        if name in container.variables:
-            return container.variables[name]
-
-        if name in container.imports['variables']:
-            return container.imports['variables'][name]
-
-        # Search downwards, walking down the tree of nested loop Scopes
-        for container in container.loops:
-            var = self._get_variable_from_scope(name, container)
-            if var:
-                return var
-
-        return None
-
     def check_for_variable(self, name):
         """
         Search for a Variable object with the given name in the current namespace,
@@ -311,20 +277,11 @@ class SemanticParser(BasicParser):
                 if i.name == name:
                     var = i
                     return var
-
-        # Walk up nested loops (if any)
-        container = self.namespace
-        while container.is_loop:
-            container = container.parent_scope
-
-        # Walk up the tree of Scope objects, until the root if needed
-        while container:
-            var = self._get_variable_from_scope(name, container)
-            if var is not None:
-                return var
-            container = container.parent_scope
-
-        return None
+        else:
+            try:
+                return self.namespace.find_in_scope(name, 'variables')
+            except RuntimeError:
+                return None
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -372,18 +329,6 @@ class SemanticParser(BasicParser):
 
             container = container.parent_scope
         return None
-
-    def insert_variable(self, var, name=None):
-        """."""
-
-        # TODO add some checks before
-        if not isinstance(var, Variable):
-            raise TypeError('variable must be of type Variable')
-
-        if name is None:
-            name = var.name
-
-        self.namespace.variables[name] = var
 
 
     def insert_class(self, cls, parent=False):
@@ -1223,7 +1168,7 @@ class SemanticParser(BasicParser):
             # ISSUES #177: lhs must be a pointer when rhs is allocatable array
             self._ensure_target(rhs, d_lhs)
 
-            var = self.get_variable_from_scope(name)
+            var = self.check_for_variable(name)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
@@ -1243,7 +1188,7 @@ class SemanticParser(BasicParser):
                 lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
                 # Add variable to scope
-                self.insert_variable(lhs, name=lhs.name)
+                self.namespace.insert_variable(lhs, name)
 
                 # ...
                 # Add memory allocation if needed
@@ -1464,7 +1409,7 @@ class SemanticParser(BasicParser):
                 cls_base = self.get_class(cls_name)
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 d_lhs    = d_var.copy()
-                self.insert_variable(var, 'self')
+                self.namespace.insert_variable(var)
 
 
                 # ISSUES #177: lhs must be a pointer when rhs is allocatable array
@@ -1508,7 +1453,7 @@ class SemanticParser(BasicParser):
         nlevels = 0
         # Create throw-away variable to help obtain result type
         index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
-        self.insert_variable(index)
+        self.namespace.insert_variable(index)
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
@@ -1553,7 +1498,7 @@ class SemanticParser(BasicParser):
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
         lhs = Variable(dtype, lhs_name, **d_var)
-        self.insert_variable(lhs)
+        self.namespace.insert_variable(lhs)
 
         # Iterate over the loops
         # This provides the definitions of iterators as well
@@ -2341,9 +2286,9 @@ class SemanticParser(BasicParser):
                         d_var = self._infere_type(master.results[0], **settings)
                         dtype = d_var.pop('datatype')
                         lhs = Variable(dtype, lhs.name, **d_var)
-                        var = self.get_variable_from_scope(lhs.name)
+                        var = self.check_for_variable(lhs.name)
                         if var is None:
-                            self.insert_variable(lhs)
+                            self.namespace.insert_variable(lhs)
 
                     name = macro.name
                     if not sympy_iterable(lhs):
@@ -2395,7 +2340,7 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(stmt, **settings)
                     dtype = d_var.pop('datatype')
                     lhs = Variable(dtype, name , **d_var)
-                    self.insert_variable(lhs)
+                    self.namespace.insert_variable(lhs)
 
             if isinstance(expr, Assign):
                 stmt = Assign(lhs, stmt)
@@ -2670,7 +2615,7 @@ class SemanticParser(BasicParser):
             index = self.check_for_variable(iterator)
             if index is None:
                 index = Variable('int', iterator, is_temp = iterator.is_temp)
-                self.insert_variable(index)
+                self.namespace.insert_variable(index)
             iterable.set_loop_counter(index)
 
         new_expr = []
@@ -2765,7 +2710,7 @@ class SemanticParser(BasicParser):
                 errors.report(PYCCEL_RESTRICTION_TODO,
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
-            self.insert_variable(var)
+            self.namespace.insert_variable(var)
             step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
@@ -2993,7 +2938,7 @@ class SemanticParser(BasicParser):
         d_var.pop('is_func')
 
         var = Variable(dtype, name, **d_var)
-        self.insert_variable(var)
+        self.namespace.insert_variable(var)
         return expr
 
     def _visit_FunctionHeader(self, expr, **settings):
@@ -3153,7 +3098,7 @@ class SemanticParser(BasicParser):
                 dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.get_class(cls_name)
                 var       = Variable(dt, 'self', cls_base=cls_base)
-                self.insert_variable(var, 'self')
+                self.namespace.insert_variable(var)
 
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
@@ -3205,7 +3150,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.insert_variable(a_new, name=a_new.name)
+                        self.namespace.insert_variable(a_new)
             results = expr.results
             if header_results:
                 new_results = []
@@ -3214,7 +3159,7 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a, **d_var)
-                    self.insert_variable(a_new, name=a_new.name)
+                    self.namespace.insert_variable(a_new)
                     new_results.append(a_new)
 
                 results = new_results
