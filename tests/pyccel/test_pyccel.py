@@ -118,8 +118,11 @@ def get_lang_output(abs_path, language):
     if language=="python":
         return get_python_output(abs_path)
     else:
+        print(["%s" % abs_path])
         p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
-        out, _ = p.communicate()
+        out, err = p.communicate()
+        print(out)
+        print(err)
         assert(p.returncode==0)
         return out
 
