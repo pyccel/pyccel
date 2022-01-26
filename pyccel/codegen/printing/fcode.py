@@ -29,7 +29,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
-                             CodeBlock, AsName,
+                             CodeBlock, AsName, EmptyNode,
                              If, IfSection, For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
