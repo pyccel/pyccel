@@ -301,33 +301,6 @@ class SemanticParser(BasicParser):
         return variables
 
 
-    def insert_template(self, expr):
-        """append the scope's templates with the given template"""
-        self.namespace.templates[expr.name] = expr
-
-    def insert_header(self, expr):
-        """."""
-        if isinstance(expr, (FunctionHeader, MethodHeader)):
-            if expr.name in self.namespace.headers:
-                self.namespace.headers[expr.name].append(expr)
-            else:
-                self.namespace.headers[expr.name] = [expr]
-        elif isinstance(expr, ClassHeader):
-            self.namespace.headers[expr.name] = expr
-
-            #  create a new Datatype for the current class
-
-            iterable = 'iterable' in expr.options
-            with_construct = 'with' in expr.options
-            dtype = DataTypeFactory(expr.name, '_name',
-                                    is_iterable=iterable,
-                                    is_with_construct=with_construct)
-            self.set_class_construct(expr.name, dtype)
-        else:
-            msg = 'header of type{0} is not supported'
-            msg = msg.format(str(type(expr)))
-            raise TypeError(msg)
-
     def get_import(self, name):
         """
         Search for an import with the given name in the current namespace.
@@ -397,35 +370,6 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return headers
 
-    def get_templates(self):
-        """Returns templates of the current scope and all its parents scopes"""
-        container = self.namespace
-        templates = {}
-        while container:
-            templates.update({tmplt:container.templates[tmplt] for tmplt in container.templates\
-                if tmplt not in templates})
-            container = container.parent_scope
-        return templates
-
-    def get_class_construct(self, name):
-        """Returns the class datatype for name if it exists.
-        Raises an error otherwise
-        """
-        result = self.namespace.find_in_scope(name, 'cls_constructs')
-
-        if result:
-            return result
-        else:
-            msg = 'class construct {} not found'.format(name)
-            return errors.report(msg,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
-
-
-    def set_class_construct(self, name, value):
-        """Sets the class datatype for name."""
-
-        self.namespace.cls_constructs[name] = value
 
     def create_new_function_scope(self, name, decorators):
         """
@@ -632,7 +576,7 @@ class SemanticParser(BasicParser):
             cls_name = expr.func.cls_name
             cls = self.namespace.find_in_scope(cls_name, 'classes')
 
-            dtype = self.get_class_construct(cls_name)()
+            dtype = self.namespace.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
             d_var['allocatable'] = False
@@ -1265,7 +1209,7 @@ class SemanticParser(BasicParser):
 
                 # update the self variable with the new attributes
 
-                dt       = self.get_class_construct(cls_name)()
+                dt       = self.namespace.get_class_construct(cls_name)()
                 cls_base = self.namespace.find_in_scope(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 d_lhs    = d_var.copy()
@@ -2810,18 +2754,18 @@ class SemanticParser(BasicParser):
     def _visit_FunctionHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
         expr.clear_user_nodes()
-        self.insert_header(expr)
+        self.namespace.insert_header(expr)
         return expr
 
     def _visit_Template(self, expr, **settings):
         expr.clear_user_nodes()
-        self.insert_template(expr)
+        self.namespace.insert_template(expr)
         return expr
 
     def _visit_ClassHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
         expr.clear_user_nodes()
-        self.insert_header(expr)
+        self.namespace.insert_header(expr)
         return expr
 
     def _visit_Return(self, expr, **settings):
@@ -2871,7 +2815,7 @@ class SemanticParser(BasicParser):
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         args_number = len(expr.arguments)
-        templates = self.get_templates()
+        templates = self.namespace.get_all_from_scope('templates')
         if decorators['template']:
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
@@ -2961,7 +2905,7 @@ class SemanticParser(BasicParser):
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
                 arguments = arguments[1:]
-                dt        = self.get_class_construct(cls_name)()
+                dt        = self.namespace.get_class_construct(cls_name)()
                 cls_base  = self.namespace.find_in_scope(cls_name, 'classes')
                 var       = Variable(dt, 'self', cls_base=cls_base)
                 self.namespace.insert_variable(var)
@@ -3050,7 +2994,7 @@ class SemanticParser(BasicParser):
             results = [self._visit(a) for a in results]
 
             if arg and cls_name:
-                dt       = self.get_class_construct(cls_name)()
+                dt       = self.namespace.get_class_construct(cls_name)()
                 cls_base = self.namespace.find_in_scope(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args

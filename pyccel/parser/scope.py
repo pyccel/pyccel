@@ -165,6 +165,19 @@ class Scope(object):
         else:
             None
 
+    def get_all_from_scope(self, location):
+        """ Find and return the specified object in the scope
+        If the object cannot be found then None is returned
+        """
+        if self.parent_scope:
+            result = self.parent_scope.get_all_from_scope(location)
+        else:
+            result = {}
+
+        result.update(self._locals[location])
+
+        return result
+
     @property
     def is_loop(self):
         return self._is_loop
@@ -272,3 +285,44 @@ class Scope(object):
             name = name.name[-1]
 
         self._locals['variables'][name] = macro
+
+    def insert_template(self, expr):
+        """append the scope's templates with the given template"""
+        self._locals['templates'][expr.name] = expr
+
+    def insert_header(self, expr):
+        """ """
+        if isinstance(expr, (FunctionHeader, MethodHeader)):
+            if expr.name in self.headers:
+                self.headers[expr.name].append(expr)
+            else:
+                self.headers[expr.name] = [expr]
+        elif isinstance(expr, ClassHeader):
+            self.headers[expr.name] = expr
+
+            #  create a new Datatype for the current class
+
+            iterable = 'iterable' in expr.options
+            with_construct = 'with' in expr.options
+            dtype = DataTypeFactory(expr.name, '_name',
+                                    is_iterable=iterable,
+                                    is_with_construct=with_construct)
+            self.cls_constructs[name] = value
+        else:
+            msg = 'header of type{0} is not supported'
+            msg = msg.format(str(type(expr)))
+            raise TypeError(msg)
+
+    def get_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Raises an error otherwise
+        """
+        result = self.find_in_scope(name, 'cls_constructs')
+
+        if result:
+            return result
+        else:
+            msg = 'class construct {} not found'.format(name)
+            return errors.report(msg,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
