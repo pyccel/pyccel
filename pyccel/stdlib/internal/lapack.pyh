@@ -284,10 +284,10 @@
 #Lineaire equation
 #............................................................
 #$ header function sgetrf(int32, int32, float3232[:,:](order=F), int32, int32 [:], int32)
-#$ header function dgetrf(int32, int32, float64 [:,:](order=F), int32, float64 [:], int32)
+#$ header function dgetrf(int32, int32, float64 [:,:](order=F), int32, int32 [:], int32)
 
 #$ header function sgetrs(str, int32, int32, float32 [:,:](order=F), int32, float32 [:], float32 [:,:](order=F), int32, int32)
-#$ header function dgetrs(str, int32, int32, float64 [:,:](order=F), int32, float64 [:], float64 [:,:](order=F), int32, int32)
+#$ header function dgetrs(str, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
 
 
 #$ header function sgecon(str, int32, float32 [:,:](order=F), int32, float32, float32, float32 [:], int32 [:], int32)
