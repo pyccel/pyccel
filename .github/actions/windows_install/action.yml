@@ -35,7 +35,7 @@ runs:
         curl https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
         #
         # Install MS MPI
-        ./msmpisetup.exe -unattend
+        ./msmpisetup.exe -unattend -verbose
         sleep 25
         msiexec /quiet /i msmpisdk.msi
         sleep 1
