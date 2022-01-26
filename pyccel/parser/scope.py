@@ -14,7 +14,7 @@ class Scope(object):
                  objects in this scope
     """
     __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
-            '_used_symbols','_is_loop','_loops','_temporary_variables')
+            '_is_loop','_loops','_temporary_variables')
 
     def __init__(self, *, decorators=None, is_loop = False,
                     parent_scope = None):
@@ -38,7 +38,6 @@ class Scope(object):
         self.parent_scope        = parent_scope
         self._sons_scopes        = OrderedDict()
 
-        self._used_symbols = set()
 
         self._is_loop = is_loop
         # scoping for loops
@@ -212,8 +211,6 @@ class Scope(object):
                 raise RuntimeError('New variable already exists in scope')
             self._locals['variables'][name] = var
             self._temporary_variables.append(var)
-            #TODO: make lower if case-sensitive
-            self._used_symbols.add(var.name)
 
     def remove_variable(self, var, name = None, python_scoping = True):
         """ Remove a variable from anywhere in scope
@@ -237,7 +234,6 @@ class Scope(object):
 
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
-            self._used_symbols.remove(name)
         elif self.parent_scope:
             self.parent_scope.remove_variable(var, name, python_scoping)
         else:
@@ -262,5 +258,3 @@ class Scope(object):
             if name in self._locals['classes']:
                 raise RuntimeError('New class already exists in scope')
             self._locals['classes'][name] = cls
-            #TODO: make lower if case-sensitive
-            self._used_symbols.add(name)
