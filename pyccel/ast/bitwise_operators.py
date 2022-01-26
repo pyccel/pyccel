@@ -9,9 +9,10 @@ These operators all have a precision as detailed here:
 They also have specific rules to determine the dtype, precision, rank, shape
 """
 from .builtins     import PythonInt
-from .datatypes    import (NativeBool, NativeInteger, NativeReal,
+from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
                            NativeComplex, NativeString)
-from .operators     import PyccelUnaryOperator, PyccelOperator
+from .internals    import max_precision
+from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
     'PyccelRShift',
@@ -85,11 +86,11 @@ class PyccelBitOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in args if a.dtype is NativeReal()]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
-        if strs or complexes or reals:
+        if strs or complexes or floats:
             raise TypeError('unsupported operand type(s): {}'.format(args))
         elif integers:
             return self._handle_integer_type(integers)
@@ -99,10 +100,16 @@ class PyccelBitOperator(PyccelOperator):
     def _set_shape_rank(self):
         pass
 
-    def _handle_integer_type(self, integers):
-        dtype     = NativeInteger()
-        precision = max(a.precision for a in integers)
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+    def _handle_integer_type(self, args):
+        dtype    = NativeInteger()
+        integers = [a for a in args if a.dtype is NativeInteger()]
+
+        if not integers:
+            precision = -1
+        else:
+            precision = max_precision(integers)
+
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
         return dtype, precision
 
 #==============================================================================
@@ -173,7 +180,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         else:
             dtype = NativeInteger()
             self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
-        precision = max(a.precision for a in integers)
+        precision = max_precision(integers, NativeInteger())
         return dtype, precision
 
 #==============================================================================

@@ -15,11 +15,14 @@ from ..errors.errors        import Errors, PyccelSemanticError
 
 from .basic                 import PyccelAstNode
 
-from .datatypes             import (NativeBool, NativeInteger, NativeReal,
-                                    NativeComplex, NativeString, default_precision,
+from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
+                                    NativeComplex, NativeString,
                                     NativeNumeric)
 
-from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .internals             import max_precision
+
+from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
+from .literals              import Nil, NilArgument
 from .literals              import convert_to_literal
 
 errors = Errors()
@@ -304,7 +307,7 @@ class PyccelNot(PyccelUnaryOperator):
         a _dtype or _precision member
         """
         dtype = NativeBool()
-        precision = default_precision['bool']
+        precision = -1
         return dtype, precision
 
     @staticmethod
@@ -369,17 +372,17 @@ class PyccelBinaryOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in args if a.dtype is NativeReal()]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
         if strs:
             return cls._handle_str_type(strs)
-            assert len(integers + reals + complexes) == 0
+            assert len(integers + floats + complexes) == 0
         elif complexes:
             return cls._handle_complex_type(complexes)
-        elif reals:
-            return cls._handle_real_type(reals)
+        elif floats:
+            return cls._handle_float_type(floats)
         elif integers:
             return cls._handle_integer_type(integers)
         else:
@@ -395,28 +398,28 @@ class PyccelBinaryOperator(PyccelOperator):
     @staticmethod
     def _handle_complex_type(complexes):
         """
-        Set dtype and precision when the result is complex
+        Set dtype and precision when the result is a complex
         """
         dtype = NativeComplex()
-        precision = max(a.precision for a in complexes)
+        precision = max_precision(complexes)
         return dtype, precision
 
     @staticmethod
-    def _handle_real_type(reals):
+    def _handle_float_type(floats):
         """
-        Set dtype and precision when the result is real
+        Set dtype and precision when the result is a float
         """
-        dtype = NativeReal()
-        precision = max(a.precision for a in reals)
+        dtype = NativeFloat()
+        precision = max_precision(floats)
         return dtype, precision
 
     @staticmethod
     def _handle_integer_type(integers):
         """
-        Set dtype and precision when the result is integer
+        Set dtype and precision when the result is an integer
         """
         dtype = NativeInteger()
-        precision = max(a.precision for a in integers)
+        precision = max_precision(integers)
         return dtype, precision
 
     @staticmethod
@@ -430,7 +433,7 @@ class PyccelBinaryOperator(PyccelOperator):
         """
         strs = [a for a in args if a.dtype is NativeString()]
         if strs:
-            other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeReal(), NativeComplex())]
+            other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeFloat(), NativeComplex())]
             assert len(other) == 0
             rank  = 0
             shape = ()
@@ -666,8 +669,8 @@ class PyccelDiv(PyccelArithmeticOperator):
 
     @staticmethod
     def _handle_integer_type(integers):
-        dtype = NativeReal()
-        precision = default_precision['real']
+        dtype = NativeFloat()
+        precision = -1
         return dtype, precision
 
     def __repr__(self):
@@ -740,7 +743,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     @staticmethod
     def _calculate_dtype(*args):
         dtype = NativeBool()
-        precision = default_precision['bool']
+        precision = -1
         return dtype, precision
 
 #==============================================================================
@@ -879,7 +882,7 @@ class PyccelBooleanOperator(PyccelOperator):
         The second argument passed to the operator
     """
     dtype = NativeBool()
-    precision = default_precision['bool']
+    precision = -1
     rank = 0
     shape = ()
     order = None
@@ -983,6 +986,22 @@ class PyccelIs(PyccelBooleanOperator):
     def __repr__(self):
         return '{} is {}'.format(self.args[0], self.args[1])
 
+    def eval(self):
+        """ Determines the value of the expression `x is None` when `x` is known.
+
+        If a boolean value cannot be computed, return the string "unknown".
+        """
+        # evaluate `x is None` when x = None
+        if self.rhs is Nil() and isinstance(self.lhs, NilArgument):
+            return True
+        # evaluate `x is not None` when x is known and different to None
+        elif self.rhs is Nil() and not getattr(self.lhs, 'self.lhs.is_optional', False):
+            return False
+        # The result of the expression is unknown if the rhs is not None
+        # or the lhs is an  optional variable
+        else:
+            return "unknown"
+
 #==============================================================================
 
 class PyccelIsNot(PyccelIs):
@@ -1003,6 +1022,21 @@ class PyccelIsNot(PyccelIs):
     def __repr__(self):
         return '{} is not {}'.format(self.args[0], self.args[1])
 
+    def eval(self):
+        """ Determines the value of the expression `x is not None` when `x` is known.
+
+        If a boolean value cannot be computed, return the string "unknown".
+        """
+        # evaluate `x is not None` when x = None
+        if self.rhs is Nil() and isinstance(self.lhs, NilArgument):
+            return False
+        # evaluate `x is not None` when x is known and different to None
+        elif self.rhs is Nil() and not getattr(self.lhs, 'self.lhs.is_optional', False):
+            return True
+        # The result of the expression is unknown if the rhs is not None
+        # or the lhs is an  optional variable
+        else:
+            return "unknown"
 
 #==============================================================================
 
@@ -1055,7 +1089,7 @@ class IfTernaryOperator(PyccelOperator):
         else:
             dtype = value_true.dtype
 
-        precision = max([value_true.precision, value_false.precision])
+        precision = max_precision([value_true, value_false])
         return dtype, precision
 
     @staticmethod
