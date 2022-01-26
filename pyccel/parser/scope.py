@@ -162,7 +162,7 @@ class Scope(object):
         if self.parent_scope:
             return self.parent_scope.find_in_scope(name, location)
         else:
-            None
+            return None
 
     def get_all_from_scope(self, location):
         """ Find and return the specified object in the scope
