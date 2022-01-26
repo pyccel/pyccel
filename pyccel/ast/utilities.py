@@ -10,30 +10,27 @@ import sys
 from itertools import chain
 from collections import namedtuple
 
-from numpy import pi
-
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate)
+                            Concatenate, Decorator, Module, PyccelFunctionDef)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .internals     import PyccelInternalFunction, Slice
-from .itertoolsext  import Product
-from .mathext       import math_functions, math_constants
-from .literals      import LiteralInteger, Literal, Nil
+from .itertoolsext  import itertools_mod
+from .literals      import LiteralInteger, Nil
+from .mathext       import math_mod
 
-from .numpyext      import (NumpyEmpty, numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants, NumpyArray,
-                            NumpyTranspose)
+from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
+                            NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .variable      import (Constant, Variable,
-                            IndexedElement, InhomogeneousTupleVariable, VariableAddress,
-                            HomogeneousTupleVariable )
+from .scipyext      import scipy_mod
+from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable,
+                            VariableAddress, HomogeneousTupleVariable )
 
 errors = Errors()
 
@@ -43,10 +40,6 @@ __all__ = (
     'builtin_import_registery',
     'split_positional_keyword_arguments',
 )
-
-scipy_constants = {
-    'pi': Constant('real', 'pi', value=pi),
-                  }
 
 #==============================================================================
 def builtin_function(expr, args=None):
@@ -77,32 +70,57 @@ def builtin_function(expr, args=None):
 
     return None
 
+#==============================================================================
+decorators_mod = Module('decorators',(),
+        funcs = [PyccelFunctionDef(d, PyccelInternalFunction) for d in pyccel_decorators.__all__])
+pyccel_mod = Module('pyccel',(),(),
+        imports = [Import('decorators', decorators_mod)])
 
 # TODO add documentation
-builtin_import_registery = {'numpy': {
-                                      **numpy_functions,
-                                      **numpy_constants,
-                                      'linalg':numpy_linalg_functions,
-                                      'random':numpy_random_functions
-                                      },
-                            'numpy.linalg': numpy_linalg_functions,
-                            'numpy.random': numpy_random_functions,
-                            'scipy.constants': scipy_constants,
-                            'itertools': {'product': Product},
-                            'math': {**math_functions, ** math_constants},
-                            'pyccel.decorators': pyccel_decorators.__all__}
+builtin_import_registery = Module('__main__',
+        (),(),
+        imports = [
+            Import('numpy', AsName(numpy_mod,'numpy')),
+            Import('scipy', AsName(scipy_mod,'scipy')),
+            Import('itertools', AsName(itertools_mod,'itertools')),
+            Import('math', AsName(math_mod,'math')),
+            Import('pyccel', AsName(pyccel_mod,'pyccel'))
+            ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
 else:
     python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
 
-recognised_libs = python_builtin_libs.union(builtin_import_registery.keys())
+recognised_libs = python_builtin_libs | builtin_import_registery.keys()
+
+def recognised_source(source_name):
+    """ Determine whether the imported source is recognised by pyccel.
+    If it is not recognised then it should be imported and translated
+    """
+    source = str(source_name).split('.')
+    if source[0] in python_builtin_libs and source[0] not in builtin_import_registery.keys():
+        return True
+    else:
+        return source_name in builtin_import_registery
 
 #==============================================================================
-def collect_relevant_imports(func_dictionary, targets):
-    if len(targets) == 0:
-        return func_dictionary
+def collect_relevant_imports(module, targets):
+    """
+    Extract all objects necessary to create imports from a module given a list of targets
 
+    Parameters
+    ----------
+    module  : Module
+              The module from which we want to collect the targets
+    targets : list of str/AsName
+              The names of the objects which we would like to import from the module
+
+    Results
+    -------
+    imports : list of tuples
+              A list where each element is a tuple containing the name which
+              will be used to refer to the object in the code, and the object
+    """
     imports = []
     for target in targets:
         if isinstance(target, AsName):
@@ -112,8 +130,8 @@ def collect_relevant_imports(func_dictionary, targets):
             import_name = target
             code_name = import_name
 
-        if import_name in func_dictionary.keys():
-            imports.append((code_name, func_dictionary[import_name]))
+        if import_name in module.keys():
+            imports.append((code_name, module[import_name]))
     return imports
 
 def builtin_import(expr):
@@ -127,16 +145,13 @@ def builtin_import(expr):
     else:
         source = str(expr.source)
 
-    if source == 'pyccel.decorators':
-        funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
-        for target in expr.target:
-            search_target = target.name if isinstance(target, AsName) else target
-            if search_target not in funcs:
-                errors.report("{} does not exist in pyccel.decorators".format(target),
-                        symbol = expr, severity='error')
-
-    elif source in builtin_import_registery:
-        return collect_relevant_imports(builtin_import_registery[source], expr.target)
+    if source in builtin_import_registery:
+        if expr.target:
+            return collect_relevant_imports(builtin_import_registery[source], expr.target)
+        elif isinstance(expr.source, AsName):
+            return [(expr.source.target, builtin_import_registery[source])]
+        else:
+            return [(expr.source, builtin_import_registery[source])]
 
     return []
 
@@ -457,6 +472,10 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
                 if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
                     break
+
+            # TODO [NH]: get all indices when adding axis argument to linspace function
+            if isinstance(line.rhs, NumpyLinspace):
+                line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
