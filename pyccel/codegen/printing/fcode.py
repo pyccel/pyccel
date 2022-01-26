@@ -733,16 +733,6 @@ class FCodePrinter(CodePrinter):
     def _print_AnnotatedComment(self, expr):
         accel = self._print(expr.accel)
         txt   = str(expr.txt)
-        if len(txt)>72:
-            txts = []
-            while len(txt)>72:
-                txts.append(txt[:72])
-                txt  = txt[72:]
-            if txt:
-                txts.append(txt)
-
-            txt = '&\n!${} &'.format(accel).join(txt for txt in txts)
-
         return '!${0} {1}\n'.format(accel, txt)
 
     def _print_tuple(self, expr):
@@ -2039,7 +2029,6 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
         clauses += str(expr.txt).replace("cancel for", "cancel do")
         omp_expr = '{}{}\n'.format(omp_expr, clauses)
-
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
@@ -2936,10 +2925,15 @@ class FCodePrinter(CodePrinter):
         trailing = ' &'
         # trailing with no added space characters in case splitting is within quotes
         quote_trailing = '&'
+
         for line in lines:
-            if len(line) > 72 and '!' in line[:72]:
-                result.append(line)
-            elif len(line) > 72:
+            if len(line) > 72:
+                cline = line[:72].lstrip()
+                if cline.startswith('!') and not cline.startswith('!$'):
+                    result.append(line)
+                    continue
+
+                tab_len = line.index(cline[0])
                 # code line
                 # set containing positions inside quotes
                 inside_quotes_positions = set()
@@ -2950,19 +2944,28 @@ class FCodePrinter(CodePrinter):
                         inside_quotes_positions.add(idx)
                 initial_len = len(line)
                 pos = split_pos_code(line, 72)
+
+                startswith_omp = cline.startswith('!$omp')
+                startswith_acc = cline.startswith('!$acc')
+
+                if startswith_acc or startswith_omp:
+                    assert pos>=5
+
                 if pos not in inside_quotes_positions:
                     hunk = line[:pos].rstrip()
                     line = line[pos:].lstrip()
                 else:
                     hunk = line[:pos]
                     line = line[pos:]
+
                 if line:
                     hunk += (quote_trailing if pos in inside_quotes_positions else trailing)
+
                 last_cut_was_inside_quotes = pos in inside_quotes_positions
                 result.append(hunk)
                 while len(line) > 0:
                     removed = initial_len - len(line)
-                    pos = split_pos_code(line, 65)
+                    pos = split_pos_code(line, 65-tab_len)
                     if pos + removed not in inside_quotes_positions:
                         hunk = line[:pos].rstrip()
                         line = line[pos:].lstrip()
@@ -2971,7 +2974,17 @@ class FCodePrinter(CodePrinter):
                         line = line[pos:]
                     if line:
                         hunk += (quote_trailing if (pos + removed) in inside_quotes_positions else trailing)
-                    result.append(('&' if last_cut_was_inside_quotes else "      ") + hunk)
+
+                    if last_cut_was_inside_quotes:
+                        hunk_start = tab_len*' ' + '&'
+                    elif startswith_omp:
+                        hunk_start = tab_len*' ' + '!$omp &'
+                    elif startswith_acc:
+                        hunk_start = tab_len*' ' + '!$acc &'
+                    else:
+                        hunk_start = tab_len*' ' + '      '
+
+                    result.append(hunk_start + hunk)
                     last_cut_was_inside_quotes = (pos + removed) in inside_quotes_positions
             else:
                 result.append(line)
@@ -2991,11 +3004,8 @@ class FCodePrinter(CodePrinter):
                      for line in code]
         decrease = [int(dec_regex.match(line) is not None)
                      for line in code]
-        continuation = [int(any(map(line.endswith, ['&', '&\n'])))
-                         for line in code]
 
         level = 0
-        cont_padding = 0
         tabwidth = self._default_settings['tabwidth']
         new_code = []
         for i, line in enumerate(code):
@@ -3004,16 +3014,11 @@ class FCodePrinter(CodePrinter):
                 continue
             level -= decrease[i]
 
-            padding = " "*(level*tabwidth + cont_padding)
+            padding = " "*(level*tabwidth)
 
             line = "%s%s" % (padding, line)
 
             new_code.append(line)
-
-            if continuation[i]:
-                cont_padding = 2*tabwidth
-            else:
-                cont_padding = 0
             level += increase[i]
 
         return new_code
