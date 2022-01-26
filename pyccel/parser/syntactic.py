@@ -25,7 +25,7 @@ from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
@@ -412,7 +412,7 @@ class SyntaxParser(BasicParser):
         for name in stmt.names:
             imp = self._visit(name)
             if isinstance(imp, AsName):
-                source = AsName(self._treat_import_source(imp.name, 0), imp.target)
+                source = AsName(self._treat_import_source(imp.object, 0), imp.target)
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
@@ -591,6 +591,7 @@ class SyntaxParser(BasicParser):
         is_pure      = False
         is_elemental = False
         is_private   = False
+        is_inline    = False
         imports      = []
         doc_string   = None
 
@@ -774,10 +775,18 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
+        if 'inline' in decorators.keys():
+            is_inline = True
+
         body = CodeBlock(body)
 
-        returns = [i.expr for i in body.get_attribute_nodes(Return, excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction))]
+        returns = [i.expr for i in body.get_attribute_nodes(Return,
+                    excluded_nodes = (Assign, FunctionCall, PyccelInternalFunction, FunctionDef))]
         assert all(len(i) == len(returns[0]) for i in returns)
+        if is_inline and len(returns)>1:
+            errors.report("Inline functions cannot have multiple return statements",
+                    symbol = stmt,
+                    severity = 'error')
         results = []
         result_counter = 1
 
@@ -796,7 +805,8 @@ class SyntaxParser(BasicParser):
 
             results.append(result_name)
 
-        func = FunctionDef(
+        cls = InlineFunctionDef if is_inline else FunctionDef
+        func = cls(
                name,
                arguments,
                results,

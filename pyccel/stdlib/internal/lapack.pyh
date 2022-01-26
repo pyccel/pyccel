@@ -12,16 +12,6 @@
 #             
 # .......................................
 
-#$ header function dgetrf(int32, int32, float64 [:,:](order=F), int32, int32 [:], int32)
-#$ header function dgetri(int32, float64 [:,:](order=F), int32, int32 [:], float64 [:], int32, int32)
-
-#$ header function dgetrs(str, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
-#$ header function dgecon(str, int32, float64 [:,:](order=F), int32, float64, float64, float64 [:], int32 [:], int32)
-
-
-#...............................................................
-
-
 #$ header function sgesv(int32, int32, float32 [:,:](order=F), int32, int32 [:], float32 [:,:](order=F), int32, int32)
 #$ header function dgesv(int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
 
