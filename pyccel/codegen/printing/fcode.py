@@ -2917,19 +2917,7 @@ class FCodePrinter(CodePrinter):
         decrease = [int(dec_regex.match(line) is not None)
                      for line in code]
 
-#        def continuation_cnd(line):
-#            def cnd(s):
-#                cond = line.endswith(s)
-#                sline = line.lstrip()
-#                cond = line.endswith(s) and (not sline.startswith('!') or sline.startswith('!$'))
-#                return cond
-#            return cnd
-
-#        continuation = [int(any(map(continuation_cnd(line), ['&', '&\n'])))
-#                         for line in code]
-
         level = 0
-        cont_padding = 0
         tabwidth = self._default_settings['tabwidth']
         new_code = []
         for i, line in enumerate(code):
@@ -2943,11 +2931,6 @@ class FCodePrinter(CodePrinter):
             line = "%s%s" % (padding, line)
 
             new_code.append(line)
-
-#            if continuation[i]:
-#                cont_padding = 2*tabwidth
-#            else:
-#                cont_padding = 0
             level += increase[i]
 
         return new_code
