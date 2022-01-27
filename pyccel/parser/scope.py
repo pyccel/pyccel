@@ -288,7 +288,7 @@ class Scope(object):
         if isinstance(macro.name, DottedName):
             name = name.name[-1]
 
-        self._locals['variables'][name] = macro
+        self._locals['macros'][name] = macro
 
     def insert_template(self, expr):
         """append the scope's templates with the given template"""
