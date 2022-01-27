@@ -2429,7 +2429,6 @@ class SemanticParser(BasicParser):
                 index = self._assign_lhs_variable(iterator, iterator_d_var,
                                 rhs=start, new_expressions=new_expr,
                                 is_augassign=False, **settings)
-                self.namespace.insert_variable(index)
             iterable.set_loop_counter(index)
 
         if isinstance(iterator, PyccelSymbol):
