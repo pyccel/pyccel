@@ -2500,6 +2500,7 @@ class SemanticParser(BasicParser):
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
                 var   = Variable('int', var)
+                dvar  = self._infere_type(var, **settings)
                 stop  = a.stop
                 start = a.start
                 step  = a.step
@@ -2528,7 +2529,13 @@ class SemanticParser(BasicParser):
                 errors.report(PYCCEL_RESTRICTION_TODO,
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
-            self.namespace.insert_variable(var, allow_loop_scoping = True)
+            existing_var = self.namespace.find_in_scope(var.name, 'variables')
+            if existing_var:
+                if self._infere_type(existing_var, **settings).difference(dvar):
+                    errors.report("Variable {} already exists with different type".format(var),
+                            symbol = expr, severity='error')
+            else:
+                self.namespace.insert_variable(var)
             step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
