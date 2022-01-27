@@ -317,7 +317,7 @@ class Scope(object):
             dtype = DataTypeFactory(expr.name, '_name',
                                     is_iterable=iterable,
                                     is_with_construct=with_construct)
-            self.cls_constructs[name] = value
+            self.cls_constructs[expr.name] = dtype
         else:
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
