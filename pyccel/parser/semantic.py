@@ -67,7 +67,7 @@ from pyccel.ast.datatypes import (NativeInteger, NativeBool,
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
-from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader, Header
+from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
@@ -2406,7 +2406,6 @@ class SemanticParser(BasicParser):
         # treatment of the index/indices
         iterable = Iterable(self._visit(expr.iterable, **settings))
         body     = list(expr.body.body)
-        iterator = expr.target
 
         new_expr = []
 
@@ -2418,13 +2417,17 @@ class SemanticParser(BasicParser):
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
-                iterator = iterator[0]
-            index = self.check_for_variable(iterator)
+                syntactic_index = expr.target[0]
+            else:
+                syntactic_index = expr.target
+            index = self.check_for_variable(syntactic_index)
             if index is None:
-                index = self._assign_lhs_variable(iterator, iterator_d_var,
+                index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
                                 rhs=start, new_expressions=new_expr,
                                 is_augassign=False, **settings)
             iterable.set_loop_counter(index)
+
+        iterator = expr.target
 
         if isinstance(iterator, PyccelSymbol):
             iterator_rhs = iterable.get_target_from_range()
