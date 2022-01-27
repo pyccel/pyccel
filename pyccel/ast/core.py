@@ -1687,7 +1687,7 @@ class For(ScopedNode):
         self._body = body
         self._local_vars = local_vars
         self._end_annotation = None
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def end_annotation(self):
