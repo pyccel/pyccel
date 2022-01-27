@@ -1253,7 +1253,6 @@ class SemanticParser(BasicParser):
         lhs  = self.check_for_variable(lhs_name)
 
         loop = expr.loops
-        loops = expr.loops
         nlevels = 0
         # Create throw-away variable to help obtain result type
         index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
@@ -1316,7 +1315,6 @@ class SemanticParser(BasicParser):
             for _ in range(nlevels-1):
                 loop = loop.body.body[0]
             _ = [loop.body.insert2body(e, back=False) for e in new_expr]
-
 
         if isinstance(expr, FunctionalSum):
             val = LiteralInteger(0)
@@ -2416,10 +2414,7 @@ class SemanticParser(BasicParser):
         iterator_d_var = self._infere_type(start)
 
         if iterable.num_loop_counters_required:
-            indices = [self._assign_lhs_variable(iterator, iterator_d_var,
-                                rhs=start, new_expressions=new_expr,
-                                is_augassign=False, **settings) \
-                        for i in range(iterable.num_loop_counters_required)]
+            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
