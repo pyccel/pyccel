@@ -1224,10 +1224,8 @@ class SemanticParser(BasicParser):
                 # update the self variable with the new attributes
 
                 dt       = self.get_class_construct(cls_name)()
-                cls_base = self.namespace.find_in_scope(cls_name, 'classes')
-                var      = Variable(dt, 'self', cls_base=cls_base)
+                var      = self.get_variable('self')
                 d_lhs    = d_var.copy()
-                self.namespace.insert_variable(var)
 
 
                 # ISSUES #177: lhs must be a pointer when rhs is allocatable array
@@ -3255,7 +3253,7 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='fatal', blocker=self.blocking)
 
-        attributes = self.namespace.find_in_scope(cls_name, 'classes').attributes
+        attributes = self.namespace.find_in_scope(name, 'classes').attributes
 
         for i in methods:
             if isinstance(i, Interface):
