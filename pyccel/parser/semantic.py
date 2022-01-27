@@ -1430,11 +1430,10 @@ class SemanticParser(BasicParser):
             init_func_name = self.get_new_name(expr.name+'__init')
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
+            # Ensure that the function is correctly defined within the namespaces
             scope = self.create_new_function_scope(init_func_name, [])
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
                     global_vars = variables, scope=scope)
-            # Ensure that the function is correctly defined within the namespaces
-            self.create_new_function_scope(init_func_name, [])
             self.exit_function_scope()
             self.insert_function(init_func)
 
@@ -1457,11 +1456,10 @@ class SemanticParser(BasicParser):
                 import_free_calls = [FunctionCall(f,[],[]) for f in import_frees if f is not None]
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
+                # Ensure that the function is correctly defined within the namespaces
                 scope = self.create_new_function_scope(free_func_name, [])
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
                                     global_vars = variables, scope = scope)
-                # Ensure that the function is correctly defined within the namespaces
-                self.create_new_function_scope(free_func_name, [])
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
