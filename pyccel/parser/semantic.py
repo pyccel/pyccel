@@ -2489,6 +2489,7 @@ class SemanticParser(BasicParser):
 
         sp_indices  = [sp_Symbol(i) for i in indices]
         idx_subs = dict()
+        scope = self.create_new_loop_scope()
 
         # The symbols created to represent unknown valued objects are temporary
         tmp_used_names = self.used_names.copy()
@@ -2529,7 +2530,7 @@ class SemanticParser(BasicParser):
                 errors.report(PYCCEL_RESTRICTION_TODO,
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
-            self.namespace.insert_variable(var)
+            self.namespace.insert_variable(var, allow_loop_scoping = True)
             step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
@@ -2642,6 +2643,8 @@ class SemanticParser(BasicParser):
 
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
+
+        self.exit_loop_scope()
 
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 

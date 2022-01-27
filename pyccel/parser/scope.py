@@ -205,7 +205,7 @@ class Scope(object):
         self._loops.append(new_scope)
         return new_scope
 
-    def insert_variable(self, var, name = None, python_scoping = True):
+    def insert_variable(self, var, name = None, allow_loop_scoping = False):
         """ Add a variable to the current scope
 
         Parameters
@@ -228,15 +228,15 @@ class Scope(object):
         if name is None:
             name = var.name
 
-        if python_scoping and self.is_loop:
-            self.parent_scope.insert_variable(var, name, python_scoping)
+        if not allow_loop_scoping and self.is_loop:
+            self.parent_scope.insert_variable(var, name, allow_loop_scoping)
         else:
             if name in self._locals['variables']:
                 raise RuntimeError('New variable already exists in scope')
             self._locals['variables'][name] = var
             self._temporary_variables.append(var)
 
-    def remove_variable(self, var, name = None, python_scoping = True):
+    def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
 
         Parameters
@@ -246,12 +246,6 @@ class Scope(object):
         name : str
                 The name of the variable in the python code
                 Default : var.name
-        python_scope : bool
-                If true then we assume that python scoping applies.
-                In this case variables declared in loops exist beyond
-                the end of the loop. Otherwise variables may be local
-                to loops
-                Default : True
         """
         if name is None:
             name = var.name
@@ -259,7 +253,7 @@ class Scope(object):
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
         elif self.parent_scope:
-            self.parent_scope.remove_variable(var, name, python_scoping)
+            self.parent_scope.remove_variable(var, name)
         else:
             raise RuntimeError("Variable not found in scope")
 
