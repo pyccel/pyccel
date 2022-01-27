@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from pyccel.ast.core import ClassDef
 from pyccel.ast.headers import MacroFunction, MacroVariable
+from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.variable import Variable, DottedName
 
 
