@@ -304,7 +304,7 @@ class SemanticParser(BasicParser):
         """Returns the class datatype for name if it exists.
         Raises an error otherwise
         """
-        result = self.find_in_scope(name, 'cls_constructs')
+        result = self.namespace.find_in_scope(name, 'cls_constructs')
 
         if result is None:
             msg = 'class construct {} not found'.format(name)
@@ -590,7 +590,7 @@ class SemanticParser(BasicParser):
             cls_name = expr.func.cls_name
             cls = self.namespace.find_in_scope(cls_name, 'classes')
 
-            dtype = self.namespace.get_class_construct(cls_name)()
+            dtype = self.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
             d_var['allocatable'] = False
@@ -1223,7 +1223,7 @@ class SemanticParser(BasicParser):
 
                 # update the self variable with the new attributes
 
-                dt       = self.namespace.get_class_construct(cls_name)()
+                dt       = self.get_class_construct(cls_name)()
                 cls_base = self.namespace.find_in_scope(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 d_lhs    = d_var.copy()
@@ -2917,7 +2917,7 @@ class SemanticParser(BasicParser):
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
                 arguments = arguments[1:]
-                dt        = self.namespace.get_class_construct(cls_name)()
+                dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.namespace.find_in_scope(cls_name, 'classes')
                 var       = Variable(dt, 'self', cls_base=cls_base)
                 self.namespace.insert_variable(var)
@@ -3006,7 +3006,7 @@ class SemanticParser(BasicParser):
             results = [self._visit(a) for a in results]
 
             if arg and cls_name:
-                dt       = self.namespace.get_class_construct(cls_name)()
+                dt       = self.get_class_construct(cls_name)()
                 cls_base = self.namespace.find_in_scope(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args
