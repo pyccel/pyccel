@@ -1,9 +1,18 @@
+# -*- coding: utf-8 -*-
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 from collections import OrderedDict
 from pyccel.ast.core import ClassDef
+from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers import MacroFunction, MacroVariable
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.variable import Variable, DottedName
 
+from pyccel.errors.errors import Errors
+
+errors = Errors()
 
 class Scope(object):
     """ Class representing all objects defined within a given
@@ -313,17 +322,3 @@ class Scope(object):
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
             raise TypeError(msg)
-
-    def get_class_construct(self, name):
-        """Returns the class datatype for name if it exists.
-        Raises an error otherwise
-        """
-        result = self.find_in_scope(name, 'cls_constructs')
-
-        if result:
-            return result
-        else:
-            msg = 'class construct {} not found'.format(name)
-            return errors.report(msg,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)

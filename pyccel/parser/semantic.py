@@ -60,7 +60,7 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
-from pyccel.ast.datatypes import DataTypeFactory, default_precision
+from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex)
@@ -299,6 +299,20 @@ class SemanticParser(BasicParser):
         for container in container.loops:
             variables.extend(self.get_variables(container))
         return variables
+
+    def get_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Raises an error otherwise
+        """
+        result = self.find_in_scope(name, 'cls_constructs')
+
+        if result is None:
+            msg = 'class construct {} not found'.format(name)
+            return errors.report(msg,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
+        else:
+            return result
 
 
     def get_import(self, name):
