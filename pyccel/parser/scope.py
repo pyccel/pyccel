@@ -232,7 +232,7 @@ class Scope(object):
             self.parent_scope.insert_variable(var, name, allow_loop_scoping)
         else:
             if name in self._locals['variables']:
-                raise RuntimeError('New variable already exists in scope')
+                raise RuntimeError('New variable {} already exists in scope'.format(name))
             self._locals['variables'][name] = var
             self._temporary_variables.append(var)
 
@@ -273,8 +273,8 @@ class Scope(object):
         if self.is_loop:
             self.parent_scope.insert_class(cls)
         else:
-            if name in self._locals['classes']:
-                raise RuntimeError('New class already exists in scope')
+            #if name in self._locals['classes']:
+            #    raise RuntimeError('New class already exists in scope')
             self._locals['classes'][name] = cls
 
     def insert_macro(self, macro):
