@@ -13,7 +13,6 @@ import os
 import re
 from collections import OrderedDict
 from filelock import FileLock
-from .scope import Scope
 
 #==============================================================================
 from pyccel.version import __version__
@@ -28,13 +27,14 @@ from pyccel.ast.core import create_incremented_string, create_variable
 
 from pyccel.ast.utilities import recognised_source
 
+from pyccel.parser.scope     import Scope
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
+from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 # TODO - use OrderedDict whenever it is possible
 
-from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 #==============================================================================
 
