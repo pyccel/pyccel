@@ -445,6 +445,8 @@ class PyccelAstNode(Basic):
 
 #------------------------------------------------------------------------------
 class ScopedNode(Basic):
+    """ Class from which all objects with a scope inherit
+    """
     __slots__ = ('_scope',)
 
     def __init__(self, scope = None):
@@ -453,4 +455,6 @@ class ScopedNode(Basic):
 
     @property
     def scope(self):
+        """ Scope object containing all available objects in this part of the code
+        """
         return self._scope
