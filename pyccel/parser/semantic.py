@@ -1500,7 +1500,8 @@ class SemanticParser(BasicParser):
                     free_func = free_func,
                     interfaces=interfaces,
                     classes=self.namespace.classes.values(),
-                    imports=self._namespace.imports['imports'].values())
+                    imports=self._namespace.imports['imports'].values(),
+                    scope=self.namespace)
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name, mod)
 
@@ -1515,7 +1516,8 @@ class SemanticParser(BasicParser):
             program = Program(prog_name,
                             self.get_variables(container),
                             program_body,
-                            container.imports['imports'].values())
+                            container.imports['imports'].values(),
+                            scope=self._program_namespace)
 
             mod.program = program
 

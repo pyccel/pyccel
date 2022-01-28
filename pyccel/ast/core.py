@@ -1183,6 +1183,7 @@ class Module(ScopedNode):
         interfaces=(),
         classes=(),
         imports=(),
+        scope = None
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1256,7 +1257,7 @@ class Module(ScopedNode):
             self._variables.append(init_var)
             self._variable_inits.append(LiteralFalse())
 
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):
@@ -2626,7 +2627,8 @@ class FunctionDef(ScopedNode):
         'functions':self._functions,
         'is_external':self._is_external,
         'interfaces':self._interfaces,
-        'doc_string':self._doc_string}
+        'doc_string':self._doc_string,
+        'scope':self._scope}
         return args, kwargs
 
     def __reduce_ex__(self, i):
@@ -2947,7 +2949,7 @@ class FunctionAddress(FunctionDef):
         is_argument=False,
         **kwargs
         ):
-        super().__init__(name, arguments, results, body, **kwargs)
+        super().__init__(name, arguments, results, body, scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
