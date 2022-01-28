@@ -2531,7 +2531,7 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             existing_var = self.namespace.find_in_scope(var.name, 'variables')
             if existing_var:
-                if self._infere_type(existing_var, **settings).difference(dvar):
+                if self._infere_type(existing_var, **settings) != dvar:
                     errors.report("Variable {} already exists with different type".format(var),
                             symbol = expr, severity='error')
             else:
