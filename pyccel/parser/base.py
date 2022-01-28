@@ -129,9 +129,6 @@ class BasicParser(object):
         headers: list, tuple
             list of headers to append to the namespace
 
-        static: list/tuple
-            a list of 'static' functions as strings
-
         show_traceback: bool
             prints Traceback exception if True
 
@@ -140,7 +137,6 @@ class BasicParser(object):
     def __init__(self,
                  debug=False,
                  headers=None,
-                 static=None,
                  show_traceback=False):
 
         self._code = None
