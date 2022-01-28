@@ -2489,7 +2489,7 @@ class SemanticParser(BasicParser):
 
         sp_indices  = [sp_Symbol(i) for i in indices]
         idx_subs = dict()
-        scope = self.create_new_loop_scope()
+        #scope = self.create_new_loop_scope()
 
         # The symbols created to represent unknown valued objects are temporary
         tmp_used_names = self.used_names.copy()
@@ -2651,7 +2651,7 @@ class SemanticParser(BasicParser):
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
 
-        self.exit_loop_scope()
+        #self.exit_loop_scope()
 
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
