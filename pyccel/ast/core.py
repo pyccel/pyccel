@@ -1439,6 +1439,7 @@ class Program(ScopedNode):
         variables,
         body,
         imports=(),
+        scope=None
         ):
 
         if not isinstance(name, str):
@@ -1465,7 +1466,7 @@ class Program(ScopedNode):
         self._variables = variables
         self._body = body
         self._imports = imports
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):
