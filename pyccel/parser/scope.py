@@ -156,7 +156,7 @@ class Scope(object):
 
     @property
     def symbolic_functions(self):
-        """
+        """ A dictionary of symbolic functions defined in this scope
         """
         return self._locals['symbolic_functions']
 
