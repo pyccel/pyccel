@@ -3,6 +3,8 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" Module containing the Scope class
+"""
 from collections import OrderedDict
 from pyccel.ast.core import ClassDef
 from pyccel.ast.datatypes import DataTypeFactory
@@ -190,10 +192,14 @@ class Scope(object):
 
     @property
     def is_loop(self):
+        """ Indicates whether this scope describes a loop
+        """
         return self._is_loop
 
     @property
     def loops(self):
+        """ Returns the scopes associated with any loops within this scope
+        """
         return self._loops
 
     def create_new_loop_scope(self):
@@ -295,7 +301,8 @@ class Scope(object):
         self._locals['templates'][expr.name] = expr
 
     def insert_header(self, expr):
-        """ """
+        """ Add a header to the current scope
+        """
         if isinstance(expr, (FunctionHeader, MethodHeader)):
             if expr.name in self.headers:
                 self.headers[expr.name].append(expr)
