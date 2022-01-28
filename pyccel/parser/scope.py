@@ -156,7 +156,7 @@ class Scope(object):
 
     @property
     def symbolic_functions(self):
-        """ 
+        """
         """
         return self._locals['symbolic_functions']
 
