@@ -728,8 +728,6 @@ class SyntaxParser(BasicParser):
                     txt += ' results(' + ','.join(results) + ')'
 
                 header = hdr_parse(stmts=txt)
-                if name in self.namespace.static_functions:
-                    header = header.to_static()
                 headers += [header]
 
         body = stmt.body

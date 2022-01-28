@@ -35,7 +35,7 @@ class Scope(object):
         keys = ('functions','variables','classes',
                 'imports','symbolic_functions',
                 'macros','templates','headers','decorators',
-                'static_functions','cls_constructs')
+                'cls_constructs')
 
         self._imports = OrderedDict((k,OrderedDict()) for k in keys)
 
@@ -133,12 +133,6 @@ class Scope(object):
         """Dictionary of Pyccel decorators which may be
         applied to a function definition in this scope."""
         return self._locals['decorators']
-
-    @property
-    def static_functions(self):
-        """ A dictionary of static functions defined in this scope
-        """
-        return self._locals['static_functions']
 
     @property
     def cls_constructs(self):

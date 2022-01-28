@@ -186,17 +186,6 @@ class BasicParser(object):
 
             self.namespace.headers.update(headers)
 
-
-        if static:
-            if not isinstance(static, (list, tuple)):
-                raise TypeError('Expecting a list/tuple of static')
-
-            for i in static:
-                if not isinstance(i, str):
-                    raise TypeError('Expecting str. given {}'.format(type(i)))
-
-            self._namespace.static_functions.extend(static)
-
     @property
     def namespace(self):
         return self._namespace
