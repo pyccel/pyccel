@@ -100,7 +100,6 @@ from pyccel.ast.operators import PyccelNot, PyccelEq
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
-from pyccel.ast.utilities import python_builtin_libs
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -143,7 +142,7 @@ def _get_name(var):
     if isinstance(var, AsName):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
-    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
+    return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
                 severity='fatal')
 
 #==============================================================================
@@ -277,6 +276,7 @@ class SemanticParser(BasicParser):
                 if i.name == name:
                     var = i
                     return var
+            return None
         else:
             return self.namespace.find_in_scope(name, 'variables')
 
@@ -285,7 +285,7 @@ class SemanticParser(BasicParser):
         """
         var = self.check_for_variable(name)
         if var is None:
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
+            return errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=True)
         else:
@@ -1223,7 +1223,6 @@ class SemanticParser(BasicParser):
 
                 # update the self variable with the new attributes
 
-                dt       = self.get_class_construct(cls_name)()
                 var      = self.get_variable('self')
                 d_lhs    = d_var.copy()
 
@@ -1387,7 +1386,7 @@ class SemanticParser(BasicParser):
                 return obj
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
+        return errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
@@ -1797,7 +1796,6 @@ class SemanticParser(BasicParser):
             macro = self.namespace.find_in_scope(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
-                name = macro.name
                 args = rhs.args
                 args = [lhs] + list(args)
                 args = [self._visit(i, **settings) for i in args]
