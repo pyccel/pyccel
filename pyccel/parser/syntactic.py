@@ -230,8 +230,7 @@ class SyntaxParser(BasicParser):
         if not isinstance(val, (CommentBlock, PythonPrint)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
-            tmp_var,_ = create_variable(self._used_names)
-            val = Assign(tmp_var, val)
+            val = Assign(PyccelSymbol('_'), val)
         return val
 
     def _visit_Tuple(self, stmt):
@@ -342,6 +341,7 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                                         for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
+            self.namespace.insert_symbols(a.arg for a in stmt.args)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -352,6 +352,7 @@ class SyntaxParser(BasicParser):
                             value=val, kwonly=True)
 
                 arguments.append(arg)
+                self.namespace.insert_symbol(a.arg)
 
         return arguments
 
@@ -396,11 +397,13 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
+        self.namespace.insert_symbol(stmt.id)
         return PyccelSymbol(stmt.id)
 
     def _treat_import_source(self, source, level):
         source = '.'*level + source
         if source.count('.') == 0:
+            self.namespace.insert_symbol(source)
             source = PyccelSymbol(source)
         else:
             source = DottedName(*source.split('.'))
@@ -581,6 +584,8 @@ class SyntaxParser(BasicParser):
 
         name = self._visit(stmt.name)
         name = name.replace("'", '')
+
+        scope = self.create_new_function_scope(name, ())
 
         arguments    = self._visit(stmt.args)
 
@@ -803,6 +808,8 @@ class SyntaxParser(BasicParser):
 
             results.append(result_name)
 
+        self.exit_function_scope()
+
         cls = InlineFunctionDef if is_inline else FunctionDef
         func = cls(
                name,
@@ -817,7 +824,8 @@ class SyntaxParser(BasicParser):
                imports=imports,
                decorators=decorators,
                headers=headers,
-               doc_string=doc_string)
+               doc_string=doc_string,
+               scope=scope)
 
         return func
 
@@ -868,6 +876,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
+        self.namespace.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
@@ -909,10 +918,15 @@ class SyntaxParser(BasicParser):
 
     def _visit_For(self, stmt):
 
+        scope = self.create_new_loop_scope()
+
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
-        expr = For(iterator, iterable, body)
+
+        self.exit_loop_scope()
+
+        expr = For(iterator, iterable, body, scope=scope)
         return expr
 
     def _visit_comprehension(self, stmt):
@@ -925,6 +939,7 @@ class SyntaxParser(BasicParser):
     def _visit_ListComp(self, stmt):
 
         result = self._visit(stmt.elt)
+
         generators = list(self._visit(stmt.generators))
 
         if not isinstance(self._scope[-2],ast.Assign):
@@ -958,6 +973,7 @@ class SyntaxParser(BasicParser):
             generators[-1].insert2body(F)
             indices.append(generators[-1].target)
         indices = indices[::-1]
+
         return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
                              indices, index)
 
@@ -978,7 +994,7 @@ class SyntaxParser(BasicParser):
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
             lhs = self._visit(grandparent.targets[0])
         else:
-            lhs = self.get_new_variable()
+            lhs = PyccelSymbol('_')
 
         body = result
         if name == 'sum':
@@ -994,6 +1010,7 @@ class SyntaxParser(BasicParser):
             indices.append(generators[-1].target)
             generators[-1].insert2body(body)
             body = generators.pop()
+
         indices = indices[::-1]
         if name == 'sum':
             expr = FunctionalSum(body, result, lhs, indices)
@@ -1035,9 +1052,14 @@ class SyntaxParser(BasicParser):
 
     def _visit_While(self, stmt):
 
+        scope = self.create_new_loop_scope()
+
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
-        return While(test, body)
+
+        self.exit_loop_scope()
+
+        return While(test, body, scope=scope)
 
     def _visit_Assert(self, stmt):
         expr = self._visit(stmt.test)
