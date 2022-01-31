@@ -9,12 +9,12 @@ from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
+from pyccel.utilities.strings import create_incremented_string
 
 __all__ = (
     'ClassHeader',

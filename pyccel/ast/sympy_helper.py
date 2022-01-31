@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import create_incremented_string, Iterable
+from .core      import Iterable
 
 from .builtins  import PythonRange, PythonTuple
 
@@ -24,6 +24,8 @@ from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .datatypes import NativeInteger
 
 from .variable  import Variable, PyccelArraySize
+
+from pyccel.utilities.strings import create_incremented_string
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
