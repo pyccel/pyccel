@@ -385,56 +385,6 @@ class SemanticParser(BasicParser):
         return headers
 
 
-    def create_new_function_scope(self, name, decorators):
-        """
-        Create a new Scope object for a Python function with the given name,
-        and attach any decorators' information to the scope. The new scope is
-        a child of the current one, and can be accessed from the dictionary of
-        its children using the function name as key.
-
-        Before returning control to the caller, the current scope (stored in
-        self._namespace) is changed to the one just created, and the function's
-        name is stored in self._current_function.
-
-        Parameters
-        ----------
-        name : str
-            Function's name, used as a key to retrieve the new scope.
-
-        decorators : dict
-            Decorators attached to FunctionDef object at syntactic stage.
-
-        """
-        child = self.namespace.new_child_scope(name, decorators=decorators)
-
-        self._namespace = child
-        if self._current_function:
-            name = DottedName(self._current_function, name)
-        self._current_function = name
-
-        return child
-
-    def exit_function_scope(self):
-
-        self._namespace = self._namespace.parent_scope
-        if isinstance(self._current_function, DottedName):
-
-            name = self._current_function.name[:-1]
-            if len(name)>1:
-                name = DottedName(*name)
-            else:
-                name = name[0]
-        else:
-            name = None
-        self._current_function = name
-
-    def create_new_loop_scope(self):
-        self._namespace = self._namespace.create_new_loop_scope()
-        return self._namespace
-
-    def exit_loop_scope(self):
-        self._namespace = self._namespace.parent_scope
-
     #=======================================================
     #              Utility functions
     #=======================================================
