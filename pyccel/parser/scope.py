@@ -27,7 +27,7 @@ class Scope(object):
                  objects in this scope
     """
     __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
-            '_is_loop','_loops','_temporary_variables')
+            '_is_loop','_loops','_temporary_variables', '_used_symbols')
 
     def __init__(self, *, decorators=None, is_loop = False,
                     parent_scope = None):
@@ -42,6 +42,8 @@ class Scope(object):
         self._locals  = OrderedDict((k,OrderedDict()) for k in keys)
 
         self._temporary_variables = []
+
+        self._used_symbols = set()
 
         if decorators:
             self._locals['decorators'].update(decorators)
@@ -317,3 +319,30 @@ class Scope(object):
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
             raise TypeError(msg)
+
+    def insert_symbol(self, symbol):
+        """ Add a new symbol to the scope
+        """
+        self._used_symbols.add(symbol)
+
+    def insert_symbols(self, symbols):
+        """ Add multiple new symbols to the scope
+        """
+        self._used_symbols.update(symbols)
+
+    def get_all_used_symbols(self):
+        if self.parent_scope:
+            symbols = self.parent_scope.get_used_symbols()
+        else:
+            symbols = set()
+        symbols.update(self._used_symbols)
+        return symbols
+
+    def get_local_used_symbols(self):
+        return self._used_symbols
+
+    def get_available_name(self, start_name):
+        if start_name in self._used_symbols:
+            new_name
+        else:
+            return start_name
