@@ -404,6 +404,9 @@ class Scope(object):
 
         return new_name
 
+    def get_new_symbol(self):
+        return PyccelSymbol(self.get_new_name(), is_temp=True)
+
     def get_available_name(self, start_name):
         if start_name in self._used_symbols:
             new_name
