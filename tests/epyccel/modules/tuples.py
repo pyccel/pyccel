@@ -356,3 +356,17 @@ def tuples_func():
         return 1, 2
     c = my_tup()
     return c[0], c[1]
+
+def tuple_slice():
+    a,b = (1,2,3)[:2]
+    return a,b
+
+def tuple_variable_index():
+    a = 1
+    b = (1,2,3)[a]
+    return b
+
+def tuple_variable_slice():
+    a = 1
+    b = (1,2,3)[:a]
+    return b[0]
