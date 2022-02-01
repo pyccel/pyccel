@@ -6,6 +6,7 @@
 """ Module containing the Scope class
 """
 from collections import OrderedDict
+
 from pyccel.ast.core import ClassDef
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -13,6 +14,8 @@ from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.variable import Variable, DottedName
 
 from pyccel.errors.errors import Errors
+
+from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
 
@@ -27,7 +30,8 @@ class Scope(object):
                  objects in this scope
     """
     __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
-            '_is_loop','_loops','_temporary_variables', '_used_symbols')
+            '_is_loop','_loops','_temporary_variables', '_used_symbols',
+            '_dummy_counter')
 
     def __init__(self, *, decorators=None, is_loop = False,
                     parent_scope = None):
@@ -44,6 +48,8 @@ class Scope(object):
         self._temporary_variables = []
 
         self._used_symbols = set()
+
+        self._dummy_counter = 0
 
         if decorators:
             self._locals['decorators'].update(decorators)
@@ -224,6 +230,7 @@ class Scope(object):
                 to loops
                 Default : True
         """
+        assert name!='_'
         if not isinstance(var, Variable):
             raise TypeError('variable must be of type Variable')
 
@@ -330,16 +337,71 @@ class Scope(object):
         """
         self._used_symbols.update(symbols)
 
-    def get_all_used_symbols(self):
+    @property
+    def all_used_symbols(self):
         if self.parent_scope:
-            symbols = self.parent_scope.get_used_symbols()
+            symbols = self.parent_scope.all_used_symbols
         else:
             symbols = set()
         symbols.update(self._used_symbols)
         return symbols
 
-    def get_local_used_symbols(self):
+    @property
+    def local_used_symbols(self):
         return self._used_symbols
+
+    def get_new_incremented_symbol(self, prefix, counter):
+        """
+        Creates a new name by adding a numbered suffix to the provided prefix.
+
+          Parameters
+          ----------
+          prefix : str
+
+          Returns
+          -------
+          new_name     : str
+        """
+
+        new_name, counter = create_incremented_string(self.local_used_symbols, prefix = prefix)
+
+        self.insert_symbol(new_name)
+
+        return PyccelSymbol(new_name, is_temp=True), counter
+
+    def get_new_name(self, current_name = None):
+        """
+        Creates a new name. A current_name can be provided indicating the name the
+        user would like to use if possible. If this name is not available then it
+        will be used as a prefix for the new name.
+        If no current_name is provided, then the standard prefix is used, and the
+        dummy counter is used and updated to facilitate finding the next value of
+        this common case
+
+          Parameters
+          ----------
+          current_name : str
+
+          Returns
+          -------
+          new_name     : str
+        """
+        if current_name is not None and current_name not in self.local_used_symbols:
+            self.insert_symbol(current_name)
+            return current_name
+
+        if current_name is None:
+            # Avoid confusing names by also searching in parent scopes
+            new_name, self._dummy_counter = create_incremented_string(self.all_used_symbols,
+                                                prefix = current_name,
+                                                counter = self._dummy_counter)
+        else:
+            # When a name is suggested, try to stick to it
+            new_name,_ = create_incremented_string(self.local_used_symbols, prefix = current_name)
+
+        self.insert_symbol(new_name)
+
+        return new_name
 
     def get_available_name(self, start_name):
         if start_name in self._used_symbols:
