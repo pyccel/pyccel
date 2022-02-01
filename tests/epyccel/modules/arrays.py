@@ -1765,3 +1765,11 @@ def arr_arange_6():
     import numpy as np
     a = np.arange(20, 1, -1.1)
     return np.shape(a)[0], a[0], a[-1]
+
+def iterate_slice(i : int):
+    import numpy as np
+    a = np.arange(15)
+    res = 0
+    for ai in a[:i]:
+        res += ai
+    return res
