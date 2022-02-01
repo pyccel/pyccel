@@ -419,11 +419,11 @@ class PythonTuple(PyccelAstNode):
     def __getitem__(self,i):
         if isinstance(i, (int, LiteralInteger)):
             return self._args[i]
-        elif isinstance(i, Slice):
-            if not all(isinstance(s, (LiteralInteger, type(None))) for s in (i.start, i.step, i.stop)):
-                raise NotImplementedError("Can't index PythonTuple with non-integer types")
-            else:
-                return PythonTuple(*self._args[i.start:i.stop:i.step])
+        elif isinstance(i, Slice) and \
+                all(isinstance(s, (LiteralInteger, type(None))) for s in (i.start, i.step, i.stop)):
+            return PythonTuple(*self._args[i.start:i.stop:i.step])
+        elif self.is_homogeneous:
+            return IndexedElement(self, i)
         else:
             raise NotImplementedError("Can't index PythonTuple with type {}".format(type(i)))
 
@@ -455,6 +455,10 @@ class PythonTuple(PyccelAstNode):
         """ Arguments of the tuple
         """
         return self._args
+
+    @property
+    def allows_negative_indexes(self):
+        return False
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
