@@ -2633,7 +2633,7 @@ class FCodePrinter(CodePrinter):
         if (expr.stop is None) or isinstance(expr.stop, Nil):
             stop = ''
         else:
-            stop = self._print(expr.stop)
+            stop = self._print(PyccelMinus(expr.stop, LiteralInteger(1), simplify = True))
         if expr.step is not None :
             return '{0}:{1}:{2}'.format(start, stop, self._print(expr.step))
         return '{0}:{1}'.format(start, stop)
