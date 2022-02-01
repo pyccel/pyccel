@@ -1076,6 +1076,7 @@ class CCodePrinter(CodePrinter):
         """convert dotted Variable to their C equivalent"""
         return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
 
+
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
         """ Create new slice with informations collected from old slice and decorators
@@ -1126,7 +1127,6 @@ class CCodePrinter(CodePrinter):
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
 
         return Slice(start, stop, step)
-
     def _print_PyccelArraySize(self, expr):
         return '{}.shape[{}]'.format(expr.arg, expr.index)
 
