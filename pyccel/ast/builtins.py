@@ -16,7 +16,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction, max_precision
+from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .literals  import LiteralString
@@ -417,7 +417,15 @@ class PythonTuple(PyccelAstNode):
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
-        return self._args[i]
+        if isinstance(i, (int, LiteralInteger)):
+            return self._args[i]
+        elif isinstance(i, Slice):
+            if not all(isinstance(s, (LiteralInteger, type(None))) for s in (i.start, i.step, i.stop)):
+                raise NotImplementedError("Can't index PythonTuple with non-integer types")
+            else:
+                return PythonTuple(*self._args[i.start:i.stop:i.step])
+        else:
+            raise NotImplementedError("Can't index PythonTuple with type {}".format(type(i)))
 
     def __add__(self,other):
         return PythonTuple(*(self._args + other._args))
