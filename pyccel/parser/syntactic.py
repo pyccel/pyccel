@@ -929,9 +929,14 @@ class SyntaxParser(BasicParser):
 
     def _visit_comprehension(self, stmt):
 
+        scope = self.create_new_loop_scope()
+
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        expr = For(iterator, iterable, [])
+
+        self.exit_loop_scope()
+
+        expr = For(iterator, iterable, [], scope=scope)
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -944,7 +949,7 @@ class SyntaxParser(BasicParser):
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
-            lhs = self.get_new_variable()
+            lhs = PyccelSymbol('_', is_temp=True)
         else:
             lhs = self._visit(self._scope[-2].targets)
             if len(lhs)==1:
@@ -952,7 +957,7 @@ class SyntaxParser(BasicParser):
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
-        index = self.get_new_variable()
+        index = PyccelSymbol('_', is_temp=True)
 
         args = [index]
         target = IndexedElement(lhs, *args)
