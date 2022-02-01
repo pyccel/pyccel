@@ -2363,7 +2363,7 @@ class SemanticParser(BasicParser):
 
     def _visit_For(self, expr, **settings):
 
-        scope = self.create_new_loop_scope()
+        scope = self._namespace = expr.scope
 
         # treatment of the index/indices
         iterable = Iterable(self._visit(expr.iterable, **settings))
@@ -2375,7 +2375,7 @@ class SemanticParser(BasicParser):
         iterator_d_var = self._infere_type(start)
 
         if iterable.num_loop_counters_required:
-            indices = [Variable('int', self.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
+            indices = [Variable('int', self.namespace.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
@@ -2430,9 +2430,12 @@ class SemanticParser(BasicParser):
 
 
     def _visit_FunctionalFor(self, expr, **settings):
+        old_index   = expr.index
+        new_index   = self.namespace.get_new_symbol()
+        expr.substitute(old_index, new_index)
 
         target  = expr.expr
-        index   = expr.index
+        index   = new_index
         indices = expr.indices
         dims    = []
         body    = expr.loops[1]
@@ -2621,7 +2624,8 @@ class SemanticParser(BasicParser):
 
     def _visit_While(self, expr, **settings):
 
-        scope = self.create_new_loop_scope()
+        scope = self._namespace = expr.scope
+
         test = self._visit(expr.test, **settings)
         body = self._visit(expr.body, **settings)
         local_vars = list(self.namespace.variables.values())
