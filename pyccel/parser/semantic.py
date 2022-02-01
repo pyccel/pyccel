@@ -1175,8 +1175,8 @@ class SemanticParser(BasicParser):
             d_lhs['is_stack_array'] = False
 
             rhs.is_target = not rhs.is_pointer
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and isinstance(rhs, Variable) and \
-                (rhs.base.is_ndarray or rhs.base.is_pointer):
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
+                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_pointer', False)):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
             d_lhs['is_stack_array'] = False
