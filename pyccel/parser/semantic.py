@@ -1194,13 +1194,15 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _assign_GeneratorComprehension(self, expr, **settings):
+    def _assign_GeneratorComprehension(self, lhs_name, expr, **settings):
         """
         Visit the GeneratorComprehension node creating all necessary expressions
         for its definition
 
         Parameters
         ----------
+        lhs_name : str
+                    The name to which the expression is assigned
         expr : GeneratorComprehension
 
         Results
@@ -1210,7 +1212,6 @@ class SemanticParser(BasicParser):
         """
 
         result   = expr.expr
-        lhs_name = _get_name(expr.lhs)
         lhs  = self.check_for_variable(lhs_name)
 
         loop = expr.loops
@@ -1956,11 +1957,12 @@ class SemanticParser(BasicParser):
 
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
-            genexp = self._assign_GeneratorComprehension(rhs, **settings)
+            rhs.substitute(rhs.lhs, lhs)
+            genexp = self._assign_GeneratorComprehension(_get_name(lhs), rhs, **settings)
             if isinstance(expr, AugAssign):
                 new_expressions.append(genexp)
                 rhs = genexp.lhs
-            elif rhs.lhs == lhs:
+            elif genexp.lhs.name == lhs:
                 return genexp
             else:
                 new_expressions.append(genexp)
@@ -2606,9 +2608,14 @@ class SemanticParser(BasicParser):
     def _visit_GeneratorComprehension(self, expr, **settings):
         lhs = self.check_for_variable(expr.lhs)
         if lhs is None:
-            creation = self._visit(Assign(expr.lhs,expr, fst=expr.fst))
+            if expr.lhs.is_temp:
+                lhs = PyccelSymbol(self.namespace.get_new_name(), is_temp=True)
+            else:
+                lhs = expr.lhs
+
+            creation = self._visit(Assign(lhs, expr, fst=expr.fst))
             self._additional_exprs[-1].append(creation)
-            return self.get_variable(expr.lhs)
+            return self.get_variable(lhs)
         else:
             return lhs
 
@@ -2686,7 +2693,7 @@ class SemanticParser(BasicParser):
     def _visit_IfTernaryOperator(self, expr, **settings):
         value_true  = self._visit(expr.value_true, **settings)
         if value_true.rank > 0 or value_true.dtype is NativeString():
-            lhs = self.get_new_variable()
+            lhs = PyccelSymbol(self.get_new_name(), is_temp=True)
             # Temporarily deactivate type checks to construct syntactic assigns
             PyccelAstNode.stage = 'syntactic'
             assign_true  = Assign(lhs, expr.value_true, fst = expr.fst)
