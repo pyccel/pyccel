@@ -43,7 +43,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
-from pyccel.ast.core import create_variable
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -230,7 +229,7 @@ class SyntaxParser(BasicParser):
         if not isinstance(val, (CommentBlock, PythonPrint)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
-            val = Assign(PyccelSymbol('_'), val)
+            val = Assign(PyccelSymbol('_', is_temp=True), val)
         return val
 
     def _visit_Tuple(self, stmt):
@@ -803,8 +802,7 @@ class SyntaxParser(BasicParser):
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
             else:
-                result_name, result_counter = create_variable(self._used_names, \
-                            prefix = 'Out', counter = result_counter)
+                result_name,result_counter = self.namespace.get_new_incremented_symbol('Out', result_counter)
 
             results.append(result_name)
 
@@ -994,7 +992,7 @@ class SyntaxParser(BasicParser):
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
             lhs = self._visit(grandparent.targets[0])
         else:
-            lhs = PyccelSymbol('_')
+            lhs = PyccelSymbol('_', is_temp=True)
 
         body = result
         if name == 'sum':
