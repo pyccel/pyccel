@@ -31,6 +31,8 @@ from pyccel.ast.variable import DottedName
 from pyccel.parser.scope     import Scope
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
+from pyccel.utilities.strings import create_incremented_string
+
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
