@@ -10,9 +10,10 @@
 from pyccel.ast.basic import Basic
 
 from pyccel.ast.core      import Assign
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.internals import PyccelSymbol, PyccelArraySize, Slice
 from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelUnarySub, PyccelMinus, PyccelAdd
+from pyccel.ast.operators import PyccelGt, PyccelLt, IfTernaryOperator
 
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -143,7 +144,6 @@ class CodePrinter:
         elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start, simplify = True), start)
-PyccelUnarySub, PyccelMinus, PyccelAdd
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0], simplify = True)
         elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
