@@ -458,6 +458,9 @@ class PythonTuple(PyccelAstNode):
 
     @property
     def allows_negative_indexes(self):
+        """ Indicates whether negative values can be
+        used to index this Variable
+        """
         return False
 
 #==============================================================================
