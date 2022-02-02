@@ -612,7 +612,7 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=self.blocking)
 
-    def _extract_indexed_from_var(self, var, indices):
+    def _extract_indexed_from_var(self, var, indices, expr):
         """ Use indices to extract appropriate element from
         object 'var'
         This contains most of the contents of _visit_IndexedElement
@@ -622,12 +622,38 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable
         # if not possible we use symbolic objects
 
-        if not isinstance(var, Variable):
-            assert(hasattr(var,'__getitem__'))
-            if len(indices)==1:
-                return var[indices[0]]
+        if isinstance(var, PythonTuple):
+            def is_literal_index(a):
+                is_int = lambda a: isinstance(a, (int, LiteralInteger)) or \
+                        (isinstance(a, PyccelUnarySub) and \
+                         isinstance(a.args[0], (int, LiteralInteger)))
+                if isinstance(a, Slice):
+                    return all(is_int(s) or s is None for s in (a.start, a.step, a.stop))
+                else:
+                    return is_int(a)
+            if all(is_literal_index(a) for a in indices):
+                if len(indices)==1:
+                    return var[indices[0]]
+                else:
+                    return self._visit(var[indices[0]][indices[1:]])
             else:
-                return self._visit(var[indices[0]][indices[1:]])
+                tmp_var = PyccelSymbol(self.get_new_name())
+                assign = Assign(tmp_var, var)
+                assign.set_fst(expr.fst)
+                self._additional_exprs[-1].append(self._visit(assign))
+                var = self._visit(tmp_var)
+
+
+        elif not isinstance(var, Variable):
+            if hasattr(var,'__getitem__'):
+                if len(indices)==1:
+                    return var[indices[0]]
+                else:
+                    return self._visit(var[indices[0]][indices[1:]])
+            else:
+                errors.report("Can't index {}".format(type(var)), symbol=expr,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
 
         indices = tuple(indices)
 
@@ -649,13 +675,13 @@ class SemanticParser(BasicParser):
                         return selected_vars[0]
                     else:
                         var = selected_vars[0]
-                        return self._extract_indexed_from_var(var, indices[1:])
+                        return self._extract_indexed_from_var(var, indices[1:], expr)
                 elif len(selected_vars)<1:
                     return None
                 elif len(indices)==1:
                     return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:]) for var in selected_vars])
+                    return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
@@ -663,7 +689,7 @@ class SemanticParser(BasicParser):
                     return var[arg]
 
                 var = var[arg]
-                return self._extract_indexed_from_var(var, indices[1:])
+                return self._extract_indexed_from_var(var, indices[1:], expr)
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
@@ -937,7 +963,8 @@ class SemanticParser(BasicParser):
             d_lhs['is_stack_array'] = False
 
             rhs.is_target = not rhs.is_pointer
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.is_ndarray or rhs.base.is_pointer):
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
+                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_pointer', False)):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
             d_lhs['is_stack_array'] = False
@@ -1683,7 +1710,7 @@ class SemanticParser(BasicParser):
                              for i in range(n_exprs)]
             return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
 
-        return self._extract_indexed_from_var(var, args)
+        return self._extract_indexed_from_var(var, args, expr)
 
     def _visit_PyccelSymbol(self, expr, **settings):
         name = expr

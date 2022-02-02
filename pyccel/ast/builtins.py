@@ -16,7 +16,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction, max_precision
+from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .literals  import LiteralString
@@ -417,7 +417,28 @@ class PythonTuple(PyccelAstNode):
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
-        return self._args[i]
+        def is_int(a):
+            return isinstance(a, (int, LiteralInteger)) or \
+                    (isinstance(a, PyccelUnarySub) and \
+                     isinstance(a.args[0], (int, LiteralInteger)))
+
+        def to_int(a):
+            if a is None:
+                return None
+            elif isinstance(a, PyccelUnarySub):
+                return -a.args[0].python_value
+            else:
+                return a
+
+        if is_int(i):
+            return self._args[to_int(i)]
+        elif isinstance(i, Slice) and \
+                all(is_int(s) or s is None for s in (i.start, i.step, i.stop)):
+            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)])
+        elif self.is_homogeneous:
+            return IndexedElement(self, i)
+        else:
+            raise NotImplementedError("Can't index PythonTuple with type {}".format(type(i)))
 
     def __add__(self,other):
         return PythonTuple(*(self._args + other._args))
@@ -447,6 +468,13 @@ class PythonTuple(PyccelAstNode):
         """ Arguments of the tuple
         """
         return self._args
+
+    @property
+    def allows_negative_indexes(self):
+        """ Indicates whether variables used to
+        index this Variable can be negative
+        """
+        return False
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):

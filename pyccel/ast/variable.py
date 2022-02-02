@@ -362,8 +362,8 @@ class Variable(PyccelAstNode):
 
     @property
     def allows_negative_indexes(self):
-        """ Indicates whether negative values can be
-        used to index this Variable
+        """ Indicates whether variables used to
+        index this Variable can be negative
         """
         return self._allows_negative_indexes
 
