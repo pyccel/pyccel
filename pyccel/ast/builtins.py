@@ -428,7 +428,7 @@ class PythonTuple(PyccelAstNode):
             elif isinstance(a, PyccelUnarySub):
                 return -int(a.args[0])
             else:
-                return int(a)
+                return a
 
         if is_int(i):
             return self._args[to_int(i)]
