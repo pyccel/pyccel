@@ -417,11 +417,24 @@ class PythonTuple(PyccelAstNode):
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
-        if isinstance(i, (int, LiteralInteger)):
-            return self._args[i]
+        def is_int(a):
+            return isinstance(a, (int, LiteralInteger)) or \
+                    (isinstance(a, PyccelUnarySub) and \
+                     isinstance(a.args[0], (int, LiteralInteger)))
+
+        def to_int(a):
+            if a is None:
+                return None
+            elif isinstance(a, PyccelUnarySub):
+                return -int(a.args[0])
+            else:
+                return int(a)
+
+        if is_int(i):
+            return self._args[to_int(i)]
         elif isinstance(i, Slice) and \
-                all(isinstance(s, (LiteralInteger, type(None))) for s in (i.start, i.step, i.stop)):
-            return PythonTuple(*self._args[i.start:i.stop:i.step])
+                all(is_int(s) or s is None for s in (i.start, i.step, i.stop)):
+            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)])
         elif self.is_homogeneous:
             return IndexedElement(self, i)
         else:
