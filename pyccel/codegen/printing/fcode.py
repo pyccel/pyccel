@@ -2578,7 +2578,7 @@ class FCodePrinter(CodePrinter):
         base = expr.base
         if isinstance(base, (PyccelInternalFunction, PythonTuple)):
             indexed_type = base.dtype
-            if isinstance(indexed_type, PythonTuple):
+            if isinstance(base, PyccelInternalFunction) and isinstance(indexed_type, PythonTuple):
                 base = self._print_PyccelInternalFunction(expr.base.base)
             else:
                 if (not self._additional_code):
