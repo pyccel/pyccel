@@ -426,7 +426,7 @@ class PythonTuple(PyccelAstNode):
             if a is None:
                 return None
             elif isinstance(a, PyccelUnarySub):
-                return -int(a.args[0])
+                return -a.args[0].python_value
             else:
                 return a
 
