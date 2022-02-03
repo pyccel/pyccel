@@ -884,11 +884,11 @@ class IndexedElement(PyccelAstNode):
         base = self.base
         for i in self.indices:
             if isinstance(i, Slice) and j<len(args):
-                if i.step == 1 or i.step == None:
+                if i.step == 1 or i.step is None:
                     incr = args[j]
                 else:
                     incr = PyccelMul(i.step, args[j], simplify = True)
-                if i.start != 0 and i.start != None:
+                if i.start != 0 and i.start is not None:
                     incr = PyccelAdd(i.start, incr, simplify = True)
                 i = incr
                 j += 1
