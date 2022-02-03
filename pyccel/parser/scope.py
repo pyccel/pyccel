@@ -174,7 +174,7 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope:
-            return self.parent_scope.find_in_scope(name, category)
+            return self.parent_scope.find(name, category)
         else:
             return None
 
@@ -183,7 +183,7 @@ class Scope(object):
         in the scope.
         """
         if self.parent_scope:
-            result = self.parent_scope.get_all_from_scope(category)
+            result = self.parent_scope.find_all(category)
         else:
             result = {}
 
