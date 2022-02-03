@@ -154,7 +154,7 @@ class Scope(object):
         """
         return self._locals['symbolic_functions']
 
-    def find_in_scope(self, name, location = None):
+    def find(self, name, category = None):
         """ Find and return the specified object in the scope
         If the object cannot be found then None is returned
         """
@@ -171,7 +171,7 @@ class Scope(object):
         else:
             return None
 
-    def get_all_from_scope(self, location):
+    def find_all(self, category):
         """ Find and return the specified object in the scope
         If the object cannot be found then None is returned
         """
