@@ -77,7 +77,6 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
 
 def get_name(a):

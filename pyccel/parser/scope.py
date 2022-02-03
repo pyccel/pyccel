@@ -5,7 +5,6 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing the Scope class
 """
-from collections import OrderedDict
 from pyccel.ast.core import ClassDef
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -22,7 +21,7 @@ class Scope(object):
 
     Parameters
     ----------
-    decorators : OrderedDict
+    decorators : dict
                  A dictionary of any decorators which operate on
                  objects in this scope
     """
@@ -37,9 +36,9 @@ class Scope(object):
                 'macros','templates','headers','decorators',
                 'cls_constructs')
 
-        self._imports = OrderedDict((k,OrderedDict()) for k in keys)
+        self._imports = {k:{} for k in keys}
 
-        self._locals  = OrderedDict((k,OrderedDict()) for k in keys)
+        self._locals  = {k:{} for k in keys}
 
         self._temporary_variables = []
 
@@ -49,7 +48,7 @@ class Scope(object):
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self.parent_scope        = parent_scope
-        self._sons_scopes        = OrderedDict()
+        self._sons_scopes        = {}
 
 
         self._is_loop = is_loop

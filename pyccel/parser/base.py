@@ -11,7 +11,6 @@ Module containing aspects of a parser which are in common over all stages.
 import importlib
 import os
 import re
-from collections import OrderedDict
 from filelock import FileLock
 
 #==============================================================================
@@ -32,8 +31,6 @@ from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
-
-# TODO - use OrderedDict whenever it is possible
 
 
 #==============================================================================
@@ -144,7 +141,7 @@ class BasicParser(object):
         self._ast  = None
 
         self._filename  = None
-        self._metavars  = OrderedDict()
+        self._metavars  = {}
         self._namespace = Scope()
 
         self._used_names = None

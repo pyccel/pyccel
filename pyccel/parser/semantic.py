@@ -6,7 +6,6 @@
 
 # pylint: disable=R0201, missing-function-docstring
 
-from collections import OrderedDict
 from itertools import chain
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -115,7 +114,6 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
 
 from pyccel.parser.base      import BasicParser, Scope
@@ -157,7 +155,7 @@ class SemanticParser(BasicParser):
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
         self._parents = kwargs.pop('parents', [])
-        self._d_parsers = kwargs.pop('d_parsers', OrderedDict())
+        self._d_parsers = kwargs.pop('d_parsers', {})
 
         # ...
         if not isinstance(inputs, SyntaxParser):
@@ -178,7 +176,7 @@ class SemanticParser(BasicParser):
         self._mod_name  = ''
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
-        self._namespace.imports['imports'] = OrderedDict()
+        self._namespace.imports['imports'] = {}
         self._program_namespace = Scope()
         self._module_namespace  = self._namespace
         self._used_names = parser.used_names
@@ -3099,7 +3097,7 @@ class SemanticParser(BasicParser):
             apps = [i for i in calls if (i.funcdef.name
                     not in sub_funcs)]
 
-            d_apps = OrderedDict((a, []) for a in args)
+            d_apps = {a: [] for a in args}
             for f in apps:
                 a_args = set(f.args) & set(args)
                 for a in a_args:
