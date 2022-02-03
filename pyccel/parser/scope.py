@@ -28,17 +28,17 @@ class Scope(object):
     __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables')
 
+    categories = ('functions','variables','classes',
+            'imports','symbolic_functions',
+            'macros','templates','headers','decorators',
+            'cls_constructs')
+
     def __init__(self, *, decorators=None, is_loop = False,
                     parent_scope = None):
 
-        keys = ('functions','variables','classes',
-                'imports','symbolic_functions',
-                'macros','templates','headers','decorators',
-                'cls_constructs')
+        self._imports = {k:{} for k in self.categories}
 
-        self._imports = {k:{} for k in keys}
-
-        self._locals  = {k:{} for k in keys}
+        self._locals  = {k:{} for k in self.categories}
 
         self._temporary_variables = []
 
@@ -162,7 +162,8 @@ class Scope(object):
         name : str
             The name of the object we are searching for
         category : str
-            The type of object we are searching for (function/variable/etc)
+            The type of object we are searching for.
+            This must be one of the strings in Scope.categories
         """
         for l in ([category] if category else self._locals.keys()):
             if name in self._locals[l]:
@@ -180,6 +181,12 @@ class Scope(object):
     def find_all(self, category):
         """ Find and return all objects from the specified category
         in the scope.
+
+        Parameter
+        ---------
+        category : str
+            The type of object we are searching for.
+            This must be one of the strings in Scope.categories
         """
         if self.parent_scope:
             result = self.parent_scope.find_all(category)
