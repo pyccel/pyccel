@@ -746,6 +746,8 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap = [v.clone(v.name.lower()) for v in orig_vars_to_wrap]
             for v,w in zip(orig_vars_to_wrap,vars_to_wrap):
                 assign = v.get_user_nodes(Assign)[0]
+                # assign.fst should always exist, but is not always set when the
+                # Assign is created in the codegen stage
                 if assign.fst:
                     w.set_fst(assign.fst)
         else:
