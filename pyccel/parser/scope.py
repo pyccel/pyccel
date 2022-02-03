@@ -165,7 +165,7 @@ class Scope(object):
         category : str
             The type of object we are searching for (function/variable/etc)
         """
-        for l in ([location] if location else self._locals.keys()):
+        for l in ([category] if category else self._locals.keys()):
             if name in self._locals[l]:
                 return self._locals[l][name]
 
@@ -174,7 +174,7 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope:
-            return self.parent_scope.find_in_scope(name, location)
+            return self.parent_scope.find_in_scope(name, category)
         else:
             return None
 
@@ -183,11 +183,11 @@ class Scope(object):
         in the scope.
         """
         if self.parent_scope:
-            result = self.parent_scope.get_all_from_scope(location)
+            result = self.parent_scope.get_all_from_scope(category)
         else:
             result = {}
 
-        result.update(self._locals[location])
+        result.update(self._locals[category])
 
         return result
 
