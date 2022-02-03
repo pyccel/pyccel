@@ -980,13 +980,13 @@ class With(ScopedNode):
     """Represents a 'with' statement in the code.
 
     Expressions are of the form:
-        "while test:
+        "with statement:
             body..."
 
     Parameters
     ----------
     test : PyccelAstNode
-        test condition given as an expression
+        with definition statement given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the With statement.
 
