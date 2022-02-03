@@ -404,6 +404,11 @@ class SemanticParser(BasicParser):
         decorators : dict
             Decorators attached to FunctionDef object at syntactic stage.
 
+        Returns
+        -------
+        child : Scope
+            The newly created scope
+
         """
         child = self.namespace.new_child_scope(name, decorators=decorators)
 
