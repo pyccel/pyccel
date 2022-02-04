@@ -70,7 +70,6 @@ __all__ = (
     'ModuleHeader',
     'Pass',
     'Program',
-    'PythonFunction',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -2991,13 +2990,6 @@ class FunctionAddress(FunctionDef):
 class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
-    __slots__ = ()
-
-
-# TODO: [EB 06.01.2021] Is this class used? What for? See issue #668
-class PythonFunction(FunctionDef):
-
-    """Represents a Python-Function definition."""
     __slots__ = ()
 
 

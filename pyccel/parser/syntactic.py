@@ -26,7 +26,7 @@ from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
-from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
@@ -735,17 +735,6 @@ class SyntaxParser(BasicParser):
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
             func = SympyFunction(name, arguments, [],
-                    [stmt.__str__()])
-            func.set_fst(stmt)
-            self.insert_function(func)
-            return EmptyNode()
-
-        elif 'python' in decorators.keys():
-
-            # TODO maybe we should run pylint here
-
-            stmt.decorators.pop()
-            func = PythonFunction(name, arguments, [],
                     [stmt.__str__()])
             func.set_fst(stmt)
             self.insert_function(func)
