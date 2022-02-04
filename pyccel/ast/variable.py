@@ -881,17 +881,19 @@ class IndexedElement(PyccelAstNode):
 
         new_indexes = []
         j = 0
+        base = self.base
         for i in self.indices:
             if isinstance(i, Slice) and j<len(args):
-                if j == 0:
-                    i = args[j]
-                elif i.step == 1:
-                    i = PyccelAdd(i.start, args[j], simplify = True)
+                if i.step == 1 or i.step is None:
+                    incr = args[j]
                 else:
-                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j], simplify=True), simplify = True)
+                    incr = PyccelMul(i.step, args[j], simplify = True)
+                if i.start != 0 and i.start is not None:
+                    incr = PyccelAdd(i.start, incr, simplify = True)
+                i = incr
                 j += 1
             new_indexes.append(i)
-        return IndexedElement(self.base, *new_indexes)
+        return IndexedElement(base, *new_indexes)
 
 class VariableAddress(PyccelAstNode):
 
