@@ -5,7 +5,6 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing the Scope class
 """
-from collections import OrderedDict
 
 from pyccel.ast.core      import ClassDef
 from pyccel.ast.datatypes import DataTypeFactory
@@ -26,7 +25,7 @@ class Scope(object):
 
     Parameters
     ----------
-    decorators : OrderedDict
+    decorators : dict
                  A dictionary of any decorators which operate on
                  objects in this scope
     """
@@ -34,17 +33,17 @@ class Scope(object):
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
             '_dummy_counter')
 
+    categories = ('functions','variables','classes',
+            'imports','symbolic_functions',
+            'macros','templates','headers','decorators',
+            'cls_constructs')
+
     def __init__(self, *, decorators=None, is_loop = False,
                     parent_scope = None):
 
-        keys = ('functions','variables','classes',
-                'imports','symbolic_functions',
-                'macros','templates','headers','decorators',
-                'cls_constructs')
+        self._imports = {k:{} for k in self.categories}
 
-        self._imports = OrderedDict((k,OrderedDict()) for k in keys)
-
-        self._locals  = OrderedDict((k,OrderedDict()) for k in keys)
+        self._locals  = {k:{} for k in self.categories}
 
         self._temporary_variables = []
 
@@ -58,7 +57,7 @@ class Scope(object):
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self.parent_scope        = parent_scope
-        self._sons_scopes        = OrderedDict()
+        self._sons_scopes        = {}
 
 
         self._is_loop = is_loop
@@ -163,11 +162,19 @@ class Scope(object):
         """
         return self._locals['symbolic_functions']
 
-    def find_in_scope(self, name, location = None):
-        """ Find and return the specified object in the scope
+    def find(self, name, category = None):
+        """ Find and return the specified object in the scope.
         If the object cannot be found then None is returned
+
+        Parameters
+        ----------
+        name : str
+            The name of the object we are searching for
+        category : str
+            The type of object we are searching for.
+            This must be one of the strings in Scope.categories
         """
-        for l in ([location] if location else self._locals.keys()):
+        for l in ([category] if category else self._locals.keys()):
             if name in self._locals[l]:
                 return self._locals[l][name]
 
@@ -176,20 +183,26 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope:
-            return self.parent_scope.find_in_scope(name, location)
+            return self.parent_scope.find(name, category)
         else:
             return None
 
-    def get_all_from_scope(self, location):
-        """ Find and return the specified object in the scope
-        If the object cannot be found then None is returned
+    def find_all(self, category):
+        """ Find and return all objects from the specified category
+        in the scope.
+
+        Parameter
+        ---------
+        category : str
+            The type of object we are searching for.
+            This must be one of the strings in Scope.categories
         """
         if self.parent_scope:
-            result = self.parent_scope.get_all_from_scope(location)
+            result = self.parent_scope.find_all(category)
         else:
             result = {}
 
-        result.update(self._locals[location])
+        result.update(self._locals[category])
 
         return result
 

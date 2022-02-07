@@ -17,7 +17,6 @@ __all__ = (
     'lambdify',
     'private',
     'pure',
-    'python',
     'stack_array',
     'sympy',
     'template',
@@ -34,9 +33,6 @@ def lambdify(f):
         return  expr.subs(zip(args,vals)).doit()
 
     return wrapper
-
-def python(f):
-    return f
 
 def sympy(f):
     return f

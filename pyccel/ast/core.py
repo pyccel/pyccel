@@ -70,7 +70,6 @@ __all__ = (
     'ModuleHeader',
     'Pass',
     'Program',
-    'PythonFunction',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -937,13 +936,13 @@ class With(ScopedNode):
     """Represents a 'with' statement in the code.
 
     Expressions are of the form:
-        "while test:
+        "with statement:
             body..."
 
     Parameters
     ----------
     test : PyccelAstNode
-        test condition given as an expression
+        with definition statement given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the With statement.
 
@@ -1478,7 +1477,7 @@ class Iterable(Basic):
                - n_indices
                - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange)
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange, IndexedElement)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
@@ -2948,13 +2947,6 @@ class FunctionAddress(FunctionDef):
 class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
-    __slots__ = ()
-
-
-# TODO: [EB 06.01.2021] Is this class used? What for? See issue #668
-class PythonFunction(FunctionDef):
-
-    """Represents a Python-Function definition."""
     __slots__ = ()
 
 

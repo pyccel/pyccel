@@ -11,7 +11,6 @@ Module containing aspects of a parser which are in common over all stages.
 import importlib
 import os
 import re
-from collections import OrderedDict
 from filelock import FileLock
 
 #==============================================================================
@@ -21,7 +20,7 @@ from pyccel.ast.builtins import Lambda
 
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
 
 from pyccel.ast.utilities import recognised_source
@@ -35,9 +34,6 @@ from pyccel.utilities.strings import create_incremented_string
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
-
-# TODO - use OrderedDict whenever it is possible
-
 
 #==============================================================================
 
@@ -147,7 +143,7 @@ class BasicParser(object):
         self._ast  = None
 
         self._filename  = None
-        self._metavars  = OrderedDict()
+        self._metavars  = {}
         self._namespace = Scope()
 
         self._used_names = None
@@ -320,8 +316,6 @@ class BasicParser(object):
 
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
-        elif isinstance(func, PythonFunction):
-            self.insert_python_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
             container = self.namespace.functions
             container[func.name] = func
@@ -339,16 +333,6 @@ class BasicParser(object):
             container[func.lhs] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
-
-    def insert_python_function(self, func):
-        """."""
-
-        container = self.namespace.python_functions
-
-        if isinstance(func, PythonFunction):
-            container[func.name] = func
-        else:
-            raise TypeError('Expected a python_function')
 
     def insert_import(self, expr):
         """."""

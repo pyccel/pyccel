@@ -455,6 +455,7 @@ class ScopedNode(Basic):
 
     @property
     def scope(self):
-        """ Scope object containing all available objects in this part of the code
+        """ Local scope of the current object
+        This contains all available objects in this part of the code
         """
         return self._scope
