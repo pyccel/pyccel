@@ -583,7 +583,7 @@ class SyntaxParser(BasicParser):
         name = self._visit(stmt.name)
         name = name.replace("'", '')
 
-        scope = self.create_new_function_scope(name, ())
+        scope = self.create_new_function_scope(name)
 
         arguments    = self._visit(stmt.args)
 
