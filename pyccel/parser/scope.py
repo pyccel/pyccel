@@ -244,7 +244,7 @@ class Scope(object):
                 to loops
                 Default : True
         """
-        assert name!='_'
+        assert var.name!='_'
         if not isinstance(var, Variable):
             raise TypeError('variable must be of type Variable')
 
@@ -256,8 +256,10 @@ class Scope(object):
         else:
             if name in self._locals['variables']:
                 raise RuntimeError('New variable {} already exists in scope'.format(name))
-            self._locals['variables'][name] = var
-            self._temporary_variables.append(var)
+            if name == '_':
+                self._temporary_variables.append(var)
+            else:
+                self._locals['variables'][name] = var
 
     def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
@@ -421,7 +423,9 @@ class Scope(object):
         return PyccelSymbol(self.get_new_name(), is_temp=True)
 
     def get_available_name(self, start_name):
-        if start_name in self._used_symbols:
-            return get_new_name(start_name)
+        if start_name == '_':
+            return self.get_new_name()
+        elif start_name in self._used_symbols:
+            return self.get_new_name(start_name)
         else:
             return start_name
