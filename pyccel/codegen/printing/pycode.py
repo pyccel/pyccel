@@ -200,6 +200,7 @@ class PythonCodePrinter(CodePrinter):
         return self._print(func)
 
     def _print_FunctionDef(self, expr):
+        self.set_scope(expr.scope)
         name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces if not i.is_argument)
@@ -259,6 +260,7 @@ class PythonCodePrinter(CodePrinter):
             headers = self._print(headers)
             code = '{header}\n{code}'.format(header=headers, code=code)
 
+        self.exit_scope()
         return code
 
     def _print_FunctionAddress(self, expr):
@@ -277,6 +279,7 @@ class PythonCodePrinter(CodePrinter):
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
     def _print_Program(self, expr):
+        self.set_scope(expr.scope)
         imports  = ''.join(self._print(i) for i in expr.imports)
         body     = self._print(expr.body)
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
@@ -284,6 +287,7 @@ class PythonCodePrinter(CodePrinter):
         body = imports+body
         body = self._indent_codestring(body)
 
+        self.exit_scope()
         return ('if __name__ == "__main__":\n'
                 '{body}\n').format(body=body)
 
@@ -479,6 +483,7 @@ class PythonCodePrinter(CodePrinter):
             return code
 
     def _print_For(self, expr):
+        self.set_scope(expr.scope)
         iterable = self._print(expr.iterable)
         target   = expr.target
         if not isinstance(target,(list, tuple)):
@@ -489,6 +494,7 @@ class PythonCodePrinter(CodePrinter):
         code   = ('for {0} in {1}:\n'
                 '{2}').format(target,iterable,body)
 
+        self.exit_scope()
         return code
 
     def _print_FunctionalFor(self, expr):
@@ -522,7 +528,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
+        self.set_scope(expr.scope)
         body = self._indent_codestring(self._print(expr.body))
+        self.exit_scope()
         return 'while {cond}:\n{body}'.format(
                 cond = cond,
                 body = body)
@@ -772,6 +780,7 @@ class PythonCodePrinter(CodePrinter):
         return 'print({0})\n'.format(fs)
 
     def _print_Module(self, expr):
+        self.set_scope(expr.scope)
         # Print interface functions (one function with multiple decorators describes the problem)
         imports  = ''.join(self._print(i) for i in expr.imports)
         interfaces = ''.join(self._print(i) for i in expr.interfaces)
@@ -806,6 +815,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             prog = ''
 
+        self.exit_scope()
         return ('{imports}\n'
                 '{body}'
                 '{prog}').format(

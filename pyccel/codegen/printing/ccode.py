@@ -582,6 +582,7 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def _print_ModuleHeader(self, expr):
+        self.set_scope(expr.scope)
         self._in_header = True
         name = expr.module.name
         # TODO: Add classes and interfaces
@@ -594,6 +595,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
+        self.exit_scope()
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n'
@@ -608,6 +610,7 @@ class CCodePrinter(CodePrinter):
                         funcs   = funcs)
 
     def _print_Module(self, expr):
+        self.set_scope(expr.scope)
         self._current_module = expr.name
         body    = ''.join(self._print(i) for i in expr.body)
 
@@ -624,6 +627,7 @@ class CCodePrinter(CodePrinter):
                         variables = global_variables,
                         body      = body)
 
+        self.exit_scope()
         return code
 
     def _print_Break(self, expr):
@@ -633,7 +637,9 @@ class CCodePrinter(CodePrinter):
         return 'continue;\n'
 
     def _print_While(self, expr):
+        self.set_scope(expr.scope)
         body = self._print(expr.body)
+        self.exit_scope()
         cond = self._print(expr.test)
         return 'while({condi})\n{{\n{body}}}\n'.format(condi = cond, body = body)
 
@@ -1345,6 +1351,7 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
+        self.set_scope(expr.scope)
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
@@ -1374,6 +1381,8 @@ class CCodePrinter(CodePrinter):
                  body,
                  '}\n',
                  sep]
+
+        self.exit_scope()
 
         return ''.join(p for p in parts if p)
 
@@ -1640,6 +1649,7 @@ class CCodePrinter(CodePrinter):
             return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
+        self.set_scope(expr.scope)
 
         indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
@@ -1668,6 +1678,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(test_step, PyccelUnarySub):
             test_step = iterable.step.args[0]
 
+        self.exit_scope()
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
             op = '>' if isinstance(iterable.step, PyccelUnarySub) else '<'
@@ -1865,6 +1876,7 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
+        self.set_scope(expr.scope)
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
@@ -1874,6 +1886,7 @@ class CCodePrinter(CodePrinter):
         imports = [*expr.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
+        self.exit_scope()
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
