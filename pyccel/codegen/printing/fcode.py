@@ -332,7 +332,7 @@ class FCodePrinter(CodePrinter):
                 args.append(a.value)
 
         # Create new local variables to ensure there are no name collisions
-        new_local_vars = [v.clone(self.parser.get_new_name(v.name)) \
+        new_local_vars = [v.clone(self.namespace.get_new_name(v.name)) \
                             for v in func.local_vars]
         for v in new_local_vars:
             self.add_vars_to_namespace(v)
@@ -699,7 +699,7 @@ class FCodePrinter(CodePrinter):
             base = expr.lhs.funcdef.results[0]
             if (not self._additional_code):
                 self._additional_code = ''
-            var_name = self.parser.get_new_name()
+            var_name = self.namespace.get_new_name()
             var = base.clone(var_name)
 
             self.add_vars_to_namespace(var)
@@ -911,7 +911,7 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
+        index  = Variable(NativeInteger(), name =  self.namespace.get_new_name('i'))
 
         self.add_vars_to_namespace(index)
 
@@ -999,7 +999,7 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = self.parser.get_new_name()
+        var_name = self.namespace.get_new_name()
         var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
@@ -1577,8 +1577,7 @@ class FCodePrinter(CodePrinter):
             # exposed to python so there is no need to print their signature
             return ''
 
-        self.parser.create_new_function_scope(name, {})
-        self.parser.exit_function_scope()
+        scope = self.namespace.new_child_scope(name, **kwargs)
         self.parser.insert_function(expr)
         self.set_current_function(name)
 
@@ -2601,7 +2600,7 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var_name = self.parser.get_new_name()
+                var_name = self.namespace.get_new_name()
                 var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
@@ -2735,7 +2734,7 @@ class FCodePrinter(CodePrinter):
                 key = a.keyword
                 arg = a.value
                 if arg in lhs_vars.values():
-                    var = arg.clone(self.parser.get_new_name())
+                    var = arg.clone(self.namespace.get_new_name())
                     self.add_vars_to_namespace(var)
                     self._additional_code += self._print(Assign(var,arg))
                     newarg = var
@@ -2750,7 +2749,7 @@ class FCodePrinter(CodePrinter):
                                 for n,r in lhs_vars.items()]
 
         elif len(func_results)>1:
-            results = [r.clone(name = self.parser.get_new_name()) \
+            results = [r.clone(name = self.namespace.get_new_name()) \
                         for r in func_results]
             for var in results:
                 self.add_vars_to_namespace(var)
@@ -2795,7 +2794,7 @@ class FCodePrinter(CodePrinter):
             base = expr.prefix.funcdef.results[0]
             if (not self._additional_code):
                 self._additional_code = ''
-            var_name = self.parser.get_new_name()
+            var_name = self.namespace.get_new_name()
             var = base.clone(var_name)
 
             self.add_vars_to_namespace(var)
