@@ -422,6 +422,6 @@ class Scope(object):
 
     def get_available_name(self, start_name):
         if start_name in self._used_symbols:
-            new_name
+            return get_new_name(start_name)
         else:
             return start_name
