@@ -422,6 +422,7 @@ class FCodePrinter(CodePrinter):
         return expr
 
     def _print_Module(self, expr):
+        self.set_scope(expr.scope)
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -479,6 +480,8 @@ class FCodePrinter(CodePrinter):
                  contains,
                  body,
                  'end module {}\n'.format(name)]
+
+        self.exit_scope()
 
         return '\n'.join([a for a in parts if a])
 
@@ -1530,6 +1533,7 @@ class FCodePrinter(CodePrinter):
 
 
    # def _print_With(self, expr):
+   #     self.set_scope(expr)
    #     test = 'call '+self._print(expr.test) + '%__enter__()'
    #     body = self._print(expr.body)
    #     end = 'call '+self._print(expr.test) + '%__exit__()'
@@ -1538,9 +1542,11 @@ class FCodePrinter(CodePrinter):
    #            '{end}').format(test=test, body=body, end=end)
         #TODO return code later
   #      expr.block
+  #      self.exit_scope()
   #      return ''
 
     def _print_Block(self, expr):
+        self.set_scope(expr.scope)
 
         decs=[]
         for i in expr.variables:
@@ -1551,6 +1557,7 @@ class FCodePrinter(CodePrinter):
         body_code = self._print(body)
         prelude   = ''.join(self._print(i) for i in decs)
 
+        self.exit_scope()
 
         #case of no local variables
         if len(decs) == 0:
@@ -1708,6 +1715,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
+        self.set_scope(expr.scope)
 
         name = self._print(expr.name)
         self.set_current_function(name)
@@ -1762,6 +1770,8 @@ class FCodePrinter(CodePrinter):
                 body_code,
                 'end {} {}\n'.format(sig_parts['func_type'], name)]
 
+        self.exit_scope()
+
         return '\n'.join(a for a in parts if a)
 
     def _print_Pass(self, expr):
@@ -1802,6 +1812,7 @@ class FCodePrinter(CodePrinter):
         if expr.hide:
             return '', ''
         # ...
+        self.set_scope(expr.scope)
 
         name = self._print(expr.name)
         self.set_current_class(name)
@@ -1856,6 +1867,8 @@ class FCodePrinter(CodePrinter):
 
         self.set_current_class(None)
 
+        self.exit_scope()
+
         return decs, methods
 
     def _print_Break(self, expr):
@@ -1895,6 +1908,7 @@ class FCodePrinter(CodePrinter):
         return loops
 
     def _print_For(self, expr):
+        self.set_scope(expr.scope)
 
         indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
@@ -1923,6 +1937,8 @@ class FCodePrinter(CodePrinter):
         if expr.end_annotation:
             end_annotation = expr.end_annotation.replace("for", "do")
             epilog += end_annotation
+
+        self.exit_scope()
 
         return ('{prolog}'
                 '{body}'
@@ -2180,7 +2196,9 @@ class FCodePrinter(CodePrinter):
     #    return prelude, body
 
     def _print_While(self,expr):
+        self.set_scope(expr.scope)
         body = self._print(expr.body)
+        self.exit_scope()
         return ('do while ({test})\n'
                 '{body}'
                 'end do\n').format(test=self._print(expr.test), body=body)

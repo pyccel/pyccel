@@ -26,6 +26,8 @@ class CodePrinter:
     The base class for code-printing subclasses.
     """
     language = None
+    def __init__(self):
+        self._namespace = None
 
     def doprint(self, expr, assign_to=None):
         """
@@ -53,6 +55,18 @@ class CodePrinter:
 
         # Format the output
         return ''.join(self._format_code(lines))
+
+    @property
+    def namespace(self):
+        """ Return the namespace associated with the object being printed
+        """
+        return self._namespace
+
+    def set_scope(self, scope):
+        self._namespace = scope
+
+    def exit_scope(self):
+        self._namespace = self._namespace.parent_scope
 
     def _print(self, expr):
         """Print the AST node in the printer language
