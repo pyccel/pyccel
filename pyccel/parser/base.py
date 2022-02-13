@@ -361,7 +361,7 @@ class BasicParser(object):
                     container[source] = []
                 container[source] += expr.target
 
-    def create_new_function_scope(self, name, *, **kwargs):
+    def create_new_function_scope(self, name, **kwargs):
         """
         Create a new Scope object for a Python function with the given name,
         and attach any decorators' information to the scope. The new scope is
