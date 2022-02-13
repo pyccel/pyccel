@@ -1404,7 +1404,7 @@ class SemanticParser(BasicParser):
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
             # Ensure that the function is correctly defined within the namespaces
-            scope = self.create_new_function_scope(init_func_name, [])
+            scope = self.create_new_function_scope(init_func_name)
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
                     global_vars = variables, scope=scope)
             self.exit_function_scope()
@@ -1430,7 +1430,7 @@ class SemanticParser(BasicParser):
                 free_func_body = If(IfSection(init_var,
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
-                scope = self.create_new_function_scope(free_func_name, [])
+                scope = self.create_new_function_scope(free_func_name)
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
@@ -2902,7 +2902,7 @@ class SemanticParser(BasicParser):
 
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
-            scope = self.create_new_function_scope(name, decorators)
+            scope = self.create_new_function_scope(name, decorators = decorators)
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]

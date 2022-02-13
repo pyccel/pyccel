@@ -361,7 +361,7 @@ class BasicParser(object):
                     container[source] = []
                 container[source] += expr.target
 
-    def create_new_function_scope(self, name, decorators):
+    def create_new_function_scope(self, name, *, **kwargs):
         """
         Create a new Scope object for a Python function with the given name,
         and attach any decorators' information to the scope. The new scope is
@@ -381,7 +381,7 @@ class BasicParser(object):
             Decorators attached to FunctionDef object at syntactic stage.
 
         """
-        child = self.namespace.new_child_scope(name, decorators=decorators)
+        child = self.namespace.new_child_scope(name, **kwargs)
 
         self._namespace = child
         if self._current_function:
