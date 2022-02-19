@@ -447,3 +447,37 @@ def omp_sections():
     #$ omp end parallel
 
     return (sum1 + sum2 + sum3)
+
+@types('int[:]', 'int[:]', 'int[:]', 'int[:]', 'int[:]')
+def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35):
+    result = 0
+    n1     = long_variable_1_oiwed423rnoij21d4kojklm.shape[0]
+    n2     = long_variable_2_oiwedqwrnoij2asxaxnjkna.shape[0]
+    n3     = long_variable_3_oiweqxhnoijaqed34023423.shape[0]
+    n4     = long_variable_4_oiweaxaijaqedqd34023423.shape[0]
+    n5     = long_variable_5_oiwed423rnoic3242ewdx35.shape[0]
+
+    #$ omp parallel private(i1, i2, i3, i4, i5) shared(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35, n1, n2, n3, n4, n5)
+
+    #$ omp for reduction (+:result)
+    for i1 in range(0, n1):
+        result += long_variable_1_oiwed423rnoij21d4kojklm[i1]
+
+    #$ omp for reduction (+:result)
+    for i2 in range(0, n2):
+        result += long_variable_2_oiwedqwrnoij2asxaxnjkna[i2]
+
+    #$ omp for reduction (+:result)
+    for i3 in range(0, n3):
+        result += long_variable_3_oiweqxhnoijaqed34023423[i3]
+
+    #$ omp for reduction (+:result)
+    for i4 in range(0, n4):
+        result += long_variable_4_oiweaxaijaqedqd34023423[i4]
+
+    #$ omp for reduction (+:result)
+    for i5 in range(0, n5):
+        result += long_variable_5_oiwed423rnoic3242ewdx35[i5]
+
+    #$ omp end parallel
+    return result

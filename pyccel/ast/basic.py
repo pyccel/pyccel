@@ -442,3 +442,20 @@ class PyccelAstNode(Basic):
         self._precision = x.precision
         self._order     = x.order
 
+
+#------------------------------------------------------------------------------
+class ScopedNode(Basic):
+    """ Class from which all objects with a scope inherit
+    """
+    __slots__ = ('_scope',)
+
+    def __init__(self, scope = None):
+        self._scope = scope
+        super().__init__()
+
+    @property
+    def scope(self):
+        """ Local scope of the current object
+        This contains all available objects in this part of the code
+        """
+        return self._scope

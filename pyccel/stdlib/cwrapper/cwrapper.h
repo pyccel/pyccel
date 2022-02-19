@@ -99,17 +99,21 @@ static inline double	PyDouble_to_Double(PyObject *object)
  *     boolean : python object
  */
 PyObject	*Complex128_to_PyComplex(double complex *c);
-PyObject	*Complex64_to_PyComplex(float complex *c);
+PyObject	*Complex128_to_NumpyComplex(double complex *c);
+PyObject	*Complex64_to_NumpyComplex(float complex *c);
 
 PyObject	*Bool_to_PyBool(bool *b);
 
 PyObject	*Int64_to_PyLong(int64_t *i);
 PyObject	*Int32_to_PyLong(int32_t *i);
-PyObject	*Int16_to_PyLong(int16_t *i);
-PyObject	*Int8_to_PyLong(int8_t *i);
+PyObject	*Int64_to_NumpyLong(int64_t *i);
+PyObject	*Int32_to_NumpyLong(int32_t *i);
+PyObject	*Int16_to_NumpyLong(int16_t *i);
+PyObject	*Int8_to_NumpyLong(int8_t *i);
 
 PyObject	*Double_to_PyDouble(double *d);
-PyObject	*Float_to_PyDouble(float *d);
+PyObject	*Double_to_NumpyDouble(double *d);
+PyObject	*Float_to_NumpyDouble(float *d);
 
 /*
  * Functions : Type check functions
@@ -132,6 +136,11 @@ PyObject	*Float_to_PyDouble(float *d);
  * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_IsScalar
  */
 //--------------------------------------------------------//
+static inline bool    PyIs_NativeInt(PyObject *o)
+{
+    return PyLong_CheckExact(o);
+}
+//--------------------------------------------------------//
 static inline bool    PyIs_Int8(PyObject *o)
 {
     return PyArray_IsScalar(o, Int8);
@@ -144,20 +153,17 @@ static inline bool    PyIs_Int16(PyObject *o)
 //--------------------------------------------------------//
 static inline bool    PyIs_Int32(PyObject *o)
 {
-#ifdef _WIN32
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int32);
-#else
     return PyArray_IsScalar(o, Int32);
-#endif
 }
 //--------------------------------------------------------//
 static inline bool    PyIs_Int64(PyObject *o)
 {
-#ifdef _WIN32
     return PyArray_IsScalar(o, Int64);
-#else
-    return PyLong_Check(o) || PyArray_IsScalar(o, Int64);
-#endif
+}
+//--------------------------------------------------------//
+static inline bool    PyIs_NativeFloat(PyObject *o)
+{
+    return PyFloat_Check(o);
 }
 //--------------------------------------------------------//
 static inline bool    PyIs_Float(PyObject *o)
@@ -167,7 +173,7 @@ static inline bool    PyIs_Float(PyObject *o)
 //--------------------------------------------------------//
 static inline bool    PyIs_Double(PyObject *o)
 {
-	return PyFloat_Check(o) || PyArray_IsScalar(o, Float64);
+	return PyArray_IsScalar(o, Float64);
 }
 //--------------------------------------------------------//
 static inline bool    PyIs_Bool(PyObject *o)
@@ -175,9 +181,14 @@ static inline bool    PyIs_Bool(PyObject *o)
 	return PyBool_Check(o) || PyArray_IsScalar(o, Bool);
 }
 //--------------------------------------------------------//
+static inline bool    PyIs_NativeComplex(PyObject *o)
+{
+	return PyComplex_Check(o);
+}
+//--------------------------------------------------------//
 static inline bool    PyIs_Complex128(PyObject *o)
 {
-	return PyComplex_Check(o) || PyArray_IsScalar(o, Complex64);
+	return PyArray_IsScalar(o, Complex128);
 }
 //--------------------------------------------------------//
 static inline bool    PyIs_Complex64(PyObject *o)

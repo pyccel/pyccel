@@ -26,7 +26,7 @@ from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Pass
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
-from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import If, IfSection
@@ -77,7 +77,6 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
 
 def get_name(a):
@@ -728,8 +727,6 @@ class SyntaxParser(BasicParser):
                     txt += ' results(' + ','.join(results) + ')'
 
                 header = hdr_parse(stmts=txt)
-                if name in self.namespace.static_functions:
-                    header = header.to_static()
                 headers += [header]
 
         body = stmt.body
@@ -738,17 +735,6 @@ class SyntaxParser(BasicParser):
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
             func = SympyFunction(name, arguments, [],
-                    [stmt.__str__()])
-            func.set_fst(stmt)
-            self.insert_function(func)
-            return EmptyNode()
-
-        elif 'python' in decorators.keys():
-
-            # TODO maybe we should run pylint here
-
-            stmt.decorators.pop()
-            func = PythonFunction(name, arguments, [],
                     [stmt.__str__()])
             func.set_fst(stmt)
             self.insert_function(func)
