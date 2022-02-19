@@ -3024,7 +3024,7 @@ class SemanticParser(BasicParser):
 
         results = [self._visit(i, **settings) for i in return_vars]
 
-        # add the Deallocate node before the Return node and eliminating the Deallocate node
+        # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
         if code:
