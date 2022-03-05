@@ -1344,9 +1344,12 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
-
-        if len(expr.results) > 1:
+        results = expr.results
+        if len(results) > 1:
             self._additional_args.append(expr.results)
+        if isinstance(results[0], Variable) and results[0].allocatable:
+            results[0].allocatable = False
+            results[0].is_pointer = True
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
