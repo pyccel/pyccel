@@ -135,6 +135,7 @@ class SyntaxParser(BasicParser):
 
         self.parse(verbose=True)
         self.dump()
+        self._in_lhs_assign = False
 
     def parse(self, verbose=False):
         """converts python ast to sympy ast."""
@@ -286,7 +287,9 @@ class SyntaxParser(BasicParser):
 
     def _visit_Assign(self, stmt):
 
+        self._in_lhs_assign = True
         lhs = self._visit(stmt.targets)
+        self._in_lhs_assign = False
         if len(lhs)==1:
             lhs = lhs[0]
         else:
@@ -395,7 +398,8 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
-        self.namespace.insert_symbol(stmt.id)
+        if self._in_lhs_assign:
+            self.namespace.insert_symbol(stmt.id)
         return PyccelSymbol(stmt.id)
 
     def _treat_import_source(self, source, level):
@@ -862,7 +866,8 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
-        self.namespace.insert_symbol(stmt.attr)
+        if self._in_lhs_assign:
+            self.namespace.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
