@@ -7,6 +7,10 @@
 
 from .basic import PyccelAstNode
 
+from pyccel.utilities.stage import PyccelStage
+
+pyccel_stage = PyccelStage()
+
 __all__ = (
     'FunctionalFor',
     'FunctionalMax',
@@ -67,7 +71,7 @@ class FunctionalFor(PyccelAstNode):
         self._index   = index
         super().__init__()
 
-        if PyccelAstNode.stage != 'syntactic':
+        if pyccel_stage != 'syntactic':
             self._dtype     = lhs.dtype
             self._precision = lhs.precision
             self._rank      = lhs.rank

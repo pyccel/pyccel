@@ -21,9 +21,11 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
 from pyccel.errors.errors import Errors
+from pyccel.utilities.stage import PyccelStage
 
 DEBUG = False
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 class Header(object):
     """Class for Header syntax."""
@@ -585,8 +587,8 @@ def parse(filename=None, stmts=None):
         model = meta.model_from_str(stmts)
     else:
         raise ValueError('Expecting a filename or a string')
-    # Ensure PyccelAstNode is in correct stage
-    PyccelAstNode.stage = 'syntactic'
+    # Ensure correct stage
+    pyccel_stage.set_stage('syntactic')
 
     stmts = []
     for stmt in model.statements:

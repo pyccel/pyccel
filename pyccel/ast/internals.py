@@ -11,6 +11,10 @@ from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
+from pyccel.utilities.stage import PyccelStage
+
+pyccel_stage = PyccelStage()
+
 __all__ = (
     'PrecomputedCode',
     'PyccelArraySize',
@@ -139,7 +143,7 @@ class Slice(Basic):
         self._stop = stop
         self._step = step
         super().__init__()
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
             raise TypeError('Slice start must be Integer or None')

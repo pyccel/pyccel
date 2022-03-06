@@ -11,6 +11,8 @@ from sympy.logic.boolalg      import And as sp_And
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
+from pyccel.utilities.stage import PyccelStage
+
 from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
@@ -29,6 +31,7 @@ from .variable import DottedName, IndexedElement
 from .variable import Variable
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
@@ -259,7 +262,7 @@ class AsName(Basic):
     _attribute_nodes = ()
 
     def __init__(self, obj, target):
-        if PyccelAstNode.stage != "syntactic":
+        if pyccel_stage != "syntactic":
             assert (isinstance(obj, Basic) and \
                     not isinstance(obj, PyccelSymbol)) or \
                    (isinstance(obj, type) and issubclass(obj, Basic))
@@ -761,7 +764,7 @@ class AliasAssign(Basic):
     _attribute_nodes = ('_lhs','_rhs')
 
     def __init__(self, lhs, rhs):
-        if PyccelAstNode.stage == 'semantic':
+        if pyccel_stage == 'semantic':
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
 
@@ -947,7 +950,7 @@ class While(ScopedNode):
 
     def __init__(self, test, body, local_vars=(), scope = None):
 
-        if PyccelAstNode.stage == 'semantic':
+        if pyccel_stage == 'semantic':
             if test.dtype is not NativeBool():
                 test = PythonBool(test)
 
@@ -1672,7 +1675,7 @@ class For(ScopedNode):
         local_vars = (),
         scope = None
         ):
-        if PyccelAstNode.stage != "syntactic":
+        if pyccel_stage != "syntactic":
             if not isinstance(iter_obj, Iterable):
                 iter_obj = Iterable(iter_obj)
                 if iter_obj.num_loop_counters_required!=0:
@@ -1988,7 +1991,7 @@ class FunctionCall(PyccelAstNode):
         # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
-        if self.stage == "syntactic":
+        if pyccel_stage == "syntactic":
             self._interface = None
             self._funcdef   = func
             self._arguments = tuple(args)
@@ -3318,13 +3321,13 @@ class Import(Basic):
         self._target = set()
         self._ignore_at_print = ignore_at_print
         if target is None:
-            if PyccelAstNode.stage == "syntactic":
+            if pyccel_stage == "syntactic":
                 target = []
             else:
                 raise KeyError("Missing argument 'target'")
         elif not iterable(target):
             target = [target]
-        if PyccelAstNode.stage == "syntactic":
+        if pyccel_stage == "syntactic":
             for i in target:
                 self._target.add(Import._format(i))
         else:
@@ -3945,7 +3948,7 @@ class IfSection(Basic):
 
     def __init__(self, cond, body):
 
-        if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
+        if pyccel_stage == 'semantic' and cond.dtype is not NativeBool():
             cond = PythonBool(cond)
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)

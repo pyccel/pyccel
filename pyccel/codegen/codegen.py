@@ -13,6 +13,7 @@ from pyccel.codegen.printing.pycode import PythonCodePrinter
 from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.errors.errors import Errors
+from pyccel.utilities.stage import PyccelStage
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
@@ -22,6 +23,7 @@ printer_registry    = {
                         'python':PythonCodePrinter
                       }
 
+pyccel_stage = PyccelStage()
 
 class Codegen(object):
 
@@ -36,7 +38,7 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
-        PyccelAstNode.stage = 'codegen'
+        pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name

@@ -74,6 +74,8 @@ from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
+from pyccel.utilities.stage import PyccelStage
+
 from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
@@ -92,6 +94,7 @@ def get_name(a):
 
 #==============================================================================
 errors = Errors()
+pyccel_stage = PyccelStage()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -147,7 +150,7 @@ class SyntaxParser(BasicParser):
         #      - filename
         errors.set_parser_stage('syntax')
 
-        PyccelAstNode.stage = 'syntactic'
+        pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
         self._ast = ast
 
