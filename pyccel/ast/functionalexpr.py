@@ -5,9 +5,9 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from .basic import PyccelAstNode
-
 from pyccel.utilities.stage import PyccelStage
+
+from .basic import PyccelAstNode
 
 pyccel_stage = PyccelStage()
 

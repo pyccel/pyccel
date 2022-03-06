@@ -7,11 +7,12 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
+
+from pyccel.utilities.stage import PyccelStage
+
 from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
-
-from pyccel.utilities.stage import PyccelStage
 
 pyccel_stage = PyccelStage()
 

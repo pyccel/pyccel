@@ -17,7 +17,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic, PyccelAstNode
+from pyccel.ast.basic import Basic
 
 from pyccel.ast.core import FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Module

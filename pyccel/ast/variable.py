@@ -9,6 +9,9 @@ variables
 """
 import inspect
 
+from pyccel.errors.errors   import Errors
+from pyccel.utilities.stage import PyccelStage
+
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
@@ -17,9 +20,6 @@ from .internals import PyccelArraySize, Slice, get_final_precision
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
-
-from pyccel.errors.errors   import Errors
-from pyccel.utilities.stage import PyccelStage
 
 errors = Errors()
 pyccel_stage = PyccelStage()

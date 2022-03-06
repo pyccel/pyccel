@@ -7,11 +7,12 @@
 """
 This module contains all classes and functions used for handling macros.
 """
+from pyccel.utilities.stage import PyccelStage
+
 from .basic          import PyccelAstNode
 from .datatypes      import NativeInteger, NativeGeneric
 from .internals      import PyccelSymbol
 from .variable       import Variable
-from pyccel.utilities.stage import PyccelStage
 
 pyccel_stage = PyccelStage()
 
