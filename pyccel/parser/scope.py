@@ -433,3 +433,24 @@ class Scope(object):
             return self.get_new_name(start_name)
         else:
             return start_name
+
+    def create_product_loop_scope(self, inner_scope, n_loops):
+        """ Create a n_loops loop scopes such that the innermost loop
+        has the scope inner_scope
+
+        Parameters
+        ----------
+        inner_scope : Namespace
+                      Namespace describing the innermost scope
+        n_loops     : The number of loop scopes required
+        """
+        assert inner_scope == self._loops[-1]
+        self._loops.pop()
+        scopes = [self.create_new_loop_scope()]
+        for i in range(n_loops-2):
+            scopes.append(scopes[-1].create_new_loop_scope())
+        scopes[-1]._loops.append(inner_scope)
+        inner_scope.parent_scope = scopes[-1]
+        scopes.append(inner_scope)
+        return scopes
+

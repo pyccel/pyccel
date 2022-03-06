@@ -2445,8 +2445,10 @@ class SemanticParser(BasicParser):
 
         if isinstance(iterable.iterable, Product):
             for_expr = body
-            for t, r in zip(target, iterable.get_range()):
-                for_expr = For(t, r, for_expr, local_vars=local_vars, scope=scope)
+            scopes = self._namespace.create_product_loop_scope(scope, len(target))
+
+            for t, r, s in zip(target, iterable.get_range(), scopes[::-1]):
+                for_expr = For(t, r, for_expr, local_vars=local_vars, scope=s)
                 for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
