@@ -2199,9 +2199,8 @@ class SemanticParser(BasicParser):
                 results = func.results
                 if results:
                     if len(results)==1:
-                        #if isinstance(results[0], Variable) and results[0].allocatable:
-                        #   results[0].allocatable = False
-                        #   results[0].is_pointer = True
+                        if isinstance(results[0], Variable) and results[0].allocatable:
+                           results[0].allocatable = False
                         d_var = self._infere_type(results[0], **settings)
                     else:
                         d_var = self._infere_type(PythonTuple(*results), **settings)
