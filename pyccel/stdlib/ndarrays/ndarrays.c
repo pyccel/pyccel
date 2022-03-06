@@ -214,17 +214,12 @@ int32_t free_array(t_ndarray arr)
 
 int32_t free_pointer(t_ndarray arr)
 {
-    if (arr.shape == NULL)
+    if (arr.is_view == false || arr.shape == NULL)
         return (0);
     free(arr.shape);
     arr.shape = NULL;
     free(arr.strides);
     arr.strides = NULL;
-    if (arr.is_view == false)
-    {
-        free(arr.raw_data);
-        arr.raw_data = NULL;
-    }
     return (1);
 }
 
