@@ -9,7 +9,8 @@ variables
 """
 import inspect
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
+from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
@@ -21,6 +22,7 @@ from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'DottedName',
@@ -797,7 +799,7 @@ class IndexedElement(PyccelAstNode):
 
         self._label = base
 
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             self._indices = args
             super().__init__()
             return

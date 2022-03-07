@@ -20,9 +20,12 @@ from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.python_wrapper import create_shared_library
+from pyccel.utilities.stage        import PyccelStage
 
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler
+
+pyccel_stage = PyccelStage()
 
 __all__ = ['execute_pyccel']
 
@@ -209,6 +212,7 @@ def execute_pyccel(fname, *,
         raise PyccelSyntaxError('Syntax step failed')
 
     if syntax_only:
+        pyccel_stage.pyccel_finished()
         return
 
     # Annotate abstract syntax Tree
@@ -229,6 +233,7 @@ def execute_pyccel(fname, *,
         raise PyccelSemanticError('Semantic step failed')
 
     if semantic_only:
+        pyccel_stage.pyccel_finished()
         return
 
     # -------------------------------------------------------------------------
@@ -261,6 +266,7 @@ def execute_pyccel(fname, *,
 
         # Change working directory back to starting point
         os.chdir(base_dirpath)
+        pyccel_stage.pyccel_finished()
         return
 
     compile_libs = [*libs, parser.metavars['libraries']] \
@@ -307,6 +313,7 @@ def execute_pyccel(fname, *,
     if convert_only:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
+        pyccel_stage.pyccel_finished()
         return
 
     deps = dict()
@@ -409,3 +416,4 @@ def execute_pyccel(fname, *,
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
+    pyccel_stage.pyccel_finished()
