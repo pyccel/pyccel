@@ -7,9 +7,14 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
+
+from pyccel.utilities.stage import PyccelStage
+
 from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
+
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'PrecomputedCode',
@@ -139,7 +144,7 @@ class Slice(Basic):
         self._stop = stop
         self._step = step
         super().__init__()
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
             raise TypeError('Slice start must be Integer or None')
