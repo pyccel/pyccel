@@ -166,3 +166,16 @@ def test_force_transpose(language):
 
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
+
+def test_transpose_to_inner_indexes(language):
+    def f1(x : 'int[:,:]'):
+        from numpy import transpose, empty
+        n,m = x.shape
+        y = empty((1,m,n,1))
+        y[0,:,:,0] = transpose(x)
+        return y[0,0,0,0], y[0,1,0,0], y[0,0,1,0], y[0,-1,0,0], y[0,0,-1,0]
+
+    x1 = randint(50, size=(2,5))
+
+    f1_epyc = epyccel(f1, language=language)
+    assert f1( x1 ) == f1_epyc( x1 )
