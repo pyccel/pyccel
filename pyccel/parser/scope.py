@@ -454,3 +454,9 @@ class Scope(object):
         scopes.append(inner_scope)
         return scopes
 
+    def collect_all_imports(self):
+        """ Collect the names of all files necessary to understand this scope
+        """
+        imports = list(self._imports['imports'].keys())
+        imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
+        return imports
