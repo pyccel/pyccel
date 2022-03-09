@@ -4,12 +4,15 @@ from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 
+
 def test_transpose_shape(language):
+
     def f1(x : 'int[:,:]'):
         from numpy import transpose
         y = transpose(x)
         n, m = y.shape
         return n, m, y[-1,0], y[0,-1]
+
     def f2(x : 'int[:,:,:]'):
         from numpy import transpose
         y = transpose(x)
@@ -24,12 +27,15 @@ def test_transpose_shape(language):
 
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
+
 
 def test_transpose_property(language):
+
     def f1(x : 'int[:,:]'):
         y = x.T
         n, m = y.shape
         return n, m, y[-1,0], y[0,-1]
+
     def f2(x : 'int[:,:,:]'):
         y = x.T
         n, m, p = y.shape
@@ -44,12 +50,15 @@ def test_transpose_property(language):
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
 
+    
 def test_transpose_in_expression(language):
+
     def f1(x : 'int[:,:]'):
         from numpy import transpose
         y = transpose(x)+3
         n, m = y.shape
         return n, m, y[-1,0], y[0,-1]
+
     def f2(x : 'int[:,:,:]'):
         y = x.T*3
         n, m, p = y.shape
@@ -64,7 +73,9 @@ def test_transpose_in_expression(language):
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
 
+
 def test_mixed_order(language):
+
     def f1(x : 'int[:,:]'):
         from numpy import transpose, ones
         n, m = x.shape
@@ -72,6 +83,7 @@ def test_mixed_order(language):
         z = x+transpose(y)
         n, m = z.shape
         return n, m, z[-1,0], z[0,-1]
+
     def f2(x : 'int[:,:]'):
         from numpy import transpose, ones
         n, m = x.shape
@@ -79,6 +91,7 @@ def test_mixed_order(language):
         z = x.transpose()+y
         n, m = z.shape
         return n, m, z[-1,0], z[0,-1]
+
     def f3(x : 'int[:,:,:]'):
         from numpy import transpose, ones
         n, m, p = x.shape
@@ -99,13 +112,16 @@ def test_mixed_order(language):
     f3_epyc = epyccel(f3, language=language)
     assert f3( x2 ) == f3_epyc( x2 )
 
+
 def test_transpose_pointer(language):
+
     def f1(x : 'int[:,:]'):
         from numpy import transpose
         y = transpose(x)
         x[0,-1] += 22
         n, m = y.shape
         return n, m, y[-1,0], y[0,-1]
+
     def f2(x : 'int[:,:,:]'):
         y = x.T
         x[0,-1,0] += 11
@@ -123,12 +139,15 @@ def test_transpose_pointer(language):
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2_copy )
 
+
 def test_transpose_of_expression(language):
+
     def f1(x : 'int[:,:]'):
         from numpy import transpose
         y = transpose(x*2)+3
         n, m = y.shape
         return n, m, y[-1,0], y[0,-1]
+
     def f2(x : 'int[:,:,:]'):
         y = (x*2).T*3
         n, m, p = y.shape
@@ -143,7 +162,9 @@ def test_transpose_of_expression(language):
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
 
+
 def test_force_transpose(language):
+
     def f1(x : 'int[:,:]'):
         from numpy import transpose, empty
         n,m = x.shape
@@ -151,6 +172,7 @@ def test_force_transpose(language):
         y[:,:] = transpose(x)
         n, m = y.shape
         return n, m, y[-1,0], y[0,-1]
+
     def f2(x : 'int[:,:,:]'):
         from numpy import empty
         n,m,p = x.shape
@@ -168,12 +190,15 @@ def test_force_transpose(language):
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
 
+
 def test_transpose_to_inner_indexes(language):
+
     def f1(x : 'int[:,:]', y : 'int[:,:,:,:]'):
-        from numpy import transpose
         y[0,:,:,0] = x.T
+
     def f2(x : 'int[:,:]', y : 'int[:,:,:,:,:]'):
         y[0,:,0,:,0] = x.T
+
     def f3(x : 'int[:,:,:]', y : 'int[:,:,:,:,:]'):
         y[0,:,:,:,0] = x.T
 
