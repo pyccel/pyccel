@@ -50,7 +50,7 @@ def test_transpose_property(language):
     f2_epyc = epyccel(f2, language=language)
     assert f2( x2 ) == f2_epyc( x2 )
 
-    
+
 def test_transpose_in_expression(language):
 
     def f1(x : 'int[:,:]'):
