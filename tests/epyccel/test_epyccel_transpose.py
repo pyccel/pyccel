@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+from numpy import empty, array_equal
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
@@ -168,14 +169,36 @@ def test_force_transpose(language):
     assert f2( x2 ) == f2_epyc( x2 )
 
 def test_transpose_to_inner_indexes(language):
-    def f1(x : 'int[:,:]'):
-        from numpy import transpose, empty
-        n,m = x.shape
-        y = empty((1,m,n,1))
-        y[0,:,:,0] = transpose(x)
-        return y[0,0,0,0], y[0,1,0,0], y[0,0,1,0], y[0,-1,0,0], y[0,0,-1,0]
+    def f1(x : 'int[:,:]', y : 'int[:,:,:,:]'):
+        from numpy import transpose
+        y[0,:,:,0] = x.T
+    def f2(x : 'int[:,:]', y : 'int[:,:,:,:,:]'):
+        y[0,:,0,:,0] = x.T
+    def f3(x : 'int[:,:,:]', y : 'int[:,:,:,:,:]'):
+        y[0,:,:,:,0] = x.T
 
     x1 = randint(50, size=(2,5))
+    x2 = randint(50, size=(2,5,3))
+
+    y1_pyt = empty((1,5,2,1), dtype=int)
+    y2_pyt = empty((1,5,1,2,1), dtype=int)
+    y3_pyt = empty((1,3,5,2,1), dtype=int)
+
+    y1_pyc = empty((1,5,2,1), dtype=int)
+    y2_pyc = empty((1,5,1,2,1), dtype=int)
+    y3_pyc = empty((1,3,5,2,1), dtype=int)
 
     f1_epyc = epyccel(f1, language=language)
-    assert f1( x1 ) == f1_epyc( x1 )
+    f1( x1, y1_pyt )
+    f1_epyc( x1, y1_pyc )
+    assert array_equal(y1_pyt, y1_pyc)
+
+    f2_epyc = epyccel(f2, language=language)
+    f2( x1, y2_pyt )
+    f2_epyc( x1, y2_pyc )
+    assert array_equal(y2_pyt, y2_pyc)
+
+    f3_epyc = epyccel(f3, language=language)
+    f3( x2, y3_pyt )
+    f3_epyc( x2, y3_pyc )
+    assert array_equal(y3_pyt, y3_pyc)
