@@ -1486,7 +1486,7 @@ class CCodePrinter(CodePrinter):
 
             # Check the Assign objects list in case of
             # the user assigns a variable to an object contains IndexedElement object.
-            if not last_assign:
+            if not last_assign or isinstance(last_assign[-1], AugAssign):
                 code = ''+self._print(expr.stmt)
             else:
                 # make sure that stmt contains one assign node.
