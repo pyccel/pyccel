@@ -41,6 +41,8 @@ from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
 from pyccel.ast.variable  import VariableAddress, Variable
 
+from pyccel.parser.scope  import Scope
+
 from pyccel.utilities.strings import create_incremented_string
 
 from pyccel.errors.errors   import Errors
@@ -222,7 +224,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_func : FunctionDef
         """
         if self._target_language == 'fortran':
-            static_func = as_static_function(function)
+            static_func = as_static_function(function, mod_scope = self.namespace)
         else:
             static_func = function
 
@@ -610,7 +612,8 @@ class CWrapperCodePrinter(CCodePrinter):
                                             '"{}"'.format(error_msg)),
                                 AliasAssign(wrapper_results[0], Nil()),
                                 Return(wrapper_results)
-                            ])
+                            ],
+                scope     = Scope())
 
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
@@ -792,6 +795,8 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_name = self._get_wrapper_name(used_names, expr)
         used_names.add(wrapper_name)
 
+        scope = self.namespace.new_child_scope(wrapper_name)
+
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments(used_names)
         wrapper_results = [self.get_new_PyObject("result", used_names)]
@@ -813,6 +818,7 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
+        scope.insert_variable(check_var, check_var.name)
         types_dict = OrderedDict((a.var, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
         # collect parse arg
         parse_args = [self.get_PyArgParseType(used_names,a.var) for a in funcs[0].arguments]
@@ -871,6 +877,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
             mini_wrapper_func_body.append(func_call)
 
+            mini_wrapper_func_name = self.get_new_name(used_names.union(self._global_names), func.name + '_mini_wrapper')
+            self._global_names.add(mini_wrapper_func_name)
+
+            mini_scope = self.namespace.new_child_scope(mini_wrapper_func_name)
+
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
@@ -878,6 +889,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 if cast_func is not None:
                     mini_wrapper_func_vars[r.name] = r
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
+
+                    mini_scope.insert_variable(r, r.name)
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
@@ -891,14 +904,12 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.clear()
 
             # Building Mini wrapper function
-            mini_wrapper_func_name = self.get_new_name(used_names.union(self._global_names), func.name + '_mini_wrapper')
-            self._global_names.add(mini_wrapper_func_name)
-
             mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
                 arguments = parse_args,
                 results = wrapper_results,
                 body = mini_wrapper_func_body,
-                local_vars = mini_wrapper_func_vars.values())
+                local_vars = mini_wrapper_func_vars.values(),
+                scope = mini_scope)
             funcs_def.append(mini_wrapper_func_def)
 
             # append check condition to the functioncall
@@ -935,7 +946,8 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = wrapper_vars.values()))
+            local_vars = wrapper_vars.values(),
+            scope = scope))
 
         sep = self._print(SeparatorComment(40))
 
@@ -972,7 +984,8 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = parse_args,
             results = [check_var],
             body = check_func_body,
-            local_vars = [])
+            local_vars = [],
+            scope = self.namespace.new_child_scope(check_func_name))
         return check_func_def
 
     def _print_PyccelPyObject(self, expr):
@@ -1035,6 +1048,8 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([a.name for a in expr.arguments]
                         + [r.name for r in expr.results]
                         + [expr.name])
+
+        self.set_scope(self.namespace.new_child_scope(expr.name))
 
         arg_vars = {a.var: a for a in expr.arguments}
         # update ndarray and optional local variables properties
@@ -1146,11 +1161,15 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = tuple(wrapper_vars.values()))
+            local_vars = tuple(wrapper_vars.values()),
+            scope = self.namespace)
+
+        self.exit_scope()
 
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
+        self.set_scope(Scope())
         # The initialisation and deallocation shouldn't be exposed to python
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
 
@@ -1233,6 +1252,8 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = module_imports.copy()
         imports += self._additional_imports.values()
         imports  = ''.join(self._print(i) for i in imports)
+
+        self.exit_scope()
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
                 '{imports}\n'

@@ -572,7 +572,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
 #==============================================================================
 
-def insert_fors(blocks, indices, level = 0):
+def insert_fors(blocks, indices, namespace, level = 0):
     """
     Run through the output of collect_loops and create For loops of the
     requested sizes
@@ -593,14 +593,19 @@ def insert_fors(blocks, indices, level = 0):
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
     else:
-        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) else [b] \
+        scope = namespace.create_new_loop_scope()
+        body = [insert_fors(b, indices, scope, level+1) if isinstance(b, LoopCollection) else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
     if blocks.length == 1:
         return body
     else:
         body = CodeBlock(body, unravelled = True)
-        return [For(indices[level], PythonRange(0,blocks.length), body)]
+        scope = namespace.create_new_loop_scope()
+        return [For(indices[level],
+                    PythonRange(0,blocks.length),
+                    body,
+                    scope = scope)]
 
 #==============================================================================
 def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
@@ -651,7 +656,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         expand_inhomog_tuple_assignments(block)
 
 #==============================================================================
-def expand_to_loops(block, new_index_name, language_has_vectors = False):
+def expand_to_loops(block, new_index_name, namespace, language_has_vectors = False):
     """
     Re-write a list of expressions to include explicit loops where necessary
 
@@ -691,7 +696,7 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     tmp_vars = []
     res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
 
-    body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
+    body = [insert_fors(b, indices, namespace) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
 
     return body, indices+tmp_vars

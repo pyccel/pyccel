@@ -582,7 +582,7 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def _print_ModuleHeader(self, expr):
-        self.set_scope(expr.scope)
+        self.set_scope(expr.module.scope)
         self._in_header = True
         name = expr.module.name
         # TODO: Add classes and interfaces
@@ -1697,7 +1697,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
-            body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+            body_exprs, new_vars = expand_to_loops(expr,
+                    self._parser.get_new_variable, self.namespace,
+                    language_has_vectors = False)
             self._additional_declare.extend(new_vars)
         else:
             body_exprs = expr.body

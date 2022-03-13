@@ -8,10 +8,11 @@
 from sympy.logic.boolalg      import And as sp_And
 
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
+from pyccel.errors.errors     import Errors
+from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
-from pyccel.utilities.stage import PyccelStage
+from pyccel.utilities.stage   import PyccelStage
+from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,

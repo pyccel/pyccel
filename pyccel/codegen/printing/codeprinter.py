@@ -6,7 +6,6 @@
 # pylint: disable=R0201
 
 
-
 from pyccel.ast.basic import Basic
 
 from pyccel.ast.core      import Assign
@@ -63,6 +62,7 @@ class CodePrinter:
         return self._namespace
 
     def set_scope(self, scope):
+        assert scope is not None
         self._namespace = scope
 
     def exit_scope(self):

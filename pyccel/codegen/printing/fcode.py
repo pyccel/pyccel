@@ -203,7 +203,6 @@ class FCodePrinter(CodePrinter):
         self.parser = parser
         self._namespace = self.parser.namespace
         self._constantImports = set()
-        self._current_function = None
         self._current_class    = None
 
         self._additional_code = None
@@ -233,25 +232,6 @@ class FCodePrinter(CodePrinter):
     def set_current_class(self, name):
 
         self._current_class = name
-
-    def set_current_function(self, name):
-
-        if name:
-            self._namespace = self._namespace.sons_scopes[name]
-            if self._current_function:
-                name = DottedName(self._current_function, name)
-        else:
-            self._namespace = self._namespace.parent_scope
-            if isinstance(self._current_function, DottedName):
-
-                # case of a function inside a function
-
-                name = self._current_function.name[:-1]
-                if len(name) > 1:
-                    name = DottedName(*name)
-                else:
-                    name = name[0]
-        self._current_function = name
 
     def get_method(self, cls_name, method_name):
         container = self._namespace
@@ -285,15 +265,17 @@ class FCodePrinter(CodePrinter):
             severity='fatal')
 
     def add_vars_to_namespace(self, *new_vars):
-        if self._current_function:
-            if self._current_class:
-                func = self.get_method(self._current_class, self._current_function)
-            else:
-                func = self.get_function(self._current_function)
-            func.add_local_vars(*new_vars)
-        else:
-            for var in new_vars:
-                self._namespace.variables[var.name] = var
+        for var in new_vars:
+            self._namespace.variables[var.name] = var
+        #if self._current_function:
+        #    if self._current_class:
+        #        func = self.get_method(self._current_class, self._current_function)
+        #    else:
+        #        func = self.get_function(self._current_function)
+        #    func.add_local_vars(*new_vars)
+        #else:
+        #    for var in new_vars:
+        #        self._namespace.variables[var.name] = var
 
     def _get_statement(self, codestring):
         return codestring
@@ -1577,9 +1559,8 @@ class FCodePrinter(CodePrinter):
             # exposed to python so there is no need to print their signature
             return ''
 
-        scope = self.namespace.new_child_scope(name, **kwargs)
+        self.set_scope(expr.scope)
         self.parser.insert_function(expr)
-        self.set_current_function(name)
 
         body = self._print(expr.body)
 
@@ -1618,7 +1599,6 @@ class FCodePrinter(CodePrinter):
             dec = Declare(result.dtype, result, static=True)
             decs[result] = dec
 
-        self.set_current_function(None)
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
@@ -1627,6 +1607,8 @@ class FCodePrinter(CodePrinter):
         prelude   = ''.join(self._print(i) for i in decs.values())
         body_code = body
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+
+        self.exit_scope()
 
         parts = [doc_string,
                 '{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
@@ -1717,7 +1699,6 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         name = self._print(expr.name)
-        self.set_current_function(name)
 
         if expr.cls_name:
             for k, m in list(_default_methods.items()):
@@ -1757,8 +1738,6 @@ class FCodePrinter(CodePrinter):
             body_code = body_code +'\ncontains\n' + functions_code
 
         imports = ''.join(self._print(i) for i in expr.imports)
-
-        self.set_current_function(None)
 
         parts = [doc_string,
                 "{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
