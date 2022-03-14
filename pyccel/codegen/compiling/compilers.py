@@ -11,7 +11,6 @@ import json
 import os
 import shutil
 import subprocess
-import sysconfig
 import platform
 import warnings
 from filelock import FileLock

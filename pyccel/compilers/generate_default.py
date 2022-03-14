@@ -3,11 +3,9 @@ Module responsible for the creation of the json files containing the default con
 This module only needs to be imported once. Once the json files have been generated they can be used directly thus
 avoiding the need for a large number of imports
 """
-import json
 import os
 import sys
 import sysconfig
-from itertools import chain
 from numpy import get_include as get_numpy_include
 from pyccel import __version__ as pyccel_version
 
