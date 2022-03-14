@@ -853,11 +853,13 @@ def test_inline_import(language):
 
 #------------------------------------------------------------------------------
 def test_json():
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran', pyccel_commands='--export-compile-info test.json')
-    with open('scripts/test.json','r') as f:
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+            pyccel_commands='--export-compile-info test.json')
+    with open(get_abs_path('scripts/test.json'),'r') as f:
         dict_1 = json.load(f)
-    pyccel_test("scripts/runtest_funcs.py", language = 'fortran', pyccel_commands='--compiler test.json --export-compile-info test2.json')
-    with open('scripts/test2.json','r') as f:
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+        pyccel_commands='--compiler test.json --export-compile-info test2.json')
+    with open(get_abs_path('scripts/test2.json'),'r') as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
