@@ -14,8 +14,7 @@ import subprocess
 import platform
 import warnings
 from filelock import FileLock
-from pyccel import __version__ as pyccel_version
-from pyccel.compilers.generate_default import available_compilers, vendors
+from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
 
 errors = Errors()
