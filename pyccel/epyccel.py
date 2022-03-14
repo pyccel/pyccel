@@ -179,7 +179,7 @@ def epyccel_seq(function_or_module, *,
                            debug         = debug,
                            accelerators  = accelerators,
                            output_name   = module_name,
-                           export_compile_info = export_compile_info)
+                           compiler_export_file = export_compile_info)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)

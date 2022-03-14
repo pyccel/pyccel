@@ -128,6 +128,9 @@ def execute_pyccel(fname, *,
     output_name   : str
                     Name of the generated module
                     Default : Same name as the file which was translated
+    export_compile_info : str
+                    Name of the json file to which compiler information is exported
+                    Default : None
     """
     if fname.endswith('.pyh'):
         syntax_only = True
