@@ -403,5 +403,8 @@ class Compiler:
         return cmd
 
     def export_compiler_info(self, compiler_export_file):
+        """ Print the information describing all compiler options
+        to the specified file in json format
+        """
         print(json.dumps(self._info, indent=4),
                 file=open(compiler_export_file,'w'))
