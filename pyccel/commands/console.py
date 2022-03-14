@@ -209,10 +209,6 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     base_dirpath = os.getcwd()
 
-    compiler_export_file = args.export_compile_info
-    if compiler_export_file:
-        compiler_export_file = os.path.abspath(compiler_export_file)
-
     if args.language == 'python' and args.output == '':
         print("Cannot output python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)
@@ -235,7 +231,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        debug         = args.debug,
                        accelerators  = accelerators,
                        folder        = args.output,
-                       compiler_export_file = compiler_export_file)
+                       compiler_export_file = args.export_compile_info)
     except PyccelError:
         sys.exit(1)
     finally:

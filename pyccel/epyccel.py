@@ -111,7 +111,8 @@ def epyccel_seq(function_or_module, *,
                 libdirs       = (),
                 modules       = (),
                 libs          = (),
-                folder        = None):
+                folder        = None,
+                export_compile_info = None):
 
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
@@ -177,7 +178,8 @@ def epyccel_seq(function_or_module, *,
                            libs          = libs,
                            debug         = debug,
                            accelerators  = accelerators,
-                           output_name   = module_name)
+                           output_name   = module_name,
+                           export_compile_info = export_compile_info)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
