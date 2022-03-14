@@ -52,7 +52,8 @@ def execute_pyccel(fname, *,
                    libs          = (),
                    debug         = False,
                    accelerators  = (),
-                   output_name   = None):
+                   output_name   = None,
+                   compiler_export_file = None):
     """
     Carries out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
@@ -194,6 +195,8 @@ def execute_pyccel(fname, *,
 
     # Get compiler object
     src_compiler = Compiler(compiler, language, debug)
+    if compiler_export_file:
+        src_compiler.export_compiler_info(compiler_export_file)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 
     # Parse Python file

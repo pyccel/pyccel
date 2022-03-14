@@ -403,3 +403,7 @@ class Compiler:
             warnings.warn(UserWarning(err))
 
         return cmd
+
+    def export_compiler_info(self, compiler_export_file):
+        print(json.dumps(self._info, indent=4),
+                file=open(compiler_export_file,'w'))
