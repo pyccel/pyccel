@@ -209,45 +209,22 @@ if sys.platform == "win32":
     python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
 
 #------------------------------------------------------------
-save_folder = os.path.dirname(os.path.abspath(__file__))
+gcc_info.update(python_info)
+gfort_info.update(python_info)
+icc_info.update(python_info)
+ifort_info.update(python_info)
+pgcc_info.update(python_info)
+pgfortran_info.update(python_info)
+nvc_info.update(python_info)
+nvfort_info.update(python_info)
 
-#------------------------------------------------------------
-def print_json(filename, info):
-    """
-    Print the json file described by info into the specied file
+available_compilers = {('GNU', 'c') : gcc_info,
+                       ('GNU', 'fortran') : gfort_info,
+                       ('intel', 'c') : icc_info,
+                       ('intel', 'fortran') : ifort_info,
+                       ('PGI', 'c') : pgcc_info,
+                       ('PGI', 'fortran') : pgfortran_info,
+                       ('nvidia', 'c') : nvc_info,
+                       ('nvidia', 'fortran') : nvfort_info}
 
-    Parameters
-    ----------
-    filename : str
-               The name of the json file where the configuration information
-               will be saved
-    info     : dict
-               A dictionary containing information about the flags, libraries, etc
-               associated with a given compiler
-    """
-    print(json.dumps(dict(chain(info.items(),
-                                python_info.items(),
-                                [('pyccel_version', pyccel_version),
-                                 ('python_version', python_version)])),
-                     indent=4),
-          file=open(os.path.join(save_folder, filename),'w'))
-
-#------------------------------------------------------------
-def generate_default():
-    """
-    Generate the json files containing the default configurations for the
-    available compilers
-    """
-    files = {
-            'gfortran.json'  : gfort_info,
-            'gcc.json'       : gcc_info,
-            'ifort.json'     : ifort_info,
-            'icc.json'       : icc_info,
-            'pgfortran.json' : pgfortran_info,
-            'pgcc.json'      : pgcc_info,
-            'nvfort.json'    : nvfort_info,
-            'nvc.json'       : nvc_info,
-            }
-    for f, d in files.items():
-        print_json(f,d)
-    return files.keys()
+vendors = ('GNU','intel','PGI','nvidia')
