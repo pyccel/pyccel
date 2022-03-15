@@ -201,7 +201,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
         _, ext = os.path.splitext(compiler_export_file)
         if ext == '':
             compiler_export_file = compiler_export_file + '.json'
-        elif ext != 'json':
+        elif ext != '.json':
             errors = Errors()
             # severity is error to avoid needing to catch exception
             errors.report('Wrong file extension. Expecting `json`, but found',
