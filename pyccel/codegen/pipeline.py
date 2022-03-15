@@ -201,9 +201,13 @@ def execute_pyccel(fname, *,
 
     # Get compiler object
     src_compiler = Compiler(compiler, language, debug)
+    wrapper_compiler = Compiler('GNU', 'c', debug)
+
+    # Export the compiler information if requested
     if compiler_export_file:
         src_compiler.export_compiler_info(compiler_export_file)
-    wrapper_compiler = Compiler('GNU', 'c', debug)
+        if not fname:
+            return
 
     # Parse Python file
     try:

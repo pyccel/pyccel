@@ -32,7 +32,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     """
     parser = MyParser(description='pyccel command line')
 
-    parser.add_argument('files', metavar='N', type=str, nargs='+',
+    parser.add_argument('files', metavar='N', type=str, nargs='*',
                         help='a Pyccel file')
 
     #... Version
@@ -163,31 +163,37 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
         sys.exit(1)
     # ...
 
-    filename = files[0]
+    if len(files) == 0:
+        if not args.export_compile_info:
+            parser.error("please specify a file to pyccelise")
+        else:
+            filename = ''
+    else:
+        filename = files[0]
 
-    # ... report error
-    if os.path.isfile(filename):
-        # we don't use is_valid_filename_py since it uses absolute path
-        # file extension
-        ext = filename.split('.')[-1]
-        if not(ext in ['py', 'pyh']):
+        # ... report error
+        if os.path.isfile(filename):
+            # we don't use is_valid_filename_py since it uses absolute path
+            # file extension
+            ext = filename.split('.')[-1]
+            if not(ext in ['py', 'pyh']):
+                errors = Errors()
+                # severity is error to avoid needing to catch exception
+                errors.report(INVALID_FILE_EXTENSION,
+                              symbol=ext,
+                              severity='error')
+                errors.check()
+                sys.exit(1)
+        else:
+            # we use Pyccel error manager, although we can do it in other ways
             errors = Errors()
             # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_EXTENSION,
-                          symbol=ext,
+            errors.report(INVALID_FILE_DIRECTORY,
+                          symbol=filename,
                           severity='error')
             errors.check()
             sys.exit(1)
-    else:
-        # we use Pyccel error manager, although we can do it in other ways
-        errors = Errors()
-        # severity is error to avoid needing to catch exception
-        errors.report(INVALID_FILE_DIRECTORY,
-                      symbol=filename,
-                      severity='error')
-        errors.check()
-        sys.exit(1)
-    # ...
+        # ...
 
     accelerators = []
     if mpi:
