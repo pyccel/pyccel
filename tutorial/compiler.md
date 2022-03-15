@@ -49,5 +49,5 @@ Python is considered to be an accelerator and must additionally specify shared\_
 The default compilers can provide examples compatible with your system once pyccel has been executed at least. To export the json file describing your setup, use the `--export-compile-info` flag and provide a target file name.
 E.g.
 ```shell
-pyccel --compiler=PGI --language=c --export-compile-info icc.json
+pyccel --compiler=PGI --language=c --export-compile-info=icc.json
 ```
