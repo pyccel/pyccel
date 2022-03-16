@@ -40,6 +40,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 -   [Installation](#Installation)
     -   [From PyPi](#From-PyPi)
     -   [From sources](#From-sources)
+    -   [On a read-only system](#On-a-read-only-system)
 
 -   [Additional packages](#Additional-packages)
 
@@ -263,6 +264,13 @@ for a system-wide installation.
 
 this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
 Any required Python packages will be installed automatically from PyPI.
+
+### On a read-only system
+
+If the folder where pyccel is saved is read only without sudo privileges an additional command should be run:
+```
+sudo pyccel-init
+```
 
 ## Additional packages
 
