@@ -6,14 +6,14 @@
 """ Module containing script to pyccelize internal files
 """
 import os
-from pyccel.parser.parser import Parser
 from argparse import ArgumentParser
+from pyccel.parser.parser import Parser
 
 def pyccel_init():
     """ Pickle internal pyccel files
     """
     parser = ArgumentParser(description='Pickle internal pyccel files')
-    args = parser.parse_args()
+    parser.parse_args()
 
     folder = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','stdlib','internal'))
     files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
