@@ -11,6 +11,7 @@ Module containing aspects of a parser which are in common over all stages.
 import importlib
 import os
 import re
+import warnings
 from filelock import FileLock
 
 #==============================================================================
@@ -378,7 +379,7 @@ class BasicParser(object):
 
             path , name  = os.path.split(self.filename)
 
-            if not name.split('.')[-1] == 'pyh':
+            if os.path.splitext(name)[1] != '.pyh':
                 return
             else:
                 name = name[:-4]
@@ -387,21 +388,24 @@ class BasicParser(object):
             filename = os.path.join(path, name)
         # check extension
 
-        if not filename.split(""".""")[-1] == 'pyccel':
+        if os.path.splitext(filename)[1] != '.pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
 #        print('>>> home = ', os.environ['HOME'])
         # ...
 
         # we are only exporting the AST.
-        with FileLock(filename+'.lock'):
-            try:
-                code = self.code.encode('utf-8')
-                hs   = hashlib.md5(code)
-                with open(filename, 'wb') as f:
-                    pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-            except (FileNotFoundError, PermissionError, pickle.PickleError):
-                pass
+        try:
+            with FileLock(filename+'.lock'):
+                try:
+                    code = self.code.encode('utf-8')
+                    hs   = hashlib.md5(code)
+                    with open(filename, 'wb') as f:
+                        pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
+                except (FileNotFoundError, pickle.PickleError) as e:
+                    pass
+        except PermissionError:
+            warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
 
     def load(self, filename=None):
         """ Load the current ast using Pickle.
@@ -433,7 +437,15 @@ class BasicParser(object):
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
-        with FileLock(filename+'.lock'):
+        try:
+            with FileLock(filename+'.lock'):
+                try:
+                    with open(filename, 'rb') as f:
+                        hs, version, parser = pickle.load(f)
+                except (FileNotFoundError, PermissionError, pickle.PickleError):
+                    return
+        except PermissionError:
+            # read/write problems don't need to be avoided on a read-only system
             try:
                 with open(filename, 'rb') as f:
                     hs, version, parser = pickle.load(f)
