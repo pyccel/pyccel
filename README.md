@@ -268,7 +268,7 @@ Any required Python packages will be installed automatically from PyPI.
 ### On a read-only system
 
 If the folder where pyccel is saved is read only without sudo privileges an additional command should be run:
-```
+```sh
 sudo pyccel-init
 ```
 
