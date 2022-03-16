@@ -402,7 +402,7 @@ class BasicParser(object):
                     hs   = hashlib.md5(code)
                     with open(filename, 'wb') as f:
                         pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-                except (FileNotFoundError, pickle.PickleError) as e:
+                except (FileNotFoundError, pickle.PickleError):
                     pass
         except PermissionError:
             warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
