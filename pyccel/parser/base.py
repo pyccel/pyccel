@@ -180,6 +180,8 @@ class BasicParser(object):
 
             self.namespace.headers.update(headers)
 
+        self._created_from_pickle = False
+
     @property
     def namespace(self):
         return self._namespace
@@ -370,8 +372,8 @@ class BasicParser(object):
             output file name. if not given `name.pyccel` will be used and placed
             in the Pyccel directory ($HOME/.pyccel)
         """
-        import pickle
-        import hashlib
+        if self._created_from_pickle:
+            return
 
         if not filename:
             if not self.filename:
@@ -379,10 +381,9 @@ class BasicParser(object):
 
             path , name  = os.path.split(self.filename)
 
-            if os.path.splitext(name)[1] != '.pyh':
+            name, ext = os.path.splitext(name)
+            if ext != '.pyh':
                 return
-            else:
-                name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
             filename = os.path.join(path, name)
@@ -390,6 +391,9 @@ class BasicParser(object):
 
         if os.path.splitext(filename)[1] != '.pyccel':
             raise ValueError('Expecting a .pyccel extension')
+
+        import pickle
+        import hashlib
 
 #        print('>>> home = ', os.environ['HOME'])
         # ...
@@ -402,6 +406,7 @@ class BasicParser(object):
                     hs   = hashlib.md5(code)
                     with open(filename, 'wb') as f:
                         pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
+                    print("Created pickle file : ", filename)
                 except (FileNotFoundError, pickle.PickleError):
                     pass
         except PermissionError:
@@ -418,7 +423,6 @@ class BasicParser(object):
         """
 
         # ...
-        import pickle
 
         if not filename:
             if not self.filename:
@@ -426,16 +430,18 @@ class BasicParser(object):
 
             path , name = os.path.split(self.filename)
 
-            if not name.split('.')[-1] == 'pyh':
+            name, ext = os.path.splitext(name)
+
+            if ext != '.pyh':
                 return
-            else:
-                name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
             filename = os.path.join(path, name)
 
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
+
+        import pickle
 
         possible_pickle_errors = (FileNotFoundError, PermissionError,
                 pickle.PickleError, AttributeError)
@@ -445,6 +451,7 @@ class BasicParser(object):
                 try:
                     with open(filename, 'rb') as f:
                         hs, version, parser = pickle.load(f)
+                    self._created_from_pickle = True
                 except possible_pickle_errors:
                     return
         except PermissionError:
@@ -452,6 +459,7 @@ class BasicParser(object):
             try:
                 with open(filename, 'rb') as f:
                     hs, version, parser = pickle.load(f)
+                self._created_from_pickle = True
             except possible_pickle_errors:
                 return
 
