@@ -437,19 +437,22 @@ class BasicParser(object):
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
+        possible_pickle_errors = (FileNotFoundError, PermissionError,
+                pickle.PickleError, AttributeError)
+
         try:
             with FileLock(filename+'.lock'):
                 try:
                     with open(filename, 'rb') as f:
                         hs, version, parser = pickle.load(f)
-                except (FileNotFoundError, PermissionError, pickle.PickleError):
+                except possible_pickle_errors:
                     return
         except PermissionError:
             # read/write problems don't need to be avoided on a read-only system
             try:
                 with open(filename, 'rb') as f:
                     hs, version, parser = pickle.load(f)
-            except (FileNotFoundError, PermissionError, pickle.PickleError):
+            except possible_pickle_errors:
                 return
 
         import hashlib
