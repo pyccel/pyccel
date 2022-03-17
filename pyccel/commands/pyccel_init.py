@@ -17,7 +17,7 @@ def pyccel_init():
 
     folder = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','stdlib','internal'))
     files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
-            'lapack.pyh', 'mpiext.py', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
+            'lapack.pyh', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
 
     for f in files:
         parser = Parser(os.path.join(folder,f), show_traceback=False)
