@@ -45,6 +45,21 @@ install_requires = [
     'filelock'
 ]
 
+
+def pickle_headers():
+    """Process .pyh headers and store their AST in .pyccel pickle files."""
+
+    from pyccel.parser.parser import Parser
+
+    folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyccel', 'stdlib', 'internal'))
+    files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
+            'lapack.pyh', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
+
+    for f in files:
+        parser = Parser(os.path.join(folder, f), show_traceback=False)
+        parser.parse(verbose=False)
+
+
 def setup_package():
     setup(packages=packages, \
           include_package_data=True, \
@@ -53,6 +68,9 @@ def setup_package():
               'pyccel-init = pyccel.commands.pyccel_init:pyccel_init',
               'pyccel-clean = pyccel.commands.pyccel_clean:pyccel_clean_command']}, \
           **setup_args)
+
+    pickle_headers()
+
 
 if __name__ == "__main__":
     setup_package()
