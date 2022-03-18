@@ -70,7 +70,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import PyccelArraySize, Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -2199,9 +2199,9 @@ class SemanticParser(BasicParser):
                 results = func.results
                 if results:
                     if len(results)==1:
-                        if isinstance(results[0], Variable) and results[0].allocatable:
-                           results[0].allocatable = False
                         d_var = self._infere_type(results[0], **settings)
+                        if isinstance(results[0], Variable) and results[0].allocatable:
+                            d_var['allocatable'] = False
                     else:
                         d_var = self._infere_type(PythonTuple(*results), **settings)
                 elif expr.lhs.is_temp:
