@@ -3,6 +3,7 @@
 
 from pathlib import Path
 from setuptools import setup, find_packages
+from setuptools.command.develop import develop
 
 # ...
 # Read library version into '__version__' variable
@@ -45,19 +46,21 @@ install_requires = [
     'filelock'
 ]
 
+class PickleHeaders(develop):
+    def run(self, *args, **kwargs):
+        """Process .pyh headers and store their AST in .pyccel pickle files."""
+        super().run(*args, **kwargs)
+        print("go")
 
-def pickle_headers():
-    """Process .pyh headers and store their AST in .pyccel pickle files."""
+        from pyccel.parser.parser import Parser
 
-    from pyccel.parser.parser import Parser
+        folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyccel', 'stdlib', 'internal'))
+        files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
+                'lapack.pyh', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
 
-    folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyccel', 'stdlib', 'internal'))
-    files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
-            'lapack.pyh', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
-
-    for f in files:
-        parser = Parser(os.path.join(folder, f), show_traceback=False)
-        parser.parse(verbose=False)
+        for f in files:
+            parser = Parser(os.path.join(folder, f), show_traceback=False)
+            parser.parse(verbose=False)
 
 
 def setup_package():
@@ -67,9 +70,8 @@ def setup_package():
           entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel',
               'pyccel-init = pyccel.commands.pyccel_init:pyccel_init',
               'pyccel-clean = pyccel.commands.pyccel_clean:pyccel_clean_command']}, \
+          cmdclass = {'develop':PickleHeaders},
           **setup_args)
-
-    pickle_headers()
 
 
 if __name__ == "__main__":
