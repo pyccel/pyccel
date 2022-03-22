@@ -50,7 +50,6 @@ class PickleHeaders(develop):
     def run(self, *args, **kwargs):
         """Process .pyh headers and store their AST in .pyccel pickle files."""
         super().run(*args, **kwargs)
-        print("go")
 
         from pyccel.parser.parser import Parser
 
