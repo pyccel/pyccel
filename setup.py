@@ -4,12 +4,14 @@ import setuptools
 from setuptools.command.develop import develop
 
 class PickleHeaders(develop):
+    """ Class to handle post-install step which pickles headers
+    """
     def run(self):
         # Execute the classic develop_data command
         super().run()
 
         # Just add a print for the example
-        """Process .pyh headers and store their AST in .pyccel pickle files."""
+        # Process .pyh headers and store their AST in .pyccel pickle files.
         import os
         from pyccel.parser.parser import Parser
 
