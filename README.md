@@ -267,7 +267,7 @@ Any required Python packages will be installed automatically from PyPI.
 
 ### On a read-only system
 
-If the folder where pyccel is saved is read only, it may be necessary to run an additional command:
+If the folder where pyccel is saved is read only, it may be necessary to run an additional command after installation or updating:
 ```sh
 sudo pyccel-init
 ```
