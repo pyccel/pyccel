@@ -11,6 +11,7 @@ Module containing aspects of a parser which are in common over all stages.
 import importlib
 import os
 import re
+import warnings
 from filelock import FileLock
 
 #==============================================================================
@@ -178,6 +179,8 @@ class BasicParser(object):
 
 
             self.namespace.headers.update(headers)
+
+        self._created_from_pickle = False
 
     @property
     def namespace(self):
@@ -369,8 +372,8 @@ class BasicParser(object):
             output file name. if not given `name.pyccel` will be used and placed
             in the Pyccel directory ($HOME/.pyccel)
         """
-        import pickle
-        import hashlib
+        if self._created_from_pickle:
+            return
 
         if not filename:
             if not self.filename:
@@ -378,30 +381,36 @@ class BasicParser(object):
 
             path , name  = os.path.split(self.filename)
 
-            if not name.split('.')[-1] == 'pyh':
+            name, ext = os.path.splitext(name)
+            if ext != '.pyh':
                 return
-            else:
-                name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
             filename = os.path.join(path, name)
         # check extension
 
-        if not filename.split(""".""")[-1] == 'pyccel':
+        if os.path.splitext(filename)[1] != '.pyccel':
             raise ValueError('Expecting a .pyccel extension')
+
+        import pickle
+        import hashlib
 
 #        print('>>> home = ', os.environ['HOME'])
         # ...
 
         # we are only exporting the AST.
-        with FileLock(filename+'.lock'):
-            try:
-                code = self.code.encode('utf-8')
-                hs   = hashlib.md5(code)
-                with open(filename, 'wb') as f:
-                    pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-            except (FileNotFoundError, PermissionError, pickle.PickleError):
-                pass
+        try:
+            with FileLock(filename+'.lock'):
+                try:
+                    code = self.code.encode('utf-8')
+                    hs   = hashlib.md5(code)
+                    with open(filename, 'wb') as f:
+                        pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
+                    print("Created pickle file : ", filename)
+                except (FileNotFoundError, pickle.PickleError):
+                    pass
+        except PermissionError:
+            warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
 
     def load(self, filename=None):
         """ Load the current ast using Pickle.
@@ -414,7 +423,6 @@ class BasicParser(object):
         """
 
         # ...
-        import pickle
 
         if not filename:
             if not self.filename:
@@ -422,10 +430,10 @@ class BasicParser(object):
 
             path , name = os.path.split(self.filename)
 
-            if not name.split('.')[-1] == 'pyh':
+            name, ext = os.path.splitext(name)
+
+            if ext != '.pyh':
                 return
-            else:
-                name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
             filename = os.path.join(path, name)
@@ -433,11 +441,26 @@ class BasicParser(object):
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
-        with FileLock(filename+'.lock'):
+        import pickle
+
+        possible_pickle_errors = (FileNotFoundError, PermissionError,
+                pickle.PickleError, AttributeError)
+
+        try:
+            with FileLock(filename+'.lock'):
+                try:
+                    with open(filename, 'rb') as f:
+                        hs, version, parser = pickle.load(f)
+                    self._created_from_pickle = True
+                except possible_pickle_errors:
+                    return
+        except PermissionError:
+            # read/write problems don't need to be avoided on a read-only system
             try:
                 with open(filename, 'rb') as f:
                     hs, version, parser = pickle.load(f)
-            except (FileNotFoundError, PermissionError, pickle.PickleError):
+                self._created_from_pickle = True
+            except possible_pickle_errors:
                 return
 
         import hashlib
