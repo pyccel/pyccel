@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  Pickled installation:
+  Pickled-installation:
 
     runs-on: ubuntu-latest
 
@@ -23,7 +23,7 @@ jobs:
           python -m pip install .
           python -c "import pyccel; from os.path import exists, join; assert(exists(join(pyccel.__path__[0],'stdlib','internal','openmp.pyccel')))"
 
-  Editable pickled installation:
+  Editable-pickled-installation:
 
     runs-on: ubuntu-latest
 
