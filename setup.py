@@ -1,14 +1,13 @@
 # -*- coding: UTF-8 -*-
 #!/usr/bin/env python
 import setuptools
-from setuptools.command.develop import develop
+from setuptools.command.dist_info import dist_info
 
-class PickleHeaders(develop):
-    """ Class to handle post-install step which pickles headers
+class PickleHeaders(dist_info):
+    """ Class to pickle headers in time for them to be collected
+    by the MANIFEST.in treatment
     """
     def run(self):
-        # Execute the classic develop_data command
-        super().run()
 
         # Just add a print for the example
         # Process .pyh headers and store their AST in .pyccel pickle files.
@@ -23,6 +22,9 @@ class PickleHeaders(develop):
             parser = Parser(os.path.join(folder, f), show_traceback=False)
             parser.parse(verbose=False)
 
+        # Execute the classic dist_info command
+        super().run()
+
 
 if __name__ == "__main__":
-    setuptools.setup(cmdclass={"develop": PickleHeaders})
+    setuptools.setup(cmdclass={"dist_info": PickleHeaders})
