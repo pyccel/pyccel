@@ -5,8 +5,6 @@ include README.md
 include TODO.rst
 
 recursive-include pyccel *.tx
-recursive-include pyccel *.txt
-recursive-include pyccel *.cmake
 recursive-include pyccel *.pyh
 recursive-include pyccel *.c
 recursive-include pyccel *.f90
