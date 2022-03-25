@@ -12,8 +12,6 @@ from pyccel.parser.parser import Parser
 def pyccel_init():
     """ Pickle internal pyccel files
     """
-    parser = ArgumentParser(description='Pickle internal pyccel files')
-    parser.parse_args()
 
     folder = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','stdlib','internal'))
     files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
@@ -22,3 +20,10 @@ def pyccel_init():
     for f in files:
         parser = Parser(os.path.join(folder,f), show_traceback=False)
         parser.parse(verbose=False)
+
+def pyccel_init_command():
+    """ Wrapper around the pyccel_init function removing the need
+    for ArgumentParser
+    """
+    parser = ArgumentParser(description='Pickle internal pyccel files')
+    parser.parse_args()

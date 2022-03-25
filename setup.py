@@ -1,30 +1,38 @@
 # -*- coding: UTF-8 -*-
 #!/usr/bin/env python
 import setuptools
+import sys
 from setuptools.command.dist_info import dist_info
+from setuptools.command.egg_info import egg_info
 
-class PickleHeaders(dist_info):
+class PickleHeadersInstall(dist_info):
     """ Class to pickle headers in time for them to be collected
-    by the MANIFEST.in treatment
+    by the MANIFEST.in treatment during the install command
     """
     def run(self):
-
-        # Just add a print for the example
         # Process .pyh headers and store their AST in .pyccel pickle files.
-        import os
-        from pyccel.parser.parser import Parser
+        from pyccel.commands.pyccel_init import pyccel_init
 
-        folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyccel', 'stdlib', 'internal'))
-        files = ['blas.pyh', 'dfftpack.pyh', 'fitpack.pyh',
-                'lapack.pyh', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
-
-        for f in files:
-            parser = Parser(os.path.join(folder, f), show_traceback=False)
-            parser.parse(verbose=False)
+        pyccel_init()
 
         # Execute the classic dist_info command
         super().run()
 
+class PickleHeadersWheel(egg_info):
+    """ Class to pickle headers in time for them to be collected
+    by the MANIFEST.in treatment while building a wheel
+    """
+    def run(self):
+        # Process .pyh headers and store their AST in .pyccel pickle files.
+        from pyccel.commands.pyccel_init import pyccel_init
+
+        pyccel_init()
+
+        # Execute the classic egg_info command
+        super().run()
 
 if __name__ == "__main__":
-    setuptools.setup(cmdclass={"dist_info": PickleHeaders})
+    setuptools.setup(cmdclass={
+        "dist_info": PickleHeadersInstall,
+        "egg_info": PickleHeadersWheel,
+        })
