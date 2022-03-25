@@ -2,7 +2,6 @@ include AUTHORS
 include CHANGES
 include LICENSE
 include README.md
-include TODO.rst
 
 recursive-include pyccel *.tx
 recursive-include pyccel *.pyh
