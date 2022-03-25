@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 #!/usr/bin/env python
 import setuptools
-import sys
 from setuptools.command.egg_info import egg_info
 
 class PickleHeaders(egg_info):
