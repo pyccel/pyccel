@@ -87,3 +87,39 @@ jobs:
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
         uses: ./.github/actions/pytest_parallel
+
+  Pickled installation:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -c "import pyccel; from os.path import exists, join; assert(exists(join(pyccel.__path__[0],'stdlib','internal','openmp.pyccel')))"
+
+  Editable pickled installation:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -c "import pyccel; from os.path import exists, join; assert(exists(join(pyccel.__path__[0],'stdlib','internal','openmp.pyccel')))"
