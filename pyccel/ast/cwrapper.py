@@ -11,7 +11,7 @@ between python code and C code (using Python/C Api and cwrapper.c).
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic
+from .basic     import Basic, PyccelAstNode
 
 from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
@@ -22,7 +22,7 @@ from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .internals import get_final_precision
 
-from .variable  import Variable
+from .variable  import Variable, VariableAddress
 
 
 errors = Errors()
@@ -258,6 +258,57 @@ class PyBuildValueNode(Basic):
     @property
     def args(self):
         return self._result_args
+
+#-------------------------------------------------------------------
+class PyModule_AddObject(PyccelAstNode):
+    """
+    Represents a call to the function from Python.h which adds a
+    PythonObject to a module
+
+    Parameters
+    ---------
+    mod_name : str
+                The name of the variable containing the module
+    name : str
+                The name of the variable being added to the module
+    variable : Variable
+                The variable containing the PythonObject
+    """
+    __slots__ = ('_mod_name','_name','_var')
+    _attribute_nodes = ('_name','_var')
+    _dtype = NativeInteger()
+    _precision = 4
+    _rank = 0
+    _shape = ()
+
+    def __init__(self, mod_name, name, variable):
+        if not isinstance(name, str):
+            raise TypeError("Name must be a string")
+        if not isinstance(variable, Variable) or \
+                variable.dtype not in (PyccelPyObject(), PyccelPyArrayObject()):
+            raise TypeError("Variable must be a PyObject Variable")
+        self._mod_name = mod_name
+        self._name = name
+        self._var = VariableAddress(variable)
+        super().__init__()
+
+    @property
+    def mod_name(self):
+        """ The name of the variable containing the module
+        """
+        return self._mod_name
+
+    @property
+    def name(self):
+        """ The name of the variable being added to the module
+        """
+        return self._name
+
+    @property
+    def variable(self):
+        """ The variable containing the PythonObject
+        """
+        return self._var
 
 #-------------------------------------------------------------------
 #                      Python.h Constants

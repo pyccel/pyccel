@@ -257,6 +257,7 @@ class CCodePrinter(CodePrinter):
         self._additional_args = []
         self._temporary_args = []
         self._current_module = None
+        self._in_header = False
         # Dictionary linking optional variables to their
         # temporary counterparts which provide allocated
         # memory
@@ -410,7 +411,7 @@ class CCodePrinter(CodePrinter):
         index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
 
         self._additional_declare += [index, target]
-        self._additional_code += self._print(Assign(index, LiteralInteger(0))) + '\n'
+        self._additional_code += self._print(Assign(index, LiteralInteger(0)))
 
         code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
         code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
@@ -580,6 +581,7 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def _print_ModuleHeader(self, expr):
+        self._in_header = True
         name = expr.module.name
         # TODO: Add classes and interfaces
         funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
@@ -590,6 +592,7 @@ class CCodePrinter(CodePrinter):
         imports = [*expr.module.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
+        self._in_header = False
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n'
@@ -938,7 +941,7 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
-        elif declaration_type == 't_ndarray ':
+        elif declaration_type == 't_ndarray ' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
         else:
@@ -1030,7 +1033,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
         base_name = self._print(base)
-        if base.is_ndarray or isinstance(base, HomogeneousTupleVariable):
+        if getattr(base, 'is_ndarray', False) or isinstance(base, HomogeneousTupleVariable):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):
@@ -1424,7 +1427,7 @@ class CCodePrinter(CodePrinter):
                 elif not self.stored_in_c_pointer(a):
                     tmp_var = self.create_tmp_var(f)
                     assign = Assign(tmp_var, a)
-                    self._additional_code += self._print(assign) + '\n'
+                    self._additional_code += self._print(assign)
                     args.append(VariableAddress(tmp_var))
                 else:
                     args.append(a)

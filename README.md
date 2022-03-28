@@ -40,6 +40,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 -   [Installation](#Installation)
     -   [From PyPi](#From-PyPi)
     -   [From sources](#From-sources)
+    -   [On a read-only system](#On-a-read-only-system)
 
 -   [Additional packages](#Additional-packages)
 
@@ -263,6 +264,17 @@ for a system-wide installation.
 
 this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
 Any required Python packages will be installed automatically from PyPI.
+
+### On a read-only system
+
+If the folder where pyccel is saved is read only, it may be necessary to run an additional command after installation or updating:
+```sh
+sudo pyccel-init
+```
+
+This step is necessary in order to [pickle header files](./tutorial/header-files.md#Pickling-header-files).
+If this command is not run then pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
+A warning, reminding the user to execute this command, will be printed to the screen when pyccelizing files which rely on these packages if the pickling step has not been executed.
 
 ## Additional packages
 
