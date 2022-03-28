@@ -120,10 +120,13 @@ from pyccel.errors.messages import *
 from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.syntactic import SyntaxParser
 
+from pyccel.utilities.stage import PyccelStage
+
 import pyccel.decorators as def_decorators
 #==============================================================================
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 #==============================================================================
 
@@ -242,7 +245,7 @@ class SemanticParser(BasicParser):
 
         self._allocs.append([])
         # we add the try/except to allow the parser to find all possible errors
-        PyccelAstNode.stage = 'semantic'
+        pyccel_stage.set_stage('semantic')
         ast = self._visit(ast, **settings)
 
         self._ast = ast
@@ -2050,10 +2053,10 @@ class SemanticParser(BasicParser):
             value_true  = self._visit(rhs.value_true, **settings)
             if value_true.rank > 0 or value_true.dtype is NativeString():
                 # Temporarily deactivate type checks to construct syntactic assigns
-                PyccelAstNode.stage = 'syntactic'
+                pyccel_stage.set_stage('syntactic')
                 assign_true  = Assign(lhs, rhs.value_true, fst = fst)
                 assign_false = Assign(lhs, rhs.value_false, fst = fst)
-                PyccelAstNode.stage = 'semantic'
+                pyccel_stage.set_stage('semantic')
 
                 cond  = self._visit(rhs.cond, **settings)
                 true_section  = IfSection(cond, [self._visit(assign_true)])
@@ -2771,10 +2774,10 @@ class SemanticParser(BasicParser):
         if value_true.rank > 0 or value_true.dtype is NativeString():
             lhs = self.get_new_variable()
             # Temporarily deactivate type checks to construct syntactic assigns
-            PyccelAstNode.stage = 'syntactic'
+            pyccel_stage.set_stage('syntactic')
             assign_true  = Assign(lhs, expr.value_true, fst = expr.fst)
             assign_false = Assign(lhs, expr.value_false, fst = expr.fst)
-            PyccelAstNode.stage = 'semantic'
+            pyccel_stage.set_stage('semantic')
 
             cond  = self._visit(expr.cond, **settings)
             true_section  = IfSection(cond, [self._visit(assign_true)])

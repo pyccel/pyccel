@@ -403,7 +403,6 @@ class Basic:
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
-    stage      = None
     __slots__  = ()
 
     @property
