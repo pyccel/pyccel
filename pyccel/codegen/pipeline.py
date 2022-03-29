@@ -52,7 +52,8 @@ def execute_pyccel(fname, *,
                    libs          = (),
                    debug         = False,
                    accelerators  = (),
-                   output_name   = None):
+                   output_name   = None,
+                   compiler_export_file = None):
     """
     Carries out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
@@ -127,6 +128,9 @@ def execute_pyccel(fname, *,
     output_name   : str
                     Name of the generated module
                     Default : Same name as the file which was translated
+    export_compile_info : str
+                    Name of the json file to which compiler information is exported
+                    Default : None
     """
     if fname.endswith('.pyh'):
         syntax_only = True
@@ -145,6 +149,7 @@ def execute_pyccel(fname, *,
     modules  = [*modules]
     libs     = [*libs]
 
+
     # Store current directory and add it to sys.path
     # variable to imitate Python's import behavior
     base_dirpath = os.getcwd()
@@ -160,6 +165,8 @@ def execute_pyccel(fname, *,
     # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
     pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
+    if compiler_export_file:
+        compiler_export_file = os.path.abspath(compiler_export_file)
 
     # Extract module name
     module_name = os.path.splitext(pymod_filename)[0]
@@ -195,6 +202,12 @@ def execute_pyccel(fname, *,
     # Get compiler object
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
+
+    # Export the compiler information if requested
+    if compiler_export_file:
+        src_compiler.export_compiler_info(compiler_export_file)
+        if not fname:
+            return
 
     # Parse Python file
     try:

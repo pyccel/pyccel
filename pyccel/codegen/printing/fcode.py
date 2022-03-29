@@ -2453,8 +2453,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
         arg = self._print(var)
-        assign = expr.get_user_nodes(Assign)[0]
-        if assign.lhs.order != var.order:
+        assigns = expr.get_user_nodes(Assign)
+        if assigns and assigns[0].lhs.order != var.order:
             return arg
         elif var.rank == 2:
             return 'transpose({0})'.format(arg)
