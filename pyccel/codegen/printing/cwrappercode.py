@@ -603,6 +603,7 @@ class CWrapperCodePrinter(CCodePrinter):
         code : string
             returns the string containing the printed FunctionDef
         """
+        current_namespace = self.namespace
         wrapper_func = FunctionDef(
                 name      = wrapper_name,
                 arguments = wrapper_args,
@@ -615,7 +616,9 @@ class CWrapperCodePrinter(CCodePrinter):
                             ],
                 scope     = Scope())
 
-        return CCodePrinter._print_FunctionDef(self, wrapper_func)
+        code = CCodePrinter._print_FunctionDef(self, wrapper_func)
+        self.set_scope(current_namespace)
+        return code
 
     # -------------------------------------------------------------------
     # Parsing arguments and building values Types functions
@@ -1074,11 +1077,13 @@ class CWrapperCodePrinter(CCodePrinter):
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
         if expr.is_private:
+            self.exit_scope()
             return self.untranslatable_function(wrapper_name,
                         wrapper_args, wrapper_results,
                         "Private functions are not accessible from python")
 
         if any(isinstance(arg, FunctionAddress) for arg in local_arg_vars):
+            self.exit_scope()
             return self.untranslatable_function(wrapper_name,
                         wrapper_args, wrapper_results,
                         "Cannot pass a function as an argument")
