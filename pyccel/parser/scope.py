@@ -260,7 +260,7 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-            self.insert_symbol(name)
+            self.insert_symbol(name, allow_loop_scoping)
 
     def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
@@ -344,15 +344,22 @@ class Scope(object):
             msg = msg.format(str(type(expr)))
             raise TypeError(msg)
 
-    def insert_symbol(self, symbol):
+    def insert_symbol(self, symbol, allow_loop_scoping = False):
         """ Add a new symbol to the scope
         """
-        self._used_symbols.add(symbol)
+        if not allow_loop_scoping and self.is_loop:
+            self.parent_scope.insert_symbol(symbol)
+        else:
+            self._used_symbols.add(symbol)
 
-    def insert_symbols(self, symbols):
+
+    def insert_symbols(self, symbols, allow_loop_scoping = False):
         """ Add multiple new symbols to the scope
         """
-        self._used_symbols.update(symbols)
+        if not allow_loop_scoping and self.is_loop:
+            self.parent_scope.insert_symbols(symbol)
+        else:
+            self._used_symbols.update(symbols)
 
     @property
     def all_used_symbols(self):
@@ -403,7 +410,7 @@ class Scope(object):
           -------
           new_name     : str
         """
-        if current_name is not None and current_name not in self.local_used_symbols:
+        if current_name is not None and current_name not in self.all_used_symbols:
             self.insert_symbol(current_name)
             return current_name
 
