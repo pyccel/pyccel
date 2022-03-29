@@ -747,6 +747,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Interface(self, expr):
 
+        # Find a name for the wrapper function
+        wrapper_name = self._get_wrapper_name(expr)
+
         scope = self.namespace.new_child_scope(wrapper_name)
         self.set_scope(scope)
 
@@ -756,9 +759,6 @@ class CWrapperCodePrinter(CCodePrinter):
         # Save all used names
         for n in funcs:
             self.namespace.insert_symbol(n.name)
-
-        # Find a name for the wrapper function
-        wrapper_name = self._get_wrapper_name(expr)
 
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments()
