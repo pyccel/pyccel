@@ -408,8 +408,8 @@ class CCodePrinter(CodePrinter):
         step   = self._print(expr.step)
         dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
 
-        target = Variable(expr.dtype, name =  self._parser.get_new_name('s'))
-        index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
+        target = Variable(expr.dtype, name =  self.namespace.get_new_name('s'))
+        index  = Variable(NativeInteger(), name = self.namespace.get_new_name('i'))
 
         self._additional_declare += [index, target]
         self._additional_code += self._print(Assign(index, LiteralInteger(0)))
@@ -444,7 +444,7 @@ class CCodePrinter(CodePrinter):
             else:
                 args.append(a.value)
 
-        new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
+        new_local_vars = [v.clone(self.namespace.get_new_name(v.name)) \
                             for v in func.local_vars]
         self._additional_declare.extend(new_local_vars)
 
@@ -854,7 +854,7 @@ class CCodePrinter(CodePrinter):
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                for_index = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
+                for_index = Variable(NativeInteger(), name = self.namespace.get_new_name('i'))
                 self._additional_declare.append(for_index)
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
                 for_range = PythonRange(max_index)
@@ -1410,7 +1410,7 @@ class CCodePrinter(CodePrinter):
                 any(a is bi for b in self._additional_args for bi in b)
 
     def create_tmp_var(self, match_var):
-        tmp_var_name = self._parser.get_new_name('tmp')
+        tmp_var_name = self.namespace.get_new_name('tmp')
         tmp_var = Variable(name = tmp_var_name, dtype = match_var.dtype)
         self._additional_declare.append(tmp_var)
         return tmp_var
@@ -1596,7 +1596,7 @@ class CCodePrinter(CodePrinter):
                 # Create temporary variable to provide allocated
                 # memory space before assigning to the pointer value
                 # (may be NULL)
-                tmp_var_name = self._parser.get_new_name()
+                tmp_var_name = self.namespace.get_new_name()
                 tmp_var = lhs.clone(tmp_var_name, is_optional=False)
                 self._additional_declare.append(tmp_var)
                 self._optional_partners[lhs] = tmp_var
