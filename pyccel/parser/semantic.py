@@ -958,6 +958,8 @@ class SemanticParser(BasicParser):
         elif isinstance(lhs, PyccelSymbol):
 
             name = lhs
+            if lhs == '_':
+                name = self.namespace.get_new_name()
             dtype = d_var.pop('datatype')
 
             d_lhs = d_var.copy()
@@ -2011,15 +2013,12 @@ class SemanticParser(BasicParser):
                 false_section = IfSection(LiteralTrue(), [self._visit(assign_false)])
                 return If(true_section, false_section)
 
-
         # Visit object
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.namespace.find(name, 'macros')
             if macro is None:
                 rhs = self._visit(rhs, **settings)
-            elif isinstance(lhs, PyccelSymbol) and lhs.is_temp:
-                return self._visit(rhs, **settings)
             else:
 
                 # TODO check types from FunctionDef
