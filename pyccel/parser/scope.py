@@ -260,6 +260,7 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
+            self.insert_symbol(name)
 
     def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
