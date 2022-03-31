@@ -456,9 +456,9 @@ class Scope(object):
             return self.get_new_name()
         elif self.is_loop:
             return self.parent_scope.get_available_name(start_name)
-        elif start_name in self._used_symbols:
+        elif start_name in self.local_used_symbols:
             return start_name
-        elif start_name in self.parent_scope.all_used_symbols:
+        elif self.parent_scope and start_name in self.parent_scope.all_used_symbols:
             return self.get_new_name(start_name)
         else:
             return start_name
