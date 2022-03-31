@@ -1256,7 +1256,6 @@ class FCodePrinter(CodePrinter):
             body_exprs, new_vars = expand_to_loops(expr,
                     self.namespace.get_temporary_variable, self.namespace,
                     language_has_vectors = True)
-            self.add_vars_to_namespace(*new_vars)
         else:
             body_exprs = expr.body
         body_stmts = []
