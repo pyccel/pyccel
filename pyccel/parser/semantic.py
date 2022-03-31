@@ -2462,7 +2462,7 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionalFor(self, expr, **settings):
         old_index   = expr.index
-        new_index   = self.namespace.get_new_symbol()
+        new_index   = self.namespace.get_new_name()
         expr.substitute(old_index, new_index)
 
         target  = expr.expr

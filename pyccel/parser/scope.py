@@ -412,7 +412,7 @@ class Scope(object):
         """
         if current_name is not None and current_name not in self.all_used_symbols:
             self.insert_symbol(current_name)
-            return current_name
+            return PyccelSymbol(current_name)
 
         if current_name is None:
             # Avoid confusing names by also searching in parent scopes
@@ -425,10 +425,7 @@ class Scope(object):
 
         self.insert_symbol(new_name)
 
-        return new_name
-
-    def get_new_symbol(self):
-        return PyccelSymbol(self.get_new_name(), is_temp=True)
+        return PyccelSymbol(new_name)
 
     def get_available_name(self, start_name):
         if start_name == '_':
