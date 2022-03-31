@@ -62,8 +62,8 @@ class PythonCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    def __init__(self, parser=None):
-        self._parser = parser
+    def __init__(self, filename):
+        errors.set_target(filename, 'file')
         super().__init__()
         self._additional_imports = {}
         self._aliases = {}

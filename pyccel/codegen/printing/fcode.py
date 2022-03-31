@@ -194,14 +194,11 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser, prefix_module = None):
+    def __init__(self, filename, prefix_module = None):
 
-        if parser.filename:
-            errors.set_target(parser.filename, 'file')
+        errors.set_target(filename, 'file')
 
         super().__init__()
-        self.parser = parser
-        self._namespace = self.parser.namespace
         self._constantImports = set()
         self._current_class    = None
 
@@ -209,12 +206,6 @@ class FCodePrinter(CodePrinter):
         self._additional_imports = set()
 
         self.prefix_module = prefix_module
-
-    def change_to_program_scope(self):
-        self._namespace = self.parser.program_namespace
-
-    def change_to_module_scope(self):
-        self._namespace = self.parser.namespace
 
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
@@ -266,16 +257,7 @@ class FCodePrinter(CodePrinter):
 
     def add_vars_to_namespace(self, *new_vars):
         for var in new_vars:
-            self._namespace.variables[var.name] = var
-        #if self._current_function:
-        #    if self._current_class:
-        #        func = self.get_method(self._current_class, self._current_function)
-        #    else:
-        #        func = self.get_function(self._current_function)
-        #    func.add_local_vars(*new_vars)
-        #else:
-        #    for var in new_vars:
-        #        self._namespace.variables[var.name] = var
+            self.namespace.insert_variable(var)
 
     def _get_statement(self, codestring):
         return codestring
@@ -290,7 +272,7 @@ class FCodePrinter(CodePrinter):
         precision = get_final_precision(expr)
         constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
-        if constant_shortcut not in self.parser.used_names and constant_name != constant_shortcut:
+        if constant_shortcut not in self.namespace.all_used_symbols and constant_name != constant_shortcut:
             self._constantImports.add((constant_shortcut, constant_name))
             constant_name = constant_shortcut
         else:
@@ -382,7 +364,7 @@ class FCodePrinter(CodePrinter):
             self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
             for v in (*func.global_vars, *func.global_funcs):
-                self.parser.used_names.add(v.name)
+                self.namespace.insert_symbol(v.name)
 
         return code
 
@@ -468,8 +450,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        module_namespace = self._namespace
-        self.change_to_program_scope()
+        self.set_scope(expr.namespace)
 
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
@@ -478,7 +459,7 @@ class FCodePrinter(CodePrinter):
         # Print the declarations of all variables in the namespace, which include:
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
-        variables = self.parser.get_variables(self._namespace)
+        variables = self.namespace.variables.values()
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         # Detect if we are using mpi4py
@@ -505,8 +486,7 @@ class FCodePrinter(CodePrinter):
                  body,
                 'end program {}\n'.format(name)]
 
-        self.change_to_module_scope()
-        self._namespace = module_namespace
+        self.exit_scope()
 
         return '\n'.join(a for a in parts if a)
 
@@ -1274,7 +1254,7 @@ class FCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs, new_vars = expand_to_loops(expr,
-                    self.parser.get_new_variable, self.namespace,
+                    self.namespace.get_new_symbol, self.namespace,
                     language_has_vectors = True)
             self.add_vars_to_namespace(*new_vars)
         else:
@@ -1562,7 +1542,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         self.set_scope(expr.scope)
-        self.parser.insert_function(expr)
+        self.namespace.functions[expr.name] = expr
 
         body = self._print(expr.body)
 
@@ -1586,7 +1566,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[i] = dec
-        vars_to_print = self.parser.get_variables(self._namespace)
+        vars_to_print = self.namespace.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -1730,7 +1710,7 @@ class FCodePrinter(CodePrinter):
         decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
-        vars_to_print = self.parser.get_variables(self._namespace)
+        vars_to_print = self.namespace.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -2934,13 +2914,13 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, parser, assign_to=None, **settings):
+def fcode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of Fortran code
 
     expr : Expr
         A pyccel expression to be converted.
-    parser : Parser
-        The parser used to collect the expression
+    filename : str
+        The name of the file being translated. Used in error printing
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -2955,4 +2935,4 @@ def fcode(expr, parser, assign_to=None, **settings):
         for examples.
     """
 
-    return FCodePrinter(parser, **settings).doprint(expr, assign_to)
+    return FCodePrinter(filename, **settings).doprint(expr, assign_to)

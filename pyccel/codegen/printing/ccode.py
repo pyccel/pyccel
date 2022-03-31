@@ -244,15 +244,13 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    def __init__(self, parser, prefix_module = None):
+    def __init__(self, filename, prefix_module = None):
 
-        if parser.filename:
-            errors.set_target(parser.filename, 'file')
+        errors.set_target(filename, 'file')
 
         super().__init__()
         self.prefix_module = prefix_module
         self._additional_imports = {'stdlib':c_imports['stdlib']}
-        self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
         self._additional_args = []
@@ -307,7 +305,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
-        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        dummy_array_name = self.namespace.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
@@ -374,7 +372,7 @@ class CCodePrinter(CodePrinter):
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
-        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        dummy_array_name = self.namespace.get_new_name('array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
                 dtype = dtype,
                 name  = dummy_array_name,
@@ -494,7 +492,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
             for v in (*func.global_vars, *func.global_funcs):
-                self._parser.used_names.add(v.name)
+                self.namespace.insert_symbol(v.name)
 
         return code
 
@@ -1698,7 +1696,7 @@ class CCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs, new_vars = expand_to_loops(expr,
-                    self._parser.get_new_variable, self.namespace,
+                    self.namespace.get_new_name, self.namespace,
                     language_has_vectors = False)
             self._additional_declare.extend(new_vars)
         else:
@@ -1878,6 +1876,7 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
+        module_scope = self.namespace
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
@@ -1889,6 +1888,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
+        self.set_scope(self.namespace)
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
@@ -1960,13 +1960,13 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-def ccode(expr, parser, assign_to=None, **settings):
+def ccode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
         A pyccel expression to be converted.
-    parser : Parser
-        The parser used to collect the expression
+    filename : str
+        The name of the file being translated. Used in error printing
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -1985,4 +1985,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, **settings).doprint(expr, assign_to)
+    return CCodePrinter(filename, **settings).doprint(expr, assign_to)
