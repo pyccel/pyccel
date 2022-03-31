@@ -282,6 +282,7 @@ class FCodePrinter(CodePrinter):
     def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
         """ Print a function call to an inline function
         """
+        scope = self.namespace
         func = expr.funcdef
 
         # Print any arguments using the same inline function
@@ -366,6 +367,7 @@ class FCodePrinter(CodePrinter):
             for v in (*func.global_vars, *func.global_funcs):
                 self.namespace.insert_symbol(v.name)
 
+        self.set_scope(scope)
         return code
 
     def _get_external_declarations(self):
@@ -450,7 +452,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
-        self.set_scope(expr.namespace)
+        self.set_scope(expr.scope)
 
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
