@@ -1696,7 +1696,7 @@ class CCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs, new_vars = expand_to_loops(expr,
-                    self.namespace.get_new_name, self.namespace,
+                    self.namespace.get_temporary_variable, self.namespace,
                     language_has_vectors = False)
             self._additional_declare.extend(new_vars)
         else:

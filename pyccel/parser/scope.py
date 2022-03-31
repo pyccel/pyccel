@@ -348,7 +348,7 @@ class Scope(object):
         """ Add a new symbol to the scope
         """
         if not allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbol(symbol)
+            self.parent_scope.insert_symbol(symbol, allow_loop_scoping)
         else:
             self._used_symbols.add(symbol)
 
@@ -374,7 +374,7 @@ class Scope(object):
     def local_used_symbols(self):
         return self._used_symbols
 
-    def get_new_incremented_symbol(self, prefix, counter):
+    def get_new_incremented_symbol(self, prefix, counter, allow_loop_scoping = False):
         """
         Creates a new name by adding a numbered suffix to the provided prefix.
 
@@ -389,11 +389,11 @@ class Scope(object):
 
         new_name, counter = create_incremented_string(self.local_used_symbols, prefix = prefix)
 
-        self.insert_symbol(new_name)
+        self.insert_symbol(new_name, allow_loop_scoping)
 
         return PyccelSymbol(new_name, is_temp=True), counter
 
-    def get_new_name(self, current_name = None):
+    def get_new_name(self, current_name = None, allow_loop_scoping = False):
         """
         Creates a new name. A current_name can be provided indicating the name the
         user would like to use if possible. If this name is not available then it
@@ -411,7 +411,7 @@ class Scope(object):
           new_name     : str
         """
         if current_name is not None and current_name not in self.all_used_symbols:
-            self.insert_symbol(current_name)
+            self.insert_symbol(current_name, allow_loop_scoping)
             return PyccelSymbol(current_name)
 
         if current_name is None:
@@ -421,11 +421,35 @@ class Scope(object):
                                                 counter = self._dummy_counter)
         else:
             # When a name is suggested, try to stick to it
-            new_name,_ = create_incremented_string(self.local_used_symbols, prefix = current_name)
+            new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
-        self.insert_symbol(new_name)
+        self.insert_symbol(new_name, allow_loop_scoping)
 
         return PyccelSymbol(new_name)
+
+    def get_temporary_variable(self, dtype_or_var, name = None, allow_loop_scoping = False, **kwargs):
+        """
+        Get a temporary variable
+
+        Parameters
+        ----------
+        dtype_or_var : str, DataType, Variable
+            In the case of a string of DataType: The type of the Variable to be created
+            In the case of a Variable: a Variable which will be cloned to set all the Variable properties
+        name : str
+            The requested name for the new variable
+        allow_loop_scoping : bool
+            Indicates whether the temporary can belong to a loop scope
+        kwargs : dict
+            See Variable keyword arguments
+        """
+        name = self.get_new_name(name, allow_loop_scoping)
+        if isinstance(dtype_or_var, Variable):
+            var = dtype_or_var.clone(name, **kwargs)
+        else:
+            var = Variable(dtype_or_var, name, **kwargs)
+        self.insert_variable(var, allow_loop_scoping = allow_loop_scoping)
+        return var
 
     def get_available_name(self, start_name):
         if start_name == '_':
