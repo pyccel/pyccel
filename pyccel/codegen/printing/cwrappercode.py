@@ -943,7 +943,7 @@ class CWrapperCodePrinter(CCodePrinter):
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
         # Creating check function definition
-        check_func_name = self.namespace.get_new_name('type_check')
+        check_func_name = self.namespace.parent_scope.get_new_name('type_check')
         self._global_names.add(check_func_name)
         check_func_def = FunctionDef(name = check_func_name,
             arguments = parse_args,
