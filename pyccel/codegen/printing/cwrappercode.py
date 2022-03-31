@@ -1014,7 +1014,11 @@ class CWrapperCodePrinter(CCodePrinter):
         arg_vars = {a.var: a for a in expr.arguments}
 
         for a in expr.arguments:
-            self.namespace.insert_variable(a.var)
+            v = a.var
+            if isinstance(v, Variable):
+                self.namespace.insert_variable(v)
+            else:
+                self.namespace.functions[v.name] = v
         for r in expr.results:
             self.namespace.insert_variable(r)
         # update ndarray and optional local variables properties
