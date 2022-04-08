@@ -18,7 +18,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic, PyccelAstNode
+from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
@@ -1389,12 +1389,15 @@ class SemanticParser(BasicParser):
             init_var = Variable(NativeBool(), self.get_new_name('initialised'),
                                 is_private=True)
             init_func_name = self.get_new_name(expr.name+'__init')
+            # Ensure that the function is correctly defined within the namespaces
+            init_scope = self.create_new_function_scope(init_func_name)
+            for b in init_func_body:
+                if isinstance(b, ScopedNode):
+                    b.scope.update_parent_scope(init_scope)
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
-            # Ensure that the function is correctly defined within the namespaces
-            scope = self.create_new_function_scope(init_func_name)
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
-                    global_vars = variables, scope=scope)
+                    global_vars = variables, scope=init_scope)
             self.exit_function_scope()
             self.insert_function(init_func)
 

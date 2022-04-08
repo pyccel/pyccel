@@ -29,7 +29,7 @@ class Scope(object):
                  A dictionary of any decorators which operate on
                  objects in this scope
     """
-    __slots__ = ('_imports','_locals','parent_scope','_sons_scopes',
+    __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
             '_dummy_counter')
 
@@ -56,7 +56,7 @@ class Scope(object):
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
-        self.parent_scope        = parent_scope
+        self._parent_scope       = parent_scope
         self._sons_scopes        = {}
 
 
@@ -90,7 +90,6 @@ class Scope(object):
         child = Scope(**kwargs, parent_scope = self)
 
         self._sons_scopes[name] = child
-        child.parent_scope = self
 
         return child
 
@@ -497,3 +496,23 @@ class Scope(object):
         imports = list(self._imports['imports'].keys())
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
         return imports
+
+    def update_parent_scope(self, new_parent):
+        """ Change the parent scope
+        """
+        key = [k for k,v in self.parent_scope._sons_scopes.items() if v is self]
+        if key:
+            key = key[0]
+            self.parent_scope._sons_scopes.pop(key)
+            self._parent_scope = new_parent
+            self.parent_scope._sons_scopes[key] = self
+        else:
+            self.parent_scope._loops.remove(self)
+            self._parent_scope = new_parent
+            self.parent_scope._loops.append(self)
+
+    @property
+    def parent_scope(self):
+        """ Return the enclosing scope
+        """
+        return self._parent_scope
