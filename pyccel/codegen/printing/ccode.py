@@ -45,8 +45,6 @@ from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
-from pyccel.utilities.strings import create_incremented_string
-
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 

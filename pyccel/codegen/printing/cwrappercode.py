@@ -43,8 +43,6 @@ from pyccel.ast.variable  import VariableAddress, Variable
 
 from pyccel.parser.scope  import Scope
 
-from pyccel.utilities.strings import create_incremented_string
-
 from pyccel.errors.errors   import Errors
 
 errors = Errors()
