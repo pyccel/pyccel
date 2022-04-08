@@ -357,7 +357,7 @@ class Scope(object):
         """ Add multiple new symbols to the scope
         """
         if not allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbols(symbol)
+            self.parent_scope.insert_symbols(symbols)
         else:
             self._used_symbols.update(symbols)
 
