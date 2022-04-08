@@ -442,7 +442,7 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
                         symbol=line, severity='fatal')
 
             func_results = [f.funcdef.results[0] for f in funcs]
-            func_vars2 = [new_index(r.dtype, r) for f in func_results]
+            func_vars2 = [new_index(r.dtype, r) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
             if assigns:
