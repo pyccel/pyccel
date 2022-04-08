@@ -4,6 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
@@ -14,7 +15,6 @@ from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
-from pyccel.utilities.strings import create_incremented_string
 
 __all__ = (
     'ClassHeader',
