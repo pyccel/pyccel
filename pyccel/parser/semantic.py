@@ -3211,6 +3211,7 @@ class SemanticParser(BasicParser):
 
         name = expr.name
         name = name.replace("'", '')
+        scope = self.create_new_class_scope(name)
         methods = list(expr.methods)
         parent = expr.superclass
         interfaces = []
@@ -3258,8 +3259,10 @@ class SemanticParser(BasicParser):
                 methods.remove(i)
                 interfaces += [i]
 
+        self.exit_class_scope()
+
         cls = ClassDef(name, attributes, methods,
-              interfaces=interfaces, superclass=parent)
+              interfaces=interfaces, superclass=parent, scope=scope)
         self.namespace.insert_class(cls)
 
         return EmptyNode()

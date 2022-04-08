@@ -395,6 +395,8 @@ class BasicParser(object):
         return child
 
     def exit_function_scope(self):
+        """ Exit the function scope and return to the encasing scope
+        """
 
         self._namespace = self._namespace.parent_scope
         if isinstance(self._current_function, DottedName):
@@ -413,6 +415,35 @@ class BasicParser(object):
         return self._namespace
 
     def exit_loop_scope(self):
+        """ Exit the loop scope and return to the encasing scope
+        """
+        self._namespace = self._namespace.parent_scope
+
+    def create_new_class_scope(self, name, **kwargs):
+        """
+        Create a new Scope object for a Python class with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._namespace) is changed to the one just created, and the function's
+        name is stored in self._current_function.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        """
+        child = self.namespace.new_child_scope(name, **kwargs)
+        self._namespace = child
+
+        return child
+
+    def exit_class_scope(self):
+        """ Exit the class scope and return to the encasing scope
+        """
         self._namespace = self._namespace.parent_scope
 
     def dump(self, filename=None):

@@ -3039,6 +3039,7 @@ class ClassDef(ScopedNode):
         imports=(),
         superclass=(),
         interfaces=(),
+        scope = None
         ):
 
         # name
@@ -3119,7 +3120,7 @@ class ClassDef(ScopedNode):
         self._superclass  = superclass
         self._interfaces = interfaces
 
-        super().__init__()
+        super().__init__(scope = scope)
 
     @property
     def name(self):
