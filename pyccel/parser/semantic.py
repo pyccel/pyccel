@@ -3444,18 +3444,18 @@ class SemanticParser(BasicParser):
                 if new_name != old_name:
                     import_free = import_free.clone(new_name)
 
-            expr = Import(source, targets)
+            mod = p.semantic_parser.ast
 
             if __import_all__:
-                mod = p.semantic_parser.ast
-                expr = Import(source_target, AsName(mod, __module_name__))
+                expr = Import(source_target, AsName(mod, __module_name__), mod=mod)
                 container['imports'][source_target] = expr
 
             elif __module_name__:
-                expr = Import(__module_name__, targets)
+                expr = Import(__module_name__, targets, mod=mod)
                 container['imports'][source_target] = expr
 
             elif not __ignore_at_import__:
+                expr = Import(source, targets, mod=mod)
                 container['imports'][source_target] = expr
 
         return result

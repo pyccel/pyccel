@@ -3252,6 +3252,10 @@ class Import(Basic):
         the module from which we import
     target : str, AsName, list, tuple
         targets to import
+    ignore_at_print : bool
+        indicates whether the import should be printed
+    mod : Module
+        The module describing the source
 
     Examples
     --------
@@ -3267,16 +3271,17 @@ class Import(Basic):
     >>> Import('foo', 'bar')
     from foo import bar
     """
-    __slots__ = ('_source','_target','_ignore_at_print')
+    __slots__ = ('_source','_target','_ignore_at_print','_source_mod')
     _attribute_nodes = ()
 
-    def __init__(self, source, target = None, ignore_at_print = False):
+    def __init__(self, source, target = None, ignore_at_print = False, mod = None):
 
         if not source is None:
             source = Import._format(source)
 
         self._source = source
         self._target = set()
+        self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
         if target is None:
             if pyccel_stage == "syntactic":
@@ -3363,6 +3368,12 @@ class Import(Basic):
             elif new_target == t:
                 return t
         return None
+
+    @property
+    def source_module(self):
+        """ The module describing the Import source
+        """
+        return self._source_mod
 
 
 # TODO: Should Declare have an optional init value for each var?
