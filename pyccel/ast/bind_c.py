@@ -34,6 +34,19 @@ def sanitize_arguments(args):
 
 #=======================================================================================
 def as_static_function(func, *, mod_scope, name=None):
+    """ Translate a FunctionDef to a BindCFunctionDef by altering the
+    arguments to allow the function to be called from c.
+    E.g. the size of each dimension of an array is provided
+
+    Parameters
+    ==========
+    func     : FunctionDef
+               The function to be translated
+    mod_scope: Scope
+               The scope of the module which contains func
+    name     : str
+               The new name of the function
+    """
 
     assert(isinstance(func, FunctionDef))
 
