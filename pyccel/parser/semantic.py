@@ -315,27 +315,6 @@ class SemanticParser(BasicParser):
         else:
             return result
 
-
-    def get_import(self, name):
-        """
-        Search for an import with the given name in the current namespace.
-        Return None if not found.
-        """
-
-        imp = None
-
-        container = self.namespace
-        while container:
-
-            if name in container.imports['imports']:
-                imp =  container.imports['imports'][name]
-                break
-            container = container.parent_scope
-
-
-        return imp
-
-
     def insert_import(self, name, target, storage_name = None):
         """
         Create and insert a new import in namespace if it's not defined
@@ -354,9 +333,9 @@ class SemanticParser(BasicParser):
         source = _get_name(name)
         if storage_name is None:
             storage_name = source
-        imp = self.get_import(source)
+        imp = self.namespace.find(source, 'imports')
         if imp is None:
-            imp = self.get_import(storage_name)
+            imp = self.namespace.find(storage_name, 'imports')
 
         if imp is not None:
             imp_source = imp.source
@@ -1715,7 +1694,7 @@ class SemanticParser(BasicParser):
         if isinstance(first, Module):
 
             if rhs_name in first:
-                imp = self.get_import(_get_name(lhs))
+                imp = self.namespace.find(_get_name(lhs), 'imports')
 
                 new_name = rhs_name
                 if imp is not None:
