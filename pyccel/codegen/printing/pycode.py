@@ -430,7 +430,7 @@ class PythonCodePrinter(CodePrinter):
             return code+'\n'
 
     def _print_Import(self, expr):
-        p = expr.mod
+        p = expr.source_module
         init_func_name = ''
         free_func_name = ''
         if p:
