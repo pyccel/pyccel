@@ -1888,7 +1888,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
-        self.set_scope(self.namespace)
+        self.set_scope(module_scope)
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
