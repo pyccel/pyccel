@@ -411,6 +411,8 @@ class BasicParser(object):
         self._current_function = name
 
     def create_new_loop_scope(self):
+        """ Create a new scope describing a loop
+        """
         self._namespace = self._namespace.create_new_loop_scope()
         return self._namespace
 
