@@ -861,7 +861,8 @@ class CCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body  = [PythonPrint(print_body)]
-                for_loop  = For(for_index, for_range, for_body)
+                for_scope = self.namespace.create_new_loop_scope()
+                for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
@@ -1876,7 +1877,6 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
-        module_scope = self.namespace
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
@@ -1888,7 +1888,6 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
-        self.set_scope(module_scope)
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'

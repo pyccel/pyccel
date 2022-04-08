@@ -279,6 +279,7 @@ class PythonCodePrinter(CodePrinter):
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
     def _print_Program(self, expr):
+        mod_scope = self.namespace
         self.set_scope(expr.scope)
         imports  = ''.join(self._print(i) for i in expr.imports)
         body     = self._print(expr.body)
@@ -288,6 +289,8 @@ class PythonCodePrinter(CodePrinter):
         body = self._indent_codestring(body)
 
         self.exit_scope()
+        if mod_scope:
+            self.set_scope(mod_scope)
         return ('if __name__ == "__main__":\n'
                 '{body}\n').format(body=body)
 
@@ -430,14 +433,14 @@ class PythonCodePrinter(CodePrinter):
             return code+'\n'
 
     def _print_Import(self, expr):
-        p = expr.source_module
+        mod = expr.source_module
         init_func_name = ''
         free_func_name = ''
-        if p:
-            init_func = p.semantic_parser.ast.init_func
+        if mod:
+            init_func = mod.init_func
             if init_func:
                 init_func_name = init_func.name
-            free_func = p.semantic_parser.ast.free_func
+            free_func = mod.free_func
             if free_func:
                 free_func_name = free_func.name
 
