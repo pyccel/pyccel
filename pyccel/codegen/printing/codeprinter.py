@@ -62,10 +62,14 @@ class CodePrinter:
         return self._namespace
 
     def set_scope(self, scope):
+        """ Change the current scope
+        """
         assert scope is not None
         self._namespace = scope
 
     def exit_scope(self):
+        """ Exit the current scope and return to the enclosing scope
+        """
         self._namespace = self._namespace.parent_scope
 
     def _print(self, expr):
