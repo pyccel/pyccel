@@ -351,8 +351,10 @@ class SemanticParser(BasicParser):
             container['imports'][storage_name] = Import(source, target, True)
 
 
-    def get_header(self, name):
-        """."""
+    def get_headers(self, name):
+        """ Get all headers in the namespace which reference the
+        requested name
+        """
         container = self.namespace
         headers = []
         while container:
@@ -2809,10 +2811,10 @@ class SemanticParser(BasicParser):
 
         tmp_headers = expr.headers
         if cls_name:
-            tmp_headers += self.get_header(cls_name + '.' + name)
+            tmp_headers += self.get_headers(cls_name + '.' + name)
             args_number -= 1
         else:
-            tmp_headers += self.get_header(name)
+            tmp_headers += self.get_headers(name)
         for header in tmp_headers:
             if all(header.dtypes != hd.dtypes for hd in headers):
                 headers.append(header)
@@ -3224,7 +3226,7 @@ class SemanticParser(BasicParser):
             ms.append(m)
 
         methods = [const] + ms
-        header = self.get_header(name)
+        header = self.get_headers(name)
 
         if not header:
             errors.report(PYCCEL_MISSING_HEADER, symbol=name,
@@ -3462,7 +3464,7 @@ class SemanticParser(BasicParser):
         # we change here the master name to its FunctionDef
 
         f_name = expr.master
-        header = self.get_header(f_name)
+        header = self.get_headers(f_name)
         if not header:
             func = self.namespace.find(f_name, 'functions')
             if func is None:
@@ -3507,7 +3509,7 @@ class SemanticParser(BasicParser):
             errors.report(PYCCEL_RESTRICTION_TODO,
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
-        header = self.get_header(master)
+        header = self.get_headers(master)
         if header is None:
             var = self.get_variable(master)
         else:
