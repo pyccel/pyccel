@@ -1255,7 +1255,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
-            body_exprs, new_vars = expand_to_loops(expr,
+            body_exprs, _ = expand_to_loops(expr,
                     self.namespace.get_temporary_variable, self.namespace,
                     language_has_vectors = True)
         else:
