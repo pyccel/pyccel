@@ -363,6 +363,8 @@ class Scope(object):
 
     @property
     def all_used_symbols(self):
+        """ Get all symbols which already exist in this scope
+        """
         if self.parent_scope:
             symbols = self.parent_scope.all_used_symbols
         else:
@@ -372,6 +374,9 @@ class Scope(object):
 
     @property
     def local_used_symbols(self):
+        """ Get all symbols which already exist in this scope
+        excluding enclosing scopes
+        """
         return self._used_symbols
 
     def get_new_incremented_symbol(self, prefix, counter, allow_loop_scoping = False):
@@ -452,6 +457,9 @@ class Scope(object):
         return var
 
     def get_available_name(self, start_name):
+        """ Get a new name matching the provided name if possible.
+        The name should already be available in the symbols
+        """
         if start_name == '_':
             return self.get_new_name()
         elif self.is_loop:
@@ -476,7 +484,7 @@ class Scope(object):
         assert inner_scope == self._loops[-1]
         self._loops.pop()
         scopes = [self.create_new_loop_scope()]
-        for i in range(n_loops-2):
+        for _ in range(n_loops-2):
             scopes.append(scopes[-1].create_new_loop_scope())
         scopes[-1]._loops.append(inner_scope)
         inner_scope.parent_scope = scopes[-1]
