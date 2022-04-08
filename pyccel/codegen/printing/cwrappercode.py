@@ -63,8 +63,8 @@ cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays'
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
     an interface between python and an implementation of the module in c"""
-    def __init__(self, parser, target_language, **settings):
-        CCodePrinter.__init__(self, parser, **settings)
+    def __init__(self, filename, target_language, **settings):
+        CCodePrinter.__init__(self, filename, **settings)
         self._target_language = target_language
         self._cast_functions_dict = OrderedDict()
         self._to_free_PyObject_list = []
@@ -1254,13 +1254,13 @@ class CWrapperCodePrinter(CCodePrinter):
                     module_def = module_def,
                     init_func = init_func))
 
-def cwrappercode(expr, parser, target_language, assign_to=None, **settings):
+def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
 
     expr : Expr
         A pyccel expression to be converted.
-    parser : Parser
-        The parser used to collect the expression
+    filename : str
+        The name of the file being translated. Used in error printing
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -1280,4 +1280,4 @@ def cwrappercode(expr, parser, target_language, assign_to=None, **settings):
         ``(*a)`` instead of ``a``.
     """
 
-    return CWrapperCodePrinter(parser, target_language, **settings).doprint(expr, assign_to)
+    return CWrapperCodePrinter(filename, target_language, **settings).doprint(expr, assign_to)
