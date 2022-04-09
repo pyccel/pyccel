@@ -29,6 +29,7 @@ class Scope(object):
                  A dictionary of any decorators which operate on
                  objects in this scope
     """
+    allow_loop_scoping = False
     __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
             '_dummy_counter')
@@ -226,7 +227,7 @@ class Scope(object):
         self.add_loop(new_scope)
         return new_scope
 
-    def insert_variable(self, var, name = None, allow_loop_scoping = False):
+    def insert_variable(self, var, name = None):
         """ Add a variable to the current scope
 
         Parameters
@@ -250,8 +251,8 @@ class Scope(object):
         if name is None:
             name = var.name
 
-        if not allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_variable(var, name, allow_loop_scoping)
+        if not self.allow_loop_scoping and self.is_loop:
+            self.parent_scope.insert_variable(var, name)
         else:
             if name in self._locals['variables']:
                 raise RuntimeError('New variable {} already exists in scope'.format(name))
@@ -259,7 +260,7 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-            self.insert_symbol(name, allow_loop_scoping)
+            self.insert_symbol(name)
 
     def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
@@ -343,19 +344,19 @@ class Scope(object):
             msg = msg.format(str(type(expr)))
             raise TypeError(msg)
 
-    def insert_symbol(self, symbol, allow_loop_scoping = False):
+    def insert_symbol(self, symbol):
         """ Add a new symbol to the scope
         """
-        if not allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbol(symbol, allow_loop_scoping)
+        if not self.allow_loop_scoping and self.is_loop:
+            self.parent_scope.insert_symbol(symbol)
         else:
             self._used_symbols.add(symbol)
 
 
-    def insert_symbols(self, symbols, allow_loop_scoping = False):
+    def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope
         """
-        if not allow_loop_scoping and self.is_loop:
+        if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbols(symbols)
         else:
             self._used_symbols.update(symbols)
@@ -378,7 +379,7 @@ class Scope(object):
         """
         return self._used_symbols
 
-    def get_new_incremented_symbol(self, prefix, counter, allow_loop_scoping = False):
+    def get_new_incremented_symbol(self, prefix, counter):
         """
         Creates a new name by adding a numbered suffix to the provided prefix.
 
@@ -393,11 +394,11 @@ class Scope(object):
 
         new_name, counter = create_incremented_string(self.local_used_symbols, prefix = prefix)
 
-        self.insert_symbol(new_name, allow_loop_scoping)
+        self.insert_symbol(new_name)
 
         return PyccelSymbol(new_name, is_temp=True), counter
 
-    def get_new_name(self, current_name = None, allow_loop_scoping = False):
+    def get_new_name(self, current_name = None):
         """
         Creates a new name. A current_name can be provided indicating the name the
         user would like to use if possible. If this name is not available then it
@@ -415,7 +416,7 @@ class Scope(object):
           new_name     : str
         """
         if current_name is not None and current_name not in self.all_used_symbols:
-            self.insert_symbol(current_name, allow_loop_scoping)
+            self.insert_symbol(current_name)
             return PyccelSymbol(current_name)
 
         if current_name is None:
@@ -427,11 +428,11 @@ class Scope(object):
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
-        self.insert_symbol(new_name, allow_loop_scoping)
+        self.insert_symbol(new_name)
 
         return PyccelSymbol(new_name, is_temp = True)
 
-    def get_temporary_variable(self, dtype_or_var, name = None, allow_loop_scoping = False, **kwargs):
+    def get_temporary_variable(self, dtype_or_var, name = None, **kwargs):
         """
         Get a temporary variable
 
@@ -442,17 +443,15 @@ class Scope(object):
             In the case of a Variable: a Variable which will be cloned to set all the Variable properties
         name : str
             The requested name for the new variable
-        allow_loop_scoping : bool
-            Indicates whether the temporary can belong to a loop scope
         kwargs : dict
             See Variable keyword arguments
         """
-        name = self.get_new_name(name, allow_loop_scoping)
+        name = self.get_new_name(name)
         if isinstance(dtype_or_var, Variable):
             var = dtype_or_var.clone(name, **kwargs)
         else:
             var = Variable(dtype_or_var, name, **kwargs)
-        self.insert_variable(var, allow_loop_scoping = allow_loop_scoping)
+        self.insert_variable(var)
         return var
 
     def get_expected_name(self, start_name):
