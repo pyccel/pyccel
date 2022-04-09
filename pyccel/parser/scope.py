@@ -429,7 +429,7 @@ class Scope(object):
 
         self.insert_symbol(new_name, allow_loop_scoping)
 
-        return PyccelSymbol(new_name)
+        return PyccelSymbol(new_name, is_temp = True)
 
     def get_temporary_variable(self, dtype_or_var, name = None, allow_loop_scoping = False, **kwargs):
         """
