@@ -493,7 +493,7 @@ class Scope(object):
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
         return imports
 
-    def update_parent_scope(self, new_parent, is_loop = False, name = None):
+    def update_parent_scope(self, new_parent, is_loop, name = None):
         """ Change the parent scope
         """
         if is_loop:
