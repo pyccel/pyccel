@@ -455,20 +455,18 @@ class Scope(object):
         self.insert_variable(var, allow_loop_scoping = allow_loop_scoping)
         return var
 
-    def get_available_name(self, start_name):
-        """ Get a new name matching the provided name if possible.
-        The name should already be available in the symbols
+    def get_expected_name(self, start_name):
+        """ Get a name with no collisions, ideally the provided name.
+        The providied name should already exist in the symbols
         """
         if start_name == '_':
             return self.get_new_name()
-        elif self.is_loop:
-            return self.parent_scope.get_available_name(start_name)
         elif start_name in self.local_used_symbols:
             return start_name
-        elif self.parent_scope and start_name in self.parent_scope.all_used_symbols:
-            return self.get_new_name(start_name)
+        elif self.parent_scope:
+            return self.parent_scope.get_expected_name(start_name)
         else:
-            return start_name
+            raise RuntimeError("The requested name {} does not correspond to an object in this scope".format(start_name))
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop

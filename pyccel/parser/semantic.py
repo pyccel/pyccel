@@ -963,7 +963,7 @@ class SemanticParser(BasicParser):
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
 
-                new_name = self.namespace.get_available_name(name)
+                new_name = self.namespace.get_expected_name(name)
 
                 # Create new variable
                 lhs = self._create_variable(new_name, dtype, rhs, d_lhs)
@@ -1172,7 +1172,7 @@ class SemanticParser(BasicParser):
         elif isinstance(lhs, DottedName):
 
             dtype = d_var.pop('datatype')
-            name = self.namespace.get_available_name(lhs.name[:-1])
+            name = self.namespace.get_expected_name(lhs.name[:-1])
             if self._current_function == '__init__':
 
                 cls      = self.get_variable('self')
