@@ -12,6 +12,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module
 from pyccel.ast.datatypes  import default_precision
+from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
@@ -119,7 +120,11 @@ class PythonCodePrinter(CodePrinter):
         body = expr.loops[1]
         while not isinstance(body, Assign):
             if isinstance(body, CodeBlock):
-                body = body.body
+                body = list(body.body)
+                while isinstance(body[0], FunctionalFor):
+                    func_for = body.pop(0)
+                    for b in body:
+                        b.substitute(func_for.lhs, func_for)
                 if len(body) > 1:
                     if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
                         raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
@@ -127,6 +132,9 @@ class PythonCodePrinter(CodePrinter):
             elif isinstance(body, For):
                 iterables.append(body.iterable)
                 body = body.body
+            elif isinstance(body, FunctionalFor):
+                body, it = self._find_functional_expr_and_iterables(body)
+                iterables.extend(it)
             else:
                 raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
         return body, iterables
@@ -513,12 +521,15 @@ class PythonCodePrinter(CodePrinter):
                 else:
                     rhs = type(body.rhs)(*args)
 
-        lhs = self._print(expr.lhs)
         body = self._print(rhs)
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 
-        return '{} = {}({} {})\n'.format(lhs, expr.name, body, for_loops)
+        if expr.get_user_nodes(FunctionalFor):
+            return '{}({} {})'.format(expr.name, body, for_loops)
+        else:
+            lhs = self._print(expr.lhs)
+            return '{} = {}({} {})\n'.format(lhs, expr.name, body, for_loops)
 
     def _print_While(self, expr):
         cond = self._print(expr.test)
