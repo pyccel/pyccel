@@ -89,7 +89,7 @@ class Scope(object):
 
         child = Scope(**kwargs, parent_scope = self)
 
-        self._sons_scopes[name] = child
+        self.add_son(name, child)
 
         return child
 
@@ -223,7 +223,7 @@ class Scope(object):
         """
         new_scope = Scope(decorators=self.decorators, is_loop = True,
                         parent_scope = self)
-        self._loops.append(new_scope)
+        self.add_loop(new_scope)
         return new_scope
 
     def insert_variable(self, var, name = None, allow_loop_scoping = False):
@@ -485,8 +485,8 @@ class Scope(object):
         scopes = [self.create_new_loop_scope()]
         for _ in range(n_loops-2):
             scopes.append(scopes[-1].create_new_loop_scope())
-        scopes[-1]._loops.append(inner_scope)
-        inner_scope.parent_scope = scopes[-1]
+        scopes[-1].add_loop.append(inner_scope)
+        inner_scope.update_parent_scope(scopes[-1])
         scopes.append(inner_scope)
         return scopes
 
@@ -497,22 +497,45 @@ class Scope(object):
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
         return imports
 
-    def update_parent_scope(self, new_parent):
+    def update_parent_scope(self, new_parent, is_loop = False, name = None):
         """ Change the parent scope
         """
-        key = [k for k,v in self.parent_scope._sons_scopes.items() if v is self]
-        if key:
-            key = key[0]
-            self.parent_scope._sons_scopes.pop(key)
+        if is_loop:
+            if self.parent_scope:
+                self.parent_scope.remove_loop(self)
             self._parent_scope = new_parent
-            self.parent_scope._sons_scopes[key] = self
+            self.parent_scope.add_loop(self)
         else:
-            self.parent_scope._loops.remove(self)
+            if self.parent_scope:
+                name = self.parent_scope.remove_son(self)
             self._parent_scope = new_parent
-            self.parent_scope._loops.append(self)
+            self.parent_scope.add_son(name, self)
 
     @property
     def parent_scope(self):
         """ Return the enclosing scope
         """
         return self._parent_scope
+
+    def remove_loop(self, loop):
+        """ Remove a loop from the scope
+        """
+        self._loops.remove(loop)
+
+    def remove_son(self, son):
+        """ Remove a sub-scope from the scope
+        """
+        name = [k for k,v in self._sons_scopes.items() if v is son]
+        self._sons_scopes.pop(name)
+
+    def add_loop(self, loop):
+        """ Make parent aware of new child loop
+        """
+        assert loop.parent_scope is self
+        self._loops.append(loop)
+
+    def add_son(self, name, son):
+        """ Make parent aware of new child
+        """
+        assert son.parent_scope is self
+        self._sons_scopes[name] = son
