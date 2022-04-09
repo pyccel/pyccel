@@ -987,7 +987,7 @@ class SyntaxParser(BasicParser):
 
         name = self._visit(parent.func)
 
-        grandparent = self._scope[-4]
+        grandparent = self._scope[-3]
         if isinstance(grandparent, ast.Assign):
             if len(grandparent.targets) != 1:
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
