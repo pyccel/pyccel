@@ -1880,10 +1880,8 @@ class CCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
-        decs  = [self._print(i) for i in expr.declarations]
-        decs += [Declare(v.dtype,v) for v in self.namespace.variables.values() \
-                if v not in chain(expr.local_vars, expr.results, arguments)]
-        decs  = ''.join(self._print(i) for i in decs)
+        variables = self.namespace.variables.values()
+        decs = ''.join(self._print(Declare(v.dtype, v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)

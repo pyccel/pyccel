@@ -1382,9 +1382,6 @@ class Program(ScopedNode):
     variables: list
         list of the variables that appear in the block.
 
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
     body: list
         a list of statements
 
@@ -1453,12 +1450,6 @@ class Program(ScopedNode):
         """ Imports imported in the program
         """
         return self._imports
-
-    @property
-    def declarations(self):
-        """ Returns the declarations of the variables
-        """
-        return [Declare(i.dtype, i) for i in self.variables]
 
     def remove_import(self, name):
         """ Remove an import with the given source name from the list
