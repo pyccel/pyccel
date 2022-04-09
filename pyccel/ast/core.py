@@ -963,6 +963,7 @@ class With(ScopedNode):
         self,
         test,
         body,
+        scope = None
         ):
 
         if iterable(body):
@@ -972,7 +973,7 @@ class With(ScopedNode):
 
         self._test = test
         self._body = body
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def test(self):
@@ -998,7 +999,7 @@ class With(ScopedNode):
         body = start.body.body
         body += self.body.body
         body +=  end.body.body
-        return Block('with', [], body)
+        return Block('with', [], body, scope=self.scope)
 
 
 # TODO add a name to a block?
@@ -1033,7 +1034,8 @@ class Block(ScopedNode):
         self,
         name,
         variables,
-        body):
+        body,
+        scope = None):
         if not isinstance(name, str):
             raise TypeError('name must be of type str')
         if not iterable(variables):
@@ -1048,7 +1050,7 @@ class Block(ScopedNode):
         self._name = name
         self._variables = variables
         self._body = body
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):

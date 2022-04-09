@@ -3461,6 +3461,7 @@ class SemanticParser(BasicParser):
 
 
     def _visit_With(self, expr, **settings):
+        scope = self.create_new_loop_scope()
 
         domaine = self._visit(expr.test, **settings)
         parent  = domaine.cls_base
@@ -3470,7 +3471,9 @@ class SemanticParser(BasicParser):
                    severity='fatal', blocker=self.blocking)
 
         body = self._visit(expr.body, **settings)
-        return With(domaine, body).block
+
+        self.exit_loop_scope()
+        return With(domaine, body, scope).block
 
 
 
