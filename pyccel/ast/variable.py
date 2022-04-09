@@ -524,6 +524,10 @@ class Variable(PyccelAstNode):
         # Don't invalidate Variables
         pass
 
+    @is_temp.setter
+    def is_temp(self, is_temp):
+        self._is_temp = is_temp
+
 class DottedName(Basic):
 
     """
