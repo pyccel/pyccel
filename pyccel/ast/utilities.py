@@ -315,7 +315,7 @@ def insert_index(expr, pos, index_var):
 LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'])
 
 #==============================================================================
-def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = False, result = None):
+def collect_loops(block, indices, new_index, language_has_vectors = False, result = None):
     """
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
@@ -341,8 +341,6 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
     new_index             : function
                             A function which provides a new variable from a base name,
                             avoiding name collisions
-    tmp_vars              : list
-                            A list to which any temporary variables created can be appended
     language_has_vectors  : bool
                             Indicates if the language has support for vector
                             operations of the same shape
@@ -454,8 +452,6 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
                             symbol=line, severity='fatal')
                 line.substitute(internal_funcs, func_vars1, excluded_nodes=(FunctionCall))
                 line.substitute(funcs, func_vars2)
-                tmp_vars.extend(func_vars1)
-                tmp_vars.extend(func_vars2)
                 result.extend(assigns)
                 current_level = 0
 
@@ -526,7 +522,7 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
                                 index_var = LiteralInteger(j)),
                             rj) # lhs[j] = rhs[j]
                           for j, rj in enumerate(rhs)]
-            collect_loops(new_assigns, indices, new_index, tmp_vars, language_has_vectors, result = result)
+            collect_loops(new_assigns, indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
             lhs = line.lhs
@@ -534,7 +530,7 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
             arg1, arg2 = rhs.args
             assign1 = Assign(lhs[Slice(LiteralInteger(0), arg1.shape[0])], arg1)
             assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True))], arg2)
-            collect_loops([assign1, assign2], indices, new_index, tmp_vars, language_has_vectors, result = result)
+            collect_loops([assign1, assign2], indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Duplicate):
             lhs = line.lhs
@@ -553,7 +549,7 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
 
                 tmp_indices = indices[1:]
 
-                block = collect_loops([assign], tmp_indices, new_index, tmp_vars, language_has_vectors)
+                block = collect_loops([assign], tmp_indices, new_index, language_has_vectors)
                 if len(tmp_indices)>len(indices)-1:
                     indices.extend(tmp_indices[len(indices)-1:])
 
@@ -565,7 +561,7 @@ def collect_loops(block, indices, new_index, tmp_vars, language_has_vectors = Fa
                                               PyccelAdd(LiteralInteger(idx), LiteralInteger(1), simplify=True),
                                               simplify=True))],
                                 rhs.val) for idx in range(rhs.length)]
-                collect_loops(assigns, indices, new_index, tmp_vars, language_has_vectors, result = result)
+                collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
 
         else:
             # Save line in top level (no for loop)
@@ -697,10 +693,9 @@ def expand_to_loops(block, new_index, namespace, language_has_vectors = False):
     expand_inhomog_tuple_assignments(block)
 
     indices = []
-    tmp_vars = []
-    res = collect_loops(block.body, indices, new_index, tmp_vars, language_has_vectors)
+    res = collect_loops(block.body, indices, new_index, language_has_vectors)
 
     body = [insert_fors(b, indices, namespace) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
 
-    return body, indices+tmp_vars
+    return body
