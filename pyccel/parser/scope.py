@@ -526,7 +526,8 @@ class Scope(object):
         """ Remove a sub-scope from the scope
         """
         name = [k for k,v in self._sons_scopes.items() if v is son]
-        self._sons_scopes.pop(name)
+        assert len(name) == 1
+        self._sons_scopes.pop(name[0])
 
     def add_loop(self, loop):
         """ Make parent aware of new child loop

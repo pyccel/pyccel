@@ -1393,7 +1393,7 @@ class SemanticParser(BasicParser):
             init_scope = self.create_new_function_scope(init_func_name)
             for b in init_func_body:
                 if isinstance(b, ScopedNode):
-                    b.scope.update_parent_scope(init_scope)
+                    b.scope.update_parent_scope(init_scope, is_loop = True)
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
