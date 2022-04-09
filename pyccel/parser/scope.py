@@ -466,7 +466,7 @@ class Scope(object):
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
-            raise RuntimeError("The requested name {} does not correspond to an object in this scope".format(start_name))
+            return start_name
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop
@@ -483,7 +483,7 @@ class Scope(object):
         scopes = [self.create_new_loop_scope()]
         for _ in range(n_loops-2):
             scopes.append(scopes[-1].create_new_loop_scope())
-        scopes[-1].add_loop.append(inner_scope)
+        scopes[-1].add_loop(inner_scope)
         inner_scope.update_parent_scope(scopes[-1])
         scopes.append(inner_scope)
         return scopes
