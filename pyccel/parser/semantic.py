@@ -1030,7 +1030,7 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-                self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign)
+                self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1077,7 +1077,7 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign):
+    def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions):
         precision = d_var.get('precision',None)
         internal_precision = default_precision[str(dtype)] if precision == -1 else precision
 
@@ -1281,7 +1281,7 @@ class SemanticParser(BasicParser):
         d_var['is_temp'] = expr.lhs.is_temp
         lhs  = self.check_for_variable(lhs_name)
         if lhs:
-            self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False)
+            self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False, new_expr)
         else:
             lhs_name = self.namespace.get_expected_name(lhs_name)
             lhs = Variable(dtype, lhs_name, **d_var)
