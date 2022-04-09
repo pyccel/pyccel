@@ -1344,6 +1344,7 @@ class SemanticParser(BasicParser):
         # Infer the final dtype of the expression
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
+        d_var['is_temp'] = expr.lhs.is_temp
         lhs = Variable(dtype, lhs_name, **d_var)
         self.namespace.insert_variable(lhs)
 
