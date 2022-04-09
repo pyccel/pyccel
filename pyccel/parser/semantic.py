@@ -1030,6 +1030,18 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+                if not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+                    errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var)
+
+                elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+                    errors.report(INVALID_POINTER_REASSIGN,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
+
                 self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -1084,24 +1096,12 @@ class SemanticParser(BasicParser):
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
-                    symbol='{}={}'.format(name, str(rhs)),
+                    symbol='{}={}'.format(var.name, str(rhs)),
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=False)
 
-        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
-            errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
-                bounding_box=(self._current_fst_node.lineno,
-                    self._current_fst_node.col_offset),
-                        severity='error', symbol=lhs)
-
         elif not is_augassign and var.is_ndarray and var.is_target:
             errors.report(ARRAY_ALREADY_IN_USE,
-                bounding_box=(self._current_fst_node.lineno,
-                    self._current_fst_node.col_offset),
-                        severity='error', symbol=var.name)
-
-        elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
-            errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self._current_fst_node.lineno,
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
@@ -1125,7 +1125,7 @@ class SemanticParser(BasicParser):
                 d2 = str(var.dtype)
 
             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
-                symbol='{}={}'.format(name, str(rhs)),
+                symbol='{}={}'.format(var.name, str(rhs)),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=False)
 
@@ -1139,7 +1139,7 @@ class SemanticParser(BasicParser):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
                 format_shape = lambda s: "" if len(s)==0 else s
-                txt = txt.format(name=name, dtype=dtype, old=format_shape(var.shape),
+                txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -1154,7 +1154,7 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset))
 
                 elif var.is_stack_array:
-                    errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
+                    errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
                         severity='error', blocker=False,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset))
@@ -1190,7 +1190,7 @@ class SemanticParser(BasicParser):
                         status=status))
 
                     if status != 'unallocated':
-                        errors.report(ARRAY_REALLOCATION, symbol=name,
+                        errors.report(ARRAY_REALLOCATION, symbol=var.name,
                             severity='warning', blocker=False,
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
