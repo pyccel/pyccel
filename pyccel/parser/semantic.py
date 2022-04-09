@@ -1030,137 +1030,7 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-                precision = d_var.get('precision',None)
-                internal_precision = default_precision[str(dtype)] if precision == -1 else precision
-
-                # TODO improve check type compatibility
-                if not hasattr(var, 'dtype'):
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
-                            symbol='{}={}'.format(name, str(rhs)),
-                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                            severity='fatal', blocker=False)
-
-                elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
-                    errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                                severity='error', symbol=lhs)
-
-                elif not is_augassign and var.is_ndarray and var.is_target:
-                    errors.report(ARRAY_ALREADY_IN_USE,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                                severity='error', symbol=var.name)
-
-                elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
-                    errors.report(INVALID_POINTER_REASSIGN,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                                severity='error', symbol=var.name)
-
-                elif var.is_ndarray and var.is_pointer:
-                    # we allow pointers to be reassigned multiple times
-                    # pointers reassigning need to call free_pointer func
-                    # to remove memory leaks
-                    new_expressions.append(Deallocate(var))
-
-                elif not is_augassign and (str(dtype) != str(var.dtype) or \
-                        internal_precision != get_final_precision(var)):
-                    # Get type name from cast function (handles precision implicitly)
-                    try:
-                        d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
-                    except KeyError:
-                        d1 = str(var.dtype)
-                    try:
-                        d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
-                    except KeyError:
-                        d2 = str(var.dtype)
-
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
-                        symbol='{}={}'.format(name, str(rhs)),
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=False)
-
-                elif not is_augassign:
-
-                    rank  = getattr(var, 'rank' , 'None')
-                    order = getattr(var, 'order', 'None')
-                    shape = getattr(var, 'shape', 'None')
-
-                    if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
-
-                        txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                        format_shape = lambda s: "" if len(s)==0 else s
-                        txt = txt.format(name=name, dtype=dtype, old=format_shape(var.shape),
-                            new=format_shape(d_var['shape']))
-                        errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
-                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                            severity='error', blocker=False)
-
-                    elif d_var['shape'] != shape:
-
-                        if var.is_argument:
-                            errors.report(ARRAY_IS_ARG, symbol=var,
-                                severity='error', blocker=False,
-                                bounding_box=(self._current_fst_node.lineno,
-                                    self._current_fst_node.col_offset))
-
-                        elif var.is_stack_array:
-                            errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
-                                severity='error', blocker=False,
-                                bounding_box=(self._current_fst_node.lineno,
-                                    self._current_fst_node.col_offset))
-
-                        else:
-                            var.set_changeable_shape()
-                            previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-                            if not previous_allocations:
-                                errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
-                                        symbol=var, severity='fatal')
-
-                            last_allocation = previous_allocations[-1]
-
-                            # Find outermost IfSection of last allocation
-                            last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
-                            alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
-                            while len(last_alloc_ifsection)>0:
-                                alloc_ifsection = last_alloc_ifsection[-1]
-                                last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
-
-                            ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
-                                                                lambda x: isinstance(x,If))) == 1 \
-                                            if alloc_ifsection else False
-
-                            if alloc_ifsection and not ifsection_has_if:
-                                status = last_allocation.status
-                            elif last_allocation.get_user_nodes((If, For, While)):
-                                status='unknown'
-                            else:
-                                status='allocated'
-                            new_expressions.append(Allocate(var,
-                                shape=d_var['shape'], order=d_var['order'],
-                                status=status))
-
-                            if status != 'unallocated':
-                                errors.report(ARRAY_REALLOCATION, symbol=name,
-                                    severity='warning', blocker=False,
-                                    bounding_box=(self._current_fst_node.lineno,
-                                        self._current_fst_node.col_offset))
-                    else:
-                        # Same shape as before
-                        previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-
-                        if previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
-                                and not previous_allocations[-1].get_user_nodes((If)):
-                            # If previously allocated in If still under construction
-                            status = previous_allocations[-1].status
-
-                            new_expressions.append(Allocate(var,
-                                shape=d_var['shape'], order=d_var['order'],
-                                status=status))
-
-                if var.precision == -1 and precision != var.precision:
-                    var.use_exact_precision()
+                self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1207,6 +1077,139 @@ class SemanticParser(BasicParser):
 
         return lhs
 
+    def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign):
+        precision = d_var.get('precision',None)
+        internal_precision = default_precision[str(dtype)] if precision == -1 else precision
+
+        # TODO improve check type compatibility
+        if not hasattr(var, 'dtype'):
+            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
+                    symbol='{}={}'.format(name, str(rhs)),
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal', blocker=False)
+
+        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+            errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
+                bounding_box=(self._current_fst_node.lineno,
+                    self._current_fst_node.col_offset),
+                        severity='error', symbol=lhs)
+
+        elif not is_augassign and var.is_ndarray and var.is_target:
+            errors.report(ARRAY_ALREADY_IN_USE,
+                bounding_box=(self._current_fst_node.lineno,
+                    self._current_fst_node.col_offset),
+                        severity='error', symbol=var.name)
+
+        elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+            errors.report(INVALID_POINTER_REASSIGN,
+                bounding_box=(self._current_fst_node.lineno,
+                    self._current_fst_node.col_offset),
+                        severity='error', symbol=var.name)
+
+        elif var.is_ndarray and var.is_pointer:
+            # we allow pointers to be reassigned multiple times
+            # pointers reassigning need to call free_pointer func
+            # to remove memory leaks
+            new_expressions.append(Deallocate(var))
+
+        elif not is_augassign and (str(dtype) != str(var.dtype) or \
+                internal_precision != get_final_precision(var)):
+            # Get type name from cast function (handles precision implicitly)
+            try:
+                d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
+            except KeyError:
+                d1 = str(var.dtype)
+            try:
+                d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
+            except KeyError:
+                d2 = str(var.dtype)
+
+            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
+                symbol='{}={}'.format(name, str(rhs)),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='error', blocker=False)
+
+        elif not is_augassign:
+
+            rank  = getattr(var, 'rank' , 'None')
+            order = getattr(var, 'order', 'None')
+            shape = getattr(var, 'shape', 'None')
+
+            if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
+
+                txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
+                format_shape = lambda s: "" if len(s)==0 else s
+                txt = txt.format(name=name, dtype=dtype, old=format_shape(var.shape),
+                    new=format_shape(d_var['shape']))
+                errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='error', blocker=False)
+
+            elif d_var['shape'] != shape:
+
+                if var.is_argument:
+                    errors.report(ARRAY_IS_ARG, symbol=var,
+                        severity='error', blocker=False,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset))
+
+                elif var.is_stack_array:
+                    errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
+                        severity='error', blocker=False,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset))
+
+                else:
+                    var.set_changeable_shape()
+                    previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+                    if not previous_allocations:
+                        errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
+                                symbol=var, severity='fatal')
+
+                    last_allocation = previous_allocations[-1]
+
+                    # Find outermost IfSection of last allocation
+                    last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                    alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                    while len(last_alloc_ifsection)>0:
+                        alloc_ifsection = last_alloc_ifsection[-1]
+                        last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+
+                    ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                        lambda x: isinstance(x,If))) == 1 \
+                                    if alloc_ifsection else False
+
+                    if alloc_ifsection and not ifsection_has_if:
+                        status = last_allocation.status
+                    elif last_allocation.get_user_nodes((If, For, While)):
+                        status='unknown'
+                    else:
+                        status='allocated'
+                    new_expressions.append(Allocate(var,
+                        shape=d_var['shape'], order=d_var['order'],
+                        status=status))
+
+                    if status != 'unallocated':
+                        errors.report(ARRAY_REALLOCATION, symbol=name,
+                            severity='warning', blocker=False,
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
+            else:
+                # Same shape as before
+                previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+
+                if previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
+                        and not previous_allocations[-1].get_user_nodes((If)):
+                    # If previously allocated in If still under construction
+                    status = previous_allocations[-1].status
+
+                    new_expressions.append(Allocate(var,
+                        shape=d_var['shape'], order=d_var['order'],
+                        status=status))
+
+        if var.precision == -1 and precision != var.precision:
+            var.use_exact_precision()
+
     def _assign_GeneratorComprehension(self, lhs_name, expr, **settings):
         """
         Visit the GeneratorComprehension node creating all necessary expressions
@@ -1223,9 +1226,7 @@ class SemanticParser(BasicParser):
         new_expr : CodeBlock
                    CodeBlock containing the semantic version of the GeneratorComprehension node
         """
-
         result   = expr.expr
-        lhs  = self.check_for_variable(lhs_name)
 
         loop = expr.loops
         nlevels = 0
@@ -1258,7 +1259,9 @@ class SemanticParser(BasicParser):
                 gens = set(loop_elem.get_attribute_nodes(GeneratorComprehension))
                 if len(gens)==1:
                     gen = gens.pop()
-                    assign = self._visit(Assign(gen.lhs, gen, fst=gen.fst))
+                    assert isinstance(gen.lhs, PyccelSymbol) and gen.lhs.is_temp
+                    gen_lhs = self.namespace.get_new_name() if gen.lhs.is_temp else gen.lhs
+                    assign = self._visit(Assign(gen_lhs, gen, fst=gen.fst))
                     new_expr.append(assign)
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
@@ -1275,8 +1278,13 @@ class SemanticParser(BasicParser):
         # Infer the final dtype of the expression
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
-        lhs = Variable(dtype, lhs_name, **d_var)
-        self.namespace.insert_variable(lhs)
+        lhs  = self.check_for_variable(lhs_name)
+        if lhs:
+            self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False)
+        else:
+            lhs_name = self.namespace.get_expected_name(lhs_name)
+            lhs = Variable(dtype, lhs_name, **d_var)
+            self.namespace.insert_variable(lhs)
 
         # Iterate over the loops
         # This provides the definitions of iterators as well
@@ -1289,7 +1297,9 @@ class SemanticParser(BasicParser):
             loop = loops[0]
             for _ in range(nlevels-1):
                 loop = loop.body.body[0]
-            _ = [loop.body.insert2body(e, back=False) for e in new_expr]
+            for e in new_expr:
+                loop.body.insert2body(e, back=False)
+                e.loops[-1].scope.update_parent_scope(loop.scope, is_loop = True)
 
         if isinstance(expr, FunctionalSum):
             val = LiteralInteger(0)
