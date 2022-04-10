@@ -14,11 +14,13 @@ Each scope is associated with a class, e.g. `FunctionDef`, `For`, `Module`. Thes
 
 The `Scope` object keeps track of all names used in the described scope. This means that it can be used to prevent name collisions. In order to do so a few steps must be respected:
 
-1. In the syntactic stage all symbols in the code must be added to the correct scope. This is done via the function `insert_symbol`
-2. All names of variables created by pyccel must be created using one of the following functions defined in the Scope class:
-    - `get_expected_name` : Collect the name which will be used to create the Variable referenced in the argument. In most cases this operation will be the identity operation, but it ensures that name collisions are handled and that the Symbol has been correctly inserted into the Scope
-    - `get_new_name` : Get a new name with no collisions. A name can be requested and will be used if available
-    - `get_new_incremented_symbol` : Get a new name with no collisions following a pattern. This function keeps track of the index appended to the incremented string so it is most useful when creating multiple names with the same prefix
-3. All newly created variables must be inserted into the scope using the `insert_variable` function.
+1.  In the syntactic stage all symbols in the code must be added to the correct scope. This is done via the function `insert_symbol`
+
+2.  All names of variables created by pyccel must be created using one of the following functions defined in the Scope class:
+    -   `get_expected_name` : Collect the name which will be used to create the Variable referenced in the argument. In most cases this operation will be the identity operation, but it ensures that name collisions are handled and that the Symbol has been correctly inserted into the Scope
+    -   `get_new_name` : Get a new name with no collisions. A name can be requested and will be used if available
+    -   `get_new_incremented_symbol` : Get a new name with no collisions following a pattern. This function keeps track of the index appended to the incremented string so it is most useful when creating multiple names with the same prefix
+
+3.  All newly created variables must be inserted into the scope using the `insert_variable` function.
 
 Temporary variables can also be created using the `get_temporary_variable` function. In this case it is not necessary to use the `insert_variable` function.
