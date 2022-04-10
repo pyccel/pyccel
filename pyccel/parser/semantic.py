@@ -1042,7 +1042,8 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=var.name)
 
-                self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions)
+                else:
+                    self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
