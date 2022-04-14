@@ -1280,6 +1280,7 @@ class SemanticParser(BasicParser):
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
         d_var['is_temp'] = expr.lhs.is_temp
+
         lhs  = self.check_for_variable(lhs_name)
         if lhs:
             self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False, new_expr)

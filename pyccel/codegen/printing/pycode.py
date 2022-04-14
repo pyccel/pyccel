@@ -123,9 +123,12 @@ class PythonCodePrinter(CodePrinter):
                 body = list(body.body)
                 while isinstance(body[0], FunctionalFor):
                     func_for = body.pop(0)
+                    # Replace the temporary assign value with the FunctionalFor expression
+                    # so the loop is printed inline
                     for b in body:
                         b.substitute(func_for.lhs, func_for)
                 if len(body) > 1:
+                    # Ensure all assigns assign to the dummy we are searching for and do not introduce unexpected variables
                     if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
                         raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
                 body = body[0]
