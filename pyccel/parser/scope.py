@@ -87,6 +87,9 @@ class Scope(object):
             New child scope, which has the current object as parent.
 
         """
+        ps = kwargs.pop('parent_scope', self)
+        if ps is not self:
+            raise ValueError("A child of {} cannot have a parent {}".format(self, ps))
 
         child = Scope(**kwargs, parent_scope = self)
 
