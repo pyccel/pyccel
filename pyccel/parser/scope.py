@@ -41,7 +41,7 @@ class Scope(object):
             'cls_constructs')
 
     def __init__(self, *, decorators=None, is_loop = False,
-                    parent_scope = None):
+                    parent_scope = None, used_symbols = None):
 
         self._imports = {k:{} for k in self.categories}
 
@@ -49,7 +49,7 @@ class Scope(object):
 
         self._temporary_variables = []
 
-        self._used_symbols = {}
+        self._used_symbols = used_symbols or {}
         self._original_symbol = {}
 
         self._dummy_counter = 0
@@ -360,6 +360,7 @@ class Scope(object):
                     self._used_symbols.values())
             self._used_symbols[symbol] = collisionless_symbol
             self._original_symbol[collisionless_symbol] = symbol
+            print(symbol, collisionless_symbol, self._used_symbols)
 
 
     def insert_symbols(self, symbols):
@@ -384,7 +385,7 @@ class Scope(object):
         """ Get all symbols which already exist in this scope
         excluding enclosing scopes
         """
-        return self._used_symbols.values()
+        return self._used_symbols
 
     def get_new_incremented_symbol(self, prefix, counter):
         """
@@ -399,7 +400,7 @@ class Scope(object):
           new_name     : str
         """
 
-        new_name, counter = create_incremented_string(self.local_used_symbols, prefix = prefix)
+        new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
 
         self.insert_symbol(new_name)
 
@@ -465,6 +466,8 @@ class Scope(object):
         """ Get a name with no collisions, ideally the provided name.
         The provided name should already exist in the symbols
         """
+        print("get_expected_name : ",start_name)
+        print(self._used_symbols)
         if start_name == '_':
             return self.get_new_name()
         elif start_name in self._used_symbols.keys():
@@ -472,7 +475,7 @@ class Scope(object):
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
-            return start_name
+            raise ValueError("{} does not exist in scope".format(start_name))
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop
