@@ -1,0 +1,3 @@
+
+class NameClashChecker:
+    pass
