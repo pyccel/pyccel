@@ -542,3 +542,6 @@ class Scope(object):
         """
         assert son.parent_scope is self
         self._sons_scopes[name] = son
+
+    def get_python_name(self, name):
+        return self._original_symbol[name]

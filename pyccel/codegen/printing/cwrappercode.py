@@ -716,7 +716,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     w.set_fst(assign.fst)
         else:
             vars_to_wrap = orig_vars_to_wrap
-        var_names = [v.name for v in orig_vars_to_wrap]
+        var_names = [str(expr.scope.get_python_name(v.name)) for v in orig_vars_to_wrap]
 
         body = [l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var)]
 
@@ -1172,7 +1172,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      'METH_VARARGS | METH_KEYWORDS,\n'
                                      '{doc_string}\n'
                                      '}},\n').format(
-                                            name = f.name,
+                                            name = expr.scope.get_python_name(f.name),
                                             wrapper_name = self._function_wrapper_names[f.name],
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""')
@@ -1190,7 +1190,8 @@ class CWrapperCodePrinter(CCodePrinter):
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                         '{method_def_func}'
                         '{{ NULL, NULL, 0, NULL}}\n'
-                        '}};\n'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
+                        '}};\n'.format(method_def_name = method_def_name,
+                            method_def_func = method_def_func))
 
         module_def_name = self.namespace.get_new_name('{}_module'.format(expr.name))
         module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
