@@ -360,7 +360,6 @@ class Scope(object):
                     self._used_symbols.values())
             self._used_symbols[symbol] = collisionless_symbol
             self._original_symbol[collisionless_symbol] = symbol
-            print(symbol, collisionless_symbol, self._used_symbols)
 
 
     def insert_symbols(self, symbols):
@@ -466,8 +465,6 @@ class Scope(object):
         """ Get a name with no collisions, ideally the provided name.
         The provided name should already exist in the symbols
         """
-        print("get_expected_name : ",start_name)
-        print(self._used_symbols)
         if start_name == '_':
             return self.get_new_name()
         elif start_name in self._used_symbols.keys():
