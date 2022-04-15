@@ -486,7 +486,7 @@ class Scope(object):
         return scopes
 
     def collect_all_imports(self):
-        """ Collect the names of all files necessary to understand this scope
+        """ Collect the names of all modules necessary to understand this scope
         """
         imports = list(self._imports['imports'].keys())
         imports.extend([i for s in self._sons_scopes.values() for i in s.collect_all_imports()])
