@@ -526,6 +526,10 @@ class Variable(PyccelAstNode):
 
     @is_temp.setter
     def is_temp(self, is_temp):
+        if not isinstance(is_temp, bool):
+            raise TypeError("is_temp must be a boolean")
+        elif is_temp:
+            raise ValueError("Variables cannot become temporary")
         self._is_temp = is_temp
 
 class DottedName(Basic):
