@@ -1091,6 +1091,23 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions):
+        """
+        Ensure that the inferred type of the new variable, matches the existing variable (which has the
+        same name)
+
+        Parameters
+        ----------
+        dtype : DataType
+                The inferred DataType
+        d_var : dict
+                The inferred information about the variable. Usually created by the _infere_type function
+        var   : Variable
+                The existing variable
+        is_augassign : bool
+                A boolean indicating if the assign statement is an augassign (tests are less strict)
+        new_expressions : list
+                A list to which any new expressions created are appended
+        """
         precision = d_var.get('precision',None)
         internal_precision = default_precision[str(dtype)] if precision == -1 else precision
 
