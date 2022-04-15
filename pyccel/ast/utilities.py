@@ -338,9 +338,9 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                             The expressions to be modified
     indices               : list
                             An empty list to be filled with the temporary variables created
-    new_index             : function
+    new_index             : function (class method of a Scope)
                             A function which provides a new variable from a base name,
-                            avoiding name collisions
+                            avoiding name collisions.
     language_has_vectors  : bool
                             Indicates if the language has support for vector
                             operations of the same shape
