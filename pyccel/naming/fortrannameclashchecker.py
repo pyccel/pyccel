@@ -1,5 +1,7 @@
-from .nameclashchecker import NameClashChecker
+import warnings
+
 from pyccel.utilities.strings import create_incremented_string
+from .nameclashchecker import NameClashChecker
 
 class FortranNameClashChecker(NameClashChecker):
     # Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords
@@ -34,6 +36,8 @@ class FortranNameClashChecker(NameClashChecker):
     def get_collisionless_name(self, name, symbols):
         """ Get the name that will be used in the fortran code
         """
+        if name[0] == '_':
+            name = 'private'+name
         prefix = name.lower()
         coll_symbols = self.keywords.copy()
         coll_symbols.update(s.lower() for s in symbols)
@@ -42,4 +46,6 @@ class FortranNameClashChecker(NameClashChecker):
             new_name, counter = create_incremented_string(coll_symbols,
                     prefix = prefix, counter = counter)
             name = name+new_name[-5:]
+        if len(name) > 96:
+            warnings.warn("Name {} is too long for Fortran. This may cause compiler errors".format(name))
         return name

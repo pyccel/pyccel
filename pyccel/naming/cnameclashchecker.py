@@ -31,6 +31,8 @@ class CNameClashChecker(NameClashChecker):
     def get_collisionless_name(self, name, symbols):
         """ Get the name that will be used in the fortran code
         """
+        if name[0] == '_':
+            name = 'private'+name
         prefix = name
         coll_symbols = self.keywords.copy()
         coll_symbols.update(s.lower() for s in symbols)
