@@ -30,9 +30,10 @@ class Scope(object):
                  objects in this scope
     """
     allow_loop_scoping = False
+    name_clash_checker = None
     __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter')
+            '_dummy_counter','_original_symbol')
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions',
@@ -48,7 +49,8 @@ class Scope(object):
 
         self._temporary_variables = []
 
-        self._used_symbols = set()
+        self._used_symbols = {}
+        self._original_symbol = {}
 
         self._dummy_counter = 0
 
@@ -354,16 +356,17 @@ class Scope(object):
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbol(symbol)
         else:
-            self._used_symbols.add(symbol)
+            collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
+                    self._used_symbols.values())
+            self._used_symbols[symbol] = collisionless_symbol
+            self._original_symbol[collisionless_symbol] = symbol
 
 
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope
         """
-        if not self.allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbols(symbols)
-        else:
-            self._used_symbols.update(symbols)
+        for s in symbols:
+            self.insert_symbol(s)
 
     @property
     def all_used_symbols(self):
@@ -373,7 +376,7 @@ class Scope(object):
             symbols = self.parent_scope.all_used_symbols
         else:
             symbols = set()
-        symbols.update(self._used_symbols)
+        symbols.update(self._used_symbols.values())
         return symbols
 
     @property
@@ -381,7 +384,7 @@ class Scope(object):
         """ Get all symbols which already exist in this scope
         excluding enclosing scopes
         """
-        return self._used_symbols
+        return self._used_symbols.values()
 
     def get_new_incremented_symbol(self, prefix, counter):
         """
@@ -464,8 +467,8 @@ class Scope(object):
         """
         if start_name == '_':
             return self.get_new_name()
-        elif start_name in self.local_used_symbols:
-            return start_name
+        elif start_name in self._used_symbols.keys():
+            return self._used_symbols[start_name]
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
