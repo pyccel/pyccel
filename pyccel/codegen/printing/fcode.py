@@ -255,10 +255,6 @@ class FCodePrinter(CodePrinter):
         errors.report(UNDEFINED_FUNCTION, symbol=name,
             severity='fatal')
 
-    def add_vars_to_namespace(self, *new_vars):
-        for var in new_vars:
-            self.namespace.insert_variable(var)
-
     def _get_statement(self, codestring):
         return codestring
 
@@ -300,7 +296,7 @@ class FCodePrinter(CodePrinter):
         new_local_vars = [v.clone(self.namespace.get_new_name(v.name)) \
                             for v in func.local_vars]
         for v in new_local_vars:
-            self.add_vars_to_namespace(v)
+            self.namespace.insert_variable(v)
 
         # Put functions into current namespace
         for entry in ['variables', 'classes', 'functions']:
@@ -666,7 +662,7 @@ class FCodePrinter(CodePrinter):
             var_name = self.namespace.get_new_name()
             var = base.clone(var_name)
 
-            self.add_vars_to_namespace(var)
+            self.namespace.insert_variable(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
             return self._print(var) + '%' +self._print(expr.name)
@@ -794,7 +790,7 @@ class FCodePrinter(CodePrinter):
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
-            self.add_vars_to_namespace(var)
+            self.namespace.insert_variable(var)
 
         init_value = template.format(
             start = self._print(expr.start),
@@ -877,7 +873,7 @@ class FCodePrinter(CodePrinter):
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
         index  = Variable(NativeInteger(), name =  self.namespace.get_new_name('i'))
 
-        self.add_vars_to_namespace(index)
+        self.namespace.insert_variable(index)
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -968,7 +964,7 @@ class FCodePrinter(CodePrinter):
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
-        self.add_vars_to_namespace(var)
+        self.namespace.insert_variable(var)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -1874,7 +1870,7 @@ class FCodePrinter(CodePrinter):
         indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
         if expr.iterable.num_loop_counters_required:
-            self.add_vars_to_namespace(index)
+            self.namespace.insert_variable(index)
 
         target   = index
         my_range = expr.iterable.get_range()
@@ -2567,7 +2563,7 @@ class FCodePrinter(CodePrinter):
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
-                self.add_vars_to_namespace(var)
+                self.namespace.insert_variable(var)
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
@@ -2697,7 +2693,7 @@ class FCodePrinter(CodePrinter):
                 arg = a.value
                 if arg in lhs_vars.values():
                     var = arg.clone(self.namespace.get_new_name())
-                    self.add_vars_to_namespace(var)
+                    self.namespace.insert_variable(var)
                     self._additional_code += self._print(Assign(var,arg))
                     newarg = var
                 else:
@@ -2714,7 +2710,7 @@ class FCodePrinter(CodePrinter):
             results = [r.clone(name = self.namespace.get_new_name()) \
                         for r in func_results]
             for var in results:
-                self.add_vars_to_namespace(var)
+                self.namespace.insert_variable(var)
 
             if len(func_results) == 1:
                 results_strs = []
@@ -2759,7 +2755,7 @@ class FCodePrinter(CodePrinter):
             var_name = self.namespace.get_new_name()
             var = base.clone(var_name)
 
-            self.add_vars_to_namespace(var)
+            self.namespace.insert_variable(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
             user_node = expr.current_user_node
