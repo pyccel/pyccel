@@ -460,7 +460,7 @@ class Scope(object):
 
     def get_expected_name(self, start_name):
         """ Get a name with no collisions, ideally the provided name.
-        The providied name should already exist in the symbols
+        The provided name should already exist in the symbols
         """
         if start_name == '_':
             return self.get_new_name()
