@@ -2818,7 +2818,7 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr, **settings):
 
-        name            = expr.name
+        name            = self.namespace.get_expected_name(expr.name)
         name            = name.replace("'", '')
         cls_name        = expr.cls_name
         decorators      = expr.decorators

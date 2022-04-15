@@ -588,6 +588,7 @@ class SyntaxParser(BasicParser):
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
         name = self._visit(stmt.name)
+        self.namespace.insert_symbol(name)
         name = name.replace("'", '')
 
         scope = self.create_new_function_scope(name)
