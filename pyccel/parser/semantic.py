@@ -1388,7 +1388,7 @@ class SemanticParser(BasicParser):
         body = self._visit(expr.program).body
         program_body      = []
         init_func_body    = []
-        mod_name = expr.name
+        mod_name = self.namespace.get_expected_name(expr.name)
         self._mod_name = mod_name
         prog_name = self.get_new_name('prog_'+expr.name)
 

@@ -503,6 +503,8 @@ class FCodePrinter(CodePrinter):
         if source in pyccel_builtin_import_registery:
             return ''
 
+        source = expr.source_module.scope.get_expected_name(source)
+
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'
 

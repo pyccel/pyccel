@@ -156,7 +156,7 @@ def as_static_module(funcs, original_module, name = None):
     return Module(name, (), bind_c_funcs, imports = imports, scope=scope)
 
 #=======================================================================================
-def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None):
+def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
     """ Translate a FunctionDef to a BindCFunctionDef which calls the
     original function. A BindCFunctionDef is a FunctionDef where the
     arguments are altered to allow the function to be called from c.
@@ -166,7 +166,7 @@ def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None
     ==========
     func     : FunctionDef
                The function to be translated
-    mod_name : str
+    mod      : str
                The name of the module which contains func
     name     : str
                The new name of the function
@@ -176,13 +176,14 @@ def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None
     """
 
     assert isinstance(func, FunctionDef)
-    assert isinstance(mod_name, str)
+    assert isinstance(mod, Module)
+    mod_name = mod.scope.get_python_name(mod.name)
 
     # from module import func
     if imports is None:
-        local_imports = [Import(target=AsName(func, func.name), source=mod_name)]
+        local_imports = [Import(target=AsName(func, func.name), source=mod_name, mod=mod)]
     else:
-        imports.append(Import(target=AsName(func, func.name), source=mod_name))
+        imports.append(Import(target=AsName(func, func.name), source=mod_name, mod=mod))
         local_imports = ()
 
     # function arguments
