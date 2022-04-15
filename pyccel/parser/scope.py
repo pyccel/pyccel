@@ -40,7 +40,7 @@ class Scope(object):
             'cls_constructs')
 
     def __init__(self, *, decorators=None, is_loop = False,
-                    parent_scope = None):
+                    parent_scope = None, used_symbols = None):
 
         self._imports = {k:{} for k in self.categories}
 
@@ -48,7 +48,7 @@ class Scope(object):
 
         self._temporary_variables = []
 
-        self._used_symbols = set()
+        self._used_symbols = used_symbols or set()
 
         self._dummy_counter = 0
 
@@ -469,7 +469,7 @@ class Scope(object):
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
-            return start_name
+            raise RuntimeError("{} does not exist in scope".format(start_name))
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop

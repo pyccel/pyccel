@@ -2922,7 +2922,8 @@ class SemanticParser(BasicParser):
 
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
-            scope = self.create_new_function_scope(name, decorators = decorators)
+            scope = self.create_new_function_scope(name, decorators = decorators,
+                    used_symbols = expr.scope.local_used_symbols.copy())
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
