@@ -929,7 +929,9 @@ class SyntaxParser(BasicParser):
 
         scope = self.create_new_loop_scope()
 
+        self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
+        self._in_lhs_assign = False
         iterable = self._visit(stmt.iter)
 
         self.exit_loop_scope()
