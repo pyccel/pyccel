@@ -825,13 +825,15 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        scope = self.create_new_class_scope(name)
         methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
         for i in methods:
             i.cls_name = name
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
+        self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclass=parent)
+                        methods=methods, superclass=parent, scope=scope)
 
         # we set the fst to keep track of needed information for errors
 

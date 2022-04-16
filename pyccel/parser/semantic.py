@@ -1055,7 +1055,7 @@ class SemanticParser(BasicParser):
         elif isinstance(lhs, DottedName):
 
             dtype = d_var.pop('datatype')
-            name = self.namespace.get_expected_name(lhs.name[:-1])
+            name = self.namespace.get_expected_name(lhs.name[-1])
             if self._current_function == '__init__':
 
                 cls      = self.get_variable('self')
@@ -1276,11 +1276,9 @@ class SemanticParser(BasicParser):
                 # it with it's lhs variable before continuing
                 gens = set(loop_elem.get_attribute_nodes(GeneratorComprehension))
                 if len(gens)==1:
-                    print("New name")
                     gen = gens.pop()
                     assert isinstance(gen.lhs, PyccelSymbol) and gen.lhs.is_temp
                     gen_lhs = self.namespace.get_new_name() if gen.lhs.is_temp else gen.lhs
-                    print("gen_lhs",gen_lhs)
                     assign = self._visit(Assign(gen_lhs, gen, fst=gen.fst))
                     new_expr.append(assign)
                     loop.substitute(gen, assign.lhs)
@@ -3219,7 +3217,7 @@ class SemanticParser(BasicParser):
 
         name = expr.name
         name = name.replace("'", '')
-        scope = self.create_new_class_scope(name)
+        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols)
         methods = list(expr.methods)
         parent = expr.superclass
         interfaces = []
