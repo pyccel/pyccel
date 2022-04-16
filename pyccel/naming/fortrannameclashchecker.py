@@ -1,10 +1,19 @@
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+Handles name clash problems in Fortran
+"""
 import warnings
 
 from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
-from .nameclashchecker import NameClashChecker
 
-class FortranNameClashChecker(NameClashChecker, metaclass = Singleton):
+class FortranNameClashChecker(metaclass = Singleton):
+    """ Class containing functions to help avoid problematic names in C
+    """
     # Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords
     keywords = set(['assign', 'backspace', 'block', 'blockdata',
             'call', 'close', 'common', 'continue', 'data',

@@ -1,8 +1,17 @@
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+Handles name clash problems in C
+"""
 from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
-from .nameclashchecker import NameClashChecker
 
-class CNameClashChecker(NameClashChecker,metaclass = Singleton):
+class CNameClashChecker(metaclass = Singleton):
+    """ Class containing functions to help avoid problematic names in C
+    """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
     keywords = set(['auto', 'break', 'case', 'char', 'const',
         'continue', 'default', 'do', 'double', 'else', 'enum',

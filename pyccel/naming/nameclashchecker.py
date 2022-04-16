@@ -1,3 +1,0 @@
-
-class NameClashChecker:
-    keywords = None
