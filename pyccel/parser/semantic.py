@@ -2092,7 +2092,7 @@ class SemanticParser(BasicParser):
                     if isinstance(master, FunctionDef) and master.results:
                         d_var = self._infere_type(master.results[0], **settings)
                         dtype = d_var.pop('datatype')
-                        lhs = Variable(dtype, lhs.name, **d_var)
+                        lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
                         var = self.check_for_variable(lhs.name)
                         if var is None:
                             self.namespace.insert_variable(lhs)
@@ -2146,7 +2146,7 @@ class SemanticParser(BasicParser):
                 if self.check_for_variable(name) is None:
                     d_var = self._infere_type(stmt, **settings)
                     dtype = d_var.pop('datatype')
-                    lhs = Variable(dtype, name , **d_var)
+                    lhs = Variable(dtype, name , **d_var, is_temp = lhs.is_temp)
                     self.namespace.insert_variable(lhs)
 
             if isinstance(expr, Assign):
@@ -2982,7 +2982,7 @@ class SemanticParser(BasicParser):
                 for a, ah in zip(results, header_results):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, a, **d_var)
+                    a_new = Variable(dtype, a, **d_var, is_temp = a.is_temp)
                     self.namespace.insert_variable(a_new)
                     new_results.append(a_new)
 
