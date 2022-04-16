@@ -231,7 +231,6 @@ def test_omp_get_set_schedule():
 
 def test_omp_get_max_task_priority():
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
-    func_result = 0
     max_task_priority_var = 0
     #$ omp parallel
     #$ omp single
