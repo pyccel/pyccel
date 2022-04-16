@@ -116,7 +116,7 @@ from pyccel.errors.errors import PyccelSemanticError
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
 
-from pyccel.parser.base      import BasicParser, Scope
+from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
 
 from pyccel.utilities.stage import PyccelStage
