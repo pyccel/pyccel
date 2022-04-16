@@ -1,6 +1,7 @@
+from pyccel.utilities.metaclasses import Singleton
 from .nameclashchecker import NameClashChecker
 
-class PythonNameClashChecker(NameClashChecker):
+class PythonNameClashChecker(NameClashChecker, metaclass = Singleton):
     keywords = set()
 
     def has_clash(self, name, symbols):

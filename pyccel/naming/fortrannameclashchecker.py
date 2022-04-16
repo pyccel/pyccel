@@ -1,9 +1,10 @@
 import warnings
 
+from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
 from .nameclashchecker import NameClashChecker
 
-class FortranNameClashChecker(NameClashChecker):
+class FortranNameClashChecker(NameClashChecker, metaclass = Singleton):
     # Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords
     keywords = set(['assign', 'backspace', 'block', 'blockdata',
             'call', 'close', 'common', 'continue', 'data',

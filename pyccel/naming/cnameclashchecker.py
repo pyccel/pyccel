@@ -1,6 +1,7 @@
+from pyccel.utilities.metaclasses import Singleton
 from .nameclashchecker import NameClashChecker
 
-class CNameClashChecker(NameClashChecker):
+class CNameClashChecker(NameClashChecker,metaclass = Singleton):
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
     keywords = set(['auto', 'break', 'case', 'char', 'const',
         'continue', 'default', 'do', 'double', 'else', 'enum',
