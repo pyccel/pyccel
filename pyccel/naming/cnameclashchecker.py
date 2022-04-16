@@ -1,4 +1,5 @@
 from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.strings import create_incremented_string
 from .nameclashchecker import NameClashChecker
 
 class CNameClashChecker(NameClashChecker,metaclass = Singleton):
