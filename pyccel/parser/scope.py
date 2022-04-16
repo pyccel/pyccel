@@ -557,6 +557,9 @@ class Scope(object):
         self._sons_scopes[name] = son
 
     def get_python_name(self, name):
+        """ Get the name used in the original python code from the
+        name used by the variable
+        """
         if name in self._original_symbol:
             return self._original_symbol[name]
         elif self.parent_scope:
