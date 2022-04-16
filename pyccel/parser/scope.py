@@ -15,6 +15,8 @@ from pyccel.ast.variable  import Variable, DottedName
 
 from pyccel.errors.errors import Errors
 
+from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
+
 from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
@@ -30,7 +32,7 @@ class Scope(object):
                  objects in this scope
     """
     allow_loop_scoping = False
-    name_clash_checker = None
+    name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
             '_dummy_counter','_original_symbol')
