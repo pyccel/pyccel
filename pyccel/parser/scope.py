@@ -358,7 +358,7 @@ class Scope(object):
         """
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbol(symbol)
-        else:
+        elif symbol not in self._used_symbols:
             collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
                     self._used_symbols.values())
             self._used_symbols[symbol] = collisionless_symbol
