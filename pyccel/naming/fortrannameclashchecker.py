@@ -39,6 +39,8 @@ class FortranNameClashChecker(metaclass = Singleton):
             'unlock', 'test'])
 
     def has_clash(self, name, symbols):
+        """ Indicate whether the proposed name causes any clashes
+        """
         name = name.lower()
         return any(name == k for k in self.keywords) or \
                any(name == s.lower() for s in symbols)

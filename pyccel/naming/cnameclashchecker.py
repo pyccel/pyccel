@@ -36,6 +36,8 @@ class CNameClashChecker(metaclass = Singleton):
         'numpy_to_ndarray_shape'])
 
     def has_clash(self, name, symbols):
+        """ Indicate whether the proposed name causes any clashes
+        """
         return any(name == k for k in self.keywords) or \
                any(name == s for s in symbols)
 
