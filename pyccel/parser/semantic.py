@@ -2842,7 +2842,7 @@ class SemanticParser(BasicParser):
             tmp_headers += self.get_headers(cls_name + '.' + name)
             args_number -= 1
         else:
-            tmp_headers += self.get_headers(name)
+            tmp_headers += self.get_headers(expr.scope.get_python_name(name))
         for header in tmp_headers:
             if all(header.dtypes != hd.dtypes for hd in headers):
                 headers.append(header)
