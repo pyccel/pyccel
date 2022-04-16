@@ -425,8 +425,7 @@ class Scope(object):
           -------
           new_name     : str
         """
-        if current_name is not None and current_name not in self.all_used_symbols \
-                and current_name not in self._original_symbol:
+        if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
             self.insert_symbol(current_name)
             return PyccelSymbol(current_name)
 
