@@ -180,8 +180,8 @@ class SemanticParser(BasicParser):
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = {}
-        self._program_namespace = Scope()
         self._module_namespace  = self._namespace
+        self._program_namespace = self._namespace.new_child_scope('__main__')
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
@@ -2691,16 +2691,6 @@ class SemanticParser(BasicParser):
         if prog_check:
             cond = InProgram()
             self.change_to_program_scope()
-
-            mod_container = self._module_namespace
-            prog_container = self._program_namespace
-            mod_imports = mod_container.imports
-            for k in mod_imports:
-                prog_container.imports[k].update(mod_container.imports[k])
-            prog_container.imports['variables'].update(mod_container.variables)
-            prog_container.imports['functions'].update(mod_container.functions)
-            prog_container.imports['classes'].update(mod_container.classes)
-            self._program_namespace.cls_constructs.update(self._module_namespace.cls_constructs)
         else:
             cond = self._visit(expr.condition)
         body = self._visit(expr.body)
