@@ -2838,11 +2838,12 @@ class SemanticParser(BasicParser):
             templates.update(decorators['template']['template_dict'])
 
         tmp_headers = expr.headers
+        python_name = expr.scope.get_python_name(name)
         if cls_name:
-            tmp_headers += self.get_headers(cls_name + '.' + name)
+            tmp_headers += self.get_headers(cls_name + '.' + python_name)
             args_number -= 1
         else:
-            tmp_headers += self.get_headers(expr.scope.get_python_name(name))
+            tmp_headers += self.get_headers(python_name)
         for header in tmp_headers:
             if all(header.dtypes != hd.dtypes for hd in headers):
                 headers.append(header)
