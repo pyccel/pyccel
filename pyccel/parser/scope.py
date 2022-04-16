@@ -51,6 +51,9 @@ class Scope(object):
 
         self._temporary_variables = []
 
+        if used_symbols and not isinstance(used_symbols, dict):
+            raise RuntimeError("Used symbols must be a dictionary")
+
         self._used_symbols = used_symbols or {}
         self._original_symbol = {}
 
@@ -361,7 +364,8 @@ class Scope(object):
         elif symbol not in self._used_symbols:
             collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
                     self._used_symbols.values())
-            collisionless_symbol = PyccelSymbol(collisionless_symbol, is_temp = True)
+            collisionless_symbol = PyccelSymbol(collisionless_symbol,
+                    is_temp = getattr(symbol, 'is_temp', False))
             self._used_symbols[symbol] = collisionless_symbol
             self._original_symbol[collisionless_symbol] = symbol
 
@@ -405,9 +409,11 @@ class Scope(object):
 
         new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
 
-        self.insert_symbol(new_name)
+        new_symbol = PyccelSymbol(new_name, is_temp=True)
 
-        return PyccelSymbol(new_name, is_temp=True), counter
+        self.insert_symbol(new_symbol)
+
+        return new_symbol, counter
 
     def get_new_name(self, current_name = None):
         """
@@ -427,8 +433,9 @@ class Scope(object):
           new_name     : str
         """
         if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
-            self.insert_symbol(current_name)
-            return PyccelSymbol(current_name)
+            new_name = PyccelSymbol(current_name)
+            self.insert_symbol(new_name)
+            return new_name
 
         if current_name is None:
             # Avoid confusing names by also searching in parent scopes
@@ -439,9 +446,11 @@ class Scope(object):
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
+        new_name = PyccelSymbol(new_name, is_temp = True)
+
         self.insert_symbol(new_name)
 
-        return PyccelSymbol(new_name, is_temp = True)
+        return new_name
 
     def get_temporary_variable(self, dtype_or_var, name = None, **kwargs):
         """

@@ -222,7 +222,7 @@ class SyntaxParser(BasicParser):
 
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
-        name = os.path.splitext(os.path.basename(self._filename))[0]
+        name = PyccelSymbol(os.path.splitext(os.path.basename(self._filename))[0])
         self.namespace.insert_symbol(name)
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
@@ -346,7 +346,7 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                                         for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
-            self.namespace.insert_symbols(a.arg for a in stmt.args)
+            self.namespace.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -402,15 +402,16 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
+        name = PyccelSymbol(stmt.id)
         if self._in_lhs_assign:
-            self.namespace.insert_symbol(stmt.id)
-        return PyccelSymbol(stmt.id)
+            self.namespace.insert_symbol(name)
+        return name
 
     def _treat_import_source(self, source, level):
         source = '.'*level + source
         if source.count('.') == 0:
-            self.namespace.insert_symbol(source)
             source = PyccelSymbol(source)
+            self.namespace.insert_symbol(source)
         else:
             source = DottedName(*source.split('.'))
 
@@ -588,7 +589,7 @@ class SyntaxParser(BasicParser):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
-        name = self._visit(stmt.name)
+        name = PyccelSymbol(self._visit(stmt.name))
         self.namespace.insert_symbol(name)
         name = name.replace("'", '')
 
