@@ -268,7 +268,8 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-            self.insert_symbol(name)
+            if name not in self.local_used_symbols.values():
+                self.insert_symbol(name)
 
     def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
@@ -424,7 +425,8 @@ class Scope(object):
           -------
           new_name     : str
         """
-        if current_name is not None and current_name not in self.all_used_symbols:
+        if current_name is not None and current_name not in self.all_used_symbols \
+                and current_name not in self._original_symbol:
             self.insert_symbol(current_name)
             return PyccelSymbol(current_name)
 
