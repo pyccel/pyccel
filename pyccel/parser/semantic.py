@@ -180,8 +180,8 @@ class SemanticParser(BasicParser):
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = {}
-        self._program_namespace = Scope()
         self._module_namespace  = self._namespace
+        self._program_namespace = self._namespace.new_child_scope('__main__')
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
@@ -569,7 +569,7 @@ class SemanticParser(BasicParser):
                 else:
                     return self._visit(var[indices[0]][indices[1:]])
             else:
-                tmp_var = PyccelSymbol(self.get_new_name())
+                tmp_var = PyccelSymbol(self.namespace.get_new_name())
                 assign = Assign(tmp_var, var)
                 assign.set_fst(expr.fst)
                 self._additional_exprs[-1].append(self._visit(assign))
@@ -849,7 +849,7 @@ class SemanticParser(BasicParser):
             is_homogeneous = True
             elem_d_lhs_ref = None
             for i,r in enumerate(iterable):
-                elem_name = self.get_new_name( name + '_' + str(i) )
+                elem_name = self.namespace.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
 
                 self._ensure_target( r, elem_d_lhs )
@@ -1055,7 +1055,7 @@ class SemanticParser(BasicParser):
         elif isinstance(lhs, DottedName):
 
             dtype = d_var.pop('datatype')
-            name = self.namespace.get_expected_name(lhs.name[:-1])
+            name = self.namespace.get_expected_name(lhs.name[-1])
             if self._current_function == '__init__':
 
                 cls      = self.get_variable('self')
@@ -1249,7 +1249,7 @@ class SemanticParser(BasicParser):
         loop = expr.loops
         nlevels = 0
         # Create throw-away variable to help obtain result type
-        index   = Variable('int',self.get_new_name('to_delete'), is_temp=True)
+        index   = Variable('int',self.namespace.get_new_name('to_delete'), is_temp=True)
         self.namespace.insert_variable(index)
         new_expr = []
         while isinstance(loop, For):
@@ -1390,7 +1390,7 @@ class SemanticParser(BasicParser):
         init_func_body    = []
         mod_name = self.namespace.get_expected_name(expr.name)
         self._mod_name = mod_name
-        prog_name = self.get_new_name('prog_'+expr.name)
+        prog_name = self.namespace.get_new_name('prog_'+expr.name)
 
         for b in body:
             if isinstance(b, If):
@@ -1416,9 +1416,9 @@ class SemanticParser(BasicParser):
 
         if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
-            init_var = Variable(NativeBool(), self.get_new_name('initialised'),
+            init_var = Variable(NativeBool(), self.namespace.get_new_name('initialised'),
                                 is_private=True)
-            init_func_name = self.get_new_name(expr.name+'__init')
+            init_func_name = self.namespace.get_new_name(expr.name+'__init')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
             for b in init_func_body:
@@ -1432,7 +1432,7 @@ class SemanticParser(BasicParser):
             self.insert_function(init_func)
 
         if init_func:
-            free_func_name = self.get_new_name(expr.name+'__free')
+            free_func_name = self.namespace.get_new_name(expr.name+'__free')
             deallocs = self._garbage_collector(init_func.body)
             pyccelised_imports = [imp for imp_name, imp in self._namespace.imports['imports'].items() \
                              if imp_name in self.d_parsers]
@@ -1735,7 +1735,7 @@ class SemanticParser(BasicParser):
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
                     if new_name is None:
-                        new_name = self.get_new_name(rhs_name)
+                        new_name = self.namespace.get_new_name(rhs_name)
 
                         # Save the import target that has been used
                         imp.define_target(AsName(first[rhs_name], PyccelSymbol(new_name)))
@@ -2312,7 +2312,7 @@ class SemanticParser(BasicParser):
             func  = _get_name(rhs.args[0])
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
-            index_name = self.get_new_name(expr)
+            index_name = self.namespace.get_new_name(expr)
             index = Variable('int',index_name, is_temp=True)
             range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
@@ -2418,7 +2418,8 @@ class SemanticParser(BasicParser):
         iterator_d_var = self._infere_type(start)
 
         if iterable.num_loop_counters_required:
-            indices = [Variable('int', self.namespace.get_new_name(), is_temp=True) for i in range(iterable.num_loop_counters_required)]
+            indices = [Variable('int', self.namespace.get_new_name(), is_temp=True)
+                        for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
@@ -2688,16 +2689,6 @@ class SemanticParser(BasicParser):
         if prog_check:
             cond = InProgram()
             self.change_to_program_scope()
-
-            mod_container = self._module_namespace
-            prog_container = self._program_namespace
-            mod_imports = mod_container.imports
-            for k in mod_imports:
-                prog_container.imports[k].update(mod_container.imports[k])
-            prog_container.imports['variables'].update(mod_container.variables)
-            prog_container.imports['functions'].update(mod_container.functions)
-            prog_container.imports['classes'].update(mod_container.classes)
-            self._program_namespace.cls_constructs.update(self._module_namespace.cls_constructs)
         else:
             cond = self._visit(expr.condition)
         body = self._visit(expr.body)
@@ -2741,7 +2732,7 @@ class SemanticParser(BasicParser):
     def _visit_IfTernaryOperator(self, expr, **settings):
         value_true  = self._visit(expr.value_true, **settings)
         if value_true.rank > 0 or value_true.dtype is NativeString():
-            lhs = PyccelSymbol(self.get_new_name(), is_temp=True)
+            lhs = PyccelSymbol(self.namespace.get_new_name(), is_temp=True)
             # Temporarily deactivate type checks to construct syntactic assigns
             pyccel_stage.set_stage('syntactic')
             assign_true  = Assign(lhs, expr.value_true, fst = expr.fst)
@@ -2923,7 +2914,7 @@ class SemanticParser(BasicParser):
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
             scope = self.create_new_function_scope(name, decorators = decorators,
-                    used_symbols = expr.scope.local_used_symbols)
+                    used_symbols = expr.scope.local_used_symbols.copy())
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
@@ -3226,7 +3217,7 @@ class SemanticParser(BasicParser):
 
         name = expr.name
         name = name.replace("'", '')
-        scope = self.create_new_class_scope(name)
+        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols)
         methods = list(expr.methods)
         parent = expr.superclass
         interfaces = []
@@ -3446,7 +3437,7 @@ class SemanticParser(BasicParser):
 
             if import_init:
                 old_name = import_init.name
-                new_name = self.get_new_name(old_name)
+                new_name = self.namespace.get_new_name(old_name)
                 targets.append(AsName(import_init, new_name))
 
                 if new_name != old_name:
@@ -3456,7 +3447,7 @@ class SemanticParser(BasicParser):
 
             if import_free:
                 old_name = import_free.name
-                new_name = self.get_new_name(old_name)
+                new_name = self.namespace.get_new_name(old_name)
                 targets.append(AsName(import_free, new_name))
 
                 if new_name != old_name:

@@ -472,7 +472,7 @@ class Scope(object):
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
-            raise ValueError("{} does not exist in scope".format(start_name))
+            raise RuntimeError("{} does not exist in scope".format(start_name))
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop
