@@ -557,4 +557,9 @@ class Scope(object):
         self._sons_scopes[name] = son
 
     def get_python_name(self, name):
-        return self._original_symbol[name]
+        if name in self._original_symbol:
+            return self._original_symbol[name]
+        elif self.parent_scope:
+            return self.parent_scope.get_python_name(name)
+        else:
+            raise RuntimeError("Can't find {} in scope".format(name))
