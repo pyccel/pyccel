@@ -133,7 +133,7 @@ def as_static_function(func, *, mod_scope, name=None):
                         )
 
 #=======================================================================================
-def as_static_module(funcs, original_module, name = None):
+def as_static_module(funcs, original_module):
     """ Create the module contained in the bind_c_mod.f90 file
     This is the interface between the c code and the fortran code thanks
     to iso_c_bindings
@@ -144,15 +144,12 @@ def as_static_module(funcs, original_module, name = None):
             All the functions which may be exposed to c
     original_module : str
             The name of the module being wrapped
-    name  : str
-            The name of the new module
     """
     funcs = [f for f in funcs if not f.is_private]
     imports = []
-    scope = Scope()
+    scope = Scope(used_symbols = original_module.scope.local_used_symbols.copy())
     bind_c_funcs = [as_static_function_call(f, original_module, scope, imports = imports) for f in funcs]
-    if name is None:
-        name = 'bind_c_{}'.format(original_module)
+    name = scope.get_new_name('bind_c_{}'.format(original_module.name))
     return Module(name, (), bind_c_funcs, imports = imports, scope=scope)
 
 #=======================================================================================
