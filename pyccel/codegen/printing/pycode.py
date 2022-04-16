@@ -430,7 +430,7 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        if expr.funcdef.name in self._ignore_funcs:
+        if expr.funcdef in self._ignore_funcs:
             return ''
         if expr.interface:
             func_name = expr.interface_name
@@ -481,10 +481,11 @@ class PythonCodePrinter(CodePrinter):
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
 
             target_names = {t.name:t.target for t in target}
-            if init_func_name in target_names:
-                self._ignore_funcs.append(target_names[init_func_name])
-            if free_func_name in target_names:
-                self._ignore_funcs.append(target_names[free_func_name])
+            if expr.source_module:
+                if expr.source_module.init_func:
+                    self._ignore_funcs.append(expr.source_module.init_func)
+                if expr.source_module.free_func:
+                    self._ignore_funcs.append(expr.source_module.free_func)
             target = [self._print(t) for t in target if t.name not in (init_func_name, free_func_name)]
             target = ', '.join(target)
             return 'from {source} import {target}\n'.format(source=source, target=target)
@@ -809,7 +810,7 @@ class PythonCodePrinter(CodePrinter):
 
         init_func = expr.init_func
         if init_func:
-            self._ignore_funcs.append(init_func.name)
+            self._ignore_funcs.append(init_func)
             # Collect initialisation body
             init_if = init_func.get_attribute_nodes(IfSection)[0]
             # Remove boolean from init_body
@@ -820,7 +821,7 @@ class PythonCodePrinter(CodePrinter):
 
         free_func = expr.free_func
         if free_func:
-            self._ignore_funcs.append(free_func.name)
+            self._ignore_funcs.append(free_func)
 
         imports += ''.join(self._print(i) for i in self.get_additional_imports())
 
