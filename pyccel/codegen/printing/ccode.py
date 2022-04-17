@@ -589,6 +589,8 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.module.scope)
         self._in_header = True
         name = expr.module.name
+        if isinstance(name, AsName):
+            name = name.name
         # TODO: Add classes and interfaces
         funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
 
@@ -754,10 +756,14 @@ class CCodePrinter(CodePrinter):
     def _print_Import(self, expr):
         if expr.ignore:
             return ''
-        if isinstance(expr.source, DottedName):
-            source = expr.source.name[-1]
+        if isinstance(expr.source, AsName):
+            source = expr.source.name
         else:
-            source = self._print(expr.source)
+            source = expr.source
+        if isinstance(source, DottedName):
+            source = source.name[-1]
+        else:
+            source = self._print(source)
 
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the

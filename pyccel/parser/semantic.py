@@ -1389,11 +1389,15 @@ class SemanticParser(BasicParser):
         init_func_body    = []
         mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
-            mod_name = self.namespace.get_expected_name(expr.name)
+            mod_name = expr.name
         else:
             self.namespace.insert_symbol(mod_name)
         self._mod_name = mod_name
-        prog_name = self.namespace.get_new_name('prog_'+expr.name)
+        if isinstance(expr.name, AsName):
+            prog_name = 'prog_'+expr.name.name
+        else:
+            prog_name = 'prog_'+expr.name
+        prog_name = self.namespace.get_new_name(prog_name)
 
         for b in body:
             if isinstance(b, If):

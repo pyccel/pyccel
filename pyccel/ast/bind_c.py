@@ -149,7 +149,10 @@ def as_static_module(funcs, original_module):
     imports = []
     scope = Scope(used_symbols = original_module.scope.local_used_symbols.copy())
     bind_c_funcs = [as_static_function_call(f, original_module, scope, imports = imports) for f in funcs]
-    name = scope.get_new_name('bind_c_{}'.format(original_module.name))
+    if isinstance(original_module.name, AsName):
+        name = scope.get_new_name('bind_c_{}'.format(original_module.name.target))
+    else:
+        name = scope.get_new_name('bind_c_{}'.format(original_module.name))
     return Module(name, (), bind_c_funcs, imports = imports, scope=scope)
 
 #=======================================================================================
