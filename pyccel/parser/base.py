@@ -256,13 +256,6 @@ class BasicParser(object):
     def show_traceback(self):
         return self._show_traceback
 
-    @property
-    def used_names(self):
-        """Returns a set of all names used in the current file.
-        The set is used to prevent name collisions when creating new variables
-        """
-        return self._used_names
-
     def get_new_variable(self, prefix = None):
         """
         Creates a new PyccelSymbol using the prefix provided. If this prefix is None,
@@ -539,8 +532,6 @@ class BasicParser(object):
 
         self._metavars  = parser.metavars
         self._namespace = parser.namespace
-
-        self._used_names = parser.used_names
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = parser.syntax_done
