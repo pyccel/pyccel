@@ -182,7 +182,6 @@ class SemanticParser(BasicParser):
         self._namespace.imports['imports'] = {}
         self._module_namespace  = self._namespace
         self._program_namespace = self._namespace.new_child_scope('__main__')
-        self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
         # used to store the local variables of a code block needed for garbage collecting
@@ -2491,7 +2490,7 @@ class SemanticParser(BasicParser):
         #scope = self.create_new_loop_scope()
 
         # The symbols created to represent unknown valued objects are temporary
-        tmp_used_names = self.used_names.copy()
+        tmp_used_names = self.namespace.all_used_symbols.copy()
         while isinstance(body, For):
 
             stop  = None
