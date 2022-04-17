@@ -832,7 +832,7 @@ class SyntaxParser(BasicParser):
         methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
         for i in methods:
             i.cls_name = name
-        attributes = methods[0].arguments
+        attributes = [a.var for a in methods[0].arguments]
         parent = [self._visit(i) for i in stmt.bases]
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
