@@ -1394,9 +1394,10 @@ class SemanticParser(BasicParser):
             self.namespace.insert_symbol(mod_name)
         self._mod_name = mod_name
         if isinstance(expr.name, AsName):
-            prog_name = 'prog_'+expr.name.name
+            name_suffix = expr.name.name
         else:
-            prog_name = 'prog_'+expr.name
+            name_suffix = expr.name
+        prog_name = 'prog_'+name_suffix
         prog_name = self.namespace.get_new_name(prog_name)
 
         for b in body:
@@ -1425,7 +1426,7 @@ class SemanticParser(BasicParser):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(NativeBool(), self.namespace.get_new_name('initialised'),
                                 is_private=True)
-            init_func_name = self.namespace.get_new_name(expr.name+'__init')
+            init_func_name = self.namespace.get_new_name(name_suffix+'__init')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
             for b in init_func_body:
@@ -1439,7 +1440,7 @@ class SemanticParser(BasicParser):
             self.insert_function(init_func)
 
         if init_func:
-            free_func_name = self.namespace.get_new_name(expr.name+'__free')
+            free_func_name = self.namespace.get_new_name(name_suffix+'__free')
             deallocs = self._garbage_collector(init_func.body)
             pyccelised_imports = [imp for imp_name, imp in self._namespace.imports['imports'].items() \
                              if imp_name in self.d_parsers]
