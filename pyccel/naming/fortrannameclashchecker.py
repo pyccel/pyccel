@@ -48,6 +48,9 @@ class FortranNameClashChecker(metaclass = Singleton):
     def get_collisionless_name(self, name, symbols):
         """ Get the name that will be used in the fortran code
         """
+        if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
+            # Ignore magic methods
+            return name
         if name[0] == '_':
             name = 'private'+name
         prefix = name.lower()
