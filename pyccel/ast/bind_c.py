@@ -292,7 +292,7 @@ def wrap_array(var, scope):
 #=======================================================================================
 
 def wrap_module_array_var(var, scope, mod):
-    func_name = scope.get_new_name('bind_c_'+var.name)
+    func_name = 'bind_c_'+var.name
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope)
     local_vars = [necessary_vars[0]]

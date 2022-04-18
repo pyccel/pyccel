@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.bind_c   import as_static_function
+from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
 
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
@@ -111,6 +111,8 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         type_declaration : String
         """
+        if expr.dtype is BindCPointer():
+            return 'void *'
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if dtype != "pyarrayobject":
@@ -670,16 +672,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 pymodule initialisation function
         """
         if var.rank != 0:
-            if self._target_language == "fortran":
-                if var.fst:
-                    symbol = var
-                else:
-                    symbol = var.get_user_nodes(Assign)[0]
-                errors.report("Global arrays (defined at the module level) cannot currently be exposed to Python",
-                        severity='warning', symbol=symbol)
-                return []
-            else:
-                self.add_import(cwrapper_ndarray_import)
+            #if self._target_language == "fortran":
+            self.add_import(cwrapper_ndarray_import)
 
         collect_value = Assign(VariableAddress(collect_var),
                                 FunctionCall(C_to_Python(var), [VariableAddress(var)]))
@@ -1163,6 +1157,10 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             static_funcs = expr.funcs
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
+        if self._target_language == 'fortran':
+            var_wrappers = [wrap_module_array_var(v, self.namespace, expr) \
+                    for v in expr.variables if not v.is_private and v.rank > 0]
+            function_signatures += ''.join('{};\n'.format(self.function_signature(v)) for v in var_wrappers)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
