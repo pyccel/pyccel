@@ -411,7 +411,7 @@ class CCodePrinter(CodePrinter):
         index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
 
         self._additional_declare += [index, target]
-        self._additional_code += self._print(Assign(index, LiteralInteger(0))) + '\n'
+        self._additional_code += self._print(Assign(index, LiteralInteger(0)))
 
         code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
         code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
@@ -1034,7 +1034,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
         base_name = self._print(base)
-        if base.is_ndarray or isinstance(base, HomogeneousTupleVariable):
+        if getattr(base, 'is_ndarray', False) or isinstance(base, HomogeneousTupleVariable):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):
@@ -1421,7 +1421,7 @@ class CCodePrinter(CodePrinter):
                 elif not self.stored_in_c_pointer(a):
                     tmp_var = self.create_tmp_var(f)
                     assign = Assign(tmp_var, a)
-                    self._additional_code += self._print(assign) + '\n'
+                    self._additional_code += self._print(assign)
                     args.append(VariableAddress(tmp_var))
                 else:
                     args.append(a)

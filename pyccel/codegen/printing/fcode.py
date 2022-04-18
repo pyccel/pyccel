@@ -2543,8 +2543,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
         arg = self._print(var)
-        assign = expr.get_user_nodes(Assign)[0]
-        if assign.lhs.order != var.order:
+        assigns = expr.get_user_nodes(Assign)
+        if assigns and assigns[0].lhs.order != var.order:
             return arg
         elif var.rank == 2:
             return 'transpose({0})'.format(arg)
@@ -2664,9 +2664,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        if isinstance(base, PyccelInternalFunction) and not isinstance(base, PythonTuple):
+        if isinstance(base, (PyccelInternalFunction, PythonTuple)):
             indexed_type = base.dtype
-            if isinstance(indexed_type, PythonTuple):
+            if isinstance(base, PyccelInternalFunction) and isinstance(indexed_type, PythonTuple):
                 base = self._print_PyccelInternalFunction(expr.base.base)
             else:
                 if (not self._additional_code):
@@ -2696,7 +2696,7 @@ class FCodePrinter(CodePrinter):
         allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
-            _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)
+            _shape = PyccelArraySize(base, i if expr.base.order != 'C' else len(inds) - i - 1)
             if isinstance(ind, Slice):
                 inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):

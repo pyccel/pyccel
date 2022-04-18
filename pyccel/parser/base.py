@@ -11,7 +11,7 @@ Module containing aspects of a parser which are in common over all stages.
 import importlib
 import os
 import re
-from collections import OrderedDict
+import warnings
 from filelock import FileLock
 
 #==============================================================================
@@ -21,20 +21,18 @@ from pyccel.ast.builtins import Lambda
 
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
-from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
 from pyccel.ast.core import create_incremented_string, create_variable
 
 from pyccel.ast.utilities import recognised_source
 
+from pyccel.parser.scope     import Scope
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
+from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
-# TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
-
-from pyccel.errors.messages import *
 
 #==============================================================================
 
@@ -112,138 +110,6 @@ def get_filename_from_import(module,input_folder=''):
                   severity='fatal')
 
 
-#==============================================================================
-
-class Scope(object):
-    """."""
-
-    def __init__(self, *, headers=None, decorators=None, templates=None):
-
-        self._imports = OrderedDict()
-
-        self._imports['functions'] = OrderedDict()
-        self._imports['variables'] = OrderedDict()
-        self._imports['classes'  ] = OrderedDict()
-        self._imports['imports'  ] = OrderedDict()
-
-        self._imports['python_functions'  ] = OrderedDict()
-        self._imports['symbolic_functions'] = OrderedDict()
-
-        self._variables = OrderedDict()
-        self._classes   = OrderedDict()
-        self._functions = OrderedDict()
-        self._macros    = OrderedDict()
-        self._templates = templates or OrderedDict()
-        self._headers   = headers    or OrderedDict()
-        self._decorators= decorators or OrderedDict()
-
-        # TODO use another name for headers
-        #      => reserved keyword, or use __
-        self.parent_scope        = None
-        self._sons_scopes        = OrderedDict()
-        self._static_functions   = []
-        self._cls_constructs     = OrderedDict()
-        self._symbolic_functions = OrderedDict()
-        self._python_functions   = OrderedDict()
-
-        self._is_loop = False
-        # scoping for loops
-        self._loops = []
-
-    def new_child_scope(self, name, **kwargs):
-        """
-        Create a new child Scope object which has the current object as parent.
-
-        The parent scope can access the child scope through the '_sons_scopes'
-        dictionary, using the provided name as key. Conversely, the child scope
-        can access the parent scope through the 'parent_scope' attribute.
-
-        Parameters
-        ----------
-        name : str
-            Name of the new scope, used as a key to retrieve the new scope.
-
-        kwargs : dict
-            Keyword arguments passed to __init__() for object initialization.
-
-        Returns
-        -------
-        child : Scope
-            New child scope, which has the current object as parent.
-
-        """
-
-        child = Scope(**kwargs)
-
-        self._sons_scopes[name] = child
-        child.parent_scope = self
-
-        return child
-
-    @property
-    def imports(self):
-        return self._imports
-
-    @property
-    def variables(self):
-        return self._variables
-
-    @property
-    def classes(self):
-        return self._classes
-
-    @property
-    def functions(self):
-        return self._functions
-
-    @property
-    def macros(self):
-        return self._macros
-
-    @property
-    def headers(self):
-        return self._headers
-
-    @property
-    def templates(self):
-        """A dictionary of user defined templates applied to all the functions in this scope"""
-        return self._templates
-
-    @property
-    def decorators(self):
-        """Dictionary of Pyccel decorators applied to a function definition."""
-        return self._decorators
-
-    @property
-    def static_functions(self):
-        return self._static_functions
-
-    @property
-    def cls_constructs(self):
-        return self._cls_constructs
-
-    @property
-    def sons_scopes(self):
-        return self._sons_scopes
-
-    @property
-    def symbolic_functions(self):
-        return self._symbolic_functions
-
-    @property
-    def python_functions(self):
-        return self._python_functions
-
-    @property
-    def is_loop(self):
-        return self._is_loop
-
-    @property
-    def loops(self):
-        return self._loops
-
-
-
 
 #==============================================================================
 
@@ -261,9 +127,6 @@ class BasicParser(object):
         headers: list, tuple
             list of headers to append to the namespace
 
-        static: list/tuple
-            a list of 'static' functions as strings
-
         show_traceback: bool
             prints Traceback exception if True
 
@@ -272,7 +135,6 @@ class BasicParser(object):
     def __init__(self,
                  debug=False,
                  headers=None,
-                 static=None,
                  show_traceback=False):
 
         self._code = None
@@ -280,7 +142,7 @@ class BasicParser(object):
         self._ast  = None
 
         self._filename  = None
-        self._metavars  = OrderedDict()
+        self._metavars  = {}
         self._namespace = Scope()
 
         self._used_names = None
@@ -318,16 +180,7 @@ class BasicParser(object):
 
             self.namespace.headers.update(headers)
 
-
-        if static:
-            if not isinstance(static, (list, tuple)):
-                raise TypeError('Expecting a list/tuple of static')
-
-            for i in static:
-                if not isinstance(i, str):
-                    raise TypeError('Expecting str. given {}'.format(type(i)))
-
-            self._namespace.static_functions.extend(static)
+        self._created_from_pickle = False
 
     @property
     def namespace(self):
@@ -464,8 +317,6 @@ class BasicParser(object):
 
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
-        elif isinstance(func, PythonFunction):
-            self.insert_python_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
             container = self.namespace.functions
             container[func.name] = func
@@ -483,16 +334,6 @@ class BasicParser(object):
             container[func.lhs] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
-
-    def insert_python_function(self, func):
-        """."""
-
-        container = self.namespace.python_functions
-
-        if isinstance(func, PythonFunction):
-            container[func.name] = func
-        else:
-            raise TypeError('Expected a python_function')
 
     def insert_import(self, expr):
         """."""
@@ -531,8 +372,8 @@ class BasicParser(object):
             output file name. if not given `name.pyccel` will be used and placed
             in the Pyccel directory ($HOME/.pyccel)
         """
-        import pickle
-        import hashlib
+        if self._created_from_pickle:
+            return
 
         if not filename:
             if not self.filename:
@@ -540,30 +381,36 @@ class BasicParser(object):
 
             path , name  = os.path.split(self.filename)
 
-            if not name.split('.')[-1] == 'pyh':
+            name, ext = os.path.splitext(name)
+            if ext != '.pyh':
                 return
-            else:
-                name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
             filename = os.path.join(path, name)
         # check extension
 
-        if not filename.split(""".""")[-1] == 'pyccel':
+        if os.path.splitext(filename)[1] != '.pyccel':
             raise ValueError('Expecting a .pyccel extension')
+
+        import pickle
+        import hashlib
 
 #        print('>>> home = ', os.environ['HOME'])
         # ...
 
         # we are only exporting the AST.
-        with FileLock(filename+'.lock'):
-            try:
-                code = self.code.encode('utf-8')
-                hs   = hashlib.md5(code)
-                with open(filename, 'wb') as f:
-                    pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-            except (FileNotFoundError, PermissionError, pickle.PickleError):
-                pass
+        try:
+            with FileLock(filename+'.lock'):
+                try:
+                    code = self.code.encode('utf-8')
+                    hs   = hashlib.md5(code)
+                    with open(filename, 'wb') as f:
+                        pickle.dump((hs.hexdigest(), __version__, self), f)
+                    print("Created pickle file : ", filename)
+                except (FileNotFoundError, pickle.PickleError):
+                    pass
+        except PermissionError:
+            warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
 
     def load(self, filename=None):
         """ Load the current ast using Pickle.
@@ -576,7 +423,6 @@ class BasicParser(object):
         """
 
         # ...
-        import pickle
 
         if not filename:
             if not self.filename:
@@ -584,10 +430,10 @@ class BasicParser(object):
 
             path , name = os.path.split(self.filename)
 
-            if not name.split('.')[-1] == 'pyh':
+            name, ext = os.path.splitext(name)
+
+            if ext != '.pyh':
                 return
-            else:
-                name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
             filename = os.path.join(path, name)
@@ -595,11 +441,26 @@ class BasicParser(object):
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
-        with FileLock(filename+'.lock'):
+        import pickle
+
+        possible_pickle_errors = (FileNotFoundError, PermissionError,
+                pickle.PickleError, AttributeError)
+
+        try:
+            with FileLock(filename+'.lock'):
+                try:
+                    with open(filename, 'rb') as f:
+                        hs, version, parser = pickle.load(f)
+                    self._created_from_pickle = True
+                except possible_pickle_errors:
+                    return
+        except PermissionError:
+            # read/write problems don't need to be avoided on a read-only system
             try:
                 with open(filename, 'rb') as f:
                     hs, version, parser = pickle.load(f)
-            except (FileNotFoundError, PermissionError, pickle.PickleError):
+                self._created_from_pickle = True
+            except possible_pickle_errors:
                 return
 
         import hashlib
