@@ -639,9 +639,6 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
-            elif f.dtype is NativeString() and i != last_index:
-                args_format.append('A')
-                args.append(self._print(f))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
                     code += formatted_args_to_print(args_format, args, self._print_LiteralString(LiteralString(sep)))
