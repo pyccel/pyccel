@@ -4,12 +4,17 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from pyccel.ast.basic import Basic
 from pyccel.ast.core import FunctionCall, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
+from pyccel.ast.core import Allocate
+from pyccel.ast.datatypes import DataType, NativeInteger
+from pyccel.ast.internals import PyccelArraySize
+from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import Variable
 from pyccel.parser.scope import Scope
 
@@ -177,14 +182,16 @@ def as_static_module(funcs, original_module):
             The name of the module being wrapped
     """
     funcs = [f for f in funcs if not f.is_private]
+    variables = [f for f in original_module.variables if not f.is_private]
     imports = []
     scope = Scope(used_symbols = original_module.scope.local_used_symbols.copy())
     bind_c_funcs = [as_static_function_call(f, original_module, scope, imports = imports) for f in funcs]
+    bind_c_arrays = [wrap_module_array_var(v, scope, original_module) for v in variables if v.rank > 0]
     if isinstance(original_module.name, AsName):
         name = scope.get_new_name('bind_c_{}'.format(original_module.name.target))
     else:
         name = scope.get_new_name('bind_c_{}'.format(original_module.name))
-    return Module(name, (), bind_c_funcs, imports = imports, scope=scope)
+    return Module(name, (), bind_c_funcs+bind_c_arrays, imports = imports, scope=scope)
 
 #=======================================================================================
 def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
@@ -242,3 +249,60 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
 
 #=======================================================================================
 
+class BindCPointer(DataType):
+    """ Datatype representing a c pointer in fortran
+    """
+    __slots__ = ()
+    _name = 'bindcpointer'
+
+#=======================================================================================
+
+class CLocFunc(Basic):
+    __slots__ = ('_arg', '_result')
+    _attribute_nodes = ()
+    def __init__(self, argument, result):
+        self._arg = argument
+        self._result = result
+        super().__init__()
+
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def result(self):
+        return self._result
+
+#=======================================================================================
+
+def wrap_array(var, scope):
+    ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
+            allocatable=True, rank = var.rank,
+            order = var.order, shape = var.shape)
+    bind_var = Variable(dtype=BindCPointer(), name = scope.get_new_name('bound_'+var.name))
+    sizes = [Variable(dtype=NativeInteger(), name = scope.get_new_name()) for _ in range(var.rank)]
+    assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
+    alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
+    ptr_var.is_pointer = True
+    copy  = Assign(ptr_var, var)
+    c_loc = CLocFunc(ptr_var, bind_var)
+    body = [*assigns, alloc, copy, c_loc]
+    return body, [ptr_var, bind_var, *sizes]
+
+#=======================================================================================
+
+def wrap_module_array_var(var, scope, mod):
+    func_name = scope.get_new_name('bind_c_'+var.name)
+    func_scope = scope.new_child_scope(func_name)
+    body, necessary_vars = wrap_array(var, func_scope)
+    local_vars = [necessary_vars[0]]
+    arg_vars = necessary_vars[1:]
+    import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
+    func = FunctionDef(name = func_name,
+                  body      = body,
+                  arguments = [],
+                  results   = arg_vars,
+                  local_vars = local_vars,
+                  imports   = [import_mod],
+                  scope = func_scope)
+    return func
