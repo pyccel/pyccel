@@ -625,32 +625,36 @@ class FCodePrinter(CodePrinter):
             for a_f, a_c in zip(fargs_format, fargs):
                 args_code.append(a_c if a_c != '' else "''")
                 args_formatting.append(a_f)
-            args_code = (' , ' + separator + ' , ' if separator != '' else ' , ').join(args_code)
-            args_formatting = (' A ' if separator != '' else ' ').join(args_formatting)
+
             fend_code = self._print(fend)
-            if args_formatting == '':
-                return "write(*, '(A)', advance=\"no\") {}\n".format(fend_code)
-            if fend != '':
-                return "write(*, '({} A)', advance=\"no\") {} , {}\n"\
-                    .format(args_formatting, args_code, fend_code)
-            return "write(*, '({})', advance=\"no\") {}\n".format(args_formatting, args_code)
+            advance = "yes" if fend_code == 'ACHAR(10)' else "no"
+            if separator != '':
+                args_formatting = [af for a in args_formatting for af in (a, 'A')][:-1]
+                args_code       = [af for a in args_code for af in (a, separator)][:-1]
+            if fend_code not in ('ACHAR(10)', ''):
+                args_formatting.append('A')
+                args_code.append(fend_code)
+            args_code = ' , '.join(args_code)
+            args_formatting = ' '.join(args_formatting)
+            return "write(*, '({})', advance=\"{}\") {}\n"\
+                .format(args_formatting, advance, args_code)
 
 
-        for i, f in enumerate(orig_args):
+        sep_kwarg = FunctionCallArgument(sep, 'sep')
+
+        for f in orig_args:
             if f.keyword:
                 continue
             else:
                 f = f.value
             if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
-                arg_format, arg = self.get_print_format_and_arg(f)
-                args_format.append(arg_format)
-                args.append(arg)
+                code += self._print(PythonPrint([*(FunctionCallArgument(fi) for fi in f), sep_kwarg, empty_end]))
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += formatted_args_to_print(args_format, args, self._print_LiteralString(LiteralString(sep)))
+                    code += formatted_args_to_print(args_format, args, self._print(sep))
                     args_format = []
                     args = []
                 for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
