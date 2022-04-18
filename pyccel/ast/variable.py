@@ -9,7 +9,8 @@ variables
 """
 import inspect
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
+from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
@@ -21,6 +22,7 @@ from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'DottedName',
@@ -362,8 +364,8 @@ class Variable(PyccelAstNode):
 
     @property
     def allows_negative_indexes(self):
-        """ Indicates whether negative values can be
-        used to index this Variable
+        """ Indicates whether variables used to
+        index this Variable can be negative
         """
         return self._allows_negative_indexes
 
@@ -797,13 +799,12 @@ class IndexedElement(PyccelAstNode):
 
         self._label = base
 
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             self._indices = args
             super().__init__()
             return
 
         self._dtype = base.dtype
-        self._order = base.order
         self._precision = base.precision
 
         shape = base.shape
@@ -853,6 +854,8 @@ class IndexedElement(PyccelAstNode):
                     new_rank -= 1
             self._rank = new_rank
 
+        self._order = None if self.rank < 2 else base.order
+
     @property
     def base(self):
         """ The object which is indexed
@@ -881,17 +884,19 @@ class IndexedElement(PyccelAstNode):
 
         new_indexes = []
         j = 0
+        base = self.base
         for i in self.indices:
             if isinstance(i, Slice) and j<len(args):
-                if j == 0:
-                    i = args[j]
-                elif i.step == 1:
-                    i = PyccelAdd(i.start, args[j], simplify = True)
+                if i.step == 1 or i.step is None:
+                    incr = args[j]
                 else:
-                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j], simplify=True), simplify = True)
+                    incr = PyccelMul(i.step, args[j], simplify = True)
+                if i.start != 0 and i.start is not None:
+                    incr = PyccelAdd(i.start, incr, simplify = True)
+                i = incr
                 j += 1
             new_indexes.append(i)
-        return IndexedElement(self.base, *new_indexes)
+        return IndexedElement(base, *new_indexes)
 
 class VariableAddress(PyccelAstNode):
 
