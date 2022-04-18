@@ -663,7 +663,8 @@ class FCodePrinter(CodePrinter):
 
                 for_body = [PythonPrint(print_body)]
                 for_loop = For(for_index, for_range, for_body)
-                for_end = FunctionCallArgument(LiteralString(']' + end if i == len(orig_args) - 1 else ']'),
+                for_end_char = LiteralString(']')
+                for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
                 body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end]),
@@ -697,12 +698,12 @@ class FCodePrinter(CodePrinter):
         arg        : str
                      The fortran code which represents var
         """
-        type_to_format = {('real'): 'F0.12',
+        type_to_format = {('float'): 'F0.12',
                           ('complex'): '"(",F0.12," + ",F0.12,")"',
-                          ('integer'): 'I0',
-                          ('logical'): 'A',
+                          ('int'): 'I0',
+                          ('bool'): 'A',
                           ('string'): 'A',
-                          ('Tuple'):  '*'
+                          ('tuple'):  '*'
                           }
         var_type = str(var.dtype)
         try:
