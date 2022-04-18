@@ -29,6 +29,17 @@ static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, 
     return ndarray_strides;
 }
 
+static npy_intp	*_ndarray_to_numpy_strides(int64_t  *nd_strides, int type_size, int nd)
+{
+    npy_intp *numpy_strides;
+
+    numpy_strides = (npy_intp*)malloc(sizeof(npy_intp) * nd);
+    for (int i = 0; i < nd; i++)
+        numpy_strides[i] = (npy_intp) nd_strides[i] * type_size;
+
+    return numpy_strides;
+}
+
 
 /*
  * Function : _numpy_to_ndarray_shape
@@ -51,6 +62,16 @@ static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
     for (int i = 0; i < nd; i++)
         nd_shape[i] = (int64_t) np_shape[i];
     return nd_shape;
+}
+
+static npy_intp *_ndarray_to_numpy_shape(int64_t *nd_shape, int nd)
+{
+    npy_intp *np_shape;
+
+    np_shape = (npy_intp*)malloc(sizeof(npy_intp) * nd);
+    for (int i = 0; i < nd; i++)
+        np_shape[i] = (npy_intp) nd_shape[i];
+    return np_shape;
 }
 
 /*
@@ -198,6 +219,30 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
 	array.is_view     = 1;
 
 	return array;
+}
+
+PyObject* ndarray_to_pyarray(t_ndarray *o)
+{
+    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
+            _ndarray_to_numpy_strides(o->strides, o->nd, o->type_size),
+            o->raw_data, 0, NULL);
+}
+
+PyObject* c_ndarray_to_pyarray(t_ndarray *o)
+{
+    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
+            _ndarray_to_numpy_strides(o->strides, o->nd, o->type_size),
+            o->raw_data, NPY_ARRAY_C_CONTIGUOUS, NULL);
+}
+
+PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
+{
+    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
+            _ndarray_to_numpy_strides(o->strides, o->nd, o->type_size),
+            o->raw_data, NPY_ARRAY_F_CONTIGUOUS, NULL);
 }
 
 
