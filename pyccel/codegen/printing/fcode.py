@@ -636,11 +636,6 @@ class FCodePrinter(CodePrinter):
             return "write(*, '({})', advance=\"no\") {}\n".format(args_formatting, args_code)
 
 
-        if len(orig_args) == 0:
-            return formatted_args_to_print(args_format, args, end)
-
-        last_index = len(orig_args)-1
-
         for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
