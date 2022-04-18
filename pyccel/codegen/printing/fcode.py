@@ -605,6 +605,7 @@ class FCodePrinter(CodePrinter):
         def formatted_args_to_print(fargs_format, fargs, fend):
 
             if fargs_format == ['*']:
+                # To print a tuple
                 return ', '.join(['print *', *fargs]) + '\n'
             separator = self._print(sep)
             args_formatting = []
