@@ -55,7 +55,7 @@ def create_shared_library(codegen,
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         new_module_name = 'bind_c_{}'.format(module_name)
         bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
-        bind_c_code = fcode(bind_c_mod, codegen.parser)
+        bind_c_code = fcode(bind_c_mod, new_module_name)
         bind_c_filename = '{}.f90'.format(new_module_name)
 
         with open(bind_c_filename, 'w') as f:
