@@ -11,6 +11,8 @@ These operators all have a precision as detailed here:
 They also have specific rules to determine the dtype, precision, rank, shape
 """
 
+from pyccel.utilities.stage import PyccelStage
+
 from ..errors.errors        import Errors, PyccelSemanticError
 
 from .basic                 import PyccelAstNode
@@ -26,6 +28,7 @@ from .literals              import Nil, NilArgument
 from .literals              import convert_to_literal
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'PyccelOperator',
@@ -118,7 +121,7 @@ class PyccelOperator(PyccelAstNode):
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             super().__init__()
             return
         self._set_dtype()
@@ -1065,7 +1068,7 @@ class IfTernaryOperator(PyccelOperator):
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
 
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')

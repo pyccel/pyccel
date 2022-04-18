@@ -11,7 +11,9 @@ from sympy.logic.boolalg      import And as sp_And
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
-from .basic     import Basic, PyccelAstNode, iterable
+from pyccel.utilities.stage import PyccelStage
+
+from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -29,6 +31,7 @@ from .variable import DottedName, IndexedElement
 from .variable import Variable
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
@@ -70,7 +73,6 @@ __all__ = (
     'ModuleHeader',
     'Pass',
     'Program',
-    'PythonFunction',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -260,7 +262,7 @@ class AsName(Basic):
     _attribute_nodes = ()
 
     def __init__(self, obj, target):
-        if PyccelAstNode.stage != "syntactic":
+        if pyccel_stage != "syntactic":
             assert (isinstance(obj, Basic) and \
                     not isinstance(obj, PyccelSymbol)) or \
                    (isinstance(obj, type) and issubclass(obj, Basic))
@@ -762,7 +764,7 @@ class AliasAssign(Basic):
     _attribute_nodes = ('_lhs','_rhs')
 
     def __init__(self, lhs, rhs):
-        if PyccelAstNode.stage == 'semantic':
+        if pyccel_stage == 'semantic':
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
 
@@ -916,7 +918,7 @@ class AugAssign(Assign):
                 like   = self.like)
 
 
-class While(Basic):
+class While(ScopedNode):
 
     """Represents a 'while' statement in the code.
 
@@ -930,6 +932,10 @@ class While(Basic):
         test condition given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the While statement.
+    local_vars : list of Variables
+        list of Variables created inside the While
+    scope : Scope
+        The scope for the loop
 
     Examples
     --------
@@ -942,9 +948,9 @@ class While(Basic):
     __slots__ = ('_body','_test','_local_vars')
     _attribute_nodes = ('_body','_test','_local_vars')
 
-    def __init__(self, test, body, local_vars=()):
+    def __init__(self, test, body, local_vars=(), scope = None):
 
-        if PyccelAstNode.stage == 'semantic':
+        if pyccel_stage == 'semantic':
             if test.dtype is not NativeBool():
                 test = PythonBool(test)
 
@@ -956,7 +962,7 @@ class While(Basic):
         self._test = test
         self._body = body
         self._local_vars = local_vars
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def test(self):
@@ -971,18 +977,18 @@ class While(Basic):
         return self._local_vars
 
 
-class With(Basic):
+class With(ScopedNode):
 
     """Represents a 'with' statement in the code.
 
     Expressions are of the form:
-        "while test:
+        "with statement:
             body..."
 
     Parameters
     ----------
     test : PyccelAstNode
-        test condition given as an expression
+        with definition statement given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the With statement.
 
@@ -1039,7 +1045,7 @@ class With(Basic):
 
 # TODO add a name to a block?
 
-class Block(Basic):
+class Block(ScopedNode):
 
     """Represents a block in the code. A block consists of the following inputs
 
@@ -1104,7 +1110,7 @@ class Block(Basic):
 
 
 
-class Module(Basic):
+class Module(ScopedNode):
 
     """Represents a module in the code. A block consists of the following inputs
 
@@ -1179,6 +1185,7 @@ class Module(Basic):
         interfaces=(),
         classes=(),
         imports=(),
+        scope = None
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1252,7 +1259,7 @@ class Module(Basic):
             self._variables.append(init_var)
             self._variable_inits.append(LiteralFalse())
 
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):
@@ -1406,7 +1413,7 @@ class ModuleHeader(Basic):
     def module(self):
         return self._module
 
-class Program(Basic):
+class Program(ScopedNode):
 
     """Represents a Program in the code. A block consists of the following inputs
 
@@ -1434,6 +1441,7 @@ class Program(Basic):
         variables,
         body,
         imports=(),
+        scope=None
         ):
 
         if not isinstance(name, str):
@@ -1460,7 +1468,7 @@ class Program(Basic):
         self._variables = variables
         self._body = body
         self._imports = imports
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):
@@ -1515,7 +1523,7 @@ class Iterable(Basic):
                - n_indices
                - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange)
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange, IndexedElement)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
@@ -1546,12 +1554,19 @@ class Iterable(Basic):
     def set_loop_counter(self, *indices):
         """ Set the iterator(s) for the generated range
         These are iterators generated by pyccel so are not
-        needed for
+        needed for python code
         """
         assert self._indices is None
         for i in indices:
             i.set_current_user_node(self)
         self._indices = indices
+
+    def unset_loop_counter(self, invalidate = True):
+        """ Remove the iterator(s) set for the generated range
+        """
+        for i in self._indices:
+            i.remove_user_node(self, invalidate)
+        self._indices = None
 
     def get_assigns(self, target):
         """ Returns a list containing any assigns necessary to initialise
@@ -1620,7 +1635,7 @@ class Iterable(Basic):
 
 #==============================================================================
 
-class For(Basic):
+class For(ScopedNode):
 
     """Represents a 'for-loop' in the code.
 
@@ -1636,6 +1651,8 @@ class For(Basic):
         iterable object. for the moment only Range is used
     body : list of pyccel objects
         list of statements representing the body of the For statement.
+    scope : Scope
+        The scope for the loop
 
     Examples
     --------
@@ -1656,8 +1673,9 @@ class For(Basic):
         iter_obj,
         body,
         local_vars = (),
+        scope = None
         ):
-        if PyccelAstNode.stage != "syntactic":
+        if pyccel_stage != "syntactic":
             if not isinstance(iter_obj, Iterable):
                 iter_obj = Iterable(iter_obj)
                 if iter_obj.num_loop_counters_required!=0:
@@ -1673,7 +1691,7 @@ class For(Basic):
         self._body = body
         self._local_vars = local_vars
         self._end_annotation = None
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def end_annotation(self):
@@ -1973,7 +1991,7 @@ class FunctionCall(PyccelAstNode):
         # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
-        if self.stage == "syntactic":
+        if pyccel_stage == "syntactic":
             self._interface = None
             self._funcdef   = func
             self._arguments = tuple(args)
@@ -2162,7 +2180,7 @@ class Return(Basic):
             code = ''
         return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
 
-class FunctionDef(Basic):
+class FunctionDef(ScopedNode):
 
     """Represents a function definition.
 
@@ -2287,7 +2305,8 @@ class FunctionDef(Basic):
         arguments_inout=(),
         functions=(),
         interfaces=(),
-        doc_string=None):
+        doc_string=None,
+        scope=None):
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2397,7 +2416,7 @@ class FunctionDef(Basic):
         self._functions       = functions
         self._interfaces      = interfaces
         self._doc_string      = doc_string
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):
@@ -2611,7 +2630,8 @@ class FunctionDef(Basic):
         'functions':self._functions,
         'is_external':self._is_external,
         'interfaces':self._interfaces,
-        'doc_string':self._doc_string}
+        'doc_string':self._doc_string,
+        'scope':self._scope}
         return args, kwargs
 
     def __reduce_ex__(self, i):
@@ -2932,7 +2952,7 @@ class FunctionAddress(FunctionDef):
         is_argument=False,
         **kwargs
         ):
-        super().__init__(name, arguments, results, body, **kwargs)
+        super().__init__(name, arguments, results, body, scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -2976,13 +2996,6 @@ class SympyFunction(FunctionDef):
     __slots__ = ()
 
 
-# TODO: [EB 06.01.2021] Is this class used? What for? See issue #668
-class PythonFunction(FunctionDef):
-
-    """Represents a Python-Function definition."""
-    __slots__ = ()
-
-
 class BindCFunctionDef(FunctionDef):
     """
     Contains the c-compatible version of the function which is
@@ -3014,7 +3027,7 @@ class BindCFunctionDef(FunctionDef):
         return self._original_function
 
 
-class ClassDef(Basic):
+class ClassDef(ScopedNode):
 
     """Represents a class definition.
 
@@ -3308,13 +3321,13 @@ class Import(Basic):
         self._target = set()
         self._ignore_at_print = ignore_at_print
         if target is None:
-            if PyccelAstNode.stage == "syntactic":
+            if pyccel_stage == "syntactic":
                 target = []
             else:
                 raise KeyError("Missing argument 'target'")
         elif not iterable(target):
             target = [target]
-        if PyccelAstNode.stage == "syntactic":
+        if pyccel_stage == "syntactic":
             for i in target:
                 self._target.add(Import._format(i))
         else:
@@ -3935,7 +3948,7 @@ class IfSection(Basic):
 
     def __init__(self, cond, body):
 
-        if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
+        if pyccel_stage == 'semantic' and cond.dtype is not NativeBool():
             cond = PythonBool(cond)
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
