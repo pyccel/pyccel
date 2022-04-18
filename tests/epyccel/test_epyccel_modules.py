@@ -137,5 +137,8 @@ def test_module_7(language):
         mod_att = getattr(mod, att)
         modnew_att = getattr(modnew, att)
         assert np.array_equal(mod_att, modnew_att)
+        print(mod_att.dtype, modnew_att.dtype)
+        print(mod_att.dtype.str, modnew_att.dtype.str)
+        assert mod_att.dtype == modnew_att.dtype
         assert mod_att.dtype is modnew_att.dtype
 
