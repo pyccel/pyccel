@@ -640,7 +640,9 @@ class FCodePrinter(CodePrinter):
                 .format(args_formatting, advance, args_code)
 
 
-        sep_kwarg = FunctionCallArgument(sep, 'sep')
+        tuple_start = FunctionCallArgument(LiteralString('('))
+        tuple_sep   = LiteralString(', ')
+        tuple_end   = FunctionCallArgument(LiteralString(')'))
 
         for f in orig_args:
             if f.keyword:
@@ -648,13 +650,19 @@ class FCodePrinter(CodePrinter):
             else:
                 f = f.value
             if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
-                code += self._print(PythonPrint([*(FunctionCallArgument(fi) for fi in f), sep_kwarg, empty_end]))
+                if args_format:
+                    code += formatted_args_to_print(args_format, args, sep)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end]))
+                args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += formatted_args_to_print(args_format, args, self._print(sep))
+                    code += formatted_args_to_print(args_format, args, sep)
                     args_format = []
                     args = []
                 for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
