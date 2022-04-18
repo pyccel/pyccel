@@ -119,3 +119,15 @@ def test_module_6(language):
         assert type(mod_att) is type(modnew_att)
 
 
+def test_module_7(language):
+    import modules.array_consts as mod
+
+    modnew = epyccel(mod, language=language)
+
+    atts = ('a', 'b', 'c', 'd', 'e')
+    for att in atts:
+        mod_att = getattr(mod, att)
+        modnew_att = getattr(modnew, att)
+        assert np.array_equal(mod_att, modnew_att)
+        assert mod_att.dtype is modnew_att.dtype
+
