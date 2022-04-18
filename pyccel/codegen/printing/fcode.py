@@ -601,13 +601,25 @@ class FCodePrinter(CodePrinter):
         args_format = []
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
+        separator = self._print(sep)
 
         def formatted_args_to_print(fargs_format, fargs, fend):
+            """ Produce a write statement from a list of formats, args and an end
+            statement
+
+            Parameters
+            ----------
+            fargs_format : iterable
+                           The format strings for the objects described by fargs
+            fargs        : iterable
+                           The args to be printed
+            fend         : PyccelAstNode
+                           The character describing the end of the line
+            """
 
             if fargs_format == ['*']:
                 # To print a tuple
                 return ', '.join(['print *', *fargs]) + '\n'
-            separator = self._print(sep)
             args_formatting = []
             args_code = []
             for a_f, a_c in zip(fargs_format, fargs):
@@ -615,12 +627,14 @@ class FCodePrinter(CodePrinter):
                 args_formatting.append(a_f)
             args_code = (' , ' + separator + ' , ' if separator != '' else ' , ').join(args_code)
             args_formatting = (' A ' if separator != '' else ' ').join(args_formatting)
+            fend_code = self._print(fend)
             if args_formatting == '':
-                return "write(*, '(A)', advance=\"no\") {}\n".format(self._print(fend))
+                return "write(*, '(A)', advance=\"no\") {}\n".format(fend_code)
             if fend != '':
                 return "write(*, '({} A)', advance=\"no\") {} , {}\n"\
-                    .format(args_formatting, args_code, self._print(fend))
+                    .format(args_formatting, args_code, fend_code)
             return "write(*, '({})', advance=\"no\") {}\n".format(args_formatting, args_code)
+
 
         if len(orig_args) == 0:
             return formatted_args_to_print(args_format, args, end)
@@ -670,6 +684,24 @@ class FCodePrinter(CodePrinter):
         return code
 
     def get_print_format_and_arg(self,var):
+        """ Get the format string and the printable argument for an object.
+        In other words get arg_format and arg such that var can be printed
+        by doing:
+
+        > write(*, arg_format) arg
+
+        Parameters
+        ----------
+        var : PyccelAstNode
+              The object to be printed
+
+        Results
+        -------
+        arg_format : str
+                     The format string
+        arg        : str
+                     The fortran code which represents var
+        """
         type_to_format = {('real'): 'F0.12',
                           ('complex'): '"(",F0.12," + ",F0.12,")"',
                           ('integer'): 'I0',
