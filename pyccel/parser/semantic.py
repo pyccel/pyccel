@@ -94,7 +94,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq
+from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -1134,22 +1134,31 @@ class SemanticParser(BasicParser):
                     # to remove memory leaks
                     new_expressions.append(Deallocate(var))
 
-                elif not is_augassign and (str(dtype) != str(var.dtype) or \
+                elif (str(dtype) != str(var.dtype) or \
                         internal_precision != get_final_precision(var)):
-                    # Get type name from cast function (handles precision implicitly)
-                    try:
-                        d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
-                    except KeyError:
-                        d1 = str(var.dtype)
-                    try:
-                        d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
-                    except KeyError:
-                        d2 = str(var.dtype)
+                    if is_augassign:
+                        tmp_result = PyccelAdd(var, rhs)
+                        result_dtype = str(tmp_result.dtype)
+                        result_precision = get_final_precision(tmp_result)
+                        raise_error = (str(var.dtype) != result_dtype or \
+                                get_final_precision(var) != result_precision)
+                    else:
+                        raise_error = True
+                    if raise_error:
+                        # Get type name from cast function (handles precision implicitly)
+                        try:
+                            d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
+                        except KeyError:
+                            d1 = str(var.dtype)
+                        try:
+                            d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
+                        except KeyError:
+                            d2 = str(var.dtype)
 
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
-                        symbol='{}={}'.format(name, str(rhs)),
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=False)
+                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
+                            symbol='{}={}'.format(name, str(rhs)),
+                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                            severity='error', blocker=False)
 
                 elif not is_augassign:
 
