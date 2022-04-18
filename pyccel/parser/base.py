@@ -405,7 +405,7 @@ class BasicParser(object):
                     code = self.code.encode('utf-8')
                     hs   = hashlib.md5(code)
                     with open(filename, 'wb') as f:
-                        pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
+                        pickle.dump((hs.hexdigest(), __version__, self), f)
                     print("Created pickle file : ", filename)
                 except (FileNotFoundError, pickle.PickleError):
                     pass

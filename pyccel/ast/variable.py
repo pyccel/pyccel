@@ -805,7 +805,6 @@ class IndexedElement(PyccelAstNode):
             return
 
         self._dtype = base.dtype
-        self._order = base.order
         self._precision = base.precision
 
         shape = base.shape
@@ -854,6 +853,8 @@ class IndexedElement(PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
+
+        self._order = None if self.rank < 2 else base.order
 
     @property
     def base(self):
