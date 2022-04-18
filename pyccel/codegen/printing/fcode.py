@@ -625,6 +625,8 @@ class FCodePrinter(CodePrinter):
         if len(orig_args) == 0:
             return formatted_args_to_print(args_format, args, end)
 
+        last_index = len(orig_args)-1
+
         for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
@@ -637,7 +639,7 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
-            elif f.dtype is NativeString() and f != expr.expr[-1]:
+            elif f.dtype is NativeString() and i != last_index:
                 args_format.append('A')
                 args.append(self._print(f))
             elif isinstance(f.rank, int) and f.rank > 0:
