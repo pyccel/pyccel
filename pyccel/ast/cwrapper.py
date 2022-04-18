@@ -378,9 +378,7 @@ def C_to_Python(c_object):
     -------
     FunctionDef : cast type FunctionDef
     """
-    if c_object.rank == 1:
-        cast_function = 'ndarray1d_to_pyarray'
-    elif c_object.rank != 0:
+    if c_object.rank != 0:
         if c_object.order == 'C':
             cast_function = 'c_ndarray_to_pyarray'
         elif c_object.order == 'F':
