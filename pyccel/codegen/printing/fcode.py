@@ -585,17 +585,17 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_PythonPrint(self, expr):
-        end = '\n'
-        sep = ' '
+        end = LiteralString('\n')
+        sep = LiteralString(' ')
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
         for f in expr.expr:
             if f.has_keyword:
                 if f.keyword == 'sep':
-                    sep = str(f.value)
+                    sep = f.value
                 elif f.keyword == 'end':
-                    end = str(f.value)
+                    end = f.value
                 else:
                     errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
         args_format = []
@@ -606,7 +606,7 @@ class FCodePrinter(CodePrinter):
 
             if fargs_format == ['*']:
                 return ', '.join(['print *', *fargs]) + '\n'
-            separator = self._print_LiteralString(LiteralString(sep))
+            separator = self._print(sep)
             args_formatting = []
             args_code = []
             for a_f, a_c in zip(fargs_format, fargs):
@@ -615,10 +615,10 @@ class FCodePrinter(CodePrinter):
             args_code = (' , ' + separator + ' , ' if separator != '' else ' , ').join(args_code)
             args_formatting = (' A ' if separator != '' else ' ').join(args_formatting)
             if args_formatting == '':
-                return "write(*, '(A)', advance=\"no\") {}\n".format(self._print_LiteralString(LiteralString(fend)))
+                return "write(*, '(A)', advance=\"no\") {}\n".format(self._print(fend))
             if fend != '':
                 return "write(*, '({} A)', advance=\"no\") {} , {}\n"\
-                    .format(args_formatting, args_code, self._print_LiteralString(LiteralString(fend)))
+                    .format(args_formatting, args_code, self._print(fend))
             return "write(*, '({})', advance=\"no\") {}\n".format(args_formatting, args_code)
 
         if len(orig_args) == 0:
