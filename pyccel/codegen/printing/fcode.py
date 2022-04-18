@@ -674,7 +674,6 @@ class FCodePrinter(CodePrinter):
                           ('complex'): '"(",F0.12," + ",F0.12,")"',
                           ('integer'): 'I0',
                           ('logical'): 'A',
-                          ('string'): 'A',
                           ('Tuple'):  '*'
                           }
         var_type = self._print(var.dtype)
