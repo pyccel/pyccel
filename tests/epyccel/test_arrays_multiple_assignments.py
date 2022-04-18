@@ -218,7 +218,7 @@ def test_Assign_Between_Allocatables():
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol  == 'x'
+    assert str(error_info.symbol)  == 'x'
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================

@@ -24,11 +24,13 @@ When adding functions to this stage the aim is often to create a `PyccelAstNode`
 
 In computer science, the _scope_ is the area of a program where an item (e.g. variable, function, etc.) is recognised. For example a variable defined in a function will not be recognised outside of that function, therefore the function defines its scope.
 
-In Pyccel, a `Scope` is an object defined in [parser/base.py](../pyccel/parser/base.py) which represents this concept. It includes all the functions, imports, variables, and classes which are available at a given point in the code. It also contains pointers to nested and parent scopes. The `namespace` in the `SemanticParser` (`SemanticParser._namespace`) stores the Scope relevant to the line of code being treated. It must be updated whenever the scope changes (e.g. through the `create_new_function_scope` function when entering into a function body).
+In Pyccel, a `Scope` is an object defined in [parser/base.py](../pyccel/parser/base.py) which represents this concept. It includes all the functions, imports, variables, and classes which are available at a given point in the code. It also contains pointers to nested and parent scopes. The `namespace` in the `SemanticParser` (`SemanticParser._namespace`) stores the Scope relevant to the line of code being treated. It must be updated whenever the scope changes (e.g. through the `create_new_function_scope` function when entering into a function body). The Scope is also used to avoid naming collisions. See [Scope documentation](./scope.md) for details.
 
 ### Code Generation Stage
 
-In this stage the Pyccel nodes are converted into a string which contains the translation into the requested language. Each language has its own printer. The printers are found in the folder [codegen/printing](../pyccel/codegen/printing)
+In this stage the Pyccel nodes are converted into a string which contains the translation into the requested language. Each language has its own printer. The printers are found in the folder [codegen/printing](../pyccel/codegen/printing).
+
+As in the Semantic stage, the Code Generation stage also stores the current Scope in a `namespace` variable which must be updated whenever the scope changes.
 
 ### Compilation Stage
 

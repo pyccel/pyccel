@@ -43,7 +43,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
-from pyccel.ast.core import create_variable
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -136,6 +135,7 @@ class SyntaxParser(BasicParser):
         self._fst           = tree
         self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg, ast.FunctionDef)))
         self._dummy_counter = 1
+        self._in_lhs_assign = False
 
         self.parse(verbose=True)
         self.dump()
@@ -222,7 +222,8 @@ class SyntaxParser(BasicParser):
 
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
-        name = os.path.splitext(os.path.basename(self._filename))[0]
+        mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        name = AsName(mod_name, self.namespace.get_new_name(mod_name))
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
         return Module(name, [], [], program = CodeBlock(body))
@@ -232,8 +233,7 @@ class SyntaxParser(BasicParser):
         if not isinstance(val, (CommentBlock, PythonPrint)):
             # Collect any results of standalone expressions
             # into a variable to avoid errors in C/Fortran
-            tmp_var,_ = create_variable(self._used_names)
-            val = Assign(tmp_var, val)
+            val = Assign(PyccelSymbol('_', is_temp=True), val)
         return val
 
     def _visit_Tuple(self, stmt):
@@ -291,7 +291,9 @@ class SyntaxParser(BasicParser):
 
     def _visit_Assign(self, stmt):
 
+        self._in_lhs_assign = True
         lhs = self._visit(stmt.targets)
+        self._in_lhs_assign = False
         if len(lhs)==1:
             lhs = lhs[0]
         else:
@@ -344,6 +346,7 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                                         for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
+            self.namespace.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -354,6 +357,7 @@ class SyntaxParser(BasicParser):
                             value=val, kwonly=True)
 
                 arguments.append(arg)
+                self.namespace.insert_symbol(a.arg)
 
         return arguments
 
@@ -398,12 +402,16 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
-        return PyccelSymbol(stmt.id)
+        name = PyccelSymbol(stmt.id)
+        if self._in_lhs_assign:
+            self.namespace.insert_symbol(name)
+        return name
 
     def _treat_import_source(self, source, level):
         source = '.'*level + source
         if source.count('.') == 0:
             source = PyccelSymbol(source)
+            self.namespace.insert_symbol(source)
         else:
             source = DottedName(*source.split('.'))
 
@@ -581,8 +589,11 @@ class SyntaxParser(BasicParser):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
-        name = self._visit(stmt.name)
+        name = PyccelSymbol(self._visit(stmt.name))
+        self.namespace.insert_symbol(name)
         name = name.replace("'", '')
+
+        scope = self.create_new_function_scope(name)
 
         arguments    = self._visit(stmt.args)
 
@@ -789,10 +800,11 @@ class SyntaxParser(BasicParser):
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
             else:
-                result_name, result_counter = create_variable(self._used_names, \
-                            prefix = 'Out', counter = result_counter)
+                result_name, result_counter = self.namespace.get_new_incremented_symbol('Out', result_counter)
 
             results.append(result_name)
+
+        self.exit_function_scope()
 
         cls = InlineFunctionDef if is_inline else FunctionDef
         func = cls(
@@ -808,20 +820,23 @@ class SyntaxParser(BasicParser):
                imports=imports,
                decorators=decorators,
                headers=headers,
-               doc_string=doc_string)
+               doc_string=doc_string,
+               scope=scope)
 
         return func
 
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        scope = self.create_new_class_scope(name)
         methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
         for i in methods:
             i.cls_name = name
-        attributes = methods[0].arguments
+        attributes = [a.var for a in methods[0].arguments]
         parent = [self._visit(i) for i in stmt.bases]
+        self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclass=parent)
+                        methods=methods, superclass=parent, scope=scope)
 
         # we set the fst to keep track of needed information for errors
 
@@ -859,6 +874,8 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
+        if self._in_lhs_assign:
+            self.namespace.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
@@ -900,29 +917,44 @@ class SyntaxParser(BasicParser):
 
     def _visit_For(self, stmt):
 
+        scope = self.create_new_loop_scope()
+
+        self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
+        self._in_lhs_assign = False
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
-        expr = For(iterator, iterable, body)
+
+        self.exit_loop_scope()
+
+        expr = For(iterator, iterable, body, scope=scope)
         return expr
 
     def _visit_comprehension(self, stmt):
 
+        scope = self.create_new_loop_scope()
+
+        self._in_lhs_assign = True
         iterator = self._visit(stmt.target)
+        self._in_lhs_assign = False
         iterable = self._visit(stmt.iter)
-        expr = For(iterator, iterable, [])
+
+        self.exit_loop_scope()
+
+        expr = For(iterator, iterable, [], scope=scope)
         return expr
 
     def _visit_ListComp(self, stmt):
 
         result = self._visit(stmt.elt)
+
         generators = list(self._visit(stmt.generators))
 
         if not isinstance(self._scope[-2],ast.Assign):
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
-            lhs = self.get_new_variable()
+            lhs = PyccelSymbol('_', is_temp=True)
         else:
             lhs = self._visit(self._scope[-2].targets)
             if len(lhs)==1:
@@ -930,7 +962,7 @@ class SyntaxParser(BasicParser):
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
-        index = self.get_new_variable()
+        index = PyccelSymbol('_', is_temp=True)
 
         args = [index]
         target = IndexedElement(lhs, *args)
@@ -949,6 +981,7 @@ class SyntaxParser(BasicParser):
             generators[-1].insert2body(F)
             indices.append(generators[-1].target)
         indices = indices[::-1]
+
         return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
                              indices, index)
 
@@ -969,7 +1002,7 @@ class SyntaxParser(BasicParser):
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
             lhs = self._visit(grandparent.targets[0])
         else:
-            lhs = self.get_new_variable()
+            lhs = PyccelSymbol('_', is_temp=True)
 
         body = result
         if name == 'sum':
@@ -985,6 +1018,7 @@ class SyntaxParser(BasicParser):
             indices.append(generators[-1].target)
             generators[-1].insert2body(body)
             body = generators.pop()
+
         indices = indices[::-1]
         if name == 'sum':
             expr = FunctionalSum(body, result, lhs, indices)
@@ -1026,9 +1060,14 @@ class SyntaxParser(BasicParser):
 
     def _visit_While(self, stmt):
 
+        scope = self.create_new_loop_scope()
+
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
-        return While(test, body)
+
+        self.exit_loop_scope()
+
+        return While(test, body, scope=scope)
 
     def _visit_Assert(self, stmt):
         expr = self._visit(stmt.test)

@@ -6,7 +6,10 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
+from itertools import chain
 import re
+
+from pyccel.ast.basic     import ScopedNode
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
@@ -19,7 +22,6 @@ from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
-from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
@@ -243,17 +245,14 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    def __init__(self, parser, prefix_module = None):
+    def __init__(self, filename, prefix_module = None):
 
-        if parser.filename:
-            errors.set_target(parser.filename, 'file')
+        errors.set_target(filename, 'file')
 
         super().__init__()
         self.prefix_module = prefix_module
         self._additional_imports = {'stdlib':c_imports['stdlib']}
-        self._parser = parser
         self._additional_code = ''
-        self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
         self._current_module = None
@@ -306,7 +305,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
-        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        dummy_array_name = self.namespace.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
@@ -373,7 +372,7 @@ class CCodePrinter(CodePrinter):
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
-        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        dummy_array_name = self.namespace.get_new_name('array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
                 dtype = dtype,
                 name  = dummy_array_name,
@@ -407,10 +406,9 @@ class CCodePrinter(CodePrinter):
         step   = self._print(expr.step)
         dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
 
-        target = Variable(expr.dtype, name =  self._parser.get_new_name('s'))
-        index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
+        target = self.namespace.get_temporary_variable(expr.dtype)
+        index  = self.namespace.get_temporary_variable(NativeInteger())
 
-        self._additional_declare += [index, target]
         self._additional_code += self._print(Assign(index, LiteralInteger(0)))
 
         code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
@@ -432,6 +430,10 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
         body = func.body
 
+        for b in body.body:
+            if isinstance(b, ScopedNode):
+                b.scope.update_parent_scope(self.namespace, is_loop=True)
+
         # Print any arguments using the same inline function
         # As the function definition is modified directly this function
         # cannot be called recursively with the same FunctionDef
@@ -443,9 +445,8 @@ class CCodePrinter(CodePrinter):
             else:
                 args.append(a.value)
 
-        new_local_vars = [v.clone(self._parser.get_new_name(v.name)) \
+        new_local_vars = [self.namespace.get_temporary_variable(v) \
                             for v in func.local_vars]
-        self._additional_declare.extend(new_local_vars)
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         if parent_assign:
@@ -493,7 +494,11 @@ class CCodePrinter(CodePrinter):
             self.add_import(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
             for v in (*func.global_vars, *func.global_funcs):
-                self._parser.used_names.add(v.name)
+                self.namespace.insert_symbol(v.name)
+
+        for b in body.body:
+            if isinstance(b, ScopedNode):
+                b.scope.update_parent_scope(func.scope, is_loop=True)
 
         return code
 
@@ -581,8 +586,11 @@ class CCodePrinter(CodePrinter):
         return ''
 
     def _print_ModuleHeader(self, expr):
+        self.set_scope(expr.module.scope)
         self._in_header = True
         name = expr.module.name
+        if isinstance(name, AsName):
+            name = name.name
         # TODO: Add classes and interfaces
         funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
 
@@ -593,6 +601,7 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self._in_header = False
+        self.exit_scope()
         return ('#ifndef {name}_H\n'
                 '#define {name}_H\n\n'
                 '{imports}\n'
@@ -607,6 +616,7 @@ class CCodePrinter(CodePrinter):
                         funcs   = funcs)
 
     def _print_Module(self, expr):
+        self.set_scope(expr.scope)
         self._current_module = expr.name
         body    = ''.join(self._print(i) for i in expr.body)
 
@@ -623,6 +633,7 @@ class CCodePrinter(CodePrinter):
                         variables = global_variables,
                         body      = body)
 
+        self.exit_scope()
         return code
 
     def _print_Break(self, expr):
@@ -632,7 +643,9 @@ class CCodePrinter(CodePrinter):
         return 'continue;\n'
 
     def _print_While(self, expr):
+        self.set_scope(expr.scope)
         body = self._print(expr.body)
+        self.exit_scope()
         cond = self._print(expr.test)
         return 'while({condi})\n{{\n{body}}}\n'.format(condi = cond, body = body)
 
@@ -743,10 +756,14 @@ class CCodePrinter(CodePrinter):
     def _print_Import(self, expr):
         if expr.ignore:
             return ''
-        if isinstance(expr.source, DottedName):
-            source = expr.source.name[-1]
+        if isinstance(expr.source, AsName):
+            source = expr.source.name
         else:
-            source = self._print(expr.source)
+            source = expr.source
+        if isinstance(source, DottedName):
+            source = source.name[-1]
+        else:
+            source = self._print(source)
 
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
@@ -799,7 +816,7 @@ class CCodePrinter(CodePrinter):
         return arg_format, arg
 
     def extract_function_call_results(self, expr):
-        tmp_list = [self.create_tmp_var(a) for a in expr.funcdef.results]
+        tmp_list = [self.namespace.get_temporary_variable(a.dtype) for a in expr.funcdef.results]
         return tmp_list
 
     def _print_PythonPrint(self, expr):
@@ -847,8 +864,7 @@ class CCodePrinter(CodePrinter):
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                for_index = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
-                self._additional_declare.append(for_index)
+                for_index = self.namespace.get_temporary_variable(NativeInteger(), name = 'i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
                 for_range = PythonRange(max_index)
                 print_body = [ FunctionCallArgument(f[for_index]) ]
@@ -856,7 +872,8 @@ class CCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body  = [PythonPrint(print_body)]
-                for_loop  = For(for_index, for_range, for_body)
+                for_scope = self.namespace.create_new_loop_scope()
+                for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
@@ -1344,6 +1361,7 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
+        self.set_scope(expr.scope)
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
@@ -1355,9 +1373,10 @@ class CCodePrinter(CodePrinter):
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
-        decs += [Declare(i.dtype, i) for i in self._additional_declare]
+        arguments = [a.var for a in expr.arguments]
+        decs += [Declare(v.dtype,v) for v in self.namespace.variables.values() \
+                if v not in chain(expr.local_vars, expr.results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
-        self._additional_declare.clear()
 
         sep = self._print(SeparatorComment(40))
         if self._additional_args :
@@ -1373,6 +1392,8 @@ class CCodePrinter(CodePrinter):
                  body,
                  '}\n',
                  sep]
+
+        self.exit_scope()
 
         return ''.join(p for p in parts if p)
 
@@ -1399,12 +1420,6 @@ class CCodePrinter(CodePrinter):
         return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
-    def create_tmp_var(self, match_var):
-        tmp_var_name = self._parser.get_new_name('tmp')
-        tmp_var = Variable(name = tmp_var_name, dtype = match_var.dtype)
-        self._additional_declare.append(tmp_var)
-        return tmp_var
-
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         if func.is_inline:
@@ -1418,7 +1433,7 @@ class CCodePrinter(CodePrinter):
                 if isinstance(a, Variable):
                     args.append(VariableAddress(a))
                 elif not self.stored_in_c_pointer(a):
-                    tmp_var = self.create_tmp_var(f)
+                    tmp_var = self.namespace.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, a)
                     self._additional_code += self._print(assign)
                     args.append(VariableAddress(tmp_var))
@@ -1478,6 +1493,9 @@ class CCodePrinter(CodePrinter):
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
                 code = ''+self._print(expr.stmt)
+            elif isinstance(last_assign[-1], AugAssign):
+                last_assign[-1].lhs.is_temp = False
+                code = ''+self._print(expr.stmt)
             else:
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
@@ -1488,7 +1506,7 @@ class CCodePrinter(CodePrinter):
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
                     code = ''+self._print(expr.stmt)
-                    self._additional_declare.append(last_assign.lhs)
+                    last_assign.lhs.is_temp = False
 
         return code + 'return {0};\n'.format(self._print(args[0]))
 
@@ -1586,9 +1604,8 @@ class CCodePrinter(CodePrinter):
                 # Create temporary variable to provide allocated
                 # memory space before assigning to the pointer value
                 # (may be NULL)
-                tmp_var_name = self._parser.get_new_name()
-                tmp_var = lhs.clone(tmp_var_name, is_optional=False)
-                self._additional_declare.append(tmp_var)
+                tmp_var = self.namespace.get_temporary_variable(lhs,
+                        is_optional = False)
                 self._optional_partners[lhs] = tmp_var
             # Point optional variable at an allocated memory space
             prefix_code = self._print(AliasAssign(lhs, tmp_var))
@@ -1639,11 +1656,12 @@ class CCodePrinter(CodePrinter):
             return '{} = {};\n'.format(lhs, rhs)
 
     def _print_For(self, expr):
+        self.set_scope(expr.scope)
 
         indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
         if expr.iterable.num_loop_counters_required:
-            self._additional_declare.append(index)
+            self.namespace.insert_variable(index)
 
         target   = index
         iterable = expr.iterable.get_range()
@@ -1667,6 +1685,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(test_step, PyccelUnarySub):
             test_step = iterable.step.args[0]
 
+        self.exit_scope()
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
             op = '>' if isinstance(iterable.step, PyccelUnarySub) else '<'
@@ -1685,8 +1704,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
-            body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
-            self._additional_declare.extend(new_vars)
+            body_exprs = expand_to_loops(expr,
+                    self.namespace.get_temporary_variable, self.namespace,
+                    language_has_vectors = False)
         else:
             body_exprs = expr.body
         body_stmts = []
@@ -1864,15 +1884,15 @@ class CCodePrinter(CodePrinter):
     #=====================================
 
     def _print_Program(self, expr):
+        self.set_scope(expr.scope)
         body  = self._print(expr.body)
-        decs     = [self._print(i) for i in expr.declarations]
-        decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
-        decs    = ''.join(self._print(i) for i in decs)
-        self._additional_declare.clear()
+        variables = self.namespace.variables.values()
+        decs = ''.join(self._print(Declare(v.dtype, v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)
 
+        self.exit_scope()
         return ('{imports}'
                 'int main()\n{{\n'
                 '{decs}'
@@ -1944,13 +1964,13 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-def ccode(expr, parser, assign_to=None, **settings):
+def ccode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
         A pyccel expression to be converted.
-    parser : Parser
-        The parser used to collect the expression
+    filename : str
+        The name of the file being translated. Used in error printing
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -1969,4 +1989,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, **settings).doprint(expr, assign_to)
+    return CCodePrinter(filename, **settings).doprint(expr, assign_to)

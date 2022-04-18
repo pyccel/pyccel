@@ -109,10 +109,7 @@ class Parser(object):
 
     @property
     def imports(self):
-        if self._semantic_parser:
-            return self._semantic_parser.namespace.imports['imports']
-        else:
-            return self._syntax_parser.namespace.imports['imports']
+        return self.namespace.collect_all_imports()
 
     @property
     def fst(self):
@@ -204,7 +201,7 @@ class Parser(object):
 
         """
 
-        imports     = self.imports.keys()
+        imports     = self.imports
         treated     = d_parsers.keys()
         not_treated = [i for i in imports if i not in treated]
         for source in not_treated:
