@@ -118,7 +118,14 @@ def test_module_6(language):
         assert mod_att == modnew_att
         assert type(mod_att) is type(modnew_att)
 
-
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = [
+        pytest.mark.skip(reason="Module arrays cannot be exposed in fortran"),
+        pytest.mark.fortran]),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_module_7(language):
     import modules.array_consts as mod
 
