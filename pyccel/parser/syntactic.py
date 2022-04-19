@@ -223,7 +223,7 @@ class SyntaxParser(BasicParser):
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
         mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        name = AsName(mod_name, self.namespace.get_new_name(mod_name))
+        name = AsName(mod_name, self.scope.get_new_name(mod_name))
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
         return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
@@ -411,7 +411,7 @@ class SyntaxParser(BasicParser):
         source = '.'*level + source
         if source.count('.') == 0:
             source = PyccelSymbol(source)
-            self.namespace.insert_symbol(source)
+            self.scope.insert_symbol(source)
         else:
             source = DottedName(*source.split('.'))
 
@@ -590,7 +590,7 @@ class SyntaxParser(BasicParser):
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
         name = PyccelSymbol(self._visit(stmt.name))
-        self.namespace.insert_symbol(name)
+        self.scope.insert_symbol(name)
         name = name.replace("'", '')
 
         scope = self.create_new_function_scope(name)

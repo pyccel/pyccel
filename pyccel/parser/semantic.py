@@ -1394,7 +1394,7 @@ class SemanticParser(BasicParser):
         if mod_name is None:
             mod_name = expr.name
         else:
-            self.namespace.insert_symbol(mod_name)
+            self.scope.insert_symbol(mod_name)
         self._mod_name = mod_name
         if isinstance(expr.name, AsName):
             name_suffix = expr.name.name
@@ -2818,7 +2818,7 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr, **settings):
 
-        name            = self.namespace.get_expected_name(expr.name)
+        name            = self.scope.get_expected_name(expr.name)
         name            = name.replace("'", '')
         cls_name        = expr.cls_name
         decorators      = expr.decorators
