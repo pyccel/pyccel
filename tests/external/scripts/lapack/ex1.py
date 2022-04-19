@@ -16,13 +16,13 @@ from scipy.linalg.lapack import dgetrs
 
 #from scipy.linalg.lapack import dgetri
 
-from numpy import zeros, empty
+from numpy import zeros, empty, int32
 
 def test_1():
-    n   = 25
-    ml  = 1
-    mu  = 1
-    lda = 2 * ml + mu + 1
+    n   = int32(25)
+    ml  = int32(1)
+    mu  = int32(1)
+    lda = int32(2 * ml + mu + 1)
 
     a = zeros((lda,n))
     b = zeros((1,n))
@@ -43,7 +43,7 @@ def test_1():
 #    assert(info == 0)
 
 def test_2():
-    n = 3
+    n = int32(3)
     lda = n
 
     a = zeros((lda,n))
@@ -74,7 +74,7 @@ def test_2():
 #    assert(info == 0)
 
 def test_3():
-    n = 3
+    n = int32(3)
     lda = n
 
     a = zeros((lda,n))
@@ -102,7 +102,7 @@ def test_3():
 #    assert(info == 0)
 
 def test_4():
-    n = 3
+    n = int32(3)
     lda = n
 
     a = zeros((lda,n))
