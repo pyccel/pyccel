@@ -218,18 +218,47 @@ def test_omp_get_initial_device():
     return host_device
 
 def test_omp_get_set_schedule():
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
-    result = 0
+    result1 = 0
+    result2 = 0
     #$ omp parallel private(i)
-    #$ omp for schedule(runtime) reduction (+:sum)
-    omp_set_schedule(2, 2)
-    schedule_kind = 0
-    chunk_size = 0
-    omp_get_schedule(schedule_kind, chunk_size)
+    omp_set_schedule(np.int32(2), np.int32(3))
+    schedule_kind, chunk_size = omp_get_schedule()
+    #$ omp for nowait schedule(runtime) reduction (+:result1, result2)
     for i in range(16):
-        result = result + i
-    #$ omp end for nowait
-    return True
+        result1 = result1 + schedule_kind
+        result2 = result2 + chunk_size
+    #$omp end parallel 
+    return result1, result2
+
+def test_nowait_schedule(n : int):
+    import numpy as np
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+
+    a = np.zeros(n)
+    imin_res = np.empty(4)
+    imax_res = np.empty(4)
+
+    #$omp parallel private(rank,nb_tasks,i_min,i_max)                                                                                                                                                      
+    rank = omp_get_thread_num()
+    nb_tasks=omp_get_num_threads()
+    i_min=n
+    i_max=0
+
+    schedule_size = int(n/nb_tasks)
+    #$omp for nowait schedule(static, schedule_size)
+    for i in range(n):
+        a[i] = 92290. + i
+        i_min = min(i_min, i)
+        i_max = max(i_min, i)
+
+    imin_res[rank] = i_min
+    imax_res[rank] = i_max
+    #$omp end parallel 
+
+    return imin_res[0], imin_res[1], imin_res[2], imin_res[3], \
+            imax_res[0], imax_res[1], imax_res[2], imax_res[3]
 
 def test_omp_get_max_task_priority():
     import numpy as np
