@@ -127,7 +127,7 @@ class SyntaxParser(BasicParser):
             code = read_file(inputs)
 
         self._code  = code
-        self._scope = []
+        self._scope = Scope()
 
         self.load()
 
@@ -225,7 +225,7 @@ class SyntaxParser(BasicParser):
         name = os.path.splitext(os.path.basename(self._filename))[0]
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
-        return Module(name, [], [], program = CodeBlock(body))
+        return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
