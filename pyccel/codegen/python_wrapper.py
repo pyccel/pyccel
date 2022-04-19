@@ -77,9 +77,8 @@ def create_shared_library(codegen,
                                 extra_files = {'numpy_version.h' :
                                                 get_numpy_max_acceptable_version_file()})
 
-    cwrapper_lib = CompileObj("cwrapper.c",
-                        folder=cwrapper_lib_dest_path,
-                        accelerators=('python',))
+    cwrapper_lib = internal_libs["cwrapper"][1]
+    cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
 
     # get the include folder path and library files
     recompile_object(cwrapper_lib,
