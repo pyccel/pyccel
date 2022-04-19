@@ -121,7 +121,6 @@ def as_static_function(func, *, mod_scope, name=None):
     arguments_inout = _arguments_inout
     # ...
     return BindCFunctionDef( name, list(args), results, body,
-                        local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout,
                         functions = functions,

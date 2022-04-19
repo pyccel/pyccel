@@ -2459,7 +2459,6 @@ class SemanticParser(BasicParser):
 
         body = [self._visit(i, **settings) for i in body]
 
-        local_vars = list(self.scope.variables.values())
         self.exit_loop_scope()
 
         if isinstance(iterable.iterable, Product):
@@ -2467,12 +2466,12 @@ class SemanticParser(BasicParser):
             scopes = self.scope.create_product_loop_scope(scope, len(target))
 
             for t, r, s in zip(target, iterable.get_range(), scopes[::-1]):
-                for_expr = For(t, r, for_expr, local_vars=local_vars, scope=s)
+                for_expr = For(t, r, for_expr, scope=s)
                 for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
         else:
-            for_expr = For(target, iterable, body, local_vars=local_vars, scope=scope)
+            for_expr = For(target, iterable, body, scope=scope)
             for_expr.end_annotation = expr.end_annotation
         return for_expr
 
@@ -2675,10 +2674,9 @@ class SemanticParser(BasicParser):
         scope = self.create_new_loop_scope()
         test = self._visit(expr.test, **settings)
         body = self._visit(expr.body, **settings)
-        local_vars = list(self.scope.variables.values())
         self.exit_loop_scope()
 
-        return While(test, body, local_vars=local_vars, scope=scope)
+        return While(test, body, scope=scope)
 
     def _visit_IfSection(self, expr, **settings):
         condition = expr.condition
@@ -2906,7 +2904,6 @@ class SemanticParser(BasicParser):
         for i, m in enumerate(interfaces):
             args           = []
             results        = []
-            local_vars     = []
             global_vars    = []
             imports        = []
             arg            = None
@@ -3018,8 +3015,7 @@ class SemanticParser(BasicParser):
             arg_vars = [a.var for a in args]
 
             # Determine local and global variables
-            local_vars  = [v for v in self.get_variables(self.scope)              if v not in arg_vars + results]
-            global_vars = [v for v in self.get_variables(self.scope.parent_scope) if v not in arg_vars + results + local_vars]
+            global_vars = list(self.get_variables(self.scope.parent_scope))
             global_vars = [g for g in global_vars if body.is_user_of(g)]
 
             # get the imports
@@ -3114,7 +3110,6 @@ class SemanticParser(BasicParser):
                     severity='fatal')
 
             func_kwargs = {
-                    'local_vars':local_vars,
                     'global_vars':global_vars,
                     'cls_name':cls_name,
                     'is_pure':is_pure,

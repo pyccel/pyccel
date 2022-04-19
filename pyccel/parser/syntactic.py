@@ -594,7 +594,6 @@ class SyntaxParser(BasicParser):
 
         arguments    = self._visit(stmt.args)
 
-        local_vars   = []
         global_vars  = []
         headers      = []
         template    = {}
@@ -809,7 +808,6 @@ class SyntaxParser(BasicParser):
                arguments,
                results,
                body,
-               local_vars=local_vars,
                global_vars=global_vars,
                is_pure=is_pure,
                is_elemental=is_elemental,
