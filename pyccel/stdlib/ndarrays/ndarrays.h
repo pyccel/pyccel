@@ -63,11 +63,11 @@ enum e_types
         nd_int8     = 1,
         nd_int16    = 3,
         nd_int32    = 5,
-        nd_int64    = 6,
-        nd_float    = 7,
-        nd_double   = 9,
-        nd_cfloat   = 11,
-        nd_cdouble  = 13
+        nd_int64    = 7,
+        nd_float    = 11,
+        nd_double   = 12,
+        nd_cfloat   = 14,
+        nd_cdouble  = 15
 };
 
 typedef struct  s_ndarray
