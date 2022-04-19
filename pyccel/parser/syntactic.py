@@ -64,10 +64,11 @@ from pyccel.ast.variable  import DottedName
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
+from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.base import BasicParser
-from pyccel.parser.utilities import read_file
-from pyccel.parser.utilities import get_default_path
+from pyccel.parser.scope       import Scope
+from pyccel.parser.utilities   import read_file
+from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
