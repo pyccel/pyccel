@@ -593,19 +593,20 @@ def insert_fors(blocks, indices, scope, level = 0):
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
     else:
-        scope = scope.create_new_loop_scope()
-        body = [insert_fors(b, indices, scope, level+1) if isinstance(b, LoopCollection) else [b] \
+        loop_scope = scope.create_new_loop_scope()
+        body = [insert_fors(b, indices, loop_scope, level+1) if isinstance(b, LoopCollection) else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
+
     if blocks.length == 1:
         return body
     else:
         body = CodeBlock(body, unravelled = True)
-        scope = scope.create_new_loop_scope()
+        loop_scope = scope.create_new_loop_scope()
         return [For(indices[level],
                     PythonRange(0,blocks.length),
                     body,
-                    scope = scope)]
+                    scope = loop_scope)]
 
 #==============================================================================
 def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
