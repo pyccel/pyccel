@@ -67,7 +67,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._cast_functions_dict = OrderedDict()
         self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
-        self._global_names = set()
         self._module_name = None
 
 
@@ -355,7 +354,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_name = self.scope.get_new_name(name+"_wrapper")
 
         self._function_wrapper_names[func.name] = wrapper_name
-        self._global_names.add(wrapper_name)
 
         return wrapper_name
 
@@ -370,6 +368,9 @@ class CWrapperCodePrinter(CCodePrinter):
         python_func_args    = self.get_new_PyObject("args")
         python_func_kwargs  = self.get_new_PyObject("kwargs")
         python_func_selfarg = self.get_new_PyObject("self"  )
+        self.scope.insert_variable(python_func_args)
+        self.scope.insert_variable(python_func_kwargs)
+        self.scope.insert_variable(python_func_selfarg)
 
         return [python_func_selfarg, python_func_args, python_func_kwargs]
 
@@ -534,6 +535,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if variable.is_optional:
                 tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
                                         name = self.scope.get_new_name(variable.name+"_tmp"))
+                self.scope.insert_variable(tmp_variable)
 
             body = [self._body_scalar(variable, collect_var, default_value, check_type, tmp_variable)]
 
@@ -604,14 +606,17 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
-            collect_var  = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
-                                   order= variable.order,
-                                   name=self.scope.get_new_name(variable.name+"_tmp"))
+            collect_var  = Variable(dtype = collect_type,
+                                is_pointer = True, rank = variable.rank,
+                                order= variable.order,
+                                name=self.scope.get_new_name(variable.name+"_tmp"))
 
         else:
             collect_type = PyccelPyObject()
-            collect_var  = Variable(dtype=collect_type, is_pointer=True,
-                                   name = self.scope.get_new_name(variable.name+"_tmp"))
+            collect_var  = Variable(dtype = collect_type,
+                                is_pointer = True,
+                                name=self.scope.get_new_name(variable.name+"_tmp"))
+        self.scope.insert_variable(collect_var)
 
         return collect_var
 
@@ -637,8 +642,9 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function = FunctionCall(C_to_Python(variable), [VariableAddress(variable)])
 
         collect_type = PyccelPyObject()
-        collect_var = Variable(dtype=collect_type, is_pointer=True,
+        collect_var = Variable(dtype = collect_type, is_pointer=True,
             name = self.scope.get_new_name(variable.name+"_tmp"))
+        self.scope.insert_variable(collect_var)
         self._to_free_PyObject_list.append(collect_var) #TODO remove in next PR
 
         return collect_var, cast_function
@@ -748,6 +754,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(expr)
 
+        mod_scope = self.scope
         scope = self.scope.new_child_scope(wrapper_name)
         self.set_scope(scope)
 
@@ -761,6 +768,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments()
         wrapper_results = [self.get_new_PyObject("result")]
+        self.scope.insert_variable(wrapper_results[0])
 
         # Collect parser arguments
         wrapper_vars = {}
@@ -789,11 +797,20 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body = []
             res_args = []
             static_func_args  = []
+
+            mini_wrapper_func_name = self.scope.get_new_name(func.name + '_mini_wrapper')
+            mini_scope = mod_scope.new_child_scope(mini_wrapper_func_name)
+            self.set_scope(mini_scope)
+
             # update ndarray local variables properties
             arg_vars = {a.var: a for a in func.arguments}
             local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
+            for a in local_arg_vars:
+                mini_scope.insert_variable(a)
+            for r in func.results:
+                mini_scope.insert_variable(r)
             mini_wrapper_func_vars = {a.name : a for a in local_arg_vars}
             flags = 0
             collect_vars = {}
@@ -838,10 +855,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
             mini_wrapper_func_body.append(func_call)
 
-            mini_wrapper_func_name = self.scope.get_new_name(func.name + '_mini_wrapper')
-            self._global_names.add(mini_wrapper_func_name)
-
-            mini_scope = self.scope.new_child_scope(mini_wrapper_func_name)
 
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
@@ -864,12 +877,13 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
 
+            self.set_scope(scope)
+
             # Building Mini wrapper function
             mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
                 arguments = parse_args,
                 results = wrapper_results,
                 body = mini_wrapper_func_body,
-                local_vars = mini_wrapper_func_vars.values(),
                 scope = mini_scope)
             funcs_def.append(mini_wrapper_func_def)
 
@@ -907,7 +921,6 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = wrapper_vars.values(),
             scope = scope))
 
         sep = self._print(SeparatorComment(40))
@@ -942,12 +955,10 @@ class CWrapperCodePrinter(CCodePrinter):
         check_func_body.append(Return([check_var]))
         # Creating check function definition
         check_func_name = self.scope.parent_scope.get_new_name('type_check')
-        self._global_names.add(check_func_name)
         check_func_def = FunctionDef(name = check_func_name,
             arguments = parse_args,
             results = [check_var],
             body = check_func_body,
-            local_vars = [],
             scope = self.scope.new_child_scope(check_func_name))
         return check_func_def
 
@@ -1033,6 +1044,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments()
         wrapper_results = [self.get_new_PyObject("result")]
+        self.scope.insert_variable(wrapper_results[0])
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in local_arg_vars]
@@ -1129,7 +1141,6 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = tuple(wrapper_vars.values()),
             scope = self.scope)
 
         self.exit_scope()
@@ -1148,7 +1159,6 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
                                     for v in expr.variables if not v.is_private and v.rank == 0]
 
-        self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
 
