@@ -616,26 +616,25 @@ class FCodePrinter(CodePrinter):
             fend         : PyccelAstNode
                            The character describing the end of the line
             """
-
             if fargs_format == ['*']:
-                # To print a tuple
+                # To print the result of a FunctionCall
                 return ', '.join(['print *', *fargs]) + '\n'
-            args_formatting = []
-            args_code = []
-            for a_f, a_c in zip(fargs_format, fargs):
-                args_code.append(a_c if a_c != '' else "''")
-                args_formatting.append(a_f)
 
+
+            args_list = [a_c if a_c != '' else "''" for a_c in fargs]
             fend_code = self._print(fend)
             advance = "yes" if fend_code == 'ACHAR(10)' else "no"
+
             if separator != '':
-                args_formatting = [af for a in args_formatting for af in (a, 'A')][:-1]
-                args_code       = [af for a in args_code for af in (a, separator)][:-1]
+                fargs_format = [af for a in fargs_format for af in (a, 'A')][:-1]
+                args_list    = [af for a in args_list for af in (a, separator)][:-1]
+
             if fend_code not in ('ACHAR(10)', ''):
-                args_formatting.append('A')
-                args_code.append(fend_code)
-            args_code = ' , '.join(args_code)
-            args_formatting = ' '.join(args_formatting)
+                fargs_format.append('A')
+                args_list.append(fend_code)
+
+            args_code       = ' , '.join(args_list)
+            args_formatting = ' '.join(fargs_format)
             return "write(*, '({})', advance=\"{}\") {}\n"\
                 .format(args_formatting, advance, args_code)
 
