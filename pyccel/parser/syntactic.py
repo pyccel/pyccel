@@ -66,7 +66,6 @@ from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.scope       import Scope
 from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
@@ -127,8 +126,8 @@ class SyntaxParser(BasicParser):
 
             code = read_file(inputs)
 
-        self._code  = code
-        self._scope = Scope()
+        self._code    = code
+        self._context = []
 
         self.load()
 
@@ -206,11 +205,11 @@ class SyntaxParser(BasicParser):
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
-            self._scope.append(stmt)
+            self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
             if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
                 result.set_fst(stmt)
-            self._scope.pop()
+            self._context.pop()
             return result
 
         # Unknown object, we raise an error.
@@ -273,7 +272,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Str(self, stmt):
         val =  stmt.s
-        if isinstance(self._scope[-2], ast.Expr):
+        if isinstance(self._context[-2], ast.Expr):
             return CommentBlock(val)
         return LiteralString(val)
 
@@ -948,13 +947,13 @@ class SyntaxParser(BasicParser):
 
         generators = list(self._visit(stmt.generators))
 
-        if not isinstance(self._scope[-2],ast.Assign):
+        if not isinstance(self._context[-2],ast.Assign):
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
             lhs = PyccelSymbol('_', is_temp=True)
         else:
-            lhs = self._visit(self._scope[-2].targets)
+            lhs = self._visit(self._context[-2].targets)
             if len(lhs)==1:
                 lhs = lhs[0]
             else:
@@ -988,13 +987,13 @@ class SyntaxParser(BasicParser):
         result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
-        parent = self._scope[-2]
+        parent = self._context[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
         name = self._visit(parent.func)
 
-        grandparent = self._scope[-3]
+        grandparent = self._context[-3]
         if isinstance(grandparent, ast.Assign):
             if len(grandparent.targets) != 1:
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
