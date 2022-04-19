@@ -553,7 +553,7 @@ class AccAsync(AccBasic):
         if DEBUG:
             print("> AccAsync: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'async({})'.format(args)
 
@@ -587,7 +587,7 @@ class AccBind(AccBasic):
         if DEBUG:
             print("> AccBind: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         arg = self.arg
         return 'bind({})'.format(str(arg))
 
@@ -606,7 +606,7 @@ class AccCache(AccBasic):
         if DEBUG:
             print("> AccCache: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'cache({})'.format(args)
 
@@ -642,7 +642,7 @@ class AccCopy(AccBasic):
         if DEBUG:
             print("> AccCopy: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'copy({})'.format(args)
 
@@ -661,7 +661,7 @@ class AccCopyin(AccBasic):
         if DEBUG:
             print("> AccCopyin: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'copyin({})'.format(args)
 
@@ -680,7 +680,7 @@ class AccCopyout(AccBasic):
         if DEBUG:
             print("> AccCopyout: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'copyout({})'.format(args)
 
@@ -699,7 +699,7 @@ class AccCreate(AccBasic):
         if DEBUG:
             print("> AccCreate: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'create({})'.format(args)
 
@@ -735,7 +735,7 @@ class AccDefaultAsync(AccBasic):
         if DEBUG:
             print("> AccDefaultAsync: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'default_async({})'.format(args)
 
@@ -754,7 +754,7 @@ class AccDelete(AccBasic):
         if DEBUG:
             print("> AccDelete: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'delete({})'.format(args)
 
@@ -773,7 +773,7 @@ class AccDevice(AccBasic):
         if DEBUG:
             print("> AccDevice: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'device({})'.format(args)
 
@@ -809,7 +809,7 @@ class AccDevicePtr(AccBasic):
         if DEBUG:
             print("> AccDevicePtr: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'deviceptr({})'.format(args)
 
@@ -828,7 +828,7 @@ class AccDeviceResident(AccBasic):
         if DEBUG:
             print("> AccDeviceResident: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'device_resident({})'.format(args)
 
@@ -847,7 +847,7 @@ class AccDeviceType(AccBasic):
         if DEBUG:
             print("> AccDeviceType: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'device_type({})'.format(args)
 
@@ -881,7 +881,7 @@ class AccFirstPrivate(AccBasic):
         if DEBUG:
             print("> AccFirstPrivate: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'firstprivate({})'.format(args)
 
@@ -900,7 +900,7 @@ class AccGang(AccBasic):
         if DEBUG:
             print("> AccGang: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(a.arg) for a in self.args)
         return 'gang({})'.format(args)
 
@@ -919,7 +919,7 @@ class AccHost(AccBasic):
         if DEBUG:
             print("> AccHost: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'host({})'.format(args)
 
@@ -938,7 +938,7 @@ class AccIf(AccBasic):
         if DEBUG:
             print("> AccIf: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         cond = self.cond
         return 'if({})'.format(str(cond))
 
@@ -987,7 +987,7 @@ class AccLink(AccBasic):
         if DEBUG:
             print("> AccLink: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'link({})'.format(args)
 
@@ -1055,7 +1055,7 @@ class AccPresent(AccBasic):
         if DEBUG:
             print("> AccPresent: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'present({})'.format(args)
 
@@ -1074,7 +1074,7 @@ class AccPrivate(AccBasic):
         if DEBUG:
             print("> AccPrivate: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'private({})'.format(args)
 
@@ -1094,7 +1094,7 @@ class AccReduction(AccBasic):
         if DEBUG:
             print("> AccReduction: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         op   = self.op
         args = ', '.join(str(arg) for arg in self.args)
         return 'reduction({0}: {1})'.format(op, args)
@@ -1114,7 +1114,7 @@ class AccSelf(AccBasic):
         if DEBUG:
             print("> AccSelf: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'self({})'.format(args)
 
@@ -1148,7 +1148,7 @@ class AccTile(AccBasic):
         if DEBUG:
             print("> AccTile: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'tile({})'.format(args)
 
@@ -1167,7 +1167,7 @@ class AccUseDevice(AccBasic):
         if DEBUG:
             print("> AccUseDevice: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'use_device({})'.format(args)
 
@@ -1186,7 +1186,7 @@ class AccVector(AccBasic):
         if DEBUG:
             print("> AccVector: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(a.arg) for a in self.args)
         return 'vector({})'.format(args)
 
@@ -1222,7 +1222,7 @@ class AccWait(AccBasic):
         if DEBUG:
             print("> AccWait: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(arg) for arg in self.args)
         return 'wait({})'.format(args)
 
@@ -1241,7 +1241,7 @@ class AccWorker(AccBasic):
         if DEBUG:
             print("> AccWorker: expr")
 
-        # TODO check if variable exist in namespace
+        # TODO check if variable exist in scope
         args = ', '.join(str(a.arg) for a in self.args)
         return 'worker({})'.format(args)
 #################################################

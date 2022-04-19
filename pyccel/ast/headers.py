@@ -4,12 +4,12 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
@@ -372,7 +372,6 @@ class FunctionHeader(Header):
                 d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
-                              local_vars=[],
                               global_vars=[],
                               cls_name=cls_name,
                               is_static=is_static,
