@@ -26,7 +26,7 @@ class CodePrinter:
     """
     language = None
     def __init__(self):
-        self._namespace = None
+        self._scope = None
 
     def doprint(self, expr, assign_to=None):
         """
@@ -56,21 +56,21 @@ class CodePrinter:
         return ''.join(self._format_code(lines))
 
     @property
-    def namespace(self):
-        """ Return the namespace associated with the object being printed
+    def scope(self):
+        """ Return the scope associated with the object being printed
         """
-        return self._namespace
+        return self._scope
 
     def set_scope(self, scope):
         """ Change the current scope
         """
         assert scope is not None
-        self._namespace = scope
+        self._scope = scope
 
     def exit_scope(self):
         """ Exit the current scope and return to the enclosing scope
         """
-        self._namespace = self._namespace.parent_scope
+        self._scope = self._scope.parent_scope
 
     def _print(self, expr):
         """Print the AST node in the printer language

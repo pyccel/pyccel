@@ -64,10 +64,10 @@ from pyccel.ast.variable  import DottedName
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
+from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.base import BasicParser
-from pyccel.parser.utilities import read_file
-from pyccel.parser.utilities import get_default_path
+from pyccel.parser.utilities   import read_file
+from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
@@ -126,8 +126,8 @@ class SyntaxParser(BasicParser):
 
             code = read_file(inputs)
 
-        self._code  = code
-        self._scope = []
+        self._code    = code
+        self._context = []
 
         self.load()
 
@@ -205,11 +205,11 @@ class SyntaxParser(BasicParser):
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
-            self._scope.append(stmt)
+            self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
             if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
                 result.set_fst(stmt)
-            self._scope.pop()
+            self._context.pop()
             return result
 
         # Unknown object, we raise an error.
@@ -226,7 +226,7 @@ class SyntaxParser(BasicParser):
         name = AsName(mod_name, self.namespace.get_new_name(mod_name))
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
-        return Module(name, [], [], program = CodeBlock(body))
+        return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
@@ -273,7 +273,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Str(self, stmt):
         val =  stmt.s
-        if isinstance(self._scope[-2], ast.Expr):
+        if isinstance(self._context[-2], ast.Expr):
             return CommentBlock(val)
         return LiteralString(val)
 
@@ -346,7 +346,7 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                                         for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
-            self.namespace.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
+            self.scope.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -357,7 +357,7 @@ class SyntaxParser(BasicParser):
                             value=val, kwonly=True)
 
                 arguments.append(arg)
-                self.namespace.insert_symbol(a.arg)
+                self.scope.insert_symbol(a.arg)
 
         return arguments
 
@@ -404,7 +404,7 @@ class SyntaxParser(BasicParser):
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)
         if self._in_lhs_assign:
-            self.namespace.insert_symbol(name)
+            self.scope.insert_symbol(name)
         return name
 
     def _treat_import_source(self, source, level):
@@ -597,7 +597,6 @@ class SyntaxParser(BasicParser):
 
         arguments    = self._visit(stmt.args)
 
-        local_vars   = []
         global_vars  = []
         headers      = []
         template    = {}
@@ -800,7 +799,7 @@ class SyntaxParser(BasicParser):
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
             else:
-                result_name, result_counter = self.namespace.get_new_incremented_symbol('Out', result_counter)
+                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
             results.append(result_name)
 
@@ -812,7 +811,6 @@ class SyntaxParser(BasicParser):
                arguments,
                results,
                body,
-               local_vars=local_vars,
                global_vars=global_vars,
                is_pure=is_pure,
                is_elemental=is_elemental,
@@ -875,7 +873,7 @@ class SyntaxParser(BasicParser):
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
         if self._in_lhs_assign:
-            self.namespace.insert_symbol(stmt.attr)
+            self.scope.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
@@ -950,13 +948,13 @@ class SyntaxParser(BasicParser):
 
         generators = list(self._visit(stmt.generators))
 
-        if not isinstance(self._scope[-2],ast.Assign):
+        if not isinstance(self._context[-2],ast.Assign):
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
                           symbol = stmt,
                           severity='error')
             lhs = PyccelSymbol('_', is_temp=True)
         else:
-            lhs = self._visit(self._scope[-2].targets)
+            lhs = self._visit(self._context[-2].targets)
             if len(lhs)==1:
                 lhs = lhs[0]
             else:
@@ -990,13 +988,13 @@ class SyntaxParser(BasicParser):
         result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
-        parent = self._scope[-2]
+        parent = self._context[-2]
         if not isinstance(parent, ast.Call):
             raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
         name = self._visit(parent.func)
 
-        grandparent = self._scope[-3]
+        grandparent = self._context[-3]
         if isinstance(grandparent, ast.Assign):
             if len(grandparent.targets) != 1:
                 raise NotImplementedError("Cannot unpack function with generator expression argument")

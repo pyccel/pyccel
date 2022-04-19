@@ -372,7 +372,6 @@ class FunctionHeader(Header):
                 d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
-                              local_vars=[],
                               global_vars=[],
                               cls_name=cls_name,
                               is_static=is_static,

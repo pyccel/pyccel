@@ -723,7 +723,29 @@ def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
+@pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
+                                        ] )
+def test_lapack( test_file ):
+    #TODO: Uncomment this when dgetri can be expressed with scipy
+    #pyccel_test(test_file)
 
+    #TODO: Remove the rest of the function when dgetri can be expressed with scipy
+    test_file = os.path.normpath(test_file)
+    test_file = get_abs_path(test_file)
+
+    cwd = get_abs_path('.')
+
+    compile_pyccel(cwd, test_file)
+
+    lang_out = get_lang_output(test_file, 'fortran')
+    lang_out = [float(l) for l in lang_out.split()]
+    output_mat = np.array(lang_out).reshape(4,4)
+    expected_output = np.eye(4)
+
+    assert np.allclose(output_mat, expected_output, rtol=1e-14, atol=1e-15)
+
+#------------------------------------------------------------------------------
 def test_type_print( language ):
     test_file = 'scripts/runtest_type_print.py'
 

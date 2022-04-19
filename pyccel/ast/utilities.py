@@ -572,7 +572,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
 #==============================================================================
 
-def insert_fors(blocks, indices, namespace, level = 0):
+def insert_fors(blocks, indices, scope, level = 0):
     """
     Run through the output of collect_loops and create For loops of the
     requested sizes
@@ -593,19 +593,20 @@ def insert_fors(blocks, indices, namespace, level = 0):
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
     else:
-        scope = namespace.create_new_loop_scope()
-        body = [insert_fors(b, indices, scope, level+1) if isinstance(b, LoopCollection) else [b] \
+        loop_scope = scope.create_new_loop_scope()
+        body = [insert_fors(b, indices, loop_scope, level+1) if isinstance(b, LoopCollection) else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
+
     if blocks.length == 1:
         return body
     else:
         body = CodeBlock(body, unravelled = True)
-        scope = namespace.create_new_loop_scope()
+        loop_scope = scope.create_new_loop_scope()
         return [For(indices[level],
                     PythonRange(0,blocks.length),
                     body,
-                    scope = scope)]
+                    scope = loop_scope)]
 
 #==============================================================================
 def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
@@ -656,7 +657,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         expand_inhomog_tuple_assignments(block)
 
 #==============================================================================
-def expand_to_loops(block, new_index, namespace, language_has_vectors = False):
+def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     """
     Re-write a list of expressions to include explicit loops where necessary
 
@@ -695,7 +696,7 @@ def expand_to_loops(block, new_index, namespace, language_has_vectors = False):
     indices = []
     res = collect_loops(block.body, indices, new_index, language_has_vectors)
 
-    body = [insert_fors(b, indices, namespace) if isinstance(b, tuple) else [b] for b in res]
+    body = [insert_fors(b, indices, scope) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
 
     return body
