@@ -1093,7 +1093,9 @@ class SemanticParser(BasicParser):
         """
         Ensure that the inferred type of the new variable, matches the existing variable (which has the
         same name). If this is not the case then errors are raised preventing pyccel reaching the codegen
-        stage
+        stage.
+        This function also handles any reallocations caused by differing shapes between the two objects.
+        These allocations/deallocations are saved in the list new_expressions
 
         Parameters
         ----------
