@@ -11,9 +11,11 @@ by providing translations between the sympy representation and the pyccel nodes
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
+from pyccel.utilities.strings import create_incremented_string
+
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import create_incremented_string, Iterable
+from .core      import Iterable
 
 from .builtins  import PythonRange, PythonTuple
 

@@ -11,6 +11,7 @@ from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.variable import Variable
+from pyccel.parser.scope import Scope
 
 __all__ = (
     'as_static_module',
@@ -32,7 +33,20 @@ def sanitize_arguments(args):
     return _args
 
 #=======================================================================================
-def as_static_function(func, name=None):
+def as_static_function(func, *, mod_scope, name=None):
+    """ Translate a FunctionDef to a BindCFunctionDef by altering the
+    arguments to allow the function to be called from c.
+    E.g. the size of each dimension of an array is provided
+
+    Parameters
+    ==========
+    func     : FunctionDef
+               The function to be translated
+    mod_scope: Scope
+               The scope of the module which contains func
+    name     : str
+               The new name of the function
+    """
 
     assert(isinstance(func, FunctionDef))
 
@@ -43,6 +57,8 @@ def as_static_function(func, name=None):
     functions = func.functions
     _results = []
     interfaces = func.interfaces
+
+    scope = mod_scope.new_child_scope(func.name)
 
     # Convert array results to inout arguments
     for r in results:
@@ -105,7 +121,6 @@ def as_static_function(func, name=None):
     arguments_inout = _arguments_inout
     # ...
     return BindCFunctionDef( name, list(args), results, body,
-                        local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout,
                         functions = functions,
@@ -113,6 +128,7 @@ def as_static_function(func, name=None):
                         imports = func.imports,
                         original_function = func,
                         doc_string = func.doc_string,
+                        scope = scope
                         )
 
 #=======================================================================================
@@ -132,13 +148,14 @@ def as_static_module(funcs, original_module, name = None):
     """
     funcs = [f for f in funcs if not f.is_private]
     imports = []
-    bind_c_funcs = [as_static_function_call(f, original_module, imports = imports) for f in funcs]
+    scope = Scope()
+    bind_c_funcs = [as_static_function_call(f, original_module, scope, imports = imports) for f in funcs]
     if name is None:
         name = 'bind_c_{}'.format(original_module)
-    return Module(name, (), bind_c_funcs, imports = imports)
+    return Module(name, (), bind_c_funcs, imports = imports, scope=scope)
 
 #=======================================================================================
-def as_static_function_call(func, mod_name, name=None, imports = None):
+def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None):
     """ Translate a FunctionDef to a BindCFunctionDef which calls the
     original function. A BindCFunctionDef is a FunctionDef where the
     arguments are altered to allow the function to be called from c.
@@ -182,10 +199,10 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
                        functions = func.functions,
                        interfaces = func.interfaces,
                        imports = local_imports,
-                       doc_string = func.doc_string,
+                       doc_string = func.doc_string
                        )
 
     # make it compatible with c
-    static_func = as_static_function(new_func, name)
+    static_func = as_static_function(new_func, name=name, mod_scope=mod_scope)
 
     return static_func
