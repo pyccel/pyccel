@@ -864,7 +864,6 @@ class CWrapperCodePrinter(CCodePrinter):
                     mini_wrapper_func_vars[r.name] = r
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
-                    mini_scope.insert_variable(r, r.name)
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
