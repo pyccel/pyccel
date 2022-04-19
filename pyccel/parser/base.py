@@ -185,6 +185,8 @@ class BasicParser(object):
 
     @property
     def scope(self):
+        """ The Scope object containing all objects defined within the current scope
+        """
         return self._scope
 
     @scope.setter
