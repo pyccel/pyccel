@@ -139,3 +139,13 @@ def test_module_7(language):
         assert np.array_equal(mod_att, modnew_att)
         assert mod_att.dtype == modnew_att.dtype
 
+    modnew.update_a()
+    mod.update_a()
+
+    mod_att = mod.a
+    modnew_att = modnew.a
+    assert np.array_equal(mod_att, modnew_att)
+    assert mod_att.dtype == modnew_att.dtype
+
+    # Necessary as python does not reload modules
+    mod_att.reset_a()

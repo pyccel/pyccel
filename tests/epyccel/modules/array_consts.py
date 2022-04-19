@@ -11,3 +11,9 @@ for i in range(2):
     for j in range(3):
         for k in range(4):
             e[i,j,k] = i*12+j*4+k
+
+def update_a():
+    a[:] = a+1
+
+def reset_a():
+    a[:] = 1
