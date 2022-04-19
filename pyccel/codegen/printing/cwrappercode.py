@@ -140,7 +140,7 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         """
         return Variable(dtype=PyccelPyObject(),
-                        name=self.namespace.get_new_name(name),
+                        name=self.scope.get_new_name(name),
                         is_pointer=True)
 
     def find_in_dtype_registry(self, dtype, prec):
@@ -196,7 +196,7 @@ class CWrapperCodePrinter(CCodePrinter):
         static_func : FunctionDef
         """
         if self._target_language == 'fortran':
-            static_func = as_static_function(function, mod_scope = self.namespace)
+            static_func = as_static_function(function, mod_scope = self.scope)
         else:
             static_func = function
 
@@ -352,7 +352,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_name : string
         """
         name         = func.name
-        wrapper_name = self.namespace.get_new_name(name+"_wrapper")
+        wrapper_name = self.scope.get_new_name(name+"_wrapper")
 
         self._function_wrapper_names[func.name] = wrapper_name
         self._global_names.add(wrapper_name)
@@ -533,7 +533,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             if variable.is_optional:
                 tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
-                                        name = self.namespace.get_new_name(variable.name+"_tmp"))
+                                        name = self.scope.get_new_name(variable.name+"_tmp"))
 
             body = [self._body_scalar(variable, collect_var, default_value, check_type, tmp_variable)]
 
@@ -566,7 +566,7 @@ class CWrapperCodePrinter(CCodePrinter):
         code : string
             returns the string containing the printed FunctionDef
         """
-        current_namespace = self.namespace
+        current_namespace = self.scope
         wrapper_func = FunctionDef(
                 name      = wrapper_name,
                 arguments = wrapper_args,
@@ -606,12 +606,12 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyArrayObject()
             collect_var  = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                    order= variable.order,
-                                   name=self.namespace.get_new_name(variable.name+"_tmp"))
+                                   name=self.scope.get_new_name(variable.name+"_tmp"))
 
         else:
             collect_type = PyccelPyObject()
             collect_var  = Variable(dtype=collect_type, is_pointer=True,
-                                   name = self.namespace.get_new_name(variable.name+"_tmp"))
+                                   name = self.scope.get_new_name(variable.name+"_tmp"))
 
         return collect_var
 
@@ -638,7 +638,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         collect_type = PyccelPyObject()
         collect_var = Variable(dtype=collect_type, is_pointer=True,
-            name = self.namespace.get_new_name(variable.name+"_tmp"))
+            name = self.scope.get_new_name(variable.name+"_tmp"))
         self._to_free_PyObject_list.append(collect_var) #TODO remove in next PR
 
         return collect_var, cast_function
@@ -699,8 +699,8 @@ class CWrapperCodePrinter(CCodePrinter):
         ------
         str
         """
-        mod_var_name = self.namespace.get_new_name('m')
-        tmp_var_name = self.namespace.get_new_name('tmp')
+        mod_var_name = self.scope.get_new_name('m')
+        tmp_var_name = self.scope.get_new_name('tmp')
         tmp_var = Variable(dtype = PyccelPyObject(),
                       name       = tmp_var_name,
                       is_pointer = True)
@@ -748,7 +748,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(expr)
 
-        scope = self.namespace.new_child_scope(wrapper_name)
+        scope = self.scope.new_child_scope(wrapper_name)
         self.set_scope(scope)
 
         # Collecting all functions
@@ -756,7 +756,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Save all used names
         for n in funcs:
-            self.namespace.insert_symbol(n.name)
+            self.scope.insert_symbol(n.name)
 
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments()
@@ -767,7 +767,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in funcs[0].arguments]
-        keyword_list_name = self.namespace.get_new_name('kwlist')
+        keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
         wrapper_body      = [keyword_list]
 
@@ -777,7 +777,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # To store the mini function responsible for collecting value and calling interfaces functions and return the builded value
         funcs_def = []
         default_value = {} # dict to collect all initialisation needed in the wrapper
-        check_var = Variable(dtype = NativeInteger(), name = self.namespace.get_new_name("check"))
+        check_var = Variable(dtype = NativeInteger(), name = self.scope.get_new_name("check"))
         wrapper_vars[check_var.name] = check_var
         scope.insert_variable(check_var, check_var.name)
         types_dict = OrderedDict((a.var, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
@@ -838,10 +838,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
             mini_wrapper_func_body.append(func_call)
 
-            mini_wrapper_func_name = self.namespace.get_new_name(func.name + '_mini_wrapper')
+            mini_wrapper_func_name = self.scope.get_new_name(func.name + '_mini_wrapper')
             self._global_names.add(mini_wrapper_func_name)
 
-            mini_scope = self.namespace.new_child_scope(mini_wrapper_func_name)
+            mini_scope = self.scope.new_child_scope(mini_wrapper_func_name)
 
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
@@ -941,14 +941,14 @@ class CWrapperCodePrinter(CCodePrinter):
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
         # Creating check function definition
-        check_func_name = self.namespace.parent_scope.get_new_name('type_check')
+        check_func_name = self.scope.parent_scope.get_new_name('type_check')
         self._global_names.add(check_func_name)
         check_func_def = FunctionDef(name = check_func_name,
             arguments = parse_args,
             results = [check_var],
             body = check_func_body,
             local_vars = [],
-            scope = self.namespace.new_child_scope(check_func_name))
+            scope = self.scope.new_child_scope(check_func_name))
         return check_func_def
 
     def _print_PyccelPyObject(self, expr):
@@ -1007,18 +1007,18 @@ class CWrapperCodePrinter(CCodePrinter):
                 self._print(expr.variable))
 
     def _print_FunctionDef(self, expr):
-        self.set_scope(self.namespace.new_child_scope(expr.name))
+        self.set_scope(self.scope.new_child_scope(expr.name))
 
         arg_vars = {a.var: a for a in expr.arguments}
 
         for a in expr.arguments:
             v = a.var
             if isinstance(v, Variable):
-                self.namespace.insert_variable(v)
+                self.scope.insert_variable(v)
             else:
-                self.namespace.functions[v.name] = v
+                self.scope.functions[v.name] = v
         for r in expr.results:
-            self.namespace.insert_variable(r)
+            self.scope.insert_variable(r)
         # update ndarray and optional local variables properties
         local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
                           if isinstance(v, Variable) and (v.rank > 0 or v.is_optional) \
@@ -1036,7 +1036,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in local_arg_vars]
-        keyword_list_name = self.namespace.get_new_name('kwlist')
+        keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
         if expr.is_private:
@@ -1130,7 +1130,7 @@ class CWrapperCodePrinter(CCodePrinter):
             results = wrapper_results,
             body = wrapper_body,
             local_vars = tuple(wrapper_vars.values()),
-            scope = self.namespace)
+            scope = self.scope)
 
         self.exit_scope()
 
@@ -1178,21 +1178,21 @@ class CWrapperCodePrinter(CCodePrinter):
                                                         if f.doc_string else '""')
                                      for f in funcs if f is not expr.init_func)
 
-        slots_name = self.namespace.get_new_name('{}_slots'.format(expr.name))
-        exec_func_name = self.namespace.get_new_name('exec_func')
+        slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
+        exec_func_name = self.scope.get_new_name('exec_func')
         slots_def = ('static PyModuleDef_Slot {name}[] = {{\n'
                      '{{Py_mod_exec, {exec_func}}},\n'
                      '{{0, NULL}},\n'
                      '}};\n').format(name = slots_name,
                              exec_func = exec_func_name)
 
-        method_def_name = self.namespace.get_new_name('{}_methods'.format(expr.name))
+        method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                         '{method_def_func}'
                         '{{ NULL, NULL, 0, NULL}}\n'
                         '}};\n'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
 
-        module_def_name = self.namespace.get_new_name('{}_module'.format(expr.name))
+        module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
         module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
                 'PyModuleDef_HEAD_INIT,\n'
                 '/* name of module */\n'

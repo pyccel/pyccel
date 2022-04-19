@@ -126,7 +126,7 @@ class BasicParser(object):
             True if in debug mode.
 
         headers: list, tuple
-            list of headers to append to the namespace
+            list of headers to append to the scope
 
         show_traceback: bool
             prints Traceback exception if True
@@ -142,13 +142,13 @@ class BasicParser(object):
         self._fst  = None
         self._ast  = None
 
-        self._filename  = None
-        self._metavars  = {}
-        self._namespace = Scope()
+        self._filename = None
+        self._metavars = {}
+        self._scope    = Scope()
 
         self._used_names = None
 
-        # represent the namespace of a function
+        # represent the scope of a function
 
         self._current_class    = None
         self._current_function = None
@@ -179,18 +179,18 @@ class BasicParser(object):
                 raise TypeError('Expecting a dict of headers')
 
 
-            self.namespace.headers.update(headers)
+            self.scope.headers.update(headers)
 
         self._created_from_pickle = False
 
     @property
-    def namespace(self):
-        return self._namespace
+    def scope(self):
+        return self._scope
 
-    @namespace.setter
-    def namespace(self, namespace):
-        assert isinstance(namespace, Scope)
-        self._namespace = namespace
+    @scope.setter
+    def scope(self, scope):
+        assert isinstance(scope, Scope)
+        self._scope = scope
 
     @property
     def filename(self):
@@ -285,7 +285,7 @@ class BasicParser(object):
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            container = self.namespace.functions
+            container = self.scope.functions
             container[func.name] = func
         else:
             raise TypeError('Expected a Function definition')
@@ -293,7 +293,7 @@ class BasicParser(object):
     def insert_symbolic_function(self, func):
         """."""
 
-        container = self.namespace.symbolic_functions
+        container = self.scope.symbolic_functions
         if isinstance(func, SympyFunction):
             container[func.name] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
@@ -309,7 +309,7 @@ class BasicParser(object):
 
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
-        container = self.namespace.imports['imports']
+        container = self.scope.imports['imports']
 
         # if source is not specified, imported things are treated as sources
         if len(expr.target) == 0:
@@ -337,7 +337,7 @@ class BasicParser(object):
         its children using the function name as key.
 
         Before returning control to the caller, the current scope (stored in
-        self._namespace) is changed to the one just created, and the function's
+        self._scope) is changed to the one just created, and the function's
         name is stored in self._current_function.
 
         Parameters
@@ -349,9 +349,9 @@ class BasicParser(object):
             Decorators attached to FunctionDef object at syntactic stage.
 
         """
-        child = self.namespace.new_child_scope(name, **kwargs)
+        child = self.scope.new_child_scope(name, **kwargs)
 
-        self._namespace = child
+        self._scope = child
         if self._current_function:
             name = DottedName(self._current_function, name)
         self._current_function = name
@@ -362,7 +362,7 @@ class BasicParser(object):
         """ Exit the function scope and return to the encasing scope
         """
 
-        self._namespace = self._namespace.parent_scope
+        self._scope = self._scope.parent_scope
         if isinstance(self._current_function, DottedName):
 
             name = self._current_function.name[:-1]
@@ -377,13 +377,13 @@ class BasicParser(object):
     def create_new_loop_scope(self):
         """ Create a new scope describing a loop
         """
-        self._namespace = self._namespace.create_new_loop_scope()
-        return self._namespace
+        self._scope = self._scope.create_new_loop_scope()
+        return self._scope
 
     def exit_loop_scope(self):
         """ Exit the loop scope and return to the encasing scope
         """
-        self._namespace = self._namespace.parent_scope
+        self._scope = self._scope.parent_scope
 
     def create_new_class_scope(self, name, **kwargs):
         """
@@ -393,7 +393,7 @@ class BasicParser(object):
         its children using the function name as key.
 
         Before returning control to the caller, the current scope (stored in
-        self._namespace) is changed to the one just created, and the function's
+        self._scope) is changed to the one just created, and the function's
         name is stored in self._current_function.
 
         Parameters
@@ -402,15 +402,15 @@ class BasicParser(object):
             Function's name, used as a key to retrieve the new scope.
 
         """
-        child = self.namespace.new_child_scope(name, **kwargs)
-        self._namespace = child
+        child = self.scope.new_child_scope(name, **kwargs)
+        self._scope = child
 
         return child
 
     def exit_class_scope(self):
         """ Exit the class scope and return to the encasing scope
         """
-        self._namespace = self._namespace.parent_scope
+        self._scope = self._scope.parent_scope
 
     def dump(self, filename=None):
         """
@@ -530,8 +530,8 @@ class BasicParser(object):
         self._fst = parser.fst
         self._ast = parser.ast
 
-        self._metavars  = parser.metavars
-        self._namespace = parser.namespace
+        self._metavars = parser.metavars
+        self._scope    = parser.scope
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = parser.syntax_done

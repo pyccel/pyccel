@@ -345,7 +345,7 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                                         for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
-            self.namespace.insert_symbols(a.arg for a in stmt.args)
+            self.scope.insert_symbols(a.arg for a in stmt.args)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -356,7 +356,7 @@ class SyntaxParser(BasicParser):
                             value=val, kwonly=True)
 
                 arguments.append(arg)
-                self.namespace.insert_symbol(a.arg)
+                self.scope.insert_symbol(a.arg)
 
         return arguments
 
@@ -402,13 +402,13 @@ class SyntaxParser(BasicParser):
 
     def _visit_Name(self, stmt):
         if self._in_lhs_assign:
-            self.namespace.insert_symbol(stmt.id)
+            self.scope.insert_symbol(stmt.id)
         return PyccelSymbol(stmt.id)
 
     def _treat_import_source(self, source, level):
         source = '.'*level + source
         if source.count('.') == 0:
-            self.namespace.insert_symbol(source)
+            self.scope.insert_symbol(source)
             source = PyccelSymbol(source)
         else:
             source = DottedName(*source.split('.'))
@@ -797,7 +797,7 @@ class SyntaxParser(BasicParser):
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
             else:
-                result_name, result_counter = self.namespace.get_new_incremented_symbol('Out', result_counter)
+                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
             results.append(result_name)
 
@@ -872,7 +872,7 @@ class SyntaxParser(BasicParser):
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
         if self._in_lhs_assign:
-            self.namespace.insert_symbol(stmt.attr)
+            self.scope.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 

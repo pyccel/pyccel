@@ -225,7 +225,7 @@ class FCodePrinter(CodePrinter):
         self._current_class = name
 
     def get_method(self, cls_name, method_name):
-        container = self._namespace
+        container = self.scope
         while container:
             if cls_name in container.classes:
                 cls = container.classes[cls_name]
@@ -245,7 +245,7 @@ class FCodePrinter(CodePrinter):
             severity='fatal')
 
     def get_function(self, name):
-        container = self._namespace
+        container = self.scope
         while container:
             if name in container.functions:
                 return container.functions[name]
@@ -268,7 +268,7 @@ class FCodePrinter(CodePrinter):
         precision = get_final_precision(expr)
         constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
-        if constant_shortcut not in self.namespace.all_used_symbols and constant_name != constant_shortcut:
+        if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:
             self._constantImports.add((constant_shortcut, constant_name))
             constant_name = constant_shortcut
         else:
@@ -278,7 +278,7 @@ class FCodePrinter(CodePrinter):
     def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
         """ Print a function call to an inline function
         """
-        scope = self.namespace
+        scope = self.scope
         func = expr.funcdef
 
         # Print any arguments using the same inline function
@@ -293,14 +293,14 @@ class FCodePrinter(CodePrinter):
                 args.append(a.value)
 
         # Create new local variables to ensure there are no name collisions
-        new_local_vars = [v.clone(self.namespace.get_new_name(v.name)) \
+        new_local_vars = [v.clone(self.scope.get_new_name(v.name)) \
                             for v in func.local_vars]
         for v in new_local_vars:
-            self.namespace.insert_variable(v)
+            self.scope.insert_variable(v)
 
-        # Put functions into current namespace
+        # Put functions into current scope
         for entry in ['variables', 'classes', 'functions']:
-            self._namespace.imports[entry].update(func.namespace_imports[entry])
+            self.scope.imports[entry].update(func.namespace_imports[entry])
 
         func.swap_in_args(args, new_local_vars)
 
@@ -361,7 +361,7 @@ class FCodePrinter(CodePrinter):
             self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
             for v in (*func.global_vars, *func.global_funcs):
-                self.namespace.insert_symbol(v.name)
+                self.scope.insert_symbol(v.name)
 
         self.set_scope(scope)
         return code
@@ -371,7 +371,7 @@ class FCodePrinter(CodePrinter):
         Look for external functions and declare their result type
         """
         decs = {}
-        for key,f in self._namespace.imports['functions'].items():
+        for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
                 i = Variable(f.results[0].dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
@@ -454,10 +454,10 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
         body    = self._print(expr.body)
 
-        # Print the declarations of all variables in the namespace, which include:
+        # Print the declarations of all variables in the scope, which include:
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
-        variables = self.namespace.variables.values()
+        variables = self.scope.variables.values()
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         # Detect if we are using mpi4py
@@ -659,10 +659,10 @@ class FCodePrinter(CodePrinter):
             base = expr.lhs.funcdef.results[0]
             if (not self._additional_code):
                 self._additional_code = ''
-            var_name = self.namespace.get_new_name()
+            var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
-            self.namespace.insert_variable(var)
+            self.scope.insert_variable(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
             return self._print(var) + '%' +self._print(expr.name)
@@ -790,7 +790,7 @@ class FCodePrinter(CodePrinter):
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
-            self.namespace.insert_variable(var)
+            self.scope.insert_variable(var)
 
         init_value = template.format(
             start = self._print(expr.start),
@@ -871,9 +871,9 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = Variable(NativeInteger(), name =  self.namespace.get_new_name('i'))
+        index  = Variable(NativeInteger(), name =  self.scope.get_new_name('i'))
 
-        self.namespace.insert_variable(index)
+        self.scope.insert_variable(index)
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -959,12 +959,12 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = self.namespace.get_new_name()
+        var_name = self.scope.get_new_name()
         var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
-        self.namespace.insert_variable(var)
+        self.scope.insert_variable(var)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -1252,7 +1252,7 @@ class FCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs = expand_to_loops(expr,
-                    self.namespace.get_temporary_variable, self.namespace,
+                    self.scope.get_temporary_variable, self.scope,
                     language_has_vectors = True)
         else:
             body_exprs = expr.body
@@ -1539,7 +1539,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         self.set_scope(expr.scope)
-        self.namespace.functions[expr.name] = expr
+        self.scope.functions[expr.name] = expr
 
         body = self._print(expr.body)
 
@@ -1563,7 +1563,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[i] = dec
-        vars_to_print = self.namespace.variables.values()
+        vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -1707,7 +1707,7 @@ class FCodePrinter(CodePrinter):
         decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
-        vars_to_print = self.namespace.variables.values()
+        vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -1870,7 +1870,7 @@ class FCodePrinter(CodePrinter):
         indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
         if expr.iterable.num_loop_counters_required:
-            self.namespace.insert_variable(index)
+            self.scope.insert_variable(index)
 
         target   = index
         my_range = expr.iterable.get_range()
@@ -2558,12 +2558,12 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var_name = self.namespace.get_new_name()
+                var_name = self.scope.get_new_name()
                 var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
-                self.namespace.insert_variable(var)
+                self.scope.insert_variable(var)
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
@@ -2692,8 +2692,8 @@ class FCodePrinter(CodePrinter):
                 key = a.keyword
                 arg = a.value
                 if arg in lhs_vars.values():
-                    var = arg.clone(self.namespace.get_new_name())
-                    self.namespace.insert_variable(var)
+                    var = arg.clone(self.scope.get_new_name())
+                    self.scope.insert_variable(var)
                     self._additional_code += self._print(Assign(var,arg))
                     newarg = var
                 else:
@@ -2707,10 +2707,10 @@ class FCodePrinter(CodePrinter):
                                 for n,r in lhs_vars.items()]
 
         elif len(func_results)>1:
-            results = [r.clone(name = self.namespace.get_new_name()) \
+            results = [r.clone(name = self.scope.get_new_name()) \
                         for r in func_results]
             for var in results:
-                self.namespace.insert_variable(var)
+                self.scope.insert_variable(var)
 
             if len(func_results) == 1:
                 results_strs = []
@@ -2752,10 +2752,10 @@ class FCodePrinter(CodePrinter):
             base = expr.prefix.funcdef.results[0]
             if (not self._additional_code):
                 self._additional_code = ''
-            var_name = self.namespace.get_new_name()
+            var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
-            self.namespace.insert_variable(var)
+            self.scope.insert_variable(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
             user_node = expr.current_user_node
