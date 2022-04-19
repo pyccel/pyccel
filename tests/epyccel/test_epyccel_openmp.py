@@ -451,15 +451,14 @@ def test_omp_sections(language):
 def test_omp_get_set_schedule(language):
     set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
     set_num_threads(4)
-    f1 = epyccel(openmp.test_omp_get_set_schedule, fflags = '-Wall', accelerators=['openmp'], language=language)
+    # Don't set -Wall as get_schedule should use enum type omp_sched_t
+    f1 = epyccel(openmp.test_omp_get_set_schedule, accelerators=['openmp'], language=language)
 
     result = f1()
     if language == 'python':
-        assert result[0] == 0
-        assert result[1] == 0
+        assert result == 0
     else:
-        assert result[0] == 16*2
-        assert result[1] == 16*3
+        assert result == 16*3
 
 @pytest.mark.parametrize( 'language', (
     pytest.param('fortran', marks = pytest.mark.fortran),
