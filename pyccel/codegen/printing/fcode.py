@@ -2703,7 +2703,8 @@ class FCodePrinter(CodePrinter):
             if len(func_results) == 1:
                 results_strs = []
             else:
-                use_names = all(not n.is_temp for n in lhs_vars)
+                # If func body is unknown then we may not know result names
+                use_names = (len(func.body.body) != 0)
                 if use_names:
                     results_strs = ['{} = {}'.format(self._print(n), self._print(r))
                             for n,r in lhs_vars.items()]
