@@ -148,4 +148,4 @@ def test_module_7(language):
     assert mod_att.dtype == modnew_att.dtype
 
     # Necessary as python does not reload modules
-    mod_att.reset_a()
+    mod.reset_a()
