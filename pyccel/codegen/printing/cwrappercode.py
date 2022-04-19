@@ -668,6 +668,9 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_func_stmts : functionCall
             call to cast function responsible for the conversion of one data type into another
         """
+        if variable.rank != 0:
+            self.add_import(cwrapper_ndarray_import)
+
 
         cast_function = FunctionCall(C_to_Python(variable), [VariableAddress(variable)])
 
@@ -702,13 +705,16 @@ class CWrapperCodePrinter(CCodePrinter):
                 pymodule initialisation function
         """
         if var.rank != 0:
-            if var.fst:
-                symbol = var
+            if self._target_language == "fortran":
+                if var.fst:
+                    symbol = var
+                else:
+                    symbol = var.get_user_nodes(Assign)[0]
+                errors.report("Global arrays (defined at the module level) cannot currently be exposed to Python",
+                        severity='warning', symbol=symbol)
+                return []
             else:
-                symbol = var.get_user_nodes(Assign)[0]
-            errors.report("Global arrays (defined at the module level) cannot currently be exposed to Python",
-                    severity='warning', symbol=symbol)
-            return []
+                self.add_import(cwrapper_ndarray_import)
 
         collect_value = Assign(VariableAddress(collect_var),
                                 FunctionCall(C_to_Python(var), [VariableAddress(var)]))
@@ -1157,7 +1163,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                     for v in expr.variables if not v.is_private and v.rank == 0]
         else:
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
-                                    for v in expr.variables if not v.is_private and v.rank == 0]
+                                    for v in expr.variables if not v.is_private]
 
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
@@ -1172,7 +1178,9 @@ class CWrapperCodePrinter(CCodePrinter):
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
 
+        self._in_header = True
         decs = ''.join('extern '+self._print(d) for d in vars_to_wrap_decs)
+        self._in_header = False
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n'.join(CCodePrinter._print_FunctionDef(self, f)

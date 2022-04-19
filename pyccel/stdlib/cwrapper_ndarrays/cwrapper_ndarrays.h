@@ -36,6 +36,9 @@
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
 t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
+PyObject* ndarray_to_pyarray(t_ndarray *o);
+PyObject* c_ndarray_to_pyarray(t_ndarray *o);
+PyObject* fortran_ndarray_to_pyarray(t_ndarray *o);
 
 
 /* arrays checkers and helpers */
