@@ -4,8 +4,9 @@ from pyccel.decorators import types
 
 @types(int)
 def set_num_threads(n):
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
-    omp_set_num_threads(n)
+    omp_set_num_threads(np.int32(n))
 
 @types()
 def get_num_threads():
@@ -29,7 +30,7 @@ def f1(i):
     idx = omp_get_thread_num()
 
     if idx == i:
-        out = idx
+        out = int(idx)
 
     #$ omp end parallel
     return out
@@ -90,8 +91,9 @@ def test_omp_get_thread_limit():
 
 @types ('int')
 def test_omp_get_set_max_active_levels(max_active_levels):
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels
-    omp_set_max_active_levels(max_active_levels)
+    omp_set_max_active_levels(np.int32(max_active_levels))
     max_active_levels_var = omp_get_max_active_levels()
     return max_active_levels_var
 
@@ -230,9 +232,9 @@ def test_omp_get_set_schedule():
     return True
 
 def test_omp_get_max_task_priority():
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
-    result = 0
-    max_task_priority_var = 0
+    max_task_priority_var = np.int32(0)
     #$ omp parallel
     #$ omp single
     #$ omp task
