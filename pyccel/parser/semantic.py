@@ -1092,7 +1092,8 @@ class SemanticParser(BasicParser):
     def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions):
         """
         Ensure that the inferred type of the new variable, matches the existing variable (which has the
-        same name)
+        same name). If this is not the case then errors are raised preventing pyccel reaching the codegen
+        stage
 
         Parameters
         ----------
