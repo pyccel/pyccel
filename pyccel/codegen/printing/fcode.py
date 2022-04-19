@@ -2703,8 +2703,9 @@ class FCodePrinter(CodePrinter):
             if len(func_results) == 1:
                 results_strs = []
             else:
-                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
-                                for n,r in lhs_vars.items()]
+                results_strs = [self._print(r) if n.is_temp else \
+                        '{} = {}'.format(self._print(n), self._print(r))
+                        for n,r in lhs_vars.items()]
 
         elif len(func_results)>1:
             results = [r.clone(name = self.scope.get_new_name()) \
