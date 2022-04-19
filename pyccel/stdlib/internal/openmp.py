@@ -298,6 +298,7 @@ def omp_get_team_num():
     The omp_get_team_num routine returns the initial team number
     of the calling thread.
     """
+    return np.int32(0)
 
 def omp_is_initial_device():
     """
