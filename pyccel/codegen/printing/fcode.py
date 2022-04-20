@@ -627,6 +627,7 @@ class FCodePrinter(CodePrinter):
                     code += formatted_args_to_print(args_format, args, sep)
                     args_format = []
                     args = []
+                loop_scope = self.scope.create_new_loop_scope()
                 for_index = self.scope.get_temporary_variable(NativeInteger(), name='i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
                 for_range = PythonRange(max_index)
@@ -635,7 +636,7 @@ class FCodePrinter(CodePrinter):
                     print_body.append(space_end)
 
                 for_body = [PythonPrint(print_body)]
-                for_loop = For(for_index, for_range, for_body)
+                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
