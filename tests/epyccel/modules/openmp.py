@@ -223,7 +223,7 @@ def test_omp_get_set_schedule():
     result = 0
     #$ omp parallel private(i)
     omp_set_schedule(np.int32(2), np.int32(3))
-    schedule_kind, chunk_size = omp_get_schedule()
+    _, chunk_size = omp_get_schedule()
     #$ omp for nowait schedule(runtime) reduction (+:result)
     for i in range(16):
         result = result + chunk_size
