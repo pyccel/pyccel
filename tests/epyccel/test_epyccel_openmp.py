@@ -447,3 +447,42 @@ def test_omp_sections(language):
     f1 = epyccel(openmp.omp_sections, fflags = '-Wall', accelerators=['openmp'], language=language)
     f2 = openmp.omp_sections
     assert f1() == f2()
+
+def test_omp_get_set_schedule(language):
+    set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
+    set_num_threads(4)
+    # Don't set -Wall as get_schedule should use enum type omp_sched_t
+    f1 = epyccel(openmp.test_omp_get_set_schedule, accelerators=['openmp'], language=language)
+
+    result = f1()
+    if language == 'python':
+        assert result == 0
+    else:
+        assert result == 16*3
+
+@pytest.mark.parametrize( 'language', (
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param("c", marks = [
+        pytest.mark.skip(reason="Min and max are not implemented in C"),
+        pytest.mark.c]),
+    pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_nowait_schedule(language):
+    set_num_threads = epyccel(openmp.set_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
+    get_num_threads = epyccel(openmp.get_num_threads, fflags = '-Wall', accelerators=['openmp'], language=language)
+    f1 = epyccel(openmp.test_nowait_schedule, fflags = '-Wall', accelerators=['openmp'], language=language)
+
+    set_num_threads(4)
+    nthreads = get_num_threads()
+    if language != 'python':
+        assert nthreads == 4
+
+    n = 200
+    results = f1(n)
+    min_vals = results[:nthreads]
+    max_vals = results[4:4+nthreads]
+    for i,m in enumerate(min_vals):
+        assert m == i*n/nthreads
+    for i,m in enumerate(max_vals):
+        assert m == (i+1)*n/nthreads-1

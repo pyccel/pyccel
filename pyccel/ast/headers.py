@@ -296,7 +296,7 @@ class FunctionHeader(Header):
             var = Variable(dtype, var_name,
                            allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
                            rank=rank, shape=shape ,order = order, precision = precision,
-                           is_argument=True)
+                           is_argument=True, is_temp = True)
             return var
 
         def process_template(signature, Tname, d_type):
@@ -364,7 +364,7 @@ class FunctionHeader(Header):
             for i,d_var in enumerate(self.results):
                 is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
-                var = Variable(dtype, 'res_{}'.format(i), **d_var)
+                var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
                 results.append(var)
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
