@@ -627,8 +627,7 @@ class FCodePrinter(CodePrinter):
                     code += formatted_args_to_print(args_format, args, sep)
                     args_format = []
                     args = []
-                for_index = Variable(NativeInteger(), name=self.parser.get_new_name('i'))
-                self.add_vars_to_namespace(for_index)
+                for_index = self.scope.get_temporary_variable(NativeInteger(), name='i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
                 for_range = PythonRange(max_index)
                 print_body = [FunctionCallArgument(f[for_index])]
