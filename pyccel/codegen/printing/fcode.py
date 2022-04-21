@@ -587,7 +587,7 @@ class FCodePrinter(CodePrinter):
                 f = f.value
             if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
                 if args_format:
-                    code += _formatted_args_to_print(args_format, args, sep, separator)
+                    code += self._formatted_args_to_print(args_format, args, sep, separator)
                     args_format = []
                     args = []
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
@@ -598,7 +598,7 @@ class FCodePrinter(CodePrinter):
                 args.append(self._print(f.print_string))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += _formatted_args_to_print(args_format, args, sep, separator)
+                    code += self._formatted_args_to_print(args_format, args, sep, separator)
                     args_format = []
                     args = []
                 loop_scope = self.scope.create_new_loop_scope()
@@ -621,13 +621,13 @@ class FCodePrinter(CodePrinter):
                                  unravelled=True)
                 code += self._print(body)
             else:
-                arg_format, arg = self.get_print_format_and_arg(f)
+                arg_format, arg = self._get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-        code += _formatted_args_to_print(args_format, args, end, separator)
+        code += self._formatted_args_to_print(args_format, args, end, separator)
         return code
 
-    def _formatted_args_to_print(fargs_format, fargs, fend, fsep):
+    def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep):
         """ Produce a write statement from a list of formats, args and an end
         statement
 
@@ -662,7 +662,7 @@ class FCodePrinter(CodePrinter):
         return "write(*, '({})', advance=\"{}\") {}\n"\
             .format(args_formatting, advance, args_code)
 
-    def get_print_format_and_arg(self,var):
+    def _get_print_format_and_arg(self,var):
         """ Get the format string and the printable argument for an object.
         In other words get arg_format and arg such that var can be printed
         by doing:
