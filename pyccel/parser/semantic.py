@@ -1144,6 +1144,7 @@ class SemanticParser(BasicParser):
                                 get_final_precision(var) != result_precision)
                     else:
                         raise_error = True
+
                     if raise_error:
                         # Get type name from cast function (handles precision implicitly)
                         try:
