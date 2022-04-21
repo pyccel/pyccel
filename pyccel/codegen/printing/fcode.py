@@ -566,41 +566,6 @@ class FCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
         separator = self._print(sep)
 
-        def formatted_args_to_print(fargs_format, fargs, fend):
-            """ Produce a write statement from a list of formats, args and an end
-            statement
-
-            Parameters
-            ----------
-            fargs_format : iterable
-                           The format strings for the objects described by fargs
-            fargs        : iterable
-                           The args to be printed
-            fend         : PyccelAstNode
-                           The character describing the end of the line
-            """
-            if fargs_format == ['*']:
-                # To print the result of a FunctionCall
-                return ', '.join(['print *', *fargs]) + '\n'
-
-
-            args_list = [a_c if a_c != '' else "''" for a_c in fargs]
-            fend_code = self._print(fend)
-            advance = "yes" if fend_code == 'ACHAR(10)' else "no"
-
-            if separator != '':
-                fargs_format = [af for a in fargs_format for af in (a, 'A')][:-1]
-                args_list    = [af for a in args_list for af in (a, separator)][:-1]
-
-            if fend_code not in ('ACHAR(10)', ''):
-                fargs_format.append('A')
-                args_list.append(fend_code)
-
-            args_code       = ' , '.join(args_list)
-            args_formatting = ' '.join(fargs_format)
-            return "write(*, '({})', advance=\"{}\") {}\n"\
-                .format(args_formatting, advance, args_code)
-
 
         tuple_start = FunctionCallArgument(LiteralString('('))
         tuple_sep   = LiteralString(', ')
@@ -613,7 +578,7 @@ class FCodePrinter(CodePrinter):
                 f = f.value
             if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
                 if args_format:
-                    code += formatted_args_to_print(args_format, args, sep)
+                    code += _formatted_args_to_print(args_format, args, sep, separator)
                     args_format = []
                     args = []
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
@@ -624,7 +589,7 @@ class FCodePrinter(CodePrinter):
                 args.append(self._print(f.print_string))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += formatted_args_to_print(args_format, args, sep)
+                    code += _formatted_args_to_print(args_format, args, sep, separator)
                     args_format = []
                     args = []
                 loop_scope = self.scope.create_new_loop_scope()
@@ -650,8 +615,43 @@ class FCodePrinter(CodePrinter):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-        code += formatted_args_to_print(args_format, args, end)
+        code += _formatted_args_to_print(args_format, args, end, separator)
         return code
+
+    def _formatted_args_to_print(fargs_format, fargs, fend, fsep):
+        """ Produce a write statement from a list of formats, args and an end
+        statement
+
+        Parameters
+        ----------
+        fargs_format : iterable
+                       The format strings for the objects described by fargs
+        fargs        : iterable
+                       The args to be printed
+        fend         : PyccelAstNode
+                       The character describing the end of the line
+        """
+        if fargs_format == ['*']:
+            # To print the result of a FunctionCall
+            return ', '.join(['print *', *fargs]) + '\n'
+
+
+        args_list = [a_c if a_c != '' else "''" for a_c in fargs]
+        fend_code = self._print(fend)
+        advance = "yes" if fend_code == 'ACHAR(10)' else "no"
+
+        if fsep != '':
+            fargs_format = [af for a in fargs_format for af in (a, 'A')][:-1]
+            args_list    = [af for a in args_list for af in (a, fsep)][:-1]
+
+        if fend_code not in ('ACHAR(10)', ''):
+            fargs_format.append('A')
+            args_list.append(fend_code)
+
+        args_code       = ' , '.join(args_list)
+        args_formatting = ' '.join(fargs_format)
+        return "write(*, '({})', advance=\"{}\") {}\n"\
+            .format(args_formatting, advance, args_code)
 
     def get_print_format_and_arg(self,var):
         """ Get the format string and the printable argument for an object.
