@@ -30,7 +30,7 @@ from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName, EmptyNode,
-                             If, IfSection, Deallocate)
+                             If, IfSection, For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
@@ -59,13 +59,14 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.internals import Slice, PrecomputedCode
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
-from pyccel.ast.literals  import LiteralTrue, LiteralFalse
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
@@ -169,6 +170,15 @@ python_builtin_datatypes = {
     'float'   : PythonFloat,
     'bool'    : PythonBool,
     'complex' : PythonComplex
+}
+
+type_to_print_format = {
+        ('float'): 'F0.12',
+        ('complex'): '"(",F0.12," + ",F0.12,")"',
+        ('int'): 'I0',
+        ('bool'): 'A',
+        ('string'): 'A',
+        ('tuple'):  '*'
 }
 
 inc_keyword = (r'do\b', r'if\b',
@@ -547,31 +557,149 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_PythonPrint(self, expr):
+        end = LiteralString('\n')
+        sep = LiteralString(' ')
+        code = ''
+        empty_end = FunctionCallArgument(LiteralString(''), 'end')
+        space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        for f in expr.expr:
+            if f.has_keyword:
+                if f.keyword == 'sep':
+                    sep = f.value
+                elif f.keyword == 'end':
+                    end = f.value
+                else:
+                    errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
+        args_format = []
         args = []
-        n = len(expr.expr)
-        for j, f in enumerate(expr.expr):
+        orig_args = [f for f in expr.expr if not f.has_keyword]
+        separator = self._print(sep)
+
+
+        tuple_start = FunctionCallArgument(LiteralString('('))
+        tuple_sep   = LiteralString(', ')
+        tuple_end   = FunctionCallArgument(LiteralString(')'))
+
+        for f in orig_args:
             if f.keyword:
                 continue
             else:
                 f = f.value
-            if isinstance(f, PythonType):
-                f = f.print_string
+            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
+                if args_format:
+                    code += self._formatted_args_to_print(args_format, args, sep, separator)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end]))
+                args = []
+            elif isinstance(f, PythonType):
+                args_format.append('A')
+                args.append(self._print(f.print_string))
+            elif isinstance(f.rank, int) and f.rank > 0:
+                if args_format:
+                    code += self._formatted_args_to_print(args_format, args, sep, separator)
+                    args_format = []
+                    args = []
+                loop_scope = self.scope.create_new_loop_scope()
+                for_index = self.scope.get_temporary_variable(NativeInteger(), name='i')
+                max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
+                for_range = PythonRange(max_index)
+                print_body = [FunctionCallArgument(f[for_index])]
+                if f.rank == 1:
+                    print_body.append(space_end)
 
-            if isinstance(f, str):
-                args.append("'{}'".format(f))
-            elif isinstance(f, PythonTuple):
-                for i in f:
-                    args.append(self._print(i))
-            elif isinstance(f, InhomogeneousTupleVariable):
-                for i in f:
-                    args.append(self._print(i))
-            elif f.dtype is NativeString() and j != n-1:
-                args.append("{} // ' ' ".format(self._print(f)))
+                for_body = [PythonPrint(print_body)]
+                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
+                for_end_char = LiteralString(']')
+                for_end = FunctionCallArgument(for_end_char,
+                                               keyword='end')
+
+                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end]),
+                                  for_loop,
+                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end])],
+                                 unravelled=True)
+                code += self._print(body)
             else:
-                args.append(self._print(f))
+                arg_format, arg = self._get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
+        code += self._formatted_args_to_print(args_format, args, end, separator)
+        return code
 
-        code = ', '.join(['print *', *args])
-        return self._get_statement(code) + '\n'
+    def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep):
+        """ Produce a write statement from a list of formats, args and an end
+        statement
+
+        Parameters
+        ----------
+        fargs_format : iterable
+                       The format strings for the objects described by fargs
+        fargs        : iterable
+                       The args to be printed
+        fend         : PyccelAstNode
+                       The character describing the end of the line
+        """
+        if fargs_format == ['*']:
+            # To print the result of a FunctionCall
+            return ', '.join(['print *', *fargs]) + '\n'
+
+
+        args_list = [a_c if a_c != '' else "''" for a_c in fargs]
+        fend_code = self._print(fend)
+        advance = "yes" if fend_code == 'ACHAR(10)' else "no"
+
+        if fsep != '':
+            fargs_format = [af for a in fargs_format for af in (a, 'A')][:-1]
+            args_list    = [af for a in args_list for af in (a, fsep)][:-1]
+
+        if fend_code not in ('ACHAR(10)', ''):
+            fargs_format.append('A')
+            args_list.append(fend_code)
+
+        args_code       = ' , '.join(args_list)
+        args_formatting = ' '.join(fargs_format)
+        return "write(*, '({})', advance=\"{}\") {}\n"\
+            .format(args_formatting, advance, args_code)
+
+    def _get_print_format_and_arg(self,var):
+        """ Get the format string and the printable argument for an object.
+        In other words get arg_format and arg such that var can be printed
+        by doing:
+
+        > write(*, arg_format) arg
+
+        Parameters
+        ----------
+        var : PyccelAstNode
+              The object to be printed
+
+        Results
+        -------
+        arg_format : str
+                     The format string
+        arg        : str
+                     The fortran code which represents var
+        """
+        var_type = var.dtype
+        try:
+            arg_format = type_to_print_format[str(var_type)]
+        except KeyError:
+            errors.report("{} type is not supported currently".format(var_type), severity='fatal')
+
+        if var_type is NativeComplex():
+            arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
+        elif var_type is NativeBool():
+            if isinstance(var, LiteralTrue):
+                arg = "'True'"
+            elif isinstance(var, LiteralFalse):
+                arg = "'False'"
+            else:
+                arg = 'merge("True ", "False", {})'.format(self._print(var))
+        else:
+            arg = self._print(var)
+
+        return arg_format, arg
 
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print

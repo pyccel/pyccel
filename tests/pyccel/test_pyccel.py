@@ -615,19 +615,9 @@ def test_print_strings(language):
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="formated string not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
 def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
-
 
 #------------------------------------------------------------------------------
 def test_c_arrays(language):
@@ -741,8 +731,15 @@ def test_lapack( test_file ):
     compile_pyccel(cwd, test_file)
 
     lang_out = get_lang_output(test_file, 'fortran')
-    lang_out = [float(l) for l in lang_out.split()]
-    output_mat = np.array(lang_out).reshape(4,4)
+    rx = re.compile('[-0-9.eE]+')
+    lang_out_vals = []
+    while lang_out:
+        try:
+            f, lang_out = get_value(lang_out, rx, float)
+            lang_out_vals.append(f)
+        except AssertionError:
+            lang_out = None
+    output_mat = np.array(lang_out_vals).reshape(4,4)
     expected_output = np.eye(4)
 
     assert np.allclose(output_mat, expected_output, rtol=1e-14, atol=1e-15)
