@@ -172,6 +172,15 @@ python_builtin_datatypes = {
     'complex' : PythonComplex
 }
 
+type_to_print_format = {
+        ('float'): 'F0.12',
+        ('complex'): '"(",F0.12," + ",F0.12,")"',
+        ('int'): 'I0',
+        ('bool'): 'A',
+        ('string'): 'A',
+        ('tuple'):  '*'
+}
+
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
                r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
@@ -672,16 +681,9 @@ class FCodePrinter(CodePrinter):
         arg        : str
                      The fortran code which represents var
         """
-        type_to_format = {('float'): 'F0.12',
-                          ('complex'): '"(",F0.12," + ",F0.12,")"',
-                          ('int'): 'I0',
-                          ('bool'): 'A',
-                          ('string'): 'A',
-                          ('tuple'):  '*'
-                          }
         var_type = str(var.dtype)
         try:
-            arg_format = type_to_format[var_type]
+            arg_format = type_to_print_format[var_type]
         except KeyError:
             errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
 
