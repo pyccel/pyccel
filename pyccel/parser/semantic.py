@@ -1029,20 +1029,8 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-                if not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
-                    errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                                severity='error', symbol=var)
 
-                elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
-                    errors.report(INVALID_POINTER_REASSIGN,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                                severity='error', symbol=var.name)
-
-                else:
-                    self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions)
+                self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1089,7 +1077,7 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions):
+    def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
         """
         Ensure that the inferred type of the new variable, matches the existing variable (which has the
         same name). If this is not the case then errors are raised preventing pyccel reaching the codegen
@@ -1109,6 +1097,9 @@ class SemanticParser(BasicParser):
                 A boolean indicating if the assign statement is an augassign (tests are less strict)
         new_expressions : list
                 A list to which any new expressions created are appended
+        rhs   : PyccelAstNode
+                The right hand side of the expression : lhs=rhs
+                If is_augassign is False, this value is not used
         """
         precision = d_var.get('precision',None)
         internal_precision = default_precision[str(dtype)] if precision == -1 else precision
@@ -1122,6 +1113,18 @@ class SemanticParser(BasicParser):
 
         elif not is_augassign and var.is_ndarray and var.is_target:
             errors.report(ARRAY_ALREADY_IN_USE,
+                bounding_box=(self._current_fst_node.lineno,
+                    self._current_fst_node.col_offset),
+                        severity='error', symbol=var.name)
+
+        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+            errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
+                bounding_box=(self._current_fst_node.lineno,
+                    self._current_fst_node.col_offset),
+                        severity='error', symbol=var)
+
+        elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+            errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self._current_fst_node.lineno,
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
@@ -1312,7 +1315,7 @@ class SemanticParser(BasicParser):
 
         lhs  = self.check_for_variable(lhs_name)
         if lhs:
-            self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False, new_expr)
+            self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False, new_expr, None)
         else:
             lhs_name = self.scope.get_expected_name(lhs_name)
             lhs = Variable(dtype, lhs_name, **d_var)
