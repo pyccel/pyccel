@@ -1158,7 +1158,7 @@ class SemanticParser(BasicParser):
                     d2 = str(var.dtype)
 
                 errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
-                    symbol='{}={}'.format(name, str(rhs)),
+                    symbol='{}={}'.format(var.name, str(rhs)),
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error', blocker=False)
 
