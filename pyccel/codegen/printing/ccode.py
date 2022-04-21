@@ -830,6 +830,7 @@ class CCodePrinter(CodePrinter):
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
             elif f.keyword == 'end'    :   end = str(f.value)
+            else: errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
         args_format = []
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
