@@ -17,13 +17,13 @@ from pyccel.stdlib.internal.lapack import dgetrs
 
 from pyccel.stdlib.internal.lapack import dgetri
 
-from numpy import zeros
+from numpy import zeros, int32
 
 def test_1():
-    n   = 25
-    ml  = 1
-    mu  = 1
-    lda = 2 * ml + mu + 1
+    n   = int32(25)
+    ml  = int32(1)
+    mu  = int32(1)
+    lda = int32(2 * ml + mu + 1)
 
     a = zeros((lda,n))
     b = zeros((1,n))
@@ -37,17 +37,17 @@ def test_1():
     a[  m,0:n] =  2.0
     a[m+1,0:n-1] = -1.0
 
-    info = -1
-    ipiv = zeros(n, 'int')
+    info = int32(-1)
+    ipiv = zeros(n, 'int32')
 
     dgbtrf(n, n, ml, mu, a, lda, ipiv, info)
 #    assert(info == 0)
 
-    dgbtrs('n', n, ml, mu, 1, a, lda, ipiv, b, n, info)
+    dgbtrs('n', n, ml, mu, int32(1), a, lda, ipiv, b, n, info)
 #    assert(info == 0)
 
 def test_2():
-    n = 3
+    n = int32(3)
     lda = n
 
     a = zeros((lda,n))
@@ -64,14 +64,14 @@ def test_2():
     a[2,1] = 8.0
     a[2,2] = 0.0
 
-    info = -1
-    ipiv = zeros(n, 'int')
+    info = int32(-1)
+    ipiv = zeros(n, 'int32')
 
     dgetrf(n, n, a, lda, ipiv, info)
 #    assert(info == 0)
 
-    iwork = zeros(n, 'int')
-    lwork = 4 * n
+    iwork = zeros(n, 'int32')
+    lwork = int32(4 * n)
     work  = zeros(lwork)
 
     # Get the condition number.
@@ -81,7 +81,7 @@ def test_2():
 #    assert(info == 0)
 
 def test_3():
-    n = 3
+    n = int32(3)
     lda = n
 
     a = zeros((lda,n))
@@ -98,13 +98,13 @@ def test_3():
     a[2,1] = 8.0
     a[2,2] = 0.0
 
-    info = -1
-    ipiv = zeros(n, 'int')
+    info = int32(-1)
+    ipiv = zeros(n, 'int32')
 
     dgetrf(n, n, a, lda, ipiv, info)
 #    assert(info == 0)
 
-    lwork = 4 * n
+    lwork = int32(4 * n)
     work  = zeros(lwork)
 
     # Compute the inverse matrix.
@@ -112,7 +112,7 @@ def test_3():
 #    assert(info == 0)
 
 def test_4():
-    n = 3
+    n = int32(3)
     lda = n
 
     a = zeros((lda,n))
@@ -129,8 +129,8 @@ def test_4():
     a[2,1] = 8.0
     a[2,2] = 0.0
 
-    info = -1
-    ipiv = zeros(n, 'int')
+    info = int32(-1)
+    ipiv = zeros(n, 'int32')
 
     dgetrf(n, n, a, lda, ipiv, info)
 #    assert(info == 0)
@@ -142,7 +142,7 @@ def test_4():
     b[2] = 23.0
 
     # Solve the linear system.
-    dgetrs('n', n, 1, a, lda, ipiv, b, n, info)
+    dgetrs('n', n, int32(1), a, lda, ipiv, b, n, info)
 #    assert(info == 0)
 
 if __name__ == '__main__':

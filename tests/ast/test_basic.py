@@ -28,7 +28,7 @@ def get_functions(filename):
     # Assert semantic success
     assert(not errors.has_errors())
 
-    return list(ast.namespace.functions.values())
+    return list(ast.scope.functions.values())
 
 def test_get_attribute_nodes():
     filename = os.path.join(path_dir, "math.py")

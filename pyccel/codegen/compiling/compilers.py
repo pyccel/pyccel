@@ -298,6 +298,7 @@ class Compiler:
         # Get compile options
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
+        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
@@ -305,7 +306,7 @@ class Compiler:
             j_code = ()
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.source,
+                 *linker_libdirs_flags, *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 

@@ -55,7 +55,7 @@ def create_shared_library(codegen,
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         new_module_name = 'bind_c_{}'.format(module_name)
         bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
-        bind_c_code = fcode(bind_c_mod, codegen.parser)
+        bind_c_code = fcode(bind_c_mod, new_module_name)
         bind_c_filename = '{}.f90'.format(new_module_name)
 
         with open(bind_c_filename, 'w') as f:
@@ -77,9 +77,8 @@ def create_shared_library(codegen,
                                 extra_files = {'numpy_version.h' :
                                                 get_numpy_max_acceptable_version_file()})
 
-    cwrapper_lib = CompileObj("cwrapper.c",
-                        folder=cwrapper_lib_dest_path,
-                        accelerators=('python',))
+    cwrapper_lib = internal_libs["cwrapper"][1]
+    cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
 
     # get the include folder path and library files
     recompile_object(cwrapper_lib,
@@ -94,7 +93,7 @@ def create_shared_library(codegen,
     #---------------------------------------
     module_old_name = codegen.ast.name
     codegen.ast.set_name(sharedlib_modname)
-    wrapper_codegen = CWrapperCodePrinter(codegen.parser, language)
+    wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     wrapper_code = wrapper_codegen.doprint(codegen.ast)
     if errors.has_errors():
         return

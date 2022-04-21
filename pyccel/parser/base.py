@@ -23,16 +23,17 @@ from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
-from pyccel.ast.core import create_incremented_string, create_variable
+from pyccel.ast.core import create_variable
 
 from pyccel.ast.utilities import recognised_source
+
+from pyccel.ast.variable import DottedName
 
 from pyccel.parser.scope     import Scope
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
-
 
 #==============================================================================
 
@@ -125,7 +126,7 @@ class BasicParser(object):
             True if in debug mode.
 
         headers: list, tuple
-            list of headers to append to the namespace
+            list of headers to append to the scope
 
         show_traceback: bool
             prints Traceback exception if True
@@ -141,13 +142,13 @@ class BasicParser(object):
         self._fst  = None
         self._ast  = None
 
-        self._filename  = None
-        self._metavars  = {}
-        self._namespace = Scope()
+        self._filename = None
+        self._metavars = {}
+        self._scope    = Scope()
 
         self._used_names = None
 
-        # represent the namespace of a function
+        # represent the scope of a function
 
         self._current_class    = None
         self._current_function = None
@@ -178,18 +179,20 @@ class BasicParser(object):
                 raise TypeError('Expecting a dict of headers')
 
 
-            self.namespace.headers.update(headers)
+            self.scope.headers.update(headers)
 
         self._created_from_pickle = False
 
     @property
-    def namespace(self):
-        return self._namespace
+    def scope(self):
+        """ The Scope object containing all objects defined within the current scope
+        """
+        return self._scope
 
-    @namespace.setter
-    def namespace(self, namespace):
-        assert isinstance(namespace, Scope)
-        self._namespace = namespace
+    @scope.setter
+    def scope(self, scope):
+        assert isinstance(scope, Scope)
+        self._scope = scope
 
     @property
     def filename(self):
@@ -255,40 +258,6 @@ class BasicParser(object):
     def show_traceback(self):
         return self._show_traceback
 
-    @property
-    def used_names(self):
-        """Returns a set of all names used in the current file.
-        The set is used to prevent name collisions when creating new variables
-        """
-        return self._used_names
-
-    def get_new_name(self, current_name = None):
-        """
-        Creates a new name. A current_name can be provided indicating the name the
-        user would like to use if possible. If this name is not available then it
-        will be used as a prefix for the new name.
-        If no current_name is provided, then the standard prefix is used, and the
-        dummy counter is used and updated to facilitate finding the next value of
-        this common case
-
-          Parameters
-          ----------
-          current_name : str
-
-          Returns
-          -------
-          new_name     : str
-        """
-        if current_name is not None and current_name not in self.used_names:
-            self.used_names.add(current_name)
-            return current_name
-
-        if current_name is None:
-            new_name, self._dummy_counter = create_incremented_string(self.used_names, prefix = current_name, counter = self._dummy_counter)
-        else:
-            new_name,_ = create_incremented_string(self.used_names, prefix = current_name)
-        return new_name
-
     def get_new_variable(self, prefix = None):
         """
         Creates a new PyccelSymbol using the prefix provided. If this prefix is None,
@@ -318,7 +287,7 @@ class BasicParser(object):
         if isinstance(func, SympyFunction):
             self.insert_symbolic_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
-            container = self.namespace.functions
+            container = self.scope.functions
             container[func.name] = func
         else:
             raise TypeError('Expected a Function definition')
@@ -326,7 +295,7 @@ class BasicParser(object):
     def insert_symbolic_function(self, func):
         """."""
 
-        container = self.namespace.symbolic_functions
+        container = self.scope.symbolic_functions
         if isinstance(func, SympyFunction):
             container[func.name] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
@@ -342,7 +311,7 @@ class BasicParser(object):
 
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
-        container = self.namespace.imports['imports']
+        container = self.scope.imports['imports']
 
         # if source is not specified, imported things are treated as sources
         if len(expr.target) == 0:
@@ -361,6 +330,89 @@ class BasicParser(object):
                 if not source in container.keys():
                     container[source] = []
                 container[source] += expr.target
+
+    def create_new_function_scope(self, name, **kwargs):
+        """
+        Create a new Scope object for a Python function with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._scope) is changed to the one just created, and the function's
+        name is stored in self._current_function.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        decorators : dict
+            Decorators attached to FunctionDef object at syntactic stage.
+
+        """
+        child = self.scope.new_child_scope(name, **kwargs)
+
+        self._scope = child
+        if self._current_function:
+            name = DottedName(self._current_function, name)
+        self._current_function = name
+
+        return child
+
+    def exit_function_scope(self):
+        """ Exit the function scope and return to the encasing scope
+        """
+
+        self._scope = self._scope.parent_scope
+        if isinstance(self._current_function, DottedName):
+
+            name = self._current_function.name[:-1]
+            if len(name)>1:
+                name = DottedName(*name)
+            else:
+                name = name[0]
+        else:
+            name = None
+        self._current_function = name
+
+    def create_new_loop_scope(self):
+        """ Create a new scope describing a loop
+        """
+        self._scope = self._scope.create_new_loop_scope()
+        return self._scope
+
+    def exit_loop_scope(self):
+        """ Exit the loop scope and return to the encasing scope
+        """
+        self._scope = self._scope.parent_scope
+
+    def create_new_class_scope(self, name, **kwargs):
+        """
+        Create a new Scope object for a Python class with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
+
+        Before returning control to the caller, the current scope (stored in
+        self._scope) is changed to the one just created, and the function's
+        name is stored in self._current_function.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        """
+        child = self.scope.new_child_scope(name, **kwargs)
+        self._scope = child
+
+        return child
+
+    def exit_class_scope(self):
+        """ Exit the class scope and return to the encasing scope
+        """
+        self._scope = self._scope.parent_scope
 
     def dump(self, filename=None):
         """
@@ -480,10 +532,8 @@ class BasicParser(object):
         self._fst = parser.fst
         self._ast = parser.ast
 
-        self._metavars  = parser.metavars
-        self._namespace = parser.namespace
-
-        self._used_names = parser.used_names
+        self._metavars = parser.metavars
+        self._scope    = parser.scope
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = parser.syntax_done
