@@ -681,19 +681,18 @@ class FCodePrinter(CodePrinter):
         arg        : str
                      The fortran code which represents var
         """
-        var_type = str(var.dtype)
+        var_type = var.dtype
         try:
-            arg_format = type_to_print_format[var_type]
+            arg_format = type_to_print_format[str(var_type)]
         except KeyError:
-            errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
+            errors.report("{} type is not supported currently".format(var_type), severity='fatal')
 
-        if var.dtype is NativeComplex():
+        if var_type is NativeComplex():
             arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
-        elif var.dtype is NativeBool():
-            var_repr = self._print(var)
-            if var_repr == '.True.':
+        elif var_type is NativeBool():
+            if isinstance(var, LiteralTrue):
                 arg = "'True'"
-            elif var_repr == '.False.':
+            elif isinstance(var, LiteralFalse):
                 arg = "'False'"
             else:
                 arg = 'merge("True ", "False", {})'.format(self._print(var))
