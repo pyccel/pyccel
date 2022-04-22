@@ -160,3 +160,4 @@ def test_awkward_names(language):
     assert mod.A == modnew.A
     assert mod.function() == modnew.function()
     assert mod.pure() == modnew.pure()
+    assert mod.allocate(1) == modnew.allocate(1)
