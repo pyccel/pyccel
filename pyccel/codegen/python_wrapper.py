@@ -13,6 +13,8 @@ from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
+from pyccel.naming                 import name_clash_checkers
+from pyccel.parser.scope           import Scope
 from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
@@ -93,6 +95,7 @@ def create_shared_library(codegen,
     module_old_name = codegen.ast.name
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
+    Scope.name_clash_checker = name_clash_checkers['c']
     wrapper_code = wrapper_codegen.doprint(codegen.ast)
     if errors.has_errors():
         return
