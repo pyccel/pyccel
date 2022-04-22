@@ -1671,7 +1671,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Variable(self, expr, **settings):
-        name = expr.name
+        name = self.scope.get_python_name(expr.name)
         return self.get_variable(name)
 
     def _visit_str(self, expr, **settings):
@@ -2939,7 +2939,8 @@ class SemanticParser(BasicParser):
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
             scope = self.create_new_function_scope(name, decorators = decorators,
-                    used_symbols = expr.scope.local_used_symbols.copy())
+                    used_symbols = expr.scope.local_used_symbols.copy(),
+                    original_symbols = expr.scope.python_names.copy())
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
@@ -3241,7 +3242,8 @@ class SemanticParser(BasicParser):
 
         name = expr.name
         name = name.replace("'", '')
-        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols)
+        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+                    original_symbols = expr.scope.python_names.copy())
         methods = list(expr.methods)
         parent = expr.superclass
         interfaces = []
