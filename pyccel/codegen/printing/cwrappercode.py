@@ -1013,20 +1013,24 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_FunctionDef(self, expr):
         self.set_scope(self.scope.new_child_scope(expr.name))
 
-        arg_vars = {a.var: a for a in expr.arguments}
-
+        local_arg_vars = {}
         for a in expr.arguments:
             v = a.var
             if isinstance(v, Variable):
-                self.scope.insert_variable(v)
+                new_name = self.scope.get_new_name(v.name)
+                if isinstance(v, Variable) and (v.rank > 0 or v.is_optional):
+                    new_v = v.clone(new_name, is_pointer=True, allocatable=False)
+                else:
+                    new_v = v.clone(new_name)
+                local_arg_vars[new_v] = a
+                self.scope.insert_variable(new_v)
             else:
                 self.scope.functions[v.name] = v
-        for r in expr.results:
-            self.scope.insert_variable(r)
+
+        result_vars = [v.clone(self.scope.get_new_name(v.name)) for v in expr.results]
+        for v in result_vars:
+            self.scope.insert_variable(v)
         # update ndarray and optional local variables properties
-        local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
-                          if isinstance(v, Variable) and (v.rank > 0 or v.is_optional) \
-                          else v) : a for v,a in arg_vars.items()}
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(expr)
@@ -1037,7 +1041,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self.scope.insert_variable(wrapper_results[0])
 
         # Collect argument names for PyArgParse
-        arg_names         = [a.name for a in local_arg_vars]
+        arg_names         = [a.var.name for a in local_arg_vars.values()]
         keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
@@ -1088,17 +1092,17 @@ class CWrapperCodePrinter(CCodePrinter):
         # Call function
         static_function = self.get_static_function(expr)
 
-        if len(expr.results)==0:
+        if len(result_vars)==0:
             func_call = FunctionCall(static_function, static_func_args)
         else:
-            results   = expr.results if len(expr.results)>1 else expr.results[0]
+            results   = result_vars if len(result_vars)>1 else result_vars[0]
             func_call = Assign(results,FunctionCall(static_function, static_func_args))
 
         wrapper_body.append(func_call)
 
         # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
-        for a in expr.results :
+        for a in result_vars :
             collect_var, cast_func = self.get_PyBuildValue(a)
             if cast_func is not None:
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
