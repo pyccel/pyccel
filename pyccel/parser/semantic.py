@@ -1948,6 +1948,10 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCall(self, expr, **settings):
         name     = expr.funcdef
+        try:
+            name = self.scope.get_expected_name(name)
+        except RuntimeError:
+            pass
 
         # Check for specialised method
         annotation_method = '_visit_' + name
