@@ -141,8 +141,8 @@ def as_static_module(funcs, original_module):
     ==========
     funcs : list of FunctionDef
             All the functions which may be exposed to c
-    original_module : str
-            The name of the module being wrapped
+    original_module : Module
+            The module being wrapped
     """
     funcs = [f for f in funcs if not f.is_private]
     imports = []
@@ -165,8 +165,8 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
     ==========
     func     : FunctionDef
                The function to be translated
-    mod      : str
-               The name of the module which contains func
+    mod      : Module
+               The module which contains func
     name     : str
                The new name of the function
     imports  : list
