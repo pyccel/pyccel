@@ -1026,6 +1026,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 self.scope.insert_variable(new_v)
             else:
                 self.scope.functions[v.name] = v
+                local_arg_vars[v] = a
 
         result_vars = [v.clone(self.scope.get_new_name(v.name)) for v in expr.results]
         for v in result_vars:
