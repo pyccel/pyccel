@@ -234,7 +234,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             arg_code = ', '.join('{}'.format(self.function_signature(i, False))
                         if isinstance(i, FunctionAddress)
-                        else '{0}{1}'.format(self.get_static_declare_type(i), i.name)
+                        else '{0}'.format(self.get_static_declare_type(i))
                         for i in args)
 
         if isinstance(expr, FunctionAddress):
@@ -292,13 +292,13 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
 
         if self.stored_in_c_pointer(variable):
-            return '{0} *'.format(dtype)
+            return '{0}*'.format(dtype)
 
         elif self._target_language == 'fortran' and variable.rank > 0:
-            return '{0} *'.format(dtype)
+            return '{0}*'.format(dtype)
 
         else:
-            return '{0} '.format(dtype)
+            return '{0}'.format(dtype)
 
     def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
