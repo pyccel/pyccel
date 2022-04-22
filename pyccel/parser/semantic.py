@@ -2957,8 +2957,8 @@ class SemanticParser(BasicParser):
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
-                        a_new = FunctionAddress(a.name, ah.arguments, ah.results, [],
-                                        **d_var)
+                        a_new = FunctionAddress(self.scope.get_expected_name(a.name),
+                                        ah.arguments, ah.results, [], **d_var)
                     else:
                         d_var = self._infere_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
@@ -2975,7 +2975,7 @@ class SemanticParser(BasicParser):
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
-                        a_new = Variable(dtype, a.name, **d_var)
+                        a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
 
                     value = None if a.value is None else self._visit(a.value)
                     if isinstance(value, Literal) and \
@@ -2995,7 +2995,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.scope.insert_variable(a_new)
+                        self.scope.insert_variable(a_new, a.name)
             results = expr.results
             if header_results:
                 new_results = []
@@ -3003,8 +3003,9 @@ class SemanticParser(BasicParser):
                 for a, ah in zip(results, header_results):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, a, **d_var, is_temp = a.is_temp)
-                    self.scope.insert_variable(a_new)
+                    a_new = Variable(dtype, self.scope.get_expected_name(a),
+                            **d_var, is_temp = a.is_temp)
+                    self.scope.insert_variable(a_new, a)
                     new_results.append(a_new)
 
                 results = new_results
