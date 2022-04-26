@@ -24,17 +24,22 @@ def get_files_from_folder(foldername):
 #@pytest.mark.parametrize("f",get_files_from_folder('syntax'))
 #def test_syntax_warnings(f):
 #
+#    # reset Errors singleton
+#    errors = Errors()
+#    errors.reset()
+#
 #    pyccel = Parser(f)
 #
 #    ast = pyccel.parse()
 #
-#    # reset Errors singleton
-#    errors = Errors()
 #    assert(errors.num_messages()!=0)
-#    errors.reset()
 
 @pytest.mark.parametrize("f",get_files_from_folder('semantic'))
 def test_semantic_warnings(f):
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
 
     pyccel = Parser(f, show_traceback=False)
     pyccel.parse()
@@ -42,14 +47,15 @@ def test_semantic_warnings(f):
     settings = {}
     pyccel.annotate(**settings)
 
-    # reset Errors singleton
-    errors = Errors()
     assert(not errors.has_errors())
     assert(errors.has_warnings())
-    errors.reset()
 
 #@pytest.mark.parametrize("f", codegen_errors_args)
 #def test_codegen_warnings(f):
+#
+#    # reset Errors singleton
+#    errors = Errors()
+#    errors.reset()
 #
 #    pyccel = Parser(f, show_traceback=False)
 #    ast = pyccel.parse()
@@ -63,11 +69,8 @@ def test_semantic_warnings(f):
 #    codegen = Codegen(ast, name)
 #    code = codegen.doprint()
 #
-#    # reset Errors singleton
-#    errors = Errors()
 #    assert(errors.has_warnings())
 #    assert(not errors.has_errors())
-#    errors.reset()
 
 ######################
 if __name__ == '__main__':
