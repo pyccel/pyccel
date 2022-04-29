@@ -234,7 +234,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             arg_code = ', '.join('{}'.format(self.function_signature(i, False))
                         if isinstance(i, FunctionAddress)
-                        else '{0}{1}'.format(self.get_static_declare_type(i), i.name)
+                        else '{0}'.format(self.get_static_declare_type(i))
                         for i in args)
 
         if isinstance(expr, FunctionAddress):
@@ -292,13 +292,13 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
 
         if self.stored_in_c_pointer(variable):
-            return '{0} *'.format(dtype)
+            return '{0}*'.format(dtype)
 
         elif self._target_language == 'fortran' and variable.rank > 0:
-            return '{0} *'.format(dtype)
+            return '{0}*'.format(dtype)
 
         else:
-            return '{0} '.format(dtype)
+            return '{0}'.format(dtype)
 
     def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
@@ -728,7 +728,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     w.set_fst(assign.fst)
         else:
             vars_to_wrap = orig_vars_to_wrap
-        var_names = [v.name for v in orig_vars_to_wrap]
+        var_names = [str(expr.scope.get_python_name(v.name)) for v in orig_vars_to_wrap]
 
         body = [l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var)]
 
@@ -776,9 +776,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results = [self.get_new_PyObject("result")]
         self.scope.insert_variable(wrapper_results[0])
 
-        # Collect parser arguments
-        wrapper_vars = {}
-
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in funcs[0].arguments]
         keyword_list_name = self.scope.get_new_name('kwlist')
@@ -792,7 +789,6 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_def = []
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.scope.get_new_name("check"))
-        wrapper_vars[check_var.name] = check_var
         scope.insert_variable(check_var, check_var.name)
         types_dict = OrderedDict((a.var, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
         # collect parse arg
@@ -817,7 +813,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 mini_scope.insert_variable(a)
             for r in func.results:
                 mini_scope.insert_variable(r)
-            mini_wrapper_func_vars = {a.name : a for a in local_arg_vars}
             flags = 0
             collect_vars = {}
 
@@ -826,13 +821,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 collect_var  = self.get_PyArgParseType(f_var)
                 collect_vars[f_var] = collect_var
                 body, tmp_variable = self._body_management(f_var, p_arg, f_arg.value)
-                if tmp_variable :
-                    mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
                 # get check type function
                 check = self._get_check_type_statement(f_var, p_arg, f_arg.value is None)
-                # If the variable cannot be collected from PyArgParse directly
-                wrapper_vars[p_arg.name] = p_arg
 
                 # Save the body
                 wrapper_body_translations.extend(body)
@@ -851,7 +842,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # create the corresponding function call
             static_function = self.get_static_function(func)
-            mini_wrapper_func_vars.update({arg.name : arg for arg in static_func_args if isinstance(arg, Variable)})
 
             if len(func.results)==0:
                 func_call = FunctionCall(static_function, static_func_args)
@@ -865,9 +855,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(r)
-                mini_wrapper_func_vars[collect_var.name] = collect_var
                 if cast_func is not None:
-                    mini_wrapper_func_vars[r.name] = r
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
@@ -1025,26 +1013,28 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_FunctionDef(self, expr):
         self.set_scope(self.scope.new_child_scope(expr.name))
 
-        arg_vars = {a.var: a for a in expr.arguments}
-
+        local_arg_vars = {}
         for a in expr.arguments:
             v = a.var
             if isinstance(v, Variable):
-                self.scope.insert_variable(v)
+                new_name = self.scope.get_new_name(v.name)
+                if isinstance(v, Variable) and (v.rank > 0 or v.is_optional):
+                    new_v = v.clone(new_name, is_pointer=True, allocatable=False)
+                else:
+                    new_v = v.clone(new_name)
+                local_arg_vars[new_v] = a
+                self.scope.insert_variable(new_v)
             else:
                 self.scope.functions[v.name] = v
-        for r in expr.results:
-            self.scope.insert_variable(r)
+                local_arg_vars[v] = a
+
+        result_vars = [v.clone(self.scope.get_new_name(v.name)) for v in expr.results]
+        for v in result_vars:
+            self.scope.insert_variable(v)
         # update ndarray and optional local variables properties
-        local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
-                          if isinstance(v, Variable) and (v.rank > 0 or v.is_optional) \
-                          else v) : a for v,a in arg_vars.items()}
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(expr)
-        # Collect local variables
-        wrapper_vars        = {a.name : a for a in local_arg_vars}
-        wrapper_vars.update({r.name : r for r in expr.results})
 
         # Collect arguments and results
         wrapper_args    = self.get_wrapper_arguments()
@@ -1052,7 +1042,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self.scope.insert_variable(wrapper_results[0])
 
         # Collect argument names for PyArgParse
-        arg_names         = [a.name for a in local_arg_vars]
+        arg_names         = [a.var.name for a in local_arg_vars.values()]
         keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
@@ -1079,11 +1069,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_vars[var] = collect_var
 
             body, tmp_variable = self._body_management(var, collect_var, arg.value, True)
-            if tmp_variable :
-                wrapper_vars[tmp_variable.name] = tmp_variable
-
-            # If the variable cannot be collected from PyArgParse directly
-            wrapper_vars[collect_var.name] = collect_var
 
             # Save cast to argument variable
             wrapper_body_translations.extend(body)
@@ -1107,22 +1092,20 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call function
         static_function = self.get_static_function(expr)
-        wrapper_vars.update({arg.name : arg for arg in static_func_args if isinstance(arg, Variable)})
 
-        if len(expr.results)==0:
+        if len(result_vars)==0:
             func_call = FunctionCall(static_function, static_func_args)
         else:
-            results   = expr.results if len(expr.results)>1 else expr.results[0]
+            results   = result_vars if len(result_vars)>1 else result_vars[0]
             func_call = Assign(results,FunctionCall(static_function, static_func_args))
 
         wrapper_body.append(func_call)
 
         # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
-        for a in expr.results :
+        for a in result_vars :
             collect_var, cast_func = self.get_PyBuildValue(a)
             if cast_func is not None:
-                wrapper_vars[collect_var.name] = collect_var
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
 
             res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
@@ -1189,7 +1172,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      'METH_VARARGS | METH_KEYWORDS,\n'
                                      '{doc_string}\n'
                                      '}},\n').format(
-                                            name = f.name,
+                                            name = expr.scope.get_python_name(f.name),
                                             wrapper_name = self._function_wrapper_names[f.name],
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""')
@@ -1207,7 +1190,8 @@ class CWrapperCodePrinter(CCodePrinter):
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                         '{method_def_func}'
                         '{{ NULL, NULL, 0, NULL}}\n'
-                        '}};\n'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
+                        '}};\n'.format(method_def_name = method_def_name,
+                            method_def_func = method_def_func))
 
         module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
         module_def = ('static struct PyModuleDef {module_def_name} = {{\n'

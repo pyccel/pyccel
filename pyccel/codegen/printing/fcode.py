@@ -395,7 +395,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
-        name = self._print(expr.name)
+        if isinstance(expr.name, AsName):
+            name = self._print(expr.name.target)
+        else:
+            name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
             name = '{prefix}_{name}'.format(prefix=self.prefix_module,
@@ -504,14 +507,21 @@ class FCodePrinter(CodePrinter):
         if expr.ignore:
             return ''
 
-        if isinstance(expr.source, DottedName):
-            source = expr.source.name[-1]
+        if isinstance(expr.source, AsName):
+            source = expr.source.target
         else:
-            source = self._print(expr.source)
+            source = expr.source
+        if isinstance(source, DottedName):
+            source = source.name[-1]
+        else:
+            source = self._print(source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
             return ''
+
+        if expr.source_module:
+            source = expr.source_module.scope.get_expected_name(source)
 
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return 'use mpi\n' + 'use mpiext\n'

@@ -480,7 +480,6 @@ class PythonCodePrinter(CodePrinter):
             if source in pyccel_builtin_import_registery:
                 self._aliases.update([(pyccel_builtin_import_registery[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
 
-            target_names = {t.name:t.target for t in target}
             if expr.source_module:
                 if expr.source_module.init_func:
                     self._ignore_funcs.append(expr.source_module.init_func)

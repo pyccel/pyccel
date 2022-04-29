@@ -15,6 +15,8 @@ from pyccel.ast.variable  import Variable, DottedName
 
 from pyccel.errors.errors import Errors
 
+from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
+
 from pyccel.utilities.strings import create_incremented_string
 
 errors = Errors()
@@ -30,9 +32,10 @@ class Scope(object):
                  objects in this scope
     """
     allow_loop_scoping = False
+    name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter')
+            '_dummy_counter','_original_symbol')
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions',
@@ -40,7 +43,8 @@ class Scope(object):
             'cls_constructs')
 
     def __init__(self, *, decorators=None, is_loop = False,
-                    parent_scope = None, used_symbols = None):
+                    parent_scope = None, used_symbols = None,
+                    original_symbols = None):
 
         self._imports = {k:{} for k in self.categories}
 
@@ -48,7 +52,11 @@ class Scope(object):
 
         self._temporary_variables = []
 
-        self._used_symbols = used_symbols or set()
+        if used_symbols and not isinstance(used_symbols, dict):
+            raise RuntimeError("Used symbols must be a dictionary")
+
+        self._used_symbols = used_symbols or {}
+        self._original_symbol = original_symbols or {}
 
         self._dummy_counter = 0
 
@@ -64,6 +72,14 @@ class Scope(object):
         self._is_loop = is_loop
         # scoping for loops
         self._loops = []
+
+    def __setstate__(self, state):
+        state = state[1] # Retrieve __dict__ ignoring None
+        if any(s not in state for s in self.__slots__):
+            raise AttributeError("Missing attribute from slots. Please update pickle file")
+
+        for s in state:
+            setattr(self, s, state[s])
 
     def new_child_scope(self, name, **kwargs):
         """
@@ -264,7 +280,8 @@ class Scope(object):
                 self._temporary_variables.append(var)
             else:
                 self._locals['variables'][name] = var
-            self.insert_symbol(name)
+            if name not in self.local_used_symbols.values():
+                self.insert_symbol(name)
 
     def remove_variable(self, var, name = None):
         """ Remove a variable from anywhere in scope
@@ -353,17 +370,20 @@ class Scope(object):
         """
         if not self.allow_loop_scoping and self.is_loop:
             self.parent_scope.insert_symbol(symbol)
-        else:
-            self._used_symbols.add(symbol)
+        elif symbol not in self._used_symbols:
+            collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
+                    self._used_symbols.values())
+            collisionless_symbol = PyccelSymbol(collisionless_symbol,
+                    is_temp = getattr(symbol, 'is_temp', False))
+            self._used_symbols[symbol] = collisionless_symbol
+            self._original_symbol[collisionless_symbol] = symbol
 
 
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope
         """
-        if not self.allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbols(symbols)
-        else:
-            self._used_symbols.update(symbols)
+        for s in symbols:
+            self.insert_symbol(s)
 
     @property
     def all_used_symbols(self):
@@ -373,7 +393,7 @@ class Scope(object):
             symbols = self.parent_scope.all_used_symbols
         else:
             symbols = set()
-        symbols.update(self._used_symbols)
+        symbols.update(self._used_symbols.values())
         return symbols
 
     @property
@@ -396,11 +416,13 @@ class Scope(object):
           new_name     : str
         """
 
-        new_name, counter = create_incremented_string(self.local_used_symbols, prefix = prefix)
+        new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
 
-        self.insert_symbol(new_name)
+        new_symbol = PyccelSymbol(new_name, is_temp=True)
 
-        return PyccelSymbol(new_name, is_temp=True), counter
+        self.insert_symbol(new_symbol)
+
+        return new_symbol, counter
 
     def get_new_name(self, current_name = None):
         """
@@ -419,9 +441,10 @@ class Scope(object):
           -------
           new_name     : str
         """
-        if current_name is not None and current_name not in self.all_used_symbols:
-            self.insert_symbol(current_name)
-            return PyccelSymbol(current_name)
+        if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
+            new_name = PyccelSymbol(current_name)
+            self.insert_symbol(new_name)
+            return new_name
 
         if current_name is None:
             # Avoid confusing names by also searching in parent scopes
@@ -432,9 +455,11 @@ class Scope(object):
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
+        new_name = PyccelSymbol(new_name, is_temp = True)
+
         self.insert_symbol(new_name)
 
-        return PyccelSymbol(new_name, is_temp = True)
+        return new_name
 
     def get_temporary_variable(self, dtype_or_var, name = None, **kwargs):
         """
@@ -464,8 +489,8 @@ class Scope(object):
         """
         if start_name == '_':
             return self.get_new_name()
-        elif start_name in self.local_used_symbols:
-            return start_name
+        elif start_name in self._used_symbols.keys():
+            return self._used_symbols[start_name]
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
@@ -539,3 +564,20 @@ class Scope(object):
         """
         assert son.parent_scope is self
         self._sons_scopes[name] = son
+
+    def get_python_name(self, name):
+        """ Get the name used in the original python code from the
+        name used by the variable
+        """
+        if name in self._original_symbol:
+            return self._original_symbol[name]
+        elif self.parent_scope:
+            return self.parent_scope.get_python_name(name)
+        else:
+            raise RuntimeError("Can't find {} in scope".format(name))
+
+    @property
+    def python_names(self):
+        """ Get map of new names to original python names
+        """
+        return self._original_symbol

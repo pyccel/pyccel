@@ -32,7 +32,6 @@ def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
                         The expected value of the next name
 
     """
-    assert(isinstance(forbidden_exprs, set))
     nDigits = 4
 
     if prefix is None:
@@ -44,7 +43,5 @@ def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     while name in forbidden_exprs:
         name = name_format.format(prefix=prefix, counter = counter)
         counter += 1
-
-    forbidden_exprs.add(name)
 
     return name, counter

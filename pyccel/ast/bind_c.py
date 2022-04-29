@@ -132,7 +132,7 @@ def as_static_function(func, *, mod_scope, name=None):
                         )
 
 #=======================================================================================
-def as_static_module(funcs, original_module, name = None):
+def as_static_module(funcs, original_module):
     """ Create the module contained in the bind_c_mod.f90 file
     This is the interface between the c code and the fortran code thanks
     to iso_c_bindings
@@ -141,21 +141,21 @@ def as_static_module(funcs, original_module, name = None):
     ==========
     funcs : list of FunctionDef
             All the functions which may be exposed to c
-    original_module : str
-            The name of the module being wrapped
-    name  : str
-            The name of the new module
+    original_module : Module
+            The module being wrapped
     """
     funcs = [f for f in funcs if not f.is_private]
     imports = []
-    scope = Scope()
+    scope = Scope(used_symbols = original_module.scope.local_used_symbols.copy())
     bind_c_funcs = [as_static_function_call(f, original_module, scope, imports = imports) for f in funcs]
-    if name is None:
-        name = 'bind_c_{}'.format(original_module)
+    if isinstance(original_module.name, AsName):
+        name = scope.get_new_name('bind_c_{}'.format(original_module.name.target))
+    else:
+        name = scope.get_new_name('bind_c_{}'.format(original_module.name))
     return Module(name, (), bind_c_funcs, imports = imports, scope=scope)
 
 #=======================================================================================
-def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None):
+def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
     """ Translate a FunctionDef to a BindCFunctionDef which calls the
     original function. A BindCFunctionDef is a FunctionDef where the
     arguments are altered to allow the function to be called from c.
@@ -165,8 +165,8 @@ def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None
     ==========
     func     : FunctionDef
                The function to be translated
-    mod_name : str
-               The name of the module which contains func
+    mod      : Module
+               The module which contains func
     name     : str
                The new name of the function
     imports  : list
@@ -175,13 +175,14 @@ def as_static_function_call(func, mod_name, mod_scope, name=None, imports = None
     """
 
     assert isinstance(func, FunctionDef)
-    assert isinstance(mod_name, str)
+    assert isinstance(mod, Module)
+    mod_name = mod.scope.get_python_name(mod.name)
 
     # from module import func
     if imports is None:
-        local_imports = [Import(target=AsName(func, func.name), source=mod_name)]
+        local_imports = [Import(target=AsName(func, func.name), source=mod_name, mod=mod)]
     else:
-        imports.append(Import(target=AsName(func, func.name), source=mod_name))
+        imports.append(Import(target=AsName(func, func.name), source=mod_name, mod=mod))
         local_imports = ()
 
     # function arguments
