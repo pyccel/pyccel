@@ -24,7 +24,7 @@ if platform.system() == 'Darwin':
     # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
     p = subprocess.Popen(["sw_vers", '-productVersion'], stdout=subprocess.PIPE)
     mac_target, err = p.communicate()
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target.decode("utf-8")
 
 #------------------------------------------------------------
 class Compiler:
