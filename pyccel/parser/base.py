@@ -128,9 +128,6 @@ class BasicParser(object):
         headers: list, tuple
             list of headers to append to the scope
 
-        show_traceback: bool
-            prints Traceback exception if True
-
     """
 
     def __init__(self,
@@ -162,7 +159,6 @@ class BasicParser(object):
         # TODO ERROR must be passed to the Parser __init__ as argument
 
         self._blocking = ErrorsMode().value == 'developer'
-        self._show_traceback = self._blocking
 
         if headers:
             if not isinstance(headers, dict):
@@ -186,7 +182,6 @@ class BasicParser(object):
 
         # Error related flags. Should not be influenced by pickled file
         self._blocking = ErrorsMode().value == 'developer'
-        self._show_traceback = self._blocking
 
         self._created_from_pickle = True
 
@@ -260,10 +255,6 @@ class BasicParser(object):
     @property
     def blocking(self):
         return self._blocking
-
-    @property
-    def show_traceback(self):
-        return self._show_traceback
 
 
     def insert_function(self, func):
