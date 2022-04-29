@@ -29,7 +29,7 @@ if platform.system() == 'Darwin':
     if mac_target:
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
     # Assume error https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
-    os.environ['SYSTEM_VERSION_COMPAT'] = 1
+    os.environ['SYSTEM_VERSION_COMPAT'] = '1'
     print(platform.mac_ver())
     p = subprocess.Popen("sw_vers", stdout=subprocess.PIPE)
     result,err = p.communicate()
