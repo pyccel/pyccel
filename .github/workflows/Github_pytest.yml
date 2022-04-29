@@ -79,9 +79,14 @@ jobs:
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
+      - name: Quick test with pytest
+        run: 
+          python -m pytest test_epyccel_openmp.py -sxv
+        shell: bash
+        working-directory: ./tests/epyccel
+      #- name: Fortran/C tests with pytest
+      #  uses: ./.github/actions/pytest_run
+      #- name: Python tests with pytest
+      #  uses: ./.github/actions/pytest_run_python
+      #- name: Parallel tests with pytest
+      #  uses: ./.github/actions/pytest_parallel
