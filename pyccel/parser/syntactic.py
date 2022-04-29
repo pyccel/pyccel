@@ -128,13 +128,12 @@ class SyntaxParser(BasicParser):
 
         self._code    = code
         self._context = []
+        self._syntax_done = False
 
         self.load()
 
         tree                = extend_tree(code)
         self._fst           = tree
-        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg, ast.FunctionDef)))
-        self._dummy_counter = 1
         self._in_lhs_assign = False
 
         self.parse(verbose=True)
@@ -154,7 +153,6 @@ class SyntaxParser(BasicParser):
         ast       = self._visit(self.fst)
         self._ast = ast
 
-        self._visit_done = True
         self._syntax_done = True
 
         return ast
