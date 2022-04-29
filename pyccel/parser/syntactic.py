@@ -128,7 +128,6 @@ class SyntaxParser(BasicParser):
 
         self._code    = code
         self._context = []
-        self._syntax_done = False
 
         self.load()
 
