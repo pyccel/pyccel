@@ -135,8 +135,7 @@ class BasicParser(object):
 
     def __init__(self,
                  debug=False,
-                 headers=None,
-                 show_traceback=False):
+                 headers=None):
 
         self._code = None
         self._fst  = None
@@ -162,11 +161,8 @@ class BasicParser(object):
         # Pyccel to stop
         # TODO ERROR must be passed to the Parser __init__ as argument
 
-        self._blocking = False
-
-        # printing exception
-
-        self._show_traceback = show_traceback
+        self._blocking = ErrorsMode().value == 'developer'
+        self._show_traceback = self._blocking
 
         if headers:
             if not isinstance(headers, dict):
@@ -189,8 +185,8 @@ class BasicParser(object):
             raise AttributeError("Scope should be a Scope (Type was previously set in syntactic parser)")
 
         # Error related flags. Should not be influenced by pickled file
-        self._blocking = False
-        self._show_traceback = False
+        self._blocking = ErrorsMode().value == 'developer'
+        self._show_traceback = self._blocking
 
         self._created_from_pickle = True
 
@@ -268,8 +264,6 @@ class BasicParser(object):
     @property
     def show_traceback(self):
         return self._show_traceback
-
-    # TODO shall we need to export the Parser too?
 
 
     def insert_function(self, func):
@@ -494,10 +488,8 @@ class BasicParser(object):
                 try:
                     with open(filename, 'rb') as f:
                         hs, version, parser = pickle.load(f)
-                    parser._blocking = self._blocking
-                    parser._show_traceback = self._show_traceback
                     self._created_from_pickle = True
-                except possible_pickle_errors as e:
+                except possible_pickle_errors:
                     return
         except PermissionError:
             # read/write problems don't need to be avoided on a read-only system
