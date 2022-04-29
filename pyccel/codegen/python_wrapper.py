@@ -13,6 +13,8 @@ from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
+from pyccel.naming                 import name_clash_checkers
+from pyccel.parser.scope           import Scope
 from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
@@ -53,10 +55,9 @@ def create_shared_library(codegen,
 
     if language == 'fortran':
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
-        new_module_name = 'bind_c_{}'.format(module_name)
-        bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
-        bind_c_code = fcode(bind_c_mod, new_module_name)
-        bind_c_filename = '{}.f90'.format(new_module_name)
+        bind_c_mod = as_static_module(codegen.routines, codegen.ast)
+        bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
+        bind_c_filename = '{}.f90'.format(bind_c_mod.name)
 
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
@@ -94,6 +95,7 @@ def create_shared_library(codegen,
     module_old_name = codegen.ast.name
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
+    Scope.name_clash_checker = name_clash_checkers['c']
     wrapper_code = wrapper_codegen.doprint(codegen.ast)
     if errors.has_errors():
         return

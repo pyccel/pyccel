@@ -149,3 +149,15 @@ def test_module_7(language):
 
     # Necessary as python does not reload modules
     mod.reset_a()
+
+def test_awkward_names(language):
+    import modules.awkward_names as mod
+
+    modnew = epyccel(mod, language=language)
+
+    assert mod.awkwards_names == modnew.awkwards_names
+    assert mod.a == modnew.a
+    assert mod.A == modnew.A
+    assert mod.function() == modnew.function()
+    assert mod.pure() == modnew.pure()
+    assert mod.allocate(1) == modnew.allocate(1)

@@ -116,7 +116,7 @@ from pyccel.errors.errors import PyccelSemanticError
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
 
-from pyccel.parser.base      import BasicParser, Scope
+from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
 
 from pyccel.utilities.stage import PyccelStage
@@ -182,7 +182,6 @@ class SemanticParser(BasicParser):
         self.scope.imports['imports'] = {}
         self._module_namespace  = self.scope
         self._program_namespace = self.scope.new_child_scope('__main__')
-        self._dummy_counter = parser._dummy_counter
 
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
@@ -287,7 +286,7 @@ class SemanticParser(BasicParser):
         if var is None:
             return errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=True)
+            severity='fatal')
         else:
             return var
 
@@ -310,7 +309,7 @@ class SemanticParser(BasicParser):
             msg = 'class construct {} not found'.format(name)
             return errors.report(msg,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
         else:
             return result
 
@@ -541,7 +540,7 @@ class SemanticParser(BasicParser):
             msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
             errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
     def _extract_indexed_from_var(self, var, indices, expr):
         """ Use indices to extract appropriate element from
@@ -597,7 +596,7 @@ class SemanticParser(BasicParser):
                         (arg.stop is not None and not isinstance(arg.stop, LiteralInteger))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=self.blocking)
+                        severity='fatal')
 
                 idx = slice(arg.start, arg.stop)
                 selected_vars = var.get_var(idx)
@@ -625,19 +624,19 @@ class SemanticParser(BasicParser):
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
         if isinstance(var, PythonTuple) and not var.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=var,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error', blocker=self.blocking)
+                severity='error')
 
         for arg in var[indices].indices:
             if not isinstance(arg, Slice) and not \
                 (hasattr(arg, 'dtype') and isinstance(arg.dtype, NativeInteger)):
                 errors.report(INVALID_INDICES, symbol=var[indices],
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error', blocker=self.blocking)
+                severity='error')
         return var[indices]
 
     def _create_PyccelOperator(self, expr, visited_args):
@@ -650,7 +649,7 @@ class SemanticParser(BasicParser):
             msg = str(err)
             errors.report(msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=True)
+                severity='fatal')
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -664,7 +663,7 @@ class SemanticParser(BasicParser):
         if not isinstance(val, (TupleVariable, PythonTuple)):
             errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=True)
+                severity='fatal')
 
         if val.is_homogeneous:
             return Duplicate(val, length)
@@ -675,7 +674,7 @@ class SemanticParser(BasicParser):
                 errors.report("Cannot create inhomogeneous tuple of unknown size",
                     symbol=Duplicate(val, length),
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal', blocker=True)
+                    severity='fatal')
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
@@ -783,7 +782,7 @@ class SemanticParser(BasicParser):
             if func is NumpyWhere:
                 if len(args) != 3:
                     errors.report(INVALID_WHERE_ARGUMENT,
-                        symbol=expr, blocker=True,
+                        symbol=expr,
                         severity='fatal')
 
             try:
@@ -976,7 +975,7 @@ class SemanticParser(BasicParser):
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
                         errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
-                            severity='warning', blocker=False,
+                            severity='warning',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
                         status='unknown'
@@ -1012,7 +1011,7 @@ class SemanticParser(BasicParser):
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self.scope.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
-                        severity='error', blocker=False,
+                        severity='error',
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset))
 
@@ -1025,7 +1024,7 @@ class SemanticParser(BasicParser):
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=self.blocking)
+                        severity='fatal')
 
             # Variable already exists
             else:
@@ -1109,7 +1108,7 @@ class SemanticParser(BasicParser):
             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
                     symbol='{}={}'.format(var.name, dtype),
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal', blocker=False)
+                    severity='fatal')
 
         elif not is_augassign and var.is_ndarray and var.is_target:
             errors.report(ARRAY_ALREADY_IN_USE,
@@ -1160,7 +1159,7 @@ class SemanticParser(BasicParser):
                 errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
                     symbol='{}={}'.format(var.name, str(rhs)),
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error', blocker=False)
+                    severity='error')
 
         elif not is_augassign:
 
@@ -1176,19 +1175,19 @@ class SemanticParser(BasicParser):
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error', blocker=False)
+                    severity='error')
 
             elif d_var['shape'] != shape:
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
-                        severity='error', blocker=False,
+                        severity='error',
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset))
 
                 elif var.is_stack_array:
                     errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
-                        severity='error', blocker=False,
+                        severity='error',
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset))
 
@@ -1224,7 +1223,7 @@ class SemanticParser(BasicParser):
 
                     if status != 'unallocated':
                         errors.report(ARRAY_REALLOCATION, symbol=var.name,
-                            severity='warning', blocker=False,
+                            severity='warning',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
             else:
@@ -1397,15 +1396,24 @@ class SemanticParser(BasicParser):
         # Unknown object, we raise an error.
         return errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
     def _visit_Module(self, expr, **settings):
         body = self._visit(expr.program).body
         program_body      = []
         init_func_body    = []
-        mod_name = expr.name
+        mod_name = self.metavars.get('module_name', None)
+        if mod_name is None:
+            mod_name = expr.name
+        else:
+            self.scope.insert_symbol(mod_name)
         self._mod_name = mod_name
-        prog_name = self.scope.get_new_name('prog_'+expr.name)
+        if isinstance(expr.name, AsName):
+            name_suffix = expr.name.name
+        else:
+            name_suffix = expr.name
+        prog_name = 'prog_'+name_suffix
+        prog_name = self.scope.get_new_name(prog_name)
 
         for b in body:
             if isinstance(b, If):
@@ -1433,7 +1441,7 @@ class SemanticParser(BasicParser):
             # If there are any initialisation statements then create an initialisation function
             init_var = Variable(NativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True)
-            init_func_name = self.scope.get_new_name(expr.name+'__init')
+            init_func_name = self.scope.get_new_name(name_suffix+'__init')
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
             for b in init_func_body:
@@ -1447,7 +1455,7 @@ class SemanticParser(BasicParser):
             self.insert_function(init_func)
 
         if init_func:
-            free_func_name = self.scope.get_new_name(expr.name+'__free')
+            free_func_name = self.scope.get_new_name(name_suffix+'__free')
             deallocs = self._garbage_collector(init_func.body)
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
@@ -1501,7 +1509,7 @@ class SemanticParser(BasicParser):
                         self.insert_function(F)
                     else:
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
-                                symbol=name, blocker=True,
+                                symbol=name,
                                 severity='fatal')
 
         mod = Module(mod_name,
@@ -1636,7 +1644,7 @@ class SemanticParser(BasicParser):
             else:
                 msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
                 errors.report(msg, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
         expr.clear_user_nodes()
         return expr
@@ -1662,7 +1670,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Variable(self, expr, **settings):
-        name = expr.name
+        name = self.scope.get_python_name(expr.name)
         return self.get_variable(name)
 
     def _visit_str(self, expr, **settings):
@@ -1713,7 +1721,7 @@ class SemanticParser(BasicParser):
 
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=True)
+            severity='fatal')
         return var
 
 
@@ -1735,7 +1743,7 @@ class SemanticParser(BasicParser):
                 errors.report("Cannot get attribute of function call with multiple returns",
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=True)
+                        severity='fatal')
             first = results[0]
         rhs_name = _get_name(rhs)
         attr_name = []
@@ -1782,13 +1790,13 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=True)
+                        severity='fatal')
 
         d_var = self._infere_type(first)
         if d_var.get('cls_base', None) is None:
             errors.report('Attribute {} not found'.format(rhs_name),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=True)
+                severity='fatal')
 
         cls_base = d_var['cls_base']
 
@@ -1871,7 +1879,7 @@ class SemanticParser(BasicParser):
         # did something go wrong?
         return errors.report('Attribute {} not found'.format(rhs_name),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=True)
+            severity='fatal')
 
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
@@ -1921,7 +1929,7 @@ class SemanticParser(BasicParser):
         if len(missing_vars) > 0:
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=True)
+                severity='fatal')
         funcs = expr.expr.get_attribute_nodes(FunctionCall)
         for func in funcs:
             name = _get_name(func)
@@ -1929,7 +1937,7 @@ class SemanticParser(BasicParser):
             if f is None:
                 errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal', blocker=True)
+                    severity='fatal')
             else:
 
                 f = f(*func.args)
@@ -1939,6 +1947,10 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCall(self, expr, **settings):
         name     = expr.funcdef
+        try:
+            name = self.scope.get_expected_name(name)
+        except RuntimeError:
+            pass
 
         # Check for specialised method
         annotation_method = '_visit_' + name
@@ -1971,7 +1983,7 @@ class SemanticParser(BasicParser):
 
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error', blocker=True)
+                severity='error')
             args = expr.args
 
             # TODO check compatibility
@@ -1997,14 +2009,14 @@ class SemanticParser(BasicParser):
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='fatal', blocker=self.blocking)
+                        severity='fatal')
             else:
                 return self._handle_function(expr, func, args, **settings)
 
     def _visit_Expr(self, expr, **settings):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
 
     def _visit_Assign(self, expr, **settings):
@@ -2107,7 +2119,7 @@ class SemanticParser(BasicParser):
                     if isinstance(master, FunctionDef) and master.results:
                         d_var = self._infere_type(master.results[0], **settings)
                         dtype = d_var.pop('datatype')
-                        lhs = Variable(dtype, lhs.name, **d_var)
+                        lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
                         var = self.check_for_variable(lhs.name)
                         if var is None:
                             self.scope.insert_variable(lhs)
@@ -2161,7 +2173,7 @@ class SemanticParser(BasicParser):
                 if self.check_for_variable(name) is None:
                     d_var = self._infere_type(stmt, **settings)
                     dtype = d_var.pop('datatype')
-                    lhs = Variable(dtype, name , **d_var)
+                    lhs = Variable(dtype, name , **d_var, is_temp = lhs.is_temp)
                     self.scope.insert_variable(lhs)
 
             if isinstance(expr, Assign):
@@ -2225,7 +2237,7 @@ class SemanticParser(BasicParser):
             if func is None:
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error',blocker=self.blocking)
+                severity='error')
 
             dvar  = self._infere_type(rhs.args[1], **settings)
             d_var = [self._infere_type(result, **settings) for result in func.results]
@@ -2267,7 +2279,7 @@ class SemanticParser(BasicParser):
                 else:
                     errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
+                        severity='error')
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
@@ -2318,7 +2330,7 @@ class SemanticParser(BasicParser):
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error', blocker=self.blocking)
+                    severity='error')
                 return None
         else:
             lhs = self._visit(lhs, **settings)
@@ -2467,7 +2479,7 @@ class SemanticParser(BasicParser):
 
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='error', blocker=self.blocking)
+                   severity='error')
 
 
         body = [self._visit(i, **settings) for i in body]
@@ -2657,7 +2669,7 @@ class SemanticParser(BasicParser):
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error', blocker=self.blocking)
+                severity='error')
 
         target.invalidate_node()
 
@@ -2822,8 +2834,7 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr, **settings):
 
-        name            = expr.name
-        name            = name.replace("'", '')
+        name            = self.scope.get_expected_name(expr.name)
         cls_name        = expr.cls_name
         decorators      = expr.decorators
         funcs           = []
@@ -2847,11 +2858,12 @@ class SemanticParser(BasicParser):
             templates.update(decorators['template']['template_dict'])
 
         tmp_headers = expr.headers
+        python_name = expr.scope.get_python_name(name)
         if cls_name:
-            tmp_headers += self.get_headers(cls_name + '.' + name)
+            tmp_headers += self.get_headers(cls_name + '.' + python_name)
             args_number -= 1
         else:
-            tmp_headers += self.get_headers(name)
+            tmp_headers += self.get_headers(python_name)
         for header in tmp_headers:
             if all(header.dtypes != hd.dtypes for hd in headers):
                 headers.append(header)
@@ -2861,7 +2873,7 @@ class SemanticParser(BasicParser):
         for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = """The number of arguments in the function {} ({}) does not match the number
-                        of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))"""
+                        of types in decorator/header ({}).""".format(name ,args_number, len(hd.dtypes))
                 if (args_number < len(hd.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
@@ -2881,7 +2893,7 @@ class SemanticParser(BasicParser):
 
             errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='error', blocker=self.blocking)
+                   severity='error')
 
         # We construct a FunctionDef from each function header
         for hd in headers:
@@ -2902,7 +2914,7 @@ class SemanticParser(BasicParser):
 #            index_arg = args.index(arg)
 #            arg       = Symbol(arg)
 #            vec_arg   = arg
-#            index     = self.get_new_variable()
+#            index     = self.namespace.get_new_name()
 #            range_    = Function('range')(Function('len')(arg))
 #            args      = symbols(args)
 #            args[index_arg] = vec_arg[index]
@@ -2926,7 +2938,8 @@ class SemanticParser(BasicParser):
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
             scope = self.create_new_function_scope(name, decorators = decorators,
-                    used_symbols = expr.scope.local_used_symbols.copy())
+                    used_symbols = expr.scope.local_used_symbols.copy(),
+                    original_symbols = expr.scope.python_names.copy())
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
@@ -2948,8 +2961,8 @@ class SemanticParser(BasicParser):
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
-                        a_new = FunctionAddress(a.name, ah.arguments, ah.results, [],
-                                        **d_var)
+                        a_new = FunctionAddress(self.scope.get_expected_name(a.name),
+                                        ah.arguments, ah.results, [], **d_var)
                     else:
                         d_var = self._infere_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
@@ -2966,7 +2979,7 @@ class SemanticParser(BasicParser):
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
-                        a_new = Variable(dtype, a.name, **d_var)
+                        a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
 
                     value = None if a.value is None else self._visit(a.value)
                     if isinstance(value, Literal) and \
@@ -2986,7 +2999,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.scope.insert_variable(a_new)
+                        self.scope.insert_variable(a_new, a.name)
             results = expr.results
             if header_results:
                 new_results = []
@@ -2994,8 +3007,9 @@ class SemanticParser(BasicParser):
                 for a, ah in zip(results, header_results):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, a, **d_var)
-                    self.scope.insert_variable(a_new)
+                    a_new = Variable(dtype, self.scope.get_expected_name(a),
+                            **d_var, is_temp = a.is_temp)
+                    self.scope.insert_variable(a_new, a)
                     new_results.append(a_new)
 
                 results = new_results
@@ -3106,7 +3120,7 @@ class SemanticParser(BasicParser):
                         msg = "Cannot modify 'const' argument ({})".format(v)
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
-                            severity='fatal', blocker=self.blocking)
+                            severity='fatal')
             # ...
 
             # Raise an error if one of the return arguments is either:
@@ -3203,7 +3217,7 @@ class SemanticParser(BasicParser):
 #            # TODO: Add description to parser/messages.py
 #            errors.report('Either all arguments must be symbolic or none of them can be',
 #                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-#                   severity='fatal', blocker=self.blocking)
+#                   severity='fatal')
 
         if is_symbolic(args[0]):
             _args = []
@@ -3227,7 +3241,8 @@ class SemanticParser(BasicParser):
 
         name = expr.name
         name = name.replace("'", '')
-        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols)
+        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+                    original_symbols = expr.scope.python_names.copy())
         methods = list(expr.methods)
         parent = expr.superclass
         interfaces = []
@@ -3251,7 +3266,7 @@ class SemanticParser(BasicParser):
         if not const:
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='error', blocker=True)
+                   severity='error')
 
         ms = []
         for i in methods:
@@ -3266,7 +3281,7 @@ class SemanticParser(BasicParser):
         if not header:
             errors.report(PYCCEL_MISSING_HEADER, symbol=name,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='fatal', blocker=self.blocking)
+                   severity='fatal')
 
         attributes = self.scope.find(name, 'classes').attributes
 
@@ -3310,7 +3325,7 @@ class SemanticParser(BasicParser):
             if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
+                        severity='error')
             return IsClass(var1, expr.rhs)
 
         if (var1.dtype != var2.dtype):
@@ -3327,12 +3342,12 @@ class SemanticParser(BasicParser):
         if (var1.dtype in lst):
             errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='error', blocker=self.blocking)
+            severity='error')
             return IsClass(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='error', blocker=self.blocking)
+            severity='error')
         return IsClass(var1, var2)
 
     def _visit_Import(self, expr, **settings):
@@ -3489,7 +3504,7 @@ class SemanticParser(BasicParser):
         if not parent.is_with_construct:
             errors.report(UNDEFINED_WITH_ACCESS,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='fatal', blocker=self.blocking)
+                   severity='fatal')
 
         body = self._visit(expr.body, **settings)
 
@@ -3507,7 +3522,7 @@ class SemanticParser(BasicParser):
             func = self.scope.find(f_name, 'functions')
             if func is None:
                 errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                symbol=f_name,severity='error', blocker=self.blocking,
+                symbol=f_name,severity='error',
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset))
         else:
             interfaces = []

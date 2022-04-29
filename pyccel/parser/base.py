@@ -32,12 +32,13 @@ from pyccel.ast.variable import DottedName
 from pyccel.parser.scope     import Scope
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.errors.errors   import Errors
+from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 #==============================================================================
 
 errors = Errors()
+error_mode = ErrorsMode()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -128,15 +129,11 @@ class BasicParser(object):
         headers: list, tuple
             list of headers to append to the scope
 
-        show_traceback: bool
-            prints Traceback exception if True
-
     """
 
     def __init__(self,
                  debug=False,
-                 headers=None,
-                 show_traceback=False):
+                 headers=None):
 
         self._code = None
         self._fst  = None
@@ -144,21 +141,15 @@ class BasicParser(object):
 
         self._filename = None
         self._metavars = {}
-        self._scope    = Scope()
-
-        self._used_names = None
 
         # represent the scope of a function
-
+        self._scope    = Scope()
         self._current_class    = None
         self._current_function = None
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
         self._semantic_done = False
-
-        # the next expected Dummy variable
-        self._dummy_counter = 1
 
         # current position for errors
 
@@ -168,11 +159,7 @@ class BasicParser(object):
         # Pyccel to stop
         # TODO ERROR must be passed to the Parser __init__ as argument
 
-        self._blocking = False
-
-        # printing exception
-
-        self._show_traceback = show_traceback
+        self._blocking = error_mode.value == 'developer'
 
         if headers:
             if not isinstance(headers, dict):
@@ -182,6 +169,22 @@ class BasicParser(object):
             self.scope.headers.update(headers)
 
         self._created_from_pickle = False
+
+    def __setstate__(self, state):
+        copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
+                '_metavars', '_scope', '_current_class', '_current_function',
+                '_syntax_done', '_semantic_done', '_current_fst_node')
+
+        self.__dict__.update({s : state[s] for s in copy_slots})
+
+        if not isinstance(self.scope, Scope):
+            # self.scope as set, deprecated in PR 1089
+            raise AttributeError("Scope should be a Scope (Type was previously set in syntactic parser)")
+
+        # Error related flags. Should not be influenced by pickled file
+        self._blocking = ErrorsMode().value == 'developer'
+
+        self._created_from_pickle = True
 
     @property
     def scope(self):
@@ -253,32 +256,6 @@ class BasicParser(object):
     @property
     def blocking(self):
         return self._blocking
-
-    @property
-    def show_traceback(self):
-        return self._show_traceback
-
-    def get_new_variable(self, prefix = None):
-        """
-        Creates a new PyccelSymbol using the prefix provided. If this prefix is None,
-        then the standard prefix is used, and the dummy counter is used and updated
-        to facilitate finding the next value of this common case
-
-          Parameters
-          ----------
-          prefix   : str
-
-          Returns
-          -------
-          variable : PyccelSymbol
-        """
-        if prefix is not None:
-            var,_ = create_variable(self._used_names, prefix)
-        else:
-            var, self._dummy_counter = create_variable(self._used_names, prefix, counter = self._dummy_counter)
-        return var
-
-    # TODO shall we need to export the Parser too?
 
 
     def insert_function(self, func):
