@@ -33,8 +33,6 @@ class CTestFile(pytest.File):
     A custom file handler class for C unit test files.
 
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @classmethod
     def from_parent(cls, **kwargs):
