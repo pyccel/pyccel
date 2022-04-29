@@ -144,12 +144,9 @@ class BasicParser(object):
 
         self._filename = None
         self._metavars = {}
-        self._scope    = Scope()
-
-        self._used_names = None
 
         # represent the scope of a function
-
+        self._scope    = Scope()
         self._current_class    = None
         self._current_function = None
 
@@ -179,6 +176,23 @@ class BasicParser(object):
             self.scope.headers.update(headers)
 
         self._created_from_pickle = False
+
+    def __setstate__(self, state):
+        copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
+                '_metavars', '_scope', '_current_class', '_current_function',
+                '_syntax_done', '_semantic_done', '_current_fst_node')
+
+        self.__dict__.update({s : state[s] for s in copy_slots})
+
+        if not isinstance(self.scope, Scope):
+            # self.scope as set, deprecated in PR 1089
+            raise AttributeError("Scope should be a Scope (Type was previously set in syntactic parser)")
+
+        # Error related flags. Should not be influenced by pickled file
+        self._blocking = False
+        self._show_traceback = False
+
+        self._created_from_pickle = True
 
     @property
     def scope(self):
@@ -480,8 +494,10 @@ class BasicParser(object):
                 try:
                     with open(filename, 'rb') as f:
                         hs, version, parser = pickle.load(f)
+                    parser._blocking = self._blocking
+                    parser._show_traceback = self._show_traceback
                     self._created_from_pickle = True
-                except possible_pickle_errors:
+                except possible_pickle_errors as e:
                     return
         except PermissionError:
             # read/write problems don't need to be avoided on a read-only system
