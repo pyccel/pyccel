@@ -2,6 +2,7 @@
 # pylint: disable=arguments-differ, inconsistent-return-statements, protected-access, abstract-method/
 import subprocess
 import os
+import pathlib
 import sys
 import shutil
 import pytest
@@ -15,8 +16,8 @@ def pytest_collect_file(parent, path):
     """
     if path.ext == ".c" and path.basename.startswith("test_"):
         if NEEDS_FROM_PARENT:
-            return CTestFile.from_parent(fspath=path, parent=parent)
-        return CTestFile(parent=parent, fspath=path)
+            return CTestFile.from_parent(path=pathlib.Path(path), parent=parent)
+        return CTestFile(parent=parent, path=pathlib.Path(path))
 
 def pytest_collection_modifyitems(items):
     """
@@ -32,12 +33,12 @@ class CTestFile(pytest.File):
     A custom file handler class for C unit test files.
 
     """
-    def __init__(self, fspath, parent):
-        pytest.File.__init__(self, fspath , parent)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     @classmethod
-    def from_parent(cls, parent, fspath):
-        return super().from_parent(parent=parent, fspath=fspath)
+    def from_parent(cls, **kwargs):
+        return super().from_parent(**kwargs)
 
     def collect(self):
         """
@@ -80,9 +81,11 @@ class CTestFile(pytest.File):
                 test_results[-1][token] = data
         for test_result in test_results:
             if NEEDS_FROM_PARENT:
-                yield CTestItem.from_parent(test_result["function_name"], self, test_result)
+                yield CTestItem.from_parent(name = test_result["function_name"],
+                        parent = self, test_result = test_result)
             else:
-                yield CTestItem(test_result["function_name"], self, test_result)
+                yield CTestItem(name = test_result["function_name"], parent = self,
+                        test_result = test_result)
 
 
 class CTestItem(pytest.Item):
@@ -92,14 +95,14 @@ class CTestItem(pytest.Item):
 
     """
 
-    def __init__(self, name, parent, test_result):
+    def __init__(self, *, test_result, **kwargs):
         """Overridden constructor to pass test results dict."""
-        pytest.Item.__init__(self, name, parent)
+        super().__init__(**kwargs)
         self.test_result = test_result
 
     @classmethod
-    def from_parent(cls, name, parent, test_result):
-        return super().from_parent(name=name, parent=parent, test_result=test_result)
+    def from_parent(cls, *, test_result, **kwargs):
+        return super().from_parent(test_result=test_result, **kwargs)
 
     def runtest(self):
         """The test has already been run. We just evaluate the result."""
