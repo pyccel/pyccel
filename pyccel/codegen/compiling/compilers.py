@@ -19,23 +19,12 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-print(platform.system())
-
 if platform.system() == 'Darwin':
-    os.environ['SYSTEM_VERSION_COMPAT'] = '0'
-    # Set correct deployment target if on mac
-    print(platform.mac_ver())
-    mac_target = platform.mac_ver()[0]
-    print(mac_target)
-    if mac_target:
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
-    # Assume error https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
-    os.environ['SYSTEM_VERSION_COMPAT'] = '0'
-    print(platform.mac_ver())
+    # Collect version using mac tools to avoid unexpected results on Big Sur
+    # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
     p = subprocess.Popen(["sw_vers", '-productVersion'], stdout=subprocess.PIPE)
-    result,err = p.communicate()
-    print(result)
-
+    mac_target, err = p.communicate()
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 #------------------------------------------------------------
 class Compiler:
