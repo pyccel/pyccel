@@ -32,12 +32,13 @@ from pyccel.ast.variable import DottedName
 from pyccel.parser.scope     import Scope
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.errors.errors   import Errors
+from pyccel.errors.errors   import Errors, ErrorsMode
 from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 #==============================================================================
 
 errors = Errors()
+error_mode = ErrorsMode()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -158,7 +159,7 @@ class BasicParser(object):
         # Pyccel to stop
         # TODO ERROR must be passed to the Parser __init__ as argument
 
-        self._blocking = ErrorsMode().value == 'developer'
+        self._blocking = error_mode.value == 'developer'
 
         if headers:
             if not isinstance(headers, dict):
