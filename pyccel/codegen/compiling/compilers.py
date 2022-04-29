@@ -19,8 +19,11 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
+print(platform.system())
+
 if platform.system() == 'Darwin':
     # Set correct deployment target if on mac
+    print(platform.system())
     mac_target = platform.mac_ver()[0]
     if mac_target:
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
