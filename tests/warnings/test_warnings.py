@@ -41,7 +41,7 @@ def test_semantic_warnings(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, show_traceback=False)
+    pyccel = Parser(f)
     pyccel.parse()
 
     settings = {}
@@ -57,7 +57,7 @@ def test_semantic_warnings(f):
 #    errors = Errors()
 #    errors.reset()
 #
-#    pyccel = Parser(f, show_traceback=False)
+#    pyccel = Parser(f)
 #    ast = pyccel.parse()
 #
 #    settings = {}
