@@ -182,7 +182,6 @@ class SemanticParser(BasicParser):
         self.scope.imports['imports'] = {}
         self._module_namespace  = self.scope
         self._program_namespace = self.scope.new_child_scope('__main__')
-        self._dummy_counter = parser._dummy_counter
 
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
@@ -2915,7 +2914,7 @@ class SemanticParser(BasicParser):
 #            index_arg = args.index(arg)
 #            arg       = Symbol(arg)
 #            vec_arg   = arg
-#            index     = self.get_new_variable()
+#            index     = self.namespace.get_new_name()
 #            range_    = Function('range')(Function('len')(arg))
 #            args      = symbols(args)
 #            args[index_arg] = vec_arg[index]

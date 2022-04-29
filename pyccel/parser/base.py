@@ -157,9 +157,6 @@ class BasicParser(object):
         self._syntax_done   = False
         self._semantic_done = False
 
-        # the next expected Dummy variable
-        self._dummy_counter = 1
-
         # current position for errors
 
         self._current_fst_node = None
@@ -257,26 +254,6 @@ class BasicParser(object):
     @property
     def show_traceback(self):
         return self._show_traceback
-
-    def get_new_variable(self, prefix = None):
-        """
-        Creates a new PyccelSymbol using the prefix provided. If this prefix is None,
-        then the standard prefix is used, and the dummy counter is used and updated
-        to facilitate finding the next value of this common case
-
-          Parameters
-          ----------
-          prefix   : str
-
-          Returns
-          -------
-          variable : PyccelSymbol
-        """
-        if prefix is not None:
-            var,_ = create_variable(self._used_names, prefix)
-        else:
-            var, self._dummy_counter = create_variable(self._used_names, prefix, counter = self._dummy_counter)
-        return var
 
     # TODO shall we need to export the Parser too?
 
