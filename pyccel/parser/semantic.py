@@ -2153,6 +2153,7 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs, **settings)
 
         if isinstance(rhs, FunctionDef):
+
             # case of lambdify
 
             rhs = rhs.rename(expr.lhs.name)
