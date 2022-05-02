@@ -4905,7 +4905,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
     @types('float64[:,:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        a = where(arr%2, arr, arr+1)
+        a = where(arr < 0, arr, arr+1)
         s = shape(a)
         return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
 
