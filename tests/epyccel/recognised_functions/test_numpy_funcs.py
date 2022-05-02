@@ -4859,8 +4859,6 @@ def test_numpy_where_array_like_1d_with_condition(language):
     @types('float[:]')
     @types('float32[:]')
     @types('float64[:]')
-    @types('complex64[:]')
-    @types('complex128[:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
         a = where(arr > 5, arr, arr*2)
@@ -4882,12 +4880,6 @@ def test_numpy_where_array_like_1d_with_condition(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
-
     epyccel_func = epyccel(get_chosen_elements, language=language)
 
     assert epyccel_func(bl) == get_chosen_elements(bl)
@@ -4899,8 +4891,6 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert epyccel_func(fl) == get_chosen_elements(fl)
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
-    assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
-    assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
 
 def test_numpy_where_array_like_2d_with_condition(language):
 
@@ -4913,8 +4903,6 @@ def test_numpy_where_array_like_2d_with_condition(language):
     @types('float[:,:]')
     @types('float32[:,:]')
     @types('float64[:,:]')
-    @types('complex64[:,:]')
-    @types('complex128[:,:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
         a = where(arr%2, arr, arr+1)
@@ -4936,12 +4924,6 @@ def test_numpy_where_array_like_2d_with_condition(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
-
     epyccel_func = epyccel(get_chosen_elements, language=language)
 
     assert epyccel_func(bl) == get_chosen_elements(bl)
@@ -4953,8 +4935,76 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert epyccel_func(fl) == get_chosen_elements(fl)
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
-    assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
-    assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
+
+def test_numpy_where_complex(language):
+    @types('complex64[:]', 'complex64[:]', 'bool[:]')
+    @types('complex128[:]', 'complex128[:]', 'bool[:]')
+    def where_wrapper(arr1, arr2, cond):
+        from numpy import where, shape
+        a = where(cond, arr1, arr2)
+        s = shape(a)
+        return len(s), s[0], a[1], a[0]
+
+    size = 7
+
+    cond = randint(0, 1, size=size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    cmplx128_from_float32_2 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_1 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+    cmplx128_2 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+
+    epyccel_func = epyccel(where_wrapper, language=language)
+
+    assert epyccel_func(cmplx64_1, cmplx64_2, cond)  == where_wrapper(cmplx64_1, cmplx64_2, cond)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cond) == where_wrapper(cmplx128_1, cmplx128_2, cond)
+
+def test_where_combined_types(language):
+    @types('bool[:]','int32[:]','int64[:]')
+    @types('bool[:]','int32[:]','float32[:]')
+    @types('bool[:]','float64[:]','int64[:]')
+    @types('bool[:]','complex128[:]','int64[:]')
+    def where_wrapper(cond, arr1, arr2):
+        from numpy import where, shape
+        a = where(cond, arr1, arr2)
+        s = shape(a)
+        return len(s), s[0], a[1], a[0]
+
+    size = 6
+
+    cond = randint(0, 1, size=size, dtype= bool)
+
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    float32 = uniform(min_float32, max_float32, size = size)
+    float32 = np.float32(float32)
+    float64 = uniform(min_float64/2, max_float64/2, size = size)
+
+    complex128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+
+    epyccel_func = epyccel(where_wrapper, language=language)
+
+    res_pyc = epyccel_func (cond, integer32, integer64)
+    res_pyt = where_wrapper(cond, integer32, integer64)
+    assert res_pyc == res_pyt
+    assert matching_types(res_pyc, res_pyt)
+    res_pyc = epyccel_func (cond, integer32, float32)
+    res_pyt = where_wrapper(cond, integer32, float32)
+    assert res_pyc == res_pyt
+    assert matching_types(res_pyc, res_pyt)
+    res_pyc = epyccel_func (cond, float64, integer64)
+    res_pyt = where_wrapper(cond, float64, integer64)
+    assert res_pyc == res_pyt
+    assert matching_types(res_pyc, res_pyt)
+    res_pyc = epyccel_func (cond, complex128, integer64)
+    res_pyt = where_wrapper(cond, complex128, integer64)
+    assert res_pyc == res_pyt
+    assert matching_types(res_pyc, res_pyt)
 
 def test_numpy_linspace_scalar(language):
     from numpy import linspace
