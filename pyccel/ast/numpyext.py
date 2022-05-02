@@ -753,7 +753,7 @@ class NumpyWhere(PyccelInternalFunction):
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
 
-        self._rank = len(shape)
+        self._rank  = len(shape)
         self._shape = shape
         self._order = 'C'
         super().__init__(condition, x, y)
