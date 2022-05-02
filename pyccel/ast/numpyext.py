@@ -750,8 +750,8 @@ class NumpyWhere(PyccelInternalFunction):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-        shape = broadcast(x._shape, y._shape)
-        shape = broadcast(condition._shape, shape)
+        shape = broadcast(x.shape, y.shape)
+        shape = broadcast(condition.shape, shape)
 
         self._rank = len(shape)
         self._shape = shape
