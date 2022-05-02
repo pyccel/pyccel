@@ -11,16 +11,18 @@ between python code and C code (using Python/C Api and cwrapper.c).
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic
+from .basic     import Basic, PyccelAstNode
 
-from .datatypes import DataType
-from .datatypes import NativeInteger, NativeReal, NativeComplex
+from .datatypes import DataType, default_precision
+from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
 
 from .core      import FunctionDefArgument
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
-from .variable  import Variable
+from .internals import get_final_precision
+
+from .variable  import Variable, VariableAddress
 
 
 errors = Errors()
@@ -108,8 +110,8 @@ pytype_parse_registry = {
     (NativeInteger(), 8)       : 'l',
     (NativeInteger(), 2)       : 'h',
     (NativeInteger(), 1)       : 'b',
-    (NativeReal(), 8)          : 'd',
-    (NativeReal(), 4)          : 'f',
+    (NativeFloat(), 8)         : 'd',
+    (NativeFloat(), 4)         : 'f',
     (NativeComplex(), 4)       : 'O',
     (NativeComplex(), 8)       : 'O',
     (NativeBool(), 4)          : 'p',
@@ -190,7 +192,7 @@ class PyArg_ParseTupleNode(Basic):
             return 'O'
         else:
             try:
-                return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
+                return pytype_parse_registry[(parse_arg.dtype, get_final_precision(parse_arg))]
             except KeyError as e:
                 raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 
@@ -246,7 +248,7 @@ class PyBuildValueNode(Basic):
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
-            self._flags += pytype_parse_registry[(i.dtype, i.precision)]
+            self._flags += pytype_parse_registry[(i.dtype, get_final_precision(i))]
         super().__init__()
 
     @property
@@ -256,6 +258,57 @@ class PyBuildValueNode(Basic):
     @property
     def args(self):
         return self._result_args
+
+#-------------------------------------------------------------------
+class PyModule_AddObject(PyccelAstNode):
+    """
+    Represents a call to the function from Python.h which adds a
+    PythonObject to a module
+
+    Parameters
+    ---------
+    mod_name : str
+                The name of the variable containing the module
+    name : str
+                The name of the variable being added to the module
+    variable : Variable
+                The variable containing the PythonObject
+    """
+    __slots__ = ('_mod_name','_name','_var')
+    _attribute_nodes = ('_name','_var')
+    _dtype = NativeInteger()
+    _precision = 4
+    _rank = 0
+    _shape = ()
+
+    def __init__(self, mod_name, name, variable):
+        if not isinstance(name, str):
+            raise TypeError("Name must be a string")
+        if not isinstance(variable, Variable) or \
+                variable.dtype not in (PyccelPyObject(), PyccelPyArrayObject()):
+            raise TypeError("Variable must be a PyObject Variable")
+        self._mod_name = mod_name
+        self._name = name
+        self._var = VariableAddress(variable)
+        super().__init__()
+
+    @property
+    def mod_name(self):
+        """ The name of the variable containing the module
+        """
+        return self._mod_name
+
+    @property
+    def name(self):
+        """ The name of the variable being added to the module
+        """
+        return self._name
+
+    @property
+    def variable(self):
+        """ The variable containing the PythonObject
+        """
+        return self._var
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
@@ -289,14 +342,16 @@ def Python_to_C(c_object):
     -------
     FunctionDef : cast type FunctionDef
     """
+    dtype = c_object.dtype
+    prec  = get_final_precision(c_object)
     try :
-        cast_function = py_to_c_registry[(c_object.dtype, c_object.precision)]
+        cast_function = py_to_c_registry[(dtype, prec)]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                       results   = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)])
+                       results   = [Variable(dtype=dtype, name = 'v', precision = prec)])
 
     return cast_func
 
@@ -307,8 +362,8 @@ py_to_c_registry = {
     (NativeInteger(), 2)   : 'PyInt16_to_Int16',
     (NativeInteger(), 4)   : 'PyInt32_to_Int32',
     (NativeInteger(), 8)   : 'PyInt64_to_Int64',
-    (NativeReal(), 4)      : 'PyFloat_to_Float',
-    (NativeReal(), 8)      : 'PyDouble_to_Double',
+    (NativeFloat(), 4)     : 'PyFloat_to_Float',
+    (NativeFloat(), 8)     : 'PyDouble_to_Double',
     (NativeComplex(), 4)   : 'PyComplex_to_Complex64',
     (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
 
@@ -323,10 +378,18 @@ def C_to_Python(c_object):
     -------
     FunctionDef : cast type FunctionDef
     """
-    try :
-        cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+    if c_object.rank != 0:
+        if c_object.order == 'C':
+            cast_function = 'c_ndarray_to_pyarray'
+        elif c_object.order == 'F':
+            cast_function = 'fortran_ndarray_to_pyarray'
+        else:
+            cast_function = 'ndarray_to_pyarray'
+    else:
+        try :
+            cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
@@ -336,17 +399,20 @@ def C_to_Python(c_object):
     return cast_func
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
-# TODO create cast functions of different precision of int issue #735
 c_to_py_registry = {
+    (NativeBool(), -1)     : 'Bool_to_PyBool',
     (NativeBool(), 4)      : 'Bool_to_PyBool',
-    (NativeInteger(), 1)   : 'Int8_to_PyLong',
-    (NativeInteger(), 2)   : 'Int16_to_PyLong',
-    (NativeInteger(), 4)   : 'Int32_to_PyLong',
-    (NativeInteger(), 8)   : 'Int64_to_PyLong',
-    (NativeReal(), 4)      : 'Float_to_PyDouble',
-    (NativeReal(), 8)      : 'Double_to_PyDouble',
-    (NativeComplex(), 4)   : 'Complex64_to_PyComplex',
-    (NativeComplex(), 8)   : 'Complex128_to_PyComplex'}
+    (NativeInteger(), -1)  : 'Int'+str(default_precision['int']*8)+'_to_PyLong',
+    (NativeInteger(), 1)   : 'Int8_to_NumpyLong',
+    (NativeInteger(), 2)   : 'Int16_to_NumpyLong',
+    (NativeInteger(), 4)   : 'Int32_to_NumpyLong',
+    (NativeInteger(), 8)   : 'Int64_to_NumpyLong',
+    (NativeFloat(), 4)     : 'Float_to_NumpyDouble',
+    (NativeFloat(), 8)     : 'Double_to_NumpyDouble',
+    (NativeFloat(), -1)    : 'Double_to_PyDouble',
+    (NativeComplex(), 4)   : 'Complex64_to_NumpyComplex',
+    (NativeComplex(), 8)   : 'Complex128_to_NumpyComplex',
+    (NativeComplex(), -1)  : 'Complex128_to_PyComplex'}
 
 
 #-------------------------------------------------------------------
@@ -399,9 +465,11 @@ def generate_datatype_error(variable):
     """
     dtype     = variable.dtype
 
-    if isinstance(dtype, NativeBool):
+    if variable.precision == -1:
+        precision = 'native '
+    elif isinstance(dtype, NativeBool):
         precision = ''
-    if isinstance(dtype, NativeComplex):
+    elif isinstance(dtype, NativeComplex):
         precision = '{} bit '.format(variable.precision * 2 * 8)
     else:
         precision = '{} bit '.format(variable.precision * 8)
@@ -414,13 +482,17 @@ def generate_datatype_error(variable):
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
+    (NativeBool(), -1)     : 'PyIs_Bool',
     (NativeBool(), 4)      : 'PyIs_Bool',
+    (NativeInteger(), -1)  : 'PyIs_NativeInt',
     (NativeInteger(), 1)   : 'PyIs_Int8',
     (NativeInteger(), 2)   : 'PyIs_Int16',
     (NativeInteger(), 4)   : 'PyIs_Int32',
     (NativeInteger(), 8)   : 'PyIs_Int64',
-    (NativeReal(), 4)      : 'PyIs_Float',
-    (NativeReal(), 8)      : 'PyIs_Double',
+    (NativeFloat(), -1)    : 'PyIs_NativeFloat',
+    (NativeFloat(), 4)     : 'PyIs_Float',
+    (NativeFloat(), 8)     : 'PyIs_Double',
+    (NativeComplex(), -1)  : 'PyIs_NativeComplex',
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
 
@@ -460,10 +532,14 @@ flags_registry = {
     (NativeInteger(), 8)       : 2,
     (NativeInteger(), 2)       : 3,
     (NativeInteger(), 1)       : 4,
-    (NativeReal(), 8)          : 5,
-    (NativeReal(), 4)          : 6,
-    (NativeComplex(), 4)       : 7,
-    (NativeComplex(), 8)       : 8,
-    (NativeBool(), 4)          : 9,
-    (NativeString(), 0)        : 10
+    (NativeInteger(), -1)      : 5,
+    (NativeFloat(), 8)         : 6,
+    (NativeFloat(), 4)         : 7,
+    (NativeFloat(), -1)        : 8,
+    (NativeComplex(), 4)       : 9,
+    (NativeComplex(), 8)       : 10,
+    (NativeComplex(), -1)      : 11,
+    (NativeBool(), 4)          : 12,
+    (NativeBool(), -1)         : 12,
+    (NativeString(), 0)        : 13
 }

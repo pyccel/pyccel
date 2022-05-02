@@ -1,4 +1,4 @@
- # pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import sys
 import pytest
 import numpy as np
@@ -6,44 +6,41 @@ import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 from pyccel.epyccel import epyccel
 
-def test_gen_1(language):
-    modnew = epyccel(mod, language = language)
+@pytest.fixture(scope="module")
+def modnew(language):
+    return epyccel(mod, language = language)
+
+def test_gen_1(modnew):
     x_expected = mod.tst_gen_1()
     x = modnew.tst_gen_1()
     assert np.array_equal(x, x_expected)
 
-def test_gen_2(language):
-    modnew = epyccel(mod, language = language)
+def test_gen_2(modnew):
     x_expected = mod.tst_gen_2()
     x = modnew.tst_gen_2()
     assert np.array_equal(x ,x_expected)
 
-def test_gen_3(language):
-    modnew = epyccel(mod, language = language)
+def test_gen_3(modnew):
     x_expected = mod.tst_gen_3()
     x = modnew.tst_gen_3()
     assert np.array_equal(x, x_expected)
 
-def test_gen_4(language):
-    modnew = epyccel(mod, language = language)
+def test_gen_4(modnew):
     x_expected = mod.tst_gen_4()
     x = modnew.tst_gen_4()
     assert np.array_equal(x, x_expected)
 
-def test_gen_5(language):
-    modnew = epyccel(mod, language = language)
+def test_gen_5(modnew):
     x_expected = mod.tst_gen_5()
     x = modnew.tst_gen_5()
     assert np.array_equal(x, x_expected)
 
-def test_gen_6(language):
-    modnew = epyccel(mod, language = language)
+def test_gen_6(modnew):
     x_expected = mod.tst_gen_6()
     x = modnew.tst_gen_6()
     assert np.array_equal(x, x_expected)
 
-def test_gen_7(language):
-    modnew = epyccel(mod, language = language)
+def test_gen_7(modnew):
     x_expected = mod.tst_gen_7()
     x = modnew.tst_gen_7()
     assert np.array_equal(x, x_expected)
@@ -72,20 +69,17 @@ def test_multi_tmplt_1(language):
     assert f1(4.5, 4.5, 8) == f2(4.5, 4.5, 8)
     assert f1(7.5, 3.5, 7.7) == f2(7.5, 3.5, 7.7)
 
-def test_tmplt_head_1(language):
-    modnew = epyccel(mod, language = language)
+def test_tmplt_head_1(modnew):
     x_expected = mod.tst_tmplt_head_1()
     x = modnew.tst_tmplt_head_1()
     assert np.array_equal(x, x_expected)
 
-def test_local_overide_1(language):
-    modnew = epyccel(mod, language = language)
+def test_local_overide_1(modnew):
     x_expected = mod.tst_local_overide_1()
     x = modnew.tst_local_overide_1()
     assert np.array_equal(x, x_expected)
 
-def test_tmplt_tmplt_1(language):
-    modnew = epyccel(mod, language = language)
+def test_tmplt_tmplt_1(modnew):
     x_expected = mod.tst_tmplt_tmplt_1()
     x = modnew.tst_tmplt_tmplt_1()
     assert np.array_equal(x, x_expected)
@@ -213,8 +207,8 @@ def test_complex_types(language):
     f2 = mod2.complex_types
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
-    assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
     assert f1(np.complex128(15.5+ 2.0j) , np.complex128(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex128(10.5+ 3.4j))
+    assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
 
 def test_mix_types_1(language):
     f1 = epyccel(mod2.mix_types_1 , language = language)
@@ -222,11 +216,11 @@ def test_mix_types_1(language):
 
     assert f1(complex(1, 2), 15, np.int16(5)) == f2(complex(1, 2), 15, np.int16(5))
     assert f1(complex(1, 2), 15, True) == f2(complex(1, 2), 15, True)
-    assert f1(complex(1, 2), 7.0, np.int16(5)) == f2(complex(1, 2), 7.0, np.int16(5))
-    assert f1(complex(1, 2), 7.0, False) == f2(complex(1, 2), 7.0, False)
+    assert f1(complex(1, 2), np.float64(7.0), np.int16(5)) == f2(complex(1, 2), np.float64(7.0), np.int16(5))
+    assert f1(complex(1, 2), np.float64(7.0), False) == f2(complex(1, 2), np.float64(7.0), False)
     assert f1(15, 14, np.int16(2012)) == f2(15, 14, np.int16(2012))
     assert f1(15, 14, True) == f2(15, 14, True)
-    assert f1(15, 7.0, np.int16(2012)) == f2(15, 7.0, np.int16(2012))
+    assert f1(15, np.float64(7.0), np.int16(2012)) == f2(15, np.float64(7.0), np.int16(2012))
     assert f1(15, 14, False) == f2(15, 14, False)
 
 
@@ -234,7 +228,7 @@ def test_mix_types_2(language):
     f1 = epyccel(mod2.mix_types_2 , language = language)
     f2 = mod2.mix_types_2
 
-    assert f1(-1, -1) == f2(-1, -1)
+    assert f1(np.int32(-1), np.int32(-1)) == f2(np.int32(-1), np.int32(-1))
     assert f1(np.int64(4), np.int64(16)) == f2(np.int64(4), np.int64(16))
     assert f1(np.int16(4), np.int16(4)) == f2(np.int16(4), np.int16(4))
     assert f1(5.7, -1.2) == f2(5.7, -1.2)
@@ -420,8 +414,8 @@ def test_zeros_types(language):
     fl_2 = f2(0.0)
 
     assert i_1 == i_2
-    assert isinstance(i_1, type(i_2.item()))
+    assert isinstance(i_1, type(i_2))
 
     assert fl_1 == fl_2
-    assert isinstance(fl_1, type(fl_2.item()))
+    assert isinstance(fl_1, type(fl_2))
 

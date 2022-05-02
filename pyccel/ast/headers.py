@@ -4,12 +4,12 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
@@ -259,7 +259,7 @@ class FunctionHeader(Header):
     def is_static(self):
         return self._is_static
 
-    def create_definition(self, templates = ()):
+    def create_definition(self, templates = (), is_external=False):
         """Returns a FunctionDef with empy body."""
         # TODO factorize what can be factorized
         from itertools import product
@@ -296,7 +296,7 @@ class FunctionHeader(Header):
             var = Variable(dtype, var_name,
                            allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
                            rank=rank, shape=shape ,order = order, precision = precision,
-                           is_argument=True)
+                           is_argument=True, is_temp = True)
             return var
 
         def process_template(signature, Tname, d_type):
@@ -364,7 +364,7 @@ class FunctionHeader(Header):
             for i,d_var in enumerate(self.results):
                 is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
-                var = Variable(dtype, 'res_{}'.format(i), **d_var)
+                var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
                 results.append(var)
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
@@ -372,12 +372,12 @@ class FunctionHeader(Header):
                 d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
-                              local_vars=[],
                               global_vars=[],
                               cls_name=cls_name,
                               is_static=is_static,
                               imports=imports,
-                              is_header=True)
+                              is_header=True,
+                              is_external=is_external)
             funcs += [func]
 
         return funcs

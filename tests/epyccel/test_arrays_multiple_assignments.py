@@ -14,7 +14,7 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
     pytest.param('fortran', marks = pytest.mark.fortran),
     pytest.param('python', marks = pytest.mark.python),
     pytest.param('c'      , marks = [pytest.mark.c,
-        pytest.mark.skip(message='NumpySum not implemented in C')])
+        pytest.mark.skip(reason='NumpySum not implemented in C')])
     ]
 )
 def language(request):
@@ -221,7 +221,7 @@ def test_Assign_Between_Allocatables():
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol  == 'x'
+    assert str(error_info.symbol)  == 'x'
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================

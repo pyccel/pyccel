@@ -1,15 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.stdlib.internal.blas import dgemm
-from numpy import zeros
+import numpy as np
 
 if __name__ == '__main__':
-    m = 4
-    k = 5
-    n = 4
+    m = np.int32(4)
+    k = np.int32(5)
+    n = np.int32(4)
 
-    a = zeros((m,k), 'double')
-    b = zeros((k,n), 'double')
-    c = zeros((m,n), 'double')
+    a = np.zeros((m,k), order='F')
+    b = np.zeros((k,n), order='F')
+    c = np.zeros((m,n), order='F')
 
     # ...
     a[0,0] = 1.0

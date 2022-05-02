@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import subprocess
+import json
 import os
 import shutil
 import sys
@@ -479,13 +480,11 @@ def test_in_specified(language):
                                         "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        pytest.param("scripts/hope_benchmarks_decorators/fib.py",
-                                            marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
+                                        "scripts/hope_benchmarks_decorators/fib.py",
                                         "scripts/hope_benchmarks_decorators/hope_ln_python.py",
                                         "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
                                         "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/hope_fib.py",
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
 
                                         ] )
@@ -614,19 +613,9 @@ def test_print_strings(language):
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="formated string not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
 def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
-
 
 #------------------------------------------------------------------------------
 def test_c_arrays(language):
@@ -724,7 +713,36 @@ def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
+@pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
+                                        ] )
+def test_lapack( test_file ):
+    #TODO: Uncomment this when dgetri can be expressed with scipy
+    #pyccel_test(test_file)
 
+    #TODO: Remove the rest of the function when dgetri can be expressed with scipy
+    test_file = os.path.normpath(test_file)
+    test_file = get_abs_path(test_file)
+
+    cwd = get_abs_path('.')
+
+    compile_pyccel(cwd, test_file)
+
+    lang_out = get_lang_output(test_file, 'fortran')
+    rx = re.compile('[-0-9.eE]+')
+    lang_out_vals = []
+    while lang_out:
+        try:
+            f, lang_out = get_value(lang_out, rx, float)
+            lang_out_vals.append(f)
+        except AssertionError:
+            lang_out = None
+    output_mat = np.array(lang_out_vals).reshape(4,4)
+    expected_output = np.eye(4)
+
+    assert np.allclose(output_mat, expected_output, rtol=1e-14, atol=1e-15)
+
+#------------------------------------------------------------------------------
 def test_type_print( language ):
     test_file = 'scripts/runtest_type_print.py'
 
@@ -764,9 +782,8 @@ def test_type_print( language ):
         assert 'int16' in lang_out[0]
         assert 'int32' in lang_out[1]
         assert 'int64' in lang_out[2]
-        # TODO: Change with issue #932
-        assert 'real32' in lang_out[3]
-        assert 'real64' in lang_out[4]
+        assert 'float32' in lang_out[3]
+        assert 'float64' in lang_out[4]
 
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
@@ -834,3 +851,32 @@ def test_module_init_collisions( language ):
         lang_out = get_lang_output(test_prog, language)
 
     compare_pyth_fort_output(pyth_out, lang_out, [float, float, float, int, float, float, float, int], language)
+
+def test_function_aliasing():
+    pyccel_test("scripts/runtest_function_alias.py",
+            language = 'fortran')
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_inline(language):
+    pyccel_test("scripts/decorators_inline.py", language = language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+def test_inline_import(language):
+    pyccel_test("scripts/runtest_decorators_inline.py",
+            dependencies = ("scripts/decorators_inline.py"),
+                language = language)
+
+#------------------------------------------------------------------------------
+def test_json():
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+            pyccel_commands='--export-compile-info test.json')
+    with open(get_abs_path('scripts/test.json'),'r') as f:
+        dict_1 = json.load(f)
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+        pyccel_commands='--compiler test.json --export-compile-info test2.json')
+    with open(get_abs_path('scripts/test2.json'),'r') as f:
+        dict_2 = json.load(f)
+
+    assert dict_1 == dict_2

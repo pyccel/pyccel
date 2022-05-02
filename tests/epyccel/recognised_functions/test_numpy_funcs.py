@@ -56,11 +56,9 @@ def matching_types(pyccel_result, python_result):
     """
     if type(pyccel_result) is type(python_result):
         return True
-    if isinstance(pyccel_result, np.generic):
-        return isinstance(pyccel_result.item(), type(python_result))
-    else:
-        #TODO: Remove when #735 is fixed
-        return isinstance(python_result, np.generic) and isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
+    return (isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)) \
+            or \
+           (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))
 
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
@@ -3273,11 +3271,14 @@ def test_numpy_real_scalar(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + \
+            uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx_from_float64 = uniform(low=min_float64 / 2, high=max_float64 / 2) + \
+            uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    cmplx64 = np.complex64(cmplx_from_float32)
+    cmplx128 = np.complex128(cmplx_from_float64)
 
     epyccel_func = epyccel(get_real, language=language)
 
@@ -3317,13 +3318,11 @@ def test_numpy_real_scalar(language):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_real(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_real(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_real(fl)
@@ -3416,12 +3415,10 @@ def test_numpy_real_array_like_1d(language):
     assert epyccel_func(integer16) == get_real(integer16)
     assert epyccel_func(integer) == get_real(integer)
     assert epyccel_func(integer32) == get_real(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_real(integer64)
-        assert epyccel_func(fl) == get_real(fl)
-        assert epyccel_func(fl32) == get_real(fl32)
-        assert epyccel_func(fl64) == get_real(fl64)
+    assert epyccel_func(integer64) == get_real(integer64)
+    assert epyccel_func(fl) == get_real(fl)
+    assert epyccel_func(fl32) == get_real(fl32)
+    assert epyccel_func(fl64) == get_real(fl64)
     assert epyccel_func(cmplx64) == get_real(cmplx64)
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
@@ -3486,12 +3483,10 @@ def test_numpy_real_array_like_2d(language):
     assert epyccel_func(integer16) == get_real(integer16)
     assert epyccel_func(integer) == get_real(integer)
     assert epyccel_func(integer32) == get_real(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_real(integer64)
-        assert epyccel_func(fl) == get_real(fl)
-        assert epyccel_func(fl32) == get_real(fl32)
-        assert epyccel_func(fl64) == get_real(fl64)
+    assert epyccel_func(integer64) == get_real(integer64)
+    assert epyccel_func(fl) == get_real(fl)
+    assert epyccel_func(fl32) == get_real(fl32)
+    assert epyccel_func(fl64) == get_real(fl64)
     assert epyccel_func(cmplx64) == get_real(cmplx64)
     assert epyccel_func(cmplx128) == get_real(cmplx128)
 
@@ -3535,11 +3530,14 @@ def test_numpy_imag_scalar(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + \
+            uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx_from_float64 = uniform(low=min_float64 / 2, high=max_float64 / 2) + \
+            uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    cmplx64 = np.complex64(cmplx_from_float32)
+    cmplx128 = np.complex128(cmplx_from_float64)
 
     epyccel_func = epyccel(get_imag, language=language)
 
@@ -3579,13 +3577,11 @@ def test_numpy_imag_scalar(language):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_imag(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_imag(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_imag(fl)
@@ -3675,12 +3671,10 @@ def test_numpy_imag_array_like_1d(language):
     assert epyccel_func(integer16) == get_imag(integer16)
     assert epyccel_func(integer) == get_imag(integer)
     assert epyccel_func(integer32) == get_imag(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_imag(integer64)
-        assert epyccel_func(fl) == get_imag(fl)
-        assert epyccel_func(fl32) == get_imag(fl32)
-        assert epyccel_func(fl64) == get_imag(fl64)
+    assert epyccel_func(integer64) == get_imag(integer64)
+    assert epyccel_func(fl) == get_imag(fl)
+    assert epyccel_func(fl32) == get_imag(fl32)
+    assert epyccel_func(fl64) == get_imag(fl64)
     assert epyccel_func(cmplx64) == get_imag(cmplx64)
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
 
@@ -3742,12 +3736,10 @@ def test_numpy_imag_array_like_2d(language):
     assert epyccel_func(integer16) == get_imag(integer16)
     assert epyccel_func(integer) == get_imag(integer)
     assert epyccel_func(integer32) == get_imag(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_imag(integer64)
-        assert epyccel_func(fl) == get_imag(fl)
-        assert epyccel_func(fl32) == get_imag(fl32)
-        assert epyccel_func(fl64) == get_imag(fl64)
+    assert epyccel_func(integer64) == get_imag(integer64)
+    assert epyccel_func(fl) == get_imag(fl)
+    assert epyccel_func(fl32) == get_imag(fl32)
+    assert epyccel_func(fl64) == get_imag(fl64)
     assert epyccel_func(cmplx64) == get_imag(cmplx64)
     assert epyccel_func(cmplx128) == get_imag(cmplx128)
 
@@ -3789,7 +3781,7 @@ def test_numpy_mod_scalar(language):
     assert matching_types(f_bl_true_output, test_bool_true_output)
 
     def test_int(min_int, max_int, dtype):
-        integer = randint(min_int, max_int, dtype=dtype) or 1
+        integer = dtype(randint(min_int, max_int, dtype=dtype) or 1)
 
         f_integer_output = epyccel_func(integer)
         test_int_output  = get_mod(integer)
@@ -3801,9 +3793,7 @@ def test_numpy_mod_scalar(language):
     test_int(min_int16, max_int16, np.int16)
     test_int(min_int  , max_int  , int)
     test_int(min_int32, max_int32, np.int32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        test_int(min_int64, max_int64, np.int64)
+    test_int(min_int64, max_int64, np.int64)
 
     fl = uniform(min_float / 2, max_float / 2)
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
@@ -3872,9 +3862,7 @@ def test_numpy_mod_array_like_1d(language):
     test_int(min_int16, max_int16, np.int16)
     test_int(min_int  , max_int  , int)
     test_int(min_int32, max_int32, np.int32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        test_int(min_int64, max_int64, np.int64)
+    test_int(min_int64, max_int64, np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
@@ -3929,9 +3917,7 @@ def test_numpy_mod_array_like_2d(language):
     test_int(min_int16, max_int16, np.int16)
     test_int(min_int  , max_int  , int)
     test_int(min_int32, max_int32, np.int32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        test_int(min_int64, max_int64, np.int64)
+    test_int(min_int64, max_int64, np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
@@ -3988,10 +3974,11 @@ def test_numpy_prod_scalar(language):
     fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx128_from_float64 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_prod, language=language)
 
@@ -4031,13 +4018,11 @@ def test_numpy_prod_scalar(language):
     assert f_integer32_output == test_int32_output
     assert matching_types(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64)
-        test_int64_output = get_prod(integer64)
+    f_integer64_output = epyccel_func(integer64)
+    test_int64_output = get_prod(integer64)
 
-        assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output)
+    assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_prod(fl)
@@ -4116,11 +4101,18 @@ def test_numpy_prod_array_like_1d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/5)), high=(max_float32 ** (1/5)), size = size) + uniform(low=-((-min_float32) ** (1/5)), high=(max_float32 ** (1/5)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/5)),
+                                    high=(max_float32 ** (1/5)), size = size) + \
+                            uniform(low=-((-min_float32) ** (1/5)),
+                                    high=(max_float32 ** (1/5)), size = size) * 1j
+    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/5)),
+                                    high=(max_float64 ** (1/5)), size = size) + \
+                            uniform(low=-((-min_float64) ** (1/5)),
+                                    high=(max_float64 ** (1/5)), size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((-min_float64) ** (1/5)), high=(max_float64 ** (1/5)), size = size) + uniform(low=-((-min_float64) ** (1/5)), high=(max_float64 ** (1/5)), size = size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_prod, language=language)
 
@@ -4129,9 +4121,7 @@ def test_numpy_prod_array_like_1d(language):
     assert epyccel_func(integer16) == get_prod(integer16)
     assert epyccel_func(integer) == get_prod(integer)
     assert epyccel_func(integer32) == get_prod(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_prod(integer64)
+    assert epyccel_func(integer64) == get_prod(integer64)
     assert epyccel_func(fl) == get_prod(fl)
     assert epyccel_func(fl32) == get_prod(fl32)
     assert epyccel_func(fl64) == get_prod(fl64)
@@ -4185,11 +4175,18 @@ def test_numpy_prod_array_like_2d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 10, max_float64 / 10, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/10)), high=(max_float32 ** (1/10)), size = size) + uniform(low=-((-min_float32) ** (1/10)), high=(max_float32 ** (1/10)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/10)),
+                                    high=(max_float32 ** (1/10)), size = size) + \
+                            uniform(low=-((-min_float32) ** (1/10)),
+                                    high=(max_float32 ** (1/10)), size = size) * 1j
+    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/10)),
+                                    high=(max_float64 ** (1/10)), size = size) + \
+                            uniform(low=-((-min_float64) ** (1/10)),
+                                    high=(max_float64 ** (1/10)), size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((-min_float64) ** (1/10)), high=(max_float64 ** (1/10)), size = size) + uniform(low=-((-min_float64) ** (1/10)), high=(max_float64 ** (1/10)), size = size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_prod, language=language)
 
@@ -4198,9 +4195,7 @@ def test_numpy_prod_array_like_2d(language):
     assert epyccel_func(integer16) == get_prod(integer16)
     assert epyccel_func(integer) == get_prod(integer)
     assert epyccel_func(integer32) == get_prod(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_prod(integer64)
+    assert epyccel_func(integer64) == get_prod(integer64)
     assert epyccel_func(fl) == get_prod(fl)
     assert epyccel_func(fl32) == get_prod(fl32)
     assert epyccel_func(fl64) == get_prod(fl64)
@@ -4248,11 +4243,12 @@ def test_numpy_norm_scalar(language):
 
     cmplx128_from_float32 = uniform(low=-((abs(min_float32) / 2)**(1/2)), high=((abs(max_float32) / 2)**(1/2))) + \
                             uniform(low=-((abs(max_float32) / 2)**(1/2)), high=((abs(max_float32) / 2)**(1/2))) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / 2)**(1/2)), high=((abs(max_float64) / 2)**(1/2))) + \
+                            uniform(low=-((abs(max_float64) / 2)**(1/2)), high=((abs(max_float64) / 2)**(1/2))) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float32) / 2)**(1/2)), high=(abs(max_float64) / 2)**(1/2)) + \
-               uniform(low=-((abs(min_float64) / 2)**(1/2)), high=(abs(max_float64) / 2)**(1/2)) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_norm, language=language)
 
@@ -4371,13 +4367,18 @@ def test_numpy_norm_array_like_1d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(low=-((abs(min_float64) / size)**(1/2)), high=(abs(max_float64) / size)**(1/2), size=size)
 
-    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size * 2))**(1/2)), high=(abs(max_float32) / (size * 2))**(1/2), size=size) + \
-                            uniform(low=-((abs(min_float32) / (size * 2))**(1/2)), high=(abs(max_float32) / (size * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / (size * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float64) / (size * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float64) / (size * 2))**(1/2)), high=(abs(max_float64) / (size * 2))**(1/2), size=size) + \
-              uniform(low=-((abs(min_float64) / (size * 2))**(1/2)), high=(abs(max_float64) / (size * 2))**(1/2), size=size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_norm, language=language)
 
@@ -4437,13 +4438,18 @@ def test_numpy_norm_array_like_2d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1]))**(1/2), size=size)
 
-    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) + \
-                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) + \
-              uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_norm, language=language)
 
@@ -4506,13 +4512,18 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1]))**(1/2), size=size)
 
-    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) + \
-                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) + \
-              uniform(low=-((abs(min_float64) / (size[0] * size[1] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * 2))**(1/2), size=size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_norm, language=language)
 
@@ -4584,13 +4595,18 @@ def test_numpy_norm_array_like_3d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2]))**(1/2), size=size)
 
-    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
-                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
-              uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_norm, language=language)
 
@@ -4655,13 +4671,18 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2]))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2]))**(1/2), size=size)
 
-    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
-                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float32) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float32) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float64 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
+                            uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)),
+                                    high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) + \
-              uniform(low=-((abs(min_float64) / (size[0] * size[1] * size[2] * 2))**(1/2)), high=(abs(max_float64) / (size[0] * size[1] * size[2] * 2))**(1/2), size=size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_norm, language=language)
 
@@ -4734,11 +4755,18 @@ def test_numpy_matmul_array_like_1d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(-((max_float64 / size)**(1/2)), (max_float64 / size)**(1/2), size = size)
 
-    cmplx128_from_float32 = uniform(low=-((max_float32 / (size * 2))**(1/2)), high=(max_float32 / (size * 2))**(1/2), size=size) + uniform(low=-((max_float32 / (size * 2))**(1/2)), high=(max_float32 / (size * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((max_float32 / (size * 2))**(1/2)),
+                                    high=(max_float32 / (size * 2))**(1/2), size=size) + \
+                            uniform(low=-((max_float32 / (size * 2))**(1/2)),
+                                    high=(max_float32 / (size * 2))**(1/2), size=size) * 1j
+    cmplx128_from_float64 = uniform(low=-((max_float64 / (size * 2))**(1/2)),
+                                    high=(max_float64 / (size * 2))**(1/2), size=size) + \
+                            uniform(low=-((max_float64 / (size * 2))**(1/2)),
+                                    high=(max_float64 / (size * 2))**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((max_float64 / (size * 2))**(1/2)), high=(max_float64 / (size * 2))**(1/2), size=size) + uniform(low=-((max_float64 / (size * 2))**(1/2)), high=(max_float64 / (size * 2))**(1/2), size=size) * 1j
+    cmplx128 = np.complex128(cmplx128_from_float64)
 
     epyccel_func = epyccel(get_matmul, language=language)
 
@@ -4747,9 +4775,7 @@ def test_numpy_matmul_array_like_1d(language):
     assert epyccel_func(integer16) == get_matmul(integer16)
     assert epyccel_func(integer) == get_matmul(integer)
     assert epyccel_func(integer32) == get_matmul(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_matmul(integer64)
+    assert epyccel_func(integer64) == get_matmul(integer64)
     assert isclose(epyccel_func(fl),get_matmul(fl), rtol=RTOL, atol=ATOL)
     assert isclose(epyccel_func(fl32),get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
     assert isclose(epyccel_func(fl64),get_matmul(fl64), rtol=RTOL, atol=ATOL)
@@ -4815,9 +4841,7 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert np.allclose(epyccel_func(integer16), get_matmul(integer16), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer), get_matmul(integer), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(integer32), get_matmul(integer32), rtol=RTOL, atol=ATOL)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert np.allclose(epyccel_func(integer64), get_matmul(integer64), rtol=RTOL, atol=ATOL)
+    assert np.allclose(epyccel_func(integer64), get_matmul(integer64), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(fl), get_matmul(fl), rtol=RTOL, atol=ATOL)
     assert np.allclose(epyccel_func(fl32), get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(fl64), get_matmul(fl64), rtol=RTOL, atol=ATOL)
@@ -4885,9 +4909,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert epyccel_func(integer16) == get_chosen_elements(integer16)
     assert epyccel_func(integer) == get_chosen_elements(integer)
     assert epyccel_func(integer32) == get_chosen_elements(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_chosen_elements(integer64)
+    assert epyccel_func(integer64) == get_chosen_elements(integer64)
     assert epyccel_func(fl) == get_chosen_elements(fl)
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
@@ -4955,48 +4977,62 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert epyccel_func(integer16) == get_chosen_elements(integer16)
     assert epyccel_func(integer) == get_chosen_elements(integer)
     assert epyccel_func(integer32) == get_chosen_elements(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_chosen_elements(integer64)
+    assert epyccel_func(integer64) == get_chosen_elements(integer64)
     assert epyccel_func(fl) == get_chosen_elements(fl)
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
     assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
     assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #771")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_linspace_scalar(language):
+    from numpy import linspace
 
-    @types('bool')
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    @types('complex64')
-    @types('complex128')
-    def get_linspace(start):
-        from numpy import linspace, shape
-        stop = start + 7
-        numberOfSamplesToGenerate = 7
-        b = linspace(start, stop, numberOfSamplesToGenerate)
-        s = shape(b)
-        return len(s), s[0], b[0], b[5]
+    @types('int', 'int', 'int')
+    @types('int8', 'int', 'int')
+    @types('int16', 'int', 'int')
+    @types('int32', 'int', 'int')
+    @types('int64', 'int', 'int')
+    @types('float', 'int', 'int')
+    @types('float32', 'int', 'int')
+    @types('float64', 'int', 'int')
+    def get_linspace(start, steps, num):
+        from numpy import linspace
+        stop = start + steps
+        b = linspace(start, stop, num)
+        x = 0.0
+        for bi in b:
+            x += bi
+        return x
+
+    @types('complex64', 'complex64')
+    def test_linspace(start, end):
+        from numpy import linspace
+        x = linspace(start, end, 5)
+        return x[0], x[1], x[2], x[3], x[4]
+
+    @types('complex128', 'complex128')
+    def test_linspace2(start, end):
+        from numpy import linspace
+        x = linspace(start, end, 5)
+        return x[0], x[1], x[2], x[3], x[4]
+
+    @types('int', 'int', 'int64[:]')
+    def test_linspace_type(start, end, result):
+        from numpy import linspace
+        import numpy as np
+        x = linspace(start + 4, end, 15, dtype=np.int64)
+        ret = 1
+        for i in range(len(x)):
+            if x[i] != result[i]:
+                ret = 0
+        return ret, x[int(len(x) / 2)]
+
+    @types('int', 'int', 'complex128[:]')
+    def test_linspace_type2(start, end, result):
+        from numpy import linspace
+        x = linspace(start, end * 2, 15, dtype='complex128')
+        for i in range(len(x)):
+            result[i] = x[i]
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -5004,175 +5040,332 @@ def test_numpy_linspace_scalar(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2)
+    fl = uniform(min_float / 200, max_float / 200)
+    fl32 = uniform(min_float32 / 200, max_float32 / 200)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
-
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    fl64 = uniform(min_float64 / 200, max_float64 / 200)
 
     epyccel_func = epyccel(get_linspace, language=language)
+    epyccel_func_type = epyccel(test_linspace_type, language=language)
+    epyccel_func_type2 = epyccel(test_linspace_type2, language=language)
 
-    assert epyccel_func(True) == get_linspace(True)
-    assert epyccel_func(False) == get_linspace(False)
-    assert epyccel_func(integer8) == get_linspace(integer8)
-    assert epyccel_func(integer16) == get_linspace(integer16)
-    assert epyccel_func(integer) == get_linspace(integer)
-    assert epyccel_func(integer32) == get_linspace(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_linspace(integer64)
-    assert epyccel_func(fl) == get_linspace(fl)
-    assert epyccel_func(fl32) == get_linspace(fl32)
-    assert epyccel_func(fl64) == get_linspace(fl64)
-    assert (epyccel_func(cmplx64) == get_linspace(cmplx64))
-    assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+    x = linspace(0 + 4, 10, 15, dtype=np.int64)
+    ret, ele = epyccel_func_type(0, 10, x)
+    assert (ret == 1)
+    assert (ele.dtype == np.int64)
+    x = linspace(0, 10 * 2, 15, dtype='complex128')
+    out = np.empty_like(x)
+    epyccel_func_type2(0, 10, out)
+    assert (np.allclose(x, out))
+    arr = np.zeros
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer, x, 100), get_linspace(integer, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer16, x, 100), get_linspace(integer16, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer32, x, 30), get_linspace(integer32, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer32, x, 100), get_linspace(integer32, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer64, x, 100), get_linspace(integer64, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl, x, 100), get_linspace(fl, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl32, x, 100), get_linspace(fl32, x, 100))
+    x = randint(100, 200)
+    assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl64, x, 100), get_linspace(fl64, x, 100))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #771")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
+    epyccel_func1 = epyccel(test_linspace, language=language)
+    epyccel_func2 = epyccel(test_linspace2, language=language)
+    assert (epyccel_func1(np.complex64(3+6j), np.complex64(5+1j)) == test_linspace(np.complex64(3+6j), np.complex64(5+1j)))
+    assert (epyccel_func1(np.complex64(-3+6j), np.complex64(5-1j)) == test_linspace(np.complex64(-3+6j), np.complex64(5-1j)))
+    assert (epyccel_func2(np.complex128(3+6j), np.complex128(5+1j)) == test_linspace(np.complex128(3+6j), np.complex128(5+1j)))
+    assert (epyccel_func2(np.complex128(-3+6j), np.complex128(5-1j)) == test_linspace(np.complex128(-3+6j), np.complex128(5-1j)))
+
+    res_pyc = epyccel_func2(np.complex128(3+6j), np.complex128(5+1j))
+    res_pyt = test_linspace(np.complex128(3+6j), np.complex128(5+1j))
+    for pyc, pyt in zip(res_pyc,res_pyt):
+        assert matching_types(pyc, pyt)
 
 def test_numpy_linspace_array_like_1d(language):
+    from numpy import linspace
 
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    @types('complex64[:]')
-    @types('complex128[:]')
-    def get_linspace(arr):
-        from numpy import linspace, shape, ones
+    @types('int[:]', 'int', 'float[:,:]', 'bool')
+    @types('int8[:]', 'int', 'float[:,:]', 'bool')
+    @types('int16[:]', 'int', 'float[:,:]', 'bool')
+    @types('int32[:]', 'int', 'float[:,:]', 'bool')
+    @types('float[:]', 'int', 'float[:,:]', 'bool')
+    @types('float32[:]', 'int', 'float32[:,:]', 'bool')
+    @types('float64[:]', 'int', 'float64[:,:]', 'bool')
+    def test_linspace(start, stop, out, endpoint):
+        from numpy import linspace
         numberOfSamplesToGenerate = 7
-        start = ones(5)
-        stop = arr
-        a = linspace(start, stop, numberOfSamplesToGenerate)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,0], a[0,4], a[1,0], a[1,4]
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                out[i][j] = a[i][j]
+
+    @types('complex128[:]', 'int', 'complex128[:,:]', 'bool')
+    def test_linspace2(start, stop, out, endpoint):
+        from numpy import linspace
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                out[i][j] = a[i][j]
+
+    @types('int[:]', 'int', 'int32[:,:]', 'bool')
+    @types('float64[:]', 'int', 'int32[:,:]', 'bool')
+    def test_linspace_dtype(start, stop, out, endpoint):
+        from numpy import linspace
+        import numpy as np
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=(endpoint == True), dtype=np.int32)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                out[i][j] = a[i][j]
 
     size = 5
-
-    bl = randint(0, 1, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer8 = randint(min_int8 / 2, max_int8 / 2, size=size, dtype=np.int8)
+    integer16 = randint(min_int16 / 2, max_int16 / 2, size=size, dtype=np.int16)
+    integer = randint(-10000, 10000, size=size, dtype=int)
+    integer32 = randint(min_int32 / 2, max_int32 / 2, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int64, max_int, size = size)
+    fl32 = np.array([1.5, 2.2, 3.3, 4.4, 5.5], dtype=np.float32)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 10, high=max_float32 / 10, size=size) + uniform(low=min_float32 / 10, high=max_float32 / 10, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 10, high=max_float64 / 10, size=size) + uniform(low=min_float64 / 10, high=max_float64 / 10, size=size) * 1j
+    epyccel_func = epyccel(test_linspace, language=language)
+    epyccel_func2 = epyccel(test_linspace2, language=language)
 
-    epyccel_func = epyccel(get_linspace, language=language)
+    epyccel_func_dtype = epyccel(test_linspace_dtype, language=language)
 
-    assert epyccel_func(bl) == get_linspace(bl)
-    assert epyccel_func(integer8) == get_linspace(integer8)
-    assert epyccel_func(integer16) == get_linspace(integer16)
-    assert epyccel_func(integer) == get_linspace(integer)
-    assert epyccel_func(integer32) == get_linspace(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    arr = linspace(integer, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer, 5, out, False)
+    assert np.allclose(arr, out)
+
+    arr = linspace(integer8, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer8, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer8, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer8, 5, out, False)
+    assert np.allclose(arr, out)
+
+    arr = linspace(integer16, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer16, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer16, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer16, 5, out, False)
+    assert np.allclose(arr, out)
+
+    arr = linspace(integer32, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer32, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer32, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer32, 5, out, False)
+    assert np.allclose(arr, out)
+    
     if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_linspace(integer64)
-    assert epyccel_func(fl) == get_linspace(fl)
-    assert epyccel_func(fl32) == get_linspace(fl32)
-    assert epyccel_func(fl64) == get_linspace(fl64)
-    assert (epyccel_func(cmplx64) == get_linspace(cmplx64))
-    assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+        arr = linspace(integer64, 5, 7)
+        out = np.empty_like(arr)
+        epyccel_func(integer64, 5, out, True)
+        assert np.allclose(arr, out)
+        arr = linspace(integer64, 5, 7, endpoint=False)
+        out = np.empty_like(arr)
+        epyccel_func(integer64, 5, out, False)
+        assert np.allclose(arr, out)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #771")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
+
+    arr = linspace(fl32, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(fl32, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(fl32, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(fl32, 5, out, False)
+    assert np.allclose(arr, out)
+
+    rng = np.random.default_rng()
+    fl64 = rng.random((5,), dtype=np.float64)
+    arr = linspace(fl64, 2, 7)
+    out = np.empty_like(arr)
+    epyccel_func(fl64, 2, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(fl64, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(fl64, 5, out, False)
+    assert np.allclose(arr, out)
+
+    cmplx = (np.random.random(5)*75) + (np.random.random(5)*50) * 1j
+    arr = linspace(cmplx, 0, 7)
+    out = np.empty_like(arr)
+    epyccel_func2(cmplx, 0, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(cmplx, 0, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func2(cmplx, 0, out, False)
+    assert np.allclose(arr, out)
 
 def test_numpy_linspace_array_like_2d(language):
+    from numpy import linspace
 
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    @types('complex64[:,:]')
-    @types('complex128[:,:]')
-    def get_linspace(arr):
-        from numpy import linspace, shape, ones
+    @types('int[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('int8[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('int16[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('int32[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('float[:,:]', 'int', 'float[:,:,:]', 'bool')
+    @types('float32[:,:]', 'int', 'float32[:,:,:]', 'bool')
+    @types('float64[:,:]', 'int', 'float64[:,:,:]', 'bool')
+    def test_linspace(start, stop, out, endpoint):
+        from numpy import linspace
         numberOfSamplesToGenerate = 7
-        start = ones((2,5))
-        stop = arr
-        a = linspace(start, stop, numberOfSamplesToGenerate)
-        s = shape(a)
-        return len(s), s[0], s[1], s[2], a[0, 0, 0], a[0, 1, 0], a[1, 0, 0], a[1, 1, 0], \
-                                         a[0, 0, 4], a[0, 1, 4], a[1, 0, 4], a[1, 1, 4]
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                for k in range(len(out[i][j])):
+                    out[i][j][k] = a[i][j][k]
+
+    @types('complex128[:,:]', 'int', 'complex128[:,:,:]', 'bool')
+    def test_linspace3(start, stop, out, endpoint):
+        from numpy import linspace
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                for k in range(len(out[i][j])):
+                    out[i][j][k] = a[i][j][k]
+
+    @types('int[:,:]', 'int[:,:]', 'float[:,:,:]', 'bool')
+    def test_linspace2(start, stop, out, endpoint):
+        from numpy import linspace
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                for k in range(len(out[i][j])):
+                    out[i][j][k] = a[i][j][k]
+
+    @types('complex128[:,:]', 'complex128[:,:]', 'complex128[:,:,:]', 'bool')
+    def test_linspace4(start, stop, out, endpoint):
+        from numpy import linspace
+        numberOfSamplesToGenerate = 7
+        a = linspace(start, stop, numberOfSamplesToGenerate, endpoint=endpoint)
+        for i in range(len(out)):
+            for j in range(len(out[i])):
+                for k in range(len(out[i][j])):
+                    out[i][j][k] = a[i][j][k]
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
-
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
     integer = randint(min_int, max_int, size=size, dtype=int)
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+    fl32 = np.array([[1.5, 2.2, 3.3, 4.4, 5.5],[5.4,2.1,7.1,10.46,11.0]], dtype=np.float32)
+    cmplx = (np.random.random((2,5))*75) + (np.random.random((2,5))*50) * 1j
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    epyccel_func = epyccel(test_linspace, language=language)
+    epyccel_func3 = epyccel(test_linspace3, language=language)
+    epyccel_func2 = epyccel(test_linspace2, language=language)
+    epyccel_func4 = epyccel(test_linspace4, language=language)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
-    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # that's why we need to convert it to a numpy.complex64 the needed type.
-    cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
-
-    epyccel_func = epyccel(get_linspace, language=language)
-
-    assert epyccel_func(bl) == get_linspace(bl)
-    assert epyccel_func(integer8) == get_linspace(integer8)
-    assert epyccel_func(integer16) == get_linspace(integer16)
-    assert epyccel_func(integer) == get_linspace(integer)
-    assert epyccel_func(integer32) == get_linspace(integer32)
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    arr = linspace(integer, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer, 5, out, False)
+    assert np.allclose(arr, out)
+    arr = linspace(integer8, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer8, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer8, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer8, 5, out, False)
+    assert np.allclose(arr, out)
+    arr = linspace(integer16, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer16, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer16, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer16, 5, out, False)
+    assert np.allclose(arr, out)
+    arr = linspace(integer32, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(integer32, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(integer32, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(integer32, 5, out, False)
+    assert np.allclose(arr, out)
+    integer   = randint(min_int / 2, max_int / 2, size=size, dtype=int)
+    integer_2 = np.array([[1, 2, 3, 4, 5],[5,2,7,10,11]], dtype=int)
+    arr = linspace(integer, integer_2, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func2(integer, integer_2, out, False)
+    assert np.allclose(arr, out)
     if sys.platform != 'win32':
-        assert epyccel_func(integer64) == get_linspace(integer64)
-    assert epyccel_func(fl) == get_linspace(fl)
-    assert epyccel_func(fl32) == get_linspace(fl32)
-    assert epyccel_func(fl64) == get_linspace(fl64)
-    assert (epyccel_func(cmplx64) == get_linspace(cmplx64))
-    assert (epyccel_func(cmplx128) == get_linspace(cmplx128))
+        arr = linspace(integer64, 5, 7)
+        out = np.empty_like(arr)
+        epyccel_func(integer64, 5, out, True)
+        assert np.allclose(arr, out)
+        arr = linspace(integer64, 5, 7, endpoint=False)
+        out = np.empty_like(arr)
+        epyccel_func(integer64, 5, out, False)
+        assert np.allclose(arr, out)
+
+    arr = linspace(fl32, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(fl32, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(fl32, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(fl32, 5, out, False)
+    assert np.allclose(arr, out)
+    rng = np.random.default_rng()
+    fl64 = rng.random((2,5), dtype=np.float64)
+    arr = linspace(fl64, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func(fl64, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(fl64, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func(fl64, 5, out, False)
+    assert np.allclose(arr, out)
+
+    arr = linspace(cmplx, 5, 7)
+    out = np.empty_like(arr)
+    epyccel_func3(cmplx, 5, out, True)
+    assert np.allclose(arr, out)
+    arr = linspace(cmplx, 5, 7, endpoint=False)
+    out = np.empty_like(arr)
+    epyccel_func3(cmplx, 5, out, False)
+    assert np.allclose(arr, out)
+    cmplx  = (np.random.random((2,5))*55) + (np.random.random((2,5))*50) * 1j
+    cmplx2 = (np.random.random((2,5))*14) + (np.random.random((2,5))*15) * 1j
+    arr = linspace(cmplx, cmplx2, 7)
+    out = np.empty_like(arr)
+    epyccel_func4(cmplx, cmplx2, out, True)
+    assert np.allclose(arr, out)
