@@ -4869,11 +4869,11 @@ def test_numpy_where_array_like_1d_with_condition(language):
 
     bl = randint(0, 1, size=size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+    integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
+    integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
+    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+    integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
+    integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
@@ -4913,11 +4913,11 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
     bl = randint(0, 1, size=size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int-1, size=size, dtype=int)
+    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
     fl = uniform(min_float / 2, max_float / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
