@@ -948,9 +948,19 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_NumpyWhere(self, expr):
+        value_true  = expr.value_true
+        value_false = expr.value_false
+        try :
+            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        if value_true.dtype != expr.dtype or value_true.precision != expr.precision:
+            value_true = cast_func(value_true)
+        if value_false.dtype != expr.dtype or value_false.precision != expr.precision:
+            value_false = cast_func(value_false)
         condition  = self._print(expr.condition)
-        value_true  = self._print(expr.value_true)
-        value_false = self._print(expr.value_false)
+        value_true  = self._print(value_true)
+        value_false = self._print(value_false)
         stmt = 'merge({true}, {false}, {cond})'.format(
                 true=value_true,
                 false=value_false,
@@ -1089,7 +1099,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.arg.dtype, NativeBool):
             return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr))
         else:
-            return '{} /= 0'.format(self._print(expr.arg))
+            return '({} /= 0)'.format(self._print(expr.arg))
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
@@ -2401,19 +2411,22 @@ class FCodePrinter(CodePrinter):
         if expr.dtype is NativeString():
             return '//'.join('trim('+self._print(a)+')' for a in expr.args)
         else:
-            return ' + '.join(self._print(a) for a in expr.args)
+            args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+            return ' + '.join(self._print(a) for a in args)
 
     def _print_PyccelMinus(self, expr):
-        args = [self._print(a) for a in expr.args]
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args_code = [self._print(a) for a in args]
 
-        return ' - '.join(args)
+        return ' - '.join(args_code)
 
     def _print_PyccelMul(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' * '.join(a for a in args)
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args_code = [self._print(a) for a in args]
+        return ' * '.join(a for a in args_code)
 
     def _print_PyccelDiv(self, expr):
-        if all(a.dtype is NativeInteger() for a in expr.args):
+        if all(a.dtype in (NativeBool(), NativeInteger()) for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
@@ -2513,23 +2526,27 @@ class FCodePrinter(CodePrinter):
         return '{0} /= {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} < {1}'.format(lhs, rhs)
 
     def _print_PyccelLe(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} <= {1}'.format(lhs, rhs)
 
     def _print_PyccelGt(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} > {1}'.format(lhs, rhs)
 
     def _print_PyccelGe(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_PyccelNot(self, expr):
