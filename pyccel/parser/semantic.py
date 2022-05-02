@@ -2152,7 +2152,6 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs, **settings)
 
         if isinstance(rhs, FunctionDef):
-            print("test here ;", rhs)
             # case of lambdify
 
             rhs = rhs.rename(expr.lhs.name)
@@ -2162,7 +2161,6 @@ class SemanticParser(BasicParser):
             return rhs
 
         elif isinstance(rhs, CodeBlock):
-            print("test here 2;", rhs)
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
                 return rhs
 
