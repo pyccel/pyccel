@@ -750,6 +750,10 @@ class SemanticParser(BasicParser):
                 errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
                         symbol = expr,
                         severity='error')
+            if f_arg.rank > 1 and i_arg.order != f_arg.order:
+                errors.report(INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=expr.func_name, order=f_arg.order),
+                        symbol = expr,
+                        severity='error')
 
     def _handle_function(self, expr, func, args, **settings):
         """
