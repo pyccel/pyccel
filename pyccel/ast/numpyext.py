@@ -760,7 +760,7 @@ class NumpyWhere(PyccelInternalFunction):
 
     @property
     def condition(self):
-        """Boolean argument determining which condition is returned"""
+        """Boolean argument determining which value is returned"""
         return self._condition
 
     @property
