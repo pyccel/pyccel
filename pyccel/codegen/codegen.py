@@ -149,7 +149,7 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
         # set the code printer
-        self._printer = code_printer(self.parser, **settings)
+        self._printer = code_printer(self.parser.filename, **settings)
 
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
@@ -158,22 +158,22 @@ class Codegen(object):
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
 
-        namespace  = self.parser.namespace
+        scope  = self.parser.scope
 
         funcs      = []
         interfaces = []
 
 
-        for i in namespace.functions.values():
+        for i in scope.functions.values():
             if isinstance(i, FunctionDef) and not i.is_header:
                 funcs.append(i)
             elif isinstance(i, Interface):
                 interfaces.append(i)
 
-        self._stmts['imports'   ] = list(namespace.imports['imports'].values())
-        self._stmts['variables' ] = list(self.parser.get_variables(namespace))
+        self._stmts['imports'   ] = list(scope.imports['imports'].values())
+        self._stmts['variables' ] = list(self.parser.get_variables(scope))
         self._stmts['routines'  ] = funcs
-        self._stmts['classes'   ] = list(namespace.classes.values())
+        self._stmts['classes'   ] = list(scope.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
 

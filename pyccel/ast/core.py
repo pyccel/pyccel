@@ -8,10 +8,11 @@
 from sympy.logic.boolalg      import And as sp_And
 
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
+from pyccel.errors.errors     import Errors
+from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
-from pyccel.utilities.stage import PyccelStage
+from pyccel.utilities.stage   import PyccelStage
+from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
@@ -160,49 +161,6 @@ def inline(func, args):
     body = func.body
     body = subs(body, zip(func.arguments, args))
     return Block(str(func.name), local_vars, body)
-
-def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
-    """This function takes a prefix and a counter and uses them to construct
-    a new name of the form:
-            prefix_counter
-    Where counter is formatted to fill 4 characters
-    The new name is checked against a list of forbidden expressions. If the
-    constructed name is forbidden then the counter is incremented until a valid
-    name is found
-
-      Parameters
-      ----------
-      forbidden_exprs : Set
-                        A set of all the values which are not valid solutions to this problem
-      prefix          : str
-                        The prefix used to begin the string
-      counter         : int
-                        The expected value of the next name
-
-      Returns
-      ----------
-      name            : str
-                        The incremented string name
-      counter         : int
-                        The expected value of the next name
-
-    """
-    assert(isinstance(forbidden_exprs, set))
-    nDigits = 4
-
-    if prefix is None:
-        prefix = 'Dummy'
-
-    name_format = "{prefix}_{counter:0="+str(nDigits)+"d}"
-    name = name_format.format(prefix=prefix, counter = counter)
-    counter += 1
-    while name in forbidden_exprs:
-        name = name_format.format(prefix=prefix, counter = counter)
-        counter += 1
-
-    forbidden_exprs.add(name)
-
-    return name, counter
 
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """This function takes a prefix and a counter and uses them to construct
@@ -932,8 +890,6 @@ class While(ScopedNode):
         test condition given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the While statement.
-    local_vars : list of Variables
-        list of Variables created inside the While
     scope : Scope
         The scope for the loop
 
@@ -945,10 +901,10 @@ class While(ScopedNode):
     >>> While((n>1), [Assign(n,n-1)])
     While(n > 1, (n := n - 1,))
     """
-    __slots__ = ('_body','_test','_local_vars')
-    _attribute_nodes = ('_body','_test','_local_vars')
+    __slots__ = ('_body','_test')
+    _attribute_nodes = ('_body','_test')
 
-    def __init__(self, test, body, local_vars=(), scope = None):
+    def __init__(self, test, body, scope = None):
 
         if pyccel_stage == 'semantic':
             if test.dtype is not NativeBool():
@@ -961,7 +917,6 @@ class While(ScopedNode):
 
         self._test = test
         self._body = body
-        self._local_vars = local_vars
         super().__init__(scope)
 
     @property
@@ -974,7 +929,8 @@ class While(ScopedNode):
 
     @property
     def local_vars(self):
-        return self._local_vars
+        """ List of variables defined in the loop """
+        return tuple(self.scope.variables.values())
 
 
 class With(ScopedNode):
@@ -1005,6 +961,7 @@ class With(ScopedNode):
         self,
         test,
         body,
+        scope = None
         ):
 
         if iterable(body):
@@ -1014,7 +971,7 @@ class With(ScopedNode):
 
         self._test = test
         self._body = body
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def test(self):
@@ -1040,7 +997,7 @@ class With(ScopedNode):
         body = start.body.body
         body += self.body.body
         body +=  end.body.body
-        return Block('with', [], body)
+        return Block('with', [], body, scope=self.scope)
 
 
 # TODO add a name to a block?
@@ -1075,7 +1032,8 @@ class Block(ScopedNode):
         self,
         name,
         variables,
-        body):
+        body,
+        scope = None):
         if not isinstance(name, str):
             raise TypeError('name must be of type str')
         if not iterable(variables):
@@ -1090,7 +1048,7 @@ class Block(ScopedNode):
         self._name = name
         self._variables = variables
         self._body = body
-        super().__init__()
+        super().__init__(scope)
 
     @property
     def name(self):
@@ -1187,8 +1145,8 @@ class Module(ScopedNode):
         imports=(),
         scope = None
         ):
-        if not isinstance(name, str):
-            raise TypeError('name must be a string')
+        if not isinstance(name, (str, AsName)):
+            raise TypeError('name must be a string or an AsName')
 
         if not iterable(variables):
             raise TypeError('variables must be an iterable')
@@ -1422,9 +1380,6 @@ class Program(ScopedNode):
     variables: list
         list of the variables that appear in the block.
 
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
     body: list
         a list of statements
 
@@ -1493,12 +1448,6 @@ class Program(ScopedNode):
         """ Imports imported in the program
         """
         return self._imports
-
-    @property
-    def declarations(self):
-        """ Returns the declarations of the variables
-        """
-        return [Declare(i.dtype, i) for i in self.variables]
 
     def remove_import(self, name):
         """ Remove an import with the given source name from the list
@@ -1664,15 +1613,14 @@ class For(ScopedNode):
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
-    __slots__ = ('_target','_iterable','_body','_local_vars','_end_annotation')
-    _attribute_nodes = ('_target','_iterable','_body','_local_vars')
+    __slots__ = ('_target','_iterable','_body','_end_annotation')
+    _attribute_nodes = ('_target','_iterable','_body')
 
     def __init__(
         self,
         target,
         iter_obj,
         body,
-        local_vars = (),
         scope = None
         ):
         if pyccel_stage != "syntactic":
@@ -1689,7 +1637,6 @@ class For(ScopedNode):
         self._target = target
         self._iterable = iter_obj
         self._body = body
-        self._local_vars = local_vars
         self._end_annotation = None
         super().__init__(scope)
 
@@ -1715,7 +1662,8 @@ class For(ScopedNode):
 
     @property
     def local_vars(self):
-        return self._local_vars
+        """ List of variables defined in the loop """
+        return tuple(self.scope.variables.values())
 
     def insert2body(self, stmt):
         stmt.set_current_user_node(self)
@@ -2198,9 +2146,6 @@ class FunctionDef(ScopedNode):
     body : iterable
         The body of the function.
 
-    local_vars : list of Symbols
-        These are used internally by the routine.
-
     global_vars : list of Symbols
         Variables which will not be passed into the function.
 
@@ -2275,12 +2220,12 @@ class FunctionDef(ScopedNode):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
-    __slots__ = ('_name','_arguments','_results','_body','_local_vars',
+    __slots__ = ('_name','_arguments','_results','_body',
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header','_arguments_inout',
                  '_functions','_interfaces','_doc_string', '_is_external')
-    _attribute_nodes = ('_arguments','_results','_body','_local_vars',
+    _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
     def __init__(
@@ -2289,7 +2234,6 @@ class FunctionDef(ScopedNode):
         arguments,
         results,
         body,
-        local_vars=(),
         global_vars=(),
         cls_name=None,
         is_static=False,
@@ -2399,7 +2343,6 @@ class FunctionDef(ScopedNode):
         self._arguments       = arguments
         self._results         = results
         self._body            = body
-        self._local_vars      = local_vars
         self._global_vars     = global_vars
         self._cls_name        = cls_name
         self._is_static       = is_static
@@ -2441,7 +2384,9 @@ class FunctionDef(ScopedNode):
     @property
     def local_vars(self):
         """ List of variables defined in the function """
-        return self._local_vars
+        local_vars = self.scope.variables.values()
+        argument_vars = [a.var for a in self.arguments]
+        return tuple(l for l in local_vars if l not in self.results and l not in argument_vars)
 
     @property
     def global_vars(self):
@@ -2590,18 +2535,6 @@ class FunctionDef(ScopedNode):
 
         self._name = newname
 
-    def add_local_vars(self, *variables):
-        """
-        Add (a) new variable(s) to the local variables tuple
-
-        Parameters
-        ----------
-        var : Variable
-              The new local variable
-        """
-        _ = [v.set_current_user_node(self) for v in variables]
-        self._local_vars += variables
-
     def __getnewargs__(self):
         """
           This method returns the positional and keyword arguments
@@ -2614,7 +2547,6 @@ class FunctionDef(ScopedNode):
         self._body)
 
         kwargs = {
-        'local_vars':self._local_vars,
         'global_vars':self._global_vars,
         'cls_name':self._cls_name,
         'is_static':self._is_static,
@@ -3081,6 +3013,7 @@ class ClassDef(ScopedNode):
         imports=(),
         superclass=(),
         interfaces=(),
+        scope = None
         ):
 
         # name
@@ -3161,7 +3094,7 @@ class ClassDef(ScopedNode):
         self._superclass  = superclass
         self._interfaces = interfaces
 
-        super().__init__()
+        super().__init__(scope = scope)
 
     @property
     def name(self):
@@ -3294,6 +3227,10 @@ class Import(Basic):
         the module from which we import
     target : str, AsName, list, tuple
         targets to import
+    ignore_at_print : bool
+        indicates whether the import should be printed
+    mod : Module
+        The module describing the source
 
     Examples
     --------
@@ -3309,16 +3246,17 @@ class Import(Basic):
     >>> Import('foo', 'bar')
     from foo import bar
     """
-    __slots__ = ('_source','_target','_ignore_at_print')
+    __slots__ = ('_source','_target','_ignore_at_print','_source_mod')
     _attribute_nodes = ()
 
-    def __init__(self, source, target = None, ignore_at_print = False):
+    def __init__(self, source, target = None, ignore_at_print = False, mod = None):
 
         if not source is None:
             source = Import._format(source)
 
         self._source = source
         self._target = set()
+        self._source_mod      = mod
         self._ignore_at_print = ignore_at_print
         if target is None:
             if pyccel_stage == "syntactic":
@@ -3405,6 +3343,12 @@ class Import(Basic):
             elif new_target == t:
                 return t
         return None
+
+    @property
+    def source_module(self):
+        """ The module describing the Import source
+        """
+        return self._source_mod
 
 
 # TODO: Should Declare have an optional init value for each var?

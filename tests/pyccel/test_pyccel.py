@@ -480,13 +480,11 @@ def test_in_specified(language):
                                         "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        pytest.param("scripts/hope_benchmarks_decorators/fib.py",
-                                            marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
+                                        "scripts/hope_benchmarks_decorators/fib.py",
                                         "scripts/hope_benchmarks_decorators/hope_ln_python.py",
                                         "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
                                         "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/hope_fib.py",
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
 
                                         ] )
@@ -615,19 +613,9 @@ def test_print_strings(language):
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="formated string not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
 def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
-
 
 #------------------------------------------------------------------------------
 def test_c_arrays(language):
@@ -725,7 +713,36 @@ def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
+@pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
+                                        ] )
+def test_lapack( test_file ):
+    #TODO: Uncomment this when dgetri can be expressed with scipy
+    #pyccel_test(test_file)
 
+    #TODO: Remove the rest of the function when dgetri can be expressed with scipy
+    test_file = os.path.normpath(test_file)
+    test_file = get_abs_path(test_file)
+
+    cwd = get_abs_path('.')
+
+    compile_pyccel(cwd, test_file)
+
+    lang_out = get_lang_output(test_file, 'fortran')
+    rx = re.compile('[-0-9.eE]+')
+    lang_out_vals = []
+    while lang_out:
+        try:
+            f, lang_out = get_value(lang_out, rx, float)
+            lang_out_vals.append(f)
+        except AssertionError:
+            lang_out = None
+    output_mat = np.array(lang_out_vals).reshape(4,4)
+    expected_output = np.eye(4)
+
+    assert np.allclose(output_mat, expected_output, rtol=1e-14, atol=1e-15)
+
+#------------------------------------------------------------------------------
 def test_type_print( language ):
     test_file = 'scripts/runtest_type_print.py'
 
