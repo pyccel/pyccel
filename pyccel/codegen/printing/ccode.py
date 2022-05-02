@@ -750,7 +750,7 @@ class CCodePrinter(CodePrinter):
         return "{}({})".format(func, self._print(expr.arg))
 
     def _print_PythonRound(self, expr):
-        self._additional_imports.add("math")
+        self.add_import(c_imports['math'])
         func = "round"
         return "{}({})".format(func, self._print(expr.arg))
 
