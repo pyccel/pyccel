@@ -11,9 +11,11 @@ by providing translations between the sympy representation and the pyccel nodes
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
+from pyccel.utilities.strings import create_incremented_string
+
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import create_incremented_string, Iterable
+from .core      import Iterable
 
 from .builtins  import PythonRange, PythonTuple
 
@@ -179,6 +181,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelArraySize):
         sym_name,_ = create_incremented_string(used_names, prefix = 'tmp_size')
+        used_names.add(sym_name)
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym

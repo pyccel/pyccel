@@ -7,8 +7,9 @@
 File providing functions to mimic OpenMP Runtime library routines to allow files to run
 in pure python mode
 """
+import numpy as np
 
-def omp_set_num_threads(num_threads : int):
+def omp_set_num_threads(num_threads : 'int32'):
     """
     The omp_set_num_threads routine affects the number of threads
     to be used for subsequent parallel regions that do not specify
@@ -17,7 +18,7 @@ def omp_set_num_threads(num_threads : int):
 
     Parameters
     ----------
-    num_threads : int
+    num_threads : int32
     """
 
 def omp_get_num_threads():
@@ -25,7 +26,7 @@ def omp_get_num_threads():
     The omp_get_num_threads routine returns the number of threads
     in the current team.
     """
-    return 1
+    return np.int32(1)
 
 def omp_get_max_threads():
     """
@@ -34,21 +35,21 @@ def omp_get_max_threads():
     parallel construct without a num_threads clause were encountered
     after execution returns from this routine.
     """
-    return 1
+    return np.int32(1)
 
 def omp_get_thread_num():
     """
     The omp_get_thread_num routine returns the thread number,
     within the current team, of the calling thread
     """
-    return 0
+    return np.int32(0)
 
 def omp_get_num_procs():
     """
     The omp_get_num_procs routine returns the number of processors
     available to the device.
     """
-    return 1
+    return np.int32(1)
 
 def omp_in_parallel():
     """
@@ -103,7 +104,7 @@ def omp_get_nested():
     """
     return False
 
-def omp_set_schedule(kind : int, chunk_size : int):
+def omp_set_schedule(kind : 'int32', chunk_size : 'int32'):
     """
     The omp_set_schedule routine affects the schedule that is
     applied when runtime is used as schedule kind, by setting
@@ -111,8 +112,8 @@ def omp_set_schedule(kind : int, chunk_size : int):
 
     Parameters
     ----------
-    kind : int
-    chunk_size : int
+    kind : int32
+    chunk_size : int32
     """
 
 def omp_get_schedule():
@@ -122,10 +123,10 @@ def omp_get_schedule():
 
     Results
     -------
-    kind : int
-    chunk_size : int
+    kind : int32
+    chunk_size : int32
     """
-    return 1,0
+    return np.int32(1),np.int32(0)
 
 def omp_get_thread_limit():
     """
@@ -133,9 +134,9 @@ def omp_get_thread_limit():
     of OpenMP threads available to participate in the current
     contention group.
     """
-    return 1
+    return np.int32(1)
 
-def omp_set_max_active_levels(max_levels : int):
+def omp_set_max_active_levels(max_levels : 'int32'):
     """
     The omp_set_max_active_levels routine limits the number of
     nested active parallel regions on the device, by setting the
@@ -143,7 +144,7 @@ def omp_set_max_active_levels(max_levels : int):
 
     Parameters
     ----------
-    max_levels : int
+    max_levels : int32
     """
 
 def omp_get_max_active_levels():
@@ -152,15 +153,15 @@ def omp_get_max_active_levels():
     the max-active-levels-var ICV, which determines the maximum
     number of nested active parallel regions on the device.
     """
-    return 1
+    return np.int32(1)
 
 def omp_get_level():
     """
     The omp_get_level routine returns the value of the levels-var ICV.
     """
-    return 0
+    return np.int32(0)
 
-def omp_get_ancestor_thread_num(level : int):
+def omp_get_ancestor_thread_num(level : 'int32'):
     """
     The omp_get_ancestor_thread_num routine returns, for a given
     nested level of the current thread, the thread number of the
@@ -168,11 +169,11 @@ def omp_get_ancestor_thread_num(level : int):
 
     Parameters
     ----------
-    level : int
+    level : int32
     """
-    return -1
+    return np.int32(-1)
 
-def omp_get_team_size(level : int):
+def omp_get_team_size(level : 'int32'):
     """
     The omp_get_team_size routine returns, for a given nested
     level of the current thread, the size of the thread team to
@@ -180,16 +181,16 @@ def omp_get_team_size(level : int):
 
     Parameters
     ----------
-    level : int
+    level : int32
     """
-    return 1
+    return np.int32(1)
 
 def omp_get_active_level():
     """
     The omp_get_active_level routine returns the value of the
     active-level-vars ICV.
     """
-    return 0
+    return np.int32(0)
 
 def omp_in_final():
     """
@@ -204,16 +205,16 @@ def omp_get_proc_bind():
     policy to be used for the subsequent nested parallel regions
     that do not specify a proc_bind clause.
     """
-    return 0
+    return np.int32(0)
 
 def omp_get_num_places():
     """
     The omp_get_num_places routine returns the number of places
     available to the execution environment in the place list.
     """
-    return 1
+    return np.int32(1)
 
-def omp_get_place_num_procs(place_num : int):
+def omp_get_place_num_procs(place_num : 'int32'):
     """
     The omp_get_place_num_procs routine returns the number of
     processors available to the execution environment in the
@@ -221,11 +222,11 @@ def omp_get_place_num_procs(place_num : int):
 
     Parameters
     ----------
-    place_num : int
+    place_num : int32
     """
-    return 1
+    return np.int32(1)
 
-def omp_get_place_proc_ids(place_num : int, ids : 'int[:]'):
+def omp_get_place_proc_ids(place_num : 'int32', ids : 'int32[:]'):
     """
     The omp_get_place_proc_ids routine returns the numerical
     identifiers of the processors available to the execution
@@ -233,8 +234,8 @@ def omp_get_place_proc_ids(place_num : int, ids : 'int[:]'):
 
     Parameters
     ----------
-    place_num : int
-    ids : array of ints
+    place_num : int32
+    ids : array of int32s
             To be filled by the function
     """
 
@@ -243,16 +244,16 @@ def omp_get_place_num():
     The omp_get_place_num routine returns the place number of
     the place to which the encountering thread is bound.
     """
-    return -1
+    return np.int32(-1)
 
 def omp_get_partition_num_places():
     """
     The omp_get_partition_num_places routine returns the number
     of places in the place partition of the innermost implicit task.
     """
-    return 1
+    return np.int32(1)
 
-def omp_get_partition_place_nums(place_nums : 'int[:]'):
+def omp_get_partition_place_nums(place_nums : 'int32[:]'):
     """
     The omp_get_partition_place_nums routine returns the list of
     place numbers corresponding to the places in the
@@ -260,11 +261,11 @@ def omp_get_partition_place_nums(place_nums : 'int[:]'):
 
     Parameters
     ----------
-    place_nums : array of ints
+    place_nums : array of int32s
             To be filled by the function
     """
 
-def omp_set_default_device(device_num : int):
+def omp_set_default_device(device_num : 'int32'):
     """
     The omp_set_default_device routine controls the default
     target device by assigning the value of the
@@ -276,27 +277,28 @@ def omp_get_default_device():
     The omp_get_default_device routine returns the default
     target device.
     """
-    return 0
+    return np.int32(0)
 
 def omp_get_num_devices():
     """
     The omp_get_num_devices routine returns the number of
     target devices.
     """
-    return 1
+    return np.int32(1)
 
 def omp_get_num_teams():
     """
     The omp_get_num_teams routine returns the number of initial
     teams in the current teams region.
     """
-    return 1
+    return np.int32(1)
 
 def omp_get_team_num():
     """
     The omp_get_team_num routine returns the initial team number
     of the calling thread.
     """
+    return np.int32(0)
 
 def omp_is_initial_device():
     """
@@ -311,11 +313,11 @@ def omp_get_initial_device():
     The omp_get_initial_device routine returns a device number
     that represents the host device.
     """
-    return 0
+    return np.int32(0)
 
 def omp_get_max_task_priority():
     """
     The omp_get_max_task_priority routine returns the maximum
     value that can be specified in the priority clause.
     """
-    return 0
+    return np.int32(0)

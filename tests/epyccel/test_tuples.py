@@ -18,8 +18,6 @@ tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__
 
 failing_tests = {
         'homogenous_tuple_string':'String has no precision',
-        'tuple_multi_indexing_1':'Multi object part of numpy array stored in sympy Tuple',
-        'tuple_multi_indexing_2':'Multi object part of numpy array stored in sympy Tuple',
         'tuple_homogeneous_return':"Can't return a tuple",
         'tuple_inhomogeneous_return':"Can't return a tuple",
         'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",

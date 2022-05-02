@@ -16,13 +16,13 @@ if __name__ == '__main__':
     # we need to declare these variables somehow,
     # since we are calling mpi subroutines
     ierr = np.int32(-1)
-    size = np.int32(-1)
+    sizes = np.int32(-1)
     rank = np.int32(-1)
 
     mpi_init(ierr)
 
     comm = mpi_comm_world
-    mpi_comm_size(comm, size, ierr)
+    mpi_comm_size(comm, sizes, ierr)
     mpi_comm_rank(comm, rank, ierr)
 
     if rank == 0:

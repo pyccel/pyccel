@@ -100,25 +100,25 @@ default_precision = {'float': 8,
                     'integer': numpy.dtype(int).alignment,
                     'complex': 8,
                     'bool':4}
-dtype_and_precision_registry = { 'float':('float',default_precision['float']),
-                                 'double':('float',default_precision['float']),
-                                 'real':('float',default_precision['float']),
-                                 'pythonfloat':('float',default_precision['float']), # built-in float
+dtype_and_precision_registry = { 'float':('float', -1),
+                                 'double':('float', -1),
+                                 'real':('float', -1),
+                                 'pythonfloat':('float', -1), # built-in float
                                  'float32':('float',4),
                                  'float64':('float',8),
-                                 'pythoncomplex':('complex',default_precision['complex']),
-                                 'complex':('complex',default_precision['complex']),  # to create numpy array with dtype='complex'
+                                 'pythoncomplex':('complex', -1),
+                                 'complex':('complex', -1),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
-                                 'int'  :('int', default_precision['int']),
-                                 'pythonint'  :('int', default_precision['int']),
-                                 'integer':('int',default_precision['int']),
-                                 'bool' :('bool',default_precision['bool']),
-                                 'pythonbool' :('bool',default_precision['bool'])}
+                                 'int'  :('int', -1),
+                                 'pythonint'  :('int', -1),
+                                 'integer':('int',-1),
+                                 'bool' :('bool',-1),
+                                 'pythonbool' :('bool',-1)}
 
 
 class DataType(metaclass=Singleton):

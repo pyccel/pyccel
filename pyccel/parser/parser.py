@@ -9,7 +9,6 @@ Module containing the Parser object
 """
 
 import os
-from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
@@ -30,7 +29,7 @@ class Parser(object):
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
         self._sons      = []
-        self._d_parsers = OrderedDict()
+        self._d_parsers = {}
 
         self._syntax_parser   = None
         self._semantic_parser = None
@@ -102,18 +101,15 @@ class Parser(object):
             return self._syntax_parser.metavars
 
     @property
-    def namespace(self):
+    def scope(self):
         if self._semantic_parser:
-            return self._semantic_parser.namespace
+            return self._semantic_parser.scope
         else:
-            return self._syntax_parser.namespace
+            return self._syntax_parser.scope
 
     @property
     def imports(self):
-        if self._semantic_parser:
-            return self._semantic_parser.namespace.imports['imports']
-        else:
-            return self._syntax_parser.namespace.imports['imports']
+        return self.scope.collect_all_imports()
 
     @property
     def fst(self):
@@ -187,7 +183,7 @@ class Parser(object):
     def parse_sons(self, d_parsers, verbose=False):
         """Recursive algorithm for syntax analysis on a given file and its
         dependencies.
-        This function always terminates with an OrderedDict that contains parsers
+        This function always terminates with an dict that contains parsers
         for all involved files.
 
          Parameters
@@ -205,7 +201,7 @@ class Parser(object):
 
         """
 
-        imports     = self.imports.keys()
+        imports     = self.imports
         treated     = d_parsers.keys()
         not_treated = [i for i in imports if i not in treated]
         for source in not_treated:

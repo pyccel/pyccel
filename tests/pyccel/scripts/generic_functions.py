@@ -69,7 +69,7 @@ def local_overide_1(x, y):
 def tmplt_tmplt_1(x, y, z):
     return x + y + z
 
-#$ header function array_elem1(int [:]|double[:])
+#$ header function array_elem1(int64 [:]|float64[:])
 def array_elem1(x):
     return x[0]
 
@@ -162,9 +162,9 @@ def tst_tmplt_tmplt_1():
     return x * y * z * a
 
 def tst_array_elem1():
-    x1 = np.array([1,2,3], dtype=np.int)
+    x1 = np.array([1,2,3], dtype=np.int64)
     y = array_elem1(x1)
-    x2 = np.array([1.3,2.4,3.4], dtype=np.double)
+    x2 = np.array([1.3,2.4,3.4], dtype=np.float64)
     x = array_elem1(x2)
     return x * y
 

@@ -32,9 +32,10 @@ internal_libs = {
     "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
     "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
 }
-internal_libs["cwrapper_ndarrays"] = ("cwrapper", CompileObj("cwrapper_ndarrays.c",folder="cwrapper",
+internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
-                                                             dependencies = (internal_libs["ndarrays"][1],)))
+                                                             dependencies = (internal_libs["ndarrays"][1],
+                                                                             internal_libs["cwrapper"][1])))
 
 #==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):

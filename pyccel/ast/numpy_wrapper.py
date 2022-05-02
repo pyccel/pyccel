@@ -15,10 +15,12 @@ from .datatypes         import (NativeInteger, NativeFloat, NativeComplex,
 from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
 
 from .core              import FunctionDef, FunctionCall
-from .operators         import PyccelNot, PyccelEq
 
+from .internals         import get_final_precision
 
 from .literals          import LiteralInteger
+
+from .operators         import PyccelNot, PyccelEq
 
 from .variable          import Variable
 
@@ -196,7 +198,7 @@ def find_in_numpy_dtype_registry(var):
     """ Find the numpy dtype key for a given variable
     """
     dtype = str(var.dtype)
-    prec  = var.precision
+    prec  = get_final_precision(var)
     try :
         return numpy_dtype_registry[(dtype, prec)]
     except KeyError:

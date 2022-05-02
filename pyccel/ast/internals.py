@@ -7,13 +7,23 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
+
+from pyccel.utilities.stage import PyccelStage
+
 from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
+pyccel_stage = PyccelStage()
+
 __all__ = (
+    'PrecomputedCode',
+    'PyccelArraySize',
     'PyccelInternalFunction',
-    'PyccelArraySize'
+    'PyccelSymbol',
+    'Slice',
+    'max_precision',
+    'get_final_precision'
 )
 
 
@@ -59,7 +69,7 @@ class PyccelArraySize(PyccelInternalFunction):
     name   = 'shape'
     _attribute_nodes = ('_arg', '_index')
     _dtype = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
@@ -134,7 +144,7 @@ class Slice(Basic):
         self._stop = stop
         self._step = step
         super().__init__()
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
             raise TypeError('Slice start must be Integer or None')
@@ -262,3 +272,35 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
+def max_precision(objs : list, dtype = None, allow_native = True):
+    """
+    Returns the largest precision of an object in the list
+
+    Parameters
+    ----------
+    objs : list
+           A list of PyccelAstNodes
+    dtype : Dtype class
+            If this argument is provided then only the
+            precision of objects with this dtype are
+            considered
+    """
+    if allow_native and all(o.precision == -1 for o in objs):
+        return -1
+    elif dtype:
+        def_prec = default_precision[str(dtype)]
+        return max(def_prec if o.precision == -1 \
+                else o.precision for o in objs if o.dtype is dtype)
+    else:
+        return max(default_precision[str(o.dtype)] if o.precision == -1 \
+                else o.precision for o in objs)
+
+def get_final_precision(obj):
+    """
+    Get the the usable precision of an object. Ie. the precision that you
+    can use to print, eg 8 instead of -1 for a default precision float
+
+    If the precision is set to the default then the value of the default
+    precision is returned, otherwise the provided precision is returned
+    """
+    return default_precision[str(obj.dtype)] if obj.precision == -1 else obj.precision

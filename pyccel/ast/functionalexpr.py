@@ -5,7 +5,11 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from pyccel.utilities.stage import PyccelStage
+
 from .basic import PyccelAstNode
+
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'FunctionalFor',
@@ -67,7 +71,7 @@ class FunctionalFor(PyccelAstNode):
         self._index   = index
         super().__init__()
 
-        if PyccelAstNode.stage != 'syntactic':
+        if pyccel_stage != 'syntactic':
             self._dtype     = lhs.dtype
             self._precision = lhs.precision
             self._rank      = lhs.rank

@@ -11,44 +11,22 @@ import json
 import os
 import shutil
 import subprocess
-import sysconfig
 import platform
 import warnings
 from filelock import FileLock
-from pyccel import __version__ as pyccel_version
+from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
 
 errors = Errors()
 
 if platform.system() == 'Darwin':
-    # Set correct deployment target if on mac
-    mac_target = platform.mac_ver()[0]
-    if mac_target:
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
-
-python_version = sysconfig.get_python_version()
-def different_version(compiler):
-    """
-    Determine whether the specified compiler matches or differs from
-    the expected version of pyccel and python
-    """
-    return compiler['pyccel_version'] != pyccel_version or \
-            compiler['python_version'] != python_version
-
-compilers_folder = os.path.join(os.path.dirname(__file__),'..','..','compilers')
-with FileLock(compilers_folder+'.lock'):
-    # TODO: Add an additional search location for user provided compiler files
-    available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
-                                                        if f.endswith('.json')}
-    if len(available_compilers)==0 or \
-            different_version(next(iter(available_compilers.values()))):
-        from pyccel.compilers.generate_default import generate_default
-        generate_default()
-        available_compilers = {f[:-5]:json.load(open(os.path.join(compilers_folder,f))) for f in os.listdir(compilers_folder)
-                                                            if f.endswith('.json')}
-
-vendors = {c['family'] for c in available_compilers.values()}
-sorted_compilers = {(c['family'],c['language']) : c for c in available_compilers.values()}
+    # Collect version using mac tools to avoid unexpected results on Big Sur
+    # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
+    p = subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE)
+    result, err = p.communicate()
+    mac_version_tuple = result.decode("utf-8").strip().split('.')
+    mac_target = '{}.{}'.format(*mac_version_tuple[:2])
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 #------------------------------------------------------------
 class Compiler:
@@ -72,12 +50,12 @@ class Compiler:
             self._info = json.load(open(vendor))
             if language != self._info['language']:
                 warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
-                self._info = sorted_compilers[('GNU',language)]
+                self._info = available_compilers[('GNU',language)]
         else:
             if vendor not in vendors:
                 raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
             try:
-                self._info = sorted_compilers[(vendor,language)]
+                self._info = available_compilers[(vendor,language)]
             except KeyError as e:
                 raise NotImplementedError("Compiler not available") from e
 
@@ -323,6 +301,7 @@ class Compiler:
         # Get compile options
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
+        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
@@ -330,7 +309,7 @@ class Compiler:
             j_code = ()
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.source,
+                 *linker_libdirs_flags, *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
@@ -426,3 +405,10 @@ class Compiler:
             warnings.warn(UserWarning(err))
 
         return cmd
+
+    def export_compiler_info(self, compiler_export_file):
+        """ Print the information describing all compiler options
+        to the specified file in json format
+        """
+        print(json.dumps(self._info, indent=4),
+                file=open(compiler_export_file,'w'))

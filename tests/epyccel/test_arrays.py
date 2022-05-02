@@ -3840,6 +3840,12 @@ def test_numpy_arange_negative_step_2(language):
     f2 = epyccel(f1, language = language)
     np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
 
+def test_iterate_slice(language):
+    f1 = arrays.iterate_slice
+    f2 = epyccel(f1, language = language)
+    i = randint(2,10)
+    assert f1(i) == f2(i)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

@@ -11,19 +11,24 @@ These operators all have a precision as detailed here:
 They also have specific rules to determine the dtype, precision, rank, shape
 """
 
+from pyccel.utilities.stage import PyccelStage
+
 from ..errors.errors        import Errors, PyccelSemanticError
 
 from .basic                 import PyccelAstNode
 
 from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
-                                    NativeComplex, NativeString, default_precision,
+                                    NativeComplex, NativeString,
                                     NativeNumeric)
+
+from .internals             import max_precision
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
 from .literals              import Nil, NilArgument
 from .literals              import convert_to_literal
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'PyccelOperator',
@@ -116,7 +121,7 @@ class PyccelOperator(PyccelAstNode):
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             super().__init__()
             return
         self._set_dtype()
@@ -305,7 +310,7 @@ class PyccelNot(PyccelUnaryOperator):
         a _dtype or _precision member
         """
         dtype = NativeBool()
-        precision = default_precision['bool']
+        precision = -1
         return dtype, precision
 
     @staticmethod
@@ -399,7 +404,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is a complex
         """
         dtype = NativeComplex()
-        precision = max(a.precision for a in complexes)
+        precision = max_precision(complexes)
         return dtype, precision
 
     @staticmethod
@@ -408,7 +413,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is a float
         """
         dtype = NativeFloat()
-        precision = max(a.precision for a in floats)
+        precision = max_precision(floats)
         return dtype, precision
 
     @staticmethod
@@ -417,7 +422,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is an integer
         """
         dtype = NativeInteger()
-        precision = max(a.precision for a in integers)
+        precision = max_precision(integers)
         return dtype, precision
 
     @staticmethod
@@ -668,7 +673,7 @@ class PyccelDiv(PyccelArithmeticOperator):
     @staticmethod
     def _handle_integer_type(integers):
         dtype = NativeFloat()
-        precision = default_precision['float']
+        precision = -1
         return dtype, precision
 
     def __repr__(self):
@@ -741,7 +746,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     @staticmethod
     def _calculate_dtype(*args):
         dtype = NativeBool()
-        precision = default_precision['bool']
+        precision = -1
         return dtype, precision
 
 #==============================================================================
@@ -880,7 +885,7 @@ class PyccelBooleanOperator(PyccelOperator):
         The second argument passed to the operator
     """
     dtype = NativeBool()
-    precision = default_precision['bool']
+    precision = -1
     rank = 0
     shape = ()
     order = None
@@ -1063,7 +1068,7 @@ class IfTernaryOperator(PyccelOperator):
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
 
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
@@ -1087,7 +1092,7 @@ class IfTernaryOperator(PyccelOperator):
         else:
             dtype = value_true.dtype
 
-        precision = max([value_true.precision, value_false.precision])
+        precision = max_precision([value_true, value_false])
         return dtype, precision
 
     @staticmethod

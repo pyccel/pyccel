@@ -52,7 +52,12 @@ __all__ = [
         'tuples_add_mixed_homogeneous_variables',
         'tuples_add_mixed_homogeneous_with_variables',
         'tuples_2d_sum',
-        'tuples_func'
+        'tuples_func',
+        'tuple_slice',
+        'tuple_variable_index',
+        'tuple_variable_slice',
+        'tuple_negative_slice',
+        'inhomogeneous_tuple_negative_slice',
         ]
 
 def homogenous_tuple_int():
@@ -356,3 +361,25 @@ def tuples_func():
         return 1, 2
     c = my_tup()
     return c[0], c[1]
+
+def tuple_slice():
+    a,b = (1,2,3)[:2]
+    return a,b
+
+def tuple_variable_index():
+    a = 1
+    b = (1,2,3)[a]
+    return b
+
+def tuple_variable_slice():
+    a = 1
+    b = (1,2,3)[:a]
+    return b[0]
+
+def tuple_negative_slice():
+    a,b = (1,2,3)[:-1]
+    return a,b
+
+def inhomogeneous_tuple_negative_slice():
+    a,b = (1,False,3)[:-1]
+    return a,b

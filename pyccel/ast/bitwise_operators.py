@@ -11,7 +11,8 @@ They also have specific rules to determine the dtype, precision, rank, shape
 from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
                            NativeComplex, NativeString)
-from .operators     import PyccelUnaryOperator, PyccelOperator
+from .internals    import max_precision
+from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
     'PyccelRShift',
@@ -99,10 +100,16 @@ class PyccelBitOperator(PyccelOperator):
     def _set_shape_rank(self):
         pass
 
-    def _handle_integer_type(self, integers):
-        dtype     = NativeInteger()
-        precision = max(a.precision for a in integers)
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+    def _handle_integer_type(self, args):
+        dtype    = NativeInteger()
+        integers = [a for a in args if a.dtype is NativeInteger()]
+
+        if not integers:
+            precision = -1
+        else:
+            precision = max_precision(integers)
+
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
         return dtype, precision
 
 #==============================================================================
@@ -173,7 +180,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         else:
             dtype = NativeInteger()
             self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
-        precision = max(a.precision for a in integers)
+        precision = max_precision(integers, NativeInteger())
         return dtype, precision
 
 #==============================================================================

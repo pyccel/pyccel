@@ -207,8 +207,8 @@ def test_complex_types(language):
     f2 = mod2.complex_types
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
-    assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
     assert f1(np.complex128(15.5+ 2.0j) , np.complex128(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex128(10.5+ 3.4j))
+    assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
 
 def test_mix_types_1(language):
     f1 = epyccel(mod2.mix_types_1 , language = language)
@@ -216,11 +216,11 @@ def test_mix_types_1(language):
 
     assert f1(complex(1, 2), 15, np.int16(5)) == f2(complex(1, 2), 15, np.int16(5))
     assert f1(complex(1, 2), 15, True) == f2(complex(1, 2), 15, True)
-    assert f1(complex(1, 2), 7.0, np.int16(5)) == f2(complex(1, 2), 7.0, np.int16(5))
-    assert f1(complex(1, 2), 7.0, False) == f2(complex(1, 2), 7.0, False)
+    assert f1(complex(1, 2), np.float64(7.0), np.int16(5)) == f2(complex(1, 2), np.float64(7.0), np.int16(5))
+    assert f1(complex(1, 2), np.float64(7.0), False) == f2(complex(1, 2), np.float64(7.0), False)
     assert f1(15, 14, np.int16(2012)) == f2(15, 14, np.int16(2012))
     assert f1(15, 14, True) == f2(15, 14, True)
-    assert f1(15, 7.0, np.int16(2012)) == f2(15, 7.0, np.int16(2012))
+    assert f1(15, np.float64(7.0), np.int16(2012)) == f2(15, np.float64(7.0), np.int16(2012))
     assert f1(15, 14, False) == f2(15, 14, False)
 
 
@@ -228,7 +228,7 @@ def test_mix_types_2(language):
     f1 = epyccel(mod2.mix_types_2 , language = language)
     f2 = mod2.mix_types_2
 
-    assert f1(-1, -1) == f2(-1, -1)
+    assert f1(np.int32(-1), np.int32(-1)) == f2(np.int32(-1), np.int32(-1))
     assert f1(np.int64(4), np.int64(16)) == f2(np.int64(4), np.int64(16))
     assert f1(np.int16(4), np.int16(4)) == f2(np.int16(4), np.int16(4))
     assert f1(5.7, -1.2) == f2(5.7, -1.2)
@@ -414,8 +414,8 @@ def test_zeros_types(language):
     fl_2 = f2(0.0)
 
     assert i_1 == i_2
-    assert isinstance(i_1, type(i_2.item()))
+    assert isinstance(i_1, type(i_2))
 
     assert fl_1 == fl_2
-    assert isinstance(fl_1, type(fl_2.item()))
+    assert isinstance(fl_1, type(fl_2))
 

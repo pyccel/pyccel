@@ -308,8 +308,9 @@ def test_multiple_returns_f14(language):
 def test_decorator_f15(language):
     @types('bool', 'int8', 'int16', 'int32', 'int64')
     def f15(a,b,c,d,e):
+        from numpy import int64
         if a:
-            return b + c
+            return int64(b + c)
         else:
             return d + e
 
@@ -374,7 +375,7 @@ def test_decorator_f22(language):
         b = a
         return b
     f = epyccel(f22, language=language)
-    assert f(complex(1, 2.2)) == f22(complex(1, 2.2))
+    assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

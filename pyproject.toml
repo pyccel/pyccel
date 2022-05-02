@@ -1,0 +1,10 @@
+[build-system]
+requires = [
+    "setuptools < 61",
+    "numpy",
+    "sympy>=1.2",
+    "termcolor",
+    "textx>=2.2",
+    "filelock",
+]
+build-backend = "setuptools.build_meta"
