@@ -895,6 +895,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_NumpyLinspace(self, expr):
+
         if expr.stop.dtype != expr.dtype or expr.precision != expr.stop.precision:
             cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
             st = cast_func(expr.stop)

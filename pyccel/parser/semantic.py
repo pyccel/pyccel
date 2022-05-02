@@ -2028,6 +2028,7 @@ class SemanticParser(BasicParser):
         new_expressions = []
         fst = expr.fst
         assert(fst)
+
         rhs = expr.rhs
         lhs = expr.lhs
 
