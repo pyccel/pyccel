@@ -33,6 +33,14 @@ def test_round_int(language):
     assert round_int_output == f_output
     assert isinstance(f_output, type(round_int_output))
 
+    # Round half
+    x = 6.5
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
 def test_negative_round_int(language):
     @types('real')
     def round_int(x):
@@ -56,6 +64,14 @@ def test_negative_round_int(language):
 
     # Round down
     x = -3.845
+
+    f_output = f(x)
+    round_int_output = round_int(x)
+    assert round_int_output == f_output
+    assert isinstance(f_output, type(round_int_output))
+
+    # Round half
+    x = -6.5
 
     f_output = f(x)
     round_int_output = round_int(x)
