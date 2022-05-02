@@ -735,7 +735,7 @@ class NumpyWhere(PyccelInternalFunction):
 
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
-        floats     = [e for e in args if e.dtype is NativeFloat()]
+        floats    = [e for e in args if e.dtype is NativeFloat()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
