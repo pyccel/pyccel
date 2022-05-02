@@ -1835,6 +1835,12 @@ class FunctionCallArgument(Basic):
         else:
             return 'FunctionCallArgument({})'.format(repr(self.value))
 
+    def __str__(self):
+        if self.has_keyword:
+            return '{} = {}'.format(self.keyword, str(self.value))
+        else:
+            return '{}'.format(str(self.value))
+
 class FunctionDefArgument(PyccelAstNode):
 
     """A FunctionDef FunctionDefArgument
