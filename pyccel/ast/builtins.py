@@ -487,20 +487,32 @@ class PythonRound(PyccelAstNode):
     """
     __slots__ = ('_arg',)
     name = 'round'
-    _dtype = NativeFloat()
-    _precision = default_precision['float']
     _rank = 0
     _shape = ()
     _order = None
-    _attribute_nodes  = ('_arg',)
+    _attribute_nodes  = ('_arg','_ndigits')
 
-    def __init__(self, arg):
-        self._arg = arg
+    def __init__(self, number, ndigits = None):
+        self._arg = number
+        if ndigits is None:
+            self._dtype = NativeInteger()
+            self._precision = default_precision['int']
+        else:
+            self._dtype = NativeFloat()
+            self._precision = default_precision['float']
         super().__init__()
 
     @property
     def arg(self):
+        """ Number to be rounded
+        """
         return self._arg
+
+    @property
+    def ndigits(self):
+        """ Number of digits to which the argument is rounded
+        """
+        return self._ndigits
 
 #==============================================================================
 class PythonInt(PyccelFunction):
