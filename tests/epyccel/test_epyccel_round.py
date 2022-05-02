@@ -15,3 +15,4 @@ def test_round_int(language):
     f_output = f(x)
     round_int_output = round_int(x)
     assert round_int_output == f_output
+    assert isinstance(round_int_output, type(f_output))
