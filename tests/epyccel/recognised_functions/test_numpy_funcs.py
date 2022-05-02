@@ -4848,20 +4848,6 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert np.allclose(epyccel_func(cmplx64), get_matmul(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.allclose(epyccel_func(cmplx128), get_matmul(cmplx128), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #770")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Outdated Python printer")]
-        )
-    )
-)
-
 def test_numpy_where_array_like_1d_with_condition(language):
 
     @types('bool[:]')
@@ -4915,20 +4901,6 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
     assert (epyccel_func(cmplx64) == get_chosen_elements(cmplx64))
     assert (epyccel_func(cmplx128) == get_chosen_elements(cmplx128))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #770")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Outdated Python printer")]
-        )
-    )
-)
 
 def test_numpy_where_array_like_2d_with_condition(language):
 
