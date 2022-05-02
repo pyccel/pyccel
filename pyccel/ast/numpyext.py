@@ -723,14 +723,15 @@ class NumpyLinspace(NumpyNewArray):
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
 
-    __slots__ = ('_condition', '_x', '_y', '_dtype', '_rank', '_shape', '_order', '_precision')
-    _attribute_nodes = ('_condition','_x','_y')
+    __slots__ = ('_condition', '_value_true', '_value_false', '_dtype',
+                 '_rank', '_shape', '_order', '_precision')
+    _attribute_nodes = ('_condition','_value_true','_value_false')
     name = 'where'
 
     def __init__(self, condition, x, y):
         self._condition = condition
-        self._x = x
-        self._y = y
+        self._value_true = x
+        self._value_false = y
 
         args      = (x, y)
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
@@ -759,18 +760,18 @@ class NumpyWhere(PyccelInternalFunction):
 
     @property
     def condition(self):
-        """When True, yield x, otherwise yield y."""
+        """Boolean argument determining which condition is returned"""
         return self._condition
 
     @property
-    def x(self):
-        """Choose when the condition is evaluated to True."""
-        return self._x
+    def value_true(self):
+        """Value returned when the condition is evaluated to True."""
+        return self._value_true
 
     @property
-    def y(self):
-        """Choose when the condition is evaluated to False."""
-        return self._y
+    def value_false(self):
+        """Value returned when the condition is evaluated to False."""
+        return self._value_false
 
     @property
     def is_elemental(self):

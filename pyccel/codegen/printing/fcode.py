@@ -949,9 +949,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyWhere(self, expr):
         condition  = self._print(expr.condition)
-        x = self._print(expr.x)
-        y = self._print(expr.y)
-        stmt = 'merge({true}, {false}, {cond})'.format(true=x,false=y,cond=condition)
+        value_true  = self._print(expr.value_true)
+        value_false = self._print(expr.value_false)
+        stmt = 'merge({true}, {false}, {cond})'.format(
+                true=value_true,
+                false=value_false,
+                cond=condition)
         return stmt
 
     def _print_NumpyArray(self, expr):
