@@ -440,7 +440,7 @@ class SemanticParser(BasicParser):
             d_var['order'         ] = expr.order
             d_var['is_pointer'    ] = False
             d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-            d_var['is_stack_array'] = not d_var['allocatable'   ]
+            d_var['is_stack_array'] = not d_var['allocatable']
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -964,6 +964,22 @@ class SemanticParser(BasicParser):
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
+                
+                # We cannot allow the definition of a stack array from a shape which
+                # is unknown at the declaration
+                if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
+                    for a in d_lhs['shape']:
+                        if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
+                                any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
+                            errors.report(STACK_ARRAY_SHAPE_UNPURE_FUNC, symbol=a.funcdef.name,
+                            severity='error',
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
+                        if isinstance(a, Variable) or not all([b.is_argument for b in a.get_attribute_nodes(Variable, excluded_nodes=FunctionDef)]):
+                            errors.report(STACK_ARRAY_UNKNOWN_SHAPE, symbol=name,
+                            severity='error',
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
 
                 new_name = self.scope.get_expected_name(name)
 
