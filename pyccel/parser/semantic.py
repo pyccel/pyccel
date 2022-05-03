@@ -965,7 +965,8 @@ class SemanticParser(BasicParser):
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
                 
-                # We cannot allow the definition of a stack array from a shape with non-literal integers
+                # We cannot allow the definition of a stack array from a shape which
+                # is unknown at the declaration
                 if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
