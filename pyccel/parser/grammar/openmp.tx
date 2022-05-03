@@ -151,13 +151,13 @@ OmpCopyin: 'copyin' '(' args+=ID[','] ')';
 OmpDepend: 'depend' '('dtype=OmpDependenceType ':' args+=ID[','] ')';
 OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
 OmpinReduction: ctype='in_reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
-OmpCollapse: 'collapse' '(' n=INT ')';
-OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
-OmpOrdered: 'ordered' ('(' n=INT ')')?;
-OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
+OmpCollapse: 'collapse' '(' n=IntegerType ')';
+OmpLinear: 'linear' '(' val=ID ':' step=IntegerType ')';
+OmpOrdered: 'ordered' ('(' n=IntegerType ')')?;
+OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=IntegerType)? ')';
 OmpEndClause: 'end' construct*=OpenmpConstructs;
 OmpCriticalName: '(' args=ID ')';
-OmpFilter: name='filter' '(' n=INT ')';
+OmpFilter: name='filter' '(' n=IntegerType ')';
 OmpPriority: name='priority' '(' n=PriorityIndex ')';
 OmpUntied: name='untied';
 OmpMergeable: name='mergeable';
@@ -170,6 +170,7 @@ OmpNowait: name='nowait';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
+IntegerType: ( INT | ID );
 CancelType: ('parallel' | 'sections' | 'taskgroup' | 'for');
 OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');

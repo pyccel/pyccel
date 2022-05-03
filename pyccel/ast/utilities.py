@@ -279,8 +279,11 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
-        while -pos<=expr.base.rank and not isinstance(indices[pos], Slice):
-            pos -= 1
+        i = -1
+        while i>=pos and -i<=expr.base.rank:
+            if not isinstance(indices[i], Slice):
+                pos -= 1
+            i -= 1
         if -pos>expr.base.rank:
             return expr
 
@@ -312,7 +315,7 @@ def insert_index(expr, pos, index_var):
 LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'])
 
 #==============================================================================
-def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors = False, result = None):
+def collect_loops(block, indices, new_index, language_has_vectors = False, result = None):
     """
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
@@ -335,11 +338,9 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                             The expressions to be modified
     indices               : list
                             An empty list to be filled with the temporary variables created
-    new_index_name        : function
-                            A function which provides a new variable name from a base name,
-                            avoiding name collisions
-    tmp_vars              : list
-                            A list to which any temporary variables created can be appended
+    new_index             : function (class method of a Scope)
+                            A function which provides a new variable from a base name,
+                            avoiding name collisions.
     language_has_vectors  : bool
                             Indicates if the language has support for vector
                             operations of the same shape
@@ -428,7 +429,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             # This ensures that the function is only called once and stops problems
             # for expressions such as:
             # c += b*np.sum(c)
-            func_vars1 = [Variable(f.dtype, new_index_name('tmp')) for f in internal_funcs]
+            func_vars1 = [new_index(f.dtype, 'tmp') for f in internal_funcs]
             _          = [v.copy_attributes(f) for v,f in zip(func_vars1, internal_funcs)]
             assigns    = [Assign(v, f) for v,f in zip(func_vars1, internal_funcs)]
 
@@ -438,7 +439,8 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_vars2 = [f.funcdef.results[0].clone(new_index_name('tmp')) for f in funcs]
+            func_results = [f.funcdef.results[0] for f in funcs]
+            func_vars2 = [new_index(r.dtype, r) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
             if assigns:
@@ -450,8 +452,6 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                             symbol=line, severity='fatal')
                 line.substitute(internal_funcs, func_vars1, excluded_nodes=(FunctionCall))
                 line.substitute(funcs, func_vars2)
-                tmp_vars.extend(func_vars1)
-                tmp_vars.extend(func_vars2)
                 result.extend(assigns)
                 current_level = 0
 
@@ -466,7 +466,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
                 if rank+index >= len(indices):
-                    indices.append(Variable('int',new_index_name('i')))
+                    indices.append(new_index('int','i'))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
                 new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
@@ -522,7 +522,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                                 index_var = LiteralInteger(j)),
                             rj) # lhs[j] = rhs[j]
                           for j, rj in enumerate(rhs)]
-            collect_loops(new_assigns, indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+            collect_loops(new_assigns, indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
             lhs = line.lhs
@@ -530,7 +530,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             arg1, arg2 = rhs.args
             assign1 = Assign(lhs[Slice(LiteralInteger(0), arg1.shape[0])], arg1)
             assign2 = Assign(lhs[Slice(arg1.shape[0], PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True))], arg2)
-            collect_loops([assign1, assign2], indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+            collect_loops([assign1, assign2], indices, new_index, language_has_vectors, result = result)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Duplicate):
             lhs = line.lhs
@@ -538,7 +538,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
             if not isinstance(rhs.length, LiteralInteger):
                 if len(indices) == 0:
-                    indices.append(Variable('int',new_index_name('i')))
+                    indices.append(new_index('int', 'i'))
                 idx = indices[0]
 
                 assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx, simplify=True),
@@ -549,7 +549,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
                 tmp_indices = indices[1:]
 
-                block = collect_loops([assign], tmp_indices, new_index_name, tmp_vars, language_has_vectors)
+                block = collect_loops([assign], tmp_indices, new_index, language_has_vectors)
                 if len(tmp_indices)>len(indices)-1:
                     indices.extend(tmp_indices[len(indices)-1:])
 
@@ -561,7 +561,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                                               PyccelAdd(LiteralInteger(idx), LiteralInteger(1), simplify=True),
                                               simplify=True))],
                                 rhs.val) for idx in range(rhs.length)]
-                collect_loops(assigns, indices, new_index_name, tmp_vars, language_has_vectors, result = result)
+                collect_loops(assigns, indices, new_index, language_has_vectors, result = result)
 
         else:
             # Save line in top level (no for loop)
@@ -572,7 +572,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
 
 #==============================================================================
 
-def insert_fors(blocks, indices, level = 0):
+def insert_fors(blocks, indices, scope, level = 0):
     """
     Run through the output of collect_loops and create For loops of the
     requested sizes
@@ -593,14 +593,20 @@ def insert_fors(blocks, indices, level = 0):
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
     else:
-        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) else [b] \
+        loop_scope = scope.create_new_loop_scope()
+        body = [insert_fors(b, indices, loop_scope, level+1) if isinstance(b, LoopCollection) else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
+
     if blocks.length == 1:
         return body
     else:
         body = CodeBlock(body, unravelled = True)
-        return [For(indices[level], PythonRange(0,blocks.length), body)]
+        loop_scope = scope.create_new_loop_scope()
+        return [For(indices[level],
+                    PythonRange(0,blocks.length),
+                    body,
+                    scope = loop_scope)]
 
 #==============================================================================
 def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
@@ -651,7 +657,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         expand_inhomog_tuple_assignments(block)
 
 #==============================================================================
-def expand_to_loops(block, new_index_name, language_has_vectors = False):
+def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     """
     Re-write a list of expressions to include explicit loops where necessary
 
@@ -659,8 +665,8 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     ==========
     block          : CodeBlock
                      The expressions to be modified
-    new_index_name : function
-                     A function which provides a new variable name from a base name,
+    new_index      : function
+                     A function which provides a new variable from a base name,
                      avoiding name collisions
     language_has_vectors : bool
                      Indicates if the language has support for vector
@@ -688,10 +694,9 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     expand_inhomog_tuple_assignments(block)
 
     indices = []
-    tmp_vars = []
-    res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
+    res = collect_loops(block.body, indices, new_index, language_has_vectors)
 
-    body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
+    body = [insert_fors(b, indices, scope) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
 
-    return body, indices+tmp_vars
+    return body

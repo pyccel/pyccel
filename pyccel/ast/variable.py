@@ -9,18 +9,20 @@ variables
 """
 import inspect
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
+from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, default_precision)
-from .internals import PyccelArraySize, Slice
+                        NativeComplex)
+from .internals import PyccelArraySize, Slice, get_final_precision
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'DottedName',
@@ -203,14 +205,8 @@ class Variable(PyccelAstNode):
             shape = tuple(None for i in range(rank))
 
         if not precision:
-            if isinstance(dtype, NativeInteger):
-                precision = default_precision['int']
-            elif isinstance(dtype, NativeFloat):
-                precision = default_precision['float']
-            elif isinstance(dtype, NativeComplex):
-                precision = default_precision['complex']
-            elif isinstance(dtype, NativeBool):
-                precision = default_precision['bool']
+            if isinstance(dtype, (NativeInteger, NativeFloat, NativeComplex, NativeBool)):
+                precision = -1
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
@@ -368,8 +364,8 @@ class Variable(PyccelAstNode):
 
     @property
     def allows_negative_indexes(self):
-        """ Indicates whether negative values can be
-        used to index this Variable
+        """ Indicates whether variables used to
+        index this Variable can be negative
         """
         return self._allows_negative_indexes
 
@@ -424,7 +420,7 @@ class Variable(PyccelAstNode):
         print('>>> Variable')
         print( '  name           = {}'.format(self.name))
         print( '  dtype          = {}'.format(self.dtype))
-        print( '  precision      = {}'.format(self.precision))
+        print( '  precision      = {}'.format(get_final_precision(self)))
         print( '  rank           = {}'.format(self.rank))
         print( '  order          = {}'.format(self.order))
         print( '  allocatable    = {}'.format(self.allocatable))
@@ -434,6 +430,14 @@ class Variable(PyccelAstNode):
         print( '  is_target      = {}'.format(self.is_target))
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
+
+    def use_exact_precision(self):
+        """
+        Change precision from default python precision to
+        equivalent numpy precision
+        """
+        if not self._is_argument:
+            self._precision = get_final_precision(self)
 
     def clone(self, name, new_class = None, **kwargs):
         """
@@ -519,6 +523,14 @@ class Variable(PyccelAstNode):
     def invalidate_node(self):
         # Don't invalidate Variables
         pass
+
+    @is_temp.setter
+    def is_temp(self, is_temp):
+        if not isinstance(is_temp, bool):
+            raise TypeError("is_temp must be a boolean")
+        elif is_temp:
+            raise ValueError("Variables cannot become temporary")
+        self._is_temp = is_temp
 
 class DottedName(Basic):
 
@@ -795,13 +807,12 @@ class IndexedElement(PyccelAstNode):
 
         self._label = base
 
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             self._indices = args
             super().__init__()
             return
 
         self._dtype = base.dtype
-        self._order = base.order
         self._precision = base.precision
 
         shape = base.shape
@@ -851,6 +862,8 @@ class IndexedElement(PyccelAstNode):
                     new_rank -= 1
             self._rank = new_rank
 
+        self._order = None if self.rank < 2 else base.order
+
     @property
     def base(self):
         """ The object which is indexed
@@ -879,17 +892,19 @@ class IndexedElement(PyccelAstNode):
 
         new_indexes = []
         j = 0
+        base = self.base
         for i in self.indices:
             if isinstance(i, Slice) and j<len(args):
-                if j == 0:
-                    i = args[j]
-                elif i.step == 1:
-                    i = PyccelAdd(i.start, args[j], simplify = True)
+                if i.step == 1 or i.step is None:
+                    incr = args[j]
                 else:
-                    i = PyccelAdd(i.start, PyccelMul(i.step, args[j], simplify=True), simplify = True)
+                    incr = PyccelMul(i.step, args[j], simplify = True)
+                if i.start != 0 and i.start is not None:
+                    incr = PyccelAdd(i.start, incr, simplify = True)
+                i = incr
                 j += 1
             new_indexes.append(i)
-        return IndexedElement(self.base, *new_indexes)
+        return IndexedElement(base, *new_indexes)
 
 class VariableAddress(PyccelAstNode):
 

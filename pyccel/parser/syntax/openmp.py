@@ -355,7 +355,7 @@ class OmpPrivate(OmpClauses):
     def __init__(self, **kwargs):
         args = kwargs.pop('args')
 
-        #TODO check for variables in namespace
+        #TODO check for variables in scope
         txt = ', '.join(str(arg) for arg in args)
         self._expr = 'private({})'.format(txt)
 
