@@ -971,12 +971,12 @@ class SemanticParser(BasicParser):
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
                             errors.report(STACK_ARRAY_SHAPE_UNPURE_FUNC, symbol=a.funcdef.name,
-                            severity='error'
+                            severity='error',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
                         if isinstance(a, Variable) or not all([b.is_argument for b in a.get_attribute_nodes(Variable, excluded_nodes=FunctionDef)]):
                             errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=a.name,
-                            severity='error'
+                            severity='error',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
 
