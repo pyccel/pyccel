@@ -968,14 +968,15 @@ class SemanticParser(BasicParser):
                 # We cannot allow the definition of a stack array from a shape with non-literal integers
                 if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
                     for a in d_lhs['shape']:
-                        if (isinstance(a, FunctionCall) and a.funcdef.is_pure == False):
+                        if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
+                                any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
                             errors.report(STACK_ARRAY_SHAPE_UNPURE_FUNC, symbol=a.funcdef.name,
-                            severity='error', blocker=False,
+                            severity='error'
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
                         if isinstance(a, Variable) or not all([b.is_argument for b in a.get_attribute_nodes(Variable, excluded_nodes=FunctionDef)]):
                             errors.report(STACK_ARRAY_NON_LITERAL_SHAPE, symbol=a.name,
-                            severity='error', blocker=False,
+                            severity='error'
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
 
