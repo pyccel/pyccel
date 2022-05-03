@@ -8,7 +8,8 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
                                     STACK_ARRAY_DEFINITION_IN_LOOP,
-                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE, STACK_ARRAY_NON_LITERAL_SHAPE)
+                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE,
+                                    STACK_ARRAY_UNKNOWN_SHAPE)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -146,7 +147,7 @@ def test_creation_in_loop_stack(language):
     error_info_list = [*errors.error_info_map.values()][0]
     error_info = error_info_list[0]
     assert error_info.symbol  == 'x'
-    assert error_info.message == STACK_ARRAY_NON_LITERAL_SHAPE
+    assert error_info.message == STACK_ARRAY_UNKNOWN_SHAPE
     error_info = error_info_list[1]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
