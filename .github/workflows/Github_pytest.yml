@@ -108,6 +108,7 @@ jobs:
         shell: bash -l {0}
         run: |
           ls /usr/share/miniconda/envs/test/lib/python3.9/config-3.9-x86_64-linux-gnu
+          echo "-----------------------------------------------------"
           ls /usr/share/miniconda/envs/test/lib
           pyccel ex2.py --verbose
         working-directory: ./tests/internal/scripts/blas
