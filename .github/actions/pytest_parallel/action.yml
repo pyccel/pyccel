@@ -7,6 +7,6 @@ runs:
       run: |
         mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
-      shell: bash
+      shell: bash -l {0}
       working-directory: ./tests
 
