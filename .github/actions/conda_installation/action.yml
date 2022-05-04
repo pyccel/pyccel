@@ -18,7 +18,7 @@ runs:
     - name: Install pytest
       shell: bash
       run:
-        conda install -c conda-forge pytest>=4.5
+        conda install -c anaconda pytest
     - name: Install parallel pytest
       shell: bash
       run:
