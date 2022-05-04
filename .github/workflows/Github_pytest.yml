@@ -102,16 +102,16 @@ jobs:
       - name: Test conda
         run: conda list
       - name: Sysconfig
+        shell: bash -l {0}
         run: python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
-        shell: bash -l {0}
-      - name: BLAS test
-        shell: bash -l {0}
-        run: |
-          ls /usr/share/miniconda/envs/test/lib/python3.9/config-3.9-x86_64-linux-gnu
-          echo "-----------------------------------------------------"
-          ls /usr/share/miniconda/envs/test/lib
-          pyccel ex2.py --verbose
-        working-directory: ./tests/internal/scripts/blas
+      #- name: BLAS test
+      #  shell: bash -l {0}
+      #  run: |
+      #    ls /usr/share/miniconda/envs/test/lib/python3.9/config-3.9-x86_64-linux-gnu
+      #    echo "-----------------------------------------------------"
+      #    ls /usr/share/miniconda/envs/test/lib
+      #    pyccel ex2.py --verbose
+      #  working-directory: ./tests/internal/scripts/blas
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
