@@ -104,6 +104,11 @@ jobs:
       - name: Sysconfig
         run: python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
         shell: bash -l {0}
+      - name: BLAS test
+        shell: bash -l {0}
+        run: |
+          pyccel ex2.py --verbose
+        working-directory: ./tests/internal/scripts/blas
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
