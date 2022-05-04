@@ -193,7 +193,7 @@ python_info = {
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
-            "dependencies" : (os.path.join(config_vars["LIBPL"], config_vars["LIBRARY"]),)
+            "dependencies" : (os.path.join(config_vars["prefix"], "lib", config_vars["LIBRARY"]),)
             }
         }
 if sys.platform == "win32":
