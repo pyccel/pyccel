@@ -96,8 +96,11 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
+          auto-activate-base: true
       - name: Install python dependencies
         uses: ./.github/actions/conda_installation
+      - name: Test conda
+        run: conda list
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
