@@ -97,7 +97,7 @@ jobs:
         with:
           auto-update-conda: true
       - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
+        uses: ./.github/actions/conda_installation
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
