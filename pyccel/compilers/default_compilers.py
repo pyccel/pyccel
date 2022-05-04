@@ -185,20 +185,15 @@ def change_to_lib_flag(lib):
     else:
         return lib
 
-python_version = sysconfig.get_python_version()
 config_vars = sysconfig.get_config_vars()
-linker_flags = [change_to_lib_flag(l) for l in
-                    config_vars.get("LIBRARY","").split() + \
-                    config_vars.get("LDSHARED","").split()[1:]]
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-            'libs' : [l[2:] for l in linker_flags if l.startswith('-l')],
-            'libdirs' : [l[2:] for l in linker_flags if l.startswith('-L')]+config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split(),
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
+            "dependencies" : os.path.join(config_vars["LIBPL"], config_vars["LIBRARY"])
             }
         }
 if sys.platform == "win32":
