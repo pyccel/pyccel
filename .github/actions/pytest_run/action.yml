@@ -14,5 +14,5 @@ runs:
         pyccel-clean
         python -m pytest ndarrays/ -rX
         pyccel-clean
-      shell: bash
+      shell: bash -l {0}
       working-directory: ./tests
