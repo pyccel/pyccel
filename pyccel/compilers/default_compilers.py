@@ -186,6 +186,12 @@ def change_to_lib_flag(lib):
         return lib
 
 config_vars = sysconfig.get_config_vars()
+python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
+possible_shared_lib = python_lib_base.replace('.a','.so')
+possible_shared_lib = possible_shared_lib if os.path.exists(possible_shared_lib) else ''
+possible_static_lib = python_lib_base.replace('.so','.a')
+possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
+
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
         'python': {
@@ -193,9 +199,19 @@ python_info = {
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
             "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
-            "dependencies" : (os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"]),)
             }
         }
+if possible_shared_lib == '' and possible_static_lib == '':
+    linker_flags = [change_to_lib_flag(l) for l in
+                    config_vars.get("LIBRARY","").split() + \
+                    config_vars.get("LDSHARED","").split()[1:]]
+    python_info['python']['libs'] = [l[2:] for l in linker_flags if l.startswith('-l')]
+    python_info['python']['libdirs'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
+                        config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split()
+elif possible_static_lib != '':
+    python_info['python']['dependencies'] = (possible_static_lib,)
+else:
+    python_info['python']['dependencies'] = (possible_shared_lib,)
 if sys.platform == "win32":
     python_info['python']['libs'].append('python{}'.format(config_vars["VERSION"]))
     python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
