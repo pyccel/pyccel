@@ -27,6 +27,10 @@ runs:
       shell: bash -l {0}
       run:
         conda install -c anaconda astunparse
+    - name: Install static python
+      shell: bash -l {0}
+      run:
+        conda install -c conda-forge libpython-static
     - name: Install pyccel
       shell: bash -l {0}
       run:
