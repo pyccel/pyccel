@@ -101,6 +101,9 @@ jobs:
         uses: ./.github/actions/conda_installation
       - name: Test conda
         run: conda list
+      - name: Sysconfig
+        run: python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
+        shell: bash -l {0}
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
