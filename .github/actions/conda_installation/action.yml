@@ -1,4 +1,8 @@
 name: 'Pyccel pip commands for testing'
+inputs:
+  mpi_type:
+    description: 'MPI version used for mpi4py openmpi/mpich/msmpi'
+    required: true
 
 runs:
   using: "composite"
@@ -26,7 +30,7 @@ runs:
     - name: Install mpi4py
       shell: bash -l {0}
       run:
-        conda install -c conda-forge mpi4py openmpi
+        conda install -c conda-forge mpi4py ${INPUT_mpi_type}
     - name: Install and update pip
       shell: bash -l {0}
       run: |
