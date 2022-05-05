@@ -98,7 +98,9 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
       - name: Install python dependencies
-        uses: ./.github/actions/conda_installation openmpi
+        uses: ./.github/actions/conda_installation
+        with:
+          mpi_type: openmpi
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
@@ -127,7 +129,9 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
       - name: Install python dependencies
-        uses: ./.github/actions/conda_installation msmpi
+        uses: ./.github/actions/conda_installation
+        with:
+          mpi_type: msmpi
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
