@@ -104,6 +104,8 @@ jobs:
       - name: Sysconfig
         shell: bash -l {0}
         run: |
+          ls /usr/share/miniconda/envs/test/lib/
+          ls /usr/share/miniconda/envs/test/lib/python3.9
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
       - name: Fortran/C tests with pytest
@@ -140,6 +142,8 @@ jobs:
       - name: Sysconfig
         shell: bash -l {0}
         run: |
+          ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\Lib
+          ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\lib
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
       - name: Fortran/C tests with pytest
