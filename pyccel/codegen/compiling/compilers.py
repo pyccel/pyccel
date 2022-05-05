@@ -64,6 +64,7 @@ class Compiler:
     def _get_exec(self, accelerators):
         # Get executable
         exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
+        print(shutil.which(exec_cmd))
 
         if shutil.which(exec_cmd) is None:
             errors.report("Could not find compiler ({})".format(exec_cmd),
