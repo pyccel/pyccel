@@ -198,8 +198,8 @@ python_info = {
         }
 
 if sys.platform == "win32":
-    python_info['python']['libs'].append('python{}'.format(config_vars["VERSION"]))
-    python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
+    python_info['python']['libs'] = ('python{}'.format(config_vars["VERSION"]),)
+    python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
 else:
     python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
     possible_shared_lib = python_lib_base.replace('.a','.so')
