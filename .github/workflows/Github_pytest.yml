@@ -103,7 +103,7 @@ jobs:
         run: conda list
       - name: Sysconfig
         shell: bash -l {0}
-        run: python3 -c "import sysconfig; print(sysconfig.get_config_vars()); import mpi4py"
+        run: python3 -c "import sysconfig; print(sysconfig.get_config_vars()); from mpi4py import MPI"
       #- name: BLAS test
       #  shell: bash -l {0}
       #  run: |
