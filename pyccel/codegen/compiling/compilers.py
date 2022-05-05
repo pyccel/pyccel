@@ -64,13 +64,18 @@ class Compiler:
     def _get_exec(self, accelerators):
         # Get executable
         exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
-        print(shutil.which(exec_cmd))
+        current_path = os.environ['PATH']
+        folders = {f: f.split('/') for f in current_path.split(':')}
+        valid_folders = [p for p,f in folders.items() if all(con not in f for con in ('conda', 'anaconda', 'miniconda'))]
+        os.environ['PATH'] = ':'.join(valid_folders)
+        exec_loc = shutil.which(exec_cmd)
+        os.environ['PATH'] = current_path
 
-        if shutil.which(exec_cmd) is None:
+        if exec_loc is None:
             errors.report("Could not find compiler ({})".format(exec_cmd),
                     severity='fatal')
 
-        return exec_cmd
+        return exec_loc
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
