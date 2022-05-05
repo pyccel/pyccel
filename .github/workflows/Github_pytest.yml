@@ -110,7 +110,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    steps:
       - uses: actions/checkout@v2
       - name: Setup Python 3.7
         uses: actions/setup-python@v2
