@@ -3,6 +3,11 @@ name: 'Pyccel pip commands for testing'
 runs:
   using: "composite"
   steps:
+    - name: Install and update pip
+      shell: bash -l {0}
+      run: |
+        conda install -c anaconda pip
+        python -m pip install --upgrade pip
     - name: Install pyccel
       shell: bash -l {0}
       run:
