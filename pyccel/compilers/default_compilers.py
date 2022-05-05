@@ -186,9 +186,19 @@ def change_to_lib_flag(lib):
         return lib
 
 config_vars = sysconfig.get_config_vars()
+
+python_info = {
+        "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
+        'python': {
+            'flags' : config_vars.get("CFLAGS","").split()\
+                + config_vars.get("CC","").split()[1:],
+            'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
+            "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
+            }
+        }
+
 if sys.platform == "win32":
-    python_lib = os.path.join(config_vars["LIBDEST"], 'python{}.dll'.format(config_vars["VERSION"]))
-    python_info['python']['libs'].append(python_lib)
+    python_info['python']['libs'].append('python{}'.format(config_vars["VERSION"]))
     python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
 else:
     python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
@@ -196,16 +206,6 @@ else:
     possible_shared_lib = possible_shared_lib if os.path.exists(possible_shared_lib) else ''
     possible_static_lib = python_lib_base.replace('.so','.a')
     possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
-
-    python_info = {
-            "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
-            'python': {
-                'flags' : config_vars.get("CFLAGS","").split()\
-                    + config_vars.get("CC","").split()[1:],
-                'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-                "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
-                }
-            }
     if possible_shared_lib == '' and possible_static_lib == '':
         linker_flags = [change_to_lib_flag(l) for l in
                         config_vars.get("LIBRARY","").split() + \
