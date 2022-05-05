@@ -105,6 +105,7 @@ jobs:
         shell: bash -l {0}
         run: |
           ls /usr/share/miniconda/envs/test/lib/
+          echo "------------------------------------------------------------------"
           ls /usr/share/miniconda/envs/test/lib/python3.9
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
@@ -142,7 +143,10 @@ jobs:
       - name: Sysconfig
         shell: bash -l {0}
         run: |
+          ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64
+          echo "------------------------------------------------------------------"
           ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\Lib
+          echo "------------------------------------------------------------------"
           ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\lib
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
