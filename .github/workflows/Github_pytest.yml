@@ -101,6 +101,9 @@ jobs:
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: openmpi
+      - name: Sysconfig
+        shell: bash -l {0}
+        run: python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
@@ -132,6 +135,9 @@ jobs:
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: msmpi
+      - name: Sysconfig
+        shell: bash -l {0}
+        run: python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
