@@ -42,7 +42,7 @@ class Compiler:
     debug : bool
             Indicates whether we are compiling in debug mode
     """
-    __slots__ = ('_debug','_info')
+    __slots__ = ('_debug','_info','_conda_folders')
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -61,14 +61,24 @@ class Compiler:
 
         self._debug = debug
 
+        # Find conda paths to be cleaned out of the PATH variable
+        current_path = os.environ['PATH']
+        folders = {f: f.split('/') for f in current_path.split(':')}
+        self._conda_folders = [p for p,f in folders.items() if any(con in f for con in ('conda', 'anaconda', 'miniconda'))] 
+        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(removed_folders)))
+
     def _get_exec(self, accelerators):
         # Get executable
         exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
+
+        # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
-        folders = {f: f.split('/') for f in current_path.split(':')}
-        valid_folders = [p for p,f in folders.items() if all(con not in f for con in ('conda', 'anaconda', 'miniconda'))]
-        os.environ['PATH'] = ':'.join(valid_folders)
+        os.environ['PATH'] = ':'.join(p for p in current_path.split(':') if p not in self._conda_folders)
+
+        # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)
+
+        # Reset PATH variable
         os.environ['PATH'] = current_path
 
         if exec_loc is None:
