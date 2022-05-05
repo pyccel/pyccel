@@ -64,6 +64,8 @@ class Compiler:
         # Find conda paths to be cleaned out of the PATH variable
         current_path = os.environ['PATH']
         folders = {f: f.split('/') for f in current_path.split(':')}
+        conda_folder_names = ('conda', 'anaconda', 'miniconda',
+                              'Conda', 'Anaconda', 'Miniconda')
         self._conda_folders = [p for p,f in folders.items() if any(con in f for con in ('conda', 'anaconda', 'miniconda'))] 
         warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(removed_folders)))
 
