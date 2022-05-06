@@ -198,7 +198,7 @@ python_info = {
         }
 
 if sys.platform == "win32":
-    python_lib = os.path.join(config_vars["prefix"], 'python{}{}'.format(config_vars["VERSION"], config_vars['EXT_SUFFIX']))
+    python_lib = os.path.join(config_vars["prefix"], 'python{}.dll'.format(config_vars["VERSION"]))
     if os.path.exists(python_lib):
         python_info['python']['dependencies'] = (python_lib,)
     else:
