@@ -145,3 +145,62 @@ def test_pow_chain(language):
         f = epyccel(c, language=language)
         assert(isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL))
         assert isinstance(f(x, y, z), type(c(x, y, z)))
+
+def test_square(language):
+    @types('float')
+    @types('int')
+    def square(x):
+        return x**2
+
+    f = epyccel(square, language=language)
+    x = randint(40)
+    y = uniform()
+
+    assert isclose(f(x), square(x), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x), type(square(x)))
+    assert isclose(f(y), square(y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(y), type(square(y)))
+
+def test_sqrt(language):
+    @types('float')
+    @types('int')
+    def sqrt(x):
+        return x**0.5
+
+    f = epyccel(sqrt, language=language)
+    x = randint(40)
+    y = uniform()
+
+    assert isclose(f(x), sqrt(x), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x), type(sqrt(x)))
+    assert isclose(f(y), sqrt(y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(y), type(sqrt(y)))
+
+def test_fabs(language):
+    @types('float')
+    @types('int')
+    def fabs(x):
+        return (x*x)**0.5
+
+    f = epyccel(fabs, language=language)
+    x = randint(40)
+    y = uniform()
+
+    assert isclose(f(x), fabs(x), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x), type(fabs(x)))
+    assert isclose(f(y), fabs(y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(y), type(fabs(y)))
+
+def test_abs(language):
+    @types('complex')
+    def norm(x):
+        return (x*x.conjugate())**0.5
+
+    f = epyccel(norm, language=language)
+    x = randint(40) + 1j * randint(40)
+    y = randint(40) - 1j * randint(40)
+
+    assert isclose(f(x), norm(x), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x), type(norm(x)))
+    assert isclose(f(y), norm(y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(y), type(norm(y)))
