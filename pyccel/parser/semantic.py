@@ -3663,8 +3663,8 @@ class SemanticParser(BasicParser):
 
     def _visit_NumpyMatmul(self, expr, **settings):
         if isinstance(expr, FunctionCall):
-            a = self._visit(expr.args[0])
-            b = self._visit(expr.args[1])
+            a = self._visit(expr.args[0].value)
+            b = self._visit(expr.args[1].value)
         else:
             self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
             a = self._visit(expr.a)
