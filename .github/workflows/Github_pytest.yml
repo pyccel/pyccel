@@ -155,9 +155,9 @@ jobs:
           ./ex1
           gfortran --version
         working-directory: ./tests/internal/scripts/openmp
-      #- name: Fortran/C tests with pytest
-      #  uses: ./.github/actions/pytest_run
-      #- name: Python tests with pytest
-      #  uses: ./.github/actions/pytest_run_python
-      #- name: Parallel tests with pytest
-      #  uses: ./.github/actions/pytest_parallel
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
