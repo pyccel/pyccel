@@ -193,13 +193,17 @@ python_info = {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-            "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
+            "shared_suffix" : config_vars['EXT_SUFFIX'],
             }
         }
 
 if sys.platform == "win32":
-    python_info['python']['libs'] = ('python{}'.format(config_vars["VERSION"]),)
-    python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
+    python_lib = os.path.join(config_vars["prefix"], 'python{}{}'.format(config_vars["VERSION"], config_vars['EXT_SUFFIX']))
+    if os.path.exists(python_lib):
+        python_info['python']['dependencies'] = (python_lib,)
+    else:
+        python_info['python']['libs'] = ('python{}'.format(config_vars["VERSION"]),)
+        python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
 else:
     python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
     possible_shared_lib = python_lib_base.replace('.a','.so')
