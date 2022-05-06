@@ -139,7 +139,7 @@ def test_pow_chain(language):
 
     x = uniform(low=min_float, high=10)
     y = uniform(high=5)
-    z = uniform(high=5)
+    z = uniform(high=1.0)
 
     for c in (chain_pow1, chain_pow2, chain_pow3):
         f = epyccel(c, language=language)
