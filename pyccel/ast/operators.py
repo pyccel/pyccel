@@ -505,6 +505,22 @@ class PyccelPow(PyccelArithmeticOperator):
     def __repr__(self):
         return '{} ** {}'.format(self.args[0], self.args[1])
 
+    def _handle_precedence(self, args):
+        precedence = [getattr(a, 'precedence', 17) for a in args]
+
+        if min(precedence) <= self._precedence:
+
+            new_args = []
+
+            for i, (a,p) in enumerate(zip(args, precedence)):
+                if (p < self._precedence or (p == self._precedence and i != 1)):
+                    new_args.append(PyccelAssociativeParenthesis(a))
+                else:
+                    new_args.append(a)
+            args = tuple(new_args)
+
+        return args
+
 #==============================================================================
 
 class PyccelAdd(PyccelArithmeticOperator):
