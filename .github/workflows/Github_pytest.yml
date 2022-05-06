@@ -86,35 +86,35 @@ jobs:
   #    - name: Parallel tests with pytest
   #      uses: ./.github/actions/pytest_parallel
 
-  Anaconda-Linux:
-    runs-on: ubuntu-latest
+  #Anaconda-Linux:
+  #  runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          auto-activate-base: true
-      - name: Install python dependencies
-        uses: ./.github/actions/conda_installation
-        with:
-          mpi_type: openmpi
-      - name: Sysconfig
-        shell: bash -l {0}
-        run: |
-          ls /usr/share/miniconda/envs/test/lib/
-          echo "------------------------------------------------------------------"
-          ls /usr/share/miniconda/envs/test/lib/python3.9
-          python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
-          echo $PATH
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - name: Install dependencies
+  #      uses: ./.github/actions/linux_install
+  #    - uses: conda-incubator/setup-miniconda@v2
+  #      with:
+  #        auto-update-conda: true
+  #        auto-activate-base: true
+  #    - name: Install python dependencies
+  #      uses: ./.github/actions/conda_installation
+  #      with:
+  #        mpi_type: openmpi
+  #    - name: Sysconfig
+  #      shell: bash -l {0}
+  #      run: |
+  #        ls /usr/share/miniconda/envs/test/lib/
+  #        echo "------------------------------------------------------------------"
+  #        ls /usr/share/miniconda/envs/test/lib/python3.9
+  #        python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
+  #        echo $PATH
+  #    - name: Fortran/C tests with pytest
+  #      uses: ./.github/actions/pytest_run
+  #    - name: Python tests with pytest
+  #      uses: ./.github/actions/pytest_run_python
+  #    - name: Parallel tests with pytest
+  #      uses: ./.github/actions/pytest_parallel
 
   Anaconda-Windows:
     runs-on: windows-latest
@@ -150,6 +150,12 @@ jobs:
           ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\lib
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
+      - name: Test lapack
+        shell: bash -l {0}
+        run: |
+          pyccel ex1.py --openmp
+          ./ex1
+        working-directory: ./tests/internal/scripts/openmp
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
