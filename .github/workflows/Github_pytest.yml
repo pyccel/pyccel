@@ -152,7 +152,6 @@ jobs:
         shell: bash -l {0}
         run: |
           pyccel openmp_quick_test.py --openmp --verbose
-          dumpbin /dependents openmp_quick_test.pyd
           python -c "import openmp_quick_test"
         working-directory: ./tests/
       #- name: Fortran/C tests with pytest
