@@ -3662,9 +3662,13 @@ class SemanticParser(BasicParser):
         return StarredArguments([var[i] for i in range(size)])
 
     def _visit_NumpyMatmul(self, expr, **settings):
-        self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
-        a = self._visit(expr.a)
-        b = self._visit(expr.b)
+        if isinstance(expr, FunctionCall):
+            a = self._visit(expr.args[0])
+            b = self._visit(expr.args[1])
+        else:
+            self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
+            a = self._visit(expr.a)
+            b = self._visit(expr.b)
         return NumpyMatmul(a, b)
 
 #==============================================================================
