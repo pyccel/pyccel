@@ -67,7 +67,7 @@ class Compiler:
         conda_folder_names = ('conda', 'anaconda', 'miniconda',
                               'Conda', 'Anaconda', 'Miniconda')
         self._conda_folders = [p for p,f in folders.items() if any(con in f for con in ('conda', 'anaconda', 'miniconda'))] 
-        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(removed_folders)))
+        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(self._conda_folders)))
 
     def _get_exec(self, accelerators):
         # Get executable
