@@ -1961,7 +1961,7 @@ class SemanticParser(BasicParser):
 
             return self._visit(new_call)
         else:
-            return PyccelPow(first, second)
+            return PyccelPow(base, exponent)
 
     def _visit_MathSqrt(self, expr, **settings):
         func = self.scope.find(expr.funcdef, 'functions')
