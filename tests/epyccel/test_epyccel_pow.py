@@ -128,3 +128,20 @@ def test_pow_r_c(language):
     assert(isclose(f(-b, e), pow_r_c(-b, e), rtol=RTOL, atol=ATOL))
     assert(isclose(f(b, -e), pow_r_c(b, -e), rtol=RTOL, atol=ATOL))
     assert(isclose(f(-b, -e), pow_r_c(-b, -e), rtol=RTOL, atol=ATOL))
+
+def test_pow_chain(language):
+    def chain_pow1(x : float, y : float, z : float):
+        return x ** y ** z
+    def chain_pow2(x : float, y : float, z : float):
+        return (x ** y) ** z
+    def chain_pow3(x : float, y : float, z : float):
+        return x ** (y ** z)
+
+    x = uniform(low=min_float, high=50)
+    y = uniform(high=5)
+    z = uniform(high=5)
+
+    for c in (chain_pow1, chain_pow2, chain_pow3):
+        f = epyccel(c, language=language)
+        assert(isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL))
+        assert isinstance(f(x, y, z), type(c(x, y, z)))
