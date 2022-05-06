@@ -1950,12 +1950,14 @@ class SemanticParser(BasicParser):
         elif isinstance(exponent, LiteralFloat) and exponent == 0.5:
             pyccel_stage.set_stage('syntactic')
 
-            new_import = Import('math','sqrt')
+            sqrt_name = self.scope.get_new_name('sqrt')
+            imp_name = AsName('sqrt', sqrt_name)
+            new_import = Import('math',imp_name)
             self._visit(new_import)
             if isinstance(expr.args[0], PyccelAssociativeParenthesis):
-                new_call = FunctionCall(PyccelSymbol('sqrt'), [expr.args[0].args[0]])
+                new_call = FunctionCall(sqrt_name, [expr.args[0].args[0]])
             else:
-                new_call = FunctionCall(PyccelSymbol('sqrt'), [expr.args[0]])
+                new_call = FunctionCall(sqrt_name, [expr.args[0]])
 
             pyccel_stage.set_stage('semantic')
 
@@ -1972,9 +1974,11 @@ class SemanticParser(BasicParser):
             if mul1 is mul2 and mul1.dtype in (NativeInteger(), NativeFloat()):
                 pyccel_stage.set_stage('syntactic')
 
-                new_import = Import('math','fabs')
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
                 self._visit(new_import)
-                new_call = FunctionCall(PyccelSymbol('fabs'), [mul1_syn])
+                new_call = FunctionCall(fabs_name, [mul1_syn])
 
                 pyccel_stage.set_stage('semantic')
 
@@ -1982,9 +1986,11 @@ class SemanticParser(BasicParser):
             elif isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
                 pyccel_stage.set_stage('syntactic')
 
-                new_import = Import('numpy','abs')
+                abs_name = self.scope.get_new_name('abs')
+                imp_name = AsName('abs', abs_name)
+                new_import = Import('math',imp_name)
                 self._visit(new_import)
-                new_call = FunctionCall(PyccelSymbol('abs'), [mul2_syn])
+                new_call = FunctionCall(abs_name, [mul2_syn])
 
                 pyccel_stage.set_stage('semantic')
 
@@ -1992,9 +1998,11 @@ class SemanticParser(BasicParser):
             elif isinstance(mul2, (NumpyConjugate, PythonConjugate)) and mul1 is mul2.internal_var:
                 pyccel_stage.set_stage('syntactic')
 
-                new_import = Import('numpy','abs')
+                abs_name = self.scope.get_new_name('abs')
+                imp_name = AsName('abs', abs_name)
+                new_import = Import('math',imp_name)
                 self._visit(new_import)
-                new_call = FunctionCall(PyccelSymbol('abs'), [mul1_syn])
+                new_call = FunctionCall(abs_name, [mul1_syn])
 
                 pyccel_stage.set_stage('semantic')
 
