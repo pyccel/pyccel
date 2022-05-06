@@ -494,7 +494,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
-            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.rank)
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
@@ -3051,7 +3051,7 @@ class SemanticParser(BasicParser):
                         d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
                         if not d_var['cls_base']:
-                            d_var['cls_base'] = get_cls_base( dtype, d_var['rank'] )
+                            d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
 
                         if 'allow_negative_index' in self.scope.decorators:
                             if a.name in decorators['allow_negative_index']:

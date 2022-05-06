@@ -168,11 +168,11 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(dtype, rank):
+def get_cls_base(dtype, precision, rank):
     """
     From the dtype and rank, determine the base class of an object
     """
-    if rank == 0:
+    if precision == -1 and rank == 0:
         return literal_classes[dtype]
     else:
         return NumpyArrayClass
