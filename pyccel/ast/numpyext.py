@@ -17,7 +17,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
-                             PythonType)
+                             PythonType, PythonConjugate)
 
 from .core           import process_shape, Module, Import, PyccelFunctionDef
 

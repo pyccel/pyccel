@@ -10,7 +10,8 @@ from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal, NumpyTranspose)
+                        NumpyImag, NumpyReal, NumpyTranspose,
+                        NumpyConjugate)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -149,7 +150,11 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
             FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
+                decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
+            FunctionDef('conj',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyConjugate}),
+            FunctionDef('conjugate',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyConjugate})])
 
 #=======================================================================================
 
