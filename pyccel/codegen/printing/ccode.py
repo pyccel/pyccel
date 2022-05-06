@@ -1739,6 +1739,9 @@ class CCodePrinter(CodePrinter):
     def _print_PythonImag(self, expr):
         return 'cimag({})'.format(self._print(expr.internal_var))
 
+    def _print_PythonConjugate(self, expr):
+        return 'conj({})'.format(self._print(expr.internal_var))
+
     def _handle_is_operator(self, Op, expr):
 
         lhs = self._print(expr.lhs)
