@@ -181,7 +181,7 @@ class NumpyReal(PythonReal):
     > np.real(a)
     1.0
     """
-    __slots__ = ('_rank','_shape','_order')
+    __slots__ = ('_precision','_rank','_shape','_order')
     name = 'real'
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
@@ -212,7 +212,7 @@ class NumpyImag(PythonImag):
     > np.imag(a)
     2.0
     """
-    __slots__ = ('_rank','_shape','_order')
+    __slots__ = ('_precision','_rank','_shape','_order')
     name = 'imag'
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
@@ -1334,7 +1334,7 @@ class NumpyConjugate(PythonConjugate):
     > np.conj(a)
     1-2j
     """
-    __slots__ = ('_rank','_shape','_order')
+    __slots__ = ('_precision','_rank','_shape','_order')
     name = 'conj'
 
     def __init__(self, arg):

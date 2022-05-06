@@ -31,6 +31,7 @@ pyccel_stage = PyccelStage()
 __all__ = (
     'PythonReal',
     'PythonImag',
+    'PythonConjugate',
     'PythonBool',
     'PythonComplex',
     'PythonEnumerate',
@@ -60,14 +61,13 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
-    __slots__ = ('_precision')
     _dtype = NativeFloat()
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
 
     def __init__(self, arg):
-        self._precision = arg.precision
         super().__init__(arg)
 
     @property
@@ -132,15 +132,14 @@ class PythonConjugate(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
-    __slots__ = ('_precision')
     _dtype = NativeComplex()
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
     name = 'conjugate'
 
     def __init__(self, arg):
-        self._precision = arg.precision
         super().__init__(arg)
 
     @property
