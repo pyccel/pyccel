@@ -155,6 +155,7 @@ jobs:
         run: |
           pyccel ex1.py --openmp
           ./ex1
+          gfortran --version
         working-directory: ./tests/internal/scripts/openmp
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
