@@ -145,21 +145,19 @@ jobs:
         run: |
           ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64
           echo "------------------------------------------------------------------"
-          ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\Lib
-          echo "------------------------------------------------------------------"
-          ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\lib
+          ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\DLLs
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
       - name: Test lapack
         shell: bash -l {0}
         run: |
-          pyccel ex1.py --openmp
+          pyccel ex1.py --openmp --verbose
           ./ex1
           gfortran --version
         working-directory: ./tests/internal/scripts/openmp
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
+      #- name: Fortran/C tests with pytest
+      #  uses: ./.github/actions/pytest_run
+      #- name: Python tests with pytest
+      #  uses: ./.github/actions/pytest_run_python
+      #- name: Parallel tests with pytest
+      #  uses: ./.github/actions/pytest_parallel
