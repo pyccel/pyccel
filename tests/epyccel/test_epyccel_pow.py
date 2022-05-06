@@ -137,7 +137,7 @@ def test_pow_chain(language):
     def chain_pow3(x : float, y : float, z : float):
         return x ** (y ** z)
 
-    x = uniform(low=min_float, high=50)
+    x = uniform(low=min_float, high=10)
     y = uniform(high=5)
     z = uniform(high=5)
 
