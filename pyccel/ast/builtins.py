@@ -75,9 +75,6 @@ class PythonComplexProperty(PyccelInternalFunction):
         """Return the variable on which the function was called"""
         return self._args[0]
 
-    def __str__(self):
-        return 'Real({0})'.format(str(self.internal_var))
-
 #==============================================================================
 class PythonReal(PythonComplexProperty):
     """Represents a call to the .real property
@@ -99,6 +96,9 @@ class PythonReal(PythonComplexProperty):
         else:
             return super().__new__(cls)
 
+    def __str__(self):
+        return 'Real({0})'.format(str(self.internal_var))
+
 #==============================================================================
 class PythonImag(PythonComplexProperty):
     """Represents a call to the .imag property
@@ -118,6 +118,38 @@ class PythonImag(PythonComplexProperty):
         else:
             return super().__new__(cls)
 
+    def __str__(self):
+        return 'Imag({0})'.format(str(self.internal_var))
+
+#==============================================================================
+class PythonConjugate(PyccelInternalFunction):
+    """Represents a call to the .conjugate() function
+
+    e.g:
+    > a = 1+2j
+    > a.conjugate()
+    1-2j
+
+    arg : Variable, Literal
+    """
+    __slots__ = ('_precision')
+    _dtype = NativeComplex()
+    _rank  = 0
+    _shape = ()
+    _order = None
+    name = 'conjugate'
+
+    def __init__(self, arg):
+        self._precision = arg.precision
+        super().__init__(arg)
+
+    @property
+    def internal_var(self):
+        """Return the variable on which the function was called"""
+        return self._args[0]
+
+    def __str__(self):
+        return 'Conjugate({0})'.format(str(self.internal_var))
 
 #==============================================================================
 class PythonBool(PyccelAstNode):

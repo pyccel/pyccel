@@ -5,7 +5,7 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
-from .builtins  import PythonImag, PythonReal
+from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
@@ -30,7 +30,8 @@ ComplexClass = ClassDef('complex',
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
             FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
-            #conjugate
+            FunctionDef('conjugate',[],[],body=[],
+                decorators={'numpy_wrapper':PythonConjugate}),
             ])
 
 #=======================================================================================

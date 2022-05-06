@@ -1327,6 +1327,30 @@ class NumpyTranspose(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
+class NumpyConjugate(PythonConjugate):
+    """Represents a call to  numpy.conj for code generation.
+
+    > a = 1+2j
+    > np.conj(a)
+    1-2j
+    """
+    __slots__ = ('_rank','_shape','_order')
+    name = 'conj'
+
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._precision = arg.precision
+        self._order = arg.order
+        self._shape = process_shape(self.internal_var.shape)
+        self._rank  = len(self._shape)
+
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
@@ -1361,6 +1385,8 @@ numpy_funcs = {
     'int'       : PyccelFunctionDef('int'       , NumpyInt),
     'real'      : PyccelFunctionDef('real'      , NumpyReal),
     'imag'      : PyccelFunctionDef('imag'      , NumpyImag),
+    'conj'      : PyccelFunctionDef('conj'      , NumpyConjugate),
+    'conjugate' : PyccelFunctionDef('conjugate' , NumpyConjugate),
     'float'     : PyccelFunctionDef('float'     , NumpyFloat),
     'double'    : PyccelFunctionDef('double'    , NumpyFloat64),
     'mod'       : PyccelFunctionDef('mod'       , NumpyMod),
