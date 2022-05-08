@@ -148,6 +148,7 @@ jobs:
           ls C:\\hostedtoolcache\\windows\\Python\\3.7.9\\x64\\DLLs
           python3 -c "import sysconfig; print(sysconfig.get_config_vars())"
           echo $PATH
+          echo $LD_LIBRARY_PATH
       - name: Test openmp
         shell: bash -l {0}
         run: |
