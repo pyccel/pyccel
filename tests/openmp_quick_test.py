@@ -11,3 +11,6 @@ def test_omp_get_max_task_priority():
     #$ omp end single
     #$ omp end parallel
     return max_task_priority_var
+
+if __name__ == '__main__':
+    test_omp_get_max_task_priority()
