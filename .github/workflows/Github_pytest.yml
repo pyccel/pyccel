@@ -154,7 +154,7 @@ jobs:
         run: |
           pyccel openmp_quick_test.py --openmp --verbose
           ls
-          openmp_quick_test.exe
+          ./openmp_quick_test.exe
           python -c "import openmp_quick_test"
         working-directory: ./tests/
       #- name: Fortran/C tests with pytest

@@ -13,4 +13,6 @@ def test_omp_get_max_task_priority():
     return max_task_priority_var
 
 if __name__ == '__main__':
-    test_omp_get_max_task_priority()
+    p = test_omp_get_max_task_priority()
+    print("Ran!")
+    print(p)
