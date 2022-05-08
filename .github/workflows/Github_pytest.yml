@@ -153,7 +153,6 @@ jobs:
         shell: bash -l {0}
         run: |
           pyccel openmp_quick_test.py --openmp --verbose --debug
-          ls
           ./openmp_quick_test.exe
           python -c "import openmp_quick_test"
         working-directory: ./tests/
