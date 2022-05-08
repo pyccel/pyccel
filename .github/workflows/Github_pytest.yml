@@ -152,6 +152,8 @@ jobs:
       - name: Test openmp
         shell: bash -l {0}
         run: |
+          pyccel quick_test.py --verbose --debug
+          ./quick_test.exe
           pyccel openmp_quick_test.py --openmp --verbose --debug
           ./openmp_quick_test.exe
           python -c "import openmp_quick_test"
