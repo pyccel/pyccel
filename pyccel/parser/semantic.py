@@ -1945,7 +1945,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelPow(self, expr, **settings):
         base, exponent = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(exponent, LiteralInteger) and exponent == 2:
+        if isinstance(exponent, LiteralInteger) and isinstance(base, (Literal, Variable)) and exponent == 2:
             return PyccelMul(base, base)
         elif isinstance(exponent, LiteralFloat) and exponent == 0.5:
             pyccel_stage.set_stage('syntactic')
