@@ -204,3 +204,17 @@ def test_abs(language):
     assert isinstance(f(x), type(norm(x)))
     assert isclose(f(y), norm(y), rtol=RTOL, atol=ATOL)
     assert isinstance(f(y), type(norm(y)))
+
+def test_complicated_abs(language):
+    @types('complex')
+    def norm(x):
+        return ((x*x.conjugate()).real**2)**0.5
+
+    f = epyccel(norm, language=language)
+    x = randint(40) + 1j * randint(40)
+    y = randint(40) - 1j * randint(40)
+
+    assert isclose(f(x), norm(x), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x), type(norm(x)))
+    assert isclose(f(y), norm(y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(y), type(norm(y)))
