@@ -95,7 +95,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
-from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -1945,9 +1945,19 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelPow(self, expr, **settings):
         base, exponent = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(exponent, LiteralInteger) and isinstance(base, (Literal, Variable)) and exponent == 2:
+
+        exp_val = exponent
+        if isinstance(exponent, LiteralInteger):
+            exp_val = exponent.python_value
+        elif isinstance(exponent, PyccelAssociativeParenthesis):
+            exp = exponent.args[0]
+            # Handle (1/2)
+            if isinstance(exp, PyccelDiv) and all(isinstance(a, Literal) for a in exp.args):
+                exp_val = exp.args[0].python_value / exp.args[1].python_value
+
+        if isinstance(base, (Literal, Variable)) and exp_val == 2:
             return PyccelMul(base, base)
-        elif isinstance(exponent, LiteralFloat) and exponent == 0.5:
+        elif exp_val == 0.5:
             pyccel_stage.set_stage('syntactic')
 
             sqrt_name = self.scope.get_new_name('sqrt')
