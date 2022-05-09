@@ -2014,6 +2014,21 @@ class SemanticParser(BasicParser):
 
                 # Cast to preserve final dtype
                 return PythonComplex(self._visit(new_call))
+        elif isinstance(arg.value, PyccelPow):
+            base, exponent = arg.value.args
+            base_syn, _ = expr.args[0].value.args
+            if exponent == 2 and base.dtype in (NativeInteger(), NativeFloat()):
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [base_syn])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
 
         return self._handle_function(expr, func, (arg,), **settings)
 
