@@ -693,9 +693,6 @@ class PyccelDiv(PyccelArithmeticOperator):
         return dtype, precision
 
     def __repr__(self):
-        return '{} + {}'.format(self.args[0], self.args[1])
-
-    def __repr__(self):
         return '{} / {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
