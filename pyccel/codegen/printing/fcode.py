@@ -2922,6 +2922,11 @@ class FCodePrinter(CodePrinter):
 
 #=======================================================================================
 
+    def _print_PythonConjugate(self, expr):
+        return 'conjg( {} )'.format( self._print(expr.internal_var) )
+
+#=======================================================================================
+
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines
 

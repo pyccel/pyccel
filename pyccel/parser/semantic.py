@@ -23,7 +23,7 @@ from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
-from pyccel.ast.builtins import PythonList
+from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
@@ -85,7 +85,7 @@ from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
-from pyccel.ast.numpyext import NumpyTranspose
+from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
@@ -94,7 +94,8 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd
+from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -493,7 +494,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
-            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.rank)
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
@@ -964,7 +965,7 @@ class SemanticParser(BasicParser):
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
-                
+
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
                 if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
@@ -1942,6 +1943,95 @@ class SemanticParser(BasicParser):
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
 
+    def _visit_PyccelPow(self, expr, **settings):
+        base, exponent = [self._visit(a, **settings) for a in expr.args]
+
+        exp_val = exponent
+        if isinstance(exponent, LiteralInteger):
+            exp_val = exponent.python_value
+        elif isinstance(exponent, PyccelAssociativeParenthesis):
+            exp = exponent.args[0]
+            # Handle (1/2)
+            if isinstance(exp, PyccelDiv) and all(isinstance(a, Literal) for a in exp.args):
+                exp_val = exp.args[0].python_value / exp.args[1].python_value
+
+        if isinstance(base, (Literal, Variable)) and exp_val == 2:
+            return PyccelMul(base, base)
+        elif exp_val == 0.5:
+            pyccel_stage.set_stage('syntactic')
+
+            sqrt_name = self.scope.get_new_name('sqrt')
+            imp_name = AsName('sqrt', sqrt_name)
+            new_import = Import('math',imp_name)
+            self._visit(new_import)
+            if isinstance(expr.args[0], PyccelAssociativeParenthesis):
+                new_call = FunctionCall(sqrt_name, [expr.args[0].args[0]])
+            else:
+                new_call = FunctionCall(sqrt_name, [expr.args[0]])
+
+            pyccel_stage.set_stage('semantic')
+
+            return self._visit(new_call)
+        else:
+            return PyccelPow(base, exponent)
+
+    def _visit_MathSqrt(self, expr, **settings):
+        func = self.scope.find(expr.funcdef, 'functions')
+        arg, = self._handle_function_args(expr.args, **settings)
+        if isinstance(arg.value, PyccelMul):
+            mul1, mul2 = arg.value.args
+            mul1_syn, mul2_syn = expr.args[0].value.args
+            is_abs = False
+            if mul1 is mul2 and mul1.dtype in (NativeInteger(), NativeFloat()):
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [mul1_syn])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
+            elif isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
+                is_abs = True
+                abs_arg = mul2_syn
+            elif isinstance(mul2, (NumpyConjugate, PythonConjugate)) and mul1 is mul2.internal_var:
+                is_abs = True
+                abs_arg = mul1_syn
+
+            if is_abs:
+                pyccel_stage.set_stage('syntactic')
+
+                abs_name = self.scope.get_new_name('abs')
+                imp_name = AsName('abs', abs_name)
+                new_import = Import('numpy',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(abs_name, [abs_arg])
+
+                pyccel_stage.set_stage('semantic')
+
+                # Cast to preserve final dtype
+                return PythonComplex(self._visit(new_call))
+        elif isinstance(arg.value, PyccelPow):
+            base, exponent = arg.value.args
+            base_syn, _ = expr.args[0].value.args
+            if exponent == 2 and base.dtype in (NativeInteger(), NativeFloat()):
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [base_syn])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
+
+        return self._handle_function(expr, func, (arg,), **settings)
+
     def _visit_Lambda(self, expr, **settings):
         expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol, excluded_nodes = FunctionDef))
         var_names = map(str, expr.variables)
@@ -1972,12 +2062,13 @@ class SemanticParser(BasicParser):
         except RuntimeError:
             pass
 
-        # Check for specialised method
-        annotation_method = '_visit_' + name
-        if hasattr(self, annotation_method):
-            return getattr(self, annotation_method)(expr, **settings)
-
         func     = self.scope.find(name, 'functions')
+
+        # Check for specialised method
+        if isinstance(func, PyccelFunctionDef):
+            annotation_method = '_visit_' + func.cls_name.__name__
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(expr, **settings)
 
         args = self._handle_function_args(expr.args, **settings)
 
@@ -2989,8 +3080,8 @@ class SemanticParser(BasicParser):
                         d_var['is_argument'] = True
                         d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
-                        if d_var['rank']>0:
-                            d_var['cls_base'] = NumpyArrayClass
+                        if not d_var['cls_base']:
+                            d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
 
                         if 'allow_negative_index' in self.scope.decorators:
                             if a.name in decorators['allow_negative_index']:
@@ -3601,9 +3692,13 @@ class SemanticParser(BasicParser):
         return StarredArguments([var[i] for i in range(size)])
 
     def _visit_NumpyMatmul(self, expr, **settings):
-        self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
-        a = self._visit(expr.a)
-        b = self._visit(expr.b)
+        if isinstance(expr, FunctionCall):
+            a = self._visit(expr.args[0].value)
+            b = self._visit(expr.args[1].value)
+        else:
+            self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
+            a = self._visit(expr.a)
+            b = self._visit(expr.b)
         return NumpyMatmul(a, b)
 
 #==============================================================================
