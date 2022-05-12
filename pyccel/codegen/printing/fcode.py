@@ -31,7 +31,7 @@ from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName, EmptyNode,
-                             If, IfSection, Deallocate)
+                             If, IfSection, For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
                              IndexedElement, HomogeneousTupleVariable,
@@ -60,13 +60,14 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.internals import Slice, PrecomputedCode
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
-from pyccel.ast.literals  import LiteralTrue, LiteralFalse
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
@@ -172,6 +173,15 @@ python_builtin_datatypes = {
     'complex' : PythonComplex
 }
 
+type_to_print_format = {
+        ('float'): 'F0.12',
+        ('complex'): '"(",F0.12," + ",F0.12,")"',
+        ('int'): 'I0',
+        ('bool'): 'A',
+        ('string'): 'A',
+        ('tuple'):  '*'
+}
+
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
                r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
@@ -226,7 +236,7 @@ class FCodePrinter(CodePrinter):
         self._current_class = name
 
     def get_method(self, cls_name, method_name):
-        container = self._namespace
+        container = self.scope
         while container:
             if cls_name in container.classes:
                 cls = container.classes[cls_name]
@@ -246,7 +256,7 @@ class FCodePrinter(CodePrinter):
             severity='fatal')
 
     def get_function(self, name):
-        container = self._namespace
+        container = self.scope
         while container:
             if name in container.functions:
                 return container.functions[name]
@@ -269,7 +279,7 @@ class FCodePrinter(CodePrinter):
         precision = get_final_precision(expr)
         constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
-        if constant_shortcut not in self.namespace.all_used_symbols and constant_name != constant_shortcut:
+        if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:
             self._constantImports.add((constant_shortcut, constant_name))
             constant_name = constant_shortcut
         else:
@@ -279,7 +289,7 @@ class FCodePrinter(CodePrinter):
     def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
         """ Print a function call to an inline function
         """
-        scope = self.namespace
+        scope = self.scope
         func = expr.funcdef
 
         # Print any arguments using the same inline function
@@ -294,14 +304,14 @@ class FCodePrinter(CodePrinter):
                 args.append(a.value)
 
         # Create new local variables to ensure there are no name collisions
-        new_local_vars = [v.clone(self.namespace.get_new_name(v.name)) \
+        new_local_vars = [v.clone(self.scope.get_new_name(v.name)) \
                             for v in func.local_vars]
         for v in new_local_vars:
-            self.namespace.insert_variable(v)
+            self.scope.insert_variable(v)
 
-        # Put functions into current namespace
+        # Put functions into current scope
         for entry in ['variables', 'classes', 'functions']:
-            self._namespace.imports[entry].update(func.namespace_imports[entry])
+            self.scope.imports[entry].update(func.namespace_imports[entry])
 
         func.swap_in_args(args, new_local_vars)
 
@@ -362,7 +372,7 @@ class FCodePrinter(CodePrinter):
             self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
             for v in (*func.global_vars, *func.global_funcs):
-                self.namespace.insert_symbol(v.name)
+                self.scope.insert_symbol(v.name)
 
         self.set_scope(scope)
         return code
@@ -372,7 +382,7 @@ class FCodePrinter(CodePrinter):
         Look for external functions and declare their result type
         """
         decs = {}
-        for key,f in self._namespace.imports['functions'].items():
+        for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
                 i = Variable(f.results[0].dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
@@ -458,10 +468,10 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
         body    = self._print(expr.body)
 
-        # Print the declarations of all variables in the namespace, which include:
+        # Print the declarations of all variables in the scope, which include:
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
-        variables = self.namespace.variables.values()
+        variables = self.scope.variables.values()
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         # Detect if we are using mpi4py
@@ -558,31 +568,149 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_PythonPrint(self, expr):
+        end = LiteralString('\n')
+        sep = LiteralString(' ')
+        code = ''
+        empty_end = FunctionCallArgument(LiteralString(''), 'end')
+        space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        for f in expr.expr:
+            if f.has_keyword:
+                if f.keyword == 'sep':
+                    sep = f.value
+                elif f.keyword == 'end':
+                    end = f.value
+                else:
+                    errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
+        args_format = []
         args = []
-        n = len(expr.expr)
-        for j, f in enumerate(expr.expr):
+        orig_args = [f for f in expr.expr if not f.has_keyword]
+        separator = self._print(sep)
+
+
+        tuple_start = FunctionCallArgument(LiteralString('('))
+        tuple_sep   = LiteralString(', ')
+        tuple_end   = FunctionCallArgument(LiteralString(')'))
+
+        for f in orig_args:
             if f.keyword:
                 continue
             else:
                 f = f.value
-            if isinstance(f, PythonType):
-                f = f.print_string
+            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
+                if args_format:
+                    code += self._formatted_args_to_print(args_format, args, sep, separator)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end]))
+                args = []
+            elif isinstance(f, PythonType):
+                args_format.append('A')
+                args.append(self._print(f.print_string))
+            elif isinstance(f.rank, int) and f.rank > 0:
+                if args_format:
+                    code += self._formatted_args_to_print(args_format, args, sep, separator)
+                    args_format = []
+                    args = []
+                loop_scope = self.scope.create_new_loop_scope()
+                for_index = self.scope.get_temporary_variable(NativeInteger(), name='i')
+                max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
+                for_range = PythonRange(max_index)
+                print_body = [FunctionCallArgument(f[for_index])]
+                if f.rank == 1:
+                    print_body.append(space_end)
 
-            if isinstance(f, str):
-                args.append("'{}'".format(f))
-            elif isinstance(f, PythonTuple):
-                for i in f:
-                    args.append(self._print(i))
-            elif isinstance(f, InhomogeneousTupleVariable):
-                for i in f:
-                    args.append(self._print(i))
-            elif f.dtype is NativeString() and j != n-1:
-                args.append("{} // ' ' ".format(self._print(f)))
+                for_body = [PythonPrint(print_body)]
+                for_loop = For(for_index, for_range, for_body, scope=loop_scope)
+                for_end_char = LiteralString(']')
+                for_end = FunctionCallArgument(for_end_char,
+                                               keyword='end')
+
+                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end]),
+                                  for_loop,
+                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end])],
+                                 unravelled=True)
+                code += self._print(body)
             else:
-                args.append(self._print(f))
+                arg_format, arg = self._get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
+        code += self._formatted_args_to_print(args_format, args, end, separator)
+        return code
 
-        code = ', '.join(['print *', *args])
-        return self._get_statement(code) + '\n'
+    def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep):
+        """ Produce a write statement from a list of formats, args and an end
+        statement
+
+        Parameters
+        ----------
+        fargs_format : iterable
+                       The format strings for the objects described by fargs
+        fargs        : iterable
+                       The args to be printed
+        fend         : PyccelAstNode
+                       The character describing the end of the line
+        """
+        if fargs_format == ['*']:
+            # To print the result of a FunctionCall
+            return ', '.join(['print *', *fargs]) + '\n'
+
+
+        args_list = [a_c if a_c != '' else "''" for a_c in fargs]
+        fend_code = self._print(fend)
+        advance = "yes" if fend_code == 'ACHAR(10)' else "no"
+
+        if fsep != '':
+            fargs_format = [af for a in fargs_format for af in (a, 'A')][:-1]
+            args_list    = [af for a in args_list for af in (a, fsep)][:-1]
+
+        if fend_code not in ('ACHAR(10)', ''):
+            fargs_format.append('A')
+            args_list.append(fend_code)
+
+        args_code       = ' , '.join(args_list)
+        args_formatting = ' '.join(fargs_format)
+        return "write(*, '({})', advance=\"{}\") {}\n"\
+            .format(args_formatting, advance, args_code)
+
+    def _get_print_format_and_arg(self,var):
+        """ Get the format string and the printable argument for an object.
+        In other words get arg_format and arg such that var can be printed
+        by doing:
+
+        > write(*, arg_format) arg
+
+        Parameters
+        ----------
+        var : PyccelAstNode
+              The object to be printed
+
+        Results
+        -------
+        arg_format : str
+                     The format string
+        arg        : str
+                     The fortran code which represents var
+        """
+        var_type = var.dtype
+        try:
+            arg_format = type_to_print_format[str(var_type)]
+        except KeyError:
+            errors.report("{} type is not supported currently".format(var_type), severity='fatal')
+
+        if var_type is NativeComplex():
+            arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
+        elif var_type is NativeBool():
+            if isinstance(var, LiteralTrue):
+                arg = "'True'"
+            elif isinstance(var, LiteralFalse):
+                arg = "'False'"
+            else:
+                arg = 'merge("True ", "False", {})'.format(self._print(var))
+        else:
+            arg = self._print(var)
+
+        return arg_format, arg
 
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
@@ -670,10 +798,10 @@ class FCodePrinter(CodePrinter):
             base = expr.lhs.funcdef.results[0]
             if (not self._additional_code):
                 self._additional_code = ''
-            var_name = self.namespace.get_new_name()
+            var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
-            self.namespace.insert_variable(var)
+            self.scope.insert_variable(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
             return self._print(var) + '%' +self._print(expr.name)
@@ -801,7 +929,7 @@ class FCodePrinter(CodePrinter):
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
-            self.namespace.insert_variable(var)
+            self.scope.insert_variable(var)
 
         init_value = template.format(
             start = self._print(expr.start),
@@ -882,9 +1010,9 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = Variable(NativeInteger(), name =  self.namespace.get_new_name('i'))
+        index  = Variable(NativeInteger(), name =  self.scope.get_new_name('i'))
 
-        self.namespace.insert_variable(index)
+        self.scope.insert_variable(index)
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -970,12 +1098,12 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = self.namespace.get_new_name()
+        var_name = self.scope.get_new_name()
         var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
-        self.namespace.insert_variable(var)
+        self.scope.insert_variable(var)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -1266,7 +1394,7 @@ class FCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
             body_exprs = expand_to_loops(expr,
-                    self.namespace.get_temporary_variable, self.namespace,
+                    self.scope.get_temporary_variable, self.scope,
                     language_has_vectors = True)
         else:
             body_exprs = expr.body
@@ -1553,7 +1681,7 @@ class FCodePrinter(CodePrinter):
             return ''
 
         self.set_scope(expr.scope)
-        self.namespace.functions[expr.name] = expr
+        self.scope.functions[expr.name] = expr
 
         body = self._print(expr.body)
 
@@ -1577,7 +1705,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[i] = dec
-        vars_to_print = self.namespace.variables.values()
+        vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -1721,7 +1849,7 @@ class FCodePrinter(CodePrinter):
         decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
-        vars_to_print = self.namespace.variables.values()
+        vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
@@ -1884,7 +2012,7 @@ class FCodePrinter(CodePrinter):
         indices = expr.iterable.loop_counters
         index = indices[0] if indices else expr.target
         if expr.iterable.num_loop_counters_required:
-            self.namespace.insert_variable(index)
+            self.scope.insert_variable(index)
 
         target   = index
         my_range = expr.iterable.get_range()
@@ -2572,12 +2700,12 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var_name = self.namespace.get_new_name()
+                var_name = self.scope.get_new_name()
                 var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
-                self.namespace.insert_variable(var)
+                self.scope.insert_variable(var)
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
@@ -2706,8 +2834,8 @@ class FCodePrinter(CodePrinter):
                 key = a.keyword
                 arg = a.value
                 if arg in lhs_vars.values():
-                    var = arg.clone(self.namespace.get_new_name())
-                    self.namespace.insert_variable(var)
+                    var = arg.clone(self.scope.get_new_name())
+                    self.scope.insert_variable(var)
                     self._additional_code += self._print(Assign(var,arg))
                     newarg = var
                 else:
@@ -2717,14 +2845,19 @@ class FCodePrinter(CodePrinter):
             if len(func_results) == 1:
                 results_strs = []
             else:
-                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
-                                for n,r in lhs_vars.items()]
+                # If func body is unknown then we may not know result names
+                use_names = (len(func.body.body) != 0)
+                if use_names:
+                    results_strs = ['{} = {}'.format(self._print(n), self._print(r))
+                            for n,r in lhs_vars.items()]
+                else:
+                    results_strs = [self._print(r) for r in lhs_vars.values()]
 
         elif len(func_results)>1:
-            results = [r.clone(name = self.namespace.get_new_name()) \
+            results = [r.clone(name = self.scope.get_new_name()) \
                         for r in func_results]
             for var in results:
-                self.namespace.insert_variable(var)
+                self.scope.insert_variable(var)
 
             if len(func_results) == 1:
                 results_strs = []
@@ -2766,10 +2899,10 @@ class FCodePrinter(CodePrinter):
             base = expr.prefix.funcdef.results[0]
             if (not self._additional_code):
                 self._additional_code = ''
-            var_name = self.namespace.get_new_name()
+            var_name = self.scope.get_new_name()
             var = base.clone(var_name)
 
-            self.namespace.insert_variable(var)
+            self.scope.insert_variable(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
             user_node = expr.current_user_node
@@ -2798,6 +2931,11 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.arg)
         self._constantImports.add('c_loc')
         return '{} = c_loc({})'.format(lhs, rhs)
+
+#=======================================================================================
+
+    def _print_PythonConjugate(self, expr):
+        return 'conjg( {} )'.format( self._print(expr.internal_var) )
 
 #=======================================================================================
 

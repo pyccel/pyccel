@@ -889,8 +889,6 @@ class While(ScopedNode):
         test condition given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the While statement.
-    local_vars : list of Variables
-        list of Variables created inside the While
     scope : Scope
         The scope for the loop
 
@@ -902,10 +900,10 @@ class While(ScopedNode):
     >>> While((n>1), [Assign(n,n-1)])
     While(n > 1, (n := n - 1,))
     """
-    __slots__ = ('_body','_test','_local_vars')
-    _attribute_nodes = ('_body','_test','_local_vars')
+    __slots__ = ('_body','_test')
+    _attribute_nodes = ('_body','_test')
 
-    def __init__(self, test, body, local_vars=(), scope = None):
+    def __init__(self, test, body, scope = None):
 
         if pyccel_stage == 'semantic':
             if test.dtype is not NativeBool():
@@ -918,7 +916,6 @@ class While(ScopedNode):
 
         self._test = test
         self._body = body
-        self._local_vars = local_vars
         super().__init__(scope)
 
     @property
@@ -931,7 +928,8 @@ class While(ScopedNode):
 
     @property
     def local_vars(self):
-        return self._local_vars
+        """ List of variables defined in the loop """
+        return tuple(self.scope.variables.values())
 
 
 class With(ScopedNode):
@@ -1614,15 +1612,14 @@ class For(ScopedNode):
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
-    __slots__ = ('_target','_iterable','_body','_local_vars','_end_annotation')
-    _attribute_nodes = ('_target','_iterable','_body','_local_vars')
+    __slots__ = ('_target','_iterable','_body','_end_annotation')
+    _attribute_nodes = ('_target','_iterable','_body')
 
     def __init__(
         self,
         target,
         iter_obj,
         body,
-        local_vars = (),
         scope = None
         ):
         if pyccel_stage != "syntactic":
@@ -1639,7 +1636,6 @@ class For(ScopedNode):
         self._target = target
         self._iterable = iter_obj
         self._body = body
-        self._local_vars = local_vars
         self._end_annotation = None
         super().__init__(scope)
 
@@ -1665,7 +1661,8 @@ class For(ScopedNode):
 
     @property
     def local_vars(self):
-        return self._local_vars
+        """ List of variables defined in the loop """
+        return tuple(self.scope.variables.values())
 
     def insert2body(self, stmt):
         stmt.set_current_user_node(self)
@@ -1836,6 +1833,12 @@ class FunctionCallArgument(Basic):
             return 'FunctionCallArgument({} = {})'.format(self.keyword, repr(self.value))
         else:
             return 'FunctionCallArgument({})'.format(repr(self.value))
+
+    def __str__(self):
+        if self.has_keyword:
+            return '{} = {}'.format(self.keyword, str(self.value))
+        else:
+            return '{}'.format(str(self.value))
 
 class FunctionDefArgument(PyccelAstNode):
 
@@ -2148,9 +2151,6 @@ class FunctionDef(ScopedNode):
     body : iterable
         The body of the function.
 
-    local_vars : list of Symbols
-        These are used internally by the routine.
-
     global_vars : list of Symbols
         Variables which will not be passed into the function.
 
@@ -2225,12 +2225,12 @@ class FunctionDef(ScopedNode):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
-    __slots__ = ('_name','_arguments','_results','_body','_local_vars',
+    __slots__ = ('_name','_arguments','_results','_body',
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header','_arguments_inout',
                  '_functions','_interfaces','_doc_string', '_is_external')
-    _attribute_nodes = ('_arguments','_results','_body','_local_vars',
+    _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
     def __init__(
@@ -2239,7 +2239,6 @@ class FunctionDef(ScopedNode):
         arguments,
         results,
         body,
-        local_vars=(),
         global_vars=(),
         cls_name=None,
         is_static=False,
@@ -2349,7 +2348,6 @@ class FunctionDef(ScopedNode):
         self._arguments       = arguments
         self._results         = results
         self._body            = body
-        self._local_vars      = local_vars
         self._global_vars     = global_vars
         self._cls_name        = cls_name
         self._is_static       = is_static
@@ -2391,7 +2389,9 @@ class FunctionDef(ScopedNode):
     @property
     def local_vars(self):
         """ List of variables defined in the function """
-        return self._local_vars
+        local_vars = self.scope.variables.values()
+        argument_vars = [a.var for a in self.arguments]
+        return tuple(l for l in local_vars if l not in self.results and l not in argument_vars)
 
     @property
     def global_vars(self):
@@ -2540,18 +2540,6 @@ class FunctionDef(ScopedNode):
 
         self._name = newname
 
-    def add_local_vars(self, *variables):
-        """
-        Add (a) new variable(s) to the local variables tuple
-
-        Parameters
-        ----------
-        var : Variable
-              The new local variable
-        """
-        _ = [v.set_current_user_node(self) for v in variables]
-        self._local_vars += variables
-
     def __getnewargs__(self):
         """
           This method returns the positional and keyword arguments
@@ -2564,7 +2552,6 @@ class FunctionDef(ScopedNode):
         self._body)
 
         kwargs = {
-        'local_vars':self._local_vars,
         'global_vars':self._global_vars,
         'cls_name':self._cls_name,
         'is_static':self._is_static,

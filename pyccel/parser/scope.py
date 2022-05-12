@@ -43,7 +43,8 @@ class Scope(object):
             'cls_constructs')
 
     def __init__(self, *, decorators=None, is_loop = False,
-                    parent_scope = None, used_symbols = None):
+                    parent_scope = None, used_symbols = None,
+                    original_symbols = None):
 
         self._imports = {k:{} for k in self.categories}
 
@@ -55,7 +56,7 @@ class Scope(object):
             raise RuntimeError("Used symbols must be a dictionary")
 
         self._used_symbols = used_symbols or {}
-        self._original_symbol = {}
+        self._original_symbol = original_symbols or {}
 
         self._dummy_counter = 0
 
@@ -71,6 +72,14 @@ class Scope(object):
         self._is_loop = is_loop
         # scoping for loops
         self._loops = []
+
+    def __setstate__(self, state):
+        state = state[1] # Retrieve __dict__ ignoring None
+        if any(s not in state for s in self.__slots__):
+            raise AttributeError("Missing attribute from slots. Please update pickle file")
+
+        for s in state:
+            setattr(self, s, state[s])
 
     def new_child_scope(self, name, **kwargs):
         """
@@ -566,3 +575,9 @@ class Scope(object):
             return self.parent_scope.get_python_name(name)
         else:
             raise RuntimeError("Can't find {} in scope".format(name))
+
+    @property
+    def python_names(self):
+        """ Get map of new names to original python names
+        """
+        return self._original_symbol

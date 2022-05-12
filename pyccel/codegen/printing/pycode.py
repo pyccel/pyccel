@@ -290,7 +290,7 @@ class PythonCodePrinter(CodePrinter):
         return prelude+'return {}\n'.format(','.join(self._print(i) for i in expr_return_vars))
 
     def _print_Program(self, expr):
-        mod_scope = self.namespace
+        mod_scope = self.scope
         self.set_scope(expr.scope)
         imports  = ''.join(self._print(i) for i in expr.imports)
         body     = self._print(expr.body)
@@ -401,6 +401,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonImag(self, expr):
         return '({}).imag'.format(self._print(expr.internal_var))
+
+    def _print_PythonConjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.internal_var))
 
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))

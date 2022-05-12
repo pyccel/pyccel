@@ -101,15 +101,15 @@ class Parser(object):
             return self._syntax_parser.metavars
 
     @property
-    def namespace(self):
+    def scope(self):
         if self._semantic_parser:
-            return self._semantic_parser.namespace
+            return self._semantic_parser.scope
         else:
-            return self._syntax_parser.namespace
+            return self._syntax_parser.scope
 
     @property
     def imports(self):
-        return self.namespace.collect_all_imports()
+        return self.scope.collect_all_imports()
 
     @property
     def fst(self):
