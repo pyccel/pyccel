@@ -276,13 +276,12 @@ class CLocFunc(Basic):
 
 def wrap_array(var, scope):
     ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
-            allocatable=True, rank = var.rank,
+            is_pointer=True, rank = var.rank,
             order = var.order, shape = var.shape)
     bind_var = Variable(dtype=BindCPointer(), name = scope.get_new_name('bound_'+var.name))
     sizes = [Variable(dtype=NativeInteger(), name = scope.get_new_name()) for _ in range(var.rank)]
     assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
     alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
-    ptr_var.is_pointer = True
     copy  = Assign(ptr_var, var)
     c_loc = CLocFunc(ptr_var, bind_var)
     body = [*assigns, alloc, copy, c_loc]
@@ -294,14 +293,13 @@ def wrap_module_array_var(var, scope, mod):
     func_name = 'bind_c_'+var.name
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope)
-    local_vars = [necessary_vars[0]]
+    func_scope.insert_variable(necessary_vars[0])
     arg_vars = necessary_vars[1:]
     import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
     func = FunctionDef(name = func_name,
                   body      = body,
                   arguments = [],
                   results   = arg_vars,
-                  local_vars = local_vars,
                   imports   = [import_mod],
                   scope = func_scope)
     return func
