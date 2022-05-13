@@ -504,7 +504,8 @@ class Allocate(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
-        if not variable.allocatable:
+        if not variable.allocatable and not variable.is_pointer:
+            # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
         if shape and not isinstance(shape, (int, tuple, list)):
