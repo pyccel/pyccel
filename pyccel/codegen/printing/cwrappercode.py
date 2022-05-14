@@ -714,11 +714,6 @@ class CWrapperCodePrinter(CCodePrinter):
                       name       = mod_var_name,
                       is_pointer = True)
         scope.insert_variable(mod_var)
-        tmp_var_name = self.scope.get_new_name('tmp')
-        tmp_var = Variable(dtype = PyccelPyObject(),
-                      name       = tmp_var_name,
-                      is_pointer = True)
-        scope.insert_variable(tmp_var)
 
         orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
         body = []
@@ -759,7 +754,13 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap = orig_vars_to_wrap
         var_names = [str(expr.scope.get_python_name(v.name)) for v in orig_vars_to_wrap]
 
-        body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
+        if vars_to_wrap:
+            tmp_var_name = self.scope.get_new_name('tmp')
+            tmp_var = Variable(dtype = PyccelPyObject(),
+                          name       = tmp_var_name,
+                          is_pointer = True)
+            scope.insert_variable(tmp_var)
+            body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
 
         decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
 
