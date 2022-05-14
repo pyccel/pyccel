@@ -976,7 +976,8 @@ class SemanticParser(BasicParser):
                             severity='error',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
-                        if isinstance(a, Variable) or not all([b.is_argument for b in a.get_attribute_nodes(Variable, excluded_nodes=FunctionDef)]):
+                        if (isinstance(a, Variable) and not a.is_argument) \
+                                or not all([b.is_argument for b in a.get_attribute_nodes(Variable, excluded_nodes=FunctionDef)]):
                             errors.report(STACK_ARRAY_UNKNOWN_SHAPE, symbol=name,
                             severity='error',
                             bounding_box=(self._current_fst_node.lineno,
