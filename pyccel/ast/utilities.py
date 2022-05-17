@@ -646,7 +646,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
                             order = a.lhs.order,
                             status="unknown"), a)
                     for a in allocs_to_unravel]
-        block.substitute(allocs_to_unravel, new_allocs)
+        block.substitute(allocs_to_unravel, new_allocs, excluded_nodes=(FunctionDef,))
 
     assigns = [a for a in block.get_attribute_nodes(Assign) \
                 if isinstance(a.lhs, InhomogeneousTupleVariable) \
