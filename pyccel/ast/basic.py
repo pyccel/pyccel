@@ -40,7 +40,7 @@ class Basic:
 
             from pyccel.ast.literals import convert_to_literal
 
-            if Basic._ignore(self, c):
+            if Basic._ignore(c):
                 continue
 
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -51,7 +51,7 @@ class Basic:
             elif iterable(c):
                 size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or self._ignore(ci)) \
+                                 or Basic._ignore(ci)) \
                         else convert_to_literal(ci) for ci in c if not iterable(ci))
                 if len(c) != size:
                     raise TypeError("Basic child cannot be a tuple of tuples")
@@ -63,15 +63,16 @@ class Basic:
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if not Basic._ignore(self, ci):
+                    if not Basic._ignore(ci):
                         ci.set_current_user_node(self)
             else:
                 c.set_current_user_node(self)
 
-    def _ignore(self, c):
+    @classmethod
+    def _ignore(cls, c):
         """ Indicates if a node should be ignored when recursing
         """
-        return c is None or isinstance(c, self._ignored_types)
+        return c is None or isinstance(c, cls._ignored_types)
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.

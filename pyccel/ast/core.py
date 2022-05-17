@@ -2050,10 +2050,11 @@ class FunctionCall(PyccelAstNode):
     def __repr__(self):
         return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
 
-    def _ignore(self, c):
+    @classmethod
+    def _ignore(cls, c):
         """ Indicates if a node should be ignored when recursing
         """
-        return c is None or isinstance(c, (FunctionDef, *self._ignored_types))
+        return c is None or isinstance(c, (FunctionDef, *cls._ignored_types))
 
 class DottedFunctionCall(FunctionCall):
     """
