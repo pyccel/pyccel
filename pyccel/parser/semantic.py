@@ -977,7 +977,7 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
                         if (isinstance(a, Variable) and not a.is_argument) \
-                                or not all([b.is_argument for b in a.get_attribute_nodes(Variable, excluded_nodes=FunctionDef)]):
+                                or not all([b.is_argument for b in a.get_attribute_nodes(Variable)]):
                             errors.report(STACK_ARRAY_UNKNOWN_SHAPE, symbol=name,
                             severity='error',
                             bounding_box=(self._current_fst_node.lineno,
@@ -2034,7 +2034,7 @@ class SemanticParser(BasicParser):
         return self._handle_function(expr, func, (arg,), **settings)
 
     def _visit_Lambda(self, expr, **settings):
-        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol, excluded_nodes = FunctionDef))
+        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -2847,7 +2847,7 @@ class SemanticParser(BasicParser):
                 errors.report("Determination of main module is too complicated to handle",
                         symbol=expr, severity='error')
 
-        allocations = [arg.get_attribute_nodes(Allocate, excluded_nodes=(FunctionDef,)) for arg in args]
+        allocations = [arg.get_attribute_nodes(Allocate) for arg in args]
 
         var_shapes = [{a.variable : a.shape for a in allocs} for allocs in allocations]
         variables = [v for branch in var_shapes for v in branch]

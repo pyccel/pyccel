@@ -323,7 +323,7 @@ class FCodePrinter(CodePrinter):
             code = self._print(body)
         else:
             # Search for the return and replace it with an empty node
-            result = body.get_attribute_nodes(Return, excluded_nodes = (FunctionDef,))[0]
+            result = body.get_attribute_nodes(Return)[0]
             empty_return = EmptyNode()
             body.substitute(result, empty_return, invalidate = False)
 
