@@ -40,7 +40,7 @@ class Basic:
 
             from pyccel.ast.literals import convert_to_literal
 
-            if self._ignore(c):
+            if Basic._ignore(self, c):
                 continue
 
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -63,7 +63,7 @@ class Basic:
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if not self._ignore(ci):
+                    if not Basic._ignore(self, ci):
                         ci.set_current_user_node(self)
             else:
                 c.set_current_user_node(self)
