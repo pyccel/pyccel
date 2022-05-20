@@ -720,7 +720,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if self._target_language == 'fortran':
             vars_to_wrap = []
             for v in orig_vars_to_wrap:
-                w = v.clone(expr.scope.get_expected_name(v.name))
+                w = v.clone(expr.scope.get_expected_name(v.name).lower())
                 assign = v.get_user_nodes(Assign)[0]
                 # assign.fst should always exist, but is not always set when the
                 # Assign is created in the codegen stage
