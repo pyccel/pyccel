@@ -761,8 +761,6 @@ class CWrapperCodePrinter(CCodePrinter):
             scope.insert_variable(tmp_var)
             body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
 
-        decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
-
         if expr.init_func:
             static_function = self.get_static_function(expr.init_func)
             body.insert(0,FunctionCall(static_function,[],[]))
