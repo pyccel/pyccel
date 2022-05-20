@@ -680,7 +680,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 pymodule initialisation function
         """
         if var.rank != 0:
-            #if self._target_language == "fortran":
             self.add_import(cwrapper_ndarray_import)
 
         collect_value = Assign(VariableAddress(collect_var),
