@@ -155,7 +155,7 @@ def test_awkward_names(language):
 
     modnew = epyccel(mod, language=language)
 
-    assert mod.awkwards_names == modnew.awkwards_names
+    assert mod.awkward_names == modnew.awkward_names
     assert mod.a == modnew.a
     assert mod.A == modnew.A
     assert mod.function() == modnew.function()
