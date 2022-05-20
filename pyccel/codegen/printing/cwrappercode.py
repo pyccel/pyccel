@@ -1188,10 +1188,10 @@ class CWrapperCodePrinter(CCodePrinter):
                         scope.insert_symbol(v.name.lower())
         else:
             for f in expr.funcs:
-                scope.insert_symbol(f.lower())
+                scope.insert_symbol(f.name.lower())
             for v in expr.variables:
                 if not v.is_private:
-                    scope.insert_symbol(v.lower())
+                    scope.insert_symbol(v.name.lower())
 
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
