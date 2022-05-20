@@ -25,7 +25,9 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 ## Table of contents
 
--   [User docs index](#User-docs-index)
+-   [User Documentation](#User-documentation)
+
+-   [Developer Documentation](#Developer-documentation)
 
 -   [Pyccel Installation Methods](#Pyccel-Installation-Methods)
 
@@ -38,6 +40,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 -   [Installation](#Installation)
     -   [From PyPi](#From-PyPi)
     -   [From sources](#From-sources)
+    -   [On a read-only system](#On-a-read-only-system)
 
 -   [Additional packages](#Additional-packages)
 
@@ -58,6 +61,10 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 -   [Templates](./tutorial/templates.md)
 
 -   [N-dimensional Arrays](./tutorial/ndarrays.md)
+
+-   [Function-pointers as arguments](./tutorial/function-pointers-as-arguments.md)
+
+-   [Const keyword](./tutorial/const_keyword.md)
 
 -   Supported libraries/APIs
     -   [OpenMP](./tutorial/openmp.md)
@@ -258,6 +265,17 @@ for a system-wide installation.
 this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
 Any required Python packages will be installed automatically from PyPI.
 
+### On a read-only system
+
+If the folder where pyccel is saved is read only, it may be necessary to run an additional command after installation or updating:
+```sh
+sudo pyccel-init
+```
+
+This step is necessary in order to [pickle header files](./tutorial/header-files.md#Pickling-header-files).
+If this command is not run then pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
+A warning, reminding the user to execute this command, will be printed to the screen when pyccelizing files which rely on these packages if the pickling step has not been executed.
+
 ## Additional packages
 
 In order to run the unit tests and to get a coverage report, a few additional Python packages should be installed:
@@ -279,7 +297,7 @@ pip3 install --user pytest-xdist
 
 ## Testing
 
-To test your Pyccel installation please run the script _tests/run_tests_py3.sh_ (Unix), or _tests/run_tests.bat_ (Windows).
+To test your Pyccel installation please run the script _tests/run\_tests\_py3.sh_ (Unix), or _tests/run\_tests.bat_ (Windows).
 
 Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
@@ -306,3 +324,10 @@ docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
 
 If you are using SELinux, you will need to set the right context for your host based volume.
 Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
+
+## Developer Documentation
+
+-   [Overview](./developer_docs/overview.md)
+-   [How to solve an issue](./developer_docs/how_to_solve_an_issue.md)
+-   [Review Process](./developer_docs/review_process.md)
+-   [Tips and Tricks](./developer_docs/tips_and_tricks.md)

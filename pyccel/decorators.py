@@ -10,17 +10,17 @@ This module contains all the provided decorator methods.
 #TODO use pycode and call exec after that in lambdify
 
 __all__ = (
-    'lambdify',
-    'python',
-    'sympy',
+    'allow_negative_index',
     'bypass',
-    'types',
-    'template',
-    'pure',
-    'private',
     'elemental',
+    'inline',
+    'lambdify',
+    'private',
+    'pure',
     'stack_array',
-    'allow_negative_index'
+    'sympy',
+    'template',
+    'types',
 )
 
 def lambdify(f):
@@ -33,9 +33,6 @@ def lambdify(f):
         return  expr.subs(zip(args,vals)).doit()
 
     return wrapper
-
-def python(f):
-    return f
 
 def sympy(f):
     return f
@@ -61,6 +58,11 @@ def private(f):
     return f
 
 def elemental(f):
+    return f
+
+def inline(f):
+    """Indicates that function calls to this function should
+    print the function body directly"""
     return f
 
 def stack_array(f, *args):

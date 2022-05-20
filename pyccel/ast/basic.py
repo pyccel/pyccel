@@ -40,7 +40,7 @@ class Basic:
 
             from pyccel.ast.literals import convert_to_literal
 
-            if self.ignore(c):
+            if Basic._ignore(c):
                 continue
 
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -51,7 +51,7 @@ class Basic:
             elif iterable(c):
                 size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or self.ignore(ci)) \
+                                 or Basic._ignore(ci)) \
                         else convert_to_literal(ci) for ci in c if not iterable(ci))
                 if len(c) != size:
                     raise TypeError("Basic child cannot be a tuple of tuples")
@@ -63,28 +63,29 @@ class Basic:
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if not self.ignore(ci):
+                    if not Basic._ignore(ci):
                         ci.set_current_user_node(self)
             else:
                 c.set_current_user_node(self)
 
-    def ignore(self, c):
+    @classmethod
+    def _ignore(cls, c):
         """ Indicates if a node should be ignored when recursing
         """
-        return c is None or isinstance(c, self._ignored_types)
+        return c is None or isinstance(c, cls._ignored_types)
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.
-        This will allow it to remove itself from its children's users.
-        If a child subsequently has no users, invalidate_node is called recursively
+        This will allow it to remove itself from its attributes' users.
+        If an attribute subsequently has no users, invalidate_node is called recursively
         """
         for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
 
-            if self.ignore(c):
+            if self._ignore(c):
                 continue
             elif isinstance(c, tuple):
-                _ = [ci.remove_user_node(self) for ci in c if not self.ignore(ci)]
+                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci)]
             else:
                 c.remove_user_node(self)
 
@@ -112,7 +113,7 @@ class Basic:
             results  = [p for p in self._user_nodes if     isinstance(p, search_type) and \
                                                        not isinstance(p, excluded_nodes)]
 
-            results += [r for p in self._user_nodes if not self.ignore(p) and \
+            results += [r for p in self._user_nodes if not self._ignore(p) and \
                                                        not isinstance(p, (search_type, excluded_nodes)) \
                           for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
             self._recursion_in_progress = False
@@ -154,18 +155,70 @@ class Basic:
                         continue
                     elif isinstance(vi, search_type):
                         results.append(vi)
-                    elif not self.ignore(vi):
+                    elif not self._ignore(vi):
                         results.extend(vi.get_attribute_nodes(
                             search_type, excluded_nodes=excluded_nodes))
 
-            elif not self.ignore(v):
+            elif not self._ignore(v):
                 results.extend(v.get_attribute_nodes(
                     search_type, excluded_nodes = excluded_nodes))
 
         self._recursion_in_progress = False
         return results
 
-    def substitute(self, original, replacement, excluded_nodes = ()):
+    def is_attribute_of(self, node):
+        """ Identifies whether this object is an attribute of node.
+        The function searches recursively down the attribute tree.
+
+        Parameters
+        ----------
+        node : Basic
+               The object whose attributes we are interested in
+
+        Results
+        -------
+        bool
+        """
+        return node.is_user_of(self)
+
+    def is_user_of(self, node, excluded_nodes = ()):
+        """ Identifies whether this object is a user of node.
+        The function searches recursively up the user tree
+
+        Parameters
+        ----------
+        node           : Basic
+                      The object whose users we are interested in
+        excluded_nodes : tuple of types
+                      Types for which is_user_of should not be called
+
+        Results
+        -------
+        bool
+        """
+        if node.recursion_in_progress:
+            return []
+        node.toggle_recursion()
+
+        for v in node.get_all_user_nodes():
+
+            if v is self:
+                node.toggle_recursion()
+                return True
+
+            elif isinstance(v, excluded_nodes):
+                continue
+
+            elif not self._ignore(v):
+                res = self.is_user_of(v, excluded_nodes=excluded_nodes)
+                if res:
+                    node.toggle_recursion()
+                    return True
+
+        node.toggle_recursion()
+        return False
+
+    def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
         """
         Substitute object 'original' for object 'replacement' in the code.
         Any types in excluded_nodes will not be visited
@@ -178,6 +231,9 @@ class Basic:
                       The object which will be inserted instead
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
+        invalidate : bool
+                    Indicates whether the removed object should
+                    be invalidated
         """
         if self._recursion_in_progress:
             return
@@ -195,13 +251,13 @@ class Basic:
             rep = replacement[idx]
             if iterable(rep):
                 for r in rep:
-                    if not self.ignore(r):
+                    if not self._ignore(r):
                         r.set_current_user_node(self)
             else:
-                if not self.ignore(rep):
+                if not self._ignore(rep):
                     rep.set_current_user_node(self)
-            if not self.ignore(found_node):
-                found_node.remove_user_node(self)
+            if not self._ignore(found_node):
+                found_node.remove_user_node(self, invalidate)
             return rep
 
         for n in self._my_attribute_nodes:
@@ -220,15 +276,15 @@ class Basic:
                     if not isinstance(vi, excluded_nodes):
                         if vi in original:
                             new_vi = prepare_sub(vi)
-                        elif not self.ignore(vi):
-                            vi.substitute(original, replacement, excluded_nodes)
+                        elif not self._ignore(vi):
+                            vi.substitute(original, replacement, excluded_nodes, invalidate)
                     if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
-            elif not self.ignore(v):
-                v.substitute(original, replacement, excluded_nodes)
+            elif not self._ignore(v):
+                v.substitute(original, replacement, excluded_nodes, invalidate)
         self._recursion_in_progress = False
 
     @property
@@ -263,6 +319,23 @@ class Basic:
         else:
             return None
 
+    def toggle_recursion(self):
+        """ Change the recursion state
+        """
+        self._recursion_in_progress = not self._recursion_in_progress
+
+    @property
+    def recursion_in_progress(self):
+        """ Recursion state used to avoid infinite loops
+        """
+        return self._recursion_in_progress
+
+    def get_all_user_nodes(self):
+        """ Returns all the objects user nodes.
+        This function should only be called in Basic
+        """
+        return self._user_nodes
+
     def get_direct_user_nodes(self, condition):
         """ For an object with multiple user nodes
         Get the objects which satisfy a given
@@ -281,6 +354,13 @@ class Basic:
         """
         self._user_nodes.append(user_nodes)
 
+    @property
+    def current_user_node(self):
+        """ Get the user node for an object with only one user node
+        """
+        assert len(self._user_nodes) == 1
+        return self._user_nodes[0]
+
     def clear_user_nodes(self):
         """ Delete all information about user nodes. This is useful
         if the same node is used for the syntactic and semantic
@@ -288,7 +368,7 @@ class Basic:
         """
         self._user_nodes = []
 
-    def remove_user_node(self, user_node):
+    def remove_user_node(self, user_node, invalidate = True):
         """ Indicate that the current node is no longer used
         by the user_node. This function is usually called by
         the substitute method
@@ -297,10 +377,13 @@ class Basic:
         ----------
         user_node : Basic
                     Node which previously used the current node
+        invalidate : bool
+                    Indicates whether the removed object should
+                    be invalidated
         """
         assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
-        if self.is_unused:
+        if self.is_unused and invalidate:
             self.invalidate_node()
 
     @property
@@ -321,7 +404,6 @@ class Basic:
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
-    stage      = None
     __slots__  = ()
 
     @property
@@ -360,3 +442,20 @@ class PyccelAstNode(Basic):
         self._precision = x.precision
         self._order     = x.order
 
+
+#------------------------------------------------------------------------------
+class ScopedNode(Basic):
+    """ Class from which all objects with a scope inherit
+    """
+    __slots__ = ('_scope',)
+
+    def __init__(self, scope = None):
+        self._scope = scope
+        super().__init__()
+
+    @property
+    def scope(self):
+        """ Local scope of the current object
+        This contains all available objects in this part of the code
+        """
+        return self._scope
