@@ -720,7 +720,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if self._target_language == 'fortran':
             vars_to_wrap = []
             for v in orig_vars_to_wrap:
-                w = v.clone(expr.scope.get_expected_name(v.name).lower())
+                w = v.clone(scope.get_expected_name(v.name.lower()))
                 assign = v.get_user_nodes(Assign)[0]
                 # assign.fst should always exist, but is not always set when the
                 # Assign is created in the codegen stage
@@ -1172,9 +1172,27 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        self.set_scope(Scope())
+        scope = Scope()
+        self.set_scope(scope)
         # The initialisation and deallocation shouldn't be exposed to python
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
+
+        # Insert declared objects into scope
+        if self._target_language == 'fortran':
+            for f in expr.funcs:
+                scope.insert_symbol('bind_c_'+f.name.lower())
+            for v in expr.variables:
+                if not v.is_private:
+                    if v.rank > 0:
+                        scope.insert_symbol('bind_c_'+v.name.lower())
+                    else:
+                        scope.insert_symbol(v.name.lower())
+        else:
+            for f in expr.funcs:
+                scope.insert_symbol(f.lower())
+            for v in expr.variables:
+                if not v.is_private:
+                    scope.insert_symbol(v.lower())
 
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
