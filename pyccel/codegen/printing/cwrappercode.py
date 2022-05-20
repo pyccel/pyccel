@@ -719,12 +719,6 @@ class CWrapperCodePrinter(CCodePrinter):
         if self._target_language == 'fortran':
             vars_to_wrap = []
             for v in orig_vars_to_wrap:
-                w = v.clone(scope.get_expected_name(v.name.lower()))
-                assign = v.get_user_nodes(Assign)[0]
-                # assign.fst should always exist, but is not always set when the
-                # Assign is created in the codegen stage
-                if assign.fst:
-                    w.set_fst(assign.fst)
                 if v.rank > 0:
                     var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
@@ -742,12 +736,18 @@ class CWrapperCodePrinter(CCodePrinter):
                             name = v.name,
                             is_pointer = True,
                             allocatable = False)
-                    alloc = Allocate(nd_var, shape=sizes, order=None, status='unallocated')
+                    alloc = Allocate(nd_var, shape=sizes, order=nd_var.order, status='unallocated')
                     body.append(alloc)
                     set_data = Assign(DottedName(nd_var, 'raw_data'), VariableAddress(var))
                     body.append(set_data)
                     vars_to_wrap.append(nd_var)
                 else:
+                    w = v.clone(scope.get_expected_name(v.name.lower()))
+                    assign = v.get_user_nodes(Assign)[0]
+                    # assign.fst should always exist, but is not always set when the
+                    # Assign is created in the codegen stage
+                    if assign.fst:
+                        w.set_fst(assign.fst)
                     vars_to_wrap.append(w)
         else:
             vars_to_wrap = orig_vars_to_wrap
