@@ -257,6 +257,7 @@ class BasicParser(object):
     def blocking(self):
         return self._blocking
 
+
     def insert_function(self, func):
         """."""
 
