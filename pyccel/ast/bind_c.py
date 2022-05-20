@@ -13,8 +13,6 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import Allocate
 from pyccel.ast.datatypes import DataType, NativeInteger
-from pyccel.ast.internals import PyccelArraySize
-from pyccel.ast.literals import LiteralInteger
 from pyccel.ast.variable import Variable
 from pyccel.parser.scope import Scope
 
@@ -58,6 +56,8 @@ class BindCFunctionDef(FunctionDef):
 
 #=======================================================================================
 def sanitize_arguments(args):
+    """ Ensure that all arguments are of expected types (Variable or FunctionAddress)
+    """
     _args = []
     for a in args:
         if isinstance(a.var, (Variable, FunctionAddress)):
@@ -257,6 +257,9 @@ class BindCPointer(DataType):
 #=======================================================================================
 
 class CLocFunc(Basic):
+    """ Class representing the iso_c_binding function cloc which returns a valid
+    C pointer to the location where an object can be found
+    """
     __slots__ = ('_arg', '_result')
     _attribute_nodes = ()
     def __init__(self, argument, result):
@@ -266,15 +269,39 @@ class CLocFunc(Basic):
 
     @property
     def arg(self):
+        """ Object which will be pointed at
+        """
         return self._arg
 
     @property
     def result(self):
+        """ The variable in which the pointer is stored
+        """
         return self._result
 
 #=======================================================================================
 
 def wrap_array(var, scope):
+    """ Function returning the code and local variables necessary to wrap an array
+
+    Parameters
+    ----------
+    var : Variable
+            The array to be wrapped
+    scope : Scope
+            The current scope (used to find valid names for variables)
+
+    Results
+    -------
+    body : list
+            A list describing the lines which must be printed to wrap the array
+    variables : list
+            A list of all new variables necessary to wrap the array. The list
+            contains:
+            - The Fortran pointer which will contain a copy of the Fortran data
+            - The C Pointer which wraps the array
+            - Variables containing the sizes of the array
+    """
     ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
             is_pointer=True, rank = var.rank,
             order = var.order, shape = var.shape)
@@ -290,6 +317,22 @@ def wrap_array(var, scope):
 #=======================================================================================
 
 def wrap_module_array_var(var, scope, mod):
+    """ Function returning the function necessary to expose an array
+
+    Parameters
+    ----------
+    var : Variable
+            The array to be exposed
+    scope : Scope
+            The current scope (used to find valid names for variables)
+    mod : Module
+            The module where the variable is defined
+
+    Results
+    -------
+    func : FunctionDef
+            A function which wraps an array and can be called from C
+    """
     func_name = 'bind_c_'+var.name
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope)
