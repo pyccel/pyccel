@@ -45,13 +45,12 @@ class BindCFunctionDef(FunctionDef):
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
         super().__init__(*args, **kwargs)
-
-    @property
-    def name(self):
-        return str(self._name).lower()
+        assert self.name == self.name.lower()
 
     @property
     def original_function(self):
+        """ The function which is wrapped by this BindCFunctionDef
+        """
         return self._original_function
 
 #=======================================================================================
