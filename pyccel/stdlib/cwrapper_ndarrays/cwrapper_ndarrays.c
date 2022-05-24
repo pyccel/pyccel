@@ -225,32 +225,34 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
 {
     int FLAGS;
     if (o->nd == 1) {
-        FLAGS = NPY_ARRAY_F_CONTIGUOUS & NPY_ARRAY_C_CONTIGUOUS;
+        FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
     else {
         FLAGS = 0;
     }
 
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
-            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
+    return PyArray_New(&PyArray_Type, o->nd,
+            _ndarray_to_numpy_shape(o->shape, o->nd), o->type,
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
-            o->raw_data, FLAGS, NULL);
+            o->raw_data, o->type_size, FLAGS, NULL);
 }
 
 PyObject* c_ndarray_to_pyarray(t_ndarray *o)
 {
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
-            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
+    int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    return PyArray_New(&PyArray_Type, o->nd,
+            _ndarray_to_numpy_shape(o->shape, o->nd), o->type,
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
-            o->raw_data, NPY_ARRAY_C_CONTIGUOUS, NULL);
+            o->raw_data, o->type_size, FLAGS, NULL);
 }
 
 PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
 {
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
-            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
+    int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    return PyArray_New(&PyArray_Type, o->nd,
+            _ndarray_to_numpy_shape(o->shape, o->nd), o->type,
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
-            o->raw_data, NPY_ARRAY_F_CONTIGUOUS, NULL);
+            o->raw_data, o->type_size, FLAGS, NULL);
 }
 
 /*
