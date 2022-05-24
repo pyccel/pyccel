@@ -280,7 +280,7 @@ class CLocFunc(Basic):
 
 #=======================================================================================
 
-def wrap_array(var, scope):
+def wrap_array(var, scope, persistent):
     """ Function returning the code and local variables necessary to wrap an array
 
     Parameters
@@ -289,6 +289,9 @@ def wrap_array(var, scope):
             The array to be wrapped
     scope : Scope
             The current scope (used to find valid names for variables)
+    persistent : bool
+            Indicates whether the variable is persistent in memory or
+            if it needs copying to avoid dead pointers
 
     Results
     -------
@@ -297,21 +300,28 @@ def wrap_array(var, scope):
     variables : list
             A list of all new variables necessary to wrap the array. The list
             contains:
-            - The Fortran pointer which will contain a copy of the Fortran data
             - The C Pointer which wraps the array
             - Variables containing the sizes of the array
+            - The Fortran pointer which will contain a copy of the Fortran data
+              (unless the variable is persistent in memory)
     """
-    ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
-            is_pointer=True, rank = var.rank,
-            order = var.order, shape = var.shape)
     bind_var = Variable(dtype=BindCPointer(), name = scope.get_new_name('bound_'+var.name))
     sizes = [Variable(dtype=NativeInteger(), name = scope.get_new_name()) for _ in range(var.rank)]
     assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
-    alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
-    copy  = Assign(ptr_var, var)
-    c_loc = CLocFunc(ptr_var, bind_var)
-    body = [*assigns, alloc, copy, c_loc]
-    return body, [ptr_var, bind_var, *sizes]
+    variables = [bind_var, *sizes]
+    if not persistent:
+        ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
+                is_pointer=True, rank = var.rank,
+                order = var.order, shape = var.shape)
+        alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
+        copy  = Assign(ptr_var, var)
+        c_loc = CLocFunc(ptr_var, bind_var)
+        variables.append(ptr_var)
+        body = [*assigns, alloc, copy, c_loc]
+    else:
+        c_loc = CLocFunc(var, bind_var)
+        body = [*assigns, c_loc]
+    return body, variables
 
 #=======================================================================================
 
@@ -334,14 +344,15 @@ def wrap_module_array_var(var, scope, mod):
     """
     func_name = 'bind_c_'+var.name
     func_scope = scope.new_child_scope(func_name)
-    body, necessary_vars = wrap_array(var, func_scope)
+    body, necessary_vars = wrap_array(var, func_scope, True)
     func_scope.insert_variable(necessary_vars[0])
-    arg_vars = necessary_vars[1:]
+    arg_vars = necessary_vars
     import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
-    func = FunctionDef(name = func_name,
+    func = BindCFunctionDef(name = func_name,
                   body      = body,
                   arguments = [],
                   results   = arg_vars,
                   imports   = [import_mod],
-                  scope = func_scope)
+                  scope = func_scope,
+                  original_function = None)
     return func
