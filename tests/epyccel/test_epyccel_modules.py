@@ -138,8 +138,25 @@ def test_module_7(language):
     assert np.array_equal(mod_att, modnew_att)
     assert mod_att.dtype == modnew_att.dtype
 
+    mod.a[3] = 10
+    modnew.a[3] = 10
+    assert np.array_equal(mod_att, modnew_att)
+    assert mod.get_elem_a(3) == modnew.get_elem_a(3)
+
+    mod.c[1,0] = 10
+    modnew.c[1,0] = 10
+    assert np.array_equal(mod.c, modnew.c)
+    assert mod.get_elem_c(1,0) == modnew.get_elem_c(1,0)
+
+    mod.e[1,0,2] = 50
+    modnew.e[1,0,2] = 50
+    assert np.array_equal(mod.e, modnew.e)
+    assert mod.get_elem_e(1,0,2) == modnew.get_elem_e(1,0,2)
+
     # Necessary as python does not reload modules
     mod.reset_a()
+    mod.reset_c()
+    mod.reset_e()
 
 def test_awkward_names(language):
     import modules.awkward_names as mod
