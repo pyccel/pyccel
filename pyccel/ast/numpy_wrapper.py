@@ -101,6 +101,13 @@ array_get_data  = FunctionDef(name   = 'nd_data',
                            arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
                            results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
 
+# Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+array_get_stride  = FunctionDef(name    = 'nd_stride',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True),
+                                        Variable(dtype=NativeInteger(), name = 'idx')],
+                           results   = [Variable(dtype=NativeInteger(), name = 'd')])
+
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')

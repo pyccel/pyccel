@@ -325,3 +325,22 @@ void    *nd_data(t_ndarray *a)
 
 	return a->raw_data;
 }
+
+/*
+ * Function: nd_stride
+ * --------------------
+ * Return the stride in the n dimension.
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      index : dimension index
+ * 	Returns		:
+ *		return 0 if object is NULL or shape at indexed dimension
+ */
+int     nd_stride(t_ndarray *a, int n)
+{
+	if (a == NULL)
+		return 0;
+
+	return a->strides[n];
+}
