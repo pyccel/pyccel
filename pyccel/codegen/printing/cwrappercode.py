@@ -34,10 +34,10 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
-from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
+from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_stride
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
+from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub, PyccelMul
 
 from pyccel.ast.variable  import VariableAddress, Variable
 
@@ -262,9 +262,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if self._target_language == 'fortran' and argument.rank > 0:
             arg_address = VariableAddress(argument)
-            static_args = [
-                FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)
-            ]
+            shape   = [FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)]
+            strides = [FunctionCall(array_get_stride, [arg_address, i]) for i in range(argument.rank)]
+            static_args = [PyccelMul(sh,st) for sh,st in zip(shape, strides)]
+            static_args += [st for st in strides]
             static_args.append(FunctionCall(array_get_data, [arg_address]))
         else:
             static_args = [argument]

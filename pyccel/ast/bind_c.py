@@ -10,7 +10,10 @@ from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.variable import Variable
+from pyccel.ast.internals import Slice
+from pyccel.ast.literals  import LiteralInteger
+from pyccel.ast.operators import PyccelMinus
+from pyccel.ast.variable import Variable, IndexedElement
 from pyccel.parser.scope import Scope
 
 __all__ = (
@@ -82,20 +85,29 @@ def as_static_function(func, *, mod_scope, name=None):
             raise TypeError('Expecting a Variable or FunctionAddress type for {}'.format(a))
         if not isinstance(a, FunctionAddress) and a.rank > 0:
             # ...
-            additional_args = []
+            shape_args = []
+            stride_args = []
+            new_strides = []
             for i in range(a.rank):
-                n_name = 'n{i}_{name}'.format(name=a.name, i=i)
+                n_name = mod_scope.get_new_name('n{i}_{name}'.format(name=a.name, i=i))
                 n_arg  = Variable('int', n_name)
 
-                additional_args += [n_arg]
+                s_name = mod_scope.get_new_name('s{i}_{name}'.format(name=a.name, i=i))
+                s_arg  = Variable('int', s_name)
 
-            shape_new = tuple(additional_args)
+                shape_args.append(n_arg)
+                stride_args.append(s_arg)
+                new_strides.append(Slice(LiteralInteger(0),
+                    n_arg,s_arg))
+
+            shape_new = tuple(shape_args)
             # ...
 
-            _args += additional_args
-            _arguments_inout += [False] * len(additional_args)
+            _args += shape_args
+            _args += stride_args
+            _arguments_inout += [False] * (len(shape_args) + len(stride_args))
 
-            a_new = Variable( a.dtype, a.name,
+            a_new = IndexedElement(Variable( a.dtype, a.name,
                               allocatable = a.allocatable,
                               is_pointer  = a.is_pointer,
                               is_target   = a.is_target,
@@ -103,7 +115,7 @@ def as_static_function(func, *, mod_scope, name=None):
                               shape       = shape_new,
                               rank        = a.rank,
                               order       = a.order,
-                              precision   = a.precision)
+                              precision   = a.precision), *new_strides)
 
             if not( a.name in results_names ):
                 _args += [a_new]
@@ -205,5 +217,8 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
 
     # make it compatible with c
     static_func = as_static_function(new_func, name=name, mod_scope=mod_scope)
+    old_args = [a.var for a in func.arguments if isinstance(a.var, Variable) and a.var.rank > 0]
+    new_args = [a.var for a in static_func.arguments if isinstance(a.var, IndexedElement)]
+    static_func.body.substitute(old_args, new_args)
 
     return static_func

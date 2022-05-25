@@ -1225,9 +1225,13 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
+        if isinstance(expr.variable, IndexedElement):
+            var = expr.variable.base
+        else:
+            var = expr.variable
+
         # ... TODO improve
         # Group the variables by intent
-        var = expr.variable
         rank        = var.rank
         allocatable = var.allocatable
         shape       = var.alloc_shape
@@ -1274,13 +1278,13 @@ class FCodePrinter(CodePrinter):
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
             else:
-                dtype += '({0})'.format(self.print_kind(expr.variable))
+                dtype += '({0})'.format(self.print_kind(var))
 
         code_value = ''
         if expr.value:
             code_value = ' = {0}'.format(self._print(expr.value))
 
-        vstr = self._print(expr.variable.name)
+        vstr = self._print(var.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
@@ -1330,12 +1334,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+        if (rank == 1) and (is_static or is_stack_array):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+        elif (rank > 0) and (is_static or is_stack_array):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
@@ -1691,6 +1693,7 @@ class FCodePrinter(CodePrinter):
 
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
             decs[arg] = dec
+        arguments = [a.base if isinstance(a, IndexedElement) else a for a in arguments]
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)

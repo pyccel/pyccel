@@ -1862,6 +1862,9 @@ class FunctionDefArgument(PyccelAstNode):
         elif isinstance(name, PyccelSymbol):
             self._var  = name
             self._name = name
+        elif pyccel_stage == 'cwrapper' and isinstance(name, IndexedElement):
+            self._var  = name
+            self._name = name.base.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
         self._value      = value
@@ -3494,7 +3497,8 @@ class Declare(Basic):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        if not isinstance(variable, Variable):
+        if not (isinstance(variable, Variable) or \
+                (pyccel_stage == 'cwrapper' and isinstance(variable, IndexedElement))):
             raise TypeError('var must be of type Variable, given {0}'.format(variable))
         if variable.dtype != dtype:
             raise ValueError('All variables must have the same dtype')
