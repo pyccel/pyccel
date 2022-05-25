@@ -1162,10 +1162,10 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        if expr.variable.allocatable:
-            alloc_code = "{} = array_create({}, {}, {});\n".format(expr.variable, len(expr.shape), shape_Assign, dtype)
-        else:
-            alloc_code = "{} = pointer_create({}, {}, {});\n".format(expr.variable, len(expr.shape), shape_Assign, dtype)
+        is_view = 'false' if expr.variable.allocatable else 'true'
+        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
+                expr.variable, len(expr.shape), shape_Assign, dtype,
+                is_view)
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
