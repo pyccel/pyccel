@@ -18,10 +18,14 @@ from pyccel.parser.scope import Scope
 
 __all__ = (
     'BindCFunctionDef',
+    'BindCPointer',
+    'CLocFunc',
     'as_static_module',
     'as_static_function',
     'as_static_function_call',
     'sanitize_arguments',
+    'wrap_array',
+    'wrap_module_array_var',
 )
 
 class BindCFunctionDef(FunctionDef):
