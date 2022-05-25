@@ -706,42 +706,54 @@ class CWrapperCodePrinter(CCodePrinter):
         ------
         str
         """
+        # Create scope for the module initialisation function
         scope = self.scope.new_child_scope(exec_func_name)
         self.set_scope(scope)
+
+        #Create module variable
         mod_var_name = self.scope.get_new_name('m')
         mod_var = Variable(dtype = PyccelPyObject(),
                       name       = mod_var_name,
                       is_pointer = True)
         scope.insert_variable(mod_var)
 
+        # Collect module variables from translated code
         orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
         body = []
         if self._target_language == 'fortran':
+            # Collect python compatible module variables
             vars_to_wrap = []
             for v in orig_vars_to_wrap:
                 if v.rank > 0:
+                    # Get pointer to store array data
                     var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
                             is_pointer = True,
                             allocatable = False,
                             rank = 0)
+                    # Create variables to store sizes of array
                     sizes = [scope.get_temporary_variable(NativeInteger(),
                             v.name+'_size') for _ in range(v.rank)]
+                    # Get the bind_c function which wraps a fortran array and returns c objects
                     var_wrapper = wrap_module_array_var(v, scope, expr)
                     # Call bind_c function
                     call = Assign(PythonTuple(VariableAddress(var), *sizes), FunctionCall(var_wrapper, ()))
                     body.append(call)
 
+                    # Create ndarray to store array data
                     nd_var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
                             is_pointer = True,
                             allocatable = False)
                     alloc = Allocate(nd_var, shape=sizes, order=nd_var.order, status='unallocated')
                     body.append(alloc)
+                    # Save raw_data into ndarray to obtain useable pointer
                     set_data = Assign(DottedName(nd_var, 'raw_data'), VariableAddress(var))
                     body.append(set_data)
+                    # Save the ndarray to vars_to_wrap to be handled as if it came from C
                     vars_to_wrap.append(nd_var)
                 else:
+                    # Ensure correct name
                     w = v.clone(scope.get_expected_name(v.name.lower()))
                     assign = v.get_user_nodes(Assign)[0]
                     # assign.fst should always exist, but is not always set when the
@@ -753,15 +765,19 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap = orig_vars_to_wrap
         var_names = [str(expr.scope.get_python_name(v.name)) for v in orig_vars_to_wrap]
 
+        # If there are any variables in the module then add them to the module object
         if vars_to_wrap:
+            # Create variable for temporary python objects
             tmp_var_name = self.scope.get_new_name('tmp')
             tmp_var = Variable(dtype = PyccelPyObject(),
                           name       = tmp_var_name,
                           is_pointer = True)
             scope.insert_variable(tmp_var)
+            # Add code to add variable to module
             body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
 
         if expr.init_func:
+            # Call init function code
             static_function = self.get_static_function(expr.init_func)
             body.insert(0,FunctionCall(static_function,[],[]))
 
