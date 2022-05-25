@@ -19,7 +19,10 @@ from .compiling.basic     import CompileObj
 
 from pyccel.errors.errors import Errors
 
+from pyccel.utilities.stage import PyccelStage
+
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = ['create_shared_library']
 
@@ -33,6 +36,7 @@ def create_shared_library(codegen,
                           wrapper_compiler,
                           sharedlib_modname=None,
                           verbose = False):
+    pyccel_stage.set_stage('cwrapper')
 
     # Get module name
     module_name = codegen.name
