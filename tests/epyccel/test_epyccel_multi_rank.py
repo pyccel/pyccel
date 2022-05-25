@@ -241,3 +241,55 @@ def test_auto_dependencies():
     f2(x2, y2)
 
     assert np.array_equal( x1, x2 )
+
+@pytest.mark.parametrize('f1',[multi_rank.add_mixed_order,
+    multi_rank.mul_mixed_order,
+    multi_rank.sub_mixed_order,
+    multi_rank.div_mixed_order,
+    multi_rank.augadd_mixed_order,
+    multi_rank.augmul_mixed_order,
+    multi_rank.augsub_mixed_order,
+    multi_rank.augdiv_mixed_order])
+def test_add_mixed_order_slice(f1, language):
+    f2 = epyccel( f1, language = language )
+
+    x1 = np.array(np.int64(rand(3,4,5))*100, dtype=float)
+    x2 = np.copy(x1)
+
+    y1 = np.array(np.int64(rand(3,5,4)*100)+1, dtype=float, order = 'F')
+    y2 = np.copy(y1)
+
+    f1(x1[:,:,3], y1[:,2,:])
+    f2(x2[:,:,3], y2[:,2,:])
+
+    assert np.array_equal( x1, x2 )
+
+def test_mul_by_vector_C_slice(language):
+    f1 = multi_rank.mul_by_vector_C
+    f2 = epyccel( f1, language = language )
+
+    x1 = np.array(rand(4,2,5)*10, dtype=int)
+    x2 = np.copy(x1)
+
+    y1 = np.array(rand(5,3)*10, dtype=int)
+    y2 = np.copy(y1)
+
+    f1(x1[:,0,:], y1[:,1])
+    f2(x2[:,0,:], y2[:,1])
+
+    assert np.array_equal( x1, x2 )
+
+def test_mul_by_vector_F_slice(language):
+    f1 = multi_rank.mul_by_vector_F
+    f2 = epyccel( f1, language = language )
+
+    x1 = np.array(rand(4,2,5)*10, dtype=int, order='F')
+    x2 = np.copy(x1)
+
+    y1 = np.array(rand(5,3)*10, dtype=int)
+    y2 = np.copy(y1)
+
+    f1(x1[:,0,:], y1[:,1])
+    f2(x2[:,0,:], y2[:,1])
+
+    assert np.array_equal( x1, x2 )
