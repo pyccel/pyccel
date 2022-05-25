@@ -155,17 +155,32 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_CHKFLAGS
  */
-static bool _check_pyarray_order(PyArrayObject *a, int flag)
+static bool _check_pyarray_order(PyArrayObject *a, int rank, int flag)
 {
 
-	if (flag == NO_ORDER_CHECK)
-		return true;
+	if (flag == NO_ORDER_CHECK || PyArray_CHKFLAGS(a, flag))
+        return true;
 
-	if (!PyArray_CHKFLAGS(a, flag))
-	{
-		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
-		PyErr_Format(PyExc_NotImplementedError,
-			"argument does not have the expected ordering (%c)", order);
+    bool ordered = true;
+    char order = '?';
+    if (flag & NPY_ARRAY_C_CONTIGUOUS) {
+        order = 'C';
+        for (int i = 1; i<rank; ++i) {
+            printf("%ld < %ld ?\n",PyArray_STRIDES(a)[i], PyArray_STRIDES(a)[i-1]);
+            ordered &= (PyArray_STRIDES(a)[i] <= PyArray_STRIDES(a)[i-1]);
+        }
+    }
+    else if (flag & NPY_ARRAY_F_CONTIGUOUS) {
+        order = 'F';
+        bool ordered = true;
+        for (int i = 1; i<rank; ++i) {
+            ordered &= (PyArray_STRIDES(a)[i] >= PyArray_STRIDES(a)[i-1]);
+        }
+    }
+
+    if (!ordered) {
+        PyErr_Format(PyExc_NotImplementedError,
+                "argument does not have the expected ordering (%c)", order);
 		return false;
 	}
 
@@ -275,7 +290,7 @@ bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
 
 	if(!_check_pyarray_rank(o, rank)) return false;
 
-	if(rank > 1 && !_check_pyarray_order(o, flag)) return false;
+	if(!_check_pyarray_order(o, rank, flag)) return false;
 
 	return true;
 }
