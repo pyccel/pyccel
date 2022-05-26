@@ -520,21 +520,26 @@ class CWrapperCodePrinter(CCodePrinter):
         body : list
             A list of statements
         """
+        static_args, additional_assigns = self.get_static_args(variable)
+        collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
+        additional_assigns.insert(0,Assign(variable, collect_func))
+
         body = []
         #check optional :
         if variable.is_optional :
+            default_assigns = [Assign(VariableAddress(variable), Nil())]
+            for s in static_args[:-1]:
+                default_assigns.append(Assign(s, LiteralInteger(0)))
             check = PyccelNot(VariableAddress(collect_var))
-            body += [IfSection(check, [Assign(VariableAddress(variable), Nil())])]
+            body += [IfSection(check, default_assigns)]
 
         check = array_checker(collect_var, variable, check_type, self._target_language)
         body += [IfSection(check, [Return([Nil()])])]
 
-        collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
-        body += [IfSection(LiteralTrue(), [Assign(variable,
-                            collect_func)])]
+        body += [IfSection(LiteralTrue(), additional_assigns)]
         body = [If(*body)]
 
-        return body
+        return body, static_args
 
     def _body_management(self, variable, collect_var, default_value = None, check_type = False):
         """
@@ -564,7 +569,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body         = []
 
         if variable.rank > 0:
-            body = self._body_array(variable, collect_var, check_type)
+            body, static_args = self._body_array(variable, collect_var, check_type)
 
         else:
             if variable.is_optional:
@@ -573,8 +578,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 self.scope.insert_variable(tmp_variable)
 
             body = [self._body_scalar(variable, collect_var, default_value, check_type, tmp_variable)]
+            static_args = (variable,)
 
-        return body, tmp_variable
+        return body, static_args
 
     def untranslatable_function(self, wrapper_name, wrapper_args, wrapper_results, error_msg):
         """
@@ -899,7 +905,8 @@ class CWrapperCodePrinter(CCodePrinter):
             for p_arg, (f_var, f_arg) in zip(parse_args, local_arg_vars.items()):
                 collect_var  = self.get_PyArgParseType(f_var)
                 collect_vars[f_var] = collect_var
-                body, tmp_variable = self._body_management(f_var, p_arg, f_arg.value)
+                body, static_args = self._body_management(f_var, p_arg, f_arg.value)
+                static_func_args.extend(static_args)
 
                 # get check type function
                 check = self._get_check_type_statement(f_var, p_arg, f_arg.value is None)
@@ -907,11 +914,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 # Write default values
                 if f_arg.value is not None:
                     wrapper_body.append(self.get_default_assign(parse_args[-1], f_var, f_arg.value))
-
-                # Get Bind/C arguments
-                static_args, additional_assigns = self.get_static_args(f_var)
-                static_func_args.extend(static_args)
-                body.extend(additional_assigns)
 
                 flag_value = flags_registry[(f_var.dtype, f_var.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
@@ -1146,17 +1148,13 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var  = self.get_PyArgParseType(var)
             collect_vars[var] = collect_var
 
-            body, tmp_variable = self._body_management(var, collect_var, arg.value, True)
+            body, static_args = self._body_management(var, collect_var, arg.value, True)
+            static_func_args.extend(static_args)
 
             # Save cast to argument variable
             wrapper_body_translations.extend(body)
 
             parse_args.append(collect_var)
-
-            # Get Bind/C arguments
-            static_args, additional_assigns = self.get_static_args(var)
-            static_func_args.extend(static_args)
-            wrapper_body_translations.extend(additional_assigns)
 
             # Write default values
             if arg.value is not None:
