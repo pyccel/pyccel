@@ -38,6 +38,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub, PyccelMul
+from pyccel.ast.operators import PyccelDiv, PyccelCIntegerDiv
 
 from pyccel.ast.variable  import VariableAddress, Variable
 
@@ -259,18 +260,44 @@ class CWrapperCodePrinter(CCodePrinter):
             List that can contains Variables and FunctionCalls
         -----------
         """
+        new_body = []
 
         if self._target_language == 'fortran' and argument.rank > 0:
             arg_address = VariableAddress(argument)
-            shape   = [FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)]
-            strides = [FunctionCall(array_get_stride, [arg_address, i]) for i in range(argument.rank)]
-            static_args = [PyccelMul(sh,st) for sh,st in zip(shape, strides)]
-            static_args += [st for st in strides]
+            counter = 0
+            stride_names = []
+            shape_names = []
+            for _ in range(argument.rank):
+                n, counter = self.scope.get_new_incremented_symbol('s_'+argument.name, counter)
+                stride_names.append(n)
+                n, counter = self.scope.get_new_incremented_symbol('n_'+argument.name, counter)
+                shape_names.append(n)
+            stride_vars = [Variable(NativeInteger(), n) for n in stride_names]
+            shape_vars = [Variable(NativeInteger(), n) for n in shape_names]
+            if argument.order == 'F':
+                for i,(v,w) in list(enumerate(zip(stride_vars,shape_vars))):
+                    self.scope.insert_variable(v)
+                    self.scope.insert_variable(w)
+                    divs = FunctionCall(array_get_stride, [arg_address, i])
+                    for z in shape_vars[:i]:
+                        divs = PyccelCIntegerDiv(divs, z)
+                    new_body.append(Assign(v, divs))
+                    new_body.append(Assign(w, PyccelMul(FunctionCall(array_get_dim, [arg_address, i]),v)))
+            else:
+                for i,(v,w) in reversed(list(enumerate(zip(stride_vars,shape_vars)))):
+                    self.scope.insert_variable(v)
+                    self.scope.insert_variable(w)
+                    divs = FunctionCall(array_get_stride, [arg_address, i])
+                    for z in shape_vars[i+1:]:
+                        divs = PyccelCIntegerDiv(divs, z)
+                    new_body.append(Assign(v, divs))
+                    new_body.append(Assign(w, PyccelMul(FunctionCall(array_get_dim, [arg_address, i]),v)))
+            static_args = shape_vars + stride_vars
             static_args.append(FunctionCall(array_get_data, [arg_address]))
         else:
             static_args = [argument]
 
-        return static_args
+        return static_args, new_body
 
     def get_static_declare_type(self, variable):
         """
@@ -834,7 +861,9 @@ class CWrapperCodePrinter(CCodePrinter):
                     wrapper_body.append(self.get_default_assign(parse_args[-1], f_var, f_arg.value))
 
                 # Get Bind/C arguments
-                static_func_args.extend(self.get_static_args(f_var))
+                static_args, additional_assigns = self.get_static_args(f_var)
+                static_func_args.extend(static_args)
+                wrapper_body_translations.extend(additional_assigns)
 
                 flag_value = flags_registry[(f_var.dtype, f_var.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
@@ -1077,7 +1106,9 @@ class CWrapperCodePrinter(CCodePrinter):
             parse_args.append(collect_var)
 
             # Get Bind/C arguments
-            static_func_args.extend(self.get_static_args(var))
+            static_args, additional_assigns = self.get_static_args(var)
+            static_func_args.extend(static_args)
+            wrapper_body_translations.extend(additional_assigns)
 
             # Write default values
             if arg.value is not None:
