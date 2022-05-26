@@ -278,8 +278,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 shape_names.append(n)
             stride_vars = [Variable(NativeInteger(), n) for n in stride_names]
             shape_vars = [Variable(NativeInteger(), n) for n in shape_names]
+            # Get dimension-specific strides and ranges
+            # Start from contiguous dimension and divide by information already
+            # contained in handled dimensions
             if argument.order == 'F':
-                for i,(v,w) in list(enumerate(zip(stride_vars,shape_vars))):
+                for i,(v,w) in enumerate(zip(stride_vars,shape_vars)):
                     self.scope.insert_variable(v)
                     self.scope.insert_variable(w)
                     divs = FunctionCall(array_get_stride, [arg_address, i])
