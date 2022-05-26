@@ -294,7 +294,7 @@ def test_auto_dependencies():
 
     assert np.array_equal( x1, x2 )
 
-def test_multi_dim_sum_ones():
+def test_multi_dim_sum_ones_slice():
     f1 = multi_rank.multi_dim_sum_ones
     f2 = epyccel( f1 )
 
