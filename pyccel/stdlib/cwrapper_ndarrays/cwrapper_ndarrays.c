@@ -166,7 +166,6 @@ static bool _check_pyarray_order(PyArrayObject *a, int rank, int flag)
     if (flag & NPY_ARRAY_C_CONTIGUOUS) {
         order = 'C';
         for (int i = 1; i<rank; ++i) {
-            printf("%ld < %ld ?\n",PyArray_STRIDES(a)[i], PyArray_STRIDES(a)[i-1]);
             ordered &= (PyArray_STRIDES(a)[i] <= PyArray_STRIDES(a)[i-1]);
         }
     }
