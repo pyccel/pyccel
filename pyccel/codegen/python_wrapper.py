@@ -8,6 +8,7 @@ import os
 
 from pyccel.ast.bind_c                      import as_static_module
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
+from pyccel.codegen.compiling.basic         import CompileObj
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.utilities      import recompile_object
@@ -15,7 +16,6 @@ from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.naming                 import name_clash_checkers
 from pyccel.parser.scope           import Scope
-from pyccel.compiling.basic        import CompileObj
 
 from pyccel.errors.errors import Errors
 
