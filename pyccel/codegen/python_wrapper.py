@@ -15,7 +15,7 @@ from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.naming                 import name_clash_checkers
 from pyccel.parser.scope           import Scope
-from .compiling.basic     import CompileObj
+from pyccel.compiling.basic        import CompileObj
 
 from pyccel.errors.errors import Errors
 
