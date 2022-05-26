@@ -308,4 +308,9 @@ def test_multi_dim_sum_ones_slice():
     f1(pyccel_result[:,dims[1]//2,:,:], x1[:,dims[1]//2,:,:])
     f2(python_result[:,dims[1]//2,:,:], y1[:,dims[1]//2,:,:])
 
+    for i in range(dims[1]):
+        if i!= dims[1]//2:
+            pyccel_result[:,i,:,:] = 0
+            python_result[:,i,:,:] = 0
+
     assert np.array_equal( pyccel_result, python_result )
