@@ -181,7 +181,11 @@ class Slice(Basic):
             stop = ''
         else:
             stop = str(self.stop)
-        return '{0} : {1}'.format(start, stop)
+        if self.step is None:
+            step = ''
+        else:
+            step = str(self.step)
+        return '{0} : {1} : {2}'.format(start, stop, step)
 
 class PyccelSymbol(str, Immutable):
     """Symbolic placeholder for a Python variable, which has a name but no type yet.
