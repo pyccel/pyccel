@@ -862,7 +862,6 @@ class CWrapperCodePrinter(CCodePrinter):
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
         wrapper_body      = [keyword_list]
 
-        wrapper_body_translations = []
         body_tmp = []
 
         # To store the mini function responsible for collecting value and calling interfaces functions and return the builded value
@@ -905,9 +904,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 # get check type function
                 check = self._get_check_type_statement(f_var, p_arg, f_arg.value is None)
 
-                # Save the body
-                wrapper_body_translations.extend(body)
-
                 # Write default values
                 if f_arg.value is not None:
                     wrapper_body.append(self.get_default_assign(parse_args[-1], f_var, f_arg.value))
@@ -915,7 +911,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 # Get Bind/C arguments
                 static_args, additional_assigns = self.get_static_args(f_var)
                 static_func_args.extend(static_args)
-                wrapper_body_translations.extend(additional_assigns)
+                body.extend(additional_assigns)
 
                 flag_value = flags_registry[(f_var.dtype, f_var.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
