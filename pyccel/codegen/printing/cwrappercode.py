@@ -40,7 +40,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub, PyccelMul
-from pyccel.ast.operators import PyccelDiv, PyccelCIntegerDiv
+from pyccel.ast.operators import PyccelCIntegerDiv
 
 from pyccel.ast.variable  import VariableAddress, Variable, DottedName
 
