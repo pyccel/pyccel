@@ -39,6 +39,7 @@ __all__ = (
     'PyccelDiv',
     'PyccelMod',
     'PyccelFloorDiv',
+    'PyccelCIntegerDiv',
     'PyccelEq',
     'PyccelNe',
     'PyccelLt',
@@ -740,6 +741,33 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 
     def __repr__(self):
         return '{} // {}'.format(self.args[0], self.args[1])
+
+#==============================================================================
+
+class PyccelCIntegerDiv(PyccelArithmeticOperator):
+    """
+    Class representing a call to the integer division operator.
+    This operator does not exist in python but can be very useful in translated
+    code
+
+    Parameters
+    ----------
+    arg1: PyccelAstNode
+        The first argument passed to the operator
+    arg2: PyccelAstNode
+        The second argument passed to the operator
+    """
+    __slots__ = ()
+    _precedence = 13
+
+    def __init__(self, *args, **kwargs):
+        if pyccel_stage not in ('codegen', 'cwrapper'):
+            raise RuntimeError("This operator doesn't exist in python. "+
+                                "It shouldn't be used outside the codegen stage")
+        super().__init__(*args, **kwargs)
+
+    def __repr__(self):
+        return 'CIntDiv({}, {})'.format(self.args[0], self.args[1])
 
 #==============================================================================
 

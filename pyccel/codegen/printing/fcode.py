@@ -65,7 +65,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
-from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.numpyext import NumpyFloat, NumpyInt
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
@@ -2452,6 +2452,13 @@ class FCodePrinter(CodePrinter):
             if is_float:
                 code = 'real({}, {})'.format(code, self.print_kind(expr))
         return code
+
+    def _print_PyccelCIntegerDiv(self, expr):
+        if all(a.dtype is NativeInteger() for a in expr.args):
+            args = expr.args
+        else:
+            args = [NumpyInt(a) for a in expr.args]
+        return ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelRShift(self, expr):
         return 'RSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))

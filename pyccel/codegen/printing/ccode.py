@@ -39,7 +39,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpyInt
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -1552,6 +1552,13 @@ class CCodePrinter(CodePrinter):
             cast_type = self.find_in_dtype_registry('int', expr.precision)
             return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
+
+    def _print_PyccelCIntegerDiv(self, expr):
+        if all(a.dtype is NativeInteger() for a in expr.args):
+            args = expr.args
+        else:
+            args = [NumpyInt(a) for a in expr.args]
+        return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelRShift(self, expr):
         return ' >> '.join(self._print(a) for a in expr.args)
