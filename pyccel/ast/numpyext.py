@@ -1401,24 +1401,33 @@ class NumpyConjugate(PythonConjugate):
         """
         return True
 
-class NumpyNonZero(PyccelInternalFunction):
-    __slots__ = ('_var','_rank','_shape')
+class NumpyNonZeroElement(NumpyNewArray):
+    __slots__ = ('_var','_dim','_shape')
     _attribute_nodes = ('_var',)
     name = 'where'
     _dtype = NativeInteger()
     _precision = 8
+    _rank = 1
     _order = 'C'
 
-    def __init__(self, a):
+    def __init__(self, a, dim):
         self._var = a
+        self._dim = dim
 
-        self._rank  = 2
-        self._shape = (LiteralInteger(a.rank), NumpyArraySize(a))
+        self._shape = (NumpyArraySize(a),)
         super().__init__(a)
 
     @property
     def variable(self):
         return self._var
+
+    @property
+    def dim(self):
+        return self._dim
+
+class NumpyNonZero(NumpyNewArray):
+    def __new__(self, a):
+        return PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
 
 class NumpyArraySize(PyccelInternalFunction):
     """
