@@ -7,6 +7,9 @@
 """ Module containing objects from the numpy module understood by pyccel
 """
 
+from functools import reduce
+import operator
+
 import numpy
 
 from pyccel.errors.errors import Errors
@@ -1391,6 +1394,54 @@ class NumpyConjugate(PythonConjugate):
         called elementwise for an array argument
         """
         return True
+
+class NumpyArraySize(PyccelInternalFunction):
+    """
+    Class representing a call to the numpy size function which
+    returns the shape of an object in a given dimension
+
+    Parameters
+    ==========
+    a     : PyccelAstNode
+            A PyccelAstNode of unknown shape
+    axis  : int
+            The dimension along which the size is
+            requested
+    """
+    __slots__ = ('_arg',)
+    _attribute_nodes = ('_arg',)
+    name   = 'size'
+    _dtype = NativeInteger()
+    _precision = -1
+    _rank  = 0
+    _shape = ()
+    _order = None
+
+    def __new__(cls, a, axis = None):
+        if index is not None:
+            return PyccelArraySize(arg, index)
+        else if not isinstance(arg, (list,
+                                    tuple,
+                                    PyccelAstNode)):
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        else if all(isinstance(s, LiteralInteger) for s in a.shape):
+            return LiteralInteger(reduce(operator.mul, [s.python_value for s in a.shape]))
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, a, axis = None):
+
+        self._arg   = a
+        super().__init__()
+
+    @property
+    def arg(self):
+        """ Object whose size is investigated
+        """
+        return self._arg
+
+    def __str__(self):
+        return 'Shape({},{})'.format(str(self.arg), str(self.index))
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following

@@ -342,6 +342,22 @@ int64_t     get_index(t_ndarray arr, ...)
 }
 
 /*
+** size
+*/
+
+int64_t     get_size(t_ndarray arr)
+{
+    int64_t size;
+
+    size = 1;
+    for (int32_t i = 0; i < arr.nd; i++)
+    {
+        size *= arr.shape[i];
+    }
+    return size;
+}
+
+/*
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
