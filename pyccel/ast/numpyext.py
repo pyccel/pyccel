@@ -731,7 +731,13 @@ class NumpyWhere(PyccelInternalFunction):
     _attribute_nodes = ('_condition','_value_true','_value_false')
     name = 'where'
 
-    def __init__(self, condition, x, y):
+    def __new__(cls, condition, x = None, y = None):
+        if x is None and y is None:
+            return NumpyNonZero(condition)
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, condition, x = None, y = None):
         self._condition = condition
         self._value_true = x
         self._value_false = y
@@ -1395,6 +1401,25 @@ class NumpyConjugate(PythonConjugate):
         """
         return True
 
+class NumpyNonZero(PyccelInternalFunction):
+    __slots__ = ('_var','_rank','_shape')
+    _attribute_nodes = ('_var',)
+    name = 'where'
+    _dtype = NativeInteger()
+    _precision = 8
+    _order = 'C'
+
+    def __init__(self, a):
+        self._var = a
+
+        self._rank  = 2
+        self._shape = (LiteralInteger(a.rank), NumpyArraySize(a))
+        super().__init__(a)
+
+    @property
+    def variable(self):
+        return self._var
+
 class NumpyArraySize(PyccelInternalFunction):
     """
     Class representing a call to the numpy size function which
@@ -1402,7 +1427,7 @@ class NumpyArraySize(PyccelInternalFunction):
 
     Parameters
     ==========
-    a     : PyccelAstNode
+        arg   : PyccelAstNode
             A PyccelAstNode of unknown shape
     axis  : int
             The dimension along which the size is
@@ -1418,13 +1443,13 @@ class NumpyArraySize(PyccelInternalFunction):
     _order = None
 
     def __new__(cls, a, axis = None):
-        if index is not None:
-            return PyccelArraySize(arg, index)
-        else if not isinstance(arg, (list,
+        if axis is not None:
+            return PyccelArraySize(a, axis)
+        elif not isinstance(a, (list,
                                     tuple,
                                     PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
-        else if all(isinstance(s, LiteralInteger) for s in a.shape):
+            raise TypeError('Unknown type of  %s.' % type(a))
+        elif all(isinstance(s, LiteralInteger) for s in a.shape):
             return LiteralInteger(reduce(operator.mul, [s.python_value for s in a.shape]))
         else:
             return super().__new__(cls)
