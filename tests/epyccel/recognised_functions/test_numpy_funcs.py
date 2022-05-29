@@ -4892,6 +4892,50 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
+def test_numpy_where_array_like_1d_1_arg(language):
+
+    @types('bool[:]')
+    @types('int[:]')
+    @types('int8[:]')
+    @types('int16[:]')
+    @types('int32[:]')
+    @types('int64[:]')
+    @types('float[:]')
+    @types('float32[:]')
+    @types('float64[:]')
+    def get_chosen_elements(arr):
+        from numpy import where, shape
+        a = where(arr > 5)
+        s = shape(a)
+        return len(s), s[1], a[0][1], a[0][0]
+
+    size = 5
+
+    bl = randint(0, 1, size=size, dtype= bool)
+
+    integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
+    integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
+    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+    integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
+    integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+
+    epyccel_func = epyccel(get_chosen_elements, language=language)
+
+    assert epyccel_func(bl) == get_chosen_elements(bl)
+    assert epyccel_func(integer8) == get_chosen_elements(integer8)
+    assert epyccel_func(integer16) == get_chosen_elements(integer16)
+    assert epyccel_func(integer) == get_chosen_elements(integer)
+    assert epyccel_func(integer32) == get_chosen_elements(integer32)
+    assert epyccel_func(integer64) == get_chosen_elements(integer64)
+    assert epyccel_func(fl) == get_chosen_elements(fl)
+    assert epyccel_func(fl32) == get_chosen_elements(fl32)
+    assert epyccel_func(fl64) == get_chosen_elements(fl64)
+
 def test_numpy_where_array_like_2d_with_condition(language):
 
     @types('bool[:,:]')
