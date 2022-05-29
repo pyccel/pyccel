@@ -147,8 +147,6 @@ ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array argum
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
 INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 
-INVALID_WHERE_ARGUMENT = 'Numpy Where function takes 3 positional arguments'
-
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'

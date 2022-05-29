@@ -784,12 +784,6 @@ class SemanticParser(BasicParser):
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
 
-            if func is NumpyWhere:
-                if len(args) != 3:
-                    errors.report(INVALID_WHERE_ARGUMENT,
-                        symbol=expr,
-                        severity='fatal')
-
             try:
                 new_expr = func(*args, **kwargs)
             except TypeError:
