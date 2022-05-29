@@ -947,6 +947,15 @@ class FCodePrinter(CodePrinter):
 
         return code
 
+    def _print_NumpyNonZero(self, expr):
+
+        ind   = self._print(self.scope.get_temporary_variable('int'))
+        mask  = self._print(expr.variable)
+
+        stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
+
+        return stmt
+
     def _print_NumpyWhere(self, expr):
         value_true  = expr.value_true
         value_false = expr.value_false
