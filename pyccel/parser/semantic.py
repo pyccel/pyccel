@@ -3696,6 +3696,26 @@ class SemanticParser(BasicParser):
             b = self._visit(expr.b)
         return NumpyMatmul(a, b)
 
+    def _visit_NumpyWhere(self, func_call, **settings):
+        # expr is a FunctionCall
+        args = [a.value for a in func_call.args if not a.has_keyword]
+        kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
+        nargs = len(args)+len(kwargs)
+        arg0 = args[0] if args else kwargs['condition']
+        if nargs == 1:
+            return self._visit_NumpyNonZero(func_call)
+        return NumpyWhere(*args, **kwargs)
+
+    def _visit_NumpyNonZero(self, func_call, **settings):
+        # expr is a FunctionCall
+        arg = func_call.args[0].value
+        if not isinstance(arg, Variable):
+            new_symbol = PyccelSymbol(self.scope.get_new_name())
+            creation = self._visit(Assign(new_symbol, arg, fst=func_call.fst))
+            self._additional_exprs[-1].append(creation)
+            arg = self._visit(new_symbol)
+        return NumpyWhere(arg)
+
 #==============================================================================
 
 
