@@ -18,6 +18,7 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.bind_c import BindCPointer
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -323,7 +324,7 @@ class FCodePrinter(CodePrinter):
             code = self._print(body)
         else:
             # Search for the return and replace it with an empty node
-            result = body.get_attribute_nodes(Return, excluded_nodes = (FunctionDef,))[0]
+            result = body.get_attribute_nodes(Return)[0]
             empty_return = EmptyNode()
             body.substitute(result, empty_return, invalidate = False)
 
@@ -1273,6 +1274,9 @@ class FCodePrinter(CodePrinter):
                 if expr.intent:
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
+            elif isinstance(expr_dtype, BindCPointer):
+                dtype = 'type(c_ptr)'
+                self._constantImports.add('c_ptr')
             else:
                 dtype += '({0})'.format(self.print_kind(expr.variable))
 
@@ -2919,6 +2923,19 @@ class FCodePrinter(CodePrinter):
 
     def _print_PrecomputedCode(self, expr):
         return expr.code
+
+#=======================================================================================
+
+    def _print_CLocFunc(self, expr):
+        lhs = self._print(expr.result)
+        rhs = self._print(expr.arg)
+        self._constantImports.add('c_loc')
+        return '{} = c_loc({})'.format(lhs, rhs)
+
+#=======================================================================================
+
+    def _print_PythonConjugate(self, expr):
+        return 'conjg( {} )'.format( self._print(expr.internal_var) )
 
 #=======================================================================================
 

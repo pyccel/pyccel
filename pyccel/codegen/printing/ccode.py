@@ -1162,7 +1162,10 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        alloc_code = "{} = array_create({}, {}, {});\n".format(expr.variable, len(expr.shape), shape_Assign, dtype)
+        is_view = 'false' if expr.variable.allocatable else 'true'
+        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
+                expr.variable, len(expr.shape), shape_Assign, dtype,
+                is_view)
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
@@ -1500,7 +1503,7 @@ class CCodePrinter(CodePrinter):
             else:
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
-                variables = last_assign.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+                variables = last_assign.rhs.get_attribute_nodes(Variable)
                 unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
@@ -1739,6 +1742,9 @@ class CCodePrinter(CodePrinter):
     def _print_PythonImag(self, expr):
         return 'cimag({})'.format(self._print(expr.internal_var))
 
+    def _print_PythonConjugate(self, expr):
+        return 'conj({})'.format(self._print(expr.internal_var))
+
     def _handle_is_operator(self, Op, expr):
 
         lhs = self._print(expr.lhs)
@@ -1824,7 +1830,7 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.value)
 
     def _print_VariableAddress(self, expr):
-        if isinstance(expr.variable, IndexedElement):
+        if isinstance(expr.variable, (IndexedElement, VariableAddress)):
             return '&{}'.format(self._print(expr.variable))
         elif self.stored_in_c_pointer(expr.variable):
             return '{}'.format(expr.variable.name)
