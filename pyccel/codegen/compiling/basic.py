@@ -182,7 +182,6 @@ class CompileObj:
     def dependencies(self):
         """ Returns the objects which the file to be compiled uses
         """
-        print("dependencies of ",self.module_target," : ", self._dependencies)
         return self._dependencies.values()
 
     def get_dependency(self, target):
