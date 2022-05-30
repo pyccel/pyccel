@@ -7,10 +7,10 @@ runs:
       run: |
         Get-Command python
         $PYTHON_EXE_PATH=(Get-Command python).Source
-        echo "${PYTHON_EXE_PATH}"
-        $PYTHON_PATH=(Split-Path -Path $PYTHON_EXE_PATH)
-        echo ${PYTHON_PATH}
-        dir ${PYTHON_PATH}
+        echo "Exe path : ${PYTHON_EXE_PATH}"
+        $PYTHON_PATH=(Split-Path -Path ${PYTHON_EXE_PATH})
+        echo "Python path : ${PYTHON_PATH}"
+        dir "${PYTHON_PATH}"
         # Use utf for output
         $PSDefaultParameterValues['Out-File:Encoding'] = 'Ascii'
         #
