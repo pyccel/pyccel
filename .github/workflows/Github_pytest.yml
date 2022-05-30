@@ -136,7 +136,7 @@ jobs:
           mpi_type: msmpi
       - name: OpenMP
         run:
-          python -m pytest -sxv -m c test_epyccel_openmp.py
+          python -m pytest test_epyccel_openmp.py -k modules_16 -sxv -m c
         working-directory: ./tests/epyccel
         shell: bash -l {0}
       #- name: Fortran/C tests with pytest
