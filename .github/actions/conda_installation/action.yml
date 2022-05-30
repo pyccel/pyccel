@@ -25,10 +25,7 @@ runs:
         conda install -c anaconda astunparse
     - name: Install mpi4py
       shell: bash -l {0}
-      run: |
-        echo ${INPUTS_MPI_TYPE}
-        echo ${{ inputs.mpi_type }}
-        printenv
+      run:
         conda install -c conda-forge mpi4py ${INPUTS_MPI_TYPE}
     - name: Install and update pip
       shell: bash -l {0}

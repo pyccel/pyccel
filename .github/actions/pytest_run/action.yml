@@ -12,7 +12,6 @@ runs:
     - name: Test with pytest
       run: |
         which python
-        echo "${{ inputs.anaconda }}"
         python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
         python -m pytest -rX -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
