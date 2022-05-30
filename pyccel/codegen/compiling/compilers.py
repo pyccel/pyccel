@@ -40,7 +40,9 @@ def get_conda_folders():
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
         warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
-    return conda_folders
+    acceptable_search_paths = [p for p in current_path.split(path_sep) if p not in self._conda_folders and os.path.exists(p)]
+    print(acceptable_search_paths)
+    return conda_folders, acceptable_search_paths
 
 #------------------------------------------------------------
 class Compiler:
@@ -57,7 +59,7 @@ class Compiler:
             Indicates whether we are compiling in debug mode
     """
     __slots__ = ('_debug','_info')
-    _conda_folders = get_conda_folders()
+    _conda_folders, _acceptable_search_paths = get_conda_folders()
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -83,10 +85,9 @@ class Compiler:
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
         if self._conda_folders:
-            acceptable_search_paths = [p for p in current_path.split(path_sep) if p not in self._conda_folders]
             os.environ['PATH'] = path_sep.join(acceptable_search_paths)
             # Only load from conda if no other path variables work
-            dll_search_path_flags = self._insert_prefix_to_list(acceptable_search_paths, '-Wl,-rpath')
+            dll_search_path_flags = self._insert_prefix_to_list(self._acceptable_search_paths, '-Wl,-rpath')
         else:
             dll_search_path_flags = []
 
