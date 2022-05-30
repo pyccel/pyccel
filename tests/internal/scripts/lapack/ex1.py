@@ -25,8 +25,8 @@ def test_1():
     mu  = int32(1)
     lda = int32(2 * ml + mu + 1)
 
-    a = zeros((lda,n))
-    b = zeros((1,n))
+    a = zeros((lda,n), order='F')
+    b = zeros((1,n), order='F')
 
     b[0]   = 1.0
     b[n-1] = 1.0
@@ -50,7 +50,7 @@ def test_2():
     n = int32(3)
     lda = n
 
-    a = zeros((lda,n))
+    a = zeros((lda,n), order='F')
 
     a[0,0] = 0.0
     a[0,1] = 1.0
@@ -84,7 +84,7 @@ def test_3():
     n = int32(3)
     lda = n
 
-    a = zeros((lda,n))
+    a = zeros((lda,n), order='F')
 
     a[0,0] = 0.0
     a[0,1] = 1.0
@@ -115,7 +115,7 @@ def test_4():
     n = int32(3)
     lda = n
 
-    a = zeros((lda,n))
+    a = zeros((lda,n), order='F')
 
     a[0,0] = 0.0
     a[0,1] = 1.0
@@ -136,7 +136,7 @@ def test_4():
 #    assert(info == 0)
 
     # Compute the inverse matrix.
-    b = zeros((1,n))
+    b = zeros((1,n), order='F')
     b[0] = 14.0
     b[1] = 32.0
     b[2] = 23.0

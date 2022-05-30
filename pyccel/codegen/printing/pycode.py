@@ -402,6 +402,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonImag(self, expr):
         return '({}).imag'.format(self._print(expr.internal_var))
 
+    def _print_PythonConjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.internal_var))
+
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 

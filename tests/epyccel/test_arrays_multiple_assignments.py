@@ -8,7 +8,8 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
                                     STACK_ARRAY_DEFINITION_IN_LOOP,
-                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE)
+                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE,
+                                    STACK_ARRAY_UNKNOWN_SHAPE)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -138,12 +139,16 @@ def test_creation_in_loop_stack(language):
     with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
-    # Check that we got exactly 1 Pyccel error
+    # Check that we got exactly 2 Pyccel errors
     assert errors.has_errors()
-    assert errors.num_messages() == 1
+    assert errors.num_messages() == 2
 
-    # Check that the error is correct
-    error_info = [*errors.error_info_map.values()][0][0]
+    # Check that the errors are correct
+    error_info_list = [*errors.error_info_map.values()][0]
+    error_info = error_info_list[0]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == STACK_ARRAY_UNKNOWN_SHAPE
+    error_info = error_info_list[1]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
 

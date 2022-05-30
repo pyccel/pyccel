@@ -15,6 +15,7 @@ class FortranNameClashChecker(metaclass = Singleton):
     """ Class containing functions to help avoid problematic names in C
     """
     # Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords
+    # Intrinsic functions as mentioned on https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap02/funct.html
     keywords = set(['assign', 'backspace', 'block', 'blockdata',
             'call', 'close', 'common', 'continue', 'data',
             'dimension', 'do', 'else', 'elseif', 'end', 'endfile',
@@ -36,7 +37,9 @@ class FortranNameClashChecker(metaclass = Singleton):
             'nopass', 'pass', 'protected', 'value', 'volatile',
             'wait', 'codimension', 'concurrent', 'contiguous',
             'critical', 'error', 'submodule', 'sync', 'lock',
-            'unlock', 'test'])
+            'unlock', 'test', 'abs', 'sqrt', 'sin', 'cos', 'tan',
+            'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
+            'floor', 'fraction', 'real', 'max', 'mod'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes

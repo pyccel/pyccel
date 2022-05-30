@@ -9,11 +9,13 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.bind_c   import as_static_function
+from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
+
+from pyccel.ast.builtins import PythonTuple
 
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
-from pyccel.ast.core import SeparatorComment
+from pyccel.ast.core import SeparatorComment, Allocate
 from pyccel.ast.core import Import, Module, Declare
 from pyccel.ast.core import AugAssign, CodeBlock
 
@@ -39,7 +41,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
-from pyccel.ast.variable  import VariableAddress, Variable
+from pyccel.ast.variable  import VariableAddress, Variable, DottedName
 
 from pyccel.parser.scope  import Scope
 
@@ -110,6 +112,8 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         type_declaration : String
         """
+        if expr.dtype is BindCPointer():
+            return 'void *'
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if dtype != "pyarrayobject":
@@ -568,7 +572,7 @@ class CWrapperCodePrinter(CCodePrinter):
         code : string
             returns the string containing the printed FunctionDef
         """
-        current_namespace = self.scope
+        current_scope = self.scope
         wrapper_func = FunctionDef(
                 name      = wrapper_name,
                 arguments = wrapper_args,
@@ -582,7 +586,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 scope     = Scope())
 
         code = CCodePrinter._print_FunctionDef(self, wrapper_func)
-        self.set_scope(current_namespace)
+        self.set_scope(current_scope)
         return code
 
     # -------------------------------------------------------------------
@@ -676,16 +680,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 pymodule initialisation function
         """
         if var.rank != 0:
-            if self._target_language == "fortran":
-                if var.fst:
-                    symbol = var
-                else:
-                    symbol = var.get_user_nodes(Assign)[0]
-                errors.report("Global arrays (defined at the module level) cannot currently be exposed to Python",
-                        severity='warning', symbol=symbol)
-                return []
-            else:
-                self.add_import(cwrapper_ndarray_import)
+            self.add_import(cwrapper_ndarray_import)
 
         collect_value = Assign(VariableAddress(collect_var),
                                 FunctionCall(C_to_Python(var), [VariableAddress(var)]))
@@ -711,49 +706,103 @@ class CWrapperCodePrinter(CCodePrinter):
         ------
         str
         """
-        mod_var_name = self.scope.get_new_name('m')
-        tmp_var_name = self.scope.get_new_name('tmp')
-        tmp_var = Variable(dtype = PyccelPyObject(),
-                      name       = tmp_var_name,
-                      is_pointer = True)
+        # Create scope for the module initialisation function
+        scope = self.scope.new_child_scope(exec_func_name)
+        self.set_scope(scope)
 
+        #Create module variable
+        mod_var_name = self.scope.get_new_name('m')
+        mod_var = Variable(dtype = PyccelPyObject(),
+                      name       = mod_var_name,
+                      is_pointer = True)
+        scope.insert_variable(mod_var)
+
+        # Collect module variables from translated code
         orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
+        body = []
         if self._target_language == 'fortran':
-            vars_to_wrap = [v.clone(v.name.lower()) for v in orig_vars_to_wrap]
-            for v,w in zip(orig_vars_to_wrap,vars_to_wrap):
-                assign = v.get_user_nodes(Assign)[0]
-                # assign.fst should always exist, but is not always set when the
-                # Assign is created in the codegen stage
-                if assign.fst:
-                    w.set_fst(assign.fst)
+            # Collect python compatible module variables
+            vars_to_wrap = []
+            for v in orig_vars_to_wrap:
+                if v.rank > 0:
+                    # Get pointer to store array data
+                    var = scope.get_temporary_variable(dtype_or_var = v,
+                            name = v.name,
+                            is_pointer = True,
+                            allocatable = False,
+                            rank = 0)
+                    # Create variables to store sizes of array
+                    sizes = [scope.get_temporary_variable(NativeInteger(),
+                            v.name+'_size') for _ in range(v.rank)]
+                    # Get the bind_c function which wraps a fortran array and returns c objects
+                    var_wrapper = wrap_module_array_var(v, scope, expr)
+                    # Call bind_c function
+                    call = Assign(PythonTuple(VariableAddress(var), *sizes), FunctionCall(var_wrapper, ()))
+                    body.append(call)
+
+                    # Create ndarray to store array data
+                    nd_var = scope.get_temporary_variable(dtype_or_var = v,
+                            name = v.name,
+                            is_pointer = True,
+                            allocatable = False)
+                    alloc = Allocate(nd_var, shape=sizes, order=nd_var.order, status='unallocated')
+                    body.append(alloc)
+                    # Save raw_data into ndarray to obtain useable pointer
+                    set_data = Assign(DottedName(nd_var, 'raw_data'), VariableAddress(var))
+                    body.append(set_data)
+                    # Save the ndarray to vars_to_wrap to be handled as if it came from C
+                    vars_to_wrap.append(nd_var)
+                else:
+                    # Ensure correct name
+                    w = v.clone(scope.get_expected_name(v.name.lower()))
+                    assign = v.get_user_nodes(Assign)[0]
+                    # assign.fst should always exist, but is not always set when the
+                    # Assign is created in the codegen stage
+                    if assign.fst:
+                        w.set_fst(assign.fst)
+                    vars_to_wrap.append(w)
         else:
             vars_to_wrap = orig_vars_to_wrap
         var_names = [str(expr.scope.get_python_name(v.name)) for v in orig_vars_to_wrap]
 
-        body = [l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var)]
-
-        decs = self._print(Declare(tmp_var.dtype, tmp_var)) if body else ''
+        # If there are any variables in the module then add them to the module object
+        if vars_to_wrap:
+            # Create variable for temporary python objects
+            tmp_var_name = self.scope.get_new_name('tmp')
+            tmp_var = Variable(dtype = PyccelPyObject(),
+                          name       = tmp_var_name,
+                          is_pointer = True)
+            scope.insert_variable(tmp_var)
+            # Add code to add variable to module
+            body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
 
         if expr.init_func:
+            # Call init function code
             static_function = self.get_static_function(expr.init_func)
             body.insert(0,FunctionCall(static_function,[],[]))
 
         body.append(Return([LiteralInteger(0)]))
+        self.exit_scope()
 
-        body_str = self._print(CodeBlock(body))
+        func = FunctionDef(name = exec_func_name,
+            arguments = (mod_var,),
+            results = (scope.get_temporary_variable(NativeInteger(),
+                precision = 4),),
+            body = CodeBlock(body),
+            scope = scope)
+        func_code = super()._print_FunctionDef(func).split('\n')
+        func_code[1] = "static "+func_code[1]
 
-        return ('static int {name}(PyObject* {mod_var})\n'
-                '{{\n'
-                '{decs}'
-                '{body}'
-                '}}\n').format(name = exec_func_name,
-                        mod_var = mod_var_name,
-                        decs = decs,
-                        body = body_str)
+
+        return '\n'.join(func_code)
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
+
+    def _print_DottedName(self, expr):
+        names = expr.name
+        return '.'.join(self._print(n) for n in names)
 
     def _print_Interface(self, expr):
 
@@ -1136,9 +1185,27 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        self.set_scope(Scope())
+        scope = Scope()
+        self.set_scope(scope)
         # The initialisation and deallocation shouldn't be exposed to python
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
+
+        # Insert declared objects into scope
+        if self._target_language == 'fortran':
+            for f in expr.funcs:
+                scope.insert_symbol('bind_c_'+f.name.lower())
+            for v in expr.variables:
+                if not v.is_private:
+                    if v.rank > 0:
+                        scope.insert_symbol('bind_c_'+v.name.lower())
+                    else:
+                        scope.insert_symbol(v.name.lower())
+        else:
+            for f in expr.funcs:
+                scope.insert_symbol(f.name.lower())
+            for v in expr.variables:
+                if not v.is_private:
+                    scope.insert_symbol(v.name.lower())
 
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
@@ -1155,6 +1222,10 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             static_funcs = expr.funcs
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
+        if self._target_language == 'fortran':
+            var_wrappers = [wrap_module_array_var(v, self.scope, expr) \
+                    for v in expr.variables if not v.is_private and v.rank > 0]
+            function_signatures += ''.join('{};\n'.format(self.function_signature(v)) for v in var_wrappers)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]

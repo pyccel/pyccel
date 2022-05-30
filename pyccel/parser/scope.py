@@ -477,9 +477,9 @@ class Scope(object):
         """
         name = self.get_new_name(name)
         if isinstance(dtype_or_var, Variable):
-            var = dtype_or_var.clone(name, **kwargs)
+            var = dtype_or_var.clone(name, **kwargs, is_temp = True)
         else:
-            var = Variable(dtype_or_var, name, **kwargs)
+            var = Variable(dtype_or_var, name, **kwargs, is_temp = True)
         self.insert_variable(var)
         return var
 

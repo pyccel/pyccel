@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
-awkwards_names = 4
+awkward_names = 4
 
 def function():
     double = 3.0

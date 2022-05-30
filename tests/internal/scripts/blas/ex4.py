@@ -7,9 +7,9 @@ if __name__ == '__main__':
     k = np.int32(5)
     n = np.int32(4)
 
-    a = np.zeros((m,k))
-    b = np.zeros((k,n))
-    c = np.zeros((m,n))
+    a = np.zeros((m,k), order='F')
+    b = np.zeros((k,n), order='F')
+    c = np.zeros((m,n), order='F')
 
     # ...
     a[0,0] = 1.0
