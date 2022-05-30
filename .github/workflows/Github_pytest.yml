@@ -135,7 +135,7 @@ jobs:
         with:
           mpi_type: msmpi
       - name: OpenMP
-        run:
+        run: |
           echo $PATH
           python -m pytest test_epyccel_openmp.py -sxv -m c
         working-directory: ./tests/epyccel
