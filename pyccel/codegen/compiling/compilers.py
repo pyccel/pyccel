@@ -32,6 +32,7 @@ if platform.system() == 'Darwin':
 
 def get_conda_folders():
     path_sep = ';' if platform.system() == 'Windows' else ':'
+    print("Platform : ",platform.system(), platform.system() == 'Windows', path_sep)
     # Find conda paths to be cleaned out of the PATH variable
     current_path = os.environ['PATH']
     folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
