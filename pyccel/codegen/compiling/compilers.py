@@ -40,7 +40,7 @@ def get_conda_folders():
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
         warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
-    acceptable_search_paths = [p for p in current_path.split(path_sep) if p not in self._conda_folders and os.path.exists(p)]
+    acceptable_search_paths = [p for p in folders.keys() if p not in conda_folders and os.path.exists(p)]
     print(acceptable_search_paths)
     return conda_folders, acceptable_search_paths
 
