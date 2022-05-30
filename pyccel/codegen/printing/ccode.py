@@ -1808,14 +1808,12 @@ class CCodePrinter(CodePrinter):
         if expr == math_constants['inf']:
             self.add_import(c_imports['math'])
             return 'HUGE_VAL'
-        elif expr == math_constants['pi']:
+        if expr == math_constants['nan']:
             self.add_import(c_imports['math'])
-            return 'M_PI'
-        elif expr == math_constants['e']:
-            self.add_import(c_imports['math'])
-            return 'M_E'
+            return 'NAN'
         else:
-            raise NotImplementedError("Constant not implemented")
+            return expr.value
+
 
     def _print_Variable(self, expr):
         if self.stored_in_c_pointer(expr):
