@@ -81,7 +81,7 @@ class Compiler:
             acceptable_search_paths = [p for p in current_path.split(':') if p not in self._conda_folders]
             os.environ['PATH'] = ':'.join(acceptable_search_paths)
             # Only load from conda if no other path variables work
-            dll_search_path_flags = self._insert_prefix_to_list(libdirs_flags, '-Wl,-rpath')
+            dll_search_path_flags = self._insert_prefix_to_list(acceptable_search_paths, '-Wl,-rpath')
         else:
             dll_search_path_flags = []
 
