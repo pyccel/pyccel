@@ -54,6 +54,13 @@ jobs:
             # 2 versions of python3X.a and the wrong one
             # is chosen
             python-version: 3.7
+      - name: Setup python location
+        run: |
+          PYTHON_PATH=$(type -p python)
+          echo ${PYTHON_PATH}
+          ls ${PYTHON_PATH}
+          echo "PYTHON_PATH=${PYTHON_PATH}" >> $GITHUB_ENV
+        shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -125,9 +132,10 @@ jobs:
           auto-activate-base: true
       - name: Setup python location
         run: |
-          PY_PATH=$(type -p python)
-          echo ${PY_PATH}
-          echo "pythonLocation=${PY_PATH}" >> $GITHUB_ENV
+          PYTHON_PATH=$(type -p python)
+          echo ${PYTHON_PATH}
+          ls ${PYTHON_PATH}
+          echo "PYTHON_PATH=${PYTHON_PATH}" >> $GITHUB_ENV
         shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
