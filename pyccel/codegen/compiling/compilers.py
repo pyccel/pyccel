@@ -76,7 +76,13 @@ class Compiler:
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
-        os.environ['PATH'] = ':'.join(p for p in current_path.split(':') if p not in self._conda_folders)
+        if self._conda_folders:
+            acceptable_search_paths = [p for p in current_path.split(':') if p not in self._conda_folders]
+            os.environ['PATH'] = ':'.join(acceptable_search_paths)
+            # Only load from conda if no other path variables work
+            dll_search_path_flags = self._insert_prefix_to_list(libdirs_flags, '-Wl,-rpath')
+        else:
+            dll_search_path_flags = []
 
         # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)
@@ -88,7 +94,7 @@ class Compiler:
             errors.report("Could not find compiler ({})".format(exec_cmd),
                     severity='fatal')
 
-        return exec_loc
+        return [exec_loc, *dll_search_path_flags]
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
@@ -288,7 +294,7 @@ class Compiler:
         else:
             j_code = ()
 
-        cmd = [exec_cmd, *flags, *inc_flags,
+        cmd = [*exec_cmd, *flags, *inc_flags,
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
@@ -327,7 +333,7 @@ class Compiler:
         else:
             j_code = ()
 
-        cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
+        cmd = [*exec_cmd, *flags, *includes, *libdirs_flags,
                  *linker_libdirs_flags, *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
@@ -381,7 +387,7 @@ class Compiler:
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
-        cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
+        cmd = [*exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
