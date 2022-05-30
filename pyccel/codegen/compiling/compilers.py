@@ -11,7 +11,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 import platform
 import warnings
 from filelock import FileLock
@@ -19,6 +18,8 @@ from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
 
 errors = Errors()
+
+print(platform.system())
 
 if platform.system() == 'Darwin':
     # Collect version using mac tools to avoid unexpected results on Big Sur
@@ -30,7 +31,7 @@ if platform.system() == 'Darwin':
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 def get_conda_folders():
-    path_sep = ';' if sys.platform == 'win32' else ':'
+    path_sep = ';' if platform.system() == 'Windows' else ':'
     # Find conda paths to be cleaned out of the PATH variable
     current_path = os.environ['PATH']
     folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
