@@ -125,7 +125,7 @@ jobs:
           auto-activate-base: true
       - name: Setup python location
         run: |
-          where python
+          type -p python
         shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
