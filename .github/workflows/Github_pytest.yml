@@ -125,7 +125,9 @@ jobs:
           auto-activate-base: true
       - name: Setup python location
         run: |
-          type -p python
+          PY_PATH=$(type -p python)
+          echo ${PY_PATH}
+          echo "pythonLocation=${PY_PATH}" >> $GITHUB_ENV
         shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
