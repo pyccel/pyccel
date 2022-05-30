@@ -135,7 +135,8 @@ jobs:
           for d in $PATH
           do
           echo $d
-          if [ -d $d ] then
+          if [ -d $d ]
+          then
           ls $d
           else
           echo "Doesn't exist"
