@@ -128,10 +128,6 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
-      - name: Check path
-        run:
-          echo $PATH
-        shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -141,7 +137,7 @@ jobs:
       - name: OpenMP
         run:
           echo $PATH
-          python -m pytest test_epyccel_openmp.py -k modules_16 -sxv -m c
+          python -m pytest test_epyccel_openmp.py -sxv -m c
         working-directory: ./tests/epyccel
         shell: bash -l {0}
       #- name: Fortran/C tests with pytest
