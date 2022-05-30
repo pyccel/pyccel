@@ -31,7 +31,7 @@ runs:
     - name: Install mpi4py
       shell: bash -l {0}
       run:
-        python -m pip install mpi4py
+        conda install -c conda-forge mpi4py
     - name: Install parallel pytest
       shell: bash -l {0}
       run:
