@@ -11,6 +11,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import platform
 import warnings
 from filelock import FileLock
@@ -28,7 +29,17 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
-path_sep = ';' if sys.platform == 'win32' else ';'
+def get_conda_folders():
+    path_sep = ';' if sys.platform == 'win32' else ':'
+    # Find conda paths to be cleaned out of the PATH variable
+    current_path = os.environ['PATH']
+    folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
+    conda_folder_names = ('conda', 'anaconda', 'miniconda',
+                          'Conda', 'Anaconda', 'Miniconda')
+    conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
+    if conda_folders:
+        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
+    return conda_folders
 
 #------------------------------------------------------------
 class Compiler:
@@ -44,7 +55,8 @@ class Compiler:
     debug : bool
             Indicates whether we are compiling in debug mode
     """
-    __slots__ = ('_debug','_info','_conda_folders')
+    __slots__ = ('_debug','_info')
+    _conda_folders = get_conda_folders()
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -62,16 +74,6 @@ class Compiler:
                 raise NotImplementedError("Compiler not available") from e
 
         self._debug = debug
-
-        # Find conda paths to be cleaned out of the PATH variable
-        current_path = os.environ['PATH']
-        print(current_path)
-        folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
-        conda_folder_names = ('conda', 'anaconda', 'miniconda',
-                              'Conda', 'Anaconda', 'Miniconda')
-        self._conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
-        if self._conda_folders:
-            warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(self._conda_folders)))
 
     def _get_exec(self, accelerators):
         # Get executable
