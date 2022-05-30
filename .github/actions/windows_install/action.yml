@@ -5,6 +5,7 @@ runs:
   steps:
     - name: Fix 'Unknown MS Compiler version 1900' problem
       run: |
+        python -c "import sys; print('\n'.join(sys.path))"
         $PYTHON_PATH=(Split-Path -Path (type -p python))
         echo ${PYTHON_PATH}
         ls ${PYTHON_PATH}
