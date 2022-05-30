@@ -1,4 +1,9 @@
 name: 'Pyccel pytest commands generating fortran or c'
+inputs:
+  anaconda:
+    description: 'Specifies if anaconda is used'
+    required: true
+
 
 runs:
   using: "composite"
@@ -14,5 +19,5 @@ runs:
         pyccel-clean
         python -m pytest ndarrays/ -rX
         pyccel-clean
-      shell: bash -l {0}
+      shell: ${{ inputs.anaconda }}
       working-directory: ./tests
