@@ -128,18 +128,23 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
-      - name: Install dependencies
-        uses: ./.github/actions/windows_install
-      - name: Install python dependencies
-        uses: ./.github/actions/conda_installation
-        with:
-          mpi_type: msmpi
-      - name: OpenMP
+      - name: Examine PATH
         run: |
           echo $PATH
-          python -m pytest test_epyccel_openmp.py -sxv -m c
-        working-directory: ./tests/epyccel
+          IFS=":"; for d in $PATH; do echo $d; ls $d; done
         shell: bash -l {0}
+      #- name: Install dependencies
+      #  uses: ./.github/actions/windows_install
+      #- name: Install python dependencies
+      #  uses: ./.github/actions/conda_installation
+      #  with:
+      #    mpi_type: msmpi
+      #- name: OpenMP
+      #  run: |
+      #    echo $PATH
+      #    python -m pytest test_epyccel_openmp.py -sxv -m c
+      #  working-directory: ./tests/epyccel
+      #  shell: bash -l {0}
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #  with:
