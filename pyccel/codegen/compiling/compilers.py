@@ -30,9 +30,8 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
+path_sep = ';' if platform.system() == 'Windows' else ':'
 def get_conda_folders():
-    path_sep = ';' if platform.system() == 'Windows' else ':'
-    print("Platform : ",platform.system(), platform.system() == 'Windows', path_sep)
     # Find conda paths to be cleaned out of the PATH variable
     current_path = os.environ['PATH']
     folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
@@ -84,8 +83,8 @@ class Compiler:
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
         if self._conda_folders:
-            acceptable_search_paths = [p for p in current_path.split(':') if p not in self._conda_folders]
-            os.environ['PATH'] = ':'.join(acceptable_search_paths)
+            acceptable_search_paths = [p for p in current_path.split(path_sep) if p not in self._conda_folders]
+            os.environ['PATH'] = path_sep.join(acceptable_search_paths)
             # Only load from conda if no other path variables work
             dll_search_path_flags = self._insert_prefix_to_list(acceptable_search_paths, '-Wl,-rpath')
         else:
