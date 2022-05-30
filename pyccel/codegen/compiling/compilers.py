@@ -28,6 +28,8 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
+path_sep = ';' if sys.platform == 'win32' else ';'
+
 #------------------------------------------------------------
 class Compiler:
     """
@@ -64,7 +66,7 @@ class Compiler:
         # Find conda paths to be cleaned out of the PATH variable
         current_path = os.environ['PATH']
         print(current_path)
-        folders = {f: f.split(os.sep) for f in current_path.split(':')}
+        folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
         conda_folder_names = ('conda', 'anaconda', 'miniconda',
                               'Conda', 'Anaconda', 'Miniconda')
         self._conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
