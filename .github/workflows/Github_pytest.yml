@@ -128,6 +128,10 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
+      - name: Check path
+        run:
+          echo $PATH
+        shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -136,7 +140,7 @@ jobs:
           mpi_type: msmpi
       - name: OpenMP
         run:
-          echo $LD_LIBRARY_PATH
+          echo $PATH
           python -m pytest test_epyccel_openmp.py -k modules_16 -sxv -m c
         working-directory: ./tests/epyccel
         shell: bash -l {0}
