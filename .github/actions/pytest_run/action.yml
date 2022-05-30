@@ -1,8 +1,9 @@
 name: 'Pyccel pytest commands generating fortran or c'
 inputs:
-  anaconda:
-    description: 'Specifies if anaconda is used'
-    required: true
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: bash
 
 
 runs:

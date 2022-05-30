@@ -1,4 +1,9 @@
 name: 'Pyccel pytest commands running parallel tests'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: bash
 
 runs:
   using: "composite"
@@ -7,6 +12,6 @@ runs:
       run: |
         mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
-      shell: bash -l {0}
+      shell: ${{ inputs.anaconda }}
       working-directory: ./tests
 

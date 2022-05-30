@@ -103,10 +103,16 @@ jobs:
           mpi_type: openmpi
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+        with:
+          shell_cmd: bash -l {0}
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
+        with:
+          shell_cmd: bash -l {0}
       - name: Parallel tests with pytest
         uses: ./.github/actions/pytest_parallel
+        with:
+          shell_cmd: bash -l {0}
 
   Anaconda-Windows:
     runs-on: windows-latest
@@ -125,7 +131,13 @@ jobs:
           mpi_type: msmpi
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
+        with:
+          shell_cmd: bash -l {0}
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
+        with:
+          shell_cmd: bash -l {0}
       - name: Parallel tests with pytest
         uses: ./.github/actions/pytest_parallel
+        with:
+          shell_cmd: bash -l {0}
