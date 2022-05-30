@@ -8,8 +8,8 @@ runs:
         # Use utf for output
         $PSDefaultParameterValues['Out-File:Encoding'] = 'Ascii'
         #
-        sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
-        Move-Item -Path sed_tmp.py -Destination ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py -Force
+        sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${Env:PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
+        Move-Item -Path sed_tmp.py -Destination ${Env:PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
     - name: Install Lapack
       run: |
