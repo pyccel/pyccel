@@ -138,7 +138,7 @@ jobs:
         run:
           python -m pytest -sxv -m c test_epyccel_openmp.py
         working-directory: ./tests/epyccel
-        shell: bash
+        shell: bash -l {0}
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #  with:
