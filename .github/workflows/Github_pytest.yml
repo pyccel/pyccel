@@ -123,6 +123,10 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
+      - name: Setup python location
+        run: |
+          where python
+        shell: bash -l {0}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
