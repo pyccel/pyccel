@@ -6,10 +6,10 @@ runs:
     - name: Fix 'Unknown MS Compiler version 1900' problem
       run: |
         Get-Command python
-        $PYTHON_EXE_PATH=(Get-Command python)
-        echo $PYTHON_EXE_PATH
+        $PYTHON_EXE_PATH=(Get-Command python).Source
+        echo "${PYTHON_EXE_PATH}"
         $PYTHON_BIN_PATH=(Split-Path -Path $PYTHON_EXE_PATH)
-        echo ${PYTHON_BIN_PATH}
+        echo "${PYTHON_BIN_PATH}"
         $PYTHON_PATH=(Split-Path -Path $PYTHON_BIN_PATH)
         echo ${PYTHON_PATH}
         ls ${PYTHON_PATH}
