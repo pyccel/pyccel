@@ -16,7 +16,7 @@ runs:
         #
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
-      shell: pwsh
+      shell: powershell
     - name: Install Lapack
       run: |
         #
@@ -32,7 +32,7 @@ runs:
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         echo "BLAS/LAPACK installed"
-      shell: pwsh
+      shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
         #
@@ -46,7 +46,7 @@ runs:
         msiexec /quiet /i msmpisdk.msi
         sleep 1
         echo "MS MPI runtime and SDK installed"
-      shell: pwsh
+      shell: powershell
     - name: Setup MPI
       run: |
         #refreshenv
@@ -73,4 +73,4 @@ runs:
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
         popd
         echo "MS MPI set up for use"
-      shell: pwsh
+      shell: powershell
