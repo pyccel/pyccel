@@ -64,7 +64,7 @@ jobs:
           ls
           pwd
           echo "Calling"
-          D:\a\pyccel\pyccel\tests\pyccel\scripts\lapack_subroutine.exe
+          /d/a/pyccel/pyccel/tests/pyccel/scripts/lapack_subroutine.exe
         shell: bash
         working-directory: ./tests/pyccel/scripts
       - name: Fortran/C tests with pytest
