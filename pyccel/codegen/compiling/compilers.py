@@ -19,8 +19,6 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-print(platform.system())
-
 if platform.system() == 'Darwin':
     # Collect version using mac tools to avoid unexpected results on Big Sur
     # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
