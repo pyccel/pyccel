@@ -63,7 +63,7 @@ jobs:
           pyccel lapack_subroutine.py --verbose
           ls
           echo "Calling"
-          ./lapack_subroutine.exe
+          lapack_subroutine.exe
         shell: bash
         working-directory: ./tests/pyccel/scripts
       - name: Fortran/C tests with pytest
