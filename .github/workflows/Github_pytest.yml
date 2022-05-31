@@ -58,11 +58,6 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: OpenMP
-        run:
-          python -m pytest -sxv -m c test_epyccel_openmp.py
-        working-directory: ./tests/epyccel
-        shell: bash
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
