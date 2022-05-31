@@ -96,7 +96,7 @@ class Compiler:
             errors.report("Could not find compiler ({})".format(exec_cmd),
                     severity='fatal')
 
-        return [exec_loc, *dll_search_path_flags]
+        return exec_loc
 
     def _get_flags(self, flags = (), accelerators = ()):
         """
@@ -296,7 +296,7 @@ class Compiler:
         else:
             j_code = ()
 
-        cmd = [*exec_cmd, *flags, *inc_flags,
+        cmd = [exec_cmd, *flags, *inc_flags,
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
@@ -335,7 +335,7 @@ class Compiler:
         else:
             j_code = ()
 
-        cmd = [*exec_cmd, *flags, *includes, *libdirs_flags,
+        cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
                  *linker_libdirs_flags, *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
@@ -389,7 +389,7 @@ class Compiler:
         sharedlib_modname = sharedlib_modname or compile_obj.python_module
         file_out = os.path.join(compile_obj.source_folder, sharedlib_modname+ext_suffix)
 
-        cmd = [*exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
+        cmd = [exec_cmd, *flags, *includes, *libdirs_flags, *linker_libdirs_flags,
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
