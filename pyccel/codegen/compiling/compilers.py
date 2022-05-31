@@ -31,8 +31,10 @@ if platform.system() == 'Darwin':
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 path_sep = ';' if platform.system() == 'Windows' else ':'
-def get_conda_folders():
-    # Find conda paths to be cleaned out of the PATH variable
+def get_condaless_search_path():
+    """ Get the value of the PATH variable to be set when searching for the compiler.
+    This is the same as the environment PATH variable but without any conda paths
+    """
     current_path = os.environ['PATH']
     folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
     conda_folder_names = ('conda', 'anaconda', 'miniconda',
@@ -58,7 +60,7 @@ class Compiler:
             Indicates whether we are compiling in debug mode
     """
     __slots__ = ('_debug','_info')
-    _acceptable_bin_paths = get_conda_folders()
+    _acceptable_bin_paths = get_condaless_search_path()
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -83,8 +85,7 @@ class Compiler:
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
-        if self._acceptable_bin_paths:
-            os.environ['PATH'] = self._acceptable_bin_paths
+        os.environ['PATH'] = self._acceptable_bin_paths
 
         # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)
