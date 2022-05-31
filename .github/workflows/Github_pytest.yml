@@ -145,11 +145,8 @@ jobs:
           pyccel-clean
           python -m pytest ndarrays/ -rX
           pyccel-clean
-        shell: ${{ inputs.shell_cmd }}
         working-directory: ./tests
-        uses: ./.github/actions/pytest_run
-        with:
-          shell_cmd: "bash -l {0}"
+        shell: "bash -l {0}"
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
         with:
