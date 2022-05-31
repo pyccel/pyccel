@@ -60,7 +60,8 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Lapack test
         run: |
-          pyccel lapack_subroutine.py
+          pyccel lapack_subroutine.py --verbose
+          echo "Calling"
           ./lapack_subroutine
         shell: bash
         working-directory: ./tests/pyccel/scripts
