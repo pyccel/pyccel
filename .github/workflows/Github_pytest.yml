@@ -61,7 +61,7 @@ jobs:
       - name: Lapack test bash
         run: |
           echo $PATH
-          ls C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
+          ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
           pyccel lapack_subroutine.py --verbose
           ls
           pwd
