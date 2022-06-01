@@ -65,7 +65,7 @@ jobs:
           echo "Calling"
           python -c "from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
           echo "Executing"
-          lapack_subroutine.exe
+          .\\lapack_subroutine.exe
         shell: powershell
         working-directory: ./tests/pyccel/scripts
       - name: Lapack test
