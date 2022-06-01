@@ -64,6 +64,7 @@ jobs:
           ls C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib
           pyccel lapack_subroutine.py --verbose
           echo "Calling"
+          cp C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib\\liblapack.dll .
           python -c "from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
           echo "Executing"
           .\\lapack_subroutine.exe
