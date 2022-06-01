@@ -58,6 +58,20 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: Lapack test bash
+        run: |
+          echo $PATH
+          ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
+          cp /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib/liblapack.dll
+          pyccel lapack_subroutine.py --verbose
+          ls
+          pwd
+          echo "Calling"
+          python -c "from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
+          echo "Executing"
+          /d/a/pyccel/pyccel/tests/pyccel/scripts/lapack_subroutine.exe
+        shell: bash
+        working-directory: ./tests/pyccel/scripts
       - name: Lapack test pwsh
         run: |
           echo $env:PATH
@@ -69,19 +83,6 @@ jobs:
           echo "Executing"
           .\\lapack_subroutine.exe
         shell: powershell
-        working-directory: ./tests/pyccel/scripts
-      - name: Lapack test bash
-        run: |
-          echo $PATH
-          ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
-          pyccel lapack_subroutine.py --verbose
-          ls
-          pwd
-          echo "Calling"
-          python -c "from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
-          echo "Executing"
-          /d/a/pyccel/pyccel/tests/pyccel/scripts/lapack_subroutine.exe
-        shell: bash
         working-directory: ./tests/pyccel/scripts
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
