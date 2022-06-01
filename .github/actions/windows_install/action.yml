@@ -13,8 +13,10 @@ runs:
       shell: powershell
     - name: Install Lapack
       run: |
-        choco install clapack -y
-        choco install openblas -y
+        choco search lapack
+        choco search blas
+        choco install clapack --source mingw -y
+        choco install openblas --source mingw -y
         #
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
         #$WEB_ADDRESS="https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64"
