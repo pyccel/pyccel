@@ -62,7 +62,7 @@ jobs:
         run: |
           echo $PATH
           ls /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
-          cp /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib/liblapack.dll
+          cp /c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib/liblapack.dll .
           pyccel lapack_subroutine.py --verbose
           ls
           pwd
