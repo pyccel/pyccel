@@ -60,6 +60,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Lapack test
         run: |
+          ls C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib
           pyccel lapack_subroutine.py --verbose
           ls
           pwd
