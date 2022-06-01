@@ -25,8 +25,7 @@ runs:
         cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
-        echo $env:Path
-        echo "PATH=$env:Path;$LIBRARY_DIR" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "$LIBRARY_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BLAS/LAPACK installed"
       shell: powershell
     - name: Install MS MPI runtime and SDK
