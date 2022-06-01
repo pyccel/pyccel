@@ -58,9 +58,9 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Lapack test
+      - name: Lapack test pwsh
         run: |
-          ls C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib
+          ls C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib
           pyccel lapack_subroutine.py --verbose
           echo "Calling"
           python -c "from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
