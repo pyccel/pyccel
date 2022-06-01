@@ -60,6 +60,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Lapack test pwsh
         run: |
+          echo $PATH
           ls C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib
           pyccel lapack_subroutine.py --verbose
           echo "Calling"
@@ -70,6 +71,7 @@ jobs:
         working-directory: ./tests/pyccel/scripts
       - name: Lapack test
         run: |
+          echo $PATH
           ls C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
           pyccel lapack_subroutine.py --verbose
           ls
