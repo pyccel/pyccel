@@ -20,10 +20,13 @@ from pyccel.errors.errors import Errors
 errors = Errors()
 
 if platform.system() == 'Darwin':
-    # Set correct deployment target if on mac
-    mac_target = platform.mac_ver()[0]
-    if mac_target:
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+    # Collect version using mac tools to avoid unexpected results on Big Sur
+    # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
+    p = subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE)
+    result, err = p.communicate()
+    mac_version_tuple = result.decode("utf-8").strip().split('.')
+    mac_target = '{}.{}'.format(*mac_version_tuple[:2])
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 #------------------------------------------------------------
 class Compiler:
@@ -298,6 +301,7 @@ class Compiler:
         # Get compile options
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
+        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
@@ -305,7 +309,7 @@ class Compiler:
             j_code = ()
 
         cmd = [exec_cmd, *flags, *includes, *libdirs_flags,
-                *m_code, compile_obj.source,
+                 *linker_libdirs_flags, *m_code, compile_obj.source,
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 

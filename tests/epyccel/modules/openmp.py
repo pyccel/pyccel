@@ -4,8 +4,9 @@ from pyccel.decorators import types
 
 @types(int)
 def set_num_threads(n):
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
-    omp_set_num_threads(n)
+    omp_set_num_threads(np.int32(n))
 
 @types()
 def get_num_threads():
@@ -29,23 +30,23 @@ def f1(i):
     idx = omp_get_thread_num()
 
     if idx == i:
-        out = idx
+        out = int(idx)
 
     #$ omp end parallel
     return out
 
 def directive_in_else(x : int):
-    result = 0
+    func_result = 0
     if x < 30:
         return x
     else:
         #$ omp parallel
-        #$ omp for reduction(+:result)
+        #$ omp for reduction(+:func_result)
         for i in range(x):
-            result = result + i
+            func_result = func_result + i
         #$ omp end parallel
 
-    return result
+    return func_result
 
 def test_omp_number_of_procs():
     from pyccel.stdlib.internal.openmp import omp_get_num_procs
@@ -90,8 +91,9 @@ def test_omp_get_thread_limit():
 
 @types ('int')
 def test_omp_get_set_max_active_levels(max_active_levels):
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels
-    omp_set_max_active_levels(max_active_levels)
+    omp_set_max_active_levels(np.int32(max_active_levels))
     max_active_levels_var = omp_get_max_active_levels()
     return max_active_levels_var
 
@@ -133,7 +135,7 @@ def test_omp_in_final():
     from pyccel.stdlib.internal.openmp import omp_in_final
     x = 20
     z = 0
-    result = 0
+    func_result = 0
 
     #$ omp parallel
     #$ omp single
@@ -141,11 +143,11 @@ def test_omp_in_final():
     for i in range(x):
         z = z + i
         if omp_in_final() == 1:
-            result = 1
+            func_result = 1
     #$ omp end task
     #$ omp end single
     #$ omp end parallel
-    return result
+    return func_result
 
 def test_omp_get_proc_bind():
     from pyccel.stdlib.internal.openmp import omp_get_proc_bind
@@ -216,23 +218,50 @@ def test_omp_get_initial_device():
     return host_device
 
 def test_omp_get_set_schedule():
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
-    result = 0
+    func_result = 0
     #$ omp parallel private(i)
-    #$ omp for schedule(runtime) reduction (+:sum)
-    omp_set_schedule(2, 2)
-    schedule_kind = 0
-    chunk_size = 0
-    omp_get_schedule(schedule_kind, chunk_size)
+    omp_set_schedule(np.int32(2), np.int32(3))
+    _, chunk_size = omp_get_schedule()
+    #$ omp for nowait schedule(runtime) reduction (+:func_result)
     for i in range(16):
-        result = result + i
-    #$ omp end for nowait
-    return True
+        func_result = func_result + chunk_size
+    #$omp end parallel
+    return func_result
+
+def test_nowait_schedule(n : int):
+    import numpy as np
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+
+    a = np.zeros(n)
+    imin_res = np.empty(4)
+    imax_res = np.empty(4)
+
+    #$omp parallel private(rank,nb_tasks,i_min,i_max)
+    rank = omp_get_thread_num()
+    nb_tasks=omp_get_num_threads()
+    i_min=n
+    i_max=0
+
+    schedule_size = int(n/nb_tasks) #pylint: disable=unused-variable
+    #$omp for nowait schedule(static, schedule_size)
+    for i in range(n):
+        a[i] = 92290. + i
+        i_min = min(i_min, i)
+        i_max = max(i_min, i)
+
+    imin_res[rank] = i_min
+    imax_res[rank] = i_max
+    #$omp end parallel
+
+    return imin_res[0], imin_res[1], imin_res[2], imin_res[3], \
+            imax_res[0], imax_res[1], imax_res[2], imax_res[3]
 
 def test_omp_get_max_task_priority():
+    import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
-    result = 0
-    max_task_priority_var = 0
+    max_task_priority_var = np.int32(0)
     #$ omp parallel
     #$ omp single
     #$ omp task
@@ -280,63 +309,63 @@ def omp_nowait(x, y, z):
 
 @types('int[:]')
 def omp_arraysum(x):
-    result = 0
+    func_result = 0
     #$ omp parallel private(i)
-    #$ omp for reduction (+:result)
+    #$ omp for reduction (+:func_result)
     for i in range(0, 5):
-        result += x[i]
+        func_result += x[i]
     #$ omp end parallel
-    return result
+    return func_result
 
 @types('int[:]')
 def omp_arraysum_combined(x):
-    result = 0
-    #$ omp parallel for reduction (+:result)
+    func_result = 0
+    #$ omp parallel for reduction (+:func_result)
     for i in range(0, 5):
-        result += x[i]
-    return result
+        func_result += x[i]
+    return func_result
 
 @types('int')
 def omp_range_sum_critical(x):
-    result = 0
-    #$ omp parallel for num_threads(4) shared(result)
+    func_result = 0
+    #$ omp parallel for num_threads(4) shared(func_result)
     for i in range(0, x):
         #$ omp critical
-        result += i
+        func_result += i
         #$ omp end critical
-    return result
+    return func_result
 
 
 @types('int[:]')
 def omp_arraysum_single(x):
-    result = 0
+    func_result = 0
     #$ omp parallel
     #$ omp single
     for i in range(0, 10):
-        result += x[i]
+        func_result += x[i]
     #$ omp end single
     #$ omp end parallel
-    return result
+    return func_result
 
 def omp_master():
-    result = 30
-    #$omp parallel num_threads(3) reduction(+:result)
+    func_result = 30
+    #$omp parallel num_threads(3) reduction(+:func_result)
     #$omp master
-    result += 1
+    func_result += 1
     #$omp end master
     #$omp end parallel
-    return result
+    return func_result
 
 @types('int')
 def omp_taskloop(n):
-    result = 0
+    func_result = 0
     #$omp parallel num_threads(n)
     #$omp taskloop
     for i in range(0, 10): # pylint: disable=unused-variable
         #$omp atomic
-        result = result + 1
+        func_result = func_result + 1
     #$omp end parallel
-    return result
+    return func_result
 
 @types('int')
 def omp_tasks(x):
@@ -362,7 +391,7 @@ def omp_tasks(x):
 @types('int')
 def omp_simd(n):
     from numpy import zeros
-    result = 0
+    func_result = 0
     arr = zeros(n, dtype=int)
     #$ omp parallel num_threads(4)
     #$ omp simd
@@ -370,8 +399,8 @@ def omp_simd(n):
         arr[i] = i
     #$ omp end parallel
     for i in range(0, n):
-        result = result + arr[i]
-    return result
+        func_result = func_result + arr[i]
+    return func_result
 
 def omp_flush():
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
@@ -393,32 +422,32 @@ def omp_flush():
 def omp_barrier():
     from numpy import zeros
     arr = zeros(1000, dtype=int)
-    result = 0
+    func_result = 0
     #$ omp parallel num_threads(3)
     #$ omp for
     for i in range(0, 1000):
         arr[i] = i * 2
 
     #$ omp barrier
-    #$ omp for reduction(+:result)
+    #$ omp for reduction(+:func_result)
     for i in range(0, 1000):
-        result = result + arr[i]
+        func_result = func_result + arr[i]
     #$ omp end parallel
-    return result
+    return func_result
 
 def combined_for_simd():
     import numpy as np
     x = np.array([1,2,1,2,1,2,1,2])
     y = np.array([2,1,2,1,2,1,2,1])
     z = np.zeros(8, dtype = int)
-    result = 0
+    func_result = 0
     #$ omp parallel for simd
     for i in range(0, 8):
         z[i] = x[i] + y[i]
 
     for i in range(0, 8):
-        result = result + z[i]
-    return result
+        func_result = func_result + z[i]
+    return func_result
 
 def omp_sections():
     n = 8
@@ -450,7 +479,7 @@ def omp_sections():
 
 @types('int[:]', 'int[:]', 'int[:]', 'int[:]', 'int[:]')
 def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35):
-    result = 0
+    func_result = 0
     n1     = long_variable_1_oiwed423rnoij21d4kojklm.shape[0]
     n2     = long_variable_2_oiwedqwrnoij2asxaxnjkna.shape[0]
     n3     = long_variable_3_oiweqxhnoijaqed34023423.shape[0]
@@ -459,25 +488,25 @@ def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwed
 
     #$ omp parallel private(i1, i2, i3, i4, i5) shared(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35, n1, n2, n3, n4, n5)
 
-    #$ omp for reduction (+:result)
+    #$ omp for reduction (+:func_result)
     for i1 in range(0, n1):
-        result += long_variable_1_oiwed423rnoij21d4kojklm[i1]
+        func_result += long_variable_1_oiwed423rnoij21d4kojklm[i1]
 
-    #$ omp for reduction (+:result)
+    #$ omp for reduction (+:func_result)
     for i2 in range(0, n2):
-        result += long_variable_2_oiwedqwrnoij2asxaxnjkna[i2]
+        func_result += long_variable_2_oiwedqwrnoij2asxaxnjkna[i2]
 
-    #$ omp for reduction (+:result)
+    #$ omp for reduction (+:func_result)
     for i3 in range(0, n3):
-        result += long_variable_3_oiweqxhnoijaqed34023423[i3]
+        func_result += long_variable_3_oiweqxhnoijaqed34023423[i3]
 
-    #$ omp for reduction (+:result)
+    #$ omp for reduction (+:func_result)
     for i4 in range(0, n4):
-        result += long_variable_4_oiweaxaijaqedqd34023423[i4]
+        func_result += long_variable_4_oiweaxaijaqedqd34023423[i4]
 
-    #$ omp for reduction (+:result)
+    #$ omp for reduction (+:func_result)
     for i5 in range(0, n5):
-        result += long_variable_5_oiwed423rnoic3242ewdx35[i5]
+        func_result += long_variable_5_oiwed423rnoic3242ewdx35[i5]
 
     #$ omp end parallel
-    return result
+    return func_result

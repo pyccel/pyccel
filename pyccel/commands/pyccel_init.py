@@ -18,7 +18,7 @@ def pyccel_init():
             'lapack.pyh', 'mpi.pyh', 'openacc.pyh', 'openmp.pyh']
 
     for f in files:
-        parser = Parser(os.path.join(folder,f), show_traceback=False)
+        parser = Parser(os.path.join(folder,f))
         parser.parse(verbose=False)
 
 def pyccel_init_command():

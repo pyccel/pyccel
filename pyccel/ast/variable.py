@@ -527,6 +527,14 @@ class Variable(PyccelAstNode):
         # Don't invalidate Variables
         pass
 
+    @is_temp.setter
+    def is_temp(self, is_temp):
+        if not isinstance(is_temp, bool):
+            raise TypeError("is_temp must be a boolean")
+        elif is_temp:
+            raise ValueError("Variables cannot become temporary")
+        self._is_temp = is_temp
+
 class DottedName(Basic):
 
     """
@@ -808,7 +816,6 @@ class IndexedElement(PyccelAstNode):
             return
 
         self._dtype = base.dtype
-        self._order = base.order
         self._precision = base.precision
 
         shape = base.shape
@@ -857,6 +864,8 @@ class IndexedElement(PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
+
+        self._order = None if self.rank < 2 else base.order
 
     @property
     def base(self):
@@ -911,7 +920,8 @@ class VariableAddress(PyccelAstNode):
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
-        if not isinstance(variable, (Variable, IndexedElement)):
+        if not isinstance(variable, (Variable, IndexedElement, VariableAddress)):
+            # Address of Address should only be used in the wrapper
             raise TypeError('variable must be a variable or indexed element')
         self._variable = variable
 
