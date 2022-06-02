@@ -1478,6 +1478,9 @@ class NumpyNonZero(NumpyNewArray):
         """
         return self._elements
 
+    def __iter__(self):
+        return self._elements.__iter__()
+
 class NumpyCountNonZero(PyccelInternalFunction):
     """
     Class representing a call to the numpy size function which
