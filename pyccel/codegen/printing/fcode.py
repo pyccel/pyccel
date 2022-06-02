@@ -70,6 +70,7 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
@@ -1473,6 +1474,10 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyEmpty):
             return ''
+
+        if isinstance(rhs, NumpyNonZero):
+            elements = [self._print(e) for e in rhs.elements]
+            return '[{}]'.format(', '.join(elements))
 
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
