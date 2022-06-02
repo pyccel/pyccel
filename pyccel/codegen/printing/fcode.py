@@ -952,9 +952,9 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyNonZeroElement(self, expr):
 
         ind   = self._print(self.scope.get_temporary_variable('int'))
-        mask  = self._print(expr.variable)
+        mask  = self._print(expr.array)
         kind  = self.print_kind(expr)
-        my_range = self._print(PythonRange(expr.variable.shape[expr.dim]))
+        my_range = self._print(PythonRange(expr.array.shape[expr.dim]))
 
         stmt  = 'pack([({ind},{ind}={my_range})],{mask})'.format(
                 ind=ind,mask=mask,kind=kind,my_range=my_range)

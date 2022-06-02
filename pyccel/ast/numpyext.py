@@ -1413,8 +1413,8 @@ class NumpyNonZeroElement(NumpyNewArray):
     dim : int
           The index of the element in the tuple
     """
-    __slots__ = ('_var','_dim','_shape')
-    _attribute_nodes = ('_var',)
+    __slots__ = ('_arr','_dim','_shape')
+    _attribute_nodes = ('_arr',)
     name = 'nonzero'
     _dtype = NativeInteger()
     _precision = 8
@@ -1422,17 +1422,17 @@ class NumpyNonZeroElement(NumpyNewArray):
     _order = None
 
     def __init__(self, a, dim):
-        self._var = a
+        self._arr = a
         self._dim = dim
 
         self._shape = (NumpyCountNonZero(a),)
         super().__init__(a)
 
     @property
-    def variable(self):
+    def array(self):
         """ The argument which was passed to numpy.nonzero
         """
-        return self._var
+        return self._arr
 
     @property
     def dim(self):
