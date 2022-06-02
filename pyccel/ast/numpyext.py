@@ -13,7 +13,7 @@ import operator
 import numpy
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
+from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -1425,7 +1425,7 @@ class NumpyNonZeroElement(NumpyNewArray):
         self._var = a
         self._dim = dim
 
-        self._shape = (None,)
+        self._shape = (NumpyCountNonZero(a),)
         super().__init__(a)
 
     @property
@@ -1477,6 +1477,65 @@ class NumpyNonZero(NumpyNewArray):
         """ The elements of the tuple
         """
         return self._elements
+
+class NumpyCountNonZero(PyccelInternalFunction):
+    """
+    Class representing a call to the numpy size function which
+    returns the shape of an object in a given dimension
+
+    Parameters
+    ==========
+    arg   : PyccelAstNode
+            An array for which the non-zero elements should be counted
+    axis  : int
+            The dimension along which the non-zero elements are counted
+    """
+    __slots__ = ('_rank', '_shape', '_order', '_arr', '_axis')
+    _attribute_nodes = ('_arr','_axis')
+    name   = 'size'
+    _dtype = NativeInteger()
+    _precision = -1
+    def __init__(self, a, axis = None, *, keep_dims = LiteralFalse()):
+        if not isinstance(keep_dims, (LiteralTrue, LiteralFalse)):
+            errors.report(NON_LITERAL_KEEP_DIMS, symbol=keep_dims, severity="fatal")
+        if axis is not None and not isinstance(axis, LiteralInteger):
+            errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
+
+        if keep_dims.python_value:
+            self._rank  = a.rank
+            self._order = a.order
+            if axis is not None:
+                self._shape = a.shape.copy()
+                self._shape[axis.python_value] = LiteralInteger(1)
+            else:
+                self._shape = (LiteralInteger(1),)*a.rank
+        else:
+            if axis is not None:
+                self._shape = a.shape.copy()
+                self._shape[axis.python_value] = LiteralInteger(1)
+                self._rank  = a.rank-1
+                self._order = a.order if a.rank>2 else None
+            else:
+                self._rank  = 0
+                self._shape = ()
+                self._order = None
+
+        self._arr = a
+        self._axis = axis
+
+        super().__init__()
+
+    @property
+    def array(self):
+        """ The argument which was passed to numpy.nonzero
+        """
+        return self._arr
+
+    @property
+    def axis(self):
+        """ The dimension which the results describe
+        """
+        return self._axis
 
 class NumpyArraySize(PyccelInternalFunction):
     """
