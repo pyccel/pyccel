@@ -1403,13 +1403,6 @@ class NumpyConjugate(PythonConjugate):
         return True
 
 class NumpyNonZeroElement(NumpyNewArray):
-    __slots__ = ('_var','_dim','_shape')
-    _attribute_nodes = ('_var',)
-    name = 'where'
-    _dtype = NativeInteger()
-    _precision = 8
-    _rank = 1
-    _order = 'C'
     """ Represents an element of the tuple returned by
     NumpyNonZero which represents a call to numpy.nonzero
 
@@ -1420,6 +1413,13 @@ class NumpyNonZeroElement(NumpyNewArray):
     dim : int
           The index of the element in the tuple
     """
+    __slots__ = ('_var','_dim','_shape')
+    _attribute_nodes = ('_var',)
+    name = 'nonzero'
+    _dtype = NativeInteger()
+    _precision = 8
+    _rank = 1
+    _order = None
 
     def __init__(self, a, dim):
         self._var = a
@@ -1453,8 +1453,30 @@ class NumpyNonZero(NumpyNewArray):
     ----------
     a : array_like
     """
-    def __new__(cls, a):
-        return PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
+    __slots__ = ('_elements','_arr','_shape')
+    _attribute_nodes = ('_elements',)
+    name = 'nonzero'
+    _dtype = NativeInteger()
+    _precision = 8
+    _rank  = 2
+    _order = 'C'
+    def __init__(self, a):
+        self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
+        self._arr = a
+        self._shape = self._elements.shape
+        super().__init__()
+
+    @property
+    def array(self):
+        """ The array argument
+        """
+        return self._arr
+
+    @property
+    def elements(self):
+        """ The elements of the tuple
+        """
+        return self._elements
 
 class NumpyArraySize(PyccelInternalFunction):
     """
