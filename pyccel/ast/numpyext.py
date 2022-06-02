@@ -1425,7 +1425,7 @@ class NumpyNonZeroElement(NumpyNewArray):
         self._var = a
         self._dim = dim
 
-        self._shape = (NumpyArraySize(a),)
+        self._shape = (None,)
         super().__init__(a)
 
     @property
