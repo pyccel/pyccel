@@ -1528,6 +1528,10 @@ class SemanticParser(BasicParser):
                                 symbol=name,
                                 severity='fatal')
 
+        for v in variables:
+            if v.rank > 0 and not v.is_pointer:
+                v.is_target = True
+
         mod = Module(mod_name,
                     variables,
                     funcs,

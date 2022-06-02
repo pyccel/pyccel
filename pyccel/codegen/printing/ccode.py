@@ -1165,7 +1165,10 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        alloc_code = "{} = array_create({}, {}, {});\n".format(expr.variable, len(expr.shape), shape_Assign, dtype)
+        is_view = 'false' if expr.variable.allocatable else 'true'
+        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
+                expr.variable, len(expr.shape), shape_Assign, dtype,
+                is_view)
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
@@ -1838,7 +1841,7 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.value)
 
     def _print_VariableAddress(self, expr):
-        if isinstance(expr.variable, IndexedElement):
+        if isinstance(expr.variable, (IndexedElement, VariableAddress)):
             return '&{}'.format(self._print(expr.variable))
         elif self.stored_in_c_pointer(expr.variable):
             return '{}'.format(expr.variable.name)
