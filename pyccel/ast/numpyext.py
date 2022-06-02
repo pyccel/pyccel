@@ -1410,6 +1410,16 @@ class NumpyNonZeroElement(NumpyNewArray):
     _precision = 8
     _rank = 1
     _order = 'C'
+    """ Represents an element of the tuple returned by
+    NumpyNonZero which represents a call to numpy.nonzero
+
+    Parameters
+    ----------
+    a   : array_like
+          The argument which was passed to numpy.nonzero
+    dim : int
+          The index of the element in the tuple
+    """
 
     def __init__(self, a, dim):
         self._var = a
@@ -1420,14 +1430,30 @@ class NumpyNonZeroElement(NumpyNewArray):
 
     @property
     def variable(self):
+        """ The argument which was passed to numpy.nonzero
+        """
         return self._var
 
     @property
     def dim(self):
+        """ The dimension which the results describe
+        """
         return self._dim
 
 class NumpyNonZero(NumpyNewArray):
-    def __new__(self, a):
+    """
+    Class representing a call to the function numpy.nonzero
+
+    Example:
+    >>> x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
+    >>> np.nonzero(x)
+    (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
+
+    Parameters
+    ----------
+    a : array_like
+    """
+    def __new__(cls, a):
         return PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
 
 class NumpyArraySize(PyccelInternalFunction):
@@ -1437,7 +1463,7 @@ class NumpyArraySize(PyccelInternalFunction):
 
     Parameters
     ==========
-        arg   : PyccelAstNode
+    arg   : PyccelAstNode
             A PyccelAstNode of unknown shape
     axis  : int
             The dimension along which the size is
@@ -1465,7 +1491,6 @@ class NumpyArraySize(PyccelInternalFunction):
             return super().__new__(cls)
 
     def __init__(self, a, axis = None):
-
         self._arg   = a
         super().__init__()
 
