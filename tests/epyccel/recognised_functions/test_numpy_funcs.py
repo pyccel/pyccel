@@ -1294,14 +1294,6 @@ def test_full_order(language):
     f_shape_F  = epyccel(create_full_shape_F, language = language)
     assert(f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_full_dtype(language):
     @types('int')
     def create_full_val_int_int(val):
@@ -4892,6 +4884,15 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="nonzero not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_numpy_where_array_like_1d_1_arg(language):
 
     @types('bool[:]')
