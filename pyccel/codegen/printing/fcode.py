@@ -961,6 +961,22 @@ class FCodePrinter(CodePrinter):
 
         return stmt
 
+    def _print_NumpyCountNonZero(self, expr):
+
+        axis  = expr.axis
+        mask  = self._print(expr.array)
+        kind  = self.print_kind(expr)
+
+        if axis is None:
+            args = '{}, kind = {}'.format(mask, kind)
+        else:
+            dim   = self._print(expr.axis)
+            args = '{}, dim = {}, kind = {}'.format(mask, dim, kind)
+
+        stmt  = 'count({})'.format(args)
+
+        return stmt
+
     def _print_NumpyWhere(self, expr):
         value_true  = expr.value_true
         value_false = expr.value_false
@@ -1476,8 +1492,13 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if isinstance(rhs, NumpyNonZero):
-            elements = [self._print(e) for e in rhs.elements]
-            return '[{}]'.format(', '.join(elements))
+            code = ''
+            lhs = expr.lhs
+            for i,e in enumerate(rhs.elements):
+                l_c = self._print(lhs[i])
+                e_c = self._print(e)
+                code += '{0} = {1}\n'.format(l_c,e_c)
+            return code
 
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
