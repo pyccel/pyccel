@@ -13,7 +13,7 @@ import operator
 import numpy
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS
+from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS, NON_LITERAL_KEEP_AXIS
 
 from pyccel.utilities.stage import PyccelStage
 
