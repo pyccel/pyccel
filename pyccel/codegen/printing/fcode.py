@@ -952,12 +952,11 @@ class FCodePrinter(CodePrinter):
 
         ind   = self._print(self.scope.get_temporary_variable('int'))
         mask  = self._print(expr.variable)
-        dim   = expr.dim+1
         kind  = self.print_kind(expr)
-        my_range = self._print(PythonRange(expr.shape[0]))
+        my_range = self._print(PythonRange(expr.shape[expr.dim]))
 
         stmt  = 'pack([({ind},{ind}={my_range})],{mask})'.format(
-                ind=ind,dim=dim,mask=mask,kind=kind,my_range=my_range)
+                ind=ind,mask=mask,kind=kind,my_range=my_range)
 
         return stmt
 
