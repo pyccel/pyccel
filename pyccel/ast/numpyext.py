@@ -30,6 +30,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
+from .internals      import PyccelArraySize
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -1475,7 +1476,7 @@ class NumpyArraySize(PyccelInternalFunction):
         return self._arg
 
     def __str__(self):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
+        return 'Size({})'.format(str(self.arg))
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
