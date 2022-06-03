@@ -994,7 +994,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory allocation if needed
-                array_declared_in_function = isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef)
+                array_declared_in_function = isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) and not rhs.funcdef.is_elemental
                 if lhs.allocatable and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
