@@ -978,6 +978,10 @@ class FCodePrinter(CodePrinter):
 
         stmt  = 'count({})'.format(args)
 
+        if expr.keep_dims is LiteralTrue():
+            shape    = ', '.join(self._print(i) for i in expr.shape)
+            stmt = 'reshape({}, [{}])'.format(stmt, shape)
+
         return stmt
 
     def _print_NumpyWhere(self, expr):
