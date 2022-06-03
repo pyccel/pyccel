@@ -17,7 +17,7 @@ def get_files_from_folder(foldername):
     files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
     return files
 
-@pytest.mark.skip(reason="Broken mpi4py support, see issue #251")
+@pytest.mark.xfail(reason="Broken mpi4py support, see issue #251")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi4py'))
 def test_mpi4py(f):
 
