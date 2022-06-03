@@ -5710,11 +5710,11 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     @types('float64[:,:,:]')
     def count(arr):
         from numpy import count_nonzero
-        a = count_nonzero(arr, axis = 1, keepdims=True)
+        a = count_nonzero(arr, axis = 0, keepdims=True)
         s = a.shape
         return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
 
-    size = (2, 5, 3)
+    size = (5, 2, 3)
 
     bl = randint(0, 2, size=size, dtype= bool)
 
@@ -5768,18 +5768,17 @@ def test_numpy_count_non_zero_axis_keep_dims_F(language):
 
     size = (2, 5, 3)
 
-    bl = randint(0, 2, size=size, dtype= bool)
+    bl = np.array(randint(0, 2, size=size), dtype= bool, order='F')
 
-    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
+    integer8  = np.array(randint(min_int8,  max_int8-1,  size=size), dtype=np.int8, order='F')
+    integer16 = np.array(randint(min_int16, max_int16-1, size=size), dtype=np.int16, order='F')
+    integer   = np.array(randint(min_int,   max_int-1,   size=size), dtype=int, order='F')
+    integer32 = np.array(randint(min_int32, max_int32-1, size=size), dtype=np.int32, order='F')
+    integer64 = np.array(randint(min_int64, max_int64-1, size=size), dtype=np.int64, order='F')
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl   = np.array(uniform(min_float / 2, max_float / 2, size = size), dtype=float, order='F')
+    fl32 = np.array(uniform(min_float32 / 2, max_float32 / 2, size = size), dtype=np.float32, order='F')
+    fl64 = np.array(uniform(min_float64 / 2, max_float64 / 2, size = size), dtype=np.float64, order='F')
 
     epyccel_func = epyccel(count, language=language)
 
