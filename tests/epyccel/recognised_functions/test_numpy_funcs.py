@@ -3381,7 +3381,7 @@ def test_numpy_real_array_like_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size = size, dtype= bool)
+    bl = randint(0, 2, size = size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
@@ -3449,7 +3449,7 @@ def test_numpy_real_array_like_2d(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size = size, dtype= bool)
+    bl = randint(0, 2, size = size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
@@ -3637,7 +3637,7 @@ def test_numpy_imag_array_like_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size = size, dtype= bool)
+    bl = randint(0, 2, size = size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
@@ -3702,7 +3702,7 @@ def test_numpy_imag_array_like_2d(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size = size, dtype= bool)
+    bl = randint(0, 2, size = size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
@@ -4080,7 +4080,7 @@ def test_numpy_prod_array_like_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size = size, dtype= bool)
+    bl = randint(0, 2, size = size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
@@ -4154,7 +4154,7 @@ def test_numpy_prod_array_like_2d(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size = size, dtype= bool)
+    bl = randint(0, 2, size = size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
@@ -4346,7 +4346,7 @@ def test_numpy_norm_array_like_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4417,7 +4417,7 @@ def test_numpy_norm_array_like_2d(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4491,7 +4491,7 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4574,7 +4574,7 @@ def test_numpy_norm_array_like_3d(language):
 
     size = (2, 5, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4650,7 +4650,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
 
     size = (2, 5, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4734,7 +4734,7 @@ def test_numpy_matmul_array_like_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4807,7 +4807,7 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     size = (2, 2)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
@@ -4859,7 +4859,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
@@ -4952,7 +4952,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
@@ -5458,7 +5458,7 @@ def test_numpy_count_non_zero_1d(language):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
@@ -5508,7 +5508,7 @@ def test_numpy_count_non_zero_2d(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
@@ -5560,7 +5560,7 @@ def test_numpy_count_non_zero_1d_keep_dims(language):
 
     size = 5
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
     integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
@@ -5612,7 +5612,7 @@ def test_numpy_count_non_zero_2d_keep_dims(language):
 
     size = (2, 5)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
@@ -5664,7 +5664,7 @@ def test_numpy_count_non_zero_axis(language):
 
     size = (2, 5, 3)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
@@ -5716,7 +5716,7 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
 
     size = (2, 5, 3)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
@@ -5768,7 +5768,7 @@ def test_numpy_count_non_zero_axis_keep_dims_F(language):
 
     size = (2, 5, 3)
 
-    bl = randint(0, 1, size=size, dtype= bool)
+    bl = randint(0, 2, size=size, dtype= bool)
 
     integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
