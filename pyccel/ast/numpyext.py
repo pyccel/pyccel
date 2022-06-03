@@ -1589,7 +1589,7 @@ class NumpyArraySize(PyccelInternalFunction):
 
     def __init__(self, a, axis = None):
         self._arg   = a
-        super().__init__()
+        super().__init__(a)
 
     @property
     def arg(self):
@@ -1630,6 +1630,7 @@ numpy_funcs = {
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , Shape),
+    'size'      : PyccelFunctionDef('size'      , NumpyArraySize),
     'norm'      : PyccelFunctionDef('norm'      , NumpyNorm),
     'int'       : PyccelFunctionDef('int'       , NumpyInt),
     'real'      : PyccelFunctionDef('real'      , NumpyReal),
