@@ -504,7 +504,8 @@ class Allocate(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
-        if not variable.allocatable and not variable.is_pointer:
+        # if not variable.allocatable and not variable.is_pointer:
+        if variable.memory_handling not in ('allocatable', 'is_pointer'):
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
@@ -3154,7 +3155,8 @@ class ClassDef(ScopedNode):
             var.dtype,
             name,
             rank=var.rank,
-            allocatable=var.allocatable,
+            memory_handling=var.memory_handling,
+            # allocatable=var.allocatable,
             shape=var.shape,
             cls_base=var.cls_base,
             )
@@ -3607,7 +3609,7 @@ class Del(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), memory_handling='allocatable')
     >>> Del([x])
     Del([x])
     """

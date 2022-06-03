@@ -135,9 +135,10 @@ def as_static_function(func, *, mod_scope, name=None):
             _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
-                              allocatable = a.allocatable,
-                              is_pointer  = a.is_pointer,
-                              is_target   = a.is_target,
+                              memory_handling = a.memory_handling,
+                            #   allocatable = a.allocatable,
+                            #   is_pointer  = a.is_pointer,
+                            #   is_target   = a.is_target,
                               is_optional = a.is_optional,
                               shape       = shape_new,
                               rank        = a.rank,
