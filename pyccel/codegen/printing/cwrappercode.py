@@ -728,8 +728,9 @@ class CWrapperCodePrinter(CCodePrinter):
                     # Get pointer to store array data
                     var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
-                            is_pointer = True,
-                            allocatable = False,
+                            # is_pointer = True,
+                            # allocatable = False,
+                            memory_handling = 'pointer',
                             rank = 0)
                     # Create variables to store sizes of array
                     sizes = [scope.get_temporary_variable(NativeInteger(),
@@ -743,8 +744,10 @@ class CWrapperCodePrinter(CCodePrinter):
                     # Create ndarray to store array data
                     nd_var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
-                            is_pointer = True,
-                            allocatable = False)
+                            # is_pointer = True,
+                            # allocatable = False
+                            memory_handling = 'pointer'
+                            )
                     alloc = Allocate(nd_var, shape=sizes, order=nd_var.order, status='unallocated')
                     body.append(alloc)
                     # Save raw_data into ndarray to obtain useable pointer
@@ -855,7 +858,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # update ndarray local variables properties
             arg_vars = {a.var: a for a in func.arguments}
-            local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
+            # local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
+            #                   if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
+            #                   else v) : a for v,a in arg_vars.items()}
+            local_arg_vars = {(v.clone(v.name, memory_handling='pointer')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
             for a in local_arg_vars:
@@ -1068,7 +1074,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(v, Variable):
                 new_name = self.scope.get_new_name(v.name)
                 if isinstance(v, Variable) and (v.rank > 0 or v.is_optional):
-                    new_v = v.clone(new_name, is_pointer=True, allocatable=False)
+                    # new_v = v.clone(new_name, is_pointer=True, allocatable=False)
+                    new_v = v.clone(new_name, memory_handling='pointer')
                 else:
                     new_v = v.clone(new_name)
                 local_arg_vars[new_v] = a

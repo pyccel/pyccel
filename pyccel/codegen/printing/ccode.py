@@ -1162,7 +1162,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.allocatable else 'true'
+        # is_view = 'false' if expr.variable.allocatable else 'true'
+        is_view = 'false' if expr.variable.memory_handling == 'allocatable' else 'true'
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view)

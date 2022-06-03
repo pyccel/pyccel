@@ -409,27 +409,33 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Variable):
-
             d_var['datatype'      ] = expr.dtype
-            d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
+            
+            if expr.memory_handling == 'allocatable':
+                d_var['memory_handling'] = 'allocatable' if expr.rank > 0 else False
+            else:
+                d_var['memory_handling'] = expr.memory_handling
+            # d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
+
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
-            d_var['is_pointer'    ] = expr.is_pointer
+            # d_var['is_pointer'    ] = expr.is_pointer
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
-            d_var['is_stack_array'] = expr.is_stack_array
+            # d_var['is_stack_array'] = expr.is_stack_array
             return d_var
 
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = expr.dtype
             d_var['precision'     ] = expr.precision
-            d_var['allocatable'   ] = True
+            d_var['memory_handling'] = 'allocatable'
+            # d_var['allocatable'   ] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
-            d_var['is_pointer'    ] = False
+            # d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -439,9 +445,10 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
-            d_var['is_pointer'    ] = False
-            d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-            d_var['is_stack_array'] = not d_var['allocatable']
+            # d_var['is_pointer'    ] = False
+            # d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
+            # d_var['is_stack_array'] = not d_var['allocatable']
+            d_var['memory_handling'] = expr.memory_handling
             d_var['cls_base'      ] = TupleClass
             return d_var
 

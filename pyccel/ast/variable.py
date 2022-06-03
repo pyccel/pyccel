@@ -163,8 +163,8 @@ class Variable(PyccelAstNode):
         #     raise TypeError('is_pointer must be a boolean.')
         # self.is_pointer = is_pointer
 
-        if memory_handling not in ('allocatable', 'is_stack_array', 'is_pointer', None):
-            raise TypeError('memory_handling must be allocatable, is_stack_array, is_pointer or None')
+        if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
+            raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
@@ -289,8 +289,8 @@ class Variable(PyccelAstNode):
 
     @memory_handling.setter
     def memory_handling(self, memory_handling):
-        if memory_handling != 'allocatable':
-            raise TypeError('memory_handling must be allocatable, is_stack_array, is_pointer or None')
+        if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
+            raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
         self._memory_handling = memory_handling
 
     # @property
@@ -434,18 +434,18 @@ class Variable(PyccelAstNode):
         """inspects the variable."""
 
         print('>>> Variable')
-        print( '  name           = {}'.format(self.name))
-        print( '  dtype          = {}'.format(self.dtype))
-        print( '  precision      = {}'.format(get_final_precision(self)))
-        print( '  rank           = {}'.format(self.rank))
-        print( '  order          = {}'.format(self.order))
-        # print( '  allocatable    = {}'.format(self.allocatable))
+        print( '  name                = {}'.format(self.name))
+        print( '  dtype               = {}'.format(self.dtype))
+        print( '  precision           = {}'.format(get_final_precision(self)))
+        print( '  rank                = {}'.format(self.rank))
+        print( '  order               = {}'.format(self.order))
+    #   print( '  allocatable    = {}'.format(self.allocatable))
         print( '  memory_handeling    = {}'.format(self.memory_handling))
-        print( '  shape          = {}'.format(self.shape))
-        print( '  cls_base       = {}'.format(self.cls_base))
-        # print( '  is_pointer     = {}'.format(self.is_pointer))
-        print( '  is_target      = {}'.format(self.is_target))
-        print( '  is_optional    = {}'.format(self.is_optional))
+        print( '  shape               = {}'.format(self.shape))
+        print( '  cls_base            = {}'.format(self.cls_base))
+    #   print( '  is_pointer     = {}'.format(self.is_pointer))
+        print( '  is_target           = {}'.format(self.is_target))
+        print( '  is_optional         = {}'.format(self.is_optional))
         print( '<<<')
 
     def use_exact_precision(self):
@@ -726,23 +726,32 @@ class InhomogeneousTupleVariable(TupleVariable):
     def __len__(self):
         return len(self._vars)
 
-    @Variable.allocatable.setter
-    def allocatable(self, allocatable):
-        if not isinstance(allocatable, bool):
-            raise TypeError('allocatable must be a boolean.')
-        self._allocatable = allocatable
-        for var in self._vars:
-            if var.rank > 0:
-                var.allocatable = allocatable
+    # @Variable.allocatable.setter
+    # def allocatable(self, allocatable):
+    #     if not isinstance(allocatable, bool):
+    #         raise TypeError('allocatable must be a boolean.')
+    #     self._allocatable = allocatable
+    #     for var in self._vars:
+    #         if var.rank > 0:
+    #             var.allocatable = allocatable
 
-    @Variable.is_pointer.setter
-    def is_pointer(self, is_pointer):
-        if not isinstance(is_pointer, bool):
-            raise TypeError('is_pointer must be a boolean.')
-        self._is_pointer = is_pointer
+    # @Variable.is_pointer.setter
+    # def is_pointer(self, is_pointer):
+    #     if not isinstance(is_pointer, bool):
+    #         raise TypeError('is_pointer must be a boolean.')
+    #     self._is_pointer = is_pointer
+    #     for var in self._vars:
+    #         if var.rank > 0:
+    #             var.is_pointer = is_pointer
+
+    @Variable.memory_handling.setter
+    def memory_handling(self, memory_handling):
+        if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
+            raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
+        self._memory_handling = memory_handling
         for var in self._vars:
             if var.rank > 0:
-                var.is_pointer = is_pointer
+                var.memory_handling = memory_handling
 
     @Variable.is_target.setter
     def is_target(self, is_target):
