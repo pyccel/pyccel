@@ -971,16 +971,28 @@ class FCodePrinter(CodePrinter):
         kind  = self.print_kind(expr)
 
         if axis is None:
-            args = '{}, kind = {}'.format(mask, kind)
+            stmt = 'count({}, kind = {})'.format(mask, kind)
+
+            if expr.keep_dims.python_value:
+                if expr.order == 'C':
+                    shape    = ', '.join(self._print(i) for i in reversed(expr.shape))
+                else:
+                    shape    = ', '.join(self._print(i) for i in expr.shape)
+                stmt = 'reshape([{}], [{}])'.format(stmt, shape)
         else:
-            dim   = self._print(expr.axis)
-            args = '{}, dim = {}, kind = {}'.format(mask, dim, kind)
+            if expr.array.order == 'C':
+                f_dim = PyccelMinus(LiteralInteger(expr.array.rank), expr.axis, simplify=True)
+            else:
+                f_dim = PyccelAdd(expr.axis, LiteralInteger(1), simplify=True)
+            dim   = self._print(f_dim)
+            stmt = 'count({}, dim = {}, kind = {})'.format(mask, dim, kind)
 
-        stmt  = 'count({})'.format(args)
-
-        if expr.keep_dims is LiteralTrue():
-            shape    = ', '.join(self._print(i) for i in expr.shape)
-            stmt = 'reshape({}, [{}])'.format(stmt, shape)
+            if expr.keep_dims.python_value:
+                if expr.order == 'C':
+                    shape    = ', '.join(self._print(i) for i in reversed(expr.shape))
+                else:
+                    shape    = ', '.join(self._print(i) for i in expr.shape)
+                stmt = 'reshape({}, [{}])'.format(stmt, shape)
 
         return stmt
 
