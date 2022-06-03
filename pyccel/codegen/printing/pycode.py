@@ -722,6 +722,23 @@ class PythonCodePrinter(CodePrinter):
         arg = self._print(expr.array)
         return "{}({})".format(name, arg)
 
+    def _print_NumpyCountNonZero(self, expr):
+        name = self._aliases.get(type(expr),'count_nonzero')
+        if name == 'count_nonzero':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyNonZero, 'count_nonzero'))
+
+        axis_arg = expr.axis
+
+        arr = self._print(expr.array)
+        axis = '' if axis_arg is None else (self._print(axis_arg) + ', ')
+        keep_dims = 'keepdims = {}'.format(self._print(expr.keep_dims))
+
+        arg = '{}, {}{}'.format(arr, axis, keep_dims)
+
+        return "{}({})".format(name, arg)
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''

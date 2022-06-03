@@ -1494,10 +1494,13 @@ class NumpyCountNonZero(PyccelInternalFunction):
             An array for which the non-zero elements should be counted
     axis  : int
             The dimension along which the non-zero elements are counted
+    keep_dims : NativeBool
+            Indicates if output arrays should have the same number of dimensions
+            as arg
     """
-    __slots__ = ('_rank', '_shape', '_order', '_arr', '_axis')
+    __slots__ = ('_rank', '_shape', '_order', '_arr', '_axis', '_keep_dims')
     _attribute_nodes = ('_arr','_axis')
-    name   = 'size'
+    name   = 'count_nonzero'
     _dtype = NativeInteger()
     _precision = -1
     def __init__(self, a, axis = None, *, keep_dims = LiteralFalse()):
@@ -1527,8 +1530,9 @@ class NumpyCountNonZero(PyccelInternalFunction):
 
         self._arr = a
         self._axis = axis
+        self._keep_dims = keep_dims
 
-        super().__init__()
+        super().__init__(a)
 
     @property
     def array(self):
@@ -1541,6 +1545,13 @@ class NumpyCountNonZero(PyccelInternalFunction):
         """ The dimension which the results describe
         """
         return self._axis
+
+    @property
+    def keep_dims(self):
+        """ Indicates if output arrays should have the same number
+        of dimensions as arg
+        """
+        return self._keep_dims
 
 class NumpyArraySize(PyccelInternalFunction):
     """
