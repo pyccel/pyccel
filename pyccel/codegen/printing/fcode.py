@@ -66,7 +66,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
-from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
@@ -963,7 +963,11 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyCountNonZero(self, expr):
 
         axis  = expr.axis
-        mask  = self._print(expr.array)
+        array = expr.array
+        if array.dtype is NativeBool():
+            mask  = self._print(expr.array)
+        else:
+            mask  = self._print(NumpyBool(expr.array))
         kind  = self.print_kind(expr)
 
         if axis is None:
