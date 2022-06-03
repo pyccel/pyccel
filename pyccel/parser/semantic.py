@@ -1027,7 +1027,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory deallocation for array variables
-                if (lhs.allocatable or lhs.is_pointer or lhs.is_ndarray) and not lhs.is_stack_array:
+                if lhs.is_ndarray and not lhs.is_stack_array:
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
