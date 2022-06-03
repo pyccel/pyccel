@@ -1461,6 +1461,8 @@ class NumpyNonZero(NumpyNewArray):
     _rank  = 2
     _order = 'C'
     def __init__(self, a):
+        if (a.rank > 1):
+            raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
         self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
         self._arr = a
         self._shape = self._elements.shape
@@ -1672,6 +1674,8 @@ numpy_funcs = {
     # 'deg2rad'   : PyccelFunctionDef('deg2rad'   , NumpyDeg2rad),
     # 'rad2deg'   : PyccelFunctionDef('rad2deg'   , NumpyRad2deg),
     'transpose' : PyccelFunctionDef('transpose' , NumpyTranspose),
+    'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
+    'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
 }
 
 numpy_mod = Module('numpy',
