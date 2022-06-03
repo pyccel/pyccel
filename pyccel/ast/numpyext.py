@@ -1503,24 +1503,24 @@ class NumpyCountNonZero(PyccelInternalFunction):
     name   = 'count_nonzero'
     _dtype = NativeInteger()
     _precision = -1
-    def __init__(self, a, axis = None, *, keep_dims = LiteralFalse()):
-        if not isinstance(keep_dims, (LiteralTrue, LiteralFalse)):
-            errors.report(NON_LITERAL_KEEP_DIMS, symbol=keep_dims, severity="fatal")
+    def __init__(self, a, axis = None, *, keepdims = LiteralFalse()):
+        if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
+            errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
         if axis is not None and not isinstance(axis, LiteralInteger):
             errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
 
-        if keep_dims.python_value:
+        if keepdims.python_value:
             self._rank  = a.rank
             self._order = a.order
             if axis is not None:
-                self._shape = a.shape.copy()
+                self._shape = list(a.shape)
                 self._shape[axis.python_value] = LiteralInteger(1)
             else:
                 self._shape = (LiteralInteger(1),)*a.rank
         else:
             if axis is not None:
-                self._shape = a.shape.copy()
-                self._shape[axis.python_value] = LiteralInteger(1)
+                self._shape = list(a.shape)
+                self._shape.pop(axis.python_value)
                 self._rank  = a.rank-1
                 self._order = a.order if a.rank>2 else None
             else:
@@ -1530,7 +1530,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
 
         self._arr = a
         self._axis = axis
-        self._keep_dims = keep_dims
+        self._keep_dims = keepdims
 
         super().__init__(a)
 
