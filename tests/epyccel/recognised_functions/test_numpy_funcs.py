@@ -1189,6 +1189,48 @@ def test_full_basic_int(language):
     assert(f_arg_names(size) == create_full_arg_names(size))
     assert matching_types(f_arg_names(size)[0], create_full_arg_names(size)[0])
 
+def test_size(language):
+    @types('int[:]')
+    def test_size_1d(f):
+        from numpy import size
+        return size(f)
+
+    @types('int[:,:]')
+    def test_size_2d(f):
+        from numpy import size
+        return size(f)
+
+    from numpy import empty
+    f1 = epyccel(test_size_1d, language = language)
+    f2 = epyccel(test_size_2d, language = language)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = empty(n1,dtype = int)
+    x2 = empty((n2,n3), dtype = int)
+    assert f1(x1) == test_size_1d(x1)
+    assert f2(x2) == test_size_2d(x2)
+
+def test_size_property(language):
+    @types('int[:]')
+    def test_size_1d(f):
+        return f.size
+
+    @types('int[:,:]')
+    def test_size_2d(f):
+        return f.size
+
+    from numpy import empty
+    f1 = epyccel(test_size_1d, language = language)
+    f2 = epyccel(test_size_2d, language = language)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = empty(n1,dtype = int)
+    x2 = empty((n2,n3), dtype = int)
+    assert f1(x1) == test_size_1d(x1)
+    assert f2(x2) == test_size_2d(x2)
+
 def test_full_basic_real(language):
     @types('int')
     def create_full_shape_1d(n):
