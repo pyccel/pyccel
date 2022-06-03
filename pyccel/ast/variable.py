@@ -239,12 +239,9 @@ class Variable(PyccelAstNode):
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
             elif isinstance(s,LiteralInteger):
                 new_shape.append(s)
-            elif isinstance(s, PyccelArraySize):
-                t = PyccelArraySize(self, s.index)
-                new_shape.append(t)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
-            elif s is None or isinstance(s, PyccelAstNode):
+            elif s is None or isinstance(s, (PyccelAstNode, PyccelArraySize)):
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
