@@ -285,9 +285,17 @@ class CCodePrinter(CodePrinter):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
             return f_list
         else:
+            if isinstance(irregular_list, Variable):
+                if irregular_list.is_kwonly:
+                    print("This is known:", irregular_list)
             return [irregular_list]
 
     #========================== Numpy Elements ===============================#
+        def spread_variable(self, var):
+            print("trying to spread var:", var.name)
+            print("The shape of this variable is: ", var.shape)
+            shape = [int(str(i)) for i in var.shape]
+            print(shape)
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
 
@@ -309,26 +317,32 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        for i in arg.shape:
-            print(i)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
+            print("do we come here\n")
 
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
-            print("isinstance variable")
             arg = self._print(arg)
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
             return '%s' % (cpy_data)
         else :
-            print("isinstance not variable")
-            print("arg.shape:", arg.shape)
+            # print("le first array element:", arg[0].shape[0].arg)
+            # array_vals = ''
+            # for i in arg:
+            #     if isinstance(i, (HomogeneousTupleVariable, Variable)):
+            #         #spread them
+            #         pass
+            #     array_vals += self._print(i) + ', '
+            print("here starts the print functions for i")
+            print("arg", len(arg))
             arg = ', '.join(self._print(i) for i in arg)
-            print("this is the arg:", arg)
-            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            print(dummy_array, "this is the dummy array")
+            print(arg, "wtf")
+            print("here ends the print functions for i")
 
+            print(arg, "this after ze join")
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)#array_vals[:-2])
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s' % (dummy_array, cpy_data)
 
@@ -1165,22 +1179,12 @@ class CCodePrinter(CodePrinter):
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
         self.add_import(c_imports['ndarrays'])
-        print("***********************************")
-        print(len(expr.shape), "This is the shape")
-        for i in expr.shape:
-            print(i, "the shape stuff")
-        print("***********************************")
         shape = ", ".join(self._print(i) for i in expr.shape)
-        print(shape, "le shape after assignation")
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.allocatable else 'true'
-        print("expr.variable:", expr.variable)
-        print("expr.shape_Assign:", shape_Assign)
-        print("dtype:", dtype)
-        print("is_view", is_view)
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view)
