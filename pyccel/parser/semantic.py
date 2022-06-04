@@ -448,7 +448,10 @@ class SemanticParser(BasicParser):
             # d_var['is_pointer'    ] = False
             # d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
             # d_var['is_stack_array'] = not d_var['allocatable']
-            d_var['memory_handling'] = expr.memory_handling
+            if any(a.memory_handling == 'allocatable' for a in expr.args):
+                d_var['memory_handling'] = 'allocatable'
+            else:
+                d_var['memory_handling'] = 'stack_array'
             d_var['cls_base'      ] = TupleClass
             return d_var
 
@@ -461,15 +464,20 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
             d_var['order'         ] = expr.order
-            d_var['is_stack_array'] = d.get('is_stack_array',False) and isinstance(expr.length, LiteralInteger)
-            d_var['allocatable'   ] = not d_var['is_stack_array']
-            d_var['is_pointer'    ] = False
+            # d_var['is_stack_array'] = d.get('stack_array',False) and isinstance(expr.length, LiteralInteger)
+            # d_var['allocatable'   ] = not d_var['is_stack_array']
+            # d_var['is_pointer'    ] = False
+            if 'memory_handling' in d.keys() and d['memory_handling'] == 'stack_array' and isinstance(expr.length, LiteralInteger):
+                d_var['memory_handling'] = 'stack_array'
+            else:
+                d_var['memory_handling'] = 'allocatable'
             d_var['cls_base'      ] = TupleClass
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
+            # d_var['allocatable'] = expr.rank>0
+            d_var['memory_handling'] = 'allocatable' if expr.rank > 0 else None
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -481,16 +489,17 @@ class SemanticParser(BasicParser):
 
             var = expr.internal_var
 
+            # d_var['allocatable'   ] = var.allocatable
+            # d_var['is_pointer'    ] = isinstance(var, Variable)
+            # d_var['is_stack_array'] = var.is_stack_array
+            d_var['memory_handling'] = 
             d_var['datatype'      ] = var.dtype
-            d_var['allocatable'   ] = var.allocatable
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
             d_var['cls_base'      ] = var.cls_base
-            d_var['is_pointer'    ] = isinstance(var, Variable)
             d_var['is_target'     ] = var.is_target
             d_var['order'         ] = 'C' if var.order=='F' else 'F'
             d_var['precision'     ] = var.precision
-            d_var['is_stack_array'] = var.is_stack_array
             return d_var
 
         elif isinstance(expr, PyccelAstNode):
