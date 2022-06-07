@@ -18,7 +18,7 @@ else:
 def test_modulo_int_int(language):
     @types(int, int)
     def modulo_i_i(x, y):
-        return x % y, x % -y, -x % y, -x % -y, (2 * x ) % -x, (-2 * x ) % x 
+        return x % y, x % -y, -x % y, -x % -y, (2 * x) % -x, (-2 * x) % x
 
     f = epyccel(modulo_i_i, language=language)
     x = randint(0, 1e6)
