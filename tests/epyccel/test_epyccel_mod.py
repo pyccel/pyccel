@@ -18,7 +18,7 @@ else:
 def test_modulo_int_int(language):
     @types(int, int)
     def modulo_i_i(x, y):
-        return x % y, x % -y, -x % y, -x % -y, x % -x, x % x
+        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_i_i, language=language)
     x = randint(0, 1e6)
@@ -33,7 +33,7 @@ def test_modulo_int_int(language):
 def test_modulo_real_real(language):
     @types('real', 'real')
     def modulo_r_r(x, y):
-        return x % y, x % -y, -x % y, -x % -y
+        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_r_r, language=language)
     x = uniform(low=0, high=1e6)
@@ -47,7 +47,7 @@ def test_modulo_real_real(language):
 def test_modulo_real_int(language):
     @types('real', 'int')
     def modulo_r_i(x, y):
-        return x % y, x % -y, -x % y, -x % -y
+        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_r_i, language=language)
     x = uniform(low=0, high=1e6)
@@ -62,7 +62,7 @@ def test_modulo_real_int(language):
 def test_modulo_int_real(language):
     @types('int', 'real')
     def modulo_i_r(x, y):
-        return x % y, x % -y, -x % y, -x % -y
+        return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_i_r, language=language)
     x = randint(0, 1e6)
@@ -77,7 +77,8 @@ def test_modulo_multiple(language):
     @types('int', 'real', 'int')
     def modulo_multiple(x, y, z):
         return x % y % z, -x % y % z, -x % -y % z, -x % -y % -z, \
-               x % -y % z, x % -y % -z, x % y % -z, -x % y % -z
+               x % -y % z, x % -y % -z, x % y % -z, -x % y % -z, \
+                   -y % y % y, y % -y % y, y % y % -y
 
     f = epyccel(modulo_multiple, language=language)
     x = randint(0, 1e6)
