@@ -60,7 +60,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Problem funcs
         run: |
-          python -m pytest -rX -k count_non_zero -xsv test_numpy_funcs.py
+          python -m pytest -rX -k test_numpy_count_non_zero_axis_keep_dims -xsv test_numpy_funcs.py
         shell: bash
         working-directory: ./tests/epyccel/recognised_functions
       #- name: Fortran/C tests with pytest
