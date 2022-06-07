@@ -487,14 +487,14 @@ class SemanticParser(BasicParser):
             # d_var['allocatable'   ] = var.allocatable
             # d_var['is_pointer'    ] = isinstance(var, Variable)
             # d_var['is_stack_array'] = var.is_stack_array
-            if var.memory_handling == 'alloatable':
-                d_var['memory_handling'] = 'allocatable'
-            elif var.memory_handling == 'stack_array':
-                d_var['memory_handling'] = 'stack_array'
+
+            if var.memory_handling in ('allocatable', 'stack_array'):
+                d_var['memory_handling'] = var.memory_handling
             elif isinstance(var, Variable):
                 d_var['memory_handling'] = 'pointer'
             else:
                 d_var['memory_handling'] = None
+
             d_var['datatype'      ] = var.dtype
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
@@ -522,7 +522,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
-            d_var['memory_handling'] = None
+            d_var['memory_handling'] = None # because rank is 0 and no shape defined
             # d_var['allocatable'] = False
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
@@ -532,7 +532,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
-            d_var['memory_handling'] = None
+            d_var['memory_handling'] = None # because rank is 0 and no shape defined
             # d_var['allocatable'] = False
             # d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
