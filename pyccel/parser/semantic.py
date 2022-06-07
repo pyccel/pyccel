@@ -410,13 +410,8 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, Variable):
             d_var['datatype'      ] = expr.dtype
-            
-            if expr.memory_handling == 'allocatable':
-                d_var['memory_handling'] = 'allocatable' if expr.rank > 0 else False
-            else:
-                d_var['memory_handling'] = expr.memory_handling
+            d_var['memory_handling'] = 'allocatable' if expr.rank > 0 else expr.memory_handling
             # d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
-
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
@@ -492,7 +487,14 @@ class SemanticParser(BasicParser):
             # d_var['allocatable'   ] = var.allocatable
             # d_var['is_pointer'    ] = isinstance(var, Variable)
             # d_var['is_stack_array'] = var.is_stack_array
-            d_var['memory_handling'] = 
+            if var.memory_handling == 'alloatable':
+                d_var['memory_handling'] = 'allocatable'
+            elif var.memory_handling == 'stack_array':
+                d_var['memory_handling'] = 'stack_array'
+            elif isinstance(var, Variable):
+                d_var['memory_handling'] = 'pointer'
+            else:
+                d_var['memory_handling'] = None
             d_var['datatype'      ] = var.dtype
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
@@ -505,7 +507,8 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
+            # d_var['allocatable'] = expr.rank>0
+            d_var['memory_handling'] = 'allocatable' if expr.rank > 0 else None
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -519,7 +522,8 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
-            d_var['allocatable'] = False
+            d_var['memory_handling'] = None
+            # d_var['allocatable'] = False
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
@@ -528,8 +532,9 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = False
+            d_var['memory_handling'] = None
+            # d_var['allocatable'] = False
+            # d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
             return d_var
 
@@ -540,7 +545,8 @@ class SemanticParser(BasicParser):
             dtype = self.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
-            d_var['allocatable'] = False
+            # d_var['allocatable'] = False
+            d_var['memory_handling'] = None
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
@@ -903,22 +909,25 @@ class SemanticParser(BasicParser):
         whether the lhs is a pointer and the rhs is a target
         """
         if isinstance(rhs, NumpyTranspose) and rhs.internal_var.allocatable:
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
+            d_lhs['memory_handling'] = 'pointer'
+            # d_lhs['allocatable'] = False
+            # d_lhs['is_pointer' ] = True
+            # d_lhs['is_stack_array'] = False
 
             rhs.internal_var.is_target = True
         if isinstance(rhs, Variable) and rhs.is_ndarray:
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
+            d_lhs['memory_handling'] = 'pointer'
+            # d_lhs['allocatable'] = False
+            # d_lhs['is_pointer' ] = True
+            # d_lhs['is_stack_array'] = False
 
             rhs.is_target = not rhs.is_pointer
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
                 (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_pointer', False)):
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
+            d_lhs['memory_handling'] = 'pointer'
+            # d_lhs['allocatable'] = False
+            # d_lhs['is_pointer' ] = True
+            # d_lhs['is_stack_array'] = False
 
             rhs.base.is_target = not rhs.base.is_pointer
 
