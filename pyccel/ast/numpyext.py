@@ -1502,7 +1502,6 @@ class NumpyCountNonZero(PyccelInternalFunction):
     _attribute_nodes = ('_arr','_axis')
     name   = 'count_nonzero'
     _dtype = NativeInteger()
-    _precision = -1
     def __init__(self, a, axis = None, *, keepdims = LiteralFalse()):
         if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
             errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
@@ -1510,6 +1509,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
             errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
 
         if keepdims.python_value:
+            self._precision = 8
             self._rank  = a.rank
             self._order = a.order
             if axis is not None:
@@ -1518,6 +1518,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
             else:
                 self._shape = (LiteralInteger(1),)*a.rank
         else:
+            self._precision  = -1
             if axis is not None:
                 self._shape = list(a.shape)
                 self._shape.pop(axis.python_value)
