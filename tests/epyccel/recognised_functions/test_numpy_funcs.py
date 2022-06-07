@@ -5772,11 +5772,11 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     #fl32 = np.float32(fl32)
     #fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    epyccel_func = epyccel(count, language=language)
-
     print(bl)
 
     print(count(bl))
+
+    epyccel_func = epyccel(count, language=language)
 
     assert epyccel_func(bl) == count(bl)
     print("Bool ok")
