@@ -1498,7 +1498,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
             Indicates if output arrays should have the same number of dimensions
             as arg
     """
-    __slots__ = ('_rank', '_shape', '_order', '_arr', '_axis', '_keep_dims')
+    __slots__ = ('_precision', '_rank', '_shape', '_order', '_arr', '_axis', '_keep_dims')
     _attribute_nodes = ('_arr','_axis')
     name   = 'count_nonzero'
     _dtype = NativeInteger()
