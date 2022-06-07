@@ -5475,361 +5475,361 @@ def test_numpy_linspace_array_like_2d(language):
     epyccel_func4(cmplx, cmplx2, out, True)
     assert np.allclose(arr, out)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_1d(language):
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def count(arr):
-        from numpy import count_nonzero
-        return count_nonzero(arr)
-
-    size = 5
-
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
-    integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
-    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
-    integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
-    integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_2d(language):
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    def count(arr):
-        from numpy import count_nonzero
-        return count_nonzero(arr)
-
-    size = (2, 5)
-
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_1d_keep_dims(language):
-    @types('bool[:]')
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def count(arr):
-        from numpy import count_nonzero
-        a = count_nonzero(arr, keepdims=True)
-        s = a.shape
-        return s[0], a[0]
-
-    size = 5
-
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
-    integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
-    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
-    integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
-    integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_2d_keep_dims(language):
-    @types('bool[:,:]')
-    @types('int[:,:]')
-    @types('int8[:,:]')
-    @types('int16[:,:]')
-    @types('int32[:,:]')
-    @types('int64[:,:]')
-    @types('float[:,:]')
-    @types('float32[:,:]')
-    @types('float64[:,:]')
-    def count(arr):
-        from numpy import count_nonzero
-        a = count_nonzero(arr, keepdims=True)
-        s = a.shape
-        return s[0], s[1], a[0,0]
-
-    size = (2, 5)
-
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_axis(language):
-    @types('bool[:,:,:]')
-    @types('int[:,:,:]')
-    @types('int8[:,:,:]')
-    @types('int16[:,:,:]')
-    @types('int32[:,:,:]')
-    @types('int64[:,:,:]')
-    @types('float[:,:,:]')
-    @types('float32[:,:,:]')
-    @types('float64[:,:,:]')
-    def count(arr):
-        from numpy import count_nonzero
-        a = count_nonzero(arr, axis = 1)
-        s = a.shape
-        return len(s), s[0], s[1], a[0,0], a[0,-1]
-
-    size = (2, 5, 3)
-
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_axis_keep_dims(language):
-    @types('bool[:,:,:]')
-    @types('int[:,:,:]')
-    @types('int8[:,:,:]')
-    @types('int16[:,:,:]')
-    @types('int32[:,:,:]')
-    @types('int64[:,:,:]')
-    @types('float[:,:,:]')
-    @types('float32[:,:,:]')
-    @types('float64[:,:,:]')
-    def count(arr):
-        from numpy import count_nonzero
-        a = count_nonzero(arr, axis = 0, keepdims=True)
-        s = a.shape
-        return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
-
-    size = (5, 2, 3)
-
-    bl = randint(0, 2, size=size, dtype= bool)
-
-    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int-1, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
-
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="count_nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_count_non_zero_axis_keep_dims_F(language):
-    @types('bool[:,:,:](order=F)')
-    @types('int[:,:,:](order=F)')
-    @types('int8[:,:,:](order=F)')
-    @types('int16[:,:,:](order=F)')
-    @types('int32[:,:,:](order=F)')
-    @types('int64[:,:,:](order=F)')
-    @types('float[:,:,:](order=F)')
-    @types('float32[:,:,:](order=F)')
-    @types('float64[:,:,:](order=F)')
-    def count(arr):
-        from numpy import count_nonzero
-        a = count_nonzero(arr, axis = 1, keepdims=True)
-        s = a.shape
-        return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
-
-    size = (2, 5, 3)
-
-    bl = np.array(randint(0, 2, size=size), dtype= bool, order='F')
-
-    integer8  = np.array(randint(min_int8,  max_int8-1,  size=size), dtype=np.int8, order='F')
-    integer16 = np.array(randint(min_int16, max_int16-1, size=size), dtype=np.int16, order='F')
-    integer   = np.array(randint(min_int,   max_int-1,   size=size), dtype=int, order='F')
-    integer32 = np.array(randint(min_int32, max_int32-1, size=size), dtype=np.int32, order='F')
-    integer64 = np.array(randint(min_int64, max_int64-1, size=size), dtype=np.int64, order='F')
-
-    fl   = np.array(uniform(min_float / 2, max_float / 2, size = size), dtype=float, order='F')
-    fl32 = np.array(uniform(min_float32 / 2, max_float32 / 2, size = size), dtype=np.float32, order='F')
-    fl64 = np.array(uniform(min_float64 / 2, max_float64 / 2, size = size), dtype=np.float64, order='F')
-
-    epyccel_func = epyccel(count, language=language)
-
-    assert epyccel_func(bl) == count(bl)
-    assert epyccel_func(integer8) == count(integer8)
-    assert epyccel_func(integer16) == count(integer16)
-    assert epyccel_func(integer) == count(integer)
-    assert epyccel_func(integer32) == count(integer32)
-    assert epyccel_func(integer64) == count(integer64)
-    assert epyccel_func(fl) == count(fl)
-    assert epyccel_func(fl32) == count(fl32)
-    assert epyccel_func(fl64) == count(fl64)
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_1d(language):
+#    @types('bool[:]')
+#    @types('int[:]')
+#    @types('int8[:]')
+#    @types('int16[:]')
+#    @types('int32[:]')
+#    @types('int64[:]')
+#    @types('float[:]')
+#    @types('float32[:]')
+#    @types('float64[:]')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        return count_nonzero(arr)
+#
+#    size = 5
+#
+#    bl = randint(0, 2, size=size, dtype= bool)
+#
+#    integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
+#    integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
+#    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+#    integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
+#    integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
+#
+#    fl = uniform(min_float / 2, max_float / 2, size = size)
+#    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+#    fl32 = np.float32(fl32)
+#    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
+#
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_2d(language):
+#    @types('bool[:,:]')
+#    @types('int[:,:]')
+#    @types('int8[:,:]')
+#    @types('int16[:,:]')
+#    @types('int32[:,:]')
+#    @types('int64[:,:]')
+#    @types('float[:,:]')
+#    @types('float32[:,:]')
+#    @types('float64[:,:]')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        return count_nonzero(arr)
+#
+#    size = (2, 5)
+#
+#    bl = randint(0, 2, size=size, dtype= bool)
+#
+#    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
+#    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
+#    integer = randint(min_int, max_int-1, size=size, dtype=int)
+#    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
+#    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
+#
+#    fl = uniform(min_float / 2, max_float / 2, size = size)
+#    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+#    fl32 = np.float32(fl32)
+#    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
+#
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_1d_keep_dims(language):
+#    @types('bool[:]')
+#    @types('int[:]')
+#    @types('int8[:]')
+#    @types('int16[:]')
+#    @types('int32[:]')
+#    @types('int64[:]')
+#    @types('float[:]')
+#    @types('float32[:]')
+#    @types('float64[:]')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        a = count_nonzero(arr, keepdims=True)
+#        s = a.shape
+#        return s[0], a[0]
+#
+#    size = 5
+#
+#    bl = randint(0, 2, size=size, dtype= bool)
+#
+#    integer8  = randint(min_int8//2,  max_int8//2, size=size, dtype=np.int8)
+#    integer16 = randint(min_int16//2, max_int16//2, size=size, dtype=np.int16)
+#    integer   = randint(min_int//2,   max_int//2, size=size, dtype=int)
+#    integer32 = randint(min_int32//2, max_int32//2, size=size, dtype=np.int32)
+#    integer64 = randint(min_int64//2, max_int64//2, size=size, dtype=np.int64)
+#
+#    fl = uniform(min_float / 2, max_float / 2, size = size)
+#    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+#    fl32 = np.float32(fl32)
+#    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
+#
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_2d_keep_dims(language):
+#    @types('bool[:,:]')
+#    @types('int[:,:]')
+#    @types('int8[:,:]')
+#    @types('int16[:,:]')
+#    @types('int32[:,:]')
+#    @types('int64[:,:]')
+#    @types('float[:,:]')
+#    @types('float32[:,:]')
+#    @types('float64[:,:]')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        a = count_nonzero(arr, keepdims=True)
+#        s = a.shape
+#        return s[0], s[1], a[0,0]
+#
+#    size = (2, 5)
+#
+#    bl = randint(0, 2, size=size, dtype= bool)
+#
+#    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
+#    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
+#    integer = randint(min_int, max_int-1, size=size, dtype=int)
+#    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
+#    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
+#
+#    fl = uniform(min_float / 2, max_float / 2, size = size)
+#    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+#    fl32 = np.float32(fl32)
+#    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
+#
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_axis(language):
+#    @types('bool[:,:,:]')
+#    @types('int[:,:,:]')
+#    @types('int8[:,:,:]')
+#    @types('int16[:,:,:]')
+#    @types('int32[:,:,:]')
+#    @types('int64[:,:,:]')
+#    @types('float[:,:,:]')
+#    @types('float32[:,:,:]')
+#    @types('float64[:,:,:]')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        a = count_nonzero(arr, axis = 1)
+#        s = a.shape
+#        return len(s), s[0], s[1], a[0,0], a[0,-1]
+#
+#    size = (2, 5, 3)
+#
+#    bl = randint(0, 2, size=size, dtype= bool)
+#
+#    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
+#    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
+#    integer = randint(min_int, max_int-1, size=size, dtype=int)
+#    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
+#    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
+#
+#    fl = uniform(min_float / 2, max_float / 2, size = size)
+#    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+#    fl32 = np.float32(fl32)
+#    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
+#
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_axis_keep_dims(language):
+#    @types('bool[:,:,:]')
+#    @types('int[:,:,:]')
+#    @types('int8[:,:,:]')
+#    @types('int16[:,:,:]')
+#    @types('int32[:,:,:]')
+#    @types('int64[:,:,:]')
+#    @types('float[:,:,:]')
+#    @types('float32[:,:,:]')
+#    @types('float64[:,:,:]')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        a = count_nonzero(arr, axis = 0, keepdims=True)
+#        s = a.shape
+#        return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
+#
+#    size = (5, 2, 3)
+#
+#    bl = randint(0, 2, size=size, dtype= bool)
+#
+#    integer8 = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
+#    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
+#    integer = randint(min_int, max_int-1, size=size, dtype=int)
+#    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
+#    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
+#
+#    fl = uniform(min_float / 2, max_float / 2, size = size)
+#    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+#    fl32 = np.float32(fl32)
+#    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
+#
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="count_nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_count_non_zero_axis_keep_dims_F(language):
+#    @types('bool[:,:,:](order=F)')
+#    @types('int[:,:,:](order=F)')
+#    @types('int8[:,:,:](order=F)')
+#    @types('int16[:,:,:](order=F)')
+#    @types('int32[:,:,:](order=F)')
+#    @types('int64[:,:,:](order=F)')
+#    @types('float[:,:,:](order=F)')
+#    @types('float32[:,:,:](order=F)')
+#    @types('float64[:,:,:](order=F)')
+#    def count(arr):
+#        from numpy import count_nonzero
+#        a = count_nonzero(arr, axis = 1, keepdims=True)
+#        s = a.shape
+#        return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
+#
+#    size = (2, 5, 3)
+#
+#    bl = np.array(randint(0, 2, size=size), dtype= bool, order='F')
+#
+#    integer8  = np.array(randint(min_int8,  max_int8-1,  size=size), dtype=np.int8, order='F')
+#    integer16 = np.array(randint(min_int16, max_int16-1, size=size), dtype=np.int16, order='F')
+#    integer   = np.array(randint(min_int,   max_int-1,   size=size), dtype=int, order='F')
+#    integer32 = np.array(randint(min_int32, max_int32-1, size=size), dtype=np.int32, order='F')
+#    integer64 = np.array(randint(min_int64, max_int64-1, size=size), dtype=np.int64, order='F')
+#
+#    fl   = np.array(uniform(min_float / 2, max_float / 2, size = size), dtype=float, order='F')
+#    fl32 = np.array(uniform(min_float32 / 2, max_float32 / 2, size = size), dtype=np.float32, order='F')
+#    fl64 = np.array(uniform(min_float64 / 2, max_float64 / 2, size = size), dtype=np.float64, order='F')
+#
+#    epyccel_func = epyccel(count, language=language)
+#
+#    assert epyccel_func(bl) == count(bl)
+#    assert epyccel_func(integer8) == count(integer8)
+#    assert epyccel_func(integer16) == count(integer16)
+#    assert epyccel_func(integer) == count(integer)
+#    assert epyccel_func(integer32) == count(integer32)
+#    assert epyccel_func(integer64) == count(integer64)
+#    assert epyccel_func(fl) == count(fl)
+#    assert epyccel_func(fl32) == count(fl32)
+#    assert epyccel_func(fl64) == count(fl64)
