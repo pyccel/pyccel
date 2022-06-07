@@ -5778,7 +5778,10 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
 
     epyccel_func = epyccel(count, language=language)
 
-    #assert epyccel_func(bl) == count(bl)
+    result = epyccel_func(bl)
+    print(result)
+
+    assert result == count(bl)
     print("Bool ok")
     #assert epyccel_func(integer8) == count(integer8)
     #print("int8 ok")
