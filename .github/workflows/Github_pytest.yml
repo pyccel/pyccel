@@ -60,7 +60,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Problem funcs
         run: |
-          python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible) and not (c or python)" test_numpy_funcs.py
+          python -m pytest -rX -k count_non_zero -xsv test_numpy_funcs.py
         shell: bash
         working-directory: ./tests/epyccel/recognised_functions
       #- name: Fortran/C tests with pytest
