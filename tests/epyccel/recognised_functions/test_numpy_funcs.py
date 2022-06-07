@@ -5754,6 +5754,7 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
         from numpy import count_nonzero
         a = count_nonzero(arr, axis = 0, keepdims=True)
         s = a.shape
+        print(s)
         return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
 
     size = (5, 2, 3)
@@ -5774,14 +5775,23 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     epyccel_func = epyccel(count, language=language)
 
     assert epyccel_func(bl) == count(bl)
+    print("Bool ok")
     assert epyccel_func(integer8) == count(integer8)
+    print("int8 ok")
     assert epyccel_func(integer16) == count(integer16)
+    print("int16 ok")
     assert epyccel_func(integer) == count(integer)
+    print("Int ok")
     assert epyccel_func(integer32) == count(integer32)
+    print("int32 ok")
     assert epyccel_func(integer64) == count(integer64)
+    print("int64 ok")
     assert epyccel_func(fl) == count(fl)
+    print("Float ok")
     assert epyccel_func(fl32) == count(fl32)
+    print("float32 ok")
     assert epyccel_func(fl64) == count(fl64)
+    print("float64 ok")
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
