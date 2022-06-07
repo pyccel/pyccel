@@ -4926,54 +4926,54 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert epyccel_func(fl32) == get_chosen_elements(fl32)
     assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="nonzero not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_numpy_where_array_like_1d_1_arg(language):
-
-    @types('int[:]')
-    @types('int8[:]')
-    @types('int16[:]')
-    @types('int32[:]')
-    @types('int64[:]')
-    @types('float[:]')
-    @types('float32[:]')
-    @types('float64[:]')
-    def get_chosen_elements(arr):
-        from numpy import where, shape
-        a = where(arr > 5)
-        s = shape(a)
-        return len(s), s[1], a[0][1], a[0][0]
-
-    size = 5
-
-    # Arrays must have at least 2 elements larger than 5 to avoid IndexError
-    integer8  = np.array([6,1,8,2,3], dtype = np.int8)
-    integer16 = np.array([6,1,8,2,3], dtype = np.int16)
-    integer   = np.array([6,1,8,2,3], dtype = int)
-    integer32 = np.array([6,1,8,2,3], dtype = np.int32)
-    integer64 = np.array([6,1,8,2,3], dtype = np.int64)
-
-    fl   = np.array([6,22,1,8,2,3], dtype = float)
-    fl32 = np.array([6,22,1,8,2,3], dtype = np.float32)
-    fl64 = np.array([6,22,1,8,2,3], dtype = np.float64)
-
-    epyccel_func = epyccel(get_chosen_elements, language=language)
-
-    assert epyccel_func(integer8) == get_chosen_elements(integer8)
-    assert epyccel_func(integer16) == get_chosen_elements(integer16)
-    assert epyccel_func(integer) == get_chosen_elements(integer)
-    assert epyccel_func(integer32) == get_chosen_elements(integer32)
-    assert epyccel_func(integer64) == get_chosen_elements(integer64)
-    assert epyccel_func(fl) == get_chosen_elements(fl)
-    assert epyccel_func(fl32) == get_chosen_elements(fl32)
-    assert epyccel_func(fl64) == get_chosen_elements(fl64)
+#@pytest.mark.parametrize( 'language', (
+#        pytest.param("fortran", marks = pytest.mark.fortran),
+#        pytest.param("c", marks = [
+#            pytest.mark.skip(reason="nonzero not implemented"),
+#            pytest.mark.c]
+#        ),
+#        pytest.param("python", marks = pytest.mark.python)
+#    )
+#)
+#def test_numpy_where_array_like_1d_1_arg(language):
+#
+#    @types('int[:]')
+#    @types('int8[:]')
+#    @types('int16[:]')
+#    @types('int32[:]')
+#    @types('int64[:]')
+#    @types('float[:]')
+#    @types('float32[:]')
+#    @types('float64[:]')
+#    def get_chosen_elements(arr):
+#        from numpy import where, shape
+#        a = where(arr > 5)
+#        s = shape(a)
+#        return len(s), s[1], a[0][1], a[0][0]
+#
+#    size = 5
+#
+#    # Arrays must have at least 2 elements larger than 5 to avoid IndexError
+#    integer8  = np.array([6,1,8,2,3], dtype = np.int8)
+#    integer16 = np.array([6,1,8,2,3], dtype = np.int16)
+#    integer   = np.array([6,1,8,2,3], dtype = int)
+#    integer32 = np.array([6,1,8,2,3], dtype = np.int32)
+#    integer64 = np.array([6,1,8,2,3], dtype = np.int64)
+#
+#    fl   = np.array([6,22,1,8,2,3], dtype = float)
+#    fl32 = np.array([6,22,1,8,2,3], dtype = np.float32)
+#    fl64 = np.array([6,22,1,8,2,3], dtype = np.float64)
+#
+#    epyccel_func = epyccel(get_chosen_elements, language=language)
+#
+#    assert epyccel_func(integer8) == get_chosen_elements(integer8)
+#    assert epyccel_func(integer16) == get_chosen_elements(integer16)
+#    assert epyccel_func(integer) == get_chosen_elements(integer)
+#    assert epyccel_func(integer32) == get_chosen_elements(integer32)
+#    assert epyccel_func(integer64) == get_chosen_elements(integer64)
+#    assert epyccel_func(fl) == get_chosen_elements(fl)
+#    assert epyccel_func(fl32) == get_chosen_elements(fl32)
+#    assert epyccel_func(fl64) == get_chosen_elements(fl64)
 
 def test_numpy_where_array_like_2d_with_condition(language):
 
