@@ -716,6 +716,7 @@ def test_classes( test_file ):
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
                                         ] )
+@pytest.mark.external
 def test_lapack( test_file ):
     #TODO: Uncomment this when dgetri can be expressed with scipy
     #pyccel_test(test_file)
