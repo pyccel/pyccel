@@ -101,6 +101,8 @@ def as_static_function(func, *, mod_scope, name=None):
 
     # Convert array results to inout arguments
     for r in results:
+        if isinstance(r, Variable) and r.is_ndarray:
+            raise NotImplementedError("Cannot convert a function ({}) that returns an array".format(func.name))
         if r.rank > 0 and r not in args:
             args += [FunctionDefArgument(r)]
             arguments_inout += [False]
