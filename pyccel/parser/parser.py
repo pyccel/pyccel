@@ -209,9 +209,11 @@ class Parser(object):
                 print ('>>> treating :: {}'.format(source))
 
             # get the absolute path corresponding to source
-
-            filename = get_filename_from_import(source, self._input_folder)
-            q = Parser(filename)
+            if source in d_parsers:
+                q = d_parsers[source]
+            else:
+                filename = get_filename_from_import(source, self._input_folder)
+                q = Parser(filename)
             q.parse(d_parsers=d_parsers)
             d_parsers[source] = q
 
