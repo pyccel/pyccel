@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 from pyccel.ast.basic import Basic
-from pyccel.ast.core import FunctionCall, Module
+from pyccel.ast.core import FunctionCall, FunctionDefArgument, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Assign
@@ -102,7 +102,7 @@ def as_static_function(func, *, mod_scope, name=None):
     # Convert array results to inout arguments
     for r in results:
         if r.rank > 0 and r not in args:
-            args += [r]
+            args += [FunctionDefArgument(r)]
             arguments_inout += [False]
         elif r.rank == 0:
             _results += [r]

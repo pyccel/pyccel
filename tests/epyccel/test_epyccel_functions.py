@@ -111,7 +111,7 @@ def test_decorator_f2(language):
 
 #------------------------------------------------------------------------------
 # Semantic error doesn't need testing in multiple languages
-def test_decorator_f3():
+def test_decorator_f3(language):
     @types('int [:]')
     def f3(x):
         from numpy import empty_like
@@ -119,12 +119,13 @@ def test_decorator_f3():
         y[:] = x - 1
         return y
 
-    with pytest.raises(PyccelError):
-        epyccel(f3)
+    f = epyccel(f3, language=language)
+    x = np.array([3, 4, 5, 6], dtype=int)
+    assert np.all(f(x) == f3(x))
 
 #------------------------------------------------------------------------------
 # Semantic error doesn't need testing in multiple languages
-def test_decorator_f4():
+def test_decorator_f4(language):
     @types('real [:,:]')
     def f4(x):
         from numpy import empty_like
@@ -132,8 +133,10 @@ def test_decorator_f4():
         y[:] = x - 1.0
         return y
 
-    with pytest.raises(PyccelError):
-        epyccel(f4)
+
+    f = epyccel(f4, language=language)
+    x = np.array([[3, 4, 5, 6],[3, 4, 5, 6]], dtype=float)
+    assert np.all(f(x) == f4(x))
 
 #------------------------------------------------------------------------------
 def test_decorator_f5(language):

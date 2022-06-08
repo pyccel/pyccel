@@ -1819,6 +1819,10 @@ class FCodePrinter(CodePrinter):
             return ''
         self.set_scope(expr.scope)
 
+        for n in expr.results:
+            if isinstance(n, Variable) and n.is_ndarray:
+                raise NotImplementedError("Cannot convert a function ({}) that returns an array".format(expr.name))
+
         name = self._print(expr.name)
 
         if expr.cls_name:
