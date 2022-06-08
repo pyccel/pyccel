@@ -204,13 +204,22 @@ if sys.platform == "win32":
     else:
         python_info['python']['libs'] = ('python{}'.format(config_vars["VERSION"]),)
         python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
+
 else:
+    # Collect library according to python config file
     python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
+
+    # Collect a list of all possible libraries matching the name in the configs
+    # which can be found on the system
     possible_shared_lib = python_lib_base.replace('.a','.so')
     possible_shared_lib = possible_shared_lib if os.path.exists(possible_shared_lib) else ''
     possible_static_lib = python_lib_base.replace('.so','.a')
     possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
+    # Prefer the static library where possible to avoid unnecessary libdirs
+    # which may lead to the wrong libraries being linked
     if possible_shared_lib == '' and possible_static_lib == '':
+        # If the proposed library does not exist use different config flags
+        # to specify the library
         linker_flags = [change_to_lib_flag(l) for l in
                         config_vars.get("LIBRARY","").split() + \
                         config_vars.get("LDSHARED","").split()[1:]]
