@@ -28,11 +28,11 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
-path_sep = ';' if platform.system() == 'Windows' else ':'
 def get_condaless_search_path():
     """ Get the value of the PATH variable to be set when searching for the compiler.
     This is the same as the environment PATH variable but without any conda paths
     """
+    path_sep = ';' if platform.system() == 'Windows' else ':'
     current_path = os.environ['PATH']
     folders = {f: f.split(os.sep) for f in current_path.split(path_sep)}
     conda_folder_names = ('conda', 'anaconda', 'miniconda',
