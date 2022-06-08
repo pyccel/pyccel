@@ -234,7 +234,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdint',
                  'pyc_math_c',
                  'stdio',
-                 'stdbool']}
+                 'stdbool',
+                 'assert']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -1842,6 +1843,11 @@ class CCodePrinter(CodePrinter):
 
         return '/*' + comments + '*/\n'
 
+    def _print_Assert(self, expr):
+        condition = self._print(expr._test)
+        self.add_import(c_imports['assert'])
+        return "assert({0});\n".format(condition)
+    
     def _print_PyccelSymbol(self, expr):
         return expr
 

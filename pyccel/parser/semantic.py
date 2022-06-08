@@ -2821,7 +2821,7 @@ class SemanticParser(BasicParser):
 
     def _visit_IfSection(self, expr, **settings):
         condition = expr.condition
-
+        print(expr)
         name_symbol = PyccelSymbol('__name__')
         main = LiteralString('__main__')
         prog_check = isinstance(condition, PyccelEq) \
@@ -3706,6 +3706,9 @@ class SemanticParser(BasicParser):
             b = self._visit(expr.b)
         return NumpyMatmul(a, b)
 
+    def _visit_Assert(self, expr, **settings):
+        expr.clear_user_nodes()
+        return expr
 #==============================================================================
 
 

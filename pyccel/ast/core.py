@@ -3822,7 +3822,6 @@ class Assert(Basic):
         #if not isinstance(test, (bool, Relational, sp_Boolean)):
         #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
         #                     % (test, type(test)))
-
         self._test = test
         super().__init__()
 
