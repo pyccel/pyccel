@@ -309,7 +309,6 @@ class CCodePrinter(CodePrinter):
                 Return a str that contains the declaration of a dummy data_buffer
                        and a call to an operator which copies it to an NdArray struct
         """
-        # from itertools import combinations_with_replacement # TODO: might use indexing
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
