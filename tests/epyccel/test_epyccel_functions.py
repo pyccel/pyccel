@@ -119,7 +119,10 @@ def test_decorator_f3(language):
         return y
 
     # broken bind_c_X file
-    with pytest.raises(PyccelError):
+    if language == 'fortran':
+        with pytest.raises(PyccelError):
+            f = epyccel(f3, language=language)
+    else:
         f = epyccel(f3, language=language)
         x = np.array([3, 4, 5, 6], dtype=int)
         assert np.all(f(x) == f3(x))
@@ -134,7 +137,10 @@ def test_decorator_f4(language):
         return y
 
     # broken bind_c_X file
-    with pytest.raises(PyccelError):
+    if language == 'fortran':
+        with pytest.raises(PyccelError):
+            f = epyccel(f4, language=language)
+    else:
         f = epyccel(f4, language=language)
         x = np.array([[3, 4, 5, 6],[3, 4, 5, 6]], dtype=float)
         assert np.all(f(x) == f4(x))

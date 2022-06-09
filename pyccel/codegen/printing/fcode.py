@@ -1710,10 +1710,9 @@ class FCodePrinter(CodePrinter):
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
 
-        if len(results) != 1:
-            func_type = 'subroutine'
-            func_end  = ''
-        else:
+        func_type = 'subroutine'
+        func_end  = ''
+        if len(results) == 1 and results[0].rank == 0:
             func_type = 'function'
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
@@ -1753,7 +1752,7 @@ class FCodePrinter(CodePrinter):
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(expr.results) != 1:
+        if len(expr.results) != 1 or (len(expr.results) > 1 and expr.results[0].rank > 0):
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
@@ -2826,7 +2825,7 @@ class FCodePrinter(CodePrinter):
             self._additional_code = ''
         if parent_assign:
             lhs = parent_assign[0].lhs
-            if len(func_results) == 1:
+            if len(func_results) == 1 and func_results[0].rank == 0:
                 lhs_vars = {func_results[0]:lhs}
             else:
                 lhs_vars = dict(zip(func_results,lhs))
@@ -2854,7 +2853,7 @@ class FCodePrinter(CodePrinter):
                 else:
                     results_strs = [self._print(r) for r in lhs_vars.values()]
 
-        elif len(func_results)>1:
+        elif len(func_results)>1 or (len(func_results)>1 and func_results[0].rank > 0):
             results = [r.clone(name = self.scope.get_new_name()) \
                         for r in func_results]
             for var in results:
