@@ -14,9 +14,9 @@
 */
 
 #define MOD_PYC(N, M) \
-    ({long int RES_MOD = (N % M); ((N < 0 ^ M < 0) && (RES_MOD ) != 0) ? (RES_MOD) + M : (RES_MOD);})
+    ({long int RES_MOD = (N % M); !(N < 0 ^ M < 0) || RES_MOD == 0 ? RES_MOD : RES_MOD + M;})
 #define FMOD_PYC(N, M) \
-    ({double RES_FMOD = fmod(N, M); ((N < 0 ^ M < 0) && RES_FMOD != 0  ? RES_FMOD + M : RES_FMOD);})
+    ({double RES_FMOD = fmod(N, M); !(N < 0 ^ M < 0) || RES_FMOD == 0 ? RES_FMOD : RES_FMOD + M;})
 
 
 int64_t         pyc_factorial(int64_t n);
