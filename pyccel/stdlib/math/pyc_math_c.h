@@ -13,8 +13,11 @@
 ** operands of modulo operator.
 */
 
-#define MOD_PYC(N, M) ((N < 0 ^ M < 0) && (N % M ) != 0 ? (N % M) + M : (N % M))
-#define FMOD_PYC(N, M) ((N < 0 ^ M < 0) && fmod(N, M) != 0  ? fmod(N, M) + M : fmod(N, M))
+#define MOD_PYC(N, M) \
+    ({long int RES_MOD = (N % M); ((N < 0 ^ M < 0) && (RES_MOD ) != 0) ? (RES_MOD) + M : (RES_MOD);})
+#define FMOD_PYC(N, M) \
+    ({double RES_FMOD = fmod(N, M); ((N < 0 ^ M < 0) && RES_FMOD != 0  ? RES_FMOD + M : RES_FMOD);})
+
 
 int64_t         pyc_factorial(int64_t n);
 int64_t         pyc_gcd (int64_t a, int64_t b);
