@@ -957,7 +957,8 @@ class CCodePrinter(CodePrinter):
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
-        if expr.variable.is_stack_array:
+        # if expr.variable.is_stack_array:
+        if expr.variable.memory_handling == 'stack_array':
             preface, init = self._init_stack_array(expr.variable,)
         elif declaration_type == 't_ndarray ' and not self._in_header:
             preface = ''
@@ -1172,7 +1173,9 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        if expr.variable.is_pointer:
+        # if expr.variable.is_pointer:
+        #     return 'free_pointer({});\n'.format(self._print(expr.variable))
+        if expr.variable.memory_handling == 'pointer':
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
 
@@ -1422,7 +1425,9 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+        # return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+        #         any(a is bi for b in self._additional_args for bi in b)
+        return (a.memory_handling == 'pointer' and not a.is_ndarray) or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     def _print_FunctionCall(self, expr):

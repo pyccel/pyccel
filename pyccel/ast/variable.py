@@ -165,6 +165,7 @@ class Variable(PyccelAstNode):
 
         if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
             raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
+        self._memory_handling = memory_handling
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
@@ -256,7 +257,8 @@ class Variable(PyccelAstNode):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.is_pointer
+        # return self.is_pointer
+        return self.memory_handling == 'pointer'
 
     def set_changeable_shape(self):
         """
@@ -639,7 +641,8 @@ class HomogeneousTupleVariable(TupleVariable):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.is_pointer and i == (self.rank-1)
+        # return self.is_pointer and i == (self.rank-1)
+        return self.memory_handling == 'pointer' and i == (self.rank-1)
 
     def __len__(self):
         return self.shape[0]

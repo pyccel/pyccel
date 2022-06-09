@@ -1099,7 +1099,10 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var_name = self.scope.get_new_name()
-        var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
+        # var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
+        #         shape = expr.shape, precision = expr.precision,
+        #         order = expr.order, rank = expr.rank)
+        var = Variable(expr.dtype, var_name, memory_handling = 'stack_array' if all([s.is_constant for s in expr.shape]) else None,
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
@@ -1229,18 +1232,18 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
-        rank        = var.rank
-        allocatable = var.allocatable
-        shape       = var.alloc_shape
-        is_pointer = var.is_pointer
-        is_target = var.is_target
-        is_const = var.is_const
-        is_stack_array = var.is_stack_array
-        is_optional = var.is_optional
-        is_private = var.is_private
-        is_static = expr.static
-        is_external = expr.external
-        intent = expr.intent
+        rank           = var.rank
+        allocatable    = var.memory_handling == 'allocatable' # var.allocatable
+        is_pointer     = var.memory_handling == 'pointer'     # var.is_pointer
+        is_stack_array = var.memory_handling == 'stack_array' # var.is_stack_array
+        shape          = var.alloc_shape
+        is_target      = var.is_target
+        is_const       = var.is_const
+        is_optional    = var.is_optional
+        is_private     = var.is_private
+        is_static      = expr.static
+        is_external    = expr.external
+        intent         = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
@@ -1549,7 +1552,9 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if var.is_pointer:
+        # if var.is_pointer:
+        #     return ''
+        if var.memory_handling == 'pointer':
             return ''
         else:
             var_code = self._print(var)
@@ -2701,7 +2706,10 @@ class FCodePrinter(CodePrinter):
                 if (not self._additional_code):
                     self._additional_code = ''
                 var_name = self.scope.get_new_name()
-                var = Variable(base.dtype, var_name, is_stack_array = True,
+                # var = Variable(base.dtype, var_name, is_stack_array = True,
+                #         shape=base.shape,precision=base.precision,
+                #         order=base.order,rank=base.rank)
+                var = Variable(base.dtype, var_name, memory_handling = 'stack_array',
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 

@@ -142,9 +142,12 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns: Variable
         -------
         """
+        # return Variable(dtype=PyccelPyObject(),
+        #                 name=self.scope.get_new_name(name),
+        #                 is_pointer=True)
         return Variable(dtype=PyccelPyObject(),
                         name=self.scope.get_new_name(name),
-                        is_pointer=True)
+                        memory_handling='pointer')
 
     def find_in_dtype_registry(self, dtype, prec):
         """
@@ -610,15 +613,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
+            # collect_var  = Variable(dtype = collect_type,
+            #                     is_pointer = True, rank = variable.rank,
+            #                     order= variable.order,
+            #                     name=self.scope.get_new_name(variable.name+"_tmp"))
             collect_var  = Variable(dtype = collect_type,
-                                is_pointer = True, rank = variable.rank,
+                                memory_handling='pointer', rank = variable.rank,
                                 order= variable.order,
                                 name=self.scope.get_new_name(variable.name+"_tmp"))
 
         else:
             collect_type = PyccelPyObject()
+            # collect_var  = Variable(dtype = collect_type,
+            #                     is_pointer = True,
+            #                     name=self.scope.get_new_name(variable.name+"_tmp"))
             collect_var  = Variable(dtype = collect_type,
-                                is_pointer = True,
+                                memory_handling='pointer',
                                 name=self.scope.get_new_name(variable.name+"_tmp"))
         self.scope.insert_variable(collect_var)
 
@@ -649,7 +659,9 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function = FunctionCall(C_to_Python(variable), [VariableAddress(variable)])
 
         collect_type = PyccelPyObject()
-        collect_var = Variable(dtype = collect_type, is_pointer=True,
+        # collect_var = Variable(dtype = collect_type, is_pointer=True,
+        #     name = self.scope.get_new_name(variable.name+"_tmp"))
+        collect_var = Variable(dtype = collect_type, memory_handling='pointer',
             name = self.scope.get_new_name(variable.name+"_tmp"))
         self.scope.insert_variable(collect_var)
         self._to_free_PyObject_list.append(collect_var) #TODO remove in next PR
@@ -712,9 +724,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #Create module variable
         mod_var_name = self.scope.get_new_name('m')
+        # mod_var = Variable(dtype = PyccelPyObject(),
+        #               name       = mod_var_name,
+        #               is_pointer = True)
         mod_var = Variable(dtype = PyccelPyObject(),
                       name       = mod_var_name,
-                      is_pointer = True)
+                      memory_handling = 'pointer')
         scope.insert_variable(mod_var)
 
         # Collect module variables from translated code
@@ -772,9 +787,12 @@ class CWrapperCodePrinter(CCodePrinter):
         if vars_to_wrap:
             # Create variable for temporary python objects
             tmp_var_name = self.scope.get_new_name('tmp')
+            # tmp_var = Variable(dtype = PyccelPyObject(),
+            #               name       = tmp_var_name,
+            #               is_pointer = True)
             tmp_var = Variable(dtype = PyccelPyObject(),
                           name       = tmp_var_name,
-                          is_pointer = True)
+                          memory_handling = 'pointer')
             scope.insert_variable(tmp_var)
             # Add code to add variable to module
             body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
@@ -913,7 +931,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
-                res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
+                # res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
+                res_args.append(VariableAddress(collect_var) if collect_var.memory_handling == 'pointer' else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
@@ -1164,7 +1183,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
 
-            res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
+            # res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
+            res_args.append(VariableAddress(collect_var) if collect_var.memory_handling == 'pointer' else collect_var)
 
         # Call PyBuildNode
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))

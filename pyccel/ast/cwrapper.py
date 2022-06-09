@@ -315,16 +315,23 @@ class PyModule_AddObject(PyccelAstNode):
 #-------------------------------------------------------------------
 
 # Python.h object  representing Booleans True and False
-Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
-Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
+# Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
+# Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
+Py_True = Variable(PyccelPyObject(), 'Py_True', memory_handling='pointer')
+Py_False = Variable(PyccelPyObject(), 'Py_False', memory_handling='pointer')
 
 # Python.h object representing None
-Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+# Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='pointer')
 
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
+# Py_DECREF = FunctionDef(name = 'Py_DECREF',
+#                         body = [],
+#                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+#                         results = [])
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        arguments = [Variable(dtype=PyccelPyObject(), name='o', memory_handling='pointer')],
                         results = [])
 
 #-------------------------------------------------------------------
@@ -348,9 +355,13 @@ def Python_to_C(c_object):
         cast_function = py_to_c_registry[(dtype, prec)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
+    # cast_func = FunctionDef(name = cast_function,
+    #                    body      = [],
+    #                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+    #                    results   = [Variable(dtype=dtype, name = 'v', precision = prec)])
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='pointer')],
                        results   = [Variable(dtype=dtype, name = 'v', precision = prec)])
 
     return cast_func
@@ -391,10 +402,14 @@ def C_to_Python(c_object):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
+    # cast_func = FunctionDef(name = cast_function,
+    #                    body      = [],
+    #                    arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
+    #                    results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
-                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
+                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='pointer')])
 
     return cast_func
 
@@ -420,9 +435,13 @@ c_to_py_registry = {
 #-------------------------------------------------------------------
 
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
+# PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
+#                              arguments = [],
+#                              results   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
+#                              body      = [])
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
+                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'pointer')],
                              body      = [])
 
 def PyErr_SetString(exception, message):
@@ -517,9 +536,13 @@ def scalar_object_check(py_object, c_object):
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
 
+    # check_func = FunctionDef(name = check_type,
+    #                 body      = [],
+    #                 arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+    #                 results   = [Variable(dtype=NativeBool(), name = 'r')])
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'pointer')],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     return FunctionCall(check_func, [py_object])

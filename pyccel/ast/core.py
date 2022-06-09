@@ -444,7 +444,8 @@ class Assign(Basic):
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
         cond = cond and isinstance(lhs, PyccelSymbol)
-        cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
+        # cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
+        cond = cond or isinstance(rhs, Variable) and rhs.memory_handling == 'pointer'
         return cond
 
     @property
@@ -505,7 +506,7 @@ class Allocate(Basic):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
         # if not variable.allocatable and not variable.is_pointer:
-        if variable.memory_handling not in ('allocatable', 'is_pointer'):
+        if variable.memory_handling not in ('allocatable', 'pointer'):
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
@@ -724,7 +725,9 @@ class AliasAssign(Basic):
 
     def __init__(self, lhs, rhs):
         if pyccel_stage == 'semantic':
-            if not lhs.is_pointer:
+            # if not lhs.is_pointer:
+            #     raise TypeError('lhs must be a pointer')
+            if lhs.memory_handling != 'pointer':
                 raise TypeError('lhs must be a pointer')
 
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
@@ -1540,9 +1543,11 @@ class Iterable(Basic):
             target = target[1:]
             range_element = range_element[1:]
         if isinstance(target, (tuple, list)):
-            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
+            # return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
+            return [AliasAssign(t, r) if t.memory_handling == 'pointer' else Assign(t, r) for t, r in zip(target, range_element)]
         else:
-            return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
+            # return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
+            return [AliasAssign(target, range_element) if target.memory_handling == 'pointer' else Assign(target, range_element)]
 
     def get_target_from_range(self):
         """ Returns an element of the range indexed with the iterators

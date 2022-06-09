@@ -101,8 +101,9 @@ class ListType(BasicStmt):
         d_var = {}
         d_var['datatype'] = str(dtypes[0])
         d_var['rank'] = len(dtypes)
-        d_var['is_pointer'] = len(dtypes)>0
-        d_var['allocatable'] = False
+        # d_var['is_pointer'] = len(dtypes)>0
+        # d_var['allocatable'] = False
+        d_var['memory_handling'] = 'pointer' if len(dtypes) > 0 else 'stack_array' # TODO: to reconsider (probably None)
         d_var['precision'] = max(precisions)
         d_var['order'] = 'C'
         d_var['is_func'] = False
@@ -146,8 +147,9 @@ class Type(BasicStmt):
         d_var={}
         d_var['datatype']=dtype
         d_var['rank'] = len(trailer)
-        d_var['allocatable'] = len(trailer)>0
-        d_var['is_pointer'] = False
+        # d_var['allocatable'] = len(trailer)>0
+        # d_var['is_pointer'] = False
+        d_var['memory_handling'] = 'pointer' if len(trailer) > 0 else 'stack_array' # TODO: to reconsider (probably None)
         d_var['precision']  = precision
         d_var['is_func'] = False
         d_var['is_const'] = False
