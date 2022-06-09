@@ -309,7 +309,7 @@ class CCodePrinter(CodePrinter):
                 Return a str that contains the declaration of a dummy data_buffer
                        and a call to an operator which copies it to an NdArray struct
         """
-        # from itertools import combinations_with_replacement # TODO: might use indexing for better stuff
+        # from itertools import combinations_with_replacement # TODO: might use indexing
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
@@ -323,21 +323,18 @@ class CCodePrinter(CodePrinter):
             arg = self._flatten_list(arg)
         self.add_import(c_imports['string'])
         to_return = ""
-        for n, i in enumerate(arg):
-            buffer_increment = "(" + ' * '.join([(i.name + ".shape[" + str(j) + "]") for j in range(len(i.shape))]) + ")"
-            shape_increment = buffer_increment + " * " + str(n)
-            if isinstance(i, Variable):
-                i = self._print(i)
-                cpy_data = "memcpy({0}.{2} + ({3}), {1}.{2}, {0}.buffer_size);\n".format(lhs, i, dtype, shape_increment)
-                to_return += '%s' % (cpy_data)
-            else :
-                i = ', '.join(self._print(i) for i in i)
-
-                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)#array_vals[:-2])
-                cpy_data = "memcpy({0}.{2} + ({3}), {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype, shape_increment)
-                to_return += '%s%s' % (dummy_array, cpy_data)
-            # shape += i._shape
-        return to_return
+        if isinstance(arg[0], Variable):
+            for n, i in enumerate(arg):
+                if isinstance(i, Variable):
+                    i = self._print(i)
+                    cpy_data = "memcpy({0}.{2} + ({0}.length * {3}), {1}.{2}, {0}.buffer_size);\n".format(lhs, i, dtype, n)
+                    to_return += '%s' % (cpy_data)
+            return to_return
+        else:
+            i = ', '.join([self._print(i) for i in arg])
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
+            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
+            return '%s%s' % (dummy_array, cpy_data)
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
