@@ -2313,7 +2313,6 @@ class FCodePrinter(CodePrinter):
         return ('{prolog}\n'
                 '{body}\n'
                 '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
-        return self._print(stmt)
 
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
