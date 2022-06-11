@@ -1,4 +1,10 @@
-#! /usr/bin/env python3
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+""" Module containing functions for testing the Bellman-Ford algorithm using pyccel or pythran
+"""
 
 # ================================================================
 def bellman_ford ( v_num: int, e_num: int, source: int, e: 'int[:,:]', e_weight: 'real[:]',

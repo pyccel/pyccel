@@ -1,3 +1,12 @@
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+Functions for solving a Poisson equation. The code is adapted from examples written by [J. Burkardt](https://people.sc.fsu.edu/~jburkardt/py_src/py_src.html)
+To be accelerated with pyccel or pythran
+"""
 from numba import njit
 
 @njit(fastmath=True)
@@ -12,7 +21,7 @@ def poisson_2d(p: 'float[:,:]', pd: 'float[:,:]', b: 'float[:,:]',
     b[3 * ny // 4, 3 * nx // 4] = -100
 
 
-    for it in range(nt):
+    for _ in range(nt):
         pd[:,:] = p[:,:]
 
         for j in range(2, row):

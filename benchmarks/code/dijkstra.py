@@ -1,4 +1,10 @@
-#! /usr/bin/env python3
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+""" Module containing functions for testing the Dijkstra algorithm using pyccel or pythran
+"""
 
 # ================================================================
 def find_nearest ( nv: int, mind: 'int[:]', connected: 'bool[:]' ):
@@ -48,9 +54,9 @@ def dijkstra_distance ( nv: int, ohd: 'int[:,:]', mind: 'int[:]' ):
 
     #  Attach one more node on each iteration.
 
-    for step in range ( 1, nv ):
+    for _ in range ( 1, nv ):
         #  Find the nearest unconnected node.
-        md, mv = find_nearest ( nv, mind, connected )
+        _, mv = find_nearest ( nv, mind, connected )
 
         if ( mv == - 1 ):
             print ( 'DIJKSTRA_DISTANCE - Fatal error!' )

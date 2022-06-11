@@ -1,4 +1,12 @@
-#! /usr/bin/env python3
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+Functions for running a small molecular dynamics simulation. The code is adapted from examples written by [J. Burkardt](https://people.sc.fsu.edu/~jburkardt/py_src/py_src.html)
+To be accelerated with pyccel or pythran
+"""
 from numpy import zeros
 from numpy import sqrt
 from numpy import pi
@@ -128,12 +136,11 @@ def md (d_num: int, p_num: int, step_num: int, dt: float,
     mass = 1.0
 
     initialize ( pos, p_num, d_num )
-    potential, kinetic = compute ( p_num, d_num, pos, vel, mass, force )
-    e0 = potential + kinetic
+    compute ( p_num, d_num, pos, vel, mass, force )
 
-    for step in range ( 1, step_num + 1 ):
+    for _ in range ( step_num ):
         update ( p_num, d_num, pos, vel, force, acc, mass, dt )
-        potential, kinetic = compute ( p_num, d_num, pos, vel, mass, force )
+        compute ( p_num, d_num, pos, vel, mass, force )
 
 # ================================================================
 # pythran export test_md(int,int,int,float)

@@ -1,6 +1,11 @@
-#! /usr/bin/env python3
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 """
 Functions for solving an ordinary differential equation using the implicit midpoint method for a fixed number of iterations. The code is adapted from examples written by [J. Burkardt](https://people.sc.fsu.edu/~jburkardt/py_src/py_src.html)
+To be accelerated with pyccel or pythran
 """
 from numpy import zeros
 from numpy import linspace
@@ -22,7 +27,7 @@ def midpoint_fixed (dydt: '()(real, const real[:], real[:])',
     it_max = 10
     theta = 0.5
 
-    t[0] = tspan[0];
+    t[0] = tspan[0]
     y[0,:] = y0
 
     for i in range ( 0, n ):
@@ -30,7 +35,7 @@ def midpoint_fixed (dydt: '()(real, const real[:], real[:])',
         xm = t[i] + theta * dt
 
         y1m[:] = y[i,:]
-        for j in range ( 0, it_max ):
+        for _ in range ( it_max ):
             dydt ( xm, y1m[:], y2m[:] )
             y1m[:] = y[i,:] + theta * dt * y2m[:]
 
