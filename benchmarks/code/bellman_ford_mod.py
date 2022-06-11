@@ -3,6 +3,9 @@
 # ================================================================
 def bellman_ford ( v_num: int, e_num: int, source: int, e: 'int[:,:]', e_weight: 'real[:]',
                    v_weight: 'real[:]', predecessor: 'int[:]' ):
+    """ Calculate the shortest paths from a source vertex to all other
+    vertices in the weighted digraph
+    """
 
     r8_big = 1.0E+14
 
@@ -40,6 +43,8 @@ def bellman_ford ( v_num: int, e_num: int, source: int, e: 'int[:,:]', e_weight:
 # pythran export bellman_ford_test()
 #@stack_array('e','e_weight','v_weight','predecessor')
 def bellman_ford_test ( ):
+    """ Test bellman ford's algorithm
+    """
 
     from numpy import array
     from numpy import zeros

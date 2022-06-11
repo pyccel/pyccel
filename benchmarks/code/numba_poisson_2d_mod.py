@@ -3,6 +3,8 @@ from numba import njit
 @njit(fastmath=True)
 def poisson_2d(p: 'float[:,:]', pd: 'float[:,:]', b: 'float[:,:]',
                nx: int, ny: int, nt: int, dx: float, dy: float):
+    """ Solve the 2D poisson equation
+    """
 
     row, col = p.shape
     # Source

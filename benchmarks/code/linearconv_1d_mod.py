@@ -2,6 +2,8 @@
 def linearconv_1d(u: 'float[:]', un: 'float[:]',
                   nt: int, nx: int,
                   dt: float, dx: float, c: float):
+    """ Solve the linear convection equation
+    """
 
     for n in range(nt):
         un[:nx] = u[:nx]

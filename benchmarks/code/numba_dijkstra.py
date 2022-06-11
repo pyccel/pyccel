@@ -5,6 +5,8 @@ from numpy import zeros
 # ================================================================
 @njit(fastmath=True)
 def find_nearest ( nv: int, mind: 'int[:]', connected: 'bool[:]' ):
+    """ Find the nearest node
+    """
 
     i4_huge = 2147483647
 
@@ -20,6 +22,8 @@ def find_nearest ( nv: int, mind: 'int[:]', connected: 'bool[:]' ):
 # ================================================================
 @njit(fastmath=True)
 def update_mind ( nv: int, mv: int, connected: 'bool[:]', ohd: 'int[:,:]', mind: 'int[:]' ):
+    """ Update the minimum distance
+    """
 
     i4_huge = 2147483647
 
@@ -31,6 +35,10 @@ def update_mind ( nv: int, mv: int, connected: 'bool[:]', ohd: 'int[:,:]', mind:
 # ================================================================
 @njit(fastmath=True)
 def dijkstra_distance ( nv: int, ohd: 'int[:,:]', mind: 'int[:]' ):
+    """ Find the shortest paths between nodes in a graph
+    """
+
+    from numpy import zeros
 
     #  Start out with only node 1 connected to the tree.
     connected = zeros (nv, dtype = 'bool' )
@@ -66,6 +74,8 @@ def dijkstra_distance ( nv: int, ohd: 'int[:,:]', mind: 'int[:]' ):
 # ================================================================
 @njit(fastmath=True)
 def init ( nv: int, ohd: 'int[:,:]' ):
+    """ Create a graph
+    """
 
     i4_huge = 2147483647
 
@@ -95,6 +105,8 @@ def init ( nv: int, ohd: 'int[:,:]' ):
 # ================================================================
 @njit(fastmath=True)
 def dijkstra_distance_test ( ):
+    """ Test Dijkstra's algorithm
+    """
 
     #  Initialize the problem data.
     nv = 6

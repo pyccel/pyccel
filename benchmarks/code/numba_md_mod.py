@@ -9,6 +9,8 @@ from numpy import sin
 @njit(fastmath=True)
 def compute ( p_num: int, d_num: int, pos: 'double[:,:]', vel: 'double[:,:]',
              mass: float, force: 'double[:,:]' ):
+    """ Calculate the energy and forces associated with the current configuration
+    """
 
     rij = zeros ( d_num )
 
@@ -59,6 +61,8 @@ def compute ( p_num: int, d_num: int, pos: 'double[:,:]', vel: 'double[:,:]',
 @njit(fastmath=True)
 def update ( p_num: int, d_num: int, pos: 'double[:,:]', vel: 'double[:,:]',
             force: 'double[:,:]', acc: 'double[:,:]', mass: float, dt: float ):
+    """ Update the position, velocity and force of the particles
+    """
 
     rmass = 1.0 / mass
     #
@@ -77,6 +81,8 @@ def update ( p_num: int, d_num: int, pos: 'double[:,:]', vel: 'double[:,:]',
 # ================================================================
 @njit(fastmath=True)
 def r8mat_uniform_ab ( r: 'double[:,:]', m: int, n: int, a: float, b: float, seed: int ):
+    """ Fill r with random numbers with a uniform distribution
+    """
 
     i4_huge = 2147483647
 
@@ -111,6 +117,8 @@ def r8mat_uniform_ab ( r: 'double[:,:]', m: int, n: int, a: float, b: float, see
 # ================================================================
 @njit(fastmath=True)
 def initialize ( pos: 'double[:,:]', p_num: int, d_num: int ):
+    """ Initialise the positions of the particles
+    """
     #  Positions.
     seed = 123456789
     seed = r8mat_uniform_ab ( pos, d_num, p_num, 0.0, 10.0, seed )
@@ -120,6 +128,8 @@ def initialize ( pos: 'double[:,:]', p_num: int, d_num: int ):
 def md (d_num: int, p_num: int, step_num: int, dt: float,
         vel: 'double[:,:]', acc: 'double[:,:]',
         force: 'double[:,:]', pos: 'double[:,:]'):
+    """ Run molecular dynamics simulation
+    """
 
     mass = 1.0
 
@@ -134,6 +144,8 @@ def md (d_num: int, p_num: int, step_num: int, dt: float,
 # ================================================================
 @njit(fastmath=True)
 def test_md ( d_num : int = 3, p_num : int = 100, step_num : int = 10, dt : float = 0.1 ):
+    """ Run molecular dynamics test
+    """
 
     #  Velocities.
     vel = zeros ( ( d_num, p_num ) )

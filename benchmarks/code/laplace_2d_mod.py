@@ -3,6 +3,8 @@ import numpy as np
 # pythran export laplace_2d(float[:,:], float[:], float, float, float)
 def laplace_2d(p: 'float[:,:]', y: 'float[:]',
                dx: float, dy: float, l1norm_target: float):
+    """ Solve the Laplace equation
+    """
 
     row, col = p.shape
     pn = np.empty((row,col))

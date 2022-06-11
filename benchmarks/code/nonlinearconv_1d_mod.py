@@ -1,6 +1,8 @@
 # pythran export nonlinearconv_1d(float[:], float[:], int, int, float, float)
 def nonlinearconv_1d(u: 'float[:]', un: 'float[:]',
                      nt: int, nx: int, dt: float, dx: float):
+    """ Solve a non-linear convection equation
+    """
 
     for n in range(nt):
         un[:] = u[:]

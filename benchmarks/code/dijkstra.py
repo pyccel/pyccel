@@ -2,6 +2,8 @@
 
 # ================================================================
 def find_nearest ( nv: int, mind: 'int[:]', connected: 'bool[:]' ):
+    """ Find the nearest node
+    """
 
     i4_huge = 2147483647
 
@@ -16,6 +18,8 @@ def find_nearest ( nv: int, mind: 'int[:]', connected: 'bool[:]' ):
 
 # ================================================================
 def update_mind ( nv: int, mv: int, connected: 'bool[:]', ohd: 'int[:,:]', mind: 'int[:]' ):
+    """ Update the minimum distance
+    """
 
     i4_huge = 2147483647
 
@@ -26,6 +30,8 @@ def update_mind ( nv: int, mv: int, connected: 'bool[:]', ohd: 'int[:,:]', mind:
 
 # ================================================================
 def dijkstra_distance ( nv: int, ohd: 'int[:,:]', mind: 'int[:]' ):
+    """ Find the shortest paths between nodes in a graph
+    """
 
     from numpy import zeros
 
@@ -62,6 +68,8 @@ def dijkstra_distance ( nv: int, ohd: 'int[:,:]', mind: 'int[:]' ):
 
 # ================================================================
 def init ( nv: int, ohd: 'int[:,:]' ):
+    """ Create a graph
+    """
 
     i4_huge = 2147483647
 
@@ -91,6 +99,8 @@ def init ( nv: int, ohd: 'int[:,:]' ):
 # ================================================================
 # pythran export dijkstra_distance_test()
 def dijkstra_distance_test ( ):
+    """ Test Dijkstra's algorithm
+    """
 
     from numpy import zeros
 
