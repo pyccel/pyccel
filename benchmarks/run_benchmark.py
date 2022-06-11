@@ -160,14 +160,25 @@ cell_splitter = {'latex'    : ' & ',
 row_splitter  = {'latex'    : '\\\\\n\\hline\n',
                  'markdown' : '\n'}
 
-test_cases_row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in ['Code']+test_cases)
+test_cases_row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in ['Algorithm']+test_cases)
 comp_result_table = [test_cases_row]
 exec_result_table = [test_cases_row]
+
+out_header = {'latex'    : lambda s : r'\textbf{'+s+'}',
+              'markdown' : lambda s : '### '+s
+             }
+
+if output_format == 'markdown':
+    header_row = cell_splitter[output_format].join('-------------------------' for _ in range(len(test_cases)+1))
+    comp_result_table.append(header_row)
+    exec_result_table.append(header_row)
 
 possible_units = ['sec','ms','us','ns']
 latex_units = ['s','ms','\\textmu s','ns']
 
 start_dir = os.getcwd()
+
+code_folder = os.path.join(os.path.dirname(__file__), 'code')
 
 for t in tests:
     print("===========================================", file=log_file, flush=True)
@@ -175,7 +186,7 @@ for t in tests:
     print("===========================================", file=log_file, flush=True)
     basename = t.basename
 
-    test_file = os.path.join('code',basename)
+    test_file = os.path.join(code_folder,basename)
     testname  = os.path.splitext(basename)[0]
 
     numba_basename = 'numba_'+basename
@@ -347,8 +358,12 @@ log_file.close()
 
 result_file = open("bench.out",'w')
 if time_compilation:
+    print(out_header[output_format]("Compilation time"), file=result_file, flush=True)
     print(row_splitter[output_format].join(comp_result_table), file=result_file, flush=True)
 
+print()
+
 if time_execution:
+    print(out_header[output_format]("Execution time"), file=result_file, flush=True)
     print(row_splitter[output_format].join(exec_result_table), file=result_file, flush=True)
 result_file.close()
