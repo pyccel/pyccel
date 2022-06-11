@@ -1,3 +1,11 @@
+#! /usr/bin/env python3
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+""" Module providing the code for executing the benchmark suite
+"""
 from argparse import ArgumentParser
 from collections import namedtuple
 import os
