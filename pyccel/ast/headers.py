@@ -298,7 +298,7 @@ class FunctionHeader(Header):
             #                allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
             #                rank=rank, shape=shape ,order = order, precision = precision,
             #                is_argument=True, is_temp = True)
-            r = Variable(dtype, var_name,
+            var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,
                            is_argument=True, is_temp=True)

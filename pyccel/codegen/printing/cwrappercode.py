@@ -232,7 +232,8 @@ class CWrapperCodePrinter(CCodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            # args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += [a.clone(name = a.name, memory_handling='pointer') for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
