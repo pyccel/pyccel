@@ -268,7 +268,7 @@ for t in tests:
                 print(err, file=log_file, flush=True)
             else:
                 print("Compilation Process time : ",out, file=log_file, flush=True)
-                comp_times.append(float(out))
+                comp_times.append('{:.2f}'.format(float(out)))
         else:
             comp_times.append('-')
 
@@ -346,9 +346,9 @@ for t in tests:
                 if time is None:
                     row.append('-')
                 else:
-                    row.append(str(time*f))
+                    row.append('{:.2f}'.format(time*f))
 
-        row = cell_splitter[output_format].join('{0: <25.2f}'.format(s) for s in row)
+        row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in row)
         if verbose:
             print(row, file=log_file, flush=True)
         exec_result_table.append(row)
