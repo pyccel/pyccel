@@ -316,7 +316,7 @@ for t in tests:
                 run_units.append(possible_units.index(units))
 
         if case in accelerator_commands:
-            p = subprocess.Popen(['pyccel-clean', '-s'])
+            p = subprocess.Popen([shutil.which('pyccel-clean'), '-s'])
 
     if time_compilation:
         row = cell_splitter[output_format].join('{0: <25}'.format(s) for s in comp_times)
