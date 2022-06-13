@@ -49,7 +49,6 @@ test_cases += ['pyccel_c']
 if args.intel:
     test_cases += ['pyccel_intel']
     test_cases += ['pyccel_intel_c']
-test_cases = ['pyccel']
 
 tests = [
     TestInfo('Ackermann',
@@ -57,86 +56,86 @@ tests = [
         ['ackermann'],
         'import sys; sys.setrecursionlimit(3000);',
         'ackermann(3,8)'),
-    #TestInfo('Bellman Ford',
-    #    'bellman_ford_mod.py',
-    #    ['bellman_ford_test'],
-    #    '',
-    #    'bellman_ford_test()'),
-    #TestInfo('Dijkstra',
-    #    'dijkstra.py',
-    #    ['dijkstra_distance_test'],
-    #    '',
-    #    'dijkstra_distance_test()'),
-    #TestInfo('Euler',
-    #    'euler_mod.py',
-    #    ['euler_humps_test', 'humps_fun'],
-    #    'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
-    #    'euler_humps_test(tspan, y0, 10000)'),
-    #TestInfo('Midpoint Explicit',
-    #    'midpoint_explicit_mod.py',
-    #    ['midpoint_explicit_humps_test', 'humps_fun'],
-    #    'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
-    #    'midpoint_explicit_humps_test(tspan, y0, 10000)'),
-    #TestInfo('Midpoint Fixed',
-    #    'midpoint_fixed_mod.py',
-    #    ['midpoint_fixed_humps_test', 'humps_fun'],
-    #    'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
-    #    'midpoint_fixed_humps_test(tspan, y0, 10000)'),
-    #TestInfo('RK4',
-    #    'rk4_mod.py',
-    #    ['rk4_humps_test', 'humps_fun'],
-    #    'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
-    #    'rk4_humps_test(tspan, y0, 10000)'),
-    #TestInfo('FD - L Convection',
-    #    'linearconv_1d_mod.py',
-    #    ['linearconv_1d'],
-    #    '''import numpy as np; nx=2001; nt=2000; c=1.; dt=0.0003;
-    #    dx = 2 / (nx-1);
-    #    grid = np.linspace(0,2,nx);
-    #    u0 = np.ones(nx);
-    #    u0[int(.5 / dx):int(1 / dx + 1)] = 2;
-    #    u = u0.copy();
-    #    un = np.ones(nx);''',
-    #    'linearconv_1d(u, un, nt, nx, dt, dx, c)'),
-    #TestInfo('FD - NL Convection',
-    #    'nonlinearconv_1d_mod.py',
-    #    ['nonlinearconv_1d'],
-    #    '''import numpy as np; nx = 2001; nt=2000; c=1.; dt=0.00035; dx = 2 / (nx-1);
-    #    grid = np.linspace(0,2,nx);
-    #    u0 = np.ones(nx);
-    #    u0[int(.5 / dx):int(1 / dx + 1)] = 2;
-    #    u = u0.copy();
-    #    un = np.ones(nx);''',
-    #    'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
-    #TestInfo('FD - Poisson',
-    #    'poisson_2d_mod.py',
-    #    ['poisson_2d'],
-    #    '''import numpy as np; nx = 150; ny = 150; nt  = 100;
-    #       xmin = 0; xmax = 2; ymin = 0; ymax = 1;
-    #       dx = (xmax - xmin) / (nx - 1);
-    #       dy = (ymax - ymin) / (ny - 1);
-    #       p  = np.zeros((ny, nx));
-    #       pd = np.zeros((ny, nx));
-    #       b  = np.zeros((ny, nx));
-    #       x  = np.linspace(xmin, xmax, nx);
-    #       y  = np.linspace(xmin, xmax, ny);''',
-    #    'poisson_2d(p, pd, b, nx, ny, nt, dx, dy)'),
-    #TestInfo('FD - Laplace',
-    #    'laplace_2d_mod.py',
-    #    ['laplace_2d'],
-    #    '''import numpy as np; nx = 31; ny = 31; c = 1.; l1norm_target=1.e-4;
-    #       dx = 2 / (nx - 1); dy = 2 / (ny - 1);
-    #       p = np.zeros((ny, nx));
-    #       x = np.linspace(0, 2, nx);
-    #       y = np.linspace(0, 1, ny);
-    #       p[:, 0] = 0; p[:, -1] = y;
-    #       p[0, :] = p[1, :]; p[-1, :] = p[-2, :];''',
-    #    'laplace_2d(p, y, dx, dy, l1norm_target)'),
-    #TestInfo('M-D',
-    #    'md_mod.py',
-    #    ['test_md'],
-    #    '',
-    #    'test_md(3, 100, 500, 0.1)'),
+    TestInfo('Bellman Ford',
+        'bellman_ford_mod.py',
+        ['bellman_ford_test'],
+        '',
+        'bellman_ford_test()'),
+    TestInfo('Dijkstra',
+        'dijkstra.py',
+        ['dijkstra_distance_test'],
+        '',
+        'dijkstra_distance_test()'),
+    TestInfo('Euler',
+        'euler_mod.py',
+        ['euler_humps_test', 'humps_fun'],
+        'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
+        'euler_humps_test(tspan, y0, 10000)'),
+    TestInfo('Midpoint Explicit',
+        'midpoint_explicit_mod.py',
+        ['midpoint_explicit_humps_test', 'humps_fun'],
+        'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
+        'midpoint_explicit_humps_test(tspan, y0, 10000)'),
+    TestInfo('Midpoint Fixed',
+        'midpoint_fixed_mod.py',
+        ['midpoint_fixed_humps_test', 'humps_fun'],
+        'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
+        'midpoint_fixed_humps_test(tspan, y0, 10000)'),
+    TestInfo('RK4',
+        'rk4_mod.py',
+        ['rk4_humps_test', 'humps_fun'],
+        'import numpy as np; tspan = np.array([0.,2.]); y0 = np.array([humps_fun(0.0)]);',
+        'rk4_humps_test(tspan, y0, 10000)'),
+    TestInfo('FD - L Convection',
+        'linearconv_1d_mod.py',
+        ['linearconv_1d'],
+        '''import numpy as np; nx=2001; nt=2000; c=1.; dt=0.0003;
+        dx = 2 / (nx-1);
+        grid = np.linspace(0,2,nx);
+        u0 = np.ones(nx);
+        u0[int(.5 / dx):int(1 / dx + 1)] = 2;
+        u = u0.copy();
+        un = np.ones(nx);''',
+        'linearconv_1d(u, un, nt, nx, dt, dx, c)'),
+    TestInfo('FD - NL Convection',
+        'nonlinearconv_1d_mod.py',
+        ['nonlinearconv_1d'],
+        '''import numpy as np; nx = 2001; nt=2000; c=1.; dt=0.00035; dx = 2 / (nx-1);
+        grid = np.linspace(0,2,nx);
+        u0 = np.ones(nx);
+        u0[int(.5 / dx):int(1 / dx + 1)] = 2;
+        u = u0.copy();
+        un = np.ones(nx);''',
+        'nonlinearconv_1d(u, un, nt, nx, dt, dx)'),
+    TestInfo('FD - Poisson',
+        'poisson_2d_mod.py',
+        ['poisson_2d'],
+        '''import numpy as np; nx = 150; ny = 150; nt  = 100;
+           xmin = 0; xmax = 2; ymin = 0; ymax = 1;
+           dx = (xmax - xmin) / (nx - 1);
+           dy = (ymax - ymin) / (ny - 1);
+           p  = np.zeros((ny, nx));
+           pd = np.zeros((ny, nx));
+           b  = np.zeros((ny, nx));
+           x  = np.linspace(xmin, xmax, nx);
+           y  = np.linspace(xmin, xmax, ny);''',
+        'poisson_2d(p, pd, b, nx, ny, nt, dx, dy)'),
+    TestInfo('FD - Laplace',
+        'laplace_2d_mod.py',
+        ['laplace_2d'],
+        '''import numpy as np; nx = 31; ny = 31; c = 1.; l1norm_target=1.e-4;
+           dx = 2 / (nx - 1); dy = 2 / (ny - 1);
+           p = np.zeros((ny, nx));
+           x = np.linspace(0, 2, nx);
+           y = np.linspace(0, 1, ny);
+           p[:, 0] = 0; p[:, -1] = y;
+           p[0, :] = p[1, :]; p[-1, :] = p[-2, :];''',
+        'laplace_2d(p, y, dx, dy, l1norm_target)'),
+    TestInfo('M-D',
+        'md_mod.py',
+        ['test_md'],
+        '',
+        'test_md(3, 100, 500, 0.1)'),
 ]
 
 if verbose:
@@ -312,7 +311,7 @@ for t in tests:
                     if units!= 'sec':
                         units = units[:-2]
                     bench_str = best
-                    run_times.append('{:.2f}'.format(best))
+                    run_times.append(best)
 
                 run_units.append(possible_units.index(units))
 
