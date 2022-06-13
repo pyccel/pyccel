@@ -245,7 +245,7 @@ for t in tests:
                 times = [float(ri) for ri in r[0]]
                 cpu_time = sum(times)
                 print("Compilation CPU time : ", cpu_time, file=log_file)
-                comp_times.append('{.2f}'.format(float(cpu_time)))
+                comp_times.append('{:.2f}'.format(float(cpu_time)))
 
         elif time_compilation and case == "numba":
             cmd = ['pypy'] if case=='pypy' else ['python3']
