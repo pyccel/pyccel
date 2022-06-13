@@ -165,7 +165,7 @@ comp_result_table = [test_cases_row]
 exec_result_table = [test_cases_row]
 
 out_header = {'latex'    : lambda s : r'\textbf{'+s+'}',
-              'markdown' : lambda s : '### '+s
+              'markdown' : lambda s : '## '+s
              }
 
 if output_format == 'markdown':
