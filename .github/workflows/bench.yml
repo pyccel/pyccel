@@ -1,4 +1,4 @@
-name: commit_tests
+name: Benchmarks
 
 on:
   push:
