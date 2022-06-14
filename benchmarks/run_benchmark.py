@@ -19,7 +19,7 @@ TestInfo = namedtuple('TestInfo', 'name basename imports setup call')
 parser = ArgumentParser(description='Run the benchmarks to compare pyccel with pure python, pythran and numba')
 
 parser.add_argument('--pyperf', action='store_true', \
-                        help='Runs timing tests with pyperf (more acurate but much slower).')
+                        help='Runs timing tests with pyperf (more accurate but much slower).')
 parser.add_argument('--no_compilation', action='store_false', dest='compilation', \
                         help="Don't time the compilation step")
 parser.add_argument('--no_execution', action='store_false', dest='execution', \
