@@ -291,11 +291,13 @@ class CCodePrinter(CodePrinter):
             return [irregular_list]
 
     #========================== Numpy Elements ===============================#
-        def spread_variable(self, var):
-            print("trying to spread var:", var.name)
-            print("The shape of this variable is: ", var.shape)
-            shape = [int(str(i)) for i in var.shape]
-            print(shape)
+
+    def varCpy(self, lhs, rhs, expr, pad):
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        expr = self._print(expr)
+        cpy_data = "memcpy({0}.{2} + ({3}), {1}.{2}, {0}.buffer_size);\n".format(lhs, expr, dtype, pad)
+        return '%s' % (cpy_data)
+
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
 
@@ -321,14 +323,14 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
         self.add_import(c_imports['string'])
-        to_return = ""
+        assignations = ""
+        if isinstance(arg, Variable):
+            return self._varCpy(lhs, rhs, arg, "0")
         if isinstance(arg[0], Variable):
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
-                    i = self._print(i)
-                    cpy_data = "memcpy({0}.{2} + ({0}.length * {3}), {1}.{2}, {0}.buffer_size);\n".format(lhs, i, dtype, n)
-                    to_return += '%s' % (cpy_data)
-            return to_return
+                    assignations += self.varCpy(lhs, rhs, i, f"{lhs}.length * {n}")
+            return assignations
         else:
             i = ', '.join([self._print(i) for i in arg])
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
