@@ -1847,7 +1847,7 @@ class CCodePrinter(CodePrinter):
         condition = self._print(expr.test)
         self.add_import(c_imports['assert'])
         return "assert({0});\n".format(condition)
-    
+
     def _print_PyccelSymbol(self, expr):
         return expr
 
