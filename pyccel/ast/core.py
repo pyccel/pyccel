@@ -730,7 +730,7 @@ class AliasAssign(Basic):
             if lhs.memory_handling != 'pointer':
                 raise TypeError('lhs must be a pointer')
 
-            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
+            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].memory_handling == 'pointer':
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs

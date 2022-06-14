@@ -773,7 +773,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     vars_to_wrap.append(nd_var)
                 else:
                     # Ensure correct name
-                    w = v.clone(scope.get_expected_name(v.name.lower()))
+                    w = v.clone(scope.get_expected_name(v.name.lower()), memory_handling=None)
                     assign = v.get_user_nodes(Assign)[0]
                     # assign.fst should always exist, but is not always set when the
                     # Assign is created in the codegen stage
@@ -1097,14 +1097,14 @@ class CWrapperCodePrinter(CCodePrinter):
                     # new_v = v.clone(new_name, is_pointer=True, allocatable=False)
                     new_v = v.clone(new_name, memory_handling='pointer')
                 else:
-                    new_v = v.clone(new_name)
+                    new_v = v.clone(new_name, memory_handling=None)
                 local_arg_vars[new_v] = a
                 self.scope.insert_variable(new_v)
             else:
                 self.scope.functions[v.name] = v
                 local_arg_vars[v] = a
 
-        result_vars = [v.clone(self.scope.get_new_name(v.name)) for v in expr.results]
+        result_vars = [v.clone(self.scope.get_new_name(v.name), memory_handling=None) for v in expr.results]
         for v in result_vars:
             self.scope.insert_variable(v)
         # update ndarray and optional local variables properties
@@ -1236,7 +1236,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     scope.insert_symbol(v.name.lower())
 
         if self._target_language == 'fortran':
-            vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
+            vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower(), memory_handling=None), module_variable=True) \
                                     for v in expr.variables if not v.is_private and v.rank == 0]
         else:
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \

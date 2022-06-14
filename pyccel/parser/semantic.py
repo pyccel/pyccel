@@ -385,7 +385,6 @@ class SemanticParser(BasicParser):
         """
         type inference for expressions
         """
-
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
@@ -934,7 +933,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, Variable) and rhs.is_ndarray:
             d_lhs['memory_handling'] = 'pointer'
-            rhs.is_target = False if rhs.memory_handling == 'pointer' else True
+            rhs.is_target = rhs.memory_handling != 'pointer'
 
         # if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
         #         (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'pointer', False)):
@@ -946,7 +945,7 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
                 (getattr(rhs.base, 'is_ndarray', False) or rhs.base.memory_handling == 'pointer'):
             d_lhs['memory_handling'] = 'pointer'
-            rhs.base.is_target = False if rhs.base.memory_handling == 'pointer' else True
+            rhs.base.is_target = rhs.base.memory_handling != 'pointer'
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -3013,7 +3012,6 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionDef(self, expr, **settings):
-
         name            = self.scope.get_expected_name(expr.name)
         cls_name        = expr.cls_name
         decorators      = expr.decorators
@@ -3161,6 +3159,8 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
+
+
 
                     value = None if a.value is None else self._visit(a.value)
                     if isinstance(value, Literal) and \

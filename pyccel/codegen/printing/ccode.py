@@ -362,14 +362,13 @@ class CCodePrinter(CodePrinter):
             array_init   : str
                 String containing the rhs of the initialization of a stack_array
         """
-
+        print(expr)
         var = expr
         dtype_str = self._print(var.dtype)
         dtype = self.find_in_dtype_registry(dtype_str, var.precision)
         np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
-        tot_shape = self._print(functools.reduce(
-            lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
+        tot_shape = self._print(functools.reduce(lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         dummy_array_name = self.scope.get_new_name('array_dummy')
@@ -937,7 +936,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += [a.clone(name = a.name, memory_handling='pointer') for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -951,6 +950,7 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});\n'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
+        print(expr.variable, expr.variable.memory_handling)
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
@@ -958,6 +958,7 @@ class CCodePrinter(CodePrinter):
         variable = self._print(expr.variable.name)
 
         # if expr.variable.is_stack_array:
+        print(expr.variable.memory_handling)
         if expr.variable.memory_handling == 'stack_array':
             preface, init = self._init_stack_array(expr.variable,)
         elif declaration_type == 't_ndarray ' and not self._in_header:
@@ -1016,7 +1017,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [FunctionDefArgument(a.clone(name = a.name, is_pointer =True)) for a in expr.results]
+            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='pointer')) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
