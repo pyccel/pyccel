@@ -361,7 +361,7 @@ if time_compilation:
     print(out_header[output_format]("Compilation time"), file=result_file, flush=True)
     print(row_splitter[output_format].join(comp_result_table), file=result_file, flush=True)
 
-print()
+print(file=result_file, flush=True)
 
 if time_execution:
     print(out_header[output_format]("Execution time"), file=result_file, flush=True)
