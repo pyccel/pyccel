@@ -27,7 +27,7 @@ jobs:
           python -m pip install pyperf
       - name: Benchmark
         run: |
-          python benchmarks/run_benchmark.py --pyperf
+          python benchmarks/run_benchmark.py --pyperf --verbose
           echo "# Performance Comparison (as of $(date))" > performance.md
           cat bench.out >> performance.md
         shell: bash
