@@ -3819,12 +3819,10 @@ class Assert(Basic):
     _attribute_nodes = ('_test',)
     #TODO add type check in the semantic stage
     def __init__(self, test):
-        #if not isinstance(test, (bool, Relational, sp_Boolean)):
-        #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
-        #                     % (test, type(test)))
+        if pyccel_stage =='semantic' and test.dtype is not NativeBool():
+            test = PythonBool(test)
         self._test = test
         super().__init__()
-
     @property
     def test(self):
         return self._test

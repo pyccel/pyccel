@@ -2314,6 +2314,7 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
+
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
