@@ -299,7 +299,7 @@ class CCodePrinter(CodePrinter):
         ----------
             lhs : 'Variable'
                 Used to extract the name of the assignee
-            
+
             rhs : 'Variable'
                 Used to extract the dtype and its precision
 
@@ -308,7 +308,7 @@ class CCodePrinter(CodePrinter):
 
             pad : 'str'
                 Contains the opertion needed to avoid overwriting previous data
-        
+
         Return
         ------
             String
