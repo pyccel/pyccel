@@ -293,9 +293,33 @@ class CCodePrinter(CodePrinter):
     #========================== Numpy Elements ===============================#
 
     def varCpy(self, lhs, rhs, expr, pad):
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        """ generates the 'memcpy' line needed to cpy a 'Variable/ndarray' to another
+
+        parameters
+        ----------
+            lhs : 'Variable'
+                Used to extract the name of the assignee
+            
+            rhs : 'Variable'
+                Used to extract the dtype and its precision
+
+            expr : 'Variable'
+                Used to extract the name of the variable to copy from
+
+            pad : 'str'
+                Contains the opertion needed to avoid overwriting previous data
+        
+        Return
+        ------
+            String
+                that contains the necessary 'memcpy' line that copies(or concats) an ndarray to     
+                    another
+        """
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype),
+        rhs.precision)
         expr = self._print(expr)
-        cpy_data = "memcpy({0}.{2} + ({3}), {1}.{2}, {0}.buffer_size);\n".format(lhs, expr, dtype, pad)
+        cpy_data = "memcpy({0}.{2} + ({3}), {1}.{2}, {0}.buffer_size);\n".format(lhs,
+        expr, dtype, pad)
         return '%s' % (cpy_data)
 
     def copy_NumpyArray_Data(self, expr):
@@ -329,7 +353,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(arg[0], Variable):
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
-                    assignations += self.varCpy(lhs, rhs, i, f"{lhs}.length * {n}")
+                    print(i)
+                    assignations += self.varCpy(lhs, rhs, i, f"{i}.length * {n}")
             return assignations
         else:
             i = ', '.join([self._print(i) for i in arg])
