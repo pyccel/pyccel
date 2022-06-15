@@ -2888,7 +2888,7 @@ class FunctionAddress(FunctionDef):
 
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
-    __slots__ = ('_is_optional','_is_pointer','_is_kwonly','_is_argument')
+    __slots__ = ('_is_optional','_is_pointer','_is_kwonly','_is_argument', '_memory_handling')
 
     def __init__(
         self,
@@ -2900,6 +2900,7 @@ class FunctionAddress(FunctionDef):
         is_pointer=False,
         is_kwonly=False,
         is_argument=False,
+        # memory_handling=None,
         **kwargs
         ):
         super().__init__(name, arguments, results, body, scope=1,**kwargs)
@@ -2919,6 +2920,7 @@ class FunctionAddress(FunctionDef):
         self._is_pointer    = is_pointer
         self._is_kwonly     = is_kwonly
         self._is_argument   = is_argument
+        # self._memory_handling = memory_handling
 
     @property
     def name(self):
@@ -2927,6 +2929,10 @@ class FunctionAddress(FunctionDef):
     @property
     def is_pointer(self):
         return self._is_pointer
+
+    # @property
+    # def memory_handling(self):
+        # return self._memory_handling
 
     @property
     def is_argument(self):

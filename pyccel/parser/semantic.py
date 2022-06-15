@@ -545,7 +545,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'   ] = dtype
             # d_var['allocatable'] = False
-            d_var['memory_handling'] = None
+            d_var['memory_handling'] = None # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
@@ -3134,8 +3134,8 @@ class SemanticParser(BasicParser):
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
-                        # d_var['is_pointer'] = True
-                        d_var['memory_handling'] = 'pointer'
+                        d_var['is_pointer'] = True
+                        # d_var['memory_handling'] = 'pointer'
                         if a.has_default:
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
@@ -3159,7 +3159,6 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
-
 
 
                     value = None if a.value is None else self._visit(a.value)
