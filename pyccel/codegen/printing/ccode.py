@@ -292,7 +292,7 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def varCpy(self, lhs, rhs, expr, pad):
+    def varCpy(self, lhs, rhs, expr, pad=""):
         """ generates the 'memcpy' line needed to cpy a 'Variable/ndarray' to another
 
         parameters
@@ -318,7 +318,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype),
         rhs.precision)
         expr = self._print(expr)
-        cpy_data = "memcpy({0}.{2} + ({3}), {1}.{2}, {0}.buffer_size);\n".format(lhs,
+        cpy_data = "memcpy({0}.{2}{3}, {1}.{2}, {1}.buffer_size);\n".format(lhs,
         expr, dtype, pad)
         return '%s' % (cpy_data)
 
@@ -349,11 +349,14 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['string'])
         assignations = ""
         if isinstance(arg, Variable):
-            return self.varCpy(lhs, rhs, arg, "0")
+            return self.varCpy(lhs, rhs, arg)
         if isinstance(arg[0], Variable):
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
-                    assignations += self.varCpy(lhs, rhs, i, f"{i}.length * {n}")
+                    if n:
+                        assignations += self.varCpy(lhs, rhs, i, f" + (*({lhs}.strides) * {n})")
+                    else:
+                        assignations += self.varCpy(lhs, rhs, i)
             return assignations
         else:
             i = ', '.join([self._print(i) for i in arg])
