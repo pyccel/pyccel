@@ -312,7 +312,7 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                that contains the necessary 'memcpy' line that copies(or concats) an ndarray to     
+                that contains the necessary 'memcpy' line that copies(or concats) an ndarray to
                     another
         """
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype),
