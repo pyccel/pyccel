@@ -950,7 +950,6 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});\n'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
-        print(expr.variable, expr.variable.memory_handling)
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
@@ -958,7 +957,6 @@ class CCodePrinter(CodePrinter):
         variable = self._print(expr.variable.name)
 
         # if expr.variable.is_stack_array:
-        print(expr.variable.memory_handling)
         if expr.variable.memory_handling == 'stack_array':
             preface, init = self._init_stack_array(expr.variable,)
         elif declaration_type == 't_ndarray ' and not self._in_header:

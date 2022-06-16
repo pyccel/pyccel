@@ -647,7 +647,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
                     ), a) if a.lhs.memory_handling == 'stack_array'
-                    else ( a)if a.lhs.memory_handling == 'allocatable'
+                    else (a) if a.lhs.memory_handling == 'allocatable'
                     else (Allocate(a.lhs,
                             shape=a.lhs.shape,
                             order = a.lhs.order,

@@ -304,7 +304,7 @@ class FCodePrinter(CodePrinter):
                 args.append(a.value)
 
         # Create new local variables to ensure there are no name collisions
-        new_local_vars = [v.clone(self.scope.get_new_name(v.name), memory_handling=None) \
+        new_local_vars = [v.clone(self.scope.get_new_name(v.name)) \
                             for v in func.local_vars]
         for v in new_local_vars:
             self.scope.insert_variable(v)
@@ -799,7 +799,7 @@ class FCodePrinter(CodePrinter):
             if (not self._additional_code):
                 self._additional_code = ''
             var_name = self.scope.get_new_name()
-            var = base.clone(var_name, memory_handling=None)
+            var = base.clone(var_name)
 
             self.scope.insert_variable(var)
 
@@ -1606,7 +1606,7 @@ class FCodePrinter(CodePrinter):
             funcs = expr.functions
         else:
             funcs = [f for f in expr.functions if f is \
-                    expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i), memory_handling=None)) \
+                    expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
                         for i,a in enumerate(f.arguments)], use_final_precision = True)]
 
         if expr.is_argument:
@@ -1958,9 +1958,9 @@ class FCodePrinter(CodePrinter):
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
-        cls_methods = [i.clone('{0}'.format(i.name), memory_handling=None) for i in expr.methods]
+        cls_methods = [i.clone('{0}'.format(i.name)) for i in expr.methods]
         for i in expr.interfaces:
-            cls_methods +=  [j.clone('{0}'.format(j.name), memory_handling=None) for j in i.functions]
+            cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
         methods = ''
         for i in cls_methods:

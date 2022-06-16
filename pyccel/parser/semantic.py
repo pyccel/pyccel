@@ -890,7 +890,7 @@ class SemanticParser(BasicParser):
 
             # d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             # d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
-            d_lhs['memory_handling'] = None
+            # d_lhs['memory_handling'] = None # Was causing segfault in 'test_epyccel_IfTernaryOperator.py'
             if any(v.memory_handling == 'pointer' for v in elem_vars):
                 d_lhs['memory_handling'] = 'pointer'
             elif d_lhs.get('memory_handling', None) == 'stack_array':
