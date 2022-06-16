@@ -2624,7 +2624,7 @@ class SemanticParser(BasicParser):
 
         target  = expr.expr
         index   = new_index
-        indices = expr.indices
+        indices = [self.scope.get_expected_name(i) for i in expr.indices]
         dims    = []
         body    = expr.loops[1]
 
@@ -2634,12 +2634,14 @@ class SemanticParser(BasicParser):
 
         # The symbols created to represent unknown valued objects are temporary
         tmp_used_names = self.scope.all_used_symbols.copy()
+        i = 0
         while isinstance(body, For):
 
             stop  = None
             start = LiteralInteger(0)
             step  = LiteralInteger(1)
-            var   = body.target
+            var   = indices[i]
+            i += 1
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
                 var   = Variable('int', var)
