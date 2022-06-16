@@ -15,6 +15,10 @@ def functional_for_1d_const(y,z):
     a = [z for _ in y]
     return len(a), a[0], a[1], a[2], a[3]
 
+def functional_for_1d_const2():
+    a = [5 for _ in range(0,4,2)]
+    return len(a), a[0], a[1]
+
 def functional_for_2d_range():
     a = [i*j for i in range(3) for j in range(2)]
     return len(a), a[0], a[1], a[2], a[3], a[4], a[5]

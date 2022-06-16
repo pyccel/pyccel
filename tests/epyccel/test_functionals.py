@@ -23,6 +23,9 @@ def test_functional_for_1d_const(language):
     z = randint(99)
     compare_epyccel(functionals.functional_for_1d_const, language, y, z)
 
+def test_functional_for_1d_const2(language):
+    compare_epyccel(functionals.functional_for_1d_const2, language)
+
 def test_functional_for_2d_range(language):
     compare_epyccel(functionals.functional_for_2d_range, language)
 
