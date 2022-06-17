@@ -1087,9 +1087,7 @@ def test_array_real_2d_C_array_initialization(language):
     assert np.array_equal(x1, x2)
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
@@ -1124,9 +1122,7 @@ def test_array_real_3d_C_array_initialization_2(language):
     assert np.array_equal(x1, x2)
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
@@ -1277,9 +1273,7 @@ def test_array_real_2d_F_array_initialization(language):
 
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
@@ -1314,9 +1308,7 @@ def test_array_real_3d_F_array_initialization_2(language):
     assert np.array_equal(x1, x2)
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="array function doesn't handle list of variables. See #752"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python)
     ]
