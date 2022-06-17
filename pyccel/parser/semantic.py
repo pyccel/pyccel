@@ -487,13 +487,7 @@ class SemanticParser(BasicParser):
             # d_var['is_pointer'    ] = isinstance(var, Variable)
             # d_var['is_stack_array'] = var.is_stack_array
 
-            if var.memory_handling in ('allocatable', 'stack_array'):
-                d_var['memory_handling'] = var.memory_handling
-            elif isinstance(var, Variable):
-                d_var['memory_handling'] = 'pointer'
-            else:
-                d_var['memory_handling'] = None
-
+            d_var['memory_handling'] = 'pointer' if isinstance(var, Variable) else var.memory_handling
             d_var['datatype'      ] = var.dtype
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
