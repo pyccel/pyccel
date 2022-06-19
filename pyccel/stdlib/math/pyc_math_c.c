@@ -42,4 +42,4 @@ extern inline double        pyc_degrees(double radians);
 /*---------------------------------------------------------------------------*/
 extern inline int64_t       pyc_modulo(int64_t a, int64_t b);
 /*---------------------------------------------------------------------------*/
-extern inline float         pyc_fmodulo(float a, float b);
+extern inline double        pyc_fmodulo(double a, double b);

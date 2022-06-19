@@ -32,8 +32,8 @@ inline int64_t      pyc_modulo(int64_t a, int64_t b){
         else
             return(res_mod + b);
 }
-inline float        pyc_fmodulo(float a, float b){
-        float res_mod = fmod(a, b);
+inline double        pyc_fmodulo(double a, double b){
+        double res_mod = fmod(a, b);
         if(!(a < 0 ^ b < 0) || res_mod == 0 )
             return(res_mod);
         else
