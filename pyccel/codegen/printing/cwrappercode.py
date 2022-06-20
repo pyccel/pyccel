@@ -333,7 +333,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     name = result.name,
                     is_pointer = True,
                     allocatable = False)
-            body.append(Allocate(result, shape = sizes, order = nd_var.order,
+            body.append(Allocate(result, shape = sizes, order = result.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', is_pointer = True,
                 lhs=result), VariableAddress(nd_var)))
