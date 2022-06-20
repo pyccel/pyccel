@@ -31,8 +31,6 @@ from pyccel.ast.cwrapper    import PyModule_AddObject
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
 from pyccel.ast.datatypes import datatype, NativeVoid
 
-from pyccel.ast.internals import PyccelArraySize
-
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
 
@@ -43,7 +41,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
-from pyccel.ast.variable  import VariableAddress, Variable, DottedName, DottedVariable
+from pyccel.ast.variable  import VariableAddress, Variable, DottedVariable
 
 from pyccel.parser.scope  import Scope
 
@@ -817,7 +815,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     body.append(call)
 
                     # Create ndarray to store array data
-                    nd_var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
+                    nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
                             is_pointer = True,
                             allocatable = False)
@@ -825,7 +823,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     body.append(alloc)
                     # Save raw_data into ndarray to obtain useable pointer
                     set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
-                            is_pointer = True, lhs=result), VariableAddress(var))
+                            is_pointer = True, lhs=nd_var), VariableAddress(var))
                     body.append(set_data)
                     # Save the ndarray to vars_to_wrap to be handled as if it came from C
                     vars_to_wrap.append(nd_var)
