@@ -1636,11 +1636,8 @@ class CCodePrinter(CodePrinter):
 
         lhs_address = VariableAddress(lhs_var)
         # Ensure everything which can be stored in a VariableAddress is
-        if hasattr(rhs_var, 'is_pointer'):
-            if rhs_var.is_pointer:
-                rhs_address = rhs_var
-            else:
-                rhs_address = VariableAddress(rhs_var)
+        if isinstance(rhs_var, (Variable, IndexedElement)):
+            rhs_address = VariableAddress(rhs_var)
         elif isinstance(rhs_var, FunctionCall):
             res = rhs_var.funcdef.results
             if len(res)!= 0 or res[0].is_pointer:
