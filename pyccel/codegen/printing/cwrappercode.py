@@ -867,12 +867,10 @@ class CWrapperCodePrinter(CCodePrinter):
             for r in func.results:
                 mini_scope.insert_variable(r)
             flags = 0
-            collect_vars = {}
 
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, (f_var, f_arg) in zip(parse_args, local_arg_vars.items()):
                 collect_var  = self.get_PyArgParseType(f_var)
-                collect_vars[f_var] = collect_var
                 body, tmp_variable = self._body_management(f_var, p_arg, f_arg.value)
 
                 # get check type function
@@ -1116,10 +1114,8 @@ class CWrapperCodePrinter(CCodePrinter):
         static_func_args  = []
 
         parse_args = []
-        collect_vars = {}
         for var, arg in local_arg_vars.items():
             collect_var  = self.get_PyArgParseType(var)
-            collect_vars[var] = collect_var
 
             body, tmp_variable = self._body_management(var, collect_var, arg.value, True)
 
