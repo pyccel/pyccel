@@ -3128,8 +3128,7 @@ class SemanticParser(BasicParser):
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
-                        d_var['is_pointer'] = True
-                        # d_var['memory_handling'] = 'pointer'
+                        d_var['memory_handling'] = 'pointer'
                         if a.has_default:
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):

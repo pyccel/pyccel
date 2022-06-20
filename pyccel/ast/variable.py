@@ -59,6 +59,12 @@ class Variable(PyccelAstNode):
     is_pointer: bool
         if object is a pointer [Default value: False]
 
+    memory_handling: str, None
+        'allocatable' is used for arrays, if we need to allocate memory
+        'stack_array' is used for arrays, if memory should be allocated on the stack
+        'pointer' if object is a pointer
+        [Default value: None]
+
     is_target: bool
         if object is pointed to by another variable [Default value: False]
 
@@ -117,9 +123,6 @@ class Variable(PyccelAstNode):
         *,
         rank=0,
         memory_handling=None,
-        # allocatable=False,
-        # is_stack_array = False,
-        # is_pointer=False,
         is_const=False,
         is_target=False,
         is_optional=False,
@@ -150,18 +153,6 @@ class Variable(PyccelAstNode):
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
-
-        # if not isinstance(allocatable, bool):
-        #     raise TypeError('allocatable must be a boolean.')
-        # self.allocatable = allocatable
-
-        # if not isinstance(is_stack_array, bool):
-        #     raise TypeError('is_stack_array must be a boolean.')
-        # self._is_stack_array = is_stack_array
-
-        # if not isinstance(is_pointer, bool):
-        #     raise TypeError('is_pointer must be a boolean.')
-        # self.is_pointer = is_pointer
 
         if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
             raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
@@ -257,7 +248,6 @@ class Variable(PyccelAstNode):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        # return self.is_pointer
         return self.memory_handling == 'pointer'
 
     def set_changeable_shape(self):
@@ -295,18 +285,6 @@ class Variable(PyccelAstNode):
             raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
         self._memory_handling = memory_handling
 
-    # @property
-    # def allocatable(self):
-    #     """ Indicates whether a Variable has a dynamic size
-    #     """
-    #     return self._allocatable
-
-    # @allocatable.setter
-    # def allocatable(self, allocatable):
-    #     if not isinstance(allocatable, bool):
-    #         raise TypeError('allocatable must be a boolean.')
-    #     self._allocatable = allocatable
-
     @property
     def cls_base(self):
         """ Class from which the Variable inherits
@@ -319,20 +297,6 @@ class Variable(PyccelAstNode):
         within its context
         """
         return self._is_const
-
-    # @property
-    # def is_pointer(self):
-    #     """ Indicates if the Variable is a label for
-    #     something which points to another object.
-    #     In other words, the Variable does not own its data
-    #     """
-    #     return self._is_pointer
-
-    # @is_pointer.setter
-    # def is_pointer(self, is_pointer):
-    #     if not isinstance(is_pointer, bool):
-    #         raise TypeError('is_pointer must be a boolean.')
-    #     self._is_pointer = is_pointer
 
     @property
     def is_temp(self):
@@ -368,17 +332,6 @@ class Variable(PyccelAstNode):
         within the Module
         """
         return self._is_private
-
-    # @property
-    # def is_stack_array(self):
-    #     """ Indicates whether an array is allocated
-    #     on the stack
-    #     """
-    #     return self._is_stack_array
-
-    # @is_stack_array.setter
-    # def is_stack_array(self, is_stack_array):
-    #     self._is_stack_array = is_stack_array
 
     @property
     def allows_negative_indexes(self):
@@ -441,11 +394,9 @@ class Variable(PyccelAstNode):
         print( '  precision           = {}'.format(get_final_precision(self)))
         print( '  rank                = {}'.format(self.rank))
         print( '  order               = {}'.format(self.order))
-    #   print( '  allocatable    = {}'.format(self.allocatable))
         print( '  memory_handeling    = {}'.format(self.memory_handling))
         print( '  shape               = {}'.format(self.shape))
         print( '  cls_base            = {}'.format(self.cls_base))
-    #   print( '  is_pointer     = {}'.format(self.is_pointer))
         print( '  is_target           = {}'.format(self.is_target))
         print( '  is_optional         = {}'.format(self.is_optional))
         print( '<<<')
@@ -519,8 +470,6 @@ class Variable(PyccelAstNode):
         kwargs = {
             'rank' : self.rank,
             'memory_handling': self.memory_handling,
-            # 'allocatable': self.allocatable,
-            # 'is_pointer':self.is_pointer,
             'is_optional':self.is_optional,
             'shape':self.shape,
             'cls_base':self.cls_base,
@@ -641,7 +590,6 @@ class HomogeneousTupleVariable(TupleVariable):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        # return self.is_pointer and i == (self.rank-1)
         return self.memory_handling == 'pointer' and i == (self.rank-1)
 
     def __len__(self):
@@ -728,24 +676,6 @@ class InhomogeneousTupleVariable(TupleVariable):
 
     def __len__(self):
         return len(self._vars)
-
-    # @Variable.allocatable.setter
-    # def allocatable(self, allocatable):
-    #     if not isinstance(allocatable, bool):
-    #         raise TypeError('allocatable must be a boolean.')
-    #     self._allocatable = allocatable
-    #     for var in self._vars:
-    #         if var.rank > 0:
-    #             var.allocatable = allocatable
-
-    # @Variable.is_pointer.setter
-    # def is_pointer(self, is_pointer):
-    #     if not isinstance(is_pointer, bool):
-    #         raise TypeError('is_pointer must be a boolean.')
-    #     self._is_pointer = is_pointer
-    #     for var in self._vars:
-    #         if var.rank > 0:
-    #             var.is_pointer = is_pointer
 
     @Variable.memory_handling.setter
     def memory_handling(self, memory_handling):

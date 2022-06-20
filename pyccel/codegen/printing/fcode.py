@@ -1099,9 +1099,6 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var_name = self.scope.get_new_name()
-        # var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
-        #         shape = expr.shape, precision = expr.precision,
-        #         order = expr.order, rank = expr.rank)
         var = Variable(expr.dtype, var_name, memory_handling = 'stack_array' if all([s.is_constant for s in expr.shape]) else None,
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
@@ -1552,8 +1549,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        # if var.is_pointer:
-        #     return ''
         if var.memory_handling == 'pointer':
             return ''
         else:
@@ -2706,9 +2701,6 @@ class FCodePrinter(CodePrinter):
                 if (not self._additional_code):
                     self._additional_code = ''
                 var_name = self.scope.get_new_name()
-                # var = Variable(base.dtype, var_name, is_stack_array = True,
-                #         shape=base.shape,precision=base.precision,
-                #         order=base.order,rank=base.rank)
                 var = Variable(base.dtype, var_name, memory_handling = 'stack_array',
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)

@@ -136,9 +136,6 @@ def as_static_function(func, *, mod_scope, name=None):
 
             a_new = Variable( a.dtype, a.name,
                               memory_handling = a.memory_handling,
-                            #   allocatable = a.allocatable,
-                            #   is_pointer  = a.is_pointer,
-                            #   is_target   = a.is_target,
                               is_optional = a.is_optional,
                               shape       = shape_new,
                               rank        = a.rank,
@@ -315,9 +312,6 @@ def wrap_array(var, scope, persistent):
     assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
     variables = [bind_var, *sizes]
     if not persistent:
-        # ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
-        #         is_pointer=True, rank = var.rank,
-        #         order = var.order, shape = var.shape)
         ptr_var = Variable(dtype=var.dtype, name=scope.get_new_name(var.name+'_ptr'),
                 memory_handling='pointer', rand=var.rank, order=var.order, shape=var.shape)
         alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')

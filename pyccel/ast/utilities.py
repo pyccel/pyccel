@@ -633,16 +633,6 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
                     if isinstance(a.lhs, HomogeneousTupleVariable) \
                     and isinstance(a.rhs, (HomogeneousTupleVariable, Duplicate, Concatenate))]
-        # new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
-        #                              dtype=a.lhs.dtype,
-        #                              order=a.lhs.order)
-        #             ), a) if a.lhs.is_stack_array
-        #             else (a) if a.lhs.allocatable
-        #             else (Allocate(a.lhs,
-        #                     shape=a.lhs.shape,
-        #                     order = a.lhs.order,
-        #                     status="unknown"), a)
-        #             for a in allocs_to_unravel]
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)

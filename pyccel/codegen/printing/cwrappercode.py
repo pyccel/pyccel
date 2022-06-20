@@ -142,9 +142,6 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns: Variable
         -------
         """
-        # return Variable(dtype=PyccelPyObject(),
-        #                 name=self.scope.get_new_name(name),
-        #                 is_pointer=True)
         return Variable(dtype=PyccelPyObject(),
                         name=self.scope.get_new_name(name),
                         memory_handling='pointer')
@@ -232,7 +229,6 @@ class CWrapperCodePrinter(CCodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            # args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
             args += [a.clone(name = a.name, memory_handling='pointer') for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
@@ -614,10 +610,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
-            # collect_var  = Variable(dtype = collect_type,
-            #                     is_pointer = True, rank = variable.rank,
-            #                     order= variable.order,
-            #                     name=self.scope.get_new_name(variable.name+"_tmp"))
             collect_var  = Variable(dtype = collect_type,
                                 memory_handling='pointer', rank = variable.rank,
                                 order= variable.order,
@@ -625,9 +617,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         else:
             collect_type = PyccelPyObject()
-            # collect_var  = Variable(dtype = collect_type,
-            #                     is_pointer = True,
-            #                     name=self.scope.get_new_name(variable.name+"_tmp"))
             collect_var  = Variable(dtype = collect_type,
                                 memory_handling='pointer',
                                 name=self.scope.get_new_name(variable.name+"_tmp"))
@@ -660,8 +649,6 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function = FunctionCall(C_to_Python(variable), [VariableAddress(variable)])
 
         collect_type = PyccelPyObject()
-        # collect_var = Variable(dtype = collect_type, is_pointer=True,
-        #     name = self.scope.get_new_name(variable.name+"_tmp"))
         collect_var = Variable(dtype = collect_type, memory_handling='pointer',
             name = self.scope.get_new_name(variable.name+"_tmp"))
         self.scope.insert_variable(collect_var)
@@ -725,9 +712,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #Create module variable
         mod_var_name = self.scope.get_new_name('m')
-        # mod_var = Variable(dtype = PyccelPyObject(),
-        #               name       = mod_var_name,
-        #               is_pointer = True)
         mod_var = Variable(dtype = PyccelPyObject(),
                       name       = mod_var_name,
                       memory_handling = 'pointer')
@@ -744,8 +728,6 @@ class CWrapperCodePrinter(CCodePrinter):
                     # Get pointer to store array data
                     var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
-                            # is_pointer = True,
-                            # allocatable = False,
                             memory_handling = 'pointer',
                             rank = 0)
                     # Create variables to store sizes of array
@@ -760,8 +742,6 @@ class CWrapperCodePrinter(CCodePrinter):
                     # Create ndarray to store array data
                     nd_var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
-                            # is_pointer = True,
-                            # allocatable = False
                             memory_handling = 'pointer'
                             )
                     alloc = Allocate(nd_var, shape=sizes, order=nd_var.order, status='unallocated')
@@ -788,9 +768,6 @@ class CWrapperCodePrinter(CCodePrinter):
         if vars_to_wrap:
             # Create variable for temporary python objects
             tmp_var_name = self.scope.get_new_name('tmp')
-            # tmp_var = Variable(dtype = PyccelPyObject(),
-            #               name       = tmp_var_name,
-            #               is_pointer = True)
             tmp_var = Variable(dtype = PyccelPyObject(),
                           name       = tmp_var_name,
                           memory_handling = 'pointer')
@@ -877,9 +854,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # update ndarray local variables properties
             arg_vars = {a.var: a for a in func.arguments}
-            # local_arg_vars = {(v.clone(v.name, is_pointer=True, allocatable=False)
-            #                   if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
-            #                   else v) : a for v,a in arg_vars.items()}
             local_arg_vars = {(v.clone(v.name, memory_handling='pointer')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
@@ -932,7 +906,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
-                # res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
                 res_args.append(VariableAddress(collect_var) if collect_var.memory_handling == 'pointer' else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
@@ -1094,10 +1067,9 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(v, Variable):
                 new_name = self.scope.get_new_name(v.name)
                 if isinstance(v, Variable) and (v.rank > 0 or v.is_optional):
-                    # new_v = v.clone(new_name, is_pointer=True, allocatable=False)
                     new_v = v.clone(new_name, memory_handling='pointer')
                 else:
-                    new_v = v.clone(new_name, memory_handling=None)
+                    new_v = v.clone(new_name)
                 local_arg_vars[new_v] = a
                 self.scope.insert_variable(new_v)
             else:
@@ -1184,7 +1156,6 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
 
-            # res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
             res_args.append(VariableAddress(collect_var) if collect_var.memory_handling == 'pointer' else collect_var)
 
         # Call PyBuildNode

@@ -444,7 +444,6 @@ class Assign(Basic):
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
         cond = cond and isinstance(lhs, PyccelSymbol)
-        # cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
         cond = cond or isinstance(rhs, Variable) and rhs.memory_handling == 'pointer'
         return cond
 
@@ -505,7 +504,6 @@ class Allocate(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
-        # if not variable.allocatable and not variable.is_pointer:
         if variable.memory_handling not in ('allocatable', 'pointer'):
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
@@ -725,8 +723,6 @@ class AliasAssign(Basic):
 
     def __init__(self, lhs, rhs):
         if pyccel_stage == 'semantic':
-            # if not lhs.is_pointer:
-            #     raise TypeError('lhs must be a pointer')
             if lhs.memory_handling != 'pointer':
                 raise TypeError('lhs must be a pointer')
 
@@ -1543,10 +1539,8 @@ class Iterable(Basic):
             target = target[1:]
             range_element = range_element[1:]
         if isinstance(target, (tuple, list)):
-            # return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
             return [AliasAssign(t, r) if t.memory_handling == 'pointer' else Assign(t, r) for t, r in zip(target, range_element)]
         else:
-            # return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
             return [AliasAssign(target, range_element) if target.memory_handling == 'pointer' else Assign(target, range_element)]
 
     def get_target_from_range(self):
@@ -2888,7 +2882,7 @@ class FunctionAddress(FunctionDef):
 
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
-    __slots__ = ('_is_optional','_is_pointer','_is_kwonly','_is_argument', '_memory_handling')
+    __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
     def __init__(
         self,
@@ -2897,18 +2891,14 @@ class FunctionAddress(FunctionDef):
         results,
         body,
         is_optional=False,
-        is_pointer=False,
         is_kwonly=False,
         is_argument=False,
-        # memory_handling=None,
+        memory_handling=None,
         **kwargs
         ):
         super().__init__(name, arguments, results, body, scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
-
-        if not isinstance(is_pointer, bool):
-            raise TypeError('Expecting a boolean for is_pointer')
 
         if not isinstance(is_kwonly, bool):
             raise TypeError('Expecting a boolean for kwonly')
@@ -2917,22 +2907,17 @@ class FunctionAddress(FunctionDef):
             raise TypeError('is_optional must be a boolean.')
 
         self._is_optional   = is_optional
-        self._is_pointer    = is_pointer
         self._is_kwonly     = is_kwonly
         self._is_argument   = is_argument
-        # self._memory_handling = memory_handling
+        self._memory_handling = memory_handling
 
     @property
     def name(self):
         return self._name
 
     @property
-    def is_pointer(self):
-        return self._is_pointer
-
-    # @property
-    # def memory_handling(self):
-        # return self._memory_handling
+    def memory_handling(self):
+        return self._memory_handling
 
     @property
     def is_argument(self):
@@ -3167,7 +3152,6 @@ class ClassDef(ScopedNode):
             name,
             rank=var.rank,
             memory_handling=var.memory_handling,
-            # allocatable=var.allocatable,
             shape=var.shape,
             cls_base=var.cls_base,
             )
