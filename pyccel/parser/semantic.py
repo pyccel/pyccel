@@ -1469,11 +1469,27 @@ class SemanticParser(BasicParser):
             for b in init_func_body:
                 if isinstance(b, ScopedNode):
                     b.scope.update_parent_scope(init_scope, is_loop = True)
+                if isinstance(b, FunctionalFor):
+                    for l in b.loops:
+                        if isinstance(l, ScopedNode):
+                            l.scope.update_parent_scope(init_scope, is_loop = True)
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
+            self.exit_function_scope()
+
+            # Update variable scope for temporaries
+            to_remove = []
+            for v in self.scope.variables.values():
+                if v.is_temp:
+                    init_scope.insert_variable(v)
+                    to_remove.append(v)
+            # Remove in a second loop so the dictionary doesn't change during iteration
+            for v in to_remove:
+                self.scope.remove_variable(v)
+                variables.remove(v)
+
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
                     global_vars = variables, scope=init_scope)
-            self.exit_function_scope()
             self.insert_function(init_func)
 
         if init_func:
