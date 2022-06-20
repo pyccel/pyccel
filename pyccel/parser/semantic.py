@@ -2819,7 +2819,7 @@ class SemanticParser(BasicParser):
             # Sub in indices as defined here for coherent naming
             if idx.is_temp:
                 self.scope.remove_variable(l.target)
-                l.substitute(l.target, idx)
+                l.substitute(l.target, idx_subs[idx])
             l = l.body.body[-1]
 
         #self.exit_loop_scope()
