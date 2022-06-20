@@ -2576,15 +2576,18 @@ class SemanticParser(BasicParser):
         start = LiteralInteger(0)
         iterator_d_var = self._infere_type(start)
 
+        iterator = expr.target
+
         if iterable.num_loop_counters_required:
             indices = [Variable('int', self.scope.get_new_name(), is_temp=True)
                         for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
-                syntactic_index = expr.target[0]
+                syntactic_index = iterator[0]
             else:
-                syntactic_index = expr.target
+                iterator = self.scope.get_expected_name(iterator)
+                syntactic_index = iterator
             index = self.check_for_variable(syntactic_index)
             if index is None:
                 index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
@@ -2592,11 +2595,10 @@ class SemanticParser(BasicParser):
                                 is_augassign=False, **settings)
             iterable.set_loop_counter(index)
 
-        iterator = expr.target
-
         if isinstance(iterator, PyccelSymbol):
             iterator_rhs = iterable.get_target_from_range()
             iterator_d_var = self._infere_type(iterator_rhs)
+
             target = self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr,
                             is_augassign=False, **settings)
@@ -2644,7 +2646,6 @@ class SemanticParser(BasicParser):
         dims    = []
         body    = expr.loops[1]
 
-        sp_indices  = [sp_Symbol(i) for i in indices]
         idx_subs = dict()
         #scope = self.create_new_loop_scope()
 
@@ -2660,7 +2661,7 @@ class SemanticParser(BasicParser):
             i += 1
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
-                var   = Variable('int', var)
+                var   = self._create_variable(var, 'int', start, {})
                 dvar  = self._infere_type(var, **settings)
                 stop  = a.stop
                 start = a.start
@@ -2716,6 +2717,8 @@ class SemanticParser(BasicParser):
             var = self.get_variable(idx)
             idx_subs[idx] = var
 
+
+        sp_indices  = [sp_Symbol(i) for i in indices]
 
         dim = sp_Integer(1)
 
@@ -2809,6 +2812,15 @@ class SemanticParser(BasicParser):
 
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
+
+        l = loops[-1]
+        for idx in indices:
+            assert isinstance(l, For)
+            # Sub in indices as defined here for coherent naming
+            if idx.is_temp:
+                self.scope.remove_variable(l.target)
+                l.substitute(l.target, idx)
+            l = l.body.body[-1]
 
         #self.exit_loop_scope()
 
