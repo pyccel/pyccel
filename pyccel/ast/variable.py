@@ -917,7 +917,7 @@ class VariableAddress(PyccelAstNode):
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
-        if not isinstance(variable, (Variable, IndexedElement, VariableAddress)):
+        if not isinstance(variable, (Variable, IndexedElement)) and pyccel_stage != 'cwrapper':
             # Address of Address should only be used in the wrapper
             raise TypeError('variable must be a variable or indexed element')
         self._variable = variable
