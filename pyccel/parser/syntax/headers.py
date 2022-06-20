@@ -149,7 +149,7 @@ class Type(BasicStmt):
         d_var['rank'] = len(trailer)
         # d_var['allocatable'] = len(trailer)>0
         # d_var['is_pointer'] = False
-        d_var['memory_handling'] = 'pointer' if len(trailer) > 0 else None
+        d_var['memory_handling'] = 'allocatable' if len(trailer) > 0 else None
         d_var['precision']  = precision
         d_var['is_func'] = False
         d_var['is_const'] = False
