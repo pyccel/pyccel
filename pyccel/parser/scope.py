@@ -297,6 +297,8 @@ class Scope(object):
         if name is None:
             name = var.name
 
+        self._used_symbols.pop(name)
+
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
         elif self.parent_scope:
