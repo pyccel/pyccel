@@ -29,7 +29,9 @@ from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.cwrapper    import PyModule_AddObject
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
-from pyccel.ast.datatypes import datatype
+from pyccel.ast.datatypes import datatype, NativeVoid
+
+from pyccel.ast.internals import PyccelArraySize
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
@@ -41,7 +43,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
-from pyccel.ast.variable  import VariableAddress, Variable, DottedName
+from pyccel.ast.variable  import VariableAddress, Variable, DottedName, DottedVariable
 
 from pyccel.parser.scope  import Scope
 
@@ -304,6 +306,33 @@ class CWrapperCodePrinter(CCodePrinter):
 
         else:
             return '{0}'.format(dtype)
+
+    def get_static_results(self, result):
+        """
+        Create bind_C results for results rank > 0 in fortran.
+        needed in static function call
+        func(a) ==> static_func(a.shape[0] , &a->raw_data)
+
+        Parameters
+        ----------
+        result      : Variable
+            Variable holding information needed (rank)
+
+        Returns     : List of arguments
+            List that can contains Variables and FunctionCalls
+        -----------
+        """
+
+        if self._target_language == 'fortran' and result.rank > 0:
+            static_results = [
+                    PyccelArraySize(result, LiteralInteger(i)) for i in range(result.rank)
+            ]
+            static_results.insert(0,VariableAddress(DottedVariable(NativeVoid(),
+                'raw_data', is_pointer = True, lhs=result)))
+        else:
+            static_results = [result]
+
+        return static_results
 
     def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
@@ -1131,6 +1160,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if arg.value is not None:
                 wrapper_body.append(self.get_default_assign(parse_args[-1], var, arg.value))
 
+        static_func_results = [r for var in result_vars for r in self.get_static_results(var)]
+
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
                                           list(local_arg_vars.values()),
@@ -1142,10 +1173,10 @@ class CWrapperCodePrinter(CCodePrinter):
         # Call function
         static_function = self.get_static_function(expr)
 
-        if len(result_vars)==0:
+        if len(static_func_results)==0:
             func_call = FunctionCall(static_function, static_func_args)
         else:
-            results   = result_vars if len(result_vars)>1 else result_vars[0]
+            results   = static_func_results if len(static_func_results)>1 else static_func_results[0]
             func_call = Assign(results,FunctionCall(static_function, static_func_args))
 
         wrapper_body.append(func_call)
