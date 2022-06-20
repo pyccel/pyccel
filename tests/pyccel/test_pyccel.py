@@ -356,6 +356,28 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_multi_imports_project(language):
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "project_multi_imports")
+    dependencies = ['project_multi_imports/file1.py',
+             'project_multi_imports/file2.py',
+             'project_multi_imports/file3.py']
+    pyccel_test("project_multi_imports/file4.py", dependencies,
+            cwd = path_dir,
+            language = language,
+            output_dtype = str)
+
+#------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 def test_imports_compile(language):
     pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
@@ -716,6 +738,7 @@ def test_classes( test_file ):
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
                                         ] )
+@pytest.mark.external
 def test_lapack( test_file ):
     #TODO: Uncomment this when dgetri can be expressed with scipy
     #pyccel_test(test_file)
