@@ -828,7 +828,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_BindCPointer(self, expr):
         return 'bind_c_ptr'
-    
+
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------

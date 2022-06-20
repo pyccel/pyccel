@@ -1,3 +1,0 @@
-
-
-pyccel_stage = None
