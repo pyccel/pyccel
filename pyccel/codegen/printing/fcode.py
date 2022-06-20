@@ -2825,7 +2825,7 @@ class FCodePrinter(CodePrinter):
             self._additional_code = ''
         if parent_assign:
             lhs = parent_assign[0].lhs
-            if len(func_results) == 1 and func_results[0].rank == 0:
+            if len(func_results) == 1:
                 lhs_vars = {func_results[0]:lhs}
             else:
                 lhs_vars = dict(zip(func_results,lhs))

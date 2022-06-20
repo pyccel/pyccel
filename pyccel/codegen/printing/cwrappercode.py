@@ -52,7 +52,8 @@ errors = Errors()
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
 dtype_registry = {('pyobject'     , 0) : 'PyObject',
-                  ('pyarrayobject', 0) : 'PyArrayObject'}
+                  ('pyarrayobject', 0) : 'PyArrayObject',
+                  ('bind_c_ptr', 0) : 'void*'}
 
 module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
@@ -796,6 +797,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return '\n'.join(func_code)
 
+    def _print_BindCPointer(self, expr):
+        return 'bind_c_ptr'
+    
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------

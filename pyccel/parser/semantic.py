@@ -3245,11 +3245,11 @@ class SemanticParser(BasicParser):
             # Raise an error if one of the return arguments is either:
             #   a) a pointer
             #   b) array which is not among arguments, hence intent(out)
-            for r in results:
-                if r.is_pointer:
-                    errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
-                    symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal')
+            #or r in results:
+            #   if r.is_pointer:
+            #       errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
+            #       symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            #       severity='fatal')
             #   elif (r not in args) and r.rank > 0:
             #       errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
             #       symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),

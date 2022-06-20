@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 from pyccel.ast.basic import Basic
-from pyccel.ast.core import FunctionCall, FunctionDefArgument, Module
+from pyccel.ast.core import CodeBlock, FunctionCall, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Assign
@@ -101,11 +101,14 @@ def as_static_function(func, *, mod_scope, name=None):
 
     # Convert array results to inout arguments
     for r in results:
-        if isinstance(r, Variable) and r.is_ndarray:
-            raise NotImplementedError("Cannot convert a function ({}) that returns an array".format(func.name))
         if r.rank > 0 and r not in args:
-            args += [FunctionDefArgument(r)]
-            arguments_inout += [False]
+            #wrap the array for the original function
+            array_body, array_vars = wrap_array(r, scope, False)
+            scope.insert_variable(array_vars[-1])
+            scope.insert_variable(r)
+            body = CodeBlock(func.body.body + tuple(array_body))
+            array_vars.pop(-1)
+            _results += array_vars
         elif r.rank == 0:
             _results += [r]
 
