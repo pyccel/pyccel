@@ -1092,7 +1092,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
-        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
+        if self.stored_in_c_pointer(expr):
+            return '(*{}.{})'.format(self._print(expr.lhs), self._print(expr.name))
+        else:
+            return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -1830,12 +1833,12 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.value)
 
     def _print_VariableAddress(self, expr):
-        if isinstance(expr.variable, (IndexedElement, VariableAddress)):
-            return '&{}'.format(self._print(expr.variable))
-        elif self.stored_in_c_pointer(expr.variable):
-            return '{}'.format(expr.variable.name)
+        code = self._print(expr.variable)
+        if isinstance(expr.variable, Variable) and self.stored_in_c_pointer(expr.variable):
+            assert code.startswith('(*')
+            return '{}'.format(code[2:-1])
         else:
-            return '&{}'.format(expr.variable.name)
+            return '&{}'.format(code)
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
