@@ -285,11 +285,16 @@ class SemanticParser(BasicParser):
         """
         var = self.check_for_variable(name)
         if var is None:
-            return errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal')
-        else:
-            return var
+            if name == '_':
+                errors.report(UNDERSCORE_NOT_A_THROWAWAY,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
+            else:
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
+
+        return var
 
     def get_variables(self, container):
         # this only works if called on a function scope
@@ -1760,10 +1765,14 @@ class SemanticParser(BasicParser):
             var = python_builtin_datatype(name)
 
         if var is None:
-
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal')
+            if name == '_':
+                errors.report(UNDERSCORE_NOT_A_THROWAWAY,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
+            else:
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
         return var
 
 
