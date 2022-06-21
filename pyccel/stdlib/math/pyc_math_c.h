@@ -19,7 +19,7 @@ int64_t             pyc_lcm (int64_t a, int64_t b);
 
 inline double       pyc_radians(double degrees)
 {
-    return (degrees * (M_PI / 180));
+    return degrees * (M_PI / 180);
 }
 inline double       pyc_degrees(double radians)
 {
@@ -28,15 +28,15 @@ inline double       pyc_degrees(double radians)
 inline int64_t      pyc_modulo(int64_t a, int64_t b){
         int64_t modulo = a % b;
         if(!((a < 0) ^ (b < 0)) || modulo == 0)
-            return(modulo);
+            return modulo;
         else
-            return(modulo + b);
+            return modulo + b;
 }
 inline double        pyc_fmodulo(double a, double b){
         double modulo = fmod(a, b);
         if(!((a < 0) ^ (b < 0)) || modulo == 0)
-            return(modulo);
+            return modulo;
         else
-            return(modulo + b);
+            return modulo + b;
 }
 #endif
