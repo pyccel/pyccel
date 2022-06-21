@@ -5752,7 +5752,9 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     #@types('float64[:,:,:]')
     def count(arr):
         from numpy import count_nonzero
+        print("Hello")
         a = count_nonzero(arr, axis = 0, keepdims=True)
+        print("Counted")
         s = a.shape
         print(s)
         return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
