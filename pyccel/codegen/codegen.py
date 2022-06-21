@@ -203,7 +203,6 @@ class Codegen(object):
 
         # print module
         code = self._printer.doprint(self.ast)
-        print(code)
         with open(filename, 'w') as f:
             for line in code:
                 f.write(line)
