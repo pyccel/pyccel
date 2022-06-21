@@ -653,7 +653,7 @@ def test_arrays_view(language):
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 def test_return_numpy_arrays(language):
-    types = [int] * 5 + [(type(np.array),) * 2]
+    types = int
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
