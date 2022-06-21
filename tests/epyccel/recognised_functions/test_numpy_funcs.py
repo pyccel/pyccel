@@ -5741,8 +5741,8 @@ def test_numpy_count_non_zero_axis(language):
     )
 )
 def test_numpy_count_non_zero_axis_keep_dims(language):
-    @types('bool[:,:,:]')
-    #@types('int[:,:,:]')
+    #@types('bool[:,:,:]')
+    @types('int[:,:,:]')
     #@types('int8[:,:,:]')
     #@types('int16[:,:,:]')
     #@types('int32[:,:,:]')
