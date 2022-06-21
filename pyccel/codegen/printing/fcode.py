@@ -992,23 +992,23 @@ class FCodePrinter(CodePrinter):
             stmt = 'count({}, dim = {}, kind = {})'.format(mask, dim, kind)
 
             if expr.keep_dims.python_value:
-                if (not self._additional_code):
-                    self._additional_code = ''
+                #if (not self._additional_code):
+                #    self._additional_code = ''
 
-                var_name = self.scope.get_new_name()
-                var = Variable(expr.dtype, var_name, allocatable=True,
-                        shape = None, precision = expr.precision,
-                        order = expr.order, rank = expr.rank-1)
+                #var_name = self.scope.get_new_name()
+                #var = Variable(expr.dtype, var_name, allocatable=True,
+                #        shape = None, precision = expr.precision,
+                #        order = expr.order, rank = expr.rank-1)
 
-                self.scope.insert_variable(var)
-                var_code = self._print(var)
-                self._additional_code += '{} = {}\n'.format(var_code, stmt)
+                #self.scope.insert_variable(var)
+                #var_code = self._print(var)
+                #self._additional_code += '{} = {}\n'.format(var_code, stmt)
 
                 if expr.order == 'C':
                     shape    = ', '.join(self._print(i) for i in reversed(expr.shape))
                 else:
                     shape    = ', '.join(self._print(i) for i in expr.shape)
-                stmt = 'reshape({}, [{}])'.format(var_code, shape)
+                stmt = 'reshape([{}], [{}])'.format(stmt, shape)
 
         return stmt
 
