@@ -85,3 +85,4 @@ jobs:
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
         uses: ./.github/actions/pytest_parallel
+
