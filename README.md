@@ -21,6 +21,8 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 -   mpi4py (not available yet)
 -   h5py (not available yet)
 
+Pyccel's acceleration capabilities lead to much faster code. A small speed comparison of python vs pyccel or other tools can be found in the [performance](./performance.md) file.
+
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
 
 ## Table of contents
@@ -77,6 +79,13 @@ Some advanced features of Pyccel require additional non-Python libraries to be i
 
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
 For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
+
+It is possible to use pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
+Support is provided for anaconda on linux/macos.
+
+On Windows support is limited to examples which do not use external libraries.
+This is because we do not know of a way to reliably avoid [DLL hell](https://en.wikipedia.org/wiki/DLL_Hell).
+As a result DLLs managed by conda are always loaded before DLLs related to the compiler.
 
 ## Requirements
 
