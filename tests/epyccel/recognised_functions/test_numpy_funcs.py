@@ -5742,57 +5742,34 @@ def test_numpy_count_non_zero_axis(language):
 )
 def test_numpy_count_non_zero_axis_keep_dims(language):
     @types('bool[:,:,:]')
-    #@types('int[:,:,:]')
-    #@types('int8[:,:,:]')
-    #@types('int16[:,:,:]')
-    #@types('int32[:,:,:]')
-    #@types('int64[:,:,:]')
-    #@types('float[:,:,:]')
-    #@types('float32[:,:,:]')
-    #@types('float64[:,:,:]')
+    @types('int[:,:,:]')
+    @types('int8[:,:,:]')
+    @types('int16[:,:,:]')
+    @types('int32[:,:,:]')
+    @types('int64[:,:,:]')
+    @types('float[:,:,:]')
+    @types('float32[:,:,:]')
+    @types('float64[:,:,:]')
     def count(arr):
         from numpy import count_nonzero, empty
-        print("Hello")
-        print(arr)
-        print("Create")
-        b = empty((1,arr.shape[1],arr.shape[2]), int)
-        print("Ready to count 1")
-        b[:] = count_nonzero(arr, axis = 0, keepdims=True)
-        print("Ready to count 2")
         a = count_nonzero(arr, axis = 0, keepdims=True)
-        print("Counted")
         s = a.shape
-        print(s)
         return len(s), s[0], s[1], s[2], a[0,0,0], a[0,0,-1]
 
     size = (5, 2, 3)
 
     bl = randint(0, 2, size=size, dtype= bool)
-    bl = np.array([[[False,  True,  True],
-                  [False,  True,  True]],
-                 [[False, False,  True],
-                  [ True,  True,  True]],
-                 [[ True, False,  True],
-                  [False, False,  True]],
-                 [[False,  True,  True],
-                  [ True, False,  True]],
-                 [[ True,  True, False],
-                  [False, False, False]]])
 
-    #integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
-    #integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
-    #integer   = randint(min_int, max_int-1, size=size, dtype=int)
-    #integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
-    #integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
+    integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
+    integer   = randint(min_int, max_int-1, size=size, dtype=int)
+    integer32 = randint(min_int32, max_int32-1, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64-1, size=size, dtype=np.int64)
 
-    #fl = uniform(min_float / 2, max_float / 2, size = size)
-    #fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
-    #fl32 = np.float32(fl32)
-    #fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
-
-    print(bl)
-
-    print(count(bl))
+    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
     epyccel_func = epyccel(count, language=language)
 
@@ -5801,22 +5778,22 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
 
     assert result == count(bl)
     print("Bool ok")
-    #assert epyccel_func(integer8) == count(integer8)
-    #print("int8 ok")
-    #assert epyccel_func(integer16) == count(integer16)
-    #print("int16 ok")
-    #assert epyccel_func(integer) == count(integer)
-    #print("Int ok")
-    #assert epyccel_func(integer32) == count(integer32)
-    #print("int32 ok")
-    #assert epyccel_func(integer64) == count(integer64)
-    #print("int64 ok")
-    #assert epyccel_func(fl) == count(fl)
-    #print("Float ok")
-    #assert epyccel_func(fl32) == count(fl32)
-    #print("float32 ok")
-    #assert epyccel_func(fl64) == count(fl64)
-    #print("float64 ok")
+    assert epyccel_func(integer8) == count(integer8)
+    print("int8 ok")
+    assert epyccel_func(integer16) == count(integer16)
+    print("int16 ok")
+    assert epyccel_func(integer) == count(integer)
+    print("Int ok")
+    assert epyccel_func(integer32) == count(integer32)
+    print("int32 ok")
+    assert epyccel_func(integer64) == count(integer64)
+    print("int64 ok")
+    assert epyccel_func(fl) == count(fl)
+    print("Float ok")
+    assert epyccel_func(fl32) == count(fl32)
+    print("float32 ok")
+    assert epyccel_func(fl64) == count(fl64)
+    print("float64 ok")
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
