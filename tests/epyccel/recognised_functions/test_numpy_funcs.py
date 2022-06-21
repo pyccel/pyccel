@@ -5859,19 +5859,17 @@ def test_nonzero(language):
         b = nonzero(a)
         return len(b), b[0][0], b[0][1]
 
-    size = (5,)
+    # Arrays must have at least 2 non-zero elements to avoid IndexError
+    bl = np.array([True, False, True, False, True])
+    integer8  = np.array([6,1,8,2,3], dtype = np.int8)
+    integer16 = np.array([6,1,8,2,3], dtype = np.int16)
+    integer   = np.array([6,1,8,2,3], dtype = int)
+    integer32 = np.array([6,1,8,2,3], dtype = np.int32)
+    integer64 = np.array([6,1,8,2,3], dtype = np.int64)
 
-    bl = np.array(randint(0, 2, size=size), dtype= bool)
-
-    integer8  = np.array(randint(min_int8,  max_int8-1,  size=size, dtype=np.int8))
-    integer16 = np.array(randint(min_int16, max_int16-1, size=size, dtype=np.int16))
-    integer   = np.array(randint(min_int,   max_int-1,   size=size, dtype=int))
-    integer32 = np.array(randint(min_int32, max_int32-1, size=size, dtype=np.int32))
-    integer64 = np.array(randint(min_int64, max_int64-1, size=size, dtype=np.int64))
-
-    fl   = np.array(uniform(min_float / 2, max_float / 2, size = size), dtype=float)
-    fl32 = np.array(uniform(min_float32 / 2, max_float32 / 2, size = size), dtype=np.float32)
-    fl64 = np.array(uniform(min_float64 / 2, max_float64 / 2, size = size), dtype=np.float64)
+    fl   = np.array([6,22,1,8,2,3], dtype = float)
+    fl32 = np.array([6,22,1,8,2,3], dtype = np.float32)
+    fl64 = np.array([6,22,1,8,2,3], dtype = np.float64)
 
     epyccel_func = epyccel(nonzero_func, language=language)
 
