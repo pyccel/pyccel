@@ -5760,6 +5760,16 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     size = (5, 2, 3)
 
     bl = randint(0, 2, size=size, dtype= bool)
+    bl = np.array([[[False,  True,  True],
+                  [False,  True,  True]],
+                 [[False, False,  True],
+                  [ True,  True,  True]],
+                 [[ True, False,  True],
+                  [False, False,  True]],
+                 [[False,  True,  True],
+                  [ True, False,  True]],
+                 [[ True,  True, False],
+                  [False, False, False]]])
 
     #integer8  = randint(min_int8, max_int8-1, size=size, dtype=np.int8)
     #integer16 = randint(min_int16, max_int16-1, size=size, dtype=np.int16)
