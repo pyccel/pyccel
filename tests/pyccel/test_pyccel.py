@@ -652,6 +652,10 @@ def test_arrays_view(language):
             [int] * 6 + [int] * 10
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
+def test_return_numpy_arrays(language):
+    types = [int] * 5 + [(type(np.array),) * 2]
+    pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
+
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),

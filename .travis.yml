@@ -54,8 +54,8 @@ after_script:  # Coverage instructions - collections
 jobs:
   include:
 
-  - os: linux
-    python: 3.5
+  # - os: linux
+  #   python: 3.5
 
   - os: linux
     python: 3.6
@@ -94,6 +94,7 @@ jobs:
         - $HOME/Library/Caches/pip/
 
   - os: windows
+    if: branch = master
     language: c  # Python not supported, "language: generic" doesn't start VM
     before_install:
       - choco install anaconda3
