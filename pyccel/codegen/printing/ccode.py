@@ -1146,10 +1146,11 @@ class CCodePrinter(CodePrinter):
         return Slice(start, stop, step)
 
     def _print_NumpyArraySize(self, expr):
-        return 'get_size({})'.format(expr.arg)
+        return '{}.length'.format(self._print(expr.arg))
 
     def _print_PyccelArraySize(self, expr):
-        return '{}.shape[{}]'.format(expr.arg, expr.index)
+        return '{}.shape[{}]'.format(self._print(expr.arg),
+            self._print(expr.index))
 
     def _print_Allocate(self, expr):
         free_code = ''
