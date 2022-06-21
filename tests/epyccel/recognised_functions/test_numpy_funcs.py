@@ -5833,3 +5833,54 @@ def test_numpy_count_non_zero_axis_keep_dims_F(language):
     assert epyccel_func(fl) == count(fl)
     assert epyccel_func(fl32) == count(fl32)
     assert epyccel_func(fl64) == count(fl64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="nonzero not implemented"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_nonzero(language):
+
+    @types('bool[:]')
+    @types('int[:]')
+    @types('int8[:]')
+    @types('int16[:]')
+    @types('int32[:]')
+    @types('int64[:]')
+    @types('float[:]')
+    @types('float32[:]')
+    @types('float64[:]')
+    def nonzero_func(a):
+        from numpy import nonzero
+        b = nonzero(a)
+        return len(b), b[0][0], b[0][1]
+
+    size = (5,)
+
+    bl = np.array(randint(0, 2, size=size), dtype= bool)
+
+    integer8  = np.array(randint(min_int8,  max_int8-1,  size=size, dtype=np.int8))
+    integer16 = np.array(randint(min_int16, max_int16-1, size=size, dtype=np.int16))
+    integer   = np.array(randint(min_int,   max_int-1,   size=size, dtype=int))
+    integer32 = np.array(randint(min_int32, max_int32-1, size=size, dtype=np.int32))
+    integer64 = np.array(randint(min_int64, max_int64-1, size=size, dtype=np.int64))
+
+    fl   = np.array(uniform(min_float / 2, max_float / 2, size = size), dtype=float)
+    fl32 = np.array(uniform(min_float32 / 2, max_float32 / 2, size = size), dtype=np.float32)
+    fl64 = np.array(uniform(min_float64 / 2, max_float64 / 2, size = size), dtype=np.float64)
+
+    epyccel_func = epyccel(nonzero_func, language=language)
+
+    assert epyccel_func(bl) == nonzero_func(bl)
+    assert epyccel_func(integer8) == nonzero_func(integer8)
+    assert epyccel_func(integer16) == nonzero_func(integer16)
+    assert epyccel_func(integer) == nonzero_func(integer)
+    assert epyccel_func(integer32) == nonzero_func(integer32)
+    assert epyccel_func(integer64) == nonzero_func(integer64)
+    assert epyccel_func(fl) == nonzero_func(fl)
+    assert epyccel_func(fl32) == nonzero_func(fl32)
+    assert epyccel_func(fl64) == nonzero_func(fl64)
