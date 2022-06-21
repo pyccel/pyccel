@@ -553,8 +553,8 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     -   empty, full, ones, zeros, arange (`like` parameter is not supported).
     -   empty_like, full_like, and zeros_like, ones_like (`subok` parameter is not supported).
     -   rand, randint
-    -   where, count_nonzero
-    -   nonzero (1D only)
+    -   where, count_nonzero (fortran only)
+    -   nonzero (fortran only, 1D only)
 
 -   others:
 
