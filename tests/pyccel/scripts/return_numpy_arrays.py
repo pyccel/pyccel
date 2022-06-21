@@ -1,13 +1,15 @@
 import numpy as np
 
-def single_return(x: 'int'):
-    return np.ones(x)
+def single_return():
+    a = np.array([1,2,3,4])
+    return a
 
-def multi_returns(x: 'int'):
-    return single_return(x), np.array([1,2,3,4])
+def multi_returns():
+    x = single_return()
+    z = np.array([1,2,3,4])
+    return x, z
 
-a = single_return(5)
-b = multi_returns(5)
+a = single_return()
+b,c = multi_returns()
 
-print(a)
-print(b)
+print(a, b, c)
