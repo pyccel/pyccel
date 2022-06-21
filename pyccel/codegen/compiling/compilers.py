@@ -290,6 +290,13 @@ class Compiler:
         # Get executable
         exec_cmd = self._get_exec(accelerators)
 
+        with FileLock('.lock_acquisition.lock'):
+            compile_obj.acquire_lock()
+        try:
+            self.run_command([exec_cmd, '--version'], True)
+        finally:
+            compile_obj.release_lock()
+
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
         else:
