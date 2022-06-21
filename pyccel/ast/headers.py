@@ -292,6 +292,7 @@ class FunctionHeader(Header):
                     dtype = datatype(dtype)
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
+            print('---->', var_name, memory_handling)
             var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,
@@ -393,7 +394,7 @@ class FunctionHeader(Header):
         """ add a dimension to one of the arguments specified by it's position"""
         types = self.dtypes
         types[index]['rank'] += 1
-        types[index]['memory_handling'] = 'allocatable'
+        types[index]['memory_handling'] = 'heap'
         return FunctionHeader(self.name,
                               types,
                               self.results,

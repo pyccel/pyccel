@@ -50,19 +50,11 @@ class Variable(PyccelAstNode):
     rank : int
         used for arrays. [Default value: 0]
 
-    allocatable: bool
-        used for arrays, if we need to allocate memory [Default value: False]
-
-    is_stack_array: bool
-        used for arrays, if memory should be allocated on the stack [Default value: False]
-
-    is_pointer: bool
-        if object is a pointer [Default value: False]
-
     memory_handling: str, None
-        'allocatable' is used for arrays, if we need to allocate memory
-        'stack_array' is used for arrays, if memory should be allocated on the stack
-        'pointer' if object is a pointer
+        'heap' is used for arrays, if we need to allocate memory on the heap
+        'stack' is used for arrays, if memory should be allocated on the stack
+        'alias' if object is a pointer
+        None if the object is a scalar
         [Default value: None]
 
     is_target: bool
@@ -105,13 +97,13 @@ class Variable(PyccelAstNode):
     >>> Variable('int', 'n')
     n
     >>> n = 4
-    >>> Variable('float', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> Variable('float', 'x', rank=2, shape=(n,2), memory_handling='heap')
     x
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_allocatable', '_is_const', '_is_pointer',
-            '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
+            '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
             '_rank','_shape','_order','_is_private')
     _attribute_nodes = ()
@@ -154,8 +146,8 @@ class Variable(PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
-        if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
-            raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
+        if memory_handling not in ('heap', 'stack', 'alias', None):
+            raise TypeError('memory_handling must be \'heap\', \'stack\', \'alias\' or None')
         self._memory_handling = memory_handling
 
         if not isinstance(is_const, bool):
@@ -248,7 +240,7 @@ class Variable(PyccelAstNode):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.memory_handling == 'pointer'
+        return self.memory_handling == 'alias'
 
     def set_changeable_shape(self):
         """
@@ -281,8 +273,8 @@ class Variable(PyccelAstNode):
 
     @memory_handling.setter
     def memory_handling(self, memory_handling):
-        if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
-            raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
+        if memory_handling not in ('heap', 'stack', 'alias', None):
+            raise TypeError('memory_handling must be \'heap\', \'stack\', \'alias\' or None')
         self._memory_handling = memory_handling
 
     @property
@@ -590,7 +582,7 @@ class HomogeneousTupleVariable(TupleVariable):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.memory_handling == 'pointer' and i == (self.rank-1)
+        return self.memory_handling == 'alias' and i == (self.rank-1)
 
     def __len__(self):
         return self.shape[0]
@@ -679,8 +671,8 @@ class InhomogeneousTupleVariable(TupleVariable):
 
     @Variable.memory_handling.setter
     def memory_handling(self, memory_handling):
-        if memory_handling not in ('allocatable', 'stack_array', 'pointer', None):
-            raise TypeError('memory_handling must be allocatable, stack_array, pointer or None')
+        if memory_handling not in ('heap', 'stack', 'alias', None):
+            raise TypeError('memory_handling must be \'heap\', \'stack\', \'alias\' or None')
         self._memory_handling = memory_handling
         for var in self._vars:
             if var.rank > 0:
@@ -871,7 +863,7 @@ class VariableAddress(PyccelAstNode):
     """Represents the address of a variable.
     E.g. In C
     VariableAddress(Variable('int','a'))                     is  &a
-    VariableAddress(Variable('int','a', is_pointer=True))    is   a
+    VariableAddress(Variable('int','a', alias=True))         is   a
     """
     __slots__ = ('_variable','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_variable',)

@@ -313,7 +313,7 @@ def wrap_array(var, scope, persistent):
     variables = [bind_var, *sizes]
     if not persistent:
         ptr_var = Variable(dtype=var.dtype, name=scope.get_new_name(var.name+'_ptr'),
-                memory_handling='pointer', rank=var.rank, order=var.order, shape=var.shape)
+                memory_handling='alias', rank=var.rank, order=var.order, shape=var.shape)
         alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
         copy  = Assign(ptr_var, var)
         c_loc = CLocFunc(ptr_var, bind_var)

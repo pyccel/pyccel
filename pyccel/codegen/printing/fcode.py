@@ -1099,7 +1099,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var_name = self.scope.get_new_name()
-        var = Variable(expr.dtype, var_name, memory_handling = 'stack_array' if all([s.is_constant for s in expr.shape]) else None,
+        var = Variable(expr.dtype, var_name, memory_handling = 'stack' if all([s.is_constant for s in expr.shape]) else None,
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
@@ -1230,9 +1230,7 @@ class FCodePrinter(CodePrinter):
         # Group the variables by intent
         var = expr.variable
         rank           = var.rank
-        allocatable    = var.memory_handling == 'allocatable' # var.allocatable
-        is_pointer     = var.memory_handling == 'pointer'     # var.is_pointer
-        is_stack_array = var.memory_handling == 'stack_array' # var.is_stack_array
+        memory_handling = var.memory_handling
         shape          = var.alloc_shape
         is_target      = var.is_target
         is_const       = var.is_const
@@ -1288,7 +1286,7 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        if not(is_static) and (allocatable or (var.shape is None)):
+        if not(is_static) and (memory_handling == 'heap' or (var.shape is None)):
             s = ''
 
         # Default empty strings
@@ -1310,10 +1308,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute allocatable string
         if not is_static:
-            if is_pointer:
+            if memory_handling == 'alias':
                 allocatablestr = ', pointer'
 
-            elif allocatable and not intent:
+            elif memory_handling == 'heap' and not intent:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1335,11 +1333,11 @@ class FCodePrinter(CodePrinter):
         # Compute rank string
         # TODO: improve
         if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+            (not(memory_handling in ('heap', 'alias')) or is_static or memory_handling == 'stack')):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
         elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+            (not(memory_handling in ('heap', 'alias')) or is_static or memory_handling == 'stack')):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
@@ -1350,10 +1348,10 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and allocatable and intent:
+        elif (rank > 0) and memory_handling == 'heap' and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and (allocatable or is_pointer):
+        elif (rank > 0) and memory_handling in ('heap', 'alias'):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
@@ -1549,7 +1547,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if var.memory_handling == 'pointer':
+        if var.memory_handling == 'alias':
             return ''
         else:
             var_code = self._print(var)
@@ -2701,7 +2699,7 @@ class FCodePrinter(CodePrinter):
                 if (not self._additional_code):
                     self._additional_code = ''
                 var_name = self.scope.get_new_name()
-                var = Variable(base.dtype, var_name, memory_handling = 'stack_array',
+                var = Variable(base.dtype, var_name, memory_handling = 'stack',
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 

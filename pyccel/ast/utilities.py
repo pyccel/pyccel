@@ -636,8 +636,8 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
-                    ), a) if a.lhs.memory_handling == 'stack_array'
-                    else (a) if a.lhs.memory_handling == 'allocatable'
+                    ), a) if a.lhs.memory_handling == 'stack'
+                    else (a) if a.lhs.memory_handling == 'heap'
                     else (Allocate(a.lhs,
                             shape=a.lhs.shape,
                             order = a.lhs.order,
