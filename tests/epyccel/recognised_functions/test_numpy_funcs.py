@@ -5788,7 +5788,7 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
 
     print(count(bl))
 
-    epyccel_func = epyccel(count, language=language)
+    epyccel_func = epyccel(count, language=language, debug=True)
 
     result = epyccel_func(bl)
     print(result)
