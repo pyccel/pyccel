@@ -60,7 +60,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Problem funcs
         run: |
-          python -m pytest -rX -k test_numpy_count_non_zero_axis_keep_dims -sv test_numpy_funcs.py
+          python -u -m pytest -rX -k test_numpy_count_non_zero_axis_keep_dims -sv test_numpy_funcs.py
         shell: bash
         working-directory: ./tests/epyccel/recognised_functions
       #- name: Fortran/C tests with pytest
@@ -70,28 +70,23 @@ jobs:
       #- name: Parallel tests with pytest
       #  uses: ./.github/actions/pytest_parallel
 
-  MacOSX:
+  #MacOSX:
 
-    runs-on: macos-latest
+  #  runs-on: macos-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.10'
-      - name: Install dependencies
-        uses: ./.github/actions/macos_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Problem funcs
-        run: |
-          python -m pytest -rX -k test_numpy_count_non_zero_axis_keep_dims -xsv test_numpy_funcs.py
-        shell: bash
-        working-directory: ./tests/epyccel/recognised_functions
-      #- name: Fortran/C tests with pytest
-      #  uses: ./.github/actions/pytest_run
-      #- name: Python tests with pytest
-      #  uses: ./.github/actions/pytest_run_python
-      #- name: Parallel tests with pytest
-      #  uses: ./.github/actions/pytest_parallel
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - name: Set up Python 3.10
+  #      uses: actions/setup-python@v2
+  #      with:
+  #        python-version: '3.10'
+  #    - name: Install dependencies
+  #      uses: ./.github/actions/macos_install
+  #    - name: Install python dependencies
+  #      uses: ./.github/actions/pip_installation
+  #    #- name: Fortran/C tests with pytest
+  #    #  uses: ./.github/actions/pytest_run
+  #    #- name: Python tests with pytest
+  #    #  uses: ./.github/actions/pytest_run_python
+  #    #- name: Parallel tests with pytest
+  #    #  uses: ./.github/actions/pytest_parallel
