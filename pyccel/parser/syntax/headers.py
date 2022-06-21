@@ -145,7 +145,7 @@ class Type(BasicStmt):
         d_var={}
         d_var['datatype']=dtype
         d_var['rank'] = len(trailer)
-        d_var['memory_handling'] = 'stack' if len(trailer) > 0 else None
+        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else None
         d_var['precision']  = precision
         d_var['is_func'] = False
         d_var['is_const'] = False

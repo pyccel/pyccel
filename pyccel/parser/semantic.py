@@ -250,6 +250,8 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
+        print(ast.body)
+
         return ast
 
     #================================================================

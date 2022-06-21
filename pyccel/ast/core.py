@@ -2862,11 +2862,11 @@ class FunctionAddress(FunctionDef):
     is_kwonly: bool
         if object is an argument which can only be specified using its keyword
 
-    is_pointer: bool
-        if object is a pointer [Default value: False]
-
     is_optional: bool
         if object is an optional argument of a function [Default value: False]
+
+    memory_handling: str, None
+        must be \'heap\', \'stack\', \'alias\' or None [Default value: None]
 
     Examples
     --------
@@ -2899,6 +2899,9 @@ class FunctionAddress(FunctionDef):
         super().__init__(name, arguments, results, body, scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
+
+        if memory_handling not in ('heap', 'alias', 'stack', None):
+            raise TypeError('Expecting \'heap\', \'stack\', \'alias\' or None for memory_handling')
 
         if not isinstance(is_kwonly, bool):
             raise TypeError('Expecting a boolean for kwonly')

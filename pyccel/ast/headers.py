@@ -292,7 +292,7 @@ class FunctionHeader(Header):
                     dtype = datatype(dtype)
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
-            print('---->', var_name, memory_handling)
+            print('---->', var_name, memory_handling, rank)
             var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,

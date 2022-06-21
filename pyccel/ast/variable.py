@@ -862,8 +862,8 @@ class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
     E.g. In C
-    VariableAddress(Variable('int','a'))                     is  &a
-    VariableAddress(Variable('int','a', alias=True))         is   a
+    VariableAddress(Variable('int','a'))                            is  &a
+    VariableAddress(Variable('int','a', memory_handling='alias'))   is   a
     """
     __slots__ = ('_variable','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_variable',)
