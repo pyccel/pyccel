@@ -750,13 +750,13 @@ class NumpyWhere(PyccelInternalFunction):
 
         if complexs:
             self._dtype     = NativeComplex()
-            self._precision = max(e.precision for e in complexs)
+            self._precision = max_precision(args, allow_native = False)
         elif floats:
             self._dtype     = NativeFloat()
-            self._precision = max(e.precision for e in floats)
+            self._precision = max_precision(args, allow_native = False)
         elif integers:
             self._dtype     = NativeInteger()
-            self._precision = max(e.precision for e in integers)
+            self._precision = max_precision(args, allow_native = False)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
