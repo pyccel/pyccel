@@ -41,16 +41,16 @@ def test_return_arrays(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    fl = uniform(min_float, max_float, size = size)
+    fl32 = uniform(min_float32, max_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float64, max_float64, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32, high=max_float32, size=size) + uniform(low=min_float32, high=max_float32, size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+    cmplx128 = uniform(low=min_float64, high=max_float64, size=size) + uniform(low=min_float64, high=max_float64, size=size) * 1j
 
     epyccel_func = epyccel(return_array, language=language)
 
