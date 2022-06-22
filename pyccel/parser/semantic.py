@@ -958,7 +958,7 @@ class SemanticParser(BasicParser):
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if 'memory_handling' in d_lhs and d_lhs['memory_handling'] == 'stack':
+                if 'memory_handling' in d_lhs and d_lhs['rank'] > 0 and d_lhs['memory_handling'] == 'stack':
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
@@ -1021,7 +1021,7 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
-                if lhs.memory_handling == 'stack' and lhs.rank > 0 and self.scope.is_loop:
+                if lhs.rank > 0 and lhs.memory_handling == 'stack' and self.scope.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
                         severity='error',
                         bounding_box=(self._current_fst_node.lineno,
