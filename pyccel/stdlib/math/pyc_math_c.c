@@ -7,7 +7,7 @@
 #include <math.h>
 
 /*---------------------------------------------------------------------------*/
-int64_t        pyc_factorial(int64_t n)
+int64_t                     pyc_factorial(int64_t n)
 {
     int64_t    res = 1;
 
@@ -19,7 +19,7 @@ int64_t        pyc_factorial(int64_t n)
     return (res);
 }
 /*---------------------------------------------------------------------------*/
-int64_t        pyc_gcd (int64_t a, int64_t b)
+int64_t                     pyc_gcd (int64_t a, int64_t b)
 {
     while (b) {
         a %= b;
@@ -31,18 +31,15 @@ int64_t        pyc_gcd (int64_t a, int64_t b)
     return a;
 }
 /*---------------------------------------------------------------------------*/
-int64_t        pyc_lcm (int64_t a, int64_t b)
+int64_t                     pyc_lcm (int64_t a, int64_t b)
 {
     return a / pyc_gcd(a, b) * b;
 }
 /*---------------------------------------------------------------------------*/
-double      pyc_radians(double degrees)
-{
-    return (degrees * (M_PI / 180));
-}
+extern inline double        pyc_radians(double degrees);
 /*---------------------------------------------------------------------------*/
-double      pyc_degrees(double radians)
-{
-    return radians * (180.0 / M_PI);
-}
+extern inline double        pyc_degrees(double radians);
 /*---------------------------------------------------------------------------*/
+extern inline int64_t       pyc_modulo(int64_t a, int64_t b);
+/*---------------------------------------------------------------------------*/
+extern inline double        pyc_fmodulo(double a, double b);
