@@ -8,6 +8,7 @@
 	that do not have any parameters.
 """
 
+ARRAYS_IN_MULTIPLE_RETURNS = "returning an array in multiple returns is not supported yet."
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
 INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'

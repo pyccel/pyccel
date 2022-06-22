@@ -7,6 +7,7 @@
 # pylint: disable=R0201, missing-function-docstring
 
 from collections import OrderedDict
+from distutils.log import error
 from itertools import chain, zip_longest
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -3242,18 +3243,17 @@ class SemanticParser(BasicParser):
                             severity='fatal')
             # ...
 
-            # Raise an error if one of the return arguments is either:
-            #   a) a pointer
-            #   b) array which is not among arguments, hence intent(out)
-            #or r in results:
-            #   if r.is_pointer:
-            #       errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
-            #       symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            #       severity='fatal')
-            #   elif (r not in args) and r.rank > 0:
-            #       errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
-            #       symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            #       severity='fatal')
+            for r in results:
+                # if one of the return arguments is a pointer.
+                if r.is_pointer:
+                    errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
+                    symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='error')
+                # array in a multiple returns statement
+                if len(results) > 1 and any(r.rank > 0 for r in results):
+                    errors.report(ARRAYS_IN_MULTIPLE_RETURNS,
+                    symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='error')
 
             func_kwargs = {
                     'global_vars':global_vars,

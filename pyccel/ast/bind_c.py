@@ -102,7 +102,7 @@ def as_static_function(func, *, mod_scope, name=None):
     # Convert array results to inout arguments
     for r in results:
         if r.rank > 0 and r not in args:
-            #wrap the array for the original function
+            #wrap the array that is returned from the original function
             array_body, array_vars = wrap_array(r, scope, False)
             scope.insert_variable(array_vars[-1])
             scope.insert_variable(r)
