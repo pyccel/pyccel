@@ -646,8 +646,8 @@ class SyntaxParser(BasicParser):
         if 'bypass' in decorators:
             return EmptyNode()
 
-        if 'stack' in decorators:
-            decorators['stack'] = tuple(str(b.value) for a in decorators['stack']
+        if 'stack_array' in decorators:
+            decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
                 for b in a.args)
 
         if 'allow_negative_index' in decorators:

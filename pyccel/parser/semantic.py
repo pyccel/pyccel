@@ -250,8 +250,6 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
-        print(ast.body)
-
         return ast
 
     #================================================================
@@ -951,8 +949,8 @@ class SemanticParser(BasicParser):
                 # Update variable's dictionary with information from function decorators
                 decorators = self.scope.decorators
                 if decorators:
-                    if 'stack' in decorators:
-                        if name in decorators['stack']:
+                    if 'stack_array' in decorators:
+                        if name in decorators['stack_array']:
                             d_lhs.update(memory_handling='stack')
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:

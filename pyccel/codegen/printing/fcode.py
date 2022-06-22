@@ -1351,7 +1351,7 @@ class FCodePrinter(CodePrinter):
         elif (rank > 0) and memory_handling == 'heap' and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and memory_handling in ('heap', 'alias'): #TODO: What the fuck
+        elif (rank > 0) and memory_handling in ('heap', 'alias'):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
