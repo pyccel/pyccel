@@ -1241,6 +1241,7 @@ class FCodePrinter(CodePrinter):
         is_static = expr.static
         is_external = expr.external
         intent = expr.intent
+        intent_in = intent and intent != 'out'
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
@@ -1271,7 +1272,7 @@ class FCodePrinter(CodePrinter):
         # ...
             if isinstance(expr_dtype, NativeString):
 
-                if expr.intent:
+                if intent_in:
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
             elif isinstance(expr_dtype, BindCPointer):
@@ -1313,7 +1314,7 @@ class FCodePrinter(CodePrinter):
             if is_pointer:
                 allocatablestr = ', pointer'
 
-            elif allocatable and not intent:
+            elif allocatable and not intent_in:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1350,7 +1351,7 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and allocatable and intent:
+        elif (rank > 0) and allocatable and intent_in:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
         elif (rank > 0) and (allocatable or is_pointer):
@@ -1365,7 +1366,7 @@ class FCodePrinter(CodePrinter):
             mod_str = ', bind(c)'
 
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr + externalstr + mod_str
+        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
