@@ -958,7 +958,7 @@ class SemanticParser(BasicParser):
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if 'memory_handling' in d_lhs and d_lhs['memory_handling'] == 'stack' and d_lhs['rank'] > 0:
+                if 'memory_handling' in d_lhs and d_lhs['memory_handling'] == 'stack':
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
@@ -1197,7 +1197,7 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset))
 
-                elif var.memory_handling == 'stack' and var.rank > 0:
+                elif var.memory_handling == 'stack':
                     errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
                         severity='error',
                         bounding_box=(self._current_fst_node.lineno,
