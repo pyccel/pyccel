@@ -50,12 +50,11 @@ class Variable(PyccelAstNode):
     rank : int
         used for arrays. [Default value: 0]
 
-    memory_handling: str, None
+    memory_handling: str
         'heap' is used for arrays, if we need to allocate memory on the heap
-        'stack' is used for arrays, if memory should be allocated on the stack
+        'stack' if memory should be allocated on the stack, represents stack arrays and scalars
         'alias' if object is a pointer
-        None if the object is a scalar
-        [Default value: None]
+        [Default value: 'stack']
 
     is_target: bool
         if object is pointed to by another variable [Default value: False]
@@ -114,7 +113,7 @@ class Variable(PyccelAstNode):
         name,
         *,
         rank=0,
-        memory_handling=None,
+        memory_handling='stack',
         is_const=False,
         is_target=False,
         is_optional=False,
@@ -146,8 +145,8 @@ class Variable(PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
-        if memory_handling not in ('heap', 'stack', 'alias', None):
-            raise TypeError('memory_handling must be \'heap\', \'stack\', \'alias\' or None')
+        if memory_handling not in ('heap', 'stack', 'alias'):
+            raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
         self._memory_handling = memory_handling
 
         if not isinstance(is_const, bool):
@@ -273,8 +272,8 @@ class Variable(PyccelAstNode):
 
     @memory_handling.setter
     def memory_handling(self, memory_handling):
-        if memory_handling not in ('heap', 'stack', 'alias', None):
-            raise TypeError('memory_handling must be \'heap\', \'stack\', \'alias\' or None')
+        if memory_handling not in ('heap', 'stack', 'alias'):
+            raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
         self._memory_handling = memory_handling
 
     @property
@@ -671,8 +670,8 @@ class InhomogeneousTupleVariable(TupleVariable):
 
     @Variable.memory_handling.setter
     def memory_handling(self, memory_handling):
-        if memory_handling not in ('heap', 'stack', 'alias', None):
-            raise TypeError('memory_handling must be \'heap\', \'stack\', \'alias\' or None')
+        if memory_handling not in ('heap', 'stack', 'alias'):
+            raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
         self._memory_handling = memory_handling
         for var in self._vars:
             if var.rank > 0:

@@ -147,9 +147,9 @@ class Template(Header):
     Examples
     --------
     >>> from pyccel.ast.headers import Template
-    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'memory_handling': None,\
+    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
-    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'memory_handling': None,\
+    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
     >>> T = Template('T', [d_var0, d_var1])
     """
@@ -292,7 +292,6 @@ class FunctionHeader(Header):
                     dtype = datatype(dtype)
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
-            print('---->', var_name, memory_handling, rank)
             var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,

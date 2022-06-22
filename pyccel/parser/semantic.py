@@ -459,7 +459,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, NumpyNewArray):
             d_var['datatype'   ] = expr.dtype
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else None
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -484,7 +484,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else None
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -498,7 +498,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
-            d_var['memory_handling'] = None # because rank is 0 and no shape defined
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
@@ -507,7 +507,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
-            d_var['memory_handling'] = None # because rank is 0 and no shape defined
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['rank'       ] = 0
             return d_var
 
@@ -518,7 +518,7 @@ class SemanticParser(BasicParser):
             dtype = self.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
-            d_var['memory_handling'] = None # because rank is 0 and no shape defined
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
@@ -958,7 +958,7 @@ class SemanticParser(BasicParser):
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if 'memory_handling' in d_lhs and d_lhs['memory_handling'] == 'stack':
+                if 'memory_handling' in d_lhs and d_lhs['memory_handling'] == 'stack' and d_lhs['rank'] > 0:
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
@@ -1021,7 +1021,7 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
-                if lhs.memory_handling == 'stack' and self.scope.is_loop:
+                if lhs.memory_handling == 'stack' and lhs.rank > 0 and self.scope.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
                         severity='error',
                         bounding_box=(self._current_fst_node.lineno,
@@ -1197,7 +1197,7 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset))
 
-                elif var.memory_handling == 'stack':
+                elif var.memory_handling == 'stack' and var.rank > 0:
                     errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
                         severity='error',
                         bounding_box=(self._current_fst_node.lineno,
@@ -2367,7 +2367,7 @@ class SemanticParser(BasicParser):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
                     #TODO: Avoid writing the default variables here
-                    d['memory_handling'] = None
+                    d['memory_handling'] = 'stack'
                     if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
                         d['memory_handling'] = 'alias'
 
@@ -2646,7 +2646,7 @@ class SemanticParser(BasicParser):
                     dvar['rank' ] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
-                    dvar['memory_handling'] = None
+                    dvar['memory_handling'] = 'stack'
                 var  = Variable(dtype, var, **dvar)
                 stop = a.element.shape[0]
             elif isinstance(a, Variable):
@@ -2656,7 +2656,7 @@ class SemanticParser(BasicParser):
                     dvar['rank'] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
-                    dvar['memory_handling'] = None
+                    dvar['memory_handling'] = 'stack'
 
                 var  = Variable(dtype, var, **dvar)
                 stop = a.shape[0]

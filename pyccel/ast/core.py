@@ -2865,8 +2865,8 @@ class FunctionAddress(FunctionDef):
     is_optional: bool
         if object is an optional argument of a function [Default value: False]
 
-    memory_handling: str, None
-        must be \'heap\', \'stack\', \'alias\' or None [Default value: None]
+    memory_handling: str
+        must be \'heap\', \'stack\' or \'alias\' [Default value: 'stack']
 
     Examples
     --------
@@ -2893,14 +2893,14 @@ class FunctionAddress(FunctionDef):
         is_optional=False,
         is_kwonly=False,
         is_argument=False,
-        memory_handling=None,
+        memory_handling='stack',
         **kwargs
         ):
         super().__init__(name, arguments, results, body, scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
-        if memory_handling not in ('heap', 'alias', 'stack', None):
+        if memory_handling not in ('heap', 'alias', 'stack'):
             raise TypeError('Expecting \'heap\', \'stack\', \'alias\' or None for memory_handling')
 
         if not isinstance(is_kwonly, bool):
