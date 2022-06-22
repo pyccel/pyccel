@@ -722,13 +722,13 @@ class CCodePrinter(CodePrinter):
         second = self._print(expr.args[1])
 
         if expr.dtype is NativeInteger():
-            return "MOD_PYC({n}, {base})".format(n=first, base=second)
+            return "pyc_modulo({n}, {base})".format(n=first, base=second)
 
         if expr.args[0].dtype is NativeInteger():
             first = self._print(NumpyFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
             second = self._print(NumpyFloat(expr.args[1]))
-        return "FMOD_PYC({n}, {base})".format(n=first, base=second)
+        return "pyc_fmodulo({n}, {base})".format(n=first, base=second)
 
     def _print_PyccelPow(self, expr):
         b = expr.args[0]
