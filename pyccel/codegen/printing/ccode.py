@@ -351,7 +351,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(arg, Variable):
             return self.varCpy(lhs, rhs, arg)
         if isinstance(arg[0], Variable):
-            print(self._flatten_list(arg[0]), "trying to flatten")
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
                     if n:
@@ -361,7 +360,6 @@ class CCodePrinter(CodePrinter):
             return assignations
         else:
             i = ', '.join([self._print(i) for i in arg])
-            print(i, "this is the stuff")
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
             return '%s%s' % (dummy_array, cpy_data)
