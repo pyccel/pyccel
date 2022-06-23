@@ -1,6 +1,5 @@
 # pylint: disable=wrong-import-position, disable=missing-function-docstring, missing-module-docstring/
 import sys
-import pytest
 from numpy.random import randint, uniform
 import numpy as np
 
