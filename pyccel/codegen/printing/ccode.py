@@ -285,9 +285,6 @@ class CCodePrinter(CodePrinter):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
             return f_list
         else:
-            if isinstance(irregular_list, Variable):
-                if irregular_list.is_kwonly:
-                    print("This is known:", irregular_list)
             return [irregular_list]
 
     #========================== Numpy Elements ===============================#
@@ -318,6 +315,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype),
         rhs.precision)
         expr = self._print(expr)
+        if pad != "":
+            pad = f"+ ({pad} / {expr}.type_size)"
         cpy_data = "memcpy({0}.{2}{3}, {1}.{2}, {1}.buffer_size);\n".format(lhs,
         expr, dtype, pad)
         return '%s' % (cpy_data)
@@ -339,6 +338,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
+        order = lhs.order
         dummy_array_name = self.scope.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
@@ -351,15 +351,17 @@ class CCodePrinter(CodePrinter):
         if isinstance(arg, Variable):
             return self.varCpy(lhs, rhs, arg)
         if isinstance(arg[0], Variable):
+            print(self._flatten_list(arg[0]), "trying to flatten")
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
                     if n:
-                        assignations += self.varCpy(lhs, rhs, i, f" + (*({lhs}.strides) * {n})")
+                        assignations += self.varCpy(lhs, rhs, i, f"(({i}.buffer_size) * {n})")
                     else:
                         assignations += self.varCpy(lhs, rhs, i)
             return assignations
         else:
             i = ', '.join([self._print(i) for i in arg])
+            print(i, "this is the stuff")
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
             return '%s%s' % (dummy_array, cpy_data)
