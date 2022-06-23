@@ -9,7 +9,7 @@ sys.path.append('recognised_functions')
 from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
-
+from recognised_functions.test_numpy_funcs import matching_types
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
@@ -31,8 +31,6 @@ def test_return_arrays(language):
         x = array([a,b])
         return x
 
-    bl = randint(0, 1, dtype= bool)
-
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
@@ -48,17 +46,80 @@ def test_return_arrays(language):
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
     epyccel_func = epyccel(return_array, language=language)
 
-    assert np.allclose(epyccel_func(bl, bl), return_array(bl, bl))
-    assert np.allclose(epyccel_func(integer8, integer8), return_array(integer8, integer8))
-    assert np.allclose(epyccel_func(integer16, integer16), return_array(integer16, integer16))
-    assert np.allclose(epyccel_func(integer, integer), return_array(integer, integer))
-    assert np.allclose(epyccel_func(integer32, integer32), return_array(integer32, integer32))
-    assert np.allclose(epyccel_func(integer64, integer64), return_array(integer64, integer64))
-    assert np.allclose(epyccel_func(fl, fl), return_array(fl, fl))
-    assert np.allclose(epyccel_func(fl32, fl32), return_array(fl32, fl32))
-    assert np.allclose(epyccel_func(fl64, fl64), return_array(fl64, fl64))
-    assert np.allclose(epyccel_func(cmplx64, cmplx64), return_array(cmplx64, cmplx64))
+    f_bl_true_output = epyccel_func(True, True)
+    test_bool_true_output = return_array(True, True)
+
+    f_bl_false_output = epyccel_func(False, False)
+    test_bool_false_output = return_array(False, False)
+
+    assert np.allclose(f_bl_true_output, test_bool_true_output)
+    assert np.allclose(f_bl_false_output, test_bool_false_output)
+
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
+
+    f_integer_output = epyccel_func(integer, integer)
+    test_int_output  = return_array(integer, integer)
+
+    assert np.allclose(f_integer_output, test_int_output)
+    assert matching_types(f_integer_output, test_int_output)
+
+    f_integer8_output = epyccel_func(integer8, integer8)
+    test_int8_output = return_array(integer8, integer8)
+
+    assert np.allclose(f_integer8_output, test_int8_output)
+    assert matching_types(f_integer8_output, test_int8_output)
+
+    f_integer16_output = epyccel_func(integer16, integer16)
+    test_int16_output = return_array(integer16, integer16)
+
+    assert np.allclose(f_integer16_output, test_int16_output)
+    assert matching_types(f_integer16_output, test_int16_output)
+
+    f_integer32_output = epyccel_func(integer32, integer32)
+    test_int32_output = return_array(integer32, integer32)
+
+    assert np.allclose(f_integer32_output, test_int32_output)
+    assert matching_types(f_integer32_output, test_int32_output)
+
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = epyccel_func(integer64, integer64)
+        test_int64_output = return_array(integer64, integer64)
+
+        assert np.allclose(f_integer64_output, test_int64_output)
+        assert matching_types(f_integer64_output, test_int64_output)
+
+    f_fl_output = epyccel_func(fl, fl)
+    test_float_output = return_array(fl, fl)
+
+    assert np.allclose(f_fl_output, test_float_output)
+    assert matching_types(f_fl_output, test_float_output)
+
+    f_fl32_output = epyccel_func(fl32, fl32)
+    test_float32_output = return_array(fl32, fl32)
+
+    assert np.allclose(f_fl32_output, test_float32_output)
+    assert matching_types(f_fl32_output, test_float32_output)
+
+    f_fl64_output = epyccel_func(fl64, fl64)
+    test_float64_output = return_array(fl64, fl64)
+
+    assert np.allclose(f_fl64_output, test_float64_output)
+    assert matching_types(f_fl64_output, test_float64_output)
+
+    f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
+    test_cmplx64_output = return_array(cmplx64, cmplx64)
+
+    assert np.allclose(f_cmplx64_output, test_cmplx64_output)
+    assert matching_types(f_cmplx64_output, test_cmplx64_output)
+
+    f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
+    test_cmplx128_output = return_array(cmplx128, cmplx128)
+
+    assert np.allclose(f_cmplx128_output, test_cmplx128_output)
+    assert matching_types(f_cmplx128_output, test_cmplx128_output)
