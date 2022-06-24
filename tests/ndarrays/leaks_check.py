@@ -37,7 +37,7 @@ def conditional_alloc(b1 : bool, b2 : bool):
     return n
 
 def return_array():
-    a = create_array()
+    a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     return a
 
 # testing garbage collecting in a Function
