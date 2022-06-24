@@ -1753,7 +1753,7 @@ class FCodePrinter(CodePrinter):
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(expr.results) != 1 or (len(expr.results) > 1 and expr.results[0].rank > 0):
+        if len(expr.results) != 1 or expr.results[0].rank > 0:
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
@@ -2843,7 +2843,7 @@ class FCodePrinter(CodePrinter):
                     newarg = arg
                 args.append(FunctionCallArgument(newarg, key))
             results = list(lhs_vars.values())
-            if len(func_results) == 1:
+            if len(func_results) == 1 and func_results[0].rank == 0:
                 results_strs = []
             else:
                 # If func body is unknown then we may not know result names
@@ -2879,8 +2879,9 @@ class FCodePrinter(CodePrinter):
             args_code = ', '.join(args_strs+results_strs)
             code = '{name}({args})'.format( name = f_name,
                                             args = args_code )
-            if len(func_results) != 1:
+            if len(func_results) != 1 or func_results[0].rank>0:
                 code = 'call {}\n'.format(code)
+                func_results = []
 
         if not parent_assign:
             if len(func_results) <= 1:
