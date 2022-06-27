@@ -19,15 +19,6 @@ from pyccel.errors.errors import Errors
 
 errors = Errors()
 
-if platform.system() == 'Darwin':
-    # Collect version using mac tools to avoid unexpected results on Big Sur
-    # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
-    p = subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE)
-    result, err = p.communicate()
-    mac_version_tuple = result.decode("utf-8").strip().split('.')
-    mac_target = '{}.{}'.format(*mac_version_tuple[:2])
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
-
 def get_condaless_search_path():
     """ Get the value of the PATH variable to be set when searching for the compiler.
     This is the same as the environment PATH variable but without any conda paths
@@ -42,6 +33,20 @@ def get_condaless_search_path():
         warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
     return acceptable_search_paths
+
+_acceptable_bin_paths = get_condaless_search_path()
+
+if platform.system() == 'Darwin':
+    # Collect version using mac tools to avoid unexpected results on Big Sur
+    # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
+    p = subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE)
+    result, err = p.communicate()
+    mac_version_tuple = result.decode("utf-8").strip().split('.')
+    mac_target = '{}.{}'.format(*mac_version_tuple[:2])
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+elif platform.system() == 'Windows':
+    for p in _acceptable_bin_paths:
+        os.add_dll_directory(p)
 
 #------------------------------------------------------------
 class Compiler:
@@ -58,7 +63,7 @@ class Compiler:
             Indicates whether we are compiling in debug mode
     """
     __slots__ = ('_debug','_info')
-    _acceptable_bin_paths = get_condaless_search_path()
+    _acceptable_bin_paths = _acceptable_bin_paths
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
