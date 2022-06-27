@@ -444,7 +444,7 @@ class Assign(Basic):
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
         cond = cond and isinstance(lhs, PyccelSymbol)
-        cond = cond or isinstance(rhs, Variable) and rhs.on_heap
+        cond = cond or isinstance(rhs, Variable) and rhs.is_alias
         return cond
 
     @property
