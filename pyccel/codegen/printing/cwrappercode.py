@@ -906,7 +906,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
-                res_args.append(VariableAddress(collect_var) if collect_var.memory_handling == 'alias' else collect_var)
+                res_args.append(VariableAddress(collect_var) if collect_var.is_alias else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
@@ -1156,7 +1156,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
 
-            res_args.append(VariableAddress(collect_var) if collect_var.memory_handling == 'alias' else collect_var)
+            res_args.append(VariableAddress(collect_var) if collect_var.is_alias else collect_var)
 
         # Call PyBuildNode
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))

@@ -955,7 +955,7 @@ class CCodePrinter(CodePrinter):
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
-        if expr.variable.memory_handling == 'stack' and expr.variable.rank > 0:
+        if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
         elif declaration_type == 't_ndarray ' and not self._in_header:
             preface = ''
@@ -1160,7 +1160,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.memory_handling == 'heap' else 'true'
+        is_view = 'false' if expr.variable.on_heap else 'true'
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view)
@@ -1169,7 +1169,7 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        if expr.variable.memory_handling == 'alias':
+        if expr.variable.is_alias:
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
 
@@ -1419,7 +1419,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.memory_handling == 'alias' and not a.is_ndarray) or a.is_optional or \
+        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     def _print_FunctionCall(self, expr):

@@ -1229,16 +1229,16 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
-        rank           = var.rank
+        rank            = var.rank
         memory_handling = var.memory_handling
-        shape          = var.alloc_shape
-        is_target      = var.is_target
-        is_const       = var.is_const
-        is_optional    = var.is_optional
-        is_private     = var.is_private
-        is_static      = expr.static
-        is_external    = expr.external
-        intent         = expr.intent
+        shape           = var.alloc_shape
+        is_target       = var.is_target
+        is_const        = var.is_const
+        is_optional     = var.is_optional
+        is_private      = var.is_private
+        is_static       = expr.static
+        is_external     = expr.external
+        intent          = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
@@ -1286,7 +1286,7 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        if not(is_static) and (memory_handling == 'heap' or (var.shape is None)):
+        if not(is_static) and (var.on_heap or (var.shape is None)):
             s = ''
 
         # Default empty strings
@@ -1308,10 +1308,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute allocatable string
         if not is_static:
-            if memory_handling == 'alias':
+            if var.is_alias:
                 allocatablestr = ', pointer'
 
-            elif memory_handling == 'heap' and not intent:
+            elif var.on_heap and not intent:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1332,12 +1332,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
-            (not(memory_handling in ('heap', 'alias')) or is_static or memory_handling == 'stack')):
+        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or var.on_stack)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
-            (not(memory_handling in ('heap', 'alias')) or is_static or memory_handling == 'stack')):
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or var.on_stack)):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
@@ -1348,10 +1346,10 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and memory_handling == 'heap' and intent:
+        elif (rank > 0) and var.on_heap and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and memory_handling in ('heap', 'alias'):
+        elif (rank > 0) and var.on_heap or var.is_alias:
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
@@ -1547,7 +1545,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if var.memory_handling == 'alias':
+        if var.is_alias:
             return ''
         else:
             var_code = self._print(var)

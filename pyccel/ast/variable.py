@@ -53,7 +53,7 @@ class Variable(PyccelAstNode):
     memory_handling: str
         'heap' is used for arrays, if we need to allocate memory on the heap
         'stack' if memory should be allocated on the stack, represents stack arrays and scalars
-        'alias' if object is a pointer
+        'alias' if object allows access to memory stored in another variable
         [Default value: 'stack']
 
     is_target: bool
@@ -239,7 +239,7 @@ class Variable(PyccelAstNode):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.memory_handling == 'alias'
+        return self.is_alias
 
     def set_changeable_shape(self):
         """
@@ -275,6 +275,32 @@ class Variable(PyccelAstNode):
         if memory_handling not in ('heap', 'stack', 'alias'):
             raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
         self._memory_handling = memory_handling
+
+    @property
+    def is_alias(self):
+        return self.memory_handling == 'alias'
+
+    @property
+    def on_heap(self):
+        return self.memory_handling == 'heap'
+
+    @property
+    def on_stack(self):
+        """ Indicates if memory is allocated on the stack
+        """
+        return self.memory_handling == 'stack'
+
+    @property
+    def is_stack_array(self):
+        """ Indicates if the variable is located on stack and is an array
+        """
+        return self.on_stack and self.rank > 0
+
+    @property
+    def is_stack_scalar(self):
+        """ Indicates if the variable is located on stack and is a scalar
+        """
+        return self.on_stack and self.rand == 0
 
     @property
     def cls_base(self):
@@ -380,16 +406,16 @@ class Variable(PyccelAstNode):
         """inspects the variable."""
 
         print('>>> Variable')
-        print( '  name                = {}'.format(self.name))
-        print( '  dtype               = {}'.format(self.dtype))
-        print( '  precision           = {}'.format(get_final_precision(self)))
-        print( '  rank                = {}'.format(self.rank))
-        print( '  order               = {}'.format(self.order))
-        print( '  memory_handeling    = {}'.format(self.memory_handling))
-        print( '  shape               = {}'.format(self.shape))
-        print( '  cls_base            = {}'.format(self.cls_base))
-        print( '  is_target           = {}'.format(self.is_target))
-        print( '  is_optional         = {}'.format(self.is_optional))
+        print( '  name               = {}'.format(self.name))
+        print( '  dtype              = {}'.format(self.dtype))
+        print( '  precision          = {}'.format(get_final_precision(self)))
+        print( '  rank               = {}'.format(self.rank))
+        print( '  order              = {}'.format(self.order))
+        print( '  memory_handling    = {}'.format(self.memory_handling))
+        print( '  shape              = {}'.format(self.shape))
+        print( '  cls_base           = {}'.format(self.cls_base))
+        print( '  is_target          = {}'.format(self.is_target))
+        print( '  is_optional        = {}'.format(self.is_optional))
         print( '<<<')
 
     def use_exact_precision(self):
@@ -581,7 +607,7 @@ class HomogeneousTupleVariable(TupleVariable):
         """
         Indicates if the shape can change in the i-th dimension
         """
-        return self.memory_handling == 'alias' and i == (self.rank-1)
+        return self.is_alias and i == (self.rank-1)
 
     def __len__(self):
         return self.shape[0]
