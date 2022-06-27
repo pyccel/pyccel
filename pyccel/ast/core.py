@@ -2920,10 +2920,14 @@ class FunctionAddress(FunctionDef):
 
     @property
     def memory_handling(self):
+        """ Returns the memory handling of the instance of FunctionAddress
+        """
         return self._memory_handling
 
     @property
     def is_alias(self):
+        """ Indicates if the instance of FunctionAddress is an alias
+        """
         return self.memory_handling == 'alias'
 
     @property
