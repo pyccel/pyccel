@@ -2821,6 +2821,7 @@ class FCodePrinter(CodePrinter):
         args   = expr.args
         func_results  = func.results
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+        is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
         if (not self._additional_code):
             self._additional_code = ''
@@ -2879,17 +2880,16 @@ class FCodePrinter(CodePrinter):
             args_code = ', '.join(args_strs+results_strs)
             code = '{name}({args})'.format( name = f_name,
                                             args = args_code )
-            if len(func_results) != 1 or func_results[0].rank>0:
+            if not is_function:
                 code = 'call {}\n'.format(code)
-                func_results = []
 
         if not parent_assign:
-            if len(func_results) <= 1:
+            if is_function or len(func_results) == 0:
                 return code
             else:
                 self._additional_code += code
                 return self._print(tuple(results))
-        elif len(func_results) == 1:
+        elif is_function:
             return '{0} = {1}\n'.format(self._print(results[0]), code)
         else:
             return code
