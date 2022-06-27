@@ -45,7 +45,7 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 elif platform.system() == 'Windows':
-    for p in _acceptable_bin_paths:
+    for p in _acceptable_bin_paths.split(';'):
         print(p)
         os.add_dll_directory(p)
 
