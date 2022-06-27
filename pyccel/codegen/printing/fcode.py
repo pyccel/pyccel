@@ -1348,7 +1348,7 @@ class FCodePrinter(CodePrinter):
         elif (rank > 0) and var.on_heap and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and var.on_heap or var.is_alias:
+        elif (rank > 0) and (var.on_heap or var.is_alias):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
