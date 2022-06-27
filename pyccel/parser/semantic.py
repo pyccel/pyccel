@@ -54,6 +54,7 @@ from pyccel.ast.core import Iterable
 from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
+from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -3706,8 +3707,8 @@ class SemanticParser(BasicParser):
         return NumpyMatmul(a, b)
 
     def _visit_Assert(self, expr, **settings):
-        expr.clear_user_nodes()
-        return expr
+        test = self._visit(expr.test, **settings)
+        return Assert(test)
 #==============================================================================
 
 

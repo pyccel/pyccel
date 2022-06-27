@@ -3819,8 +3819,9 @@ class Assert(Basic):
     _attribute_nodes = ('_test',)
     #TODO add type check in the semantic stage
     def __init__(self, test):
-        if pyccel_stage =='semantic' and test.dtype is not NativeBool():
-            test = PythonBool(test)
+        if pyccel_stage == 'semantic':
+            if test.dtype is not NativeBool():
+                test = PythonBool(test)
         self._test = test
         super().__init__()
     @property

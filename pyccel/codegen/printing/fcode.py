@@ -2307,7 +2307,7 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        prolog = "if ( .not. {0}) then".format(self._print(expr.test))
+        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
         body = 'stop'
         epilog = 'end if'
         return ('{prolog}\n'
