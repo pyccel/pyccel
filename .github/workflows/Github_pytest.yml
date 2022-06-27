@@ -60,9 +60,9 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Test failing
         run: |
-          pyccel module_init.py
+          pyccel module_init.py --language=c
           echo "Done 1"
-          pyccel runtest_module_init.py
+          pyccel runtest_module_init.py --language=c
           echo "Done 2"
           ./runtest_module_init
         shell: bash
