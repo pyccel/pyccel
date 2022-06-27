@@ -4122,11 +4122,11 @@ def test_numpy_prod_array_like_1d(language):
     assert epyccel_func(integer) == get_prod(integer)
     assert epyccel_func(integer32) == get_prod(integer32)
     assert epyccel_func(integer64) == get_prod(integer64)
-    assert epyccel_func(fl) == get_prod(fl)
-    assert epyccel_func(fl32) == get_prod(fl32)
-    assert epyccel_func(fl64) == get_prod(fl64)
-    assert (epyccel_func(cmplx64) == get_prod(cmplx64))
-    assert (epyccel_func(cmplx128) == get_prod(cmplx128))
+    assert np.isclose(epyccel_func(fl), get_prod(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(fl32), get_prod(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(epyccel_func(fl64), get_prod(fl64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(cmplx64), get_prod(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -4196,11 +4196,11 @@ def test_numpy_prod_array_like_2d(language):
     assert epyccel_func(integer) == get_prod(integer)
     assert epyccel_func(integer32) == get_prod(integer32)
     assert epyccel_func(integer64) == get_prod(integer64)
-    assert epyccel_func(fl) == get_prod(fl)
-    assert epyccel_func(fl32) == get_prod(fl32)
-    assert epyccel_func(fl64) == get_prod(fl64)
-    assert (epyccel_func(cmplx64) == get_prod(cmplx64))
-    assert (epyccel_func(cmplx128) == get_prod(cmplx128))
+    assert np.isclose(epyccel_func(fl), get_prod(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(fl32), get_prod(fl32), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(epyccel_func(fl64), get_prod(fl64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(epyccel_func(cmplx64), get_prod(cmplx64), rtol=RTOL32, atol=ATOL32)
+    assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
