@@ -278,10 +278,14 @@ class Variable(PyccelAstNode):
 
     @property
     def is_alias(self):
+        """ Indicates if variable is an alias
+        """
         return self.memory_handling == 'alias'
 
     @property
     def on_heap(self):
+        """ Indicates if memory is allocated on the heap
+        """
         return self.memory_handling == 'heap'
 
     @property
@@ -300,7 +304,7 @@ class Variable(PyccelAstNode):
     def is_stack_scalar(self):
         """ Indicates if the variable is located on stack and is a scalar
         """
-        return self.on_stack and self.rand == 0
+        return self.on_stack and self.rank == 0
 
     @property
     def cls_base(self):
