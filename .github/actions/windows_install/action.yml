@@ -59,7 +59,7 @@ runs:
         pushd "$MSMPI_INC"
         sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
         sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
-        gfortran -c -D_WIN64 -D INT_PTR_KIND`(`)=8 -fno-range-check mpi.f90
+        gfortran -c -D_WIN64 -D INT_PTR_KIND`(`)=8 -fno-range-check -fallow-invalid-boz  mpi.f90
         popd
         #
         # Generate static libmsmpi.a from msmpi.dll
