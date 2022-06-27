@@ -808,6 +808,15 @@ def test_type_print( language ):
         assert 'float32' in lang_out[3]
         assert 'float64' in lang_out[4]
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
+            pytest.mark.c]
+        )
+    )
+)
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
