@@ -5,7 +5,7 @@
 
 #ifndef         PYC_MATH_C_H
 #define         PYC_MATH_C_H
-
+#include <math.h>
 #include <stdint.h>
 
 /*
@@ -13,13 +13,30 @@
 ** operands of modulo operator.
 */
 
-#define MOD_PYC(N, M) ((N < 0 ^ M < 0) ? (N % M) + M : (N % M))
-#define FMOD_PYC(N, M) ((N < 0 ^ M < 0) ? fmod(N, M) + M : fmod(N, M))
+int64_t             pyc_factorial(int64_t n);
+int64_t             pyc_gcd (int64_t a, int64_t b);
+int64_t             pyc_lcm (int64_t a, int64_t b);
 
-int64_t         pyc_factorial(int64_t n);
-int64_t         pyc_gcd (int64_t a, int64_t b);
-int64_t         pyc_lcm (int64_t a, int64_t b);
-double          pyc_radians(double degrees);
-double          pyc_degrees(double radians);
-
+inline double       pyc_radians(double degrees)
+{
+    return degrees * (M_PI / 180);
+}
+inline double       pyc_degrees(double radians)
+{
+    return radians * (180.0 / M_PI);
+}
+inline int64_t      pyc_modulo(int64_t a, int64_t b){
+        int64_t modulo = a % b;
+        if(!((a < 0) ^ (b < 0)) || modulo == 0)
+            return modulo;
+        else
+            return modulo + b;
+}
+inline double        pyc_fmodulo(double a, double b){
+        double modulo = fmod(a, b);
+        if(!((a < 0) ^ (b < 0)) || modulo == 0)
+            return modulo;
+        else
+            return modulo + b;
+}
 #endif
