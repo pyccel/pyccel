@@ -68,7 +68,7 @@ jobs:
           ls
           pwd
           echo "Calling"
-          python -c "import os; os.add_dll_directory(os.path.join('c','ProgramData','Chocolatey','lib','mingw','tools','install','mingw64','lib'); from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
+          python -c "import os; os.add_dll_directory(os.path.join('c','ProgramData','Chocolatey','lib','mingw','tools','install','mingw64','lib')); from lapack_subroutine import dgetri_test; from numpy import eye; N = 4; A = eye(N,dtype='float64',order='F'); dgetri_test(A); print(A)"
           echo "Executing"
           /d/a/pyccel/pyccel/tests/pyccel/scripts/lapack_subroutine.exe
         shell: bash
