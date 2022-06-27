@@ -951,6 +951,7 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});\n'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
+        
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
@@ -1024,8 +1025,9 @@ class CCodePrinter(CodePrinter):
         else:
             arg_code = ', '.join('{}'.format(self.function_signature(i.var, False))
                         if isinstance(i.var, FunctionAddress)
-                        else '{0}'.format(self.get_declare_type(i.var)) + (i.name if print_arg_names else '')
+                        else '{1}{0}'.format(self.get_declare_type(i.var), 'const ' if i.var.is_const else '') + (i.name if print_arg_names else '')
                         for i in args)
+            # print(arg_code, "\n\n")
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
@@ -1363,12 +1365,15 @@ class CCodePrinter(CodePrinter):
         return ""
 
     def _print_FunctionDef(self, expr):
+       
+
         if expr.is_inline:
             return ''
         self.set_scope(expr.scope)
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
+        
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
@@ -1388,7 +1393,6 @@ class CCodePrinter(CodePrinter):
         for i in expr.imports:
             self.add_import(i)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
-
         parts = [sep,
                  doc_string,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
