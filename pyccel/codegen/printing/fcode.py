@@ -1230,7 +1230,6 @@ class FCodePrinter(CodePrinter):
         # Group the variables by intent
         var = expr.variable
         rank            = var.rank
-        memory_handling = var.memory_handling
         shape           = var.alloc_shape
         is_target       = var.is_target
         is_const        = var.is_const
