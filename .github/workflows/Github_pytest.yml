@@ -69,8 +69,15 @@ jobs:
         working-directory: ./tests/pyccel/scripts
       - name: Run exe
         run: |
-          dir
-          .\runtest_inoutfunc.exe
+          try
+          {
+              .\runtest_inoutfunc.exe
+          }
+          catch
+          {
+              Write-Output "Something threw an exception or used Write-Error"
+              Write-Output $_
+          }
         working-directory: ./tests/pyccel/scripts
       #- name: Check dependencies
       #  run: |
