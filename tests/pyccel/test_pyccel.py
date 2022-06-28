@@ -51,7 +51,11 @@ def get_python_output(abs_path, cwd = None):
         p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     else:
         p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
-    out, _ = p.communicate()
+    out, err = p.communicate()
+    if p.returncode != 0:
+        print(out)
+        print("---------")
+        print(err)
     assert(p.returncode==0)
     return out
 
@@ -120,7 +124,11 @@ def get_lang_output(abs_path, language):
         return get_python_output(abs_path)
     else:
         p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
-        out, _ = p.communicate()
+        out, err = p.communicate()
+        if p.returncode != 0:
+            print(out)
+            print("---------")
+            print(err)
         assert(p.returncode==0)
         return out
 
