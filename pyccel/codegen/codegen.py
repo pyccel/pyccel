@@ -197,7 +197,6 @@ class Codegen(object):
         # print module header
         if header_ext is not None:
             code = self._printer.doprint(ModuleHeader(self.ast))
-            print(code)
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
@@ -207,7 +206,6 @@ class Codegen(object):
         with open(filename, 'w') as f:
             for line in code:
                 f.write(line)
-        print(code)
 
         # print program
         prog_filename = None
@@ -216,7 +214,6 @@ class Codegen(object):
             fname  = os.path.basename(filename)
             prog_filename = os.path.join(folder,"prog_"+fname)
             code = self._printer.doprint(self.ast.program)
-            print(code)
             with open(prog_filename, 'w') as f:
                 for line in code:
                     f.write(line)
