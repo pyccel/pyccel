@@ -95,7 +95,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
@@ -996,7 +996,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)
-                if lhs.allocatable and not array_declared_in_function:
+                if lhs.allocatable and not array_declared_in_function and not isinstance(rhs, PyccelOperator):
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
                         errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
