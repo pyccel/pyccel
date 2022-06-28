@@ -1235,6 +1235,9 @@ class FCodePrinter(CodePrinter):
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
+        is_alias        = var.is_alias
+        on_heap         = var.on_heap
+        on_stack        = var.on_stack
         is_static       = expr.static
         is_external     = expr.external
         intent          = expr.intent
@@ -1285,7 +1288,7 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        if not(is_static) and (var.on_heap or (var.shape is None)):
+        if not(is_static) and (on_heap or (var.shape is None)):
             s = ''
 
         # Default empty strings
@@ -1307,10 +1310,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute allocatable string
         if not is_static:
-            if var.is_alias:
+            if is_alias:
                 allocatablestr = ', pointer'
 
-            elif var.on_heap and not intent:
+            elif on_heap and not intent:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1331,10 +1334,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or var.on_stack)):
+        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or on_stack)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or var.on_stack)):
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
@@ -1345,10 +1348,10 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and var.on_heap and intent:
+        elif (rank > 0) and on_heap and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and (var.on_heap or var.is_alias):
+        elif (rank > 0) and (on_heap or is_alias):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
