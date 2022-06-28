@@ -167,11 +167,11 @@ This requires that the Command Line Tools (CLT) for Xcode are installed.
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
 We recommend using [Chocolatey](https://chocolatey.org/) to speed up the process, and we provide commands that work in a git-bash sh.
-In an Administrator prompt install git-bash (if needed), a Python3 Anaconda distribution, and a GCC compiler:
+In an Administrator prompt install git-bash (if needed), a Python3 distribution, and a GCC compiler:
 
 ```sh
 choco install git
-choco install anaconda3
+choco install python3
 choco install mingw
 ```
 
@@ -226,16 +226,31 @@ dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
 cd -
 ```
 
-Before installing Pyccel and using it, the Anaconda environment should be activated with:
-
+On Windows it is important that all locations containing DLLs are on the PATH. If you have added any variables to locations which are not on the PATH then you need to add them:
 ```sh
-source /c/tools/Anaconda3/etc/profile.d/conda.sh
-conda activate
+echo $PATH
+export PATH=$LIBRARY_DIR;$PATH
 ```
 
-On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of pyccel below.
+[As of Python 3.8](https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew) it is also important to tell python which directories contain trusted DLLs. In order to use pyccel this should include all folders containing DLLs used by your chosen compiler. The function which communicates this to python is: [`os.add_dll_directory`](https://docs.python.org/3/library/os.html#os.add_dll_directory).
+E.g:
+```python
+import os
+os.add_dll_directory(C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')
+os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')
+```
+
+These commands must be run every time a python instance is opened which will import a pyccel-generated library.
+
+If you use pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
+```sh
+echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" > $SITE_PATH/dll_path.pth
+```
+(The command may need adapting for your installation locations)
 
 ## Installation
+
+On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of pyccel below.
 
 ### From PyPi
 
