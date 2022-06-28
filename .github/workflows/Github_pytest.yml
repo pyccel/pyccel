@@ -62,11 +62,13 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Check dependencies
         run: |
-          pyccel c_arrays.py
+          pyccel complex_func.py --language=c
           ls
-          objdump -x c_arrays.cp39-win_amd64.pyd
+          objdump -x complex_func.cp39-win_amd64.pyd
+          objdump -x complex_func.cp39-win_amd64.pyd | Get-Content -Filter "*DLL Name*"
+          python -c "import complex_func"
         shell: bash
-        working-directory: ./tests/pyccel/scripts
+        working-directory: ./tests/epyccel/modules
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
