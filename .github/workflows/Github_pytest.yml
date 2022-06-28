@@ -57,12 +57,14 @@ jobs:
       - name: See python config
         run: |
           python -c "import sys; print(sys.prefix); print(sys.exec_prefix)"
-      #- name: Install dependencies
-      #  uses: ./.github/actions/windows_install
-      #- name: Install python dependencies
-      #  uses: ./.github/actions/pip_installation
-      #- name: Fortran/C tests with pytest
-      #  uses: ./.github/actions/pytest_run
+          ls C:\hostedtoolcache\windows\Python\3.8.10\x64
+        shell: bash
+      - name: Install dependencies
+        uses: ./.github/actions/windows_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
       #  uses: ./.github/actions/pytest_run_python
       #- name: Parallel tests with pytest

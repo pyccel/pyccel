@@ -20,6 +20,7 @@ runs:
         $WEB_ADDRESS="https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64"
         $LIBRARY_DIR="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
         echo $LIBRARY_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo $LIBRARY_DIR | Out-File -FilePath C:\hostedtoolcache\windows\Python\3.8.10\x64\mingw_path.pth -Encoding utf8 -Append
         curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR\\libblas.dll
         curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR\\liblapack.dll
         #
