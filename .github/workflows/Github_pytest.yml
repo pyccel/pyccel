@@ -65,8 +65,12 @@ jobs:
         run: |
           pyccel runtest_inoutfunc.py
           ls
-          ./runtest_inoutfunc.exe
         shell: bash
+        working-directory: ./tests/pyccel/scripts
+      - name: Run exe
+        run: |
+          dir
+          .\runtest_inoutfunc.exe
         working-directory: ./tests/pyccel/scripts
       #- name: Check dependencies
       #  run: |
