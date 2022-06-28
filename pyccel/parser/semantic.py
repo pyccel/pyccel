@@ -863,8 +863,8 @@ class SemanticParser(BasicParser):
 
             if any(v.is_alias for v in elem_vars):
                 d_lhs['memory_handling'] = 'alias'
-            elif d_lhs.get('memory_handling', None) == 'stack':
-                d_lhs['memory_handling'] = 'stack'
+            else:
+                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
 
             if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
@@ -2367,9 +2367,10 @@ class SemanticParser(BasicParser):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
                     #TODO: Avoid writing the default variables here
-                    d['memory_handling'] = 'stack'
                     if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
                         d['memory_handling'] = 'alias'
+                    else:
+                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
