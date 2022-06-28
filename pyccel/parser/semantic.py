@@ -435,7 +435,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
             d_var['cls_base'      ] = TupleClass
-            if any(getattr(a, 'on_heap', None) for a in expr.args):
+            if any(getattr(a, 'on_heap', False) for a in expr.args):
                 d_var['memory_handling'] = 'heap'
             else:
                 d_var['memory_handling'] = 'stack'
@@ -471,7 +471,7 @@ class SemanticParser(BasicParser):
 
             var = expr.internal_var
 
-            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else var.memory_handling
+            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             d_var['datatype'      ] = var.dtype
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
