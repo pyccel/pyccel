@@ -55,34 +55,14 @@ jobs:
             # is chosen
             python-version: 3.9
       # Uncomment to examine DLL requirements
-      - name: Install mingw tools
-        uses: msys2/setup-msys2@v2
+      #- name: Install mingw tools
+      #  uses: msys2/setup-msys2@v2
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Check pyccel tests
-        run: |
-          pyccel runtest_inoutfunc.py
-          ls
-          objdump -x runtest_inoutfunc.exe  | grep "DLL Name"
-          ./runtest_inoutfunc.exe
-        shell: bash
-        working-directory: ./tests/pyccel/scripts
-      #- name: Check dependencies
-      #  run: |
-      #    pyccel complex_func.py --language=c
-      #    ls
-      #    objdump -x complex_func.cp39-win_amd64.pyd | grep "DLL Name"
-      #    pyccel Module_1.py --language=c
-      #    ls
-      #    objdump -x Module_1.cp39-win_amd64.pyd | grep "DLL Name"
-      #    python -c "import Module_1; print('import ok')"
-      #    python -c "import complex_func; print('import ok')"
-      #  shell: bash
-      #  working-directory: ./tests/epyccel/modules
-      #- name: Fortran/C tests with pytest
-      #  uses: ./.github/actions/pytest_run
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
       #  uses: ./.github/actions/pytest_run_python
       #- name: Parallel tests with pytest
