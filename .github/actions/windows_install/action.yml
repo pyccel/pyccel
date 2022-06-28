@@ -19,11 +19,12 @@ runs:
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
         echo "import os`nos.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')`nprint('works')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding utf8
         Get-Content -Path $PYTHON_SITE_PATH\\dll_path.pth
-        dir "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
-        echo "-------------------------------------------------------------------------"
-        dir "C:\ProgramData\chocolatey\lib\mingw"
-        echo "-------------------------------------------------------------------------"
-        Get-ChildItem -Path "C:\ProgramData\chocolatey\lib\mingw\*.dll" -Recurse
+        #dir "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
+        #echo "-------------------------------------------------------------------------"
+        #dir "C:\ProgramData\chocolatey\lib\mingw"
+        #echo "-------------------------------------------------------------------------"
+        #Get-ChildItem -Path "C:\ProgramData\chocolatey\lib\mingw\*.dll" -Recurse
+        python -c "print('hello')"
       shell: powershell
     - name: Install Lapack
       run: |
