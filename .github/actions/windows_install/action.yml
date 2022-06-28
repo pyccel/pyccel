@@ -35,6 +35,7 @@ runs:
         curl $WEB_ADDRESS/libblas.dll -o ${Env:LIBRARY_DIR}\\libblas.dll
         curl $WEB_ADDRESS/liblapack.dll -o ${Env:LIBRARY_DIR}\\liblapack.dll
         objdump -x ${Env:LIBRARY_DIR}\\liblapack.dll
+        objdump -x ${Env:LIBRARY_DIR}\\libblas.dll
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
         cd ${Env:LIBRARY_DIR}
