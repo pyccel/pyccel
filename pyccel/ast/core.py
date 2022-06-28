@@ -1852,7 +1852,7 @@ class FunctionDefArgument(PyccelAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value', '_is_const')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value')
     _attribute_nodes = ('_value','_var')
 
     def __init__(self, name, *, value = None, kwonly=False, annotation=None):
@@ -1867,7 +1867,6 @@ class FunctionDefArgument(PyccelAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
-        self._is_const = True
         super().__init__()
 
     @property
@@ -1916,20 +1915,6 @@ class FunctionDefArgument(PyccelAstNode):
         (if not then it must be provided)
         """
         return self._value is not None
-    
-    @property
-    def is_const(self):
-        """ Indicates whether the argument has been modified
-        (if not then it can be declared as a constant)
-        """
-        return self._is_const
-    
-    @is_const.setter
-    def is_const(self, is_const):
-        
-        if not isinstance(is_const, bool):
-            raise TypeError("is_const must be a boolean")
-        self._is_const = is_const
 
     def __str__(self):
         if self.has_default:

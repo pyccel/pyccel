@@ -2967,26 +2967,6 @@ class SemanticParser(BasicParser):
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
-        # Check if an argument is modified
-        
-        def check_if_const(arguments, code_block):
-            lines = code_block.body
-            for line in lines:
-                if isinstance(line, For) :
-                    check_if_const(arguments, line.body)
-                    
-                if isinstance(line, Assign):
-                    for arg in arguments:
-                        if (isinstance(line.lhs, PyccelSymbol) and line.lhs == arg.var)\
-                            or (isinstance(line.lhs, IndexedElement) and line.lhs.base == arg.var)\
-                            or (isinstance(line.rhs, FunctionCall) and arg.var in [nested_arg.value for nested_arg in line.rhs._arguments]):
-                                arg.is_const = False
-                                print('mutated')
-                                break
-        arguments = expr.arguments
-        check_if_const(arguments, expr.body)
-
-
         args_number = len(expr.arguments)
         templates = self.scope.find_all('templates')
         if decorators['template']:
@@ -3104,7 +3084,7 @@ class SemanticParser(BasicParser):
                         d_var = self._infere_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
                         d_var['is_argument'] = True
-                        d_var['is_const'] = ah.is_const or a.is_const
+                        d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
                         if not d_var['cls_base']:
                             d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )

@@ -623,4 +623,3 @@ if __name__ == '__main__':
     print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
     print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
     print(parse(stmts='#$ header function _f(int, int [:,:])'))
-
