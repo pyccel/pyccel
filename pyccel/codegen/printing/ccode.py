@@ -1388,7 +1388,7 @@ class CCodePrinter(CodePrinter):
         for i in expr.imports:
             self.add_import(i)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
-        
+
         parts = [sep,
                  doc_string,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
