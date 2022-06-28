@@ -64,7 +64,7 @@ jobs:
         run: |
           pyccel c_arrays.py
           ls
-          objdump c_arrays.pyd
+          objdump -x c_arrays.cp39-win_amd64.pyd
         shell: bash
         working-directory: ./tests/pyccel/scripts
       #- name: Fortran/C tests with pytest
