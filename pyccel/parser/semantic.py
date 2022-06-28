@@ -893,7 +893,7 @@ class SemanticParser(BasicParser):
             rhs.is_target = not rhs.is_alias
 
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
-                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'memory_handling', False) == 'alias'):
+                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_alias', False)):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
