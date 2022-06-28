@@ -63,7 +63,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Investigate lapack
         run: |
-          pyccel lapack_subroutine
+          pyccel lapack_subroutine.py
           objdump -x lapack_subroutine.exe | grep "DLL Name"
         shell: bash
         working-directory: ./tests/pyccel/scripts
