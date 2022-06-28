@@ -13,19 +13,19 @@ runs:
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
-    - name: Add DLL paths
-      run: |
-        $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
-        $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
-        echo "import os`nos.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')`nprint('works')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding utf8
-        Get-Content -Path $PYTHON_SITE_PATH\\dll_path.pth
-        #dir "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
-        #echo "-------------------------------------------------------------------------"
-        #dir "C:\ProgramData\chocolatey\lib\mingw"
-        #echo "-------------------------------------------------------------------------"
-        #Get-ChildItem -Path "C:\ProgramData\chocolatey\lib\mingw\*.dll" -Recurse
-        python -c "print('hello')"
-      shell: powershell
+      #- name: Add DLL paths
+      #  run: |
+      #    $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
+      #    $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
+      #    echo "import os`nos.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib')`nprint('works')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding utf8
+      #    Get-Content -Path $PYTHON_SITE_PATH\\dll_path.pth
+      #    #dir "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
+      #    #echo "-------------------------------------------------------------------------"
+      #    #dir "C:\ProgramData\chocolatey\lib\mingw"
+      #    #echo "-------------------------------------------------------------------------"
+      #    #Get-ChildItem -Path "C:\ProgramData\chocolatey\lib\mingw\*.dll" -Recurse
+      #    python -c "print('hello')"
+      #  shell: powershell
     - name: Install Lapack
       run: |
         #
