@@ -55,18 +55,22 @@ jobs:
             # is chosen
             python-version: 3.9
       # Uncomment to examine DLL requirements
-      #- name: Install mingw tools
-      #  uses: msys2/setup-msys2@v2
+      - name: Install mingw tools
+        uses: msys2/setup-msys2@v2
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
+      - name: Investigate lapack
+        run: |
+          pyccel lapack_subroutine
+          objdump -x lapack_subroutine.exe | grep "DLL Name"
+      #- name: Fortran/C tests with pytest
+      #  uses: ./.github/actions/pytest_run
+      #- name: Python tests with pytest
+      #  uses: ./.github/actions/pytest_run_python
+      #- name: Parallel tests with pytest
+      #  uses: ./.github/actions/pytest_parallel
 
   #MacOSX:
 
