@@ -65,6 +65,8 @@ jobs:
         run: |
           pyccel lapack_subroutine
           objdump -x lapack_subroutine.exe | grep "DLL Name"
+        shell: bash
+        working-directory: ./tests/pyccel/scripts
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
