@@ -66,7 +66,7 @@ jobs:
           ls
           objdump c_arrays.pyd
         shell: bash
-        working-directory: ./test/pyccel/scripts
+        working-directory: ./tests/pyccel/scripts
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
