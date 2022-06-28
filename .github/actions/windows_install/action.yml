@@ -34,6 +34,7 @@ runs:
         $WEB_ADDRESS="https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64"
         curl $WEB_ADDRESS/libblas.dll -o ${Env:LIBRARY_DIR}\\libblas.dll
         curl $WEB_ADDRESS/liblapack.dll -o ${Env:LIBRARY_DIR}\\liblapack.dll
+        objdump -x ${Env:LIBRARY_DIR}\\liblapack.dll
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
         cd ${Env:LIBRARY_DIR}
