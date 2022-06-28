@@ -64,9 +64,12 @@ jobs:
         run: |
           pyccel complex_func.py --language=c
           ls
-          objdump -x complex_func.cp39-win_amd64.pyd
-          objdump -x complex_func.cp39-win_amd64.pyd | Get-Content -Filter "*DLL Name*"
-          python -c "import complex_func"
+          objdump -x complex_func.cp39-win_amd64.pyd | grep "DLL Name"
+          pyccel Module_1.py --language=c
+          ls
+          objdump -x Module_1.cp39-win_amd64.pyd | grep "DLL Name"
+          python -c "import Module_1; print('import ok')"
+          python -c "import complex_func; print('import ok')"
         shell: bash
         working-directory: ./tests/epyccel/modules
       #- name: Fortran/C tests with pytest
