@@ -2866,7 +2866,7 @@ class FunctionAddress(FunctionDef):
         if object is an optional argument of a function [Default value: False]
 
     memory_handling: str
-        must be \'heap\', \'stack\' or \'alias\' [Default value: 'stack']
+        must be 'heap', 'stack' or 'alias' [Default value: 'stack']
 
     Examples
     --------
