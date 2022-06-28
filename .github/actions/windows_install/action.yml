@@ -15,7 +15,9 @@ runs:
       shell: powershell
     - name: Add DLL paths
       run: |
-        $PYTHON_SITE_PATH=(python -c "import sys; print(sys.prefix)")\\lib\\site-packages
+        $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
+        echo $PYTHON_PREFIX
+        $PYTHON_SITE_PATH=$PYTHON_PREFIX\\lib\\site-packages
         echo $PYTHON_SITE_PATH
         dir $PYTHON_SITE_PATH
         echo $PYTHON_SITE_PATH\\dll_path.pth
