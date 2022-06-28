@@ -55,8 +55,8 @@ jobs:
             # is chosen
             python-version: 3.9
       # Uncomment to examine DLL requirements
-      #- name: Install mingw tools
-      #  uses: msys2/setup-msys2@v2
+      - name: Install mingw tools
+        uses: msys2/setup-msys2@v2
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -65,19 +65,9 @@ jobs:
         run: |
           pyccel runtest_inoutfunc.py
           ls
+          objdump -x runtest_inoutfunc.exe  | grep "DLL Name"
+          ./runtest_inoutfunc.exe
         shell: bash
-        working-directory: ./tests/pyccel/scripts
-      - name: Run exe
-        run: |
-          try
-          {
-              .\runtest_inoutfunc.exe
-          }
-          catch
-          {
-              Write-Output "Something threw an exception or used Write-Error"
-              Write-Output $_
-          }
         working-directory: ./tests/pyccel/scripts
       #- name: Check dependencies
       #  run: |

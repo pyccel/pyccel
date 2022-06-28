@@ -19,6 +19,7 @@ runs:
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
         echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
         Get-Content -Path $PYTHON_SITE_PATH\\dll_path.pth
+        echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         #dir "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
         #echo "-------------------------------------------------------------------------"
         #dir "C:\ProgramData\chocolatey\lib\mingw"
