@@ -3050,7 +3050,6 @@ class SemanticParser(BasicParser):
             arg            = None
             arguments      = expr.arguments
             header_results = m.results
-            # arguments = expr.arguments
             if len(interfaces) > 1:
                 name = interface_name + '_' + str(i).zfill(2)
             scope = self.create_new_function_scope(name, decorators = decorators,
