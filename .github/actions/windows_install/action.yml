@@ -30,12 +30,13 @@ runs:
     - name: Add DLL paths to python
       run: |
         # Add DLL paths for python imports
-        $PYTHON_EXE_PATH=(Get-Command python).Source
-        $PYTHON_PATH=(Split-Path -Path ${PYTHON_EXE_PATH})
-        $PYTHON_SITE_PATH="$PYTHON_PATH\lib\site-packages"
+        which python
+        PYTHON_EXE_PATH=$(which python)
+        PYTHON_PATH=$(dirname ${PYTHON_EXE_PATH})
+        PYTHON_SITE_PATH="$PYTHON_PATH/lib/site-packages"
         echo $PYTHON_SITE_PATH
-        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin'); print('break pytest!')" | Out-File -FilePath $PYTHON_SITE_PATH\dll_path.pth -Encoding utf8 -Append
-      shell: powershell
+        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin'); print('break pytest!')" > $PYTHON_SITE_PATH\dll_path.pth
+      shell: ${{inputs.shell_cmd}}
     - name: Install Lapack
       run: |
         #
