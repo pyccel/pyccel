@@ -25,7 +25,7 @@ def test_return_arrays(language):
     @types('complex128', 'complex128')
     def return_array(a, b):
         from numpy import array
-        x = array([a,b])
+        x = array([a,b], dtype=type(a))
         return x
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
