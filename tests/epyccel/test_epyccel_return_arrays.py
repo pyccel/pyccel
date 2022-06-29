@@ -1,10 +1,8 @@
-# pylint: disable=wrong-import-position, disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import sys
 from numpy.random import randint, uniform
 import numpy as np
 import pytest
-
-sys.path.append('recognised_functions')
 
 from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
@@ -59,32 +57,32 @@ def test_return_arrays(language):
     assert np.allclose(f_bl_true_output, test_bool_true_output)
     assert np.allclose(f_bl_false_output, test_bool_false_output)
 
-    assert matching_types(f_bl_true_output, test_bool_true_output)
-    assert matching_types(f_bl_false_output, test_bool_false_output)
+    assert f_bl_false_output.dtype == test_bool_false_output.dtype
+    assert f_bl_true_output.dtype == test_bool_true_output.dtype
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = return_array(integer, integer)
 
     assert np.allclose(f_integer_output, test_int_output)
-    assert matching_types(f_integer_output, test_int_output)
+    assert f_integer_output.dtype == test_int_output.dtype
 
     f_integer8_output = epyccel_func(integer8, integer8)
     test_int8_output = return_array(integer8, integer8)
 
     assert np.allclose(f_integer8_output, test_int8_output)
-    assert matching_types(f_integer8_output, test_int8_output)
+    assert f_integer8_output.dtype == test_int8_output.dtype
 
     f_integer16_output = epyccel_func(integer16, integer16)
     test_int16_output = return_array(integer16, integer16)
 
     assert np.allclose(f_integer16_output, test_int16_output)
-    assert matching_types(f_integer16_output, test_int16_output)
+    assert f_integer16_output.dtype == test_int16_output.dtype
 
     f_integer32_output = epyccel_func(integer32, integer32)
     test_int32_output = return_array(integer32, integer32)
 
     assert np.allclose(f_integer32_output, test_int32_output)
-    assert matching_types(f_integer32_output, test_int32_output)
+    assert f_integer32_output.dtype == test_int32_output.dtype
 
     # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -92,37 +90,37 @@ def test_return_arrays(language):
         test_int64_output = return_array(integer64, integer64)
 
         assert np.allclose(f_integer64_output, test_int64_output)
-        assert matching_types(f_integer64_output, test_int64_output)
+        assert f_integer64_output.dtype == test_int64_output.dtype
 
     f_fl_output = epyccel_func(fl, fl)
     test_float_output = return_array(fl, fl)
 
     assert np.allclose(f_fl_output, test_float_output)
-    assert matching_types(f_fl_output, test_float_output)
+    assert f_fl_output.dtype == test_float_output.dtype
 
     f_fl32_output = epyccel_func(fl32, fl32)
     test_float32_output = return_array(fl32, fl32)
 
     assert np.allclose(f_fl32_output, test_float32_output)
-    assert matching_types(f_fl32_output, test_float32_output)
+    assert f_fl32_output.dtype == test_float32_output.dtype
 
     f_fl64_output = epyccel_func(fl64, fl64)
     test_float64_output = return_array(fl64, fl64)
 
     assert np.allclose(f_fl64_output, test_float64_output)
-    assert matching_types(f_fl64_output, test_float64_output)
+    assert f_fl64_output.dtype == test_float64_output.dtype
 
     f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
     test_cmplx64_output = return_array(cmplx64, cmplx64)
 
     assert np.allclose(f_cmplx64_output, test_cmplx64_output)
-    assert matching_types(f_cmplx64_output, test_cmplx64_output)
+    assert f_cmplx64_output.dtype == test_cmplx64_output.dtype
 
     f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
     test_cmplx128_output = return_array(cmplx128, cmplx128)
 
     assert np.allclose(f_cmplx128_output, test_cmplx128_output)
-    assert matching_types(f_cmplx128_output, test_cmplx128_output)
+    assert f_cmplx128_output.dtype == test_cmplx128_output.dtype
 
 
 @pytest.mark.parametrize( 'language', (

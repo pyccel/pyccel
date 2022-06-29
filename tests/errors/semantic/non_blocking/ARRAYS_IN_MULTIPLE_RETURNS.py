@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, no-value-for-parameter
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy import array
 
 def multi_returns():
