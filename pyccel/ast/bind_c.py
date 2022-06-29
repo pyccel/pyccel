@@ -319,9 +319,8 @@ def wrap_array(var, scope, persistent):
     assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
     variables = [bind_var, *sizes]
     if not persistent:
-        ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
-                is_pointer=True, rank = var.rank,
-                order = var.order, shape = var.shape)
+        ptr_var = var.clone(scope.get_new_name(var.name+'_ptr'),
+                is_pointer=True, allocatable=False)
         alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
         copy  = Assign(ptr_var, var)
         c_loc = CLocFunc(ptr_var, bind_var)
