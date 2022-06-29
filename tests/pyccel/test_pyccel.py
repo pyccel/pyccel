@@ -659,6 +659,11 @@ def test_return_numpy_arrays(language):
     types += [bool]*2 # 2 bools for d
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
+@pytest.mark.xfail()
+def test_return_numpy_arrays_xfails(language):
+    types = [int]*4 # 4 ints for a
+    pyccel_test("scripts/return_numpy_arrays_xfails.py", language=language, output_dtype=types)
+
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),

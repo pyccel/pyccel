@@ -2855,7 +2855,7 @@ class FCodePrinter(CodePrinter):
                 else:
                     results_strs = [self._print(r) for r in lhs_vars.values()]
 
-        elif len(func_results)>1 or (len(func_results)>1 and func_results[0].rank > 0):
+        elif not is_function and len(func_results)!=0:
             results = [r.clone(name = self.scope.get_new_name()) \
                         for r in func_results]
             for var in results:
@@ -2888,7 +2888,7 @@ class FCodePrinter(CodePrinter):
                 return code
             else:
                 self._additional_code += code
-                return self._print(tuple(results))
+                return self._print(results) if len(func_results) == 1 else self._print(tuple(results))
         elif is_function:
             return '{0} = {1}\n'.format(self._print(results[0]), code)
         else:
