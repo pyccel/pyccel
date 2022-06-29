@@ -104,6 +104,8 @@ jobs:
         uses: msys2/setup-msys2@v2
       - name: Install dependencies
         uses: ./.github/actions/windows_install
+        with:
+          shell_cmd: 'bash -l -eo pipefail {0}'
       - name: Install python dependencies
         uses: ./.github/actions/conda_installation
         with:

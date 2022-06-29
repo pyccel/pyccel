@@ -1,4 +1,9 @@
 name: 'Windows installation commands'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: "powershell"
 
 runs:
   using: "composite"
@@ -12,7 +17,7 @@ runs:
         #
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
-      shell: pwsh
+      shell: powershell
     - name: Add DLL paths
       run: |
         # Add DLL paths for program execution
@@ -21,13 +26,15 @@ runs:
         echo $BIN_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo $LIBRARY_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "LIBRARY_DIR=${LIBRARY_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
+      shell: powershell
+    - name: Add DLL paths to python
+      run: |
         # Add DLL paths for python imports
-        $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
-        $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
+        PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
+        PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
         echo $PYTHON_SITE_PATH
-        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin'); print('break pytest!')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
-      shell: pwsh
+        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin'); print('break pytest!')" > $PYTHON_SITE_PATH/dll_path.pth
+      shell: ${{ inputs.shell_cmd }}
     - name: Install Lapack
       run: |
         #
@@ -42,7 +49,7 @@ runs:
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         echo "BLAS/LAPACK installed"
-      shell: pwsh
+      shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
         #
@@ -56,7 +63,7 @@ runs:
         msiexec /quiet /i msmpisdk.msi
         sleep 1
         echo "MS MPI runtime and SDK installed"
-      shell: pwsh
+      shell: powershell
     - name: Setup MPI
       run: |
         #refreshenv
@@ -83,4 +90,4 @@ runs:
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
         popd
         echo "MS MPI set up for use"
-      shell: pwsh
+      shell: powershell
