@@ -2888,7 +2888,10 @@ class FCodePrinter(CodePrinter):
                 return code
             else:
                 self._additional_code += code
-                return self._print(results) if len(func_results) == 1 else self._print(tuple(results))
+                if len(func_results) == 1:
+                    return self._print(results)
+                else:
+                    return self._print(tuple(results))
         elif is_function:
             return '{0} = {1}\n'.format(self._print(results[0]), code)
         else:
