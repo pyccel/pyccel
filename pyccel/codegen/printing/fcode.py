@@ -2861,11 +2861,8 @@ class FCodePrinter(CodePrinter):
             for var in results:
                 self.scope.insert_variable(var)
 
-            if len(func_results) == 1:
-                results_strs = []
-            else:
-                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
-                                for n,r in zip(func_results, results)]
+            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                            for n,r in zip(func_results, results)]
 
         else:
             results_strs = []
@@ -2889,7 +2886,7 @@ class FCodePrinter(CodePrinter):
             else:
                 self._additional_code += code
                 if len(func_results) == 1:
-                    return self._print(results)
+                    return self._print(results[0])
                 else:
                     return self._print(tuple(results))
         elif is_function:
