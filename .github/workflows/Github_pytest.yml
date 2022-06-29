@@ -99,12 +99,24 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
+      # Uncomment to examine DLL requirements with 'objdump -x FILE'
+      - name: Install mingw tools
+        uses: msys2/setup-msys2@v2
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/conda_installation
         with:
           mpi_type: msmpi
+      - name: Test failing case
+        run: |
+          python -c "import sys; print(sys.prefix)"
+          pyccel highorder_functions.py
+          ls
+          objdump -x highorder_functions.*.pyd | grep "DLL Name"
+          python -c "import highorder_functions"
+        working-directory: ./tests
+        shell: bash -l -eo pipefail {0}
       - name: Fortran/C tests with pytest
         run: |
           #echo $GITHUB_ENV
@@ -119,8 +131,8 @@ jobs:
           python -m pytest ndarrays/ -rX
           pyccel-clean
         working-directory: ./tests
-        shell: pwsh
+        shell: bash -l -eo pipefail {0}
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
         with:
-          shell_cmd: pwsh
+          shell_cmd: 'bash -l -eo pipefail {0}'
