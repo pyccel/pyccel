@@ -25,7 +25,7 @@ runs:
         # Add DLL paths for python imports
         $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
-        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
+        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin'); print('break pytest!')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
       shell: powershell
     - name: Install Lapack
       run: |
