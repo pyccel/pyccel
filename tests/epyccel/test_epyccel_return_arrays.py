@@ -135,8 +135,8 @@ def test_return_arrays(language):
 def test_return_arrays_in_expression(language):
     def return_arrays_in_expression():
         def single_return():
-            import numpy as np
-            return np.array([1,2,3,4])
+            from numpy import array
+            return array([1,2,3,4])
         b = single_return()+1
 
         return b
