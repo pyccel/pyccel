@@ -122,3 +122,14 @@ def test_return_arrays(language):
 
     assert np.allclose(f_cmplx128_output, test_cmplx128_output)
     assert matching_types(f_cmplx128_output, test_cmplx128_output)
+
+def test_return_arrays_in_expression():
+    def f():
+        def single_return():
+            return np.array([1,2,3])
+
+        b = single_return()+1
+
+        return b
+
+    epyccel_func = epyccel(f, language=language)
