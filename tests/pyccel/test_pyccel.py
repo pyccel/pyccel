@@ -662,7 +662,7 @@ def test_return_numpy_arrays(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Unravelling loops is not working yet."),
+            pytest.mark.xfail(reason="Hidden memory allocation triggers pyccel error."),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
