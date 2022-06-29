@@ -1640,7 +1640,7 @@ class CCodePrinter(CodePrinter):
             rhs_address = VariableAddress(rhs_var)
         elif isinstance(rhs_var, FunctionCall):
             res = rhs_var.funcdef.results
-            if len(res)!= 0 or res[0].is_pointer:
+            if len(res)!= 0 and res[0].is_pointer:
                 rhs_address = rhs_var
             else:
                 rhs_address = VariableAddress(rhs_var)
