@@ -115,7 +115,7 @@ jobs:
           ls
           objdump -x highorder_functions.*.pyd | grep "DLL Name"
           python -c "import highorder_functions"
-        working-directory: ./tests
+        working-directory: ./tests/epyccel/modules
         shell: bash -l -eo pipefail {0}
       - name: Fortran/C tests with pytest
         run: |
