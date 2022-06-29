@@ -2,6 +2,7 @@
 import sys
 from numpy.random import randint, uniform
 import numpy as np
+import pytest
 
 sys.path.append('recognised_functions')
 
@@ -123,13 +124,25 @@ def test_return_arrays(language):
     assert np.allclose(f_cmplx128_output, test_cmplx128_output)
     assert matching_types(f_cmplx128_output, test_cmplx128_output)
 
-def test_return_arrays_in_expression():
-    def f():
-        def single_return():
-            return np.array([1,2,3])
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Unravelling loops is not working yet."),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_return_arrays_in_expression(language):
+    def return_arrays_in_expression():
+        def single_return():
+            import numpy as np
+            return np.array([1,2,3,4])
         b = single_return()+1
 
         return b
 
-    epyccel_func = epyccel(f, language=language)
+    epyccel_function = epyccel(return_arrays_in_expression, language=language)
+
+    assert np.allclose(epyccel_function(), return_arrays_in_expression())
