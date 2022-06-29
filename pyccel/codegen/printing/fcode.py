@@ -2844,7 +2844,7 @@ class FCodePrinter(CodePrinter):
                     newarg = arg
                 args.append(FunctionCallArgument(newarg, key))
             results = list(lhs_vars.values())
-            if len(func_results) == 1 and func_results[0].rank == 0:
+            if is_function:
                 results_strs = []
             else:
                 # If func body is unknown then we may not know result names
