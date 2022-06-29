@@ -110,6 +110,7 @@ jobs:
           mpi_type: msmpi
       - name: Test failing case
         run: |
+          ls C://Miniconda/envs/test/lib/site-packages
           python -c "import sys; print(sys.prefix)"
           pyccel highorder_functions.py
           ls
