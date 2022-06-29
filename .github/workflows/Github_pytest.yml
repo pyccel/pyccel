@@ -107,8 +107,9 @@ jobs:
           mpi_type: msmpi
       - name: Fortran/C tests with pytest
         run: |
-          echo $GITHUB_ENV
-          which python
+          #echo $GITHUB_ENV
+          #which python
+          python --version
           python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible or external) and c" --ignore=symbolic --ignore=ndarrays
           python -m pytest -rX -m "xdist_incompatible and not parallel and c and not external" --ignore=symbolic --ignore=ndarrays
           pyccel-clean
@@ -118,8 +119,8 @@ jobs:
           python -m pytest ndarrays/ -rX
           pyccel-clean
         working-directory: ./tests
-        shell: "bash -l -eo pipefail {0}"
+        shell: pwsh
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
         with:
-          shell_cmd: "bash -l -eo pipefail {0}"
+          shell_cmd: pwsh
