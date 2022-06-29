@@ -12,7 +12,7 @@ runs:
         #
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1900'':\\n            return [''msvcr140'']' ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${PYTHON_PATH}\\Lib\\distutils\\cygwinccompiler.py -Force
-      shell: powershell
+      shell: pwsh
     - name: Add DLL paths
       run: |
         # Add DLL paths for program execution
@@ -27,7 +27,7 @@ runs:
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
         echo $PYTHON_SITE_PATH
         echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin'); print('break pytest!')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
-      shell: powershell
+      shell: pwsh
     - name: Install Lapack
       run: |
         #
@@ -42,7 +42,7 @@ runs:
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         echo "BLAS/LAPACK installed"
-      shell: powershell
+      shell: pwsh
     - name: Install MS MPI runtime and SDK
       run: |
         #
@@ -56,7 +56,7 @@ runs:
         msiexec /quiet /i msmpisdk.msi
         sleep 1
         echo "MS MPI runtime and SDK installed"
-      shell: powershell
+      shell: pwsh
     - name: Setup MPI
       run: |
         #refreshenv
@@ -83,4 +83,4 @@ runs:
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
         popd
         echo "MS MPI set up for use"
-      shell: powershell
+      shell: pwsh
