@@ -442,7 +442,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             if assigns:
                 # For now we do not handle memory allocation in loop unravelling
-                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_results):
+                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_results):
                     errors.report("Loop unravelling cannot handle extraction of function calls "\
                             "which return arrays as this requires allocation. Please place the function "\
                             "call on its own line",
