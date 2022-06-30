@@ -146,7 +146,7 @@ class Variable(PyccelAstNode):
         self._name = name
 
         if memory_handling not in ('heap', 'stack', 'alias'):
-            raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
+            raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
         self._memory_handling = memory_handling
 
         if not isinstance(is_const, bool):
@@ -273,7 +273,7 @@ class Variable(PyccelAstNode):
     @memory_handling.setter
     def memory_handling(self, memory_handling):
         if memory_handling not in ('heap', 'stack', 'alias'):
-            raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
+            raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
         self._memory_handling = memory_handling
 
     @property
@@ -701,7 +701,7 @@ class InhomogeneousTupleVariable(TupleVariable):
     @Variable.memory_handling.setter
     def memory_handling(self, memory_handling):
         if memory_handling not in ('heap', 'stack', 'alias'):
-            raise TypeError('memory_handling must be \'heap\', \'stack\' or \'alias\'')
+            raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
         self._memory_handling = memory_handling
         for var in self._vars:
             if var.rank > 0:
