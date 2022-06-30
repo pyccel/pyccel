@@ -521,7 +521,13 @@ class PythonCodePrinter(CodePrinter):
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 
-        return '{} = [{} {}]\n'.format(lhs, body, for_loops)
+        name = self._aliases.get(type(expr),'array')
+        if name == 'array':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyArray, 'array'))
+
+        return '{} = {}([{} {}])\n'.format(lhs, name, body, for_loops)
 
     def _print_GeneratorComprehension(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)
