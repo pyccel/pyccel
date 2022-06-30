@@ -953,14 +953,16 @@ class FCodePrinter(CodePrinter):
 
         ind   = self._print(self.scope.get_temporary_variable('int'))
         array = expr.array
-        if array.dtype is NativeBool():
-            mask  = self._print(expr.array)
-        else:
-            mask  = self._print(NumpyBool(expr.array))
-        my_range = self._print(PythonRange(expr.array.shape[expr.dim]))
 
-        stmt  = 'pack([({ind},{ind}={my_range})],{mask})'.format(
-                ind=ind,mask=mask,my_range=my_range)
+        if array.dtype is NativeBool():
+            mask  = self._print(array)
+        else:
+            mask  = self._print(NumpyBool(array))
+
+        my_range = self._print(PythonRange(array.shape[expr.dim]))
+
+        stmt  = 'pack([({ind}, {ind}={my_range})], {mask})'.format(
+                ind = ind, mask = mask, my_range = my_range)
 
         return stmt
 
@@ -968,10 +970,12 @@ class FCodePrinter(CodePrinter):
 
         axis  = expr.axis
         array = expr.array
+
         if array.dtype is NativeBool():
-            mask  = self._print(expr.array)
+            mask  = self._print(array)
         else:
-            mask  = self._print(NumpyBool(expr.array))
+            mask  = self._print(NumpyBool(array))
+
         kind  = self.print_kind(expr)
 
         if axis is None:
@@ -984,10 +988,11 @@ class FCodePrinter(CodePrinter):
                     shape    = ', '.join(self._print(i) for i in expr.shape)
                 stmt = 'reshape([{}], [{}])'.format(stmt, shape)
         else:
-            if expr.array.order == 'C':
-                f_dim = PyccelMinus(LiteralInteger(expr.array.rank), expr.axis, simplify=True)
+            if array.order == 'C':
+                f_dim = PyccelMinus(LiteralInteger(array.rank), expr.axis, simplify=True)
             else:
                 f_dim = PyccelAdd(expr.axis, LiteralInteger(1), simplify=True)
+
             dim   = self._print(f_dim)
             stmt = 'count({}, dim = {}, kind = {})'.format(mask, dim, kind)
 
@@ -1008,17 +1013,21 @@ class FCodePrinter(CodePrinter):
             cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+
         if value_true.dtype != expr.dtype or value_true.precision != expr.precision:
             value_true = cast_func(value_true)
         if value_false.dtype != expr.dtype or value_false.precision != expr.precision:
             value_false = cast_func(value_false)
-        condition  = self._print(expr.condition)
+
+        condition   = self._print(expr.condition)
         value_true  = self._print(value_true)
         value_false = self._print(value_false)
+
         stmt = 'merge({true}, {false}, {cond})'.format(
                 true=value_true,
                 false=value_false,
                 cond=condition)
+
         return stmt
 
     def _print_NumpyArray(self, expr):
