@@ -1145,6 +1145,8 @@ class CCodePrinter(CodePrinter):
         return Slice(start, stop, step)
 
     def _print_PyccelArraySize(self, expr):
+        if expr.arg.is_optional:
+            return '{}->shape[{}]'.format(expr.arg, expr.index)
         return '{}.shape[{}]'.format(expr.arg, expr.index)
 
     def _print_Allocate(self, expr):
