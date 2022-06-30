@@ -98,7 +98,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          auto-activate-base: true
+          activate-environment: test
+          python-version: 3.10
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
       #- name: Install mingw tools
       #  uses: msys2/setup-msys2@v2
