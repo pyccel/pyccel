@@ -109,6 +109,22 @@ jobs:
           PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
           echo $PYTHON_PREFIX
         shell: bash -l -eo pipefail {0}
+      - name: Which python bash activate
+        run: |
+          conda activate test
+          which python
+          python -c "import sys; print(sys.prefix)"
+          PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
+          echo $PYTHON_PREFIX
+          conda deactivate
+        shell: bash
+      - name: Which python bash 2
+        run: |
+          which python
+          python -c "import sys; print(sys.prefix)"
+          PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
+          echo $PYTHON_PREFIX
+        shell: bash -l {0}
       - name: Which python powershell
         run: |
           $PYTHON_EXE_PATH=(Get-Command python).Source
@@ -116,6 +132,16 @@ jobs:
           python -c "import sys; print(sys.prefix)"
           $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
           echo $PYTHON_PREFIX
+        shell: powershell
+      - name: Which python powershell activate
+        run: |
+          conda activate test
+          $PYTHON_EXE_PATH=(Get-Command python).Source
+          echo $PYTHON_EXE_PATH
+          python -c "import sys; print(sys.prefix)"
+          $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
+          echo $PYTHON_PREFIX
+          conda deactivate
         shell: powershell
       - name: Which python pwsh
         run: |
@@ -135,6 +161,7 @@ jobs:
           mpi_type: msmpi
       - name: Test failing case
         run: |
+          which python
           ls C://Miniconda/envs/test/lib/site-packages
           python -c "import sys; print(sys.prefix)"
           pyccel highorder_functions.py
@@ -146,7 +173,7 @@ jobs:
       - name: Fortran/C tests with pytest
         run: |
           #echo $GITHUB_ENV
-          #which python
+          which python
           python --version
           #python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible or external) and c" --ignore=symbolic --ignore=ndarrays
           #python -m pytest -rX -m "xdist_incompatible and not parallel and c and not external" --ignore=symbolic --ignore=ndarrays
