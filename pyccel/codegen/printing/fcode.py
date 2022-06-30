@@ -1099,7 +1099,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var_name = self.scope.get_new_name()
-        var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
+        var = Variable(expr.dtype, var_name, memory_handling = 'stack',
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
@@ -1229,18 +1229,18 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
-        rank        = var.rank
-        allocatable = var.allocatable
-        shape       = var.alloc_shape
-        is_pointer = var.is_pointer
-        is_target = var.is_target
-        is_const = var.is_const
-        is_stack_array = var.is_stack_array
-        is_optional = var.is_optional
-        is_private = var.is_private
-        is_static = expr.static
-        is_external = expr.external
-        intent = expr.intent
+        rank            = var.rank
+        shape           = var.alloc_shape
+        is_target       = var.is_target
+        is_const        = var.is_const
+        is_optional     = var.is_optional
+        is_private      = var.is_private
+        is_alias        = var.is_alias
+        on_heap         = var.on_heap
+        on_stack        = var.on_stack
+        is_static       = expr.static
+        is_external     = expr.external
+        intent          = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
@@ -1288,7 +1288,7 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        if not(is_static) and (allocatable or (var.shape is None)):
+        if not(is_static) and (on_heap or (var.shape is None)):
             s = ''
 
         # Default empty strings
@@ -1310,10 +1310,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute allocatable string
         if not is_static:
-            if is_pointer:
+            if is_alias:
                 allocatablestr = ', pointer'
 
-            elif allocatable and not intent:
+            elif on_heap and not intent:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1334,12 +1334,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or on_stack)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
@@ -1350,10 +1348,10 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and allocatable and intent:
+        elif (rank > 0) and on_heap and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and (allocatable or is_pointer):
+        elif (rank > 0) and (on_heap or is_alias):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
@@ -1549,7 +1547,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if var.is_pointer:
+        if var.is_alias:
             return ''
         else:
             var_code = self._print(var)
@@ -2701,7 +2699,7 @@ class FCodePrinter(CodePrinter):
                 if (not self._additional_code):
                     self._additional_code = ''
                 var_name = self.scope.get_new_name()
-                var = Variable(base.dtype, var_name, is_stack_array = True,
+                var = Variable(base.dtype, var_name, memory_handling = 'stack',
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
