@@ -84,7 +84,12 @@ __all__ = (
     'NumpyMatmul',
     'NumpyAmax',
     'NumpyAmin',
+    'NumpyArange',
+    'NumpyArraySize',
+    'NumpyCountNonZero',
     'NumpyMod',
+    'NumpyNonZero',
+    'NumpyNonZeroElement',
     'NumpyNorm',
     'NumpySum',
     'NumpyOnes',
@@ -97,7 +102,6 @@ __all__ = (
     'NumpyWhere',
     'NumpyZeros',
     'NumpyZerosLike',
-    'NumpyArange'
 )
 
 #=======================================================================================
