@@ -104,6 +104,7 @@ jobs:
         uses: msys2/setup-msys2@v2
       - name: Which python bash
         run: |
+          conda info --envs
           which python
           python -c "import sys; print(sys.prefix)"
           PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
@@ -117,7 +118,7 @@ jobs:
           PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
           echo $PYTHON_PREFIX
           conda deactivate
-        shell: bash
+        shell: bash -l {0}
       - name: Which python bash 2
         run: |
           which python
