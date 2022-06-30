@@ -102,6 +102,29 @@ jobs:
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
       - name: Install mingw tools
         uses: msys2/setup-msys2@v2
+      - name: Which python bash
+        run: |
+          which python
+          python -c "import sys; print(sys.prefix)"
+          PYTHON_PREFIX=$(python -c "import sys; print(sys.prefix)")
+          echo $PYTHON_PREFIX
+        shell: bash -l -eo pipefail {0}
+      - name: Which python powershell
+        run: |
+          $PYTHON_EXE_PATH=(Get-Command python).Source
+          echo $PYTHON_EXE_PATH
+          python -c "import sys; print(sys.prefix)"
+          $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
+          echo $PYTHON_PREFIX
+        shell: powershell
+      - name: Which python pwsh
+        run: |
+          $PYTHON_EXE_PATH=(Get-Command python).Source
+          echo $PYTHON_EXE_PATH
+          python -c "import sys; print(sys.prefix)"
+          $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
+          echo $PYTHON_PREFIX
+        shell: pwsh
       - name: Install dependencies
         uses: ./.github/actions/windows_install
         with:
