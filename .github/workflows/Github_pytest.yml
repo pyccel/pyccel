@@ -100,9 +100,6 @@ jobs:
           auto-update-conda: true
           activate-environment: test
           python-version: "3.10"
-      # Uncomment to examine DLL requirements with 'objdump -x FILE'
-      #- name: Install mingw tools
-      #  uses: msys2/setup-msys2@v2
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -111,12 +108,9 @@ jobs:
           mpi_type: msmpi
       - name: Fortran/C tests with pytest
         run: |
-          #echo $GITHUB_ENV
-          which python
-          python --version
-          #python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible or external) and c" --ignore=symbolic --ignore=ndarrays
-          #python -m pytest -rX -m "xdist_incompatible and not parallel and c and not external" --ignore=symbolic --ignore=ndarrays
-          #pyccel-clean
+          python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible or external) and c" --ignore=symbolic --ignore=ndarrays
+          python -m pytest -rX -m "xdist_incompatible and not parallel and c and not external" --ignore=symbolic --ignore=ndarrays
+          pyccel-clean
           python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible or external) and not (c or python)" --ignore=symbolic --ignore=ndarrays
           python -m pytest -rX -m "xdist_incompatible and not parallel and not (c or python) and not external" --ignore=symbolic --ignore=ndarrays
           pyccel-clean
