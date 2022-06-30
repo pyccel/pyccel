@@ -100,8 +100,8 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
-      - name: Install mingw tools
-        uses: msys2/setup-msys2@v2
+      #- name: Install mingw tools
+      #  uses: msys2/setup-msys2@v2
       - name: Which python bash
         run: |
           conda info --envs
