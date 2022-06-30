@@ -735,9 +735,9 @@ def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
                                         ] )
+@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.external
 def test_lapack( test_file ):
     #TODO: Uncomment this when dgetri can be expressed with scipy
@@ -808,6 +808,15 @@ def test_type_print( language ):
         assert 'float32' in lang_out[3]
         assert 'float64' in lang_out[4]
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
+            pytest.mark.c]
+        )
+    )
+)
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
@@ -886,6 +895,15 @@ def test_inline(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
+            pytest.mark.c]
+        )
+    )
+)
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),

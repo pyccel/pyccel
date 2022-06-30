@@ -131,6 +131,7 @@ UNDEFINED_METHOD   = 'Undefined method'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 UNDEFINED_IMPORT_OBJECT = 'Could not find {} in imported module {}'
+UNDERSCORE_NOT_A_THROWAWAY = "Variables named '_' are assumed to be throwaways so their value cannot be used"
 
 REDEFINING_VARIABLE = 'Variable already defined'
 

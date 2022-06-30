@@ -266,7 +266,7 @@ class Basic:
             if isinstance(v, excluded_nodes):
                 continue
 
-            elif v in original:
+            elif any(v is oi for oi in original):
                 setattr(self, n, prepare_sub(v))
 
             elif isinstance(v, tuple):
@@ -274,7 +274,7 @@ class Basic:
                 for vi in v:
                     new_vi = vi
                     if not isinstance(vi, excluded_nodes):
-                        if vi in original:
+                        if any(vi is oi for oi in original):
                             new_vi = prepare_sub(vi)
                         elif not self._ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes, invalidate)
