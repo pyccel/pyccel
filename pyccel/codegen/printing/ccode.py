@@ -1144,10 +1144,12 @@ class CCodePrinter(CodePrinter):
 
         return Slice(start, stop, step)
 
+    def _print_NumpyArraySize(self, expr):
+        return '{}.length'.format(self._print(expr.arg))
+
     def _print_PyccelArraySize(self, expr):
-        if expr.arg.is_optional:
-            return '{}->shape[{}]'.format(expr.arg, expr.index)
-        return '{}.shape[{}]'.format(expr.arg, expr.index)
+        return '{}.shape[{}]'.format(self._print(expr.arg),
+            self._print(expr.index))
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -1320,6 +1322,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionAddress(self, expr):
         return expr.name
+
+    def _print_NumpyWhere(self, expr):
+        cond = self._print(expr.condition)
+        value_true = self._print(expr.value_true)
+        value_false = self._print(expr.value_false)
+        stmt = '{cond} ? {true} : {false}'.format(cond = cond,
+                true = value_true, false = value_false)
+        return stmt
 
     def _print_Rand(self, expr):
         raise NotImplementedError("Rand not implemented")
