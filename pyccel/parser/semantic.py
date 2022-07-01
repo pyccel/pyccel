@@ -3277,7 +3277,6 @@ class SemanticParser(BasicParser):
 
             # Raise an error if one of the return arguments is either:
             #   a) an alias
-            #   b) array which is not among arguments, hence intent(out)
             for r in results:
                 if r.is_alias:
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,

@@ -1314,7 +1314,7 @@ class FCodePrinter(CodePrinter):
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent:
+            elif on_heap and not intent_in:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
