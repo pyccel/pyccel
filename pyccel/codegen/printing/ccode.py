@@ -360,9 +360,8 @@ class CCodePrinter(CodePrinter):
             buffer_array : str
                 String initialising the stack (C) array which stores the data
             array_init   : str
-                String containing the rhs of the initialization of a stack_array
+                String containing the rhs of the initialization of a stack array
         """
-
         var = expr
         dtype_str = self._print(var.dtype)
         dtype = self.find_in_dtype_registry(dtype_str, var.precision)
@@ -937,7 +936,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -1015,7 +1014,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [FunctionDefArgument(a.clone(name = a.name, is_pointer =True)) for a in expr.results]
+            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='alias')) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -1165,7 +1164,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.allocatable else 'true'
+        is_view = 'false' if expr.variable.on_heap else 'true'
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view)
@@ -1174,7 +1173,7 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        if expr.variable.is_pointer:
+        if expr.variable.is_alias:
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
 
@@ -1424,7 +1423,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     def _print_FunctionCall(self, expr):
@@ -1640,7 +1639,7 @@ class CCodePrinter(CodePrinter):
             rhs_address = VariableAddress(rhs_var)
         elif isinstance(rhs_var, FunctionCall):
             res = rhs_var.funcdef.results
-            if len(res)!= 0 and res[0].is_pointer:
+            if len(res)!= 0 and res[0].is_alias:
                 rhs_address = rhs_var
             else:
                 rhs_address = VariableAddress(rhs_var)

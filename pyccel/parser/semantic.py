@@ -392,7 +392,6 @@ class SemanticParser(BasicParser):
         """
         type inference for expressions
         """
-
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
@@ -416,28 +415,24 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Variable):
-
-            d_var['datatype'      ] = expr.dtype
-            d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
-            d_var['shape'         ] = expr.shape
-            d_var['rank'          ] = expr.rank
-            d_var['cls_base'      ] = expr.cls_base
-            d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_target'     ] = expr.is_target
-            d_var['order'         ] = expr.order
-            d_var['precision'     ] = expr.precision
-            d_var['is_stack_array'] = expr.is_stack_array
+            d_var['datatype'       ] = expr.dtype
+            d_var['memory_handling'] = expr.memory_handling
+            d_var['shape'          ] = expr.shape
+            d_var['rank'           ] = expr.rank
+            d_var['cls_base'       ] = expr.cls_base
+            d_var['is_target'      ] = expr.is_target
+            d_var['order'          ] = expr.order
+            d_var['precision'      ] = expr.precision
             return d_var
 
         elif isinstance(expr, PythonTuple):
-            d_var['datatype'      ] = expr.dtype
-            d_var['precision'     ] = expr.precision
-            d_var['allocatable'   ] = True
-            d_var['shape'         ] = expr.shape
-            d_var['rank'          ] = expr.rank
-            d_var['order'         ] = expr.order
-            d_var['is_pointer'    ] = False
-            d_var['cls_base'      ] = TupleClass
+            d_var['datatype'       ] = expr.dtype
+            d_var['precision'      ] = expr.precision
+            d_var['memory_handling'] = 'heap'
+            d_var['shape'          ] = expr.shape
+            d_var['rank'           ] = expr.rank
+            d_var['order'          ] = expr.order
+            d_var['cls_base'       ] = TupleClass
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -446,10 +441,11 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
-            d_var['is_pointer'    ] = False
-            d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-            d_var['is_stack_array'] = not d_var['allocatable']
             d_var['cls_base'      ] = TupleClass
+            if any(getattr(a, 'on_heap', False) for a in expr.args):
+                d_var['memory_handling'] = 'heap'
+            else:
+                d_var['memory_handling'] = 'stack'
             return d_var
 
         elif isinstance(expr, Duplicate):
@@ -461,15 +457,16 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
             d_var['order'         ] = expr.order
-            d_var['is_stack_array'] = d.get('is_stack_array',False) and isinstance(expr.length, LiteralInteger)
-            d_var['allocatable'   ] = not d_var['is_stack_array']
-            d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
+            if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
+                d_var['memory_handling'] = 'stack'
+            else:
+                d_var['memory_handling'] = 'heap'
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -481,22 +478,20 @@ class SemanticParser(BasicParser):
 
             var = expr.internal_var
 
+            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             d_var['datatype'      ] = var.dtype
-            d_var['allocatable'   ] = var.allocatable
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
             d_var['cls_base'      ] = var.cls_base
-            d_var['is_pointer'    ] = isinstance(var, Variable)
             d_var['is_target'     ] = var.is_target
             d_var['order'         ] = 'C' if var.order=='F' else 'F'
             d_var['precision'     ] = var.precision
-            d_var['is_stack_array'] = var.is_stack_array
             return d_var
 
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -510,7 +505,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
-            d_var['allocatable'] = False
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
@@ -519,8 +514,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = False
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['rank'       ] = 0
             return d_var
 
@@ -531,7 +525,7 @@ class SemanticParser(BasicParser):
             dtype = self.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
-            d_var['allocatable'] = False
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
@@ -874,9 +868,12 @@ class SemanticParser(BasicParser):
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
 
-            d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
-            d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
-            if is_homogeneous and not (d_lhs['is_pointer'] and isinstance(rhs, PythonTuple)):
+            if any(v.is_alias for v in elem_vars):
+                d_lhs['memory_handling'] = 'alias'
+            else:
+                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
+
+            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
@@ -891,27 +888,21 @@ class SemanticParser(BasicParser):
 
     def _ensure_target(self, rhs, d_lhs):
         """ Function using data about the new lhs to determine
-        whether the lhs is a pointer and the rhs is a target
+        whether the lhs is an alias and the rhs is a target
         """
-        if isinstance(rhs, NumpyTranspose) and rhs.internal_var.allocatable:
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
 
+        if isinstance(rhs, NumpyTranspose) and rhs.internal_var.on_heap:
+            d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
+
         if isinstance(rhs, Variable) and rhs.is_ndarray:
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
+            d_lhs['memory_handling'] = 'alias'
+            rhs.is_target = not rhs.is_alias
 
-            rhs.is_target = not rhs.is_pointer
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
-                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_pointer', False)):
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
-
-            rhs.base.is_target = not rhs.base.is_pointer
+                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_alias', False)):
+            d_lhs['memory_handling'] = 'alias'
+            rhs.base.is_target = not rhs.base.is_alias
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -954,7 +945,7 @@ class SemanticParser(BasicParser):
             dtype = d_var.pop('datatype')
 
             d_lhs = d_var.copy()
-            # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+            # ISSUES #177: lhs must be a pointer when rhs is heap array
             self._ensure_target(rhs, d_lhs)
 
             var = self.check_for_variable(name)
@@ -967,15 +958,14 @@ class SemanticParser(BasicParser):
                 if decorators:
                     if 'stack_array' in decorators:
                         if name in decorators['stack_array']:
-                            d_lhs.update(is_stack_array=True,
-                                    allocatable=False, is_pointer=False)
+                            d_lhs.update(memory_handling='stack')
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if 'is_stack_array' in d_lhs and d_lhs['is_stack_array']:
+                if d_lhs['rank'] > 0 and d_lhs.get('memory_handling', None) == 'stack':
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
@@ -1002,7 +992,7 @@ class SemanticParser(BasicParser):
                 # Add memory allocation if needed
                 array_declared_in_function = isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
                                             and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)
-                if lhs.allocatable and not array_declared_in_function:
+                if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
                         errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -1018,7 +1008,7 @@ class SemanticParser(BasicParser):
                     if isinstance(lhs, InhomogeneousTupleVariable):
                         args = [v for v in lhs.get_vars() if v.rank>0]
                         new_args = []
-                        while len(args)>0:
+                        while len(args) > 0:
                             for a in args:
                                 if isinstance(a, InhomogeneousTupleVariable):
                                     new_args.extend(v for v in a.get_vars() if v.rank>0)
@@ -1034,7 +1024,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory deallocation for array variables
-                if lhs.is_ndarray and not lhs.is_stack_array:
+                if lhs.is_ndarray and not lhs.on_stack:
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
@@ -1090,7 +1080,7 @@ class SemanticParser(BasicParser):
                 d_lhs    = d_var.copy()
 
 
-                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                # ISSUES #177: lhs must be a pointer when rhs is heap array
                 self._ensure_target(rhs, d_lhs)
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
@@ -1147,19 +1137,19 @@ class SemanticParser(BasicParser):
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.on_heap:
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self._current_fst_node.lineno,
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var)
 
-        elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+        elif var.is_ndarray and var.is_alias and isinstance(rhs, NumpyNewArray):
             errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self._current_fst_node.lineno,
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif var.is_ndarray and var.is_pointer:
+        elif var.is_ndarray and var.is_alias:
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
@@ -1560,7 +1550,7 @@ class SemanticParser(BasicParser):
                                 severity='fatal')
 
         for v in variables:
-            if v.rank > 0 and not v.is_pointer:
+            if v.rank > 0 and not v.is_alias:
                 v.is_target = True
 
         mod = Module(mod_name,
@@ -2358,10 +2348,10 @@ class SemanticParser(BasicParser):
                     if not all(same_ranks):
                         assert(len(c_ranks) == 1)
                         arg = call_args[0].value
-                        d_var['shape'      ] = arg.shape
-                        d_var['rank'       ] = arg.rank
-                        d_var['allocatable'] = arg.allocatable
-                        d_var['order'      ] = arg.order
+                        d_var['shape'          ] = arg.shape
+                        d_var['rank'           ] = arg.rank
+                        d_var['memory_handling'] = arg.memory_handling
+                        d_var['order'          ] = arg.order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -2392,7 +2382,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infere_type(rhs, **settings)
-            if d_var['is_pointer'] and not isinstance(lhs, IndexedElement):
+            if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
 
         else:
@@ -2406,7 +2396,10 @@ class SemanticParser(BasicParser):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
                     #TODO: Avoid writing the default variables here
-                    d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
+                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
+                        d['memory_handling'] = 'alias'
+                    else:
+                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
@@ -2414,7 +2407,7 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
                     d['is_target' ] = False
-                    d['is_pointer'] = True
+                    d['memory_handling'] = 'alias'
 
         lhs = expr.lhs
         if isinstance(lhs, (PyccelSymbol, DottedName)):
@@ -2509,15 +2502,15 @@ class SemanticParser(BasicParser):
             lhs = lhs[0]
 
         if isinstance(lhs, Variable):
-            is_pointer = lhs.is_pointer
+            is_pointer = lhs.is_alias
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
         elif isinstance(lhs, (PythonTuple, PythonList)):
-            is_pointer = any(l.is_pointer for l in lhs if isinstance(lhs, Variable))
+            is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
-        is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
+        is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_alias
 
         lhs = [lhs]
         rhs = [rhs]
@@ -2543,7 +2536,7 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
-            is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
+            is_pointer_i = l.is_alias if isinstance(l, Variable) else is_pointer
 
             new_expr = Assign(l, r)
 
@@ -2686,7 +2679,7 @@ class SemanticParser(BasicParser):
                     dvar['rank' ] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
-                    dvar['allocatable'] = dvar['is_pointer'] = False
+                    dvar['memory_handling'] = 'stack'
                 var  = Variable(dtype, var, **dvar)
                 stop = a.element.shape[0]
             elif isinstance(a, Variable):
@@ -2696,7 +2689,7 @@ class SemanticParser(BasicParser):
                     dvar['rank'] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
-                    dvar['allocatable'] = dvar['is_pointer'] = False
+                    dvar['memory_handling'] = 'stack'
 
                 var  = Variable(dtype, var, **dvar)
                 stop = a.shape[0]
@@ -2801,11 +2794,10 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['rank'] += 1
-        d_var['allocatable'] = True
+        d_var['memory_handling'] = 'heap'
         shape = list(d_var['shape'])
         shape.insert(0, dim)
         d_var['shape'] = shape
-        d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
         # ...
         # TODO [YG, 30.10.2020]:
@@ -2993,7 +2985,6 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionDef(self, expr, **settings):
-
         name            = self.scope.get_expected_name(expr.name)
         cls_name        = expr.cls_name
         decorators      = expr.decorators
@@ -3116,7 +3107,7 @@ class SemanticParser(BasicParser):
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
-                        d_var['is_pointer'] = True
+                        d_var['memory_handling'] = 'alias'
                         if a.has_default:
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
@@ -3140,6 +3131,7 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
+
 
                     value = None if a.value is None else self._visit(a.value)
                     if isinstance(value, Literal) and \
@@ -3283,9 +3275,11 @@ class SemanticParser(BasicParser):
                             severity='fatal')
             # ...
 
+            # Raise an error if one of the return arguments is either:
+            #   a) an alias
+            #   b) array which is not among arguments, hence intent(out)
             for r in results:
-                # if one of the return arguments is a pointer.
-                if r.is_pointer:
+                if r.is_alias:
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')

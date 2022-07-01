@@ -140,9 +140,7 @@ def as_static_function(func, *, mod_scope, name=None):
             _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
-                              allocatable = a.allocatable,
-                              is_pointer  = a.is_pointer,
-                              is_target   = a.is_target,
+                              memory_handling = a.memory_handling,
                               is_optional = a.is_optional,
                               shape       = shape_new,
                               rank        = a.rank,
@@ -320,7 +318,7 @@ def wrap_array(var, scope, persistent):
     variables = [bind_var, *sizes]
     if not persistent:
         ptr_var = var.clone(scope.get_new_name(var.name+'_ptr'),
-                is_pointer=True, allocatable=False)
+                memory_handling='alias')
         alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
         copy  = Assign(ptr_var, var)
         c_loc = CLocFunc(ptr_var, bind_var)
