@@ -444,7 +444,7 @@ class Assign(Basic):
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
         cond = cond and isinstance(lhs, PyccelSymbol)
-        cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
+        cond = cond or isinstance(rhs, Variable) and rhs.is_alias
         return cond
 
     @property
@@ -504,7 +504,7 @@ class Allocate(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
-        if not variable.allocatable and not variable.is_pointer:
+        if variable.on_stack:
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
@@ -723,10 +723,10 @@ class AliasAssign(Basic):
 
     def __init__(self, lhs, rhs):
         if pyccel_stage == 'semantic':
-            if not lhs.is_pointer:
+            if not lhs.is_alias:
                 raise TypeError('lhs must be a pointer')
 
-            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
+            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_alias:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs
@@ -1539,9 +1539,9 @@ class Iterable(Basic):
             target = target[1:]
             range_element = range_element[1:]
         if isinstance(target, (tuple, list)):
-            return [AliasAssign(t, r) if t.is_pointer else Assign(t, r) for t,r in zip(target, range_element)]
+            return [AliasAssign(t, r) if t.is_alias else Assign(t, r) for t, r in zip(target, range_element)]
         else:
-            return [AliasAssign(target, range_element) if target.is_pointer else Assign(target, range_element)]
+            return [AliasAssign(target, range_element) if target.is_alias else Assign(target, range_element)]
 
     def get_target_from_range(self):
         """ Returns an element of the range indexed with the iterators
@@ -2862,11 +2862,11 @@ class FunctionAddress(FunctionDef):
     is_kwonly: bool
         if object is an argument which can only be specified using its keyword
 
-    is_pointer: bool
-        if object is a pointer [Default value: False]
-
     is_optional: bool
         if object is an optional argument of a function [Default value: False]
+
+    memory_handling: str
+        must be 'heap', 'stack' or 'alias' [Default value: 'stack']
 
     Examples
     --------
@@ -2882,7 +2882,7 @@ class FunctionAddress(FunctionDef):
 
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
-    __slots__ = ('_is_optional','_is_pointer','_is_kwonly','_is_argument')
+    __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
     def __init__(
         self,
@@ -2891,17 +2891,17 @@ class FunctionAddress(FunctionDef):
         results,
         body,
         is_optional=False,
-        is_pointer=False,
         is_kwonly=False,
         is_argument=False,
+        memory_handling='stack',
         **kwargs
         ):
         super().__init__(name, arguments, results, body, scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
-        if not isinstance(is_pointer, bool):
-            raise TypeError('Expecting a boolean for is_pointer')
+        if memory_handling not in ('heap', 'alias', 'stack'):
+            raise TypeError('Expecting \'heap\', \'stack\', \'alias\' or None for memory_handling')
 
         if not isinstance(is_kwonly, bool):
             raise TypeError('Expecting a boolean for kwonly')
@@ -2910,17 +2910,25 @@ class FunctionAddress(FunctionDef):
             raise TypeError('is_optional must be a boolean.')
 
         self._is_optional   = is_optional
-        self._is_pointer    = is_pointer
         self._is_kwonly     = is_kwonly
         self._is_argument   = is_argument
+        self._memory_handling = memory_handling
 
     @property
     def name(self):
         return self._name
 
     @property
-    def is_pointer(self):
-        return self._is_pointer
+    def memory_handling(self):
+        """ Returns the memory handling of the instance of FunctionAddress
+        """
+        return self._memory_handling
+
+    @property
+    def is_alias(self):
+        """ Indicates if the instance of FunctionAddress is an alias
+        """
+        return self.memory_handling == 'alias'
 
     @property
     def is_argument(self):
@@ -3154,7 +3162,7 @@ class ClassDef(ScopedNode):
             var.dtype,
             name,
             rank=var.rank,
-            allocatable=var.allocatable,
+            memory_handling=var.memory_handling,
             shape=var.shape,
             cls_base=var.cls_base,
             )
@@ -3607,7 +3615,7 @@ class Del(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), memory_handling='heap')
     >>> Del([x])
     Del([x])
     """

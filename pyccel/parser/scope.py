@@ -297,6 +297,8 @@ class Scope(object):
         if name is None:
             name = var.name
 
+        self._used_symbols.pop(name)
+
         if name in self._locals['variables']:
             self._locals['variables'].pop(name)
         elif self.parent_scope:
@@ -439,7 +441,7 @@ class Scope(object):
 
           Returns
           -------
-          new_name     : str
+          new_name     : PyccelSymbol
         """
         if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
             new_name = PyccelSymbol(current_name)

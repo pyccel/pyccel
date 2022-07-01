@@ -361,9 +361,8 @@ class CCodePrinter(CodePrinter):
             buffer_array : str
                 String initialising the stack (C) array which stores the data
             array_init   : str
-                String containing the rhs of the initialization of a stack_array
+                String containing the rhs of the initialization of a stack array
         """
-
         var = expr
         dtype_str = self._print(var.dtype)
         dtype = self.find_in_dtype_registry(dtype_str, var.precision)
@@ -725,13 +724,13 @@ class CCodePrinter(CodePrinter):
         second = self._print(expr.args[1])
 
         if expr.dtype is NativeInteger():
-            return "MOD_PYC({n}, {base})".format(n=first, base=second)
+            return "pyc_modulo({n}, {base})".format(n=first, base=second)
 
         if expr.args[0].dtype is NativeInteger():
             first = self._print(NumpyFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
             second = self._print(NumpyFloat(expr.args[1]))
-        return "FMOD_PYC({n}, {base})".format(n=first, base=second)
+        return "pyc_fmodulo({n}, {base})".format(n=first, base=second)
 
     def _print_PyccelPow(self, expr):
         b = expr.args[0]
@@ -938,7 +937,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -1016,7 +1015,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [FunctionDefArgument(a.clone(name = a.name, is_pointer =True)) for a in expr.results]
+            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='alias')) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -1146,8 +1145,12 @@ class CCodePrinter(CodePrinter):
 
         return Slice(start, stop, step)
 
+    def _print_NumpyArraySize(self, expr):
+        return '{}.length'.format(self._print(expr.arg))
+
     def _print_PyccelArraySize(self, expr):
-        return '{}.shape[{}]'.format(expr.arg, expr.index)
+        return '{}.shape[{}]'.format(self._print(expr.arg),
+            self._print(expr.index))
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -1163,7 +1166,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.allocatable else 'true'
+        is_view = 'false' if expr.variable.on_heap else 'true'
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view)
@@ -1172,7 +1175,7 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        if expr.variable.is_pointer:
+        if expr.variable.is_alias:
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
 
@@ -1321,6 +1324,14 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionAddress(self, expr):
         return expr.name
 
+    def _print_NumpyWhere(self, expr):
+        cond = self._print(expr.condition)
+        value_true = self._print(expr.value_true)
+        value_false = self._print(expr.value_false)
+        stmt = '{cond} ? {true} : {false}'.format(cond = cond,
+                true = value_true, false = value_false)
+        return stmt
+
     def _print_Rand(self, expr):
         raise NotImplementedError("Rand not implemented")
 
@@ -1422,7 +1433,7 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_pointer and not a.is_ndarray) or a.is_optional or \
+        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     def _print_FunctionCall(self, expr):
