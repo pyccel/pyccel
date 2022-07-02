@@ -9,7 +9,7 @@ Module representing object address.
 
 from .basic import PyccelAstNode
 
-from pyccel.ast.variable import Variable, IndexedElement
+from .variable import Variable, IndexedElement
 
 class ObjectAddress(PyccelAstNode):
     """Represents the address of an object.

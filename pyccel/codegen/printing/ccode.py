@@ -1869,7 +1869,7 @@ class CCodePrinter(CodePrinter):
     def _print_ObjectAddress(self, expr):
         # if self.stored_in_c_pointer(expr.object):
         #     return '&({})'.format(self._print(expr.object))
-        return '{}'.format(expr.object)
+        return '{}'.format(expr.obj)
 
     def _print_Variable(self, expr):
         if self.stored_in_c_pointer(expr):
