@@ -48,6 +48,7 @@ from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
+from pyccel.ast.object_address import ObjectAddress
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
