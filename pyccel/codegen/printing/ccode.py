@@ -237,6 +237,30 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  'stdbool']}
 
+# class WithArrow(PyccelAstNode):
+#     __slots__ = ('_object')
+#     _attribute_nodes = ('_object',)
+
+#     def __init__(self, object):
+#         self._object = object
+#         super().__init__()
+
+#     @property
+#     def object(self):
+#         return self._object
+
+# class WithDot(PyccelAstNode):
+#     __slots__ = ('_object')
+#     _attribute_nodes = ('_object',)
+
+#     def __init__(self, object):
+#         self._object = object
+#         super().__init__()
+
+#     @property
+#     def object(self):
+#         return self._object
+
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
