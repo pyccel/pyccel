@@ -1866,6 +1866,11 @@ class CCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Constant not implemented")
 
+    def _print_ObjectAddress(self, expr):
+        # if self.stored_in_c_pointer(expr.object):
+        #     return '&({})'.format(self._print(expr.object))
+        return '{}'.format(expr.object)
+
     def _print_Variable(self, expr):
         if self.stored_in_c_pointer(expr):
             return '(*{0})'.format(expr.name)
