@@ -1177,14 +1177,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyArraySize(self, expr):
         arg = expr.arg
-        
         if self.stored_in_c_pointer(arg):
             return '{}->length'.format(self._print(ObjectAddress(arg)))
         return '{}.length'.format(self._print(arg))
 
     def _print_PyccelArraySize(self, expr):
         arg    = expr.arg
-
         if self.stored_in_c_pointer(arg):
             return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
