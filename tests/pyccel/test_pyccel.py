@@ -849,6 +849,47 @@ def test_module_init( language ):
     compare_pyth_fort_output(pyth_out, lang_out, str, language)
 
 #------------------------------------------------------------------------------
+def get_lang_exit_value(abs_path, language, cwd=None):
+    abs_path = get_exe(abs_path, language)
+    if language == "python":
+        if cwd is None:
+            p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+        else:
+            p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
+    else:
+        p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+    p.communicate()
+    return p.returncode
+
+def pyccel_test_program_exit(language, test_file):
+    
+    rel_test_dir = os.path.dirname(test_file)
+    test_file = get_abs_path(os.path.normpath(test_file))
+
+    output_dir   = os.path.join(get_abs_path(rel_test_dir),'__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+
+    cwd = get_abs_path(rel_test_dir)
+
+    if not language:
+        language = "fortran"
+    pyccel_commands = " --language="+language
+    if language == "python":
+        pyccel_commands += " --output="+ output_dir
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+    if language == 'python' :
+        lang_out = get_lang_exit_value(output_test_file, language)
+    else:
+        lang_out = get_lang_exit_value(test_file, language)
+
+    pyth_out = get_lang_exit_value(test_file, "python", cwd)
+    assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
+
+
+def test_assert(language ):
+    pyccel_test_program_exit(language, "scripts/asserts/valid_assert_test.py")
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
