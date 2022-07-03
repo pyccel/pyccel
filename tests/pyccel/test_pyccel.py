@@ -862,7 +862,6 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     return p.returncode
 
 def pyccel_test_program_exit(language, test_file):
-    
     rel_test_dir = os.path.dirname(test_file)
     test_file = get_abs_path(os.path.normpath(test_file))
 
