@@ -870,18 +870,22 @@ def pyccel_test_program_exit(language, test_file):
 
     cwd = get_abs_path(test_dir)
 
-    pyccel_commands = " --language=" + language
-    pyccel_commands += " --output=" + output_dir
+    pyccel_commands = " --language="+language
+    if language == "python":
+        pyccel_commands += " --output="+ output_dir
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+    if language == 'python' :
+        lang_out = get_lang_exit_value(output_test_file, language)
+    else:
+        lang_out = get_lang_exit_value(test_file, language)
 
     pyth_out = get_lang_exit_value(test_file, "python")
-    compile_pyccel(cwd, test_file, pyccel_commands)
-    lang_out = get_lang_exit_value(output_test_file, language)
-      
     assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
 
 def test_assert(language ):
-    pyccel_test_program_exit(language, "scripts/asserts/valid_assert_test.py")
+    pyccel_test_program_exit(language, "scripts/valid_assert_test.py")
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
