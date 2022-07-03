@@ -862,26 +862,21 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     return p.returncode
 
 def pyccel_test_program_exit(language, test_file):
-    rel_test_dir = os.path.dirname(test_file)
+    test_dir = os.path.dirname(test_file)
     test_file = get_abs_path(os.path.normpath(test_file))
 
-    output_dir   = os.path.join(get_abs_path(rel_test_dir),'__pyccel__')
+    output_dir   = os.path.join(get_abs_path(test_dir),'__pyccel__')
     output_test_file = os.path.join(output_dir, os.path.basename(test_file))
 
-    cwd = get_abs_path(rel_test_dir)
+    cwd = get_abs_path(test_dir)
 
-    if not language:
-        language = "fortran"
     pyccel_commands = " --language=" + language
     pyccel_commands += " --output=" + output_dir
 
+    pyth_out = get_lang_exit_value(test_file, "python")
     compile_pyccel(cwd, test_file, pyccel_commands)
-    if language == 'python' :
-        lang_out = get_lang_exit_value(output_test_file, language)
-    else:
-        lang_out = get_lang_exit_value(test_file, language)
-
-    pyth_out = get_lang_exit_value(test_file, "python", cwd)
+    lang_out = get_lang_exit_value(output_test_file, language)
+      
     assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
 
