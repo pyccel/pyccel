@@ -872,9 +872,8 @@ def pyccel_test_program_exit(language, test_file):
 
     if not language:
         language = "fortran"
-    pyccel_commands = " --language="+language
-    if language == "python":
-        pyccel_commands += " --output="+ output_dir
+    pyccel_commands = " --language=" + language
+    pyccel_commands += " --output=" + output_dir
 
     compile_pyccel(cwd, test_file, pyccel_commands)
     if language == 'python' :
