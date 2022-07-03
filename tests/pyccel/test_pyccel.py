@@ -881,11 +881,11 @@ def pyccel_test_program_exit(language, test_file):
         lang_out = get_lang_exit_value(test_file, language)
 
     pyth_out = get_lang_exit_value(test_file, "python")
-    assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
+    return (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
 
 def test_assert(language ):
-    pyccel_test_program_exit(language, "scripts/valid_assert_test.py")
+    assert (pyccel_test_program_exit(language, "scripts/valid_assert_test.py"))
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
