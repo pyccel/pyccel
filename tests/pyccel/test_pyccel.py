@@ -872,7 +872,6 @@ def pyccel_test_program_exit(language, test_file):
 
     if not language:
         language = "fortran"
-    
     pyccel_commands = " --language="+language
     pyccel_commands += " --output="+ output_dir
 
@@ -886,6 +885,9 @@ def pyccel_test_program_exit(language, test_file):
 
 def test_assert(language ):
     pyccel_test_program_exit(language, "scripts/asserts/valid_assert.py")
+    pyccel_test_program_exit(language, "scripts/asserts/unvalid_assert1.py")
+    pyccel_test_program_exit(language, "scripts/asserts/unvalid_assert2.py")
+    pyccel_test_program_exit(language, "scripts/asserts/unvalid_assert3.py")
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
