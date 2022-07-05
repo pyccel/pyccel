@@ -876,9 +876,7 @@ def pyccel_test_program_exit(language, test_file):
     pyccel_commands += " --output="+ output_dir
 
     compile_pyccel(cwd, test_file, pyccel_commands)
-    
     lang_out = get_lang_exit_value(output_test_file, language)
-
     pyth_out = get_lang_exit_value(test_file, "python")
     assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
