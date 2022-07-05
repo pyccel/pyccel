@@ -219,3 +219,12 @@ def use_optional(a : int = None):
     if a:
         b += a
     return b
+
+def none_equality(a : int = None):
+    return a == None, a != None
+
+def none_none_equality():
+    return None == None, None != None
+
+def none_literal_equality():
+    return None == 1, 3.5 != None
