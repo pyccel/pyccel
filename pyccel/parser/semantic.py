@@ -2847,6 +2847,7 @@ class SemanticParser(BasicParser):
 
     def _visit_IfSection(self, expr, **settings):
         condition = expr.condition
+
         name_symbol = PyccelSymbol('__name__')
         main = LiteralString('__main__')
         prog_check = isinstance(condition, PyccelEq) \
@@ -3756,6 +3757,9 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
+
+#==============================================================================
+
 
 if __name__ == '__main__':
     import sys

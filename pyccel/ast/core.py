@@ -3832,6 +3832,7 @@ class Assert(Basic):
                 test = PythonBool(test)
         self._test = test
         super().__init__()
+
     @property
     def test(self):
         return self._test
