@@ -853,11 +853,11 @@ def get_lang_exit_value(abs_path, language, cwd=None):
     abs_path = get_exe(abs_path, language)
     if language == "python":
         if cwd is None:
-            p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen([sys.executable , abs_path])
         else:
-            p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
+            p = subprocess.Popen([sys.executable , abs_path], cwd=cwd)
     else:
-        p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen([abs_path])
     p.communicate()
     return p.returncode
 
