@@ -2,7 +2,7 @@ name: Benchmarks
 
 on:
   push:
-    branches: [ master ]
+    branches: [ bench ]
 
 jobs:
 
@@ -11,30 +11,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
       - name: Set up Python 3.7
         uses: actions/setup-python@v3
         with:
           python-version: 3.7
+
       - name: Install dependencies
         uses: ./.github/actions/linux_install
+
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+
       - name: Install python benchmark dependencies
         run: |
           python -m pip install pythran
           python -m pip install numba
           python -m pip install pyperf
+
       - name: Benchmark
         run: |
-          python benchmarks/run_benchmark.py --pyperf --verbose
+#          python benchmarks/run_benchmark.py --pyperf --verbose
           echo "# Performance Comparison (as of $(date))" > performance.md
-          cat bench.out >> performance.md
+#          cat bench.out >> performance.md
         shell: bash
         working-directory: ./.
-      - name: Add & Commit
-        uses: EndBug/add-and-commit@v9.0.0
-        with:
-          message: 'Update performance comparison'
-          add: 'performance.md'
-          default_author: github_actions
+
+#      - name: Add & Commit
+#        uses: EndBug/add-and-commit@v9.0.0
+#        with:
+#          message: 'Update performance comparison'
+#          add: 'performance.md'
+#          default_author: github_actions
+
+      - name: Clone pyccel-benchmarks repository
+        working-directory: ../
+        run: |
+          git clone git@github.com:pyccel/pyccel-benchmarks.git
+
+      - name: Push results to pyccel-benchmarks
+        working-directory: ../pyccel-benchmarks
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        run: |
+          cp ../pyccel/performance.md .
+          git add -u
+          git commit -m "Benchmark of pyccel@${GITHUB_SHA}"
+          git push
