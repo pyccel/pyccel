@@ -22,7 +22,9 @@ from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .internals import get_final_precision
 
-from .variable  import Variable, VariableAddress
+from .variable  import Variable
+
+from .object_address import ObjectAddress
 
 
 errors = Errors()
