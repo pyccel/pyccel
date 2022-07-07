@@ -17,22 +17,22 @@ class ObjectAddress(PyccelAstNode):
     ObjectAddress(Variable('int','a', memory_handling='alias'))   is   a
     """
 
-    __slots__ = ('_obj',)
-    _attribute_nodes = ('_obj',)
+    __slots__ = ('_variable', '_rank', '_precision', '_dtype', '_shape', '_order')
+    _attribute_nodes = ('_variable',)
 
-    def __init__(self, obj):
-        if not isinstance(obj, (Variable, IndexedElement, ObjectAddress)):
-            raise TypeError("object must be a ...") #TODO: to change
-        self._obj = obj
+    def __init__(self, variable):
+        if not isinstance(variable, (Variable, IndexedElement, ObjectAddress)):
+            raise TypeError("object must be a Variable, IndexedElement or ObjectAddress.") #TODO: to change
+        self._variable  = variable
+        self._rank      = variable.rank
+        self._shape     = variable.shape
+        self._precision = variable.precision
+        self._dtype     = variable.dtype
+        self._order     = variable.order
         super().__init__()
 
     @property
-    def obj(self):
+    def variable(self):
         """The object whose address is of interest
         """
-        return self._obj
-
-
-# Notes:
-# self._print(ObjectAddress(Variable('int', 'x'))) where x is a Variable for example.
-# Need a _print_ObjectAddress in the ccode.py
+        return self._variable
