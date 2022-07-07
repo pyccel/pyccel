@@ -1009,12 +1009,14 @@ class CCodePrinter(CodePrinter):
         String
             Signature of the function
         """
+        if len(expr.results) > 1:
+            self._additional_args.append(expr.results)
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='alias')) for a in expr.results]
+            args += [FunctionDefArgument(a) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -1165,8 +1167,9 @@ class CCodePrinter(CodePrinter):
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
+        variable_code = "(*{})".format(expr.variable) if expr.variable.is_target else  "{}".format(expr.variable)
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
-                expr.variable, len(expr.shape), shape_Assign, dtype,
+                variable_code, len(expr.shape), shape_Assign, dtype,
                 is_view)
         return '{}{}'.format(free_code, alloc_code)
 
