@@ -44,7 +44,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
+from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
@@ -236,30 +236,6 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'pyc_math_c',
                  'stdio',
                  'stdbool']}
-
-# class WithArrow(PyccelAstNode):
-#     __slots__ = ('_object')
-#     _attribute_nodes = ('_object',)
-
-#     def __init__(self, object):
-#         self._object = object
-#         super().__init__()
-
-#     @property
-#     def object(self):
-#         return self._object
-
-# class WithDot(PyccelAstNode):
-#     __slots__ = ('_object')
-#     _attribute_nodes = ('_object',)
-
-#     def __init__(self, object):
-#         self._object = object
-#         super().__init__()
-
-#     @property
-#     def object(self):
-#         return self._object
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -1168,12 +1144,6 @@ class CCodePrinter(CodePrinter):
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
 
         return Slice(start, stop, step)
-
-    # def _print_WithArrow(self, expr):
-    #     return '{}->'.format(self._print(expr.object))
-
-    # def _print_WithDot(self, expr):
-    #     return '{}.'.format(self._print(expr.object))
 
     def _print_NumpyArraySize(self, expr):
         arg = expr.arg
