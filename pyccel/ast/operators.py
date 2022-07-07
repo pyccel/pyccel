@@ -794,7 +794,7 @@ class PyccelNe(PyccelComparisonOperator):
     I.e:
         a != b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelNe(a, b)
 
     Parameters
     ----------
