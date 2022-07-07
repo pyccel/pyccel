@@ -1092,6 +1092,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
+        if self.stored_in_c_pointer(expr):
+            return '{}->{}'.format(self._print(expr.lhs), self._print(expr.name))
         return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
 
     @staticmethod
