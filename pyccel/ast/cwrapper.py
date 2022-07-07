@@ -291,7 +291,7 @@ class PyModule_AddObject(PyccelAstNode):
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
-        self._var = VariableAddress(variable)
+        self._var = ObjectAddress(variable)
         super().__init__()
 
     @property
