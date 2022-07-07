@@ -1009,8 +1009,6 @@ class CCodePrinter(CodePrinter):
         String
             Signature of the function
         """
-        if len(expr.results) > 1:
-            self._additional_args.append(expr.results)
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
@@ -1388,8 +1386,6 @@ class CCodePrinter(CodePrinter):
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))
-        if self._additional_args :
-            self._additional_args.pop()
         for i in expr.imports:
             self.add_import(i)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
@@ -1402,6 +1398,8 @@ class CCodePrinter(CodePrinter):
                  '}\n',
                  sep]
 
+        if self._additional_args :
+            self._additional_args.pop()
         self.exit_scope()
 
         return ''.join(p for p in parts if p)
