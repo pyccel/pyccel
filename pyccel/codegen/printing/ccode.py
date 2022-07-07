@@ -453,7 +453,7 @@ class CCodePrinter(CodePrinter):
             results = dict(zip(func.results, parent_assign[0].lhs))
             orig_res_vars = list(results.keys())
             new_res_vars  = self._temporary_args
-            new_res_vars = [a.variable if isinstance(a, VariableAddress) else a for a in new_res_vars]
+            new_res_vars = [a.variable if isinstance(a, ObjectAddress) else a for a in new_res_vars]
             self._temporary_args = []
             body.substitute(orig_res_vars, new_res_vars)
 
@@ -1427,7 +1427,7 @@ class CCodePrinter(CodePrinter):
         ----------
         a : PyccelAstNode
         """
-        if isinstance(a, (Nil, VariableAddress)):
+        if isinstance(a, (Nil, ObjectAddress)):
             return True
         if isinstance(a, FunctionCall):
             results = a.funcdef.results
@@ -1452,12 +1452,12 @@ class CCodePrinter(CodePrinter):
             f = f.var
             if self.stored_in_c_pointer(f):
                 if isinstance(a, Variable):
-                    args.append(VariableAddress(a))
+                    args.append(ObjectAddress(a))
                 elif not self.stored_in_c_pointer(a):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, a)
                     self._additional_code += self._print(assign)
-                    args.append(VariableAddress(tmp_var))
+                    args.append(ObjectAddress(tmp_var))
                 else:
                     args.append(a)
             else :
@@ -1494,7 +1494,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [VariableAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
+        args = [ObjectAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
@@ -1631,7 +1631,7 @@ class CCodePrinter(CodePrinter):
             # Point optional variable at an allocated memory space
             prefix_code = self._print(AliasAssign(lhs, tmp_var))
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
-            self._temporary_args = [VariableAddress(a) for a in lhs]
+            self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
@@ -1648,10 +1648,10 @@ class CCodePrinter(CodePrinter):
         lhs_var = expr.lhs
         rhs_var = expr.rhs
 
-        lhs_address = VariableAddress(lhs_var)
-        # Ensure everything which can be stored in a VariableAddress is
+        lhs_address = ObjectAddress(lhs_var)
+        # Ensure everything which can be stored in a ObjectAddress is
         try:
-            rhs_address = VariableAddress(rhs_var)
+            rhs_address = ObjectAddress(rhs_var)
         except TypeError:
             rhs_address = rhs_var
 
@@ -1770,8 +1770,8 @@ class CCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if Nil() in expr.args:
-            lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
-            rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
+            lhs = ObjectAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
+            rhs = ObjectAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
 
             lhs = self._print(lhs)
             rhs = self._print(rhs)
@@ -1851,8 +1851,8 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionCallArgument(self, expr):
         return self._print(expr.value)
 
-    def _print_VariableAddress(self, expr):
-        if isinstance(expr.variable, (IndexedElement, VariableAddress)):
+    def _print_ObjectAddress(self, expr):
+        if isinstance(expr.variable, (IndexedElement, ObjectAddress)):
             return '&{}'.format(self._print(expr.variable))
         elif self.stored_in_c_pointer(expr.variable):
             return '{}'.format(expr.variable.name)
