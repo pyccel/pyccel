@@ -281,7 +281,7 @@ class CCodePrinter(CodePrinter):
         return self.indent_code(lines)
 
     def _flatten_list(self, irregular_list):
-        if isinstance(irregular_list, (PythonList, PythonTuple)):
+        if isinstance(irregular_list, (PythonList, PythonTuple, list)):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
             return f_list
         else:
@@ -339,12 +339,19 @@ class CCodePrinter(CodePrinter):
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         order = lhs.order
+        # cause currently variables with order f are not working
+        transpose_arg = None
         dummy_array_name = self.scope.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        if isinstance(arg, PythonList) and not isinstance(arg[0], Variable) and order=="F":
+            import numpy as np
+            transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
+            if order=="F" and transpose_arg != None:
+                arg = [list(i) for i in self._flatten_list(transpose_arg)]
             arg = self._flatten_list(arg)
         self.add_import(c_imports['string'])
         assignations = ""
@@ -359,6 +366,7 @@ class CCodePrinter(CodePrinter):
                         assignations += self.varCpy(lhs, rhs, i)
             return assignations
         else:
+            print("bruh we come here")
             i = ', '.join([self._print(i) for i in arg])
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
