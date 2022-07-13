@@ -814,7 +814,7 @@ class SemanticParser(BasicParser):
                         expr, func.is_elemental)
             return new_expr
 
-    def _create_variable(self, name, dtype, rhs, d_lhs):
+    def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
         Create a new variable. In most cases this is just a call to
         Variable.__init__
@@ -856,7 +856,8 @@ class SemanticParser(BasicParser):
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
 
-                self._ensure_target( r, elem_d_lhs )
+                if not arr_in_multirets:
+                    self._ensure_target( r, elem_d_lhs )
                 if elem_d_lhs_ref is None:
                     elem_d_lhs_ref = elem_d_lhs.copy()
                     is_homogeneous = elem_d_lhs['datatype'] is not NativeGeneric()
@@ -931,6 +932,11 @@ class SemanticParser(BasicParser):
             This is necessary as the restrictions on the dtype are less strict in this
             case
 
+        arr_in_multirets : bool
+            If True, rhs has an array in its results, otherwise, it should be set to False.
+            It helps when we don't need lhs to be a pointer in case of a returned array in
+            a tuple of results.
+
         settings : dictionary
             Provided to all _visit_ClassName functions
         """
@@ -984,7 +990,7 @@ class SemanticParser(BasicParser):
                 new_name = self.scope.get_expected_name(name)
 
                 # Create new variable
-                lhs = self._create_variable(new_name, dtype, rhs, d_lhs)
+                lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
 
                 # Add variable to scope
                 self.scope.insert_variable(lhs, name)
@@ -1082,7 +1088,8 @@ class SemanticParser(BasicParser):
 
 
                 # ISSUES #177: lhs must be a pointer when rhs is heap array
-                self._ensure_target(rhs, d_lhs)
+                if not arr_in_multirets:
+                    self._ensure_target(rhs, d_lhs)
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
                 lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
@@ -2431,7 +2438,7 @@ class SemanticParser(BasicParser):
                 new_lhs = []
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     d = self._infere_type(r, **settings)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=True ,**settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ,**settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif isinstance(rhs, HomogeneousTupleVariable):
