@@ -3275,18 +3275,12 @@ class SemanticParser(BasicParser):
                             severity='fatal')
             # ...
 
-            # Raise an error if one of the return arguments is either:
-            #   a) an alias
+            # Raise an error if one of the return arguments is an alias.
             for r in results:
                 if r.is_alias:
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')
-                # array in a multiple returns statement
-                # if len(results) > 1 and any(r.rank > 0 for r in results):
-                #     errors.report(ARRAYS_IN_MULTIPLE_RETURNS,
-                #     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                #     severity='error')
 
             func_kwargs = {
                     'global_vars':global_vars,

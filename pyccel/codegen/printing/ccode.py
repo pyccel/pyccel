@@ -1027,7 +1027,7 @@ class CCodePrinter(CodePrinter):
                         if isinstance(i.var, FunctionAddress)
                         else '{0}'.format(self.get_declare_type(i.var)) + (i.name if print_arg_names else '')
                         for i in args)
-        
+
         if self._additional_args :
             self._additional_args.pop()
         if isinstance(expr, FunctionAddress):

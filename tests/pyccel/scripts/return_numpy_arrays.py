@@ -24,7 +24,7 @@ b = f(1, 3)
 c = f(1., 3.)
 d = f(False, True)
 e = f(1+2j, 3+4j)
-f,g = multi_returns()
+h,g = multi_returns()
 
 if __name__ == '__main__':
-    print(a, b, c, d, e, f, g)
+    print(a, b, c, d, e, h, g)
