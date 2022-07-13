@@ -904,7 +904,7 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False ,**settings):
         """
         Create a lhs based on the information in d_var
         If the lhs already exists then check that it has the expected properties.
@@ -946,7 +946,8 @@ class SemanticParser(BasicParser):
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is heap array
-            self._ensure_target(rhs, d_lhs)
+            if not arr_in_multirets:
+                self._ensure_target(rhs, d_lhs)
 
             var = self.check_for_variable(name)
 
@@ -990,8 +991,8 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory allocation if needed
-                array_declared_in_function = isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)
+                array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
+                                            and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -2430,7 +2431,7 @@ class SemanticParser(BasicParser):
                 new_lhs = []
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     d = self._infere_type(r, **settings)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign), **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=True ,**settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif isinstance(rhs, HomogeneousTupleVariable):
