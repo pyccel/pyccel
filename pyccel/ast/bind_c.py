@@ -343,7 +343,7 @@ def wrap_module_array_var(var, scope, mod):
     func : FunctionDef
             A function which wraps an array and can be called from C
     """
-    func_name = 'bind_c_'+var.name
+    func_name = 'bind_c_'+var.name.lower()
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope, True)
     func_scope.insert_variable(necessary_vars[0])
