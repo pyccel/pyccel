@@ -149,8 +149,6 @@ ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array argum
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
 INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 
-INVALID_WHERE_ARGUMENT = 'Numpy Where function takes 3 positional arguments'
-
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
@@ -161,3 +159,5 @@ TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'
 INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
 WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
+NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
+NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'

@@ -88,7 +88,7 @@ from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, Num
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
-from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
@@ -785,12 +785,6 @@ class SemanticParser(BasicParser):
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
 
-            if func is NumpyWhere:
-                if len(args) != 3:
-                    errors.report(INVALID_WHERE_ARGUMENT,
-                        symbol=expr,
-                        severity='fatal')
-
             try:
                 new_expr = func(*args, **kwargs)
             except TypeError:
@@ -843,7 +837,7 @@ class SemanticParser(BasicParser):
         else:
             is_temp = False
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)) or \
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
                 (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = rhs.funcdef.results
@@ -3476,7 +3470,12 @@ class SemanticParser(BasicParser):
             var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
-            if not var1.is_optional:
+            if not isinstance(var1, Variable):
+                if IsClass == PyccelIsNot:
+                    return LiteralTrue()
+                elif IsClass == PyccelIs:
+                    return LiteralFalse()
+            elif not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error')
@@ -3743,6 +3742,28 @@ class SemanticParser(BasicParser):
             a = self._visit(expr.a)
             b = self._visit(expr.b)
         return NumpyMatmul(a, b)
+
+    def _visit_NumpyWhere(self, func_call, **settings):
+        func_call_args = self._handle_function_args(func_call.args, **settings)
+        # expr is a FunctionCall
+        args = [a.value for a in func_call_args if not a.has_keyword]
+        kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
+        nargs = len(args)+len(kwargs)
+        arg0 = args[0] if args else kwargs['condition']
+        if nargs == 1:
+            return self._visit_NumpyNonZero(func_call)
+        return NumpyWhere(*args, **kwargs)
+
+    def _visit_NumpyNonZero(self, func_call, **settings):
+        func_call_args = self._handle_function_args(func_call.args, **settings)
+        # expr is a FunctionCall
+        arg = func_call_args[0].value
+        if not isinstance(arg, Variable):
+            new_symbol = PyccelSymbol(self.scope.get_new_name())
+            creation = self._visit(Assign(new_symbol, arg, fst=func_call.fst))
+            self._additional_exprs[-1].append(creation)
+            arg = self._visit(new_symbol)
+        return NumpyWhere(arg)
 
 #==============================================================================
 

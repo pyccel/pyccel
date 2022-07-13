@@ -16,7 +16,7 @@ from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
-from pyccel.ast.numpyext   import NumpyArray
+from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities  import builtin_import_registery as pyccel_builtin_import_registery
@@ -718,6 +718,32 @@ class PythonCodePrinter(CodePrinter):
         if axis:
             return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
         return  "{name}({arg})".format(name = name, arg  = self._print(expr.python_arg))
+
+    def _print_NumpyNonZero(self, expr):
+        name = self._aliases.get(type(expr),'nonzero')
+        if name == 'nonzero':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyNonZero, 'nonzero'))
+        arg = self._print(expr.array)
+        return "{}({})".format(name, arg)
+
+    def _print_NumpyCountNonZero(self, expr):
+        name = self._aliases.get(type(expr),'count_nonzero')
+        if name == 'count_nonzero':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyNonZero, 'count_nonzero'))
+
+        axis_arg = expr.axis
+
+        arr = self._print(expr.array)
+        axis = '' if axis_arg is None else (self._print(axis_arg) + ', ')
+        keep_dims = 'keepdims = {}'.format(self._print(expr.keep_dims))
+
+        arg = '{}, {}{}'.format(arr, axis, keep_dims)
+
+        return "{}({})".format(name, arg)
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
