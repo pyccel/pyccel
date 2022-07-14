@@ -3,6 +3,9 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" File containing SemanticParser. This class handles the semantic stage of the translation.
+See the developer docs for more details
+"""
 
 # pylint: disable=R0201, missing-function-docstring
 
@@ -115,8 +118,23 @@ from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
-# TODO - remove import * and only import what we need
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
+        UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
+        INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
+        UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
+        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP,
+        INCOMPATIBLE_TYPES_IN_ASSIGNMENT, ARRAY_ALREADY_IN_USE, ASSIGN_ARRAYS_ONE_ANOTHER,
+        INVALID_POINTER_REASSIGN, INCOMPATIBLE_REDEFINITION, ARRAY_IS_ARG,
+        INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION, IMPORTING_EXISTING_IDENTIFIED,
+        PYCCEL_RESTRICTION_INHOMOG_LIST, UNDEFINED_IMPORT_OBJECT, UNDEFINED_LAMBDA_VARIABLE,
+        UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
+        INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
+        PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
+        UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
+        UNSUPPORTED_ARRAY_RETURN_VALUE, PYCCEL_MISSING_HEADER, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
+        FOUND_DUPLICATED_IMPORT, IMPORTING_EXISTING_IDENTIFIED, UNDEFINED_WITH_ACCESS,
+        MACRO_MISSING_HEADER_OR_FUNC,)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
