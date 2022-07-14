@@ -120,7 +120,7 @@ class Variable(PyccelAstNode):
         is_private=False,
         shape=None,
         cls_base=None,
-        order='C',
+        order=None,
         precision=0,
         is_argument=False,
         is_kwonly=False,
@@ -187,9 +187,17 @@ class Variable(PyccelAstNode):
 
         if rank == 0:
             assert shape is None
+            assert order is None
 
         elif shape is None:
             shape = tuple(None for i in range(rank))
+        else:
+            assert len(shape) == rank
+
+        if rank == 1:
+            assert order is None
+        elif rank > 1:
+            assert order in ('C', 'F')
 
         if not precision:
             if isinstance(dtype, (NativeInteger, NativeFloat, NativeComplex, NativeBool)):
