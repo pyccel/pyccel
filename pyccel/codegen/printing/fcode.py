@@ -66,10 +66,10 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyEmpty
-from pyccel.ast.numpyext import NumpyFloat, NumpyInt
-from pyccel.ast.numpyext import NumpyReal, NumpyImag
+from pyccel.ast.numpyext import NumpyFloat, NumpyInt, NumpyBool
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
@@ -948,12 +948,84 @@ class FCodePrinter(CodePrinter):
 
         return code
 
+    def _print_NumpyNonZeroElement(self, expr):
+
+        ind   = self._print(self.scope.get_temporary_variable('int'))
+        array = expr.array
+
+        if array.dtype is NativeBool():
+            mask  = self._print(array)
+        else:
+            mask  = self._print(NumpyBool(array))
+
+        my_range = self._print(PythonRange(array.shape[expr.dim]))
+
+        stmt  = 'pack([({ind}, {ind}={my_range})], {mask})'.format(
+                ind = ind, mask = mask, my_range = my_range)
+
+        return stmt
+
+    def _print_NumpyCountNonZero(self, expr):
+
+        axis  = expr.axis
+        array = expr.array
+
+        if array.dtype is NativeBool():
+            mask  = self._print(array)
+        else:
+            mask  = self._print(NumpyBool(array))
+
+        kind  = self.print_kind(expr)
+
+        if axis is None:
+            stmt = 'count({}, kind = {})'.format(mask, kind)
+
+            if expr.keep_dims.python_value:
+                if expr.order == 'C':
+                    shape    = ', '.join(self._print(i) for i in reversed(expr.shape))
+                else:
+                    shape    = ', '.join(self._print(i) for i in expr.shape)
+                stmt = 'reshape([{}], [{}])'.format(stmt, shape)
+        else:
+            if array.order == 'C':
+                f_dim = PyccelMinus(LiteralInteger(array.rank), expr.axis, simplify=True)
+            else:
+                f_dim = PyccelAdd(expr.axis, LiteralInteger(1), simplify=True)
+
+            dim   = self._print(f_dim)
+            stmt = 'count({}, dim = {}, kind = {})'.format(mask, dim, kind)
+
+            if expr.keep_dims.python_value:
+
+                if expr.order == 'C':
+                    shape    = ', '.join(self._print(i) for i in reversed(expr.shape))
+                else:
+                    shape    = ', '.join(self._print(i) for i in expr.shape)
+                stmt = 'reshape([{}], [{}])'.format(stmt, shape)
+
+        return stmt
+
     def _print_NumpyWhere(self, expr):
+        value_true  = expr.value_true
+        value_false = expr.value_false
+        try :
+            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
-        ind   = self._print(expr.index)
-        mask  = self._print(expr.mask)
+        if value_true.dtype != expr.dtype or value_true.precision != expr.precision:
+            value_true = cast_func(value_true)
+        if value_false.dtype != expr.dtype or value_false.precision != expr.precision:
+            value_false = cast_func(value_false)
 
-        stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
+        condition   = self._print(expr.condition)
+        value_true  = self._print(value_true)
+        value_false = self._print(value_false)
+
+        stmt = 'merge({true}, {false}, {cond})'.format(
+                true=value_true,
+                false=value_false,
+                cond=condition)
 
         return stmt
 
@@ -1027,6 +1099,11 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpyArraySize(self, expr):
+        init_value = self._print(expr.arg)
+        prec = self.print_kind(expr)
+        return 'size({0}, kind={1})'.format(init_value, prec)
+
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
@@ -1089,7 +1166,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.arg.dtype, NativeBool):
             return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr))
         else:
-            return '{} /= 0'.format(self._print(expr.arg))
+            return '({} /= 0)'.format(self._print(expr.arg))
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
@@ -1099,7 +1176,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var_name = self.scope.get_new_name()
-        var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
+        var = Variable(expr.dtype, var_name, memory_handling = 'stack',
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
@@ -1233,18 +1310,19 @@ class FCodePrinter(CodePrinter):
 
         # ... TODO improve
         # Group the variables by intent
-        rank        = var.rank
-        allocatable = var.allocatable
-        shape       = var.alloc_shape
-        is_pointer = var.is_pointer
-        is_target = var.is_target
-        is_const = var.is_const
-        is_stack_array = var.is_stack_array
-        is_optional = var.is_optional
-        is_private = var.is_private
-        is_static = expr.static
-        is_external = expr.external
-        intent = expr.intent
+        var = expr.variable
+        rank            = var.rank
+        shape           = var.alloc_shape
+        is_target       = var.is_target
+        is_const        = var.is_const
+        is_optional     = var.is_optional
+        is_private      = var.is_private
+        is_alias        = var.is_alias
+        on_heap         = var.on_heap
+        on_stack        = var.on_stack
+        is_static       = expr.static
+        is_external     = expr.external
+        intent          = expr.intent
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
@@ -1292,7 +1370,7 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        if not(is_static) and (allocatable or (var.shape is None)):
+        if not(is_static) and (on_heap or (var.shape is None)):
             s = ''
 
         # Default empty strings
@@ -1314,10 +1392,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute allocatable string
         if not is_static:
-            if is_pointer:
+            if is_alias:
                 allocatablestr = ', pointer'
 
-            elif allocatable and not intent:
+            elif on_heap and not intent:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1338,10 +1416,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if (rank == 1) and (is_static or is_stack_array):
+        if (rank == 1) and (is_static or on_stack):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
-        elif (rank > 0) and (is_static or is_stack_array):
+        elif (rank > 0) and (is_static or on_stack):
             #TODO fix bug when we include shape of type list
 
             if var.order == 'C':
@@ -1352,10 +1430,10 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and allocatable and intent:
+        elif (rank > 0) and on_heap and intent:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and (allocatable or is_pointer):
+        elif (rank > 0) and (on_heap or is_alias):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
@@ -1447,6 +1525,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyEmpty):
             return ''
+
+        if isinstance(rhs, NumpyNonZero):
+            code = ''
+            lhs = expr.lhs
+            for i,e in enumerate(rhs.elements):
+                l_c = self._print(lhs[i])
+                e_c = self._print(e)
+                code += '{0} = {1}\n'.format(l_c,e_c)
+            return code
 
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
@@ -1551,7 +1638,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
-        if var.is_pointer:
+        if var.is_alias:
             return ''
         else:
             var_code = self._print(var)
@@ -2310,19 +2397,13 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        # we first create an If statement
-        # TODO: depending on a debug flag we should print 'PASSED' or not.
-        DEBUG = True
+        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
+        body = 'stop 1'
+        epilog = 'end if'
+        return ('{prolog}\n'
+                '{body}\n'
+                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
-        err = ErrorExit()
-        args = [IfSection(PyccelNot(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
-
-        if DEBUG:
-            args.append((True, PythonPrint(["'PASSED'"])))
-
-        stmt = If(*args)
-        code = self._print(stmt)
-        return self._get_statement(code)
 
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
@@ -2407,19 +2488,22 @@ class FCodePrinter(CodePrinter):
         if expr.dtype is NativeString():
             return '//'.join('trim('+self._print(a)+')' for a in expr.args)
         else:
-            return ' + '.join(self._print(a) for a in expr.args)
+            args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+            return ' + '.join(self._print(a) for a in args)
 
     def _print_PyccelMinus(self, expr):
-        args = [self._print(a) for a in expr.args]
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args_code = [self._print(a) for a in args]
 
-        return ' - '.join(args)
+        return ' - '.join(args_code)
 
     def _print_PyccelMul(self, expr):
-        args = [self._print(a) for a in expr.args]
-        return ' * '.join(a for a in args)
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args_code = [self._print(a) for a in args]
+        return ' * '.join(a for a in args_code)
 
     def _print_PyccelDiv(self, expr):
-        if all(a.dtype is NativeInteger() for a in expr.args):
+        if all(a.dtype in (NativeBool(), NativeInteger()) for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
@@ -2526,23 +2610,27 @@ class FCodePrinter(CodePrinter):
         return '{0} /= {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} < {1}'.format(lhs, rhs)
 
     def _print_PyccelLe(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} <= {1}'.format(lhs, rhs)
 
     def _print_PyccelGt(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} > {1}'.format(lhs, rhs)
 
     def _print_PyccelGe(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
+        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        lhs = self._print(args[0])
+        rhs = self._print(args[1])
         return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_PyccelNot(self, expr):
@@ -2711,7 +2799,7 @@ class FCodePrinter(CodePrinter):
                 if (not self._additional_code):
                     self._additional_code = ''
                 var_name = self.scope.get_new_name()
-                var = Variable(base.dtype, var_name, is_stack_array = True,
+                var = Variable(base.dtype, var_name, memory_handling = 'stack',
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 

@@ -2,8 +2,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# TODO [EB 12.03.21]: Remove pylint command with PR #797
-# pylint: disable=W0201
 """
 Module handling all python builtin operators
 These operators all have a precision as detailed here:
@@ -809,6 +807,12 @@ class PyccelEq(PyccelComparisonOperator):
     """
     __slots__ = ()
 
+    def __new__(cls, arg1, arg2, simplify = False):
+        if isinstance(arg1, Nil) or isinstance(arg2, Nil):
+            return PyccelIs(arg1, arg2)
+        else:
+            return super().__new__(cls)
+
     def __repr__(self):
         return '{} == {}'.format(self.args[0], self.args[1])
 
@@ -818,7 +822,7 @@ class PyccelNe(PyccelComparisonOperator):
     I.e:
         a != b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelNe(a, b)
 
     Parameters
     ----------
@@ -828,6 +832,12 @@ class PyccelNe(PyccelComparisonOperator):
         The second argument passed to the operator
     """
     __slots__ = ()
+
+    def __new__(cls, arg1, arg2, simplify = False):
+        if isinstance(arg1, Nil) or isinstance(arg2, Nil):
+            return PyccelIsNot(arg1, arg2)
+        else:
+            return super().__new__(cls)
 
     def __repr__(self):
         return '{} != {}'.format(self.args[0], self.args[1])
