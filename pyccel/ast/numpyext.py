@@ -108,6 +108,15 @@ __all__ = (
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
+    """ Modify the input shape to the expected type
+
+    Parameters
+    ----------
+    is_scalar : bool
+                True if the result is a scalar, False if it is an array
+    shape     : PyccelAstNode/iterable/int
+                input shape
+    """
     if is_scalar:
         return None
     elif shape is None:
