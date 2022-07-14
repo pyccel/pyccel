@@ -3812,20 +3812,17 @@ class CommentBlock(Basic):
 
 
 class Assert(Basic):
-
-    """Represents a assert statement in the code.
+    """
+    Represents an assert statement in the code.
 
     Parameters
     ----------
     test: PyccelAstNode
         boolean expression to check
-
-    Examples
-    --------
     """
     __slots__ = ('_test',)
     _attribute_nodes = ('_test',)
-    #TODO add type check in the semantic stage
+
     def __init__(self, test):
         if pyccel_stage != 'syntactic':
             if test.dtype is not NativeBool():
