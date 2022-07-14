@@ -188,7 +188,7 @@ class Variable(PyccelAstNode):
         if rank == 0:
             assert shape is None
 
-        if shape is None:
+        elif shape is None:
             shape = tuple(None for i in range(rank))
 
         if not precision:
