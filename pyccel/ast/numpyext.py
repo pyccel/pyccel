@@ -1298,9 +1298,13 @@ class NumpyMod(NumpyUfuncBinary):
 
     def _set_shape_rank(self, x1, x2):
         args   = (x1, x2)
+        ranks  = [a.rank  for a in args]
         shapes = [a.shape for a in args]
 
-        if all(sh is not None for sh in shapes):
+        if all(r == 0 for r in ranks):
+            self._rank  = 0
+            self._shape = None
+        else:
             if len(args) == 1:
                 shape = args[0].shape
             else:
@@ -1311,8 +1315,6 @@ class NumpyMod(NumpyUfuncBinary):
 
             self._shape = shape
             self._rank  = len(shape)
-        else:
-            self._rank = max(a.rank for a in args)
 
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
