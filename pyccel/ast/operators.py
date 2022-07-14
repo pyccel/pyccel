@@ -449,9 +449,6 @@ class PyccelBinaryOperator(PyccelOperator):
             rank  = 0
             shape = None
         else:
-            ranks  = [a.rank for a in args]
-            shapes = [() if a.rank == 0 else a.shape for a in args]
-
             s = broadcast(args[0].shape, args[1].shape)
 
             shape = s
