@@ -448,7 +448,10 @@ class PythonTuple(PyccelAstNode):
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
-            self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+            if self._rank == 1:
+                self._shape     = (LiteralInteger(len(args)), )
+            else:
+                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
         def is_int(a):

@@ -2674,7 +2674,10 @@ class SemanticParser(BasicParser):
             elif isinstance(a, Variable):
                 dvar  = self._infere_type(a, **settings)
                 dtype = dvar.pop('datatype')
-                if dvar['rank'] > 0:
+                if dvar['rank'] == 1:
+                    dvar['rank']  = 0
+                    dvar['shape'] = None
+                if dvar['rank'] > 1:
                     dvar['rank'] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
@@ -2784,8 +2787,9 @@ class SemanticParser(BasicParser):
 
         d_var['rank'] += 1
         d_var['memory_handling'] = 'heap'
-        shape = list(d_var['shape'])
-        shape.insert(0, dim)
+        shape = [dim]
+        if d_var['rank'] == 0:
+            shape += list(d_var['shape'])
         d_var['shape'] = shape
 
         # ...
