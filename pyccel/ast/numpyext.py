@@ -255,8 +255,8 @@ class NumpyImag(PythonImag):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = self.internal_var.shape
-        self._rank  = len(self._shape)
+        self._rank  = self.internal_var.rank
+        self._shape = process_shape(self._rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):
@@ -575,10 +575,10 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = (m, n)
 
         if a.rank == 1 and b.rank == 1:
-            self._rank = 0
+            self._rank  = 0
             self._shape = None
         elif a.rank == 1 or b.rank == 1:
-            self._rank = 1
+            self._rank  = 1
             self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
             self._rank = 2
@@ -790,8 +790,8 @@ class NumpyWhere(PyccelInternalFunction):
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
 
+        self._shape = process_shape(False, shape)
         self._rank  = len(shape)
-        self._shape = shape
         self._order = 'C'
         super().__init__(condition, x, y)
 
@@ -1156,8 +1156,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._set_order(x1, x2)
 
     def _set_shape_rank(self, x1, x2):
-        self._shape     = x1.shape  # TODO ^^
-        self._rank      = x1.rank   # TODO ^^
+        self._shape = broadcast(x1.shape, x2.shape)
+        self._rank  = 0 if self._shape is None else len(self._shape)
 
     def _set_dtype_precision(self, x1, x2):
         self._dtype     = NativeFloat()
