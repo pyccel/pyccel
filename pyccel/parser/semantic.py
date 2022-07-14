@@ -7,7 +7,7 @@
 See the developer docs for more details
 """
 
-# pylint: disable=R0201, missing-function-docstring
+# pylint: disable=missing-function-docstring
 
 from itertools import chain
 
@@ -570,7 +570,8 @@ class SemanticParser(BasicParser):
 
         if isinstance(var, PythonTuple):
             def is_literal_index(a):
-                is_int = lambda a: isinstance(a, (int, LiteralInteger)) or \
+                def is_int(a):
+                    return isinstance(a, (int, LiteralInteger)) or \
                         (isinstance(a, PyccelUnarySub) and \
                          isinstance(a.args[0], (int, LiteralInteger)))
                 if isinstance(a, Slice):
@@ -741,12 +742,12 @@ class SemanticParser(BasicParser):
                      Indicates if the function is elemental
         """
         if elemental:
-            incompatible = lambda i_arg, f_arg: \
-                        (i_arg.dtype is not f_arg.dtype or \
+            def incompatible(i_arg, f_arg):
+                return (i_arg.dtype is not f_arg.dtype or \
                         get_final_precision(i_arg) != get_final_precision(f_arg))
         else:
-            incompatible = lambda i_arg, f_arg: \
-                        (i_arg.dtype is not f_arg.dtype or \
+            def incompatible(i_arg, f_arg):
+                return (i_arg.dtype is not f_arg.dtype or \
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
@@ -982,7 +983,7 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
                         if (isinstance(a, Variable) and not a.is_argument) \
-                                or not all([b.is_argument for b in a.get_attribute_nodes(Variable)]):
+                                or not all(b.is_argument for b in a.get_attribute_nodes(Variable)):
                             errors.report(STACK_ARRAY_UNKNOWN_SHAPE, symbol=name,
                             severity='error',
                             bounding_box=(self._current_fst_node.lineno,
@@ -1197,7 +1198,8 @@ class SemanticParser(BasicParser):
             if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                format_shape = lambda s: "" if len(s)==0 else s
+                def format_shape(s):
+                    return "" if len(s)==0 else s
                 txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
@@ -2659,7 +2661,7 @@ class SemanticParser(BasicParser):
         dims    = []
         body    = expr.loops[1]
 
-        idx_subs = dict()
+        idx_subs = {}
         #scope = self.create_new_loop_scope()
 
         # The symbols created to represent unknown valued objects are temporary
@@ -3365,8 +3367,9 @@ class SemanticParser(BasicParser):
         if len(args) == 0:
             return PythonPrint(args)
 
-        is_symbolic = lambda var: isinstance(var, Variable) \
-            and isinstance(var.dtype, NativeSymbol)
+        def is_symbolic(var):
+            return isinstance(var, Variable) \
+                and isinstance(var.dtype, NativeSymbol)
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
@@ -3441,7 +3444,7 @@ class SemanticParser(BasicParser):
 
         attributes = self.scope.find(name, 'classes').attributes
 
-        for i in methods:
+        for i in methods.copy():
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
