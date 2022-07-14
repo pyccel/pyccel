@@ -453,7 +453,7 @@ class CCodePrinter(CodePrinter):
             results = dict(zip(func.results, parent_assign[0].lhs))
             orig_res_vars = list(results.keys())
             new_res_vars  = self._temporary_args
-            new_res_vars = [a.variable if isinstance(a, ObjectAddress) else a for a in new_res_vars]
+            new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
             self._temporary_args = []
             body.substitute(orig_res_vars, new_res_vars)
 
