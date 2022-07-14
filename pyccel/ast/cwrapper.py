@@ -24,7 +24,7 @@ from .internals import get_final_precision
 
 from .variable  import Variable
 
-from .object_address import ObjectAddress
+from .c_concepts import ObjectAddress
 
 
 errors = Errors()

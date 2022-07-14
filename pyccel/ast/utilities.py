@@ -32,7 +32,7 @@ from .scipyext      import scipy_mod
 from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable,
                             HomogeneousTupleVariable )
 
-from .object_address import ObjectAddress
+from .c_concepts import ObjectAddress
 
 errors = Errors()
 

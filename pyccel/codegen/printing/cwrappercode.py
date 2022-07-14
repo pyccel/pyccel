@@ -43,7 +43,7 @@ from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
 from pyccel.ast.variable  import Variable, DottedName
 
-from pyccel.ast.object_address import ObjectAddress
+from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.parser.scope  import Scope
 
