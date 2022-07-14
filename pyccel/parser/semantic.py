@@ -2786,10 +2786,13 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['memory_handling'] = 'heap'
-        shape = [dim]
-        if d_var['rank'] != 0:
-            shape += list(d_var['shape'])
         d_var['rank'] += 1
+        shape = [dim]
+        if d_var['rank'] != 1:
+            d_var['order'] = 'C'
+            shape += list(d_var['shape'])
+        else:
+            d_var['order'] = None
         d_var['shape'] = shape
 
         # ...
