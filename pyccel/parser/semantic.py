@@ -1180,7 +1180,7 @@ class SemanticParser(BasicParser):
             if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                format_shape = lambda s: "" if len(s)==0 else s
+                format_shape = lambda s: "" if s is None else s
                 txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
