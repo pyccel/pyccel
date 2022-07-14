@@ -439,11 +439,10 @@ class PythonTuple(PyccelAstNode):
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
-                shapes     = [a.shape for a in args]
+                inner_shape = [() if a.rank == 0 else a.shape for a in args]
                 self._rank = max(a.rank for a in args) + 1
-                if all(sh is not None for sh in shapes):
-                    self._shape = (LiteralInteger(len(args)), ) + shapes[0]
-                    self._rank  = len(self._shape)
+                self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+                self._rank  = len(self._shape)
 
         else:
             self._rank      = max(a.rank for a in args) + 1
