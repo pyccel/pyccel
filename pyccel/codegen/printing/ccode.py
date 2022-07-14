@@ -48,7 +48,7 @@ from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
-from pyccel.ast.object_address import ObjectAddress
+from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -1849,12 +1849,15 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.value)
 
     def _print_ObjectAddress(self, expr):
-        if isinstance(expr.variable, (IndexedElement, ObjectAddress)):
-            return '&{}'.format(self._print(expr.variable))
-        elif self.stored_in_c_pointer(expr.variable):
-            return '{}'.format(expr.variable.name)
-        else:
-            return '&{}'.format(expr.variable.name)
+        if isinstance(expr.obj, ObjectAddress):
+            return '&{}'.format(self._print(expr.obj))
+        if self.stored_in_c_pointer(expr.obj):
+            if hasattr(expr.obj, 'name'):
+                return '{}'.format(expr.obj.name)
+            return '{}'.format(self._print(expr.obj))
+        if hasattr(expr.obj, 'name'):
+            return '&{}'.format(expr.obj.name)
+        return '&{}'.format(expr.obj)
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
