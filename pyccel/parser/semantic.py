@@ -6,10 +6,6 @@
 
 # pylint: disable=R0201, missing-function-docstring
 
-from collections import OrderedDict
-from distutils.log import error
-from itertools import chain, zip_longest
-
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation

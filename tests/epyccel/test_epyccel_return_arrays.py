@@ -83,13 +83,11 @@ def test_single_return(language):
     assert np.allclose(f_integer32_output, test_int32_output)
     assert f_integer32_output.dtype == test_int32_output.dtype
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64, integer64)
-        test_int64_output = return_array(integer64, integer64)
+    f_integer64_output = epyccel_func(integer64, integer64)
+    test_int64_output = return_array(integer64, integer64)
 
-        assert np.allclose(f_integer64_output, test_int64_output)
-        assert f_integer64_output.dtype == test_int64_output.dtype
+    assert np.allclose(f_integer64_output, test_int64_output)
+    assert f_integer64_output.dtype == test_int64_output.dtype
 
     f_fl_output = epyccel_func(fl, fl)
     test_float_output = return_array(fl, fl)
@@ -189,12 +187,10 @@ def test_multi_returns(language):
 
     assert np.allclose(f_integer32_output, test_int32_output)
 
-    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
-    if sys.platform != 'win32':
-        f_integer64_output = epyccel_func(integer64, integer64)
-        test_int64_output = return_array(integer64, integer64)
+    f_integer64_output = epyccel_func(integer64, integer64)
+    test_int64_output = return_array(integer64, integer64)
 
-        assert np.allclose(f_integer64_output, test_int64_output)
+    assert np.allclose(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl, fl)
     test_float_output = return_array(fl, fl)
