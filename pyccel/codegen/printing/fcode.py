@@ -1073,6 +1073,8 @@ class FCodePrinter(CodePrinter):
                 rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
             else:
                 rhs_code = self._print(expr.arg)
+        elif expr.order is None:
+            rhs_code = self._print(expr.arg)
         return rhs_code
 
     def _print_NumpyFloor(self, expr):
