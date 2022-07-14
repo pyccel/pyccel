@@ -91,7 +91,7 @@ def as_static_function(func, *, mod_scope, name=None):
 
     args    = list(func.arguments)
     results = list(func.results)
-    body    = func.body
+    body    = func.body.body
     arguments_inout = func.arguments_inout
     functions = func.functions
     _results = []
@@ -106,11 +106,13 @@ def as_static_function(func, *, mod_scope, name=None):
             array_body, array_vars = wrap_array(r, scope, False)
             scope.insert_variable(array_vars[-1])
             scope.insert_variable(r)
-            body = CodeBlock(func.body.body + tuple(array_body))
+            body = body + tuple(array_body)
             array_vars.pop(-1)
             _results += array_vars
         elif r.rank == 0:
             _results += [r]
+
+    body = CodeBlock(body)
 
     if name is None:
         name = 'bind_c_{}'.format(func.name).lower()
