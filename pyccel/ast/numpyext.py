@@ -22,7 +22,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType, PythonConjugate)
 
-from .core           import process_shape, Module, Import, PyccelFunctionDef
+from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -43,6 +43,8 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'process_shape',
+    # ---
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -103,6 +105,25 @@ __all__ = (
     'NumpyZeros',
     'NumpyZerosLike',
 )
+
+#=======================================================================================
+def process_shape(is_scalar, shape):
+    if is_scalar:
+        return None
+    elif shape is None:
+        return ()
+    elif not hasattr(shape,'__iter__'):
+        shape = [shape]
+
+    new_shape = []
+    for s in shape:
+        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
+            new_shape.append(s)
+        elif isinstance(s, int):
+            new_shape.append(LiteralInteger(s))
+        else:
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
+    return tuple(new_shape)
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -201,8 +222,8 @@ class NumpyReal(PythonReal):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = process_shape(self.internal_var.shape)
-        self._rank  = len(self._shape)
+        self._rank  = self.internal_var.rank
+        self._shape = process_shape(self._rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):
@@ -380,7 +401,7 @@ class NumpyArray(NumpyNewArray):
             order = 'C'
         # ...
         self._arg   = arg
-        self._shape = process_shape(arg.shape)
+        self._shape = process_shape(False, arg.shape)
         self._rank  = len(self._shape)
         self._dtype = dtype
         self._order = order
@@ -437,7 +458,7 @@ class NumpyArange(NumpyNewArray):
             self._dtype, self._precision = process_dtype(dtype)
 
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
-        self._shape = process_shape(self._shape)
+        self._shape = process_shape(False, self._shape)
         super().__init__()
 
     @property
@@ -883,7 +904,7 @@ class NumpyFull(NumpyNewArray):
     def __init__(self, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
-        shape = process_shape(shape)
+        shape = process_shape(False, shape)
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
@@ -1394,8 +1415,8 @@ class NumpyConjugate(PythonConjugate):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = process_shape(self.internal_var.shape)
-        self._rank  = len(self._shape)
+        self._rank  = self.internal_var.rank
+        self._shape = process_shape(self._rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):

@@ -85,7 +85,6 @@ __all__ = (
     'create_incremented_string',
     'get_iterable_ranges',
     'inline',
-    'process_shape',
     'subs'
 )
 
@@ -4219,17 +4218,4 @@ def get_iterable_ranges(it, var_name=None):
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 #==============================================================================
-def process_shape(shape):
-    if not hasattr(shape,'__iter__'):
-        shape = [shape]
-
-    new_shape = []
-    for s in shape:
-        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
-            new_shape.append(s)
-        elif isinstance(s, int):
-            new_shape.append(LiteralInteger(s))
-        else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
-    return tuple(new_shape)
 
