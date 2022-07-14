@@ -64,7 +64,7 @@ class PythonComplexProperty(PyccelInternalFunction):
     _dtype = NativeFloat()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -135,7 +135,7 @@ class PythonConjugate(PyccelInternalFunction):
     _dtype = NativeComplex()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     name = 'conjugate'
 
@@ -158,8 +158,8 @@ class PythonBool(PyccelAstNode):
     name = 'bool'
     _dtype = NativeBool()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _attribute_nodes = ('_arg',)
 
@@ -191,8 +191,8 @@ class PythonComplex(PyccelAstNode):
 
     _dtype = NativeComplex()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _real_cast = PythonReal
     _imag_cast = PythonImag
@@ -331,8 +331,8 @@ class PythonFloat(PyccelAstNode):
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _attribute_nodes = ('_arg',)
 
@@ -363,8 +363,8 @@ class PythonInt(PyccelAstNode):
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _attribute_nodes  = ('_arg',)
 
@@ -400,7 +400,7 @@ class PythonTuple(PyccelAstNode):
             self._dtype = NativeGeneric()
             self._precision = 0
             self._rank = 0
-            self._shape = ()
+            self._shape = None
             self._is_homogeneous = False
             return
         arg0 = args[0]
@@ -421,7 +421,7 @@ class PythonTuple(PyccelAstNode):
                 self._dtype = NativeString()
                 self._precision = 0
                 self._rank  = 0
-                self._shape = ()
+                self._shape = None
             else:
                 if complexes:
                     self._dtype     = NativeComplex()
@@ -523,7 +523,7 @@ class PythonLen(PyccelInternalFunction):
     _dtype     = NativeInteger()
     _precision = -1
     _rank      = 0
-    _shape     = ()
+    _shape     = None
     _order     = None
 
     def __init__(self, arg):
@@ -726,7 +726,7 @@ class PythonSum(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name   = 'sum'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -749,7 +749,7 @@ class PythonMax(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name   = 'max'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, *x):
@@ -778,7 +778,7 @@ class PythonMin(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name   = 'min'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     def __init__(self, *x):
         if len(x)==1:

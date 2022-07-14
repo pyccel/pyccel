@@ -32,7 +32,7 @@ class Literal(PyccelAstNode):
     __slots__ = ('_precision',)
     _attribute_nodes  = ()
     _rank      = 0
-    _shape     = ()
+    _shape     = None
     _order     = None
 
     def __init__(self, precision):

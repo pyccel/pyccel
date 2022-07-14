@@ -186,7 +186,7 @@ class Variable(PyccelAstNode):
             raise TypeError('rank must be an instance of int.')
 
         if rank == 0:
-            shape = ()
+            assert shape is None
 
         if shape is None:
             shape = tuple(None for i in range(rank))

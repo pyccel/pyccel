@@ -318,7 +318,7 @@ class PyccelNot(PyccelUnaryOperator):
         a _shape or _rank member
         """
         rank = 0
-        shape = ()
+        shape = None
         return shape, rank
 
     def __repr__(self):
@@ -437,7 +437,7 @@ class PyccelBinaryOperator(PyccelOperator):
             other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeFloat(), NativeComplex())]
             assert len(other) == 0
             rank  = 0
-            shape = ()
+            shape = None
         else:
             ranks  = [a.rank for a in args]
             shapes = [a.shape for a in args]
@@ -910,7 +910,7 @@ class PyccelBooleanOperator(PyccelOperator):
     dtype = NativeBool()
     precision = -1
     rank = 0
-    shape = ()
+    shape = None
     order = None
 
     __slots__ = ()

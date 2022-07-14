@@ -466,7 +466,7 @@ class NumpySum(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name = 'sum'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -489,7 +489,7 @@ class NumpyProduct(PyccelInternalFunction):
     __slots__ = ('_arg','_dtype','_precision')
     name = 'product'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -555,7 +555,7 @@ class NumpyMatmul(PyccelInternalFunction):
 
         if a.rank == 1 and b.rank == 1:
             self._rank = 0
-            self._shape = ()
+            self._shape = None
         elif a.rank == 1 or b.rank == 1:
             self._rank = 1
             self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
@@ -827,8 +827,6 @@ class NumpyRandint(PyccelInternalFunction):
     _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
-        if size is None:
-            size = ()
         if not hasattr(size,'__iter__'):
             size = (size,)
 
@@ -1060,7 +1058,7 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = tuple(sh)
             self._order = arg.order
         else:
-            self._shape = ()
+            self._shape = None
             self._order = None
         self._rank = len(self._shape)
         self._order = arg.order
@@ -1310,7 +1308,7 @@ class NumpyAmin(NumpyUfuncUnary):
     __slots__ = ()
     name = 'amin'
     def _set_shape_rank(self, x):
-        self._shape     = ()
+        self._shape     = None
         self._rank      = 0
 
     def _set_dtype_precision(self, x):
@@ -1326,7 +1324,7 @@ class NumpyAmax(NumpyUfuncUnary):
     __slots__ = ()
     name = 'amax'
     def _set_shape_rank(self, x):
-        self._shape     = ()
+        self._shape     = None
         self._rank      = 0
 
     def _set_dtype_precision(self, x):
@@ -1530,7 +1528,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
                 self._order = a.order if a.rank>2 else None
             else:
                 self._rank  = 0
-                self._shape = ()
+                self._shape = None
                 self._order = None
 
         self._arr = a
@@ -1577,7 +1575,7 @@ class NumpyArraySize(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __new__(cls, a, axis = None):

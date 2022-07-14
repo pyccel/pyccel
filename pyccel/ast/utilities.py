@@ -207,12 +207,12 @@ def compatible_operation(*args, language_has_vectors = True):
     """
     if language_has_vectors:
         # If the shapes don't match then an index must be required
-        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
+        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
     else:
-        return all(a.shape==() for a in args)
+        return all(a.rank == 0 for a in args)
 
 #==============================================================================
 def insert_index(expr, pos, index_var):

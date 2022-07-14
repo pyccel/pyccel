@@ -504,7 +504,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'   ] = NativeRange()
             d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = ()
+            d_var['shape'      ] = None
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
             return d_var
@@ -524,7 +524,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'   ] = dtype
             d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = ()
+            d_var['shape'      ] = None
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
 
