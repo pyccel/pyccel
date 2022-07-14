@@ -6,6 +6,8 @@
 
 # pylint: disable=R0201, missing-function-docstring
 
+from itertools import chain
+
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
