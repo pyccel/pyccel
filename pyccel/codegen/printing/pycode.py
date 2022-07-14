@@ -426,6 +426,10 @@ class PythonCodePrinter(CodePrinter):
         txt = '\n'.join(self._print(c) for c in expr.comments)
         return '"""{0}"""\n'.format(txt)
 
+    def _print_Assert(self, expr):
+        condition = self._print(expr.test)
+        return "assert {0}\n".format(condition)
+
     def _print_EmptyNode(self, expr):
         return ''
 
