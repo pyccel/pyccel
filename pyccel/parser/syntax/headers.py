@@ -13,15 +13,18 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
-from pyccel.ast.core      import ValuedArgument
+from pyccel.ast.core      import FunctionDefArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
-from pyccel.ast.literals  import LiteralString
+from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
 from pyccel.errors.errors import Errors
+from pyccel.utilities.stage import PyccelStage
 
 DEBUG = False
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 class Header(object):
     """Class for Header syntax."""
@@ -98,8 +101,7 @@ class ListType(BasicStmt):
         d_var = {}
         d_var['datatype'] = str(dtypes[0])
         d_var['rank'] = len(dtypes)
-        d_var['is_pointer'] = len(dtypes)>0
-        d_var['allocatable'] = False
+        d_var['memory_handling'] = 'alias' if len(dtypes) > 0 else 'stack'
         d_var['precision'] = max(precisions)
         d_var['order'] = 'C'
         d_var['is_func'] = False
@@ -143,8 +145,7 @@ class Type(BasicStmt):
         d_var={}
         d_var['datatype']=dtype
         d_var['rank'] = len(trailer)
-        d_var['allocatable'] = len(trailer)>0
-        d_var['is_pointer'] = False
+        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else 'stack'
         d_var['precision']  = precision
         d_var['is_func'] = False
         d_var['is_const'] = False
@@ -156,6 +157,33 @@ class Type(BasicStmt):
             d_var['order'] = order
         return d_var
 
+class ShapedID(BasicStmt):
+    """class representing a ShapedID in the grammar.
+
+    Parameters
+    ----------
+    name: str
+        Name of the variable result
+
+    shape: list
+        A list representing the shape of the result
+    """
+
+    def __init__(self, **kwargs):
+        self._name   = kwargs.pop('name')
+        self._shape  = kwargs.pop('shape', [])
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """Returns a dictionary containing name and shape of result"""
+
+        shape = [i.expr if isinstance(i, MacroStmt) else PyccelSymbol(i) for i in self._shape]
+        d_var = {'name': self._name, 'shape': shape}
+
+        return d_var
+
 class TypeHeader(BasicStmt):
     pass
 
@@ -164,7 +192,7 @@ class StringStmt(BasicStmt):
         self.arg = kwargs.pop('arg')
     @property
     def expr(self):
-        return LiteralString(repr(str(self.arg)))
+        return LiteralString(str(self.arg))
 
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
@@ -389,7 +417,7 @@ class MacroArg(BasicStmt):
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
-            return ValuedArgument(arg, value)
+            return FunctionDefArgument(arg, value=value)
         return arg
 
 
@@ -446,9 +474,7 @@ class FunctionMacroStmt(BasicStmt):
         """
 
         self.dotted_name = tuple(kwargs.pop('dotted_name'))
-        self.results = kwargs.pop('results',None)
-        if self.results:
-            self.results = [PyccelSymbol(r) for r in self.results]
+        self.results = kwargs.pop('results', [])
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -480,14 +506,21 @@ class FunctionMacroStmt(BasicStmt):
         for i in self.master_args:
             if isinstance(i, MacroStmt):
                 master_args.append(i.expr)
-            else:
+            elif isinstance(i, str):
                 master_args.append(PyccelSymbol(i))
+            elif isinstance(i, int):
+                master_args.append(LiteralInteger(i))
+            elif isinstance(i, float):
+                master_args.append(LiteralFloat(i))
+            elif i is True:
+                master_args.append(LiteralTrue())
+            elif i is False:
+                master_args.append(LiteralFalse())
+            else:
+                NotImplementedError("Unrecognised macro argument type")
 
-
-        results = self.results
-        if (results is None):
-            results = []
-
+        results = [PyccelSymbol(r.expr['name']) for r in self.results]
+        results_shapes = [r.expr['shape'] for r in self.results]
 
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
@@ -497,7 +530,8 @@ class FunctionMacroStmt(BasicStmt):
             # so that we always have a name of type str
             args = list(name.name[:-1]) + list(args)
             name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args, results=results)
+        return MacroFunction(name, args, master_name, master_args, results=results,
+                             results_shapes=results_shapes)
 
 
 #################################################
@@ -507,6 +541,7 @@ class FunctionMacroStmt(BasicStmt):
 # lists.
 hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
+               ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,
@@ -549,6 +584,8 @@ def parse(filename=None, stmts=None):
         model = meta.model_from_str(stmts)
     else:
         raise ValueError('Expecting a filename or a string')
+    # Ensure correct stage
+    pyccel_stage.set_stage('syntactic')
 
     stmts = []
     for stmt in model.statements:

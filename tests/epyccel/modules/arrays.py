@@ -615,6 +615,12 @@ def array_real_2d_1d_matmul(A, x, out):
     from numpy import matmul
     out[:] = matmul(A, x)
 
+@types('real[:,:], real[:]')
+def array_real_2d_1d_matmul_creation(A, x):
+    from numpy import matmul
+    out = matmul(A, x)
+    return out.sum()
+
 @types('real[:,:](order=F), real[:], real[:]')
 def array_real_2d_1d_matmul_order_F(A, x, out):
     from numpy import matmul
@@ -640,6 +646,10 @@ def array_real_2d_2d_matmul_F_F(A, B, out):
 def array_real_2d_2d_matmul_mixorder(A, B, out):
     from numpy import matmul
     out[:,:] = matmul(A, B)
+
+@types('real[:,:], real[:,:], real[:,:]')
+def array_real_2d_2d_matmul_operator(A, B, out):
+    out[:,:] = A @ B
 
 @types('real[:], real[:], real[:]')
 def array_real_loopdiff(x, y, out):
@@ -1755,3 +1765,11 @@ def arr_arange_6():
     import numpy as np
     a = np.arange(20, 1, -1.1)
     return np.shape(a)[0], a[0], a[-1]
+
+def iterate_slice(i : int):
+    import numpy as np
+    a = np.arange(15)
+    res = 0
+    for ai in a[:i]:
+        res += ai
+    return res

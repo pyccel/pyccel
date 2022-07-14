@@ -21,7 +21,7 @@ DataType: ID|STAR;
 Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
 ListType : '[' dtype+=Type[','] ']';
 
-FuncType: '('(results*=TypeHeader[','])?')' '('decs*=TypeHeader[',']')';
+FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
 
 TypeHeader: FuncType|Type|ListType;
 UnionTypeStmt: (const=Const)? dtypes+=TypeHeader['|'] ;
@@ -30,7 +30,7 @@ Const: 'const';
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 
 FunctionHeaderStmt: 
-  (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
+  ((name=ID '(') | ((kind=FunctionKind)? (static=Static)? name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
 
 TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
@@ -81,8 +81,12 @@ AvailableMacro:
 
 // TODO shall we add also results to the master call?
 
+ShapeElement: MacroValue | ':';
+
+ShapedID: name=ID ('(' shape+=ShapeElement[','] ')')?;
+
 FunctionMacroStmt: 
-  'macro' ('(' results*=ID[','] ')' ',')?
+  'macro' ('(' results*=ShapedID[','] ')' ',')?
   dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?

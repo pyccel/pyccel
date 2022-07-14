@@ -17,6 +17,7 @@ __pycache__
 __pyccel__
 __epyccel__
 .DS_Store
+.vscode
 
 build
 *egg*
@@ -34,8 +35,11 @@ doc/source
 *.ps
 *.gv
 *.exe
+*.lock
 
 *.swp
+
+pyccel/compilers/*.json
 
 tests/*.pyccel
 tests/*.f90
@@ -50,6 +54,7 @@ tests/scripts/core/*.f90
 tests/scripts/core/*.mod
 tests/scripts/core/*.o
 
+tests/pyccel/scripts/runtest_headers.py
 tests/pyccel/scripts/headers.pyh
 tests/pyccel/scripts/test_headers.py
 
@@ -61,3 +66,5 @@ tests/examples/openmp/*.pyccel
 tests/examples/openmp/*.f90
 tests/examples/openmp/*.mod
 tests/examples/openmp/*.o
+
+benchmarks/tmp/*

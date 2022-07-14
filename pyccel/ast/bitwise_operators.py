@@ -8,12 +8,11 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
-# TODO [EB 12.03.21]: Remove pylint command with PR #797
-# pylint: disable=W0201
 from .builtins     import PythonInt
-from .datatypes    import (NativeBool, NativeInteger, NativeReal,
+from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
                            NativeComplex, NativeString)
-from .operators     import PyccelUnaryOperator, PyccelOperator
+from .internals    import max_precision
+from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
     'PyccelRShift',
@@ -42,15 +41,15 @@ class PyccelInvert(PyccelUnaryOperator):
     __slots__ = ()
     _precedence = 14
 
-    def _set_dtype(self):
-        self._dtype     = NativeInteger()
-        a = self._args[0]
+    def _calculate_dtype(self, *args):
+        dtype = NativeInteger()
+        a = args[0]
         if a.dtype not in (NativeInteger(), NativeBool()):
-            raise TypeError('unsupported operand type(s): {}'.format(self))
+            raise TypeError('unsupported operand type(s): {}'.format(args))
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
-
-        self._precision = a.precision
+        precision = a.precision
+        return dtype, precision
 
     def __repr__(self):
         return '~{}'.format(repr(self.args[0]))
@@ -68,9 +67,15 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    __slots__ = ()
+    _shape = ()
+    _rank = 0
+    _order = None
+    __slots__ = ('_dtype','_precision')
 
-    def _set_dtype(self):
+    def _set_order(self):
+        pass
+
+    def _calculate_dtype(self, *args):
         """ Sets the dtype and precision
 
         If one argument is a string then all arguments must be strings
@@ -80,26 +85,32 @@ class PyccelBitOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-        integers  = [a for a in self._args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in self._args if a.dtype is NativeReal()]
-        complexes = [a for a in self._args if a.dtype is NativeComplex()]
-        strs      = [a for a in self._args if a.dtype is NativeString()]
+        integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
+        complexes = [a for a in args if a.dtype is NativeComplex()]
+        strs      = [a for a in args if a.dtype is NativeString()]
 
-        if strs or complexes or reals:
-            raise TypeError('unsupported operand type(s): {}'.format(self))
+        if strs or complexes or floats:
+            raise TypeError('unsupported operand type(s): {}'.format(args))
         elif integers:
-            self._handle_integer_type(integers)
+            return self._handle_integer_type(integers)
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            raise TypeError('cannot determine the type of {}'.format(args))
 
     def _set_shape_rank(self):
-        self._rank = 0
-        self._shape = ()
+        pass
 
-    def _handle_integer_type(self, integers):
-        self._dtype     = NativeInteger()
-        self._precision = max(a.precision for a in integers)
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+    def _handle_integer_type(self, args):
+        dtype    = NativeInteger()
+        integers = [a for a in args if a.dtype is NativeInteger()]
+
+        if not integers:
+            precision = -1
+        else:
+            precision = max_precision(integers)
+
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
+        return dtype, precision
 
 #==============================================================================
 
@@ -163,13 +174,14 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     __slots__ = ()
     def _handle_integer_type(self, integers):
         if all(a.dtype is NativeInteger() for a in integers):
-            self._dtype = NativeInteger()
+            dtype = NativeInteger()
         elif all(a.dtype is NativeBool() for a in integers):
-            self._dtype = NativeBool()
+            dtype = NativeBool()
         else:
-            self._dtype = NativeInteger()
+            dtype = NativeInteger()
             self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
-        self._precision = max(a.precision for a in integers)
+        precision = max_precision(integers, NativeInteger())
+        return dtype, precision
 
 #==============================================================================
 

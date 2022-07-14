@@ -3,13 +3,17 @@
 /* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
 /* --------------------------------------------------------------------------------------- */
 
-#include "ndarrays.h"
+# include "ndarrays.h"
+# include <string.h>
+# include <stdarg.h>
+# include <stdlib.h>
 
 /*
 ** allocation
 */
 
-t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
+t_ndarray   array_create(int32_t nd, int64_t *shape,
+        enum e_types type, bool is_view)
 {
     t_ndarray arr;
 
@@ -45,7 +49,7 @@ t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
             arr.type_size = sizeof(double complex);
             break;
     }
-    arr.is_view = false;
+    arr.is_view = is_view;
     arr.length = 1;
     arr.shape = malloc(arr.nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
@@ -61,7 +65,8 @@ t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
         for (int32_t j = i + 1; j < arr.nd; j++)
             arr.strides[i] *= arr.shape[j];
     }
-    arr.raw_data = malloc(arr.buffer_size);
+    if (!is_view)
+        arr.raw_data = malloc(arr.buffer_size);
     return (arr);
 }
 
@@ -297,6 +302,25 @@ void        alias_assign(t_ndarray *dest, t_ndarray src)
     memcpy(dest->shape, src.shape, sizeof(int64_t) * src.nd);
     dest->strides = malloc(sizeof(int64_t) * src.nd);
     memcpy(dest->strides, src.strides, sizeof(int64_t) * src.nd);
+    dest->is_view = true;
+}
+
+void        transpose_alias_assign(t_ndarray *dest, t_ndarray src)
+{
+    /*
+    ** copy src to dest
+    ** allocate new memory for shape and strides
+    ** setting is_view to true for the garbage collector to deallocate
+    */
+
+    *dest = src;
+    dest->shape = malloc(sizeof(int64_t) * src.nd);
+    dest->strides = malloc(sizeof(int64_t) * src.nd);
+    for (int32_t i = 0; i < src.nd; i++)
+    {
+        dest->shape[i] = src.shape[src.nd-1-i];
+        dest->strides[i] = src.strides[src.nd-1-i];
+    }
     dest->is_view = true;
 }
 

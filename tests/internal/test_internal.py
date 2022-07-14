@@ -5,7 +5,6 @@
 #      execute the binary file
 
 import os
-import sys
 import pytest
 from pyccel.codegen.pipeline import execute_pyccel
 
@@ -18,23 +17,32 @@ def get_files_from_folder(foldername):
     return files
 
 @pytest.mark.parametrize("f", get_files_from_folder('blas'))
+@pytest.mark.external
 def test_blas(f):
     execute_pyccel(f, libs=['blas'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('lapack'))
+@pytest.mark.external
 def test_lapack(f):
     execute_pyccel(f, libs=['blas', 'lapack'])
 
-@pytest.mark.skipif(sys.platform == "win32", reason = "Mpi not yet correctly installed")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi'))
+@pytest.mark.external
 def test_mpi(f):
-    execute_pyccel(f, compiler='mpif90')
+    execute_pyccel(f, accelerators=['mpi'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('openmp'))
-def test_openmp(f):
-    execute_pyccel(f, accelerator='openmp')
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+    )
+)
+@pytest.mark.external
+def test_openmp(f, language):
+    execute_pyccel(f, accelerators=['openmp'], language=language)
 
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
+#@pytest.mark.external
 #def test_openacc():
 #    execute_pyccel(f, compiler='pgfortran', accelerator='openacc')
 

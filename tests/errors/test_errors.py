@@ -56,7 +56,7 @@ def test_semantic_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, show_traceback=False)
+    pyccel = Parser(f)
     ast = pyccel.parse()
 
     settings = {}
@@ -74,7 +74,7 @@ def test_semantic_non_blocking_errors(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f, show_traceback=False)
+    pyccel = Parser(f)
     ast = pyccel.parse()
 
     settings = {}

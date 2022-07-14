@@ -23,36 +23,16 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 #==============================================================================
-def _which(program):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    if os.name == 'nt':  # Windows
-        program = program + '.exe'
-    fpath, _ = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-#==============================================================================
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
-def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None):
+def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
     pyccel console command.
     """
     parser = MyParser(description='pyccel command line')
 
-    parser.add_argument('files', metavar='N', type=str, nargs='+',
+    parser.add_argument('files', metavar='N', type=str, nargs='*',
                         help='a Pyccel file')
 
     #... Version
@@ -82,13 +62,12 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
 
-    group.add_argument('--compiler', choices=('gfortran', 'ifort', 'pgfortran', \
-            'gcc', 'icc'), help='Compiler name')
-
-    group.add_argument('--mpi-compiler', help='MPI compiler wrapper')
+    group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI}')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
+    group.add_argument('--wrapper-flags', type=str, \
+                       help='Compiler flags for the wrapper.')
     group.add_argument('--debug', action='store_true', \
                        help='compiles the code in a debug mode.')
 
@@ -120,6 +99,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     # ... Accelerators
     group = parser.add_argument_group('Accelerators options')
+    group.add_argument('--mpi', action='store_true', \
+                       help='uses mpi')
     group.add_argument('--openmp', action='store_true', \
                        help='uses openmp')
     group.add_argument('--openacc', action='store_true', \
@@ -132,6 +113,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                         help='enables verbose mode.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='shows internal messages')
+    group.add_argument('--export-compile-info', type=str, default = None, \
+                        help='file to which the compiler json file is exported')
     # ...
 
     # TODO move to another cmd line
@@ -156,6 +139,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     if args.compiler:
         compiler = args.compiler
 
+    if not mpi:
+        mpi = args.mpi
+
     if not openmp:
         openmp = args.openmp
 
@@ -177,47 +163,60 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
         sys.exit(1)
     # ...
 
-    filename = files[0]
+    compiler_export_file = args.export_compile_info
 
-    # ... report error
-    if os.path.isfile(filename):
-        # we don't use is_valid_filename_py since it uses absolute path
-        # file extension
-        ext = filename.split('.')[-1]
-        if not(ext in ['py', 'pyh']):
+    if len(files) == 0:
+        if compiler_export_file is None:
+            parser.error("please specify a file to pyccelise")
+        else:
+            filename = ''
+    else:
+        filename = files[0]
+
+        # ... report error
+        if os.path.isfile(filename):
+            # we don't use is_valid_filename_py since it uses absolute path
+            # file extension
+            ext = filename.split('.')[-1]
+            if not(ext in ['py', 'pyh']):
+                errors = Errors()
+                # severity is error to avoid needing to catch exception
+                errors.report(INVALID_FILE_EXTENSION,
+                              symbol=ext,
+                              severity='error')
+                errors.check()
+                sys.exit(1)
+        else:
+            # we use Pyccel error manager, although we can do it in other ways
             errors = Errors()
             # severity is error to avoid needing to catch exception
-            errors.report(INVALID_FILE_EXTENSION,
+            errors.report(INVALID_FILE_DIRECTORY,
+                          symbol=filename,
+                          severity='error')
+            errors.check()
+            sys.exit(1)
+        # ...
+
+    if compiler_export_file is not None:
+        _, ext = os.path.splitext(compiler_export_file)
+        if ext == '':
+            compiler_export_file = compiler_export_file + '.json'
+        elif ext != '.json':
+            errors = Errors()
+            # severity is error to avoid needing to catch exception
+            errors.report('Wrong file extension. Expecting `json`, but found',
                           symbol=ext,
                           severity='error')
             errors.check()
             sys.exit(1)
-    else:
-        # we use Pyccel error manager, although we can do it in other ways
-        errors = Errors()
-        # severity is error to avoid needing to catch exception
-        errors.report(INVALID_FILE_DIRECTORY,
-                      symbol=filename,
-                      severity='error')
-        errors.check()
-        sys.exit(1)
-    # ...
 
-    if compiler:
-        if _which(compiler) is None:
-            errors = Errors()
-            # severity is error to avoid needing to catch exception
-            errors.report('Could not find compiler',
-                          symbol=compiler,
-                          severity='error')
-            errors.check()
-            sys.exit(1)
-
-    accelerator = None
+    accelerators = []
+    if mpi:
+        accelerators.append("mpi")
     if openmp:
-        accelerator = "openmp"
+        accelerators.append("openmp")
     if openacc:
-        accelerator = "openacc"
+        accelerators.append("openacc")
 
     # ...
 
@@ -244,21 +243,20 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        verbose       = args.verbose,
                        language      = args.language,
                        compiler      = compiler,
-                       mpi_compiler  = args.mpi_compiler,
                        fflags        = args.flags,
+                       wrapper_flags = args.wrapper_flags,
                        includes      = args.includes,
                        libdirs       = args.libdirs,
                        modules       = (),
                        libs          = args.libs,
                        debug         = args.debug,
-                       accelerator   = accelerator,
-                       folder        = args.output)
+                       accelerators  = accelerators,
+                       folder        = args.output,
+                       compiler_export_file = compiler_export_file)
     except PyccelError:
         sys.exit(1)
     finally:
         os.chdir(base_dirpath)
-
-    return
 
 #==============================================================================
 # NOTE: left here for later reference

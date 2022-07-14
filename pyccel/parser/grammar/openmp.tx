@@ -42,11 +42,11 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 OmpParallelConstruct:   'parallel'        combined=ParallelCombined? clauses*=AllOmpClauses;
 OmpLoopConstruct:       'for'             combinedsimd='simd'? clauses*=AllOmpClauses;
-OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
+OmpTaskLoopConstruct:   'taskloop'        clauses*=AllOmpClauses;
 OmpSingleConstruct:     'single'          clauses*=AllOmpClauses;
 OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
 OmpMaskedConstruct:     'masked'          combined=MaskedCombined? clauses*=AllOmpClauses;
-OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
+OmpSimdConstruct:       'simd'            clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clauses were added (can't test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
@@ -145,13 +145,13 @@ OmpCopyin: 'copyin' '(' args+=ID[','] ')';
 OmpDepend: 'depend' '('dtype=OmpDependenceType ':' args+=ID[','] ')';
 OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
 OmpinReduction: ctype='in_reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
-OmpCollapse: 'collapse' '(' n=INT ')';
-OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
-OmpOrdered: 'ordered' ('(' n=INT ')')?;
-OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
+OmpCollapse: 'collapse' '(' n=IntegerType ')';
+OmpLinear: 'linear' '(' val=ID ':' step=IntegerType ')';
+OmpOrdered: 'ordered' ('(' n=IntegerType ')')?;
+OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=IntegerType)? ')';
 OmpEndClause: 'end' construct*=OpenmpConstructs;
 OmpCriticalName: '(' args=ID ')';
-OmpFilter: name='filter' '(' n=INT ')';
+OmpFilter: name='filter' '(' n=IntegerType ')';
 OmpPriority: name='priority' '(' n=PriorityIndex ')';
 OmpUntied: name='untied';
 OmpMergeable: name='mergeable';
@@ -164,6 +164,7 @@ OmpNowait: name='nowait';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
+IntegerType: ( INT | ID );
 CancelType: ('parallel' | 'sections' | 'taskgroup' | 'for');
 OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');

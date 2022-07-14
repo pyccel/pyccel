@@ -8,6 +8,9 @@ from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 from pyccel.errors.errors import PyccelError
 
+RTOL = 2e-14
+ATOL = 1e-15
+
 def test_func_no_args_1(language):
     '''test function with return value but no args'''
     def free_gift():
@@ -151,7 +154,7 @@ def test_decorator_f5(language):
     x_expected = np.zeros(m1)
     f5(m1, x_expected)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
     # ...
 
 #------------------------------------------------------------------------------
@@ -174,7 +177,7 @@ def test_decorator_f6(language):
     x_expected = np.zeros((m1,m2))
     f6_1(m1, m2, x_expected)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
     # ...
 
 #------------------------------------------------------------------------------
@@ -199,7 +202,7 @@ def test_decorator_f7(language):
     x = np.zeros((m1,m2), order='F')
     f(m1, m2, x)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
     # ...
 
 #------------------------------------------------------------------------------
@@ -305,8 +308,9 @@ def test_multiple_returns_f14(language):
 def test_decorator_f15(language):
     @types('bool', 'int8', 'int16', 'int32', 'int64')
     def f15(a,b,c,d,e):
+        from numpy import int64
         if a:
-            return b + c
+            return int64(b + c)
         else:
             return d + e
 
@@ -371,7 +375,7 @@ def test_decorator_f22(language):
         b = a
         return b
     f = epyccel(f22, language=language)
-    assert f(complex(1, 2.2)) == f22(complex(1, 2.2))
+    assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

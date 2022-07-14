@@ -20,12 +20,18 @@ RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive fun
                               "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
 
 INCOMPATIBLE_TYPES = 'Incompatible types'
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
+INCOMPATIBLE_TYPES_IN_ASSIGNMENT = "Variable has already been defined with type '{}'. Type '{}' in assignment is incompatible"
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
 INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, because it does not support memory reallocation. Avoid redefinition, or use standard heap array.'
 STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
+STACK_ARRAY_UNKNOWN_SHAPE = 'Cannot create stack array from a shape which is unknown at function entry'
+STACK_ARRAY_SHAPE_UNPURE_FUNC = 'Cannot create stack array from a shape created with an impure function'
+INCOMPATIBLE_ARGUMENT = 'Argument {} : {}, passed to function {} is incompatible (expected {}). Please cast the argument explicitly or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)'
+INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is incompatible as it has the wrong ordering (expected '{order}'). Please use an argument with '{order}' ordering, explicitly transpose {arg}, or overload the function (see https://github.com/pyccel/pyccel/blob/master/tutorial/headers.md for details)"
+UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
 UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
+UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
@@ -125,18 +131,20 @@ UNDEFINED_METHOD   = 'Undefined method'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 UNDEFINED_IMPORT_OBJECT = 'Could not find {} in imported module {}'
+UNDERSCORE_NOT_A_THROWAWAY = "Variables named '_' are assumed to be throwaways so their value cannot be used"
 
 REDEFINING_VARIABLE = 'Variable already defined'
 
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
 
 INVALID_FILE_DIRECTORY = 'No file or directory of this name'
-INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` of `pyh`, but found'
+INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` or `pyh`, but found'
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS
 ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
+ARRAY_IS_ARG = 'Attempt to reallocate an array which is an argument. Array arguments cannot be used as local variables'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
 INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 
@@ -148,3 +156,7 @@ ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtim
 ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'
 TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
 DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'
+INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
+WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
+NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
+NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'

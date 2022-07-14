@@ -6,17 +6,6 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
-@pytest.fixture(params=[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('c'      , marks = pytest.mark.c),
-    pytest.param("python", marks = [
-        pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
-        pytest.mark.python]
-    )]
-)
-def language(request):
-    return request.param
-
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')
@@ -49,14 +38,14 @@ def test_f2(language):
     x_expected = np.zeros(m1)
     f5(x_expected)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=2e-14, atol=1e-15 )
     # ...
 
     f(x, m1 = m1)
 
     f5(x_expected, m1)
 
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    assert np.allclose( x, x_expected, rtol=2e-14, atol=1e-15 )
 
 
 #------------------------------------------------------------------------------
@@ -104,3 +93,12 @@ def test_f5(language):
     assert f(2.9+3j) == f5(2.9+3j)
     assert f()       == f5()
     # ...
+
+#------------------------------------------------------------------------------
+def test_changed_precision_arguments(language):
+    import modules.Module_8 as mod
+
+    modnew = epyccel(mod, language=language)
+
+    assert mod.get_f() == modnew.get_f()
+    assert mod.get_g() == modnew.get_g()

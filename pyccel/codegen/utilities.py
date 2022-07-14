@@ -10,181 +10,113 @@ This file contains some useful functions to compile the generated fortran code
 
 import os
 import shutil
-import subprocess
-import sys
-import warnings
+from filelock import FileLock
+import pyccel.stdlib as stdlib_folder
 
-__all__ = ['construct_flags', 'compile_files', 'get_gfortran_library_dir']
+from .compiling.basic     import CompileObj
+
+# get path to pyccel/stdlib/lib_name
+stdlib_path = os.path.dirname(stdlib_folder.__file__)
+
+__all__ = ['copy_internal_library','recompile_object']
 
 #==============================================================================
-# TODO use constructor and a dict to map flags w.r.t the compiler
-_avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort', 'gcc', 'icc']
-
 language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
 
 #==============================================================================
-# TODO add opt flags, etc... look at f2py interface in numpy
-def construct_flags(compiler,
-                    fflags=None,
-                    debug=False,
-                    accelerator=None,
-                    includes=()):
-    """
-    Constructs compiling flags for a given compiler.
-
-    fflags: str
-        Fortran compiler flags. Default is `-O3`
-
-    compiler: str
-        used compiler for the target language.
-
-    accelerator: str
-        name of the selected accelerator.
-        One among ('openmp', 'openacc')
-
-    debug: bool
-        add some useful prints that may help for debugging.
-
-    includes: list
-        list of include directories paths
-
-    libdirs: list
-        list of lib directories paths
-    """
-
-    if not(compiler in _avail_compilers):
-        raise ValueError("Only {0} are available.".format(_avail_compilers))
-
-    if not fflags:
-        fflags = '-O3'
-
-    # make sure there are spaces
-    flags = str(fflags)
-    if compiler == "gfortran":
-        if debug:
-            flags += " -fcheck=bounds"
-
-    if compiler == "mpif90":
-        if debug:
-            flags += " -fcheck=bounds"
-        if sys.platform == "win32":
-            mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
-            mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
-            flags += ' -D USE_MPI_MODULE -I"{}" -L"{}"'.format(mpiinc, mpilib)
-
-    if accelerator is not None:
-        if accelerator == "openmp":
-            if sys.platform == "darwin" and compiler == "gcc":
-                flags += " -Xpreprocessor"
-
-            flags += " -fopenmp"
-            if compiler == 'ifort':
-                flags   += ' -nostandard-realloc-lhs '
-
-        elif accelerator == "openacc":
-            flags += " -ta=multicore -Minfo=accel"
-        else:
-            raise ValueError("Only openmp and openacc are available")
-
-    # Construct flags
-    flags += ''.join(' -I"{0}"'.format(i) for i in includes)
-
-    return flags
+# map internal libraries to their folders inside pyccel/stdlib and their compile objects
+# The compile object folder will be in the pyccel dirpath
+internal_libs = {
+    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
+    "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
+}
+internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
+                                                             accelerators = ('python',),
+                                                             dependencies = (internal_libs["ndarrays"][1],
+                                                                             internal_libs["cwrapper"][1])))
 
 #==============================================================================
-def compile_files(filename, compiler, flags,
-                    binary=None,
-                    verbose=False,
-                    modules=(),
-                    is_module=False,
-                    libs=(),
-                    libdirs=(),
-                    language="fortran",
-                    output=''):
+def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
-    Compiles the generated file.
+    Copy an internal library from its specified stdlib folder to the pyccel
+    directory. The copy is only done if the files are not already present or
+    if the files have changed since they were last copied. Extra files can be
+    added to the folder if and when the copy occurs (e.g. for specifying
+    the numpy version compatibility)
 
-    verbose: bool
-        talk more
+    Parameters
+    ----------
+    lib_folder     : str
+                     The name of the folder to be copied, relative to the stdlib folder
+    pyccel_dirpath : str
+                     The location that the folder should be copied to
+    extra_files    : dict
+                     A dictionary whose keys are the names of any files to be created
+                     in the folder and whose values are the contents of the file
+
+    Results
+    -------
+    lib_dest_path  : str
+                     The location that the files were copied to
     """
-
-    if binary is None:
-        if not is_module:
-            binary = os.path.splitext(os.path.basename(filename))[0]
+    # get lib path (stdlib_path/lib_name)
+    lib_path = os.path.join(stdlib_path, lib_folder)
+    # remove library folder to avoid missing files and copy
+    # new one from pyccel stdlib
+    lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)
+    with FileLock(lib_dest_path + '.lock'):
+        to_copy = False
+        if not os.path.exists(lib_dest_path):
+            to_copy = True
         else:
-            f = os.path.join(output, os.path.splitext(os.path.basename(filename))[0])
-            binary = '{}.o'.format(f)
-#            binary = "{folder}{binary}.o".format(folder=output,
-#                                binary=os.path.splitext(os.path.basename(filename))[0])
+            src_files = os.listdir(lib_path)
+            dst_files = os.listdir(lib_dest_path)
+            outdated = any(s not in dst_files for s in src_files)
+            if not outdated:
+                outdated = any(os.path.getmtime(os.path.join(lib_path, s)) > os.path.getmtime(os.path.join(lib_dest_path,s)) for s in src_files)
+            if outdated:
+                shutil.rmtree(lib_dest_path)
+                to_copy = True
+        if to_copy:
+            shutil.copytree(lib_path, lib_dest_path)
+            if extra_files:
+                for filename, contents in extra_files.items():
+                    with open(os.path.join(lib_dest_path, filename), 'w') as f:
+                        f.writelines(contents)
+    return lib_dest_path
 
-    o_code = '-o'
-    j_code = ''
-    if is_module:
-        flags += ' -c '
-        if (len(output)>0) and language == "fortran":
-            if compiler == "ifort":
-                j_code = '-module "{folder}"'.format(folder=output)
-            else:
-                j_code = '-J"{folder}"'.format(folder=output)
-
-    m_code = ' '.join('{}.o'.format(m) for m in modules)
-    if is_module:
-        libs_flags = ''
-    else:
-        flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
-        libs_flags = ' '.join('-l{}'.format(i) for i in libs)
-
-    filename = '"{}"'.format(filename)  # in case of spaces in path
-    binary = '"{}"'.format(binary)
-
-    if sys.platform == "win32" and compiler == "mpif90":
-        compiler = "gfortran"
-        filename += ' "{}"'.format(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
-
-    cmd = '{0} {1} {2} {3} {4} {5} {6} {7}'.format( \
-        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code)
-
-    if verbose:
-        print(cmd)
-
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-
-    if output:
-        output = output.decode("utf-8")
-        warnings.warn(UserWarning(output))
-
-    # TODO shall we uncomment this?
-#    # write and save a log file in .pyccel/'filename'.log
-#    # ...
-#    def mkdir_p(dir):
-#        # type: (unicode) -> None
-#        if os.path.isdir(dir):
-#            return
-#        os.makedirs(dir)
-#
-#    if True:
-#        tmp_dir = '.pyccel'
-#        mkdir_p(tmp_dir)
-#        logfile = '{0}.log'.format(binary)
-#        logfile = os.path.join(tmp_dir, logfile)
-#        f = open(logfile, 'w')
-#        f.write(output)
-#        f.close()
-
-    return output, cmd
-
-def get_gfortran_library_dir():
-    """Provide the location of the gfortran libraries for linking
+#==============================================================================
+def recompile_object(compile_obj,
+                   compiler,
+                   verbose = False):
     """
-    if sys.platform == "win32":
-        file_name = 'gfortran.lib'
+    Compile the provided file.
+    If the file has already been compiled then it will only be recompiled
+    if the source has been modified
+
+    Parameters
+    ----------
+    compile_obj : CompileObj
+                  The object to compile
+    compiler    : str
+                  The compiler used
+    verbose     : bool
+                  Indicates whethere additional information should be printed
+    """
+
+    # compile library source files
+    compile_obj.acquire_simple_lock()
+    if os.path.exists(compile_obj.module_target):
+        # Check if source file has changed since last compile
+        o_file_age   = os.path.getmtime(compile_obj.module_target)
+        src_file_age = os.path.getmtime(compile_obj.source)
+        outdated     = o_file_age < src_file_age
     else:
-        file_name = 'libgfortran.a'
-    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name='+file_name],
-            universal_newlines = True)
-    lib_dir = os.path.abspath(os.path.dirname(file_location))
-    if lib_dir:
-        if lib_dir not in sys.path:
-            # Add to sytem path
-            sys.path.insert(0, lib_dir)
-    return lib_dir
+        outdated = True
+    compile_obj.release_simple_lock()
+    if outdated:
+        compiler.compile_module(compile_obj=compile_obj,
+                output_folder=compile_obj.source_folder,
+                verbose=verbose)
