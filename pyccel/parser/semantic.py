@@ -54,6 +54,7 @@ from pyccel.ast.core import Iterable
 from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
+from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -3740,6 +3741,10 @@ class SemanticParser(BasicParser):
             a = self._visit(expr.a)
             b = self._visit(expr.b)
         return NumpyMatmul(a, b)
+
+    def _visit_Assert(self, expr, **settings):
+        test = self._visit(expr.test, **settings)
+        return Assert(test)
 
     def _visit_NumpyWhere(self, func_call, **settings):
         func_call_args = self._handle_function_args(func_call.args, **settings)

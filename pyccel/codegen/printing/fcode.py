@@ -2393,19 +2393,13 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        # we first create an If statement
-        # TODO: depending on a debug flag we should print 'PASSED' or not.
-        DEBUG = True
+        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
+        body = 'stop 1'
+        epilog = 'end if'
+        return ('{prolog}\n'
+                '{body}\n'
+                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
-        err = ErrorExit()
-        args = [IfSection(PyccelNot(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
-
-        if DEBUG:
-            args.append((True, PythonPrint(["'PASSED'"])))
-
-        stmt = If(*args)
-        code = self._print(stmt)
-        return self._get_statement(code)
 
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
