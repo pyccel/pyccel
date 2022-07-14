@@ -102,8 +102,12 @@ def broadcast(shape_1, shape_2):
                 and not (sy_e1 - sy_e2).is_constant():
             new_shape.append(e1)
         else:
-            shape1_code = '({})'.format(' '.join([str(s)+',' for s in shape_1]))
-            shape2_code = '({})'.format(' '.join([str(s)+',' for s in shape_2]))
+            shape1_code = '-'
+            shape2_code = '-'
+            if shape_1:
+                shape1_code = '({})'.format(' '.join([str(s)+',' for s in shape_1]))
+            if shape_2:
+                shape2_code = '({})'.format(' '.join([str(s)+',' for s in shape_2]))
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape1_code, shape2_code)
             raise PyccelSemanticError(msg)
@@ -451,7 +455,7 @@ class PyccelBinaryOperator(PyccelOperator):
             s = broadcast(args[0].shape, args[1].shape)
 
             shape = s
-            rank  = len(s)
+            rank  = 0 if s is None else len(s)
         return shape, rank
 
 #==============================================================================

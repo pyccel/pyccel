@@ -216,7 +216,9 @@ class Variable(PyccelAstNode):
         replaces those expressions with calls to
         PyccelArraySize
         """
-        if not hasattr(shape,'__iter__'):
+        if self.rank == 0:
+            return None
+        elif not hasattr(shape,'__iter__'):
             shape = [shape]
 
         new_shape = []
@@ -834,8 +836,8 @@ class IndexedElement(PyccelAstNode):
 
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
-            self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
+            self._shape = None if self._rank == 0 else tuple(new_shape)
         else:
             new_rank = rank
             for i in range(rank):
