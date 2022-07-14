@@ -886,7 +886,7 @@ class FCodePrinter(CodePrinter):
         arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
         if expr.axis:
             axis = expr.axis
-            if expr.order != 'F':
+            if arg.order != 'F':
                 axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis, simplify=True)
             else:
                 axis = LiteralInteger(expr.axis.python_value + 1)
