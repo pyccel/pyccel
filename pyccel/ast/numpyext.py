@@ -358,9 +358,9 @@ class NumpyNewArray(PyccelInternalFunction):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def _process_order(order):
+    def _process_order(rank, order):
 
-        if not order:
+        if rank < 2:
             return None
 
         order = str(order).strip('\'"')
@@ -399,19 +399,27 @@ class NumpyArray(NumpyNewArray):
         if dtype is None:
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
-        # ... Determine ordering
-        order = str(order).strip("\'")
 
-        if order not in ('K', 'A', 'C', 'F'):
-            raise ValueError("Cannot recognize '{:s}' order".format(order))
+        shape = process_shape(False, arg.shape)
+        rank  = len(shape)
 
-        # TODO [YG, 18.02.2020]: set correct order based on input array
-        if order in ('K', 'A'):
-            order = 'C'
-        # ...
+        if rank < 2:
+            order = None
+        else:
+            # ... Determine ordering
+            order = str(order).strip("\'")
+
+            if order not in ('K', 'A', 'C', 'F'):
+                raise ValueError("Cannot recognize '{:s}' order".format(order))
+
+            # TODO [YG, 18.02.2020]: set correct order based on input array
+            if order in ('K', 'A'):
+                order = 'C'
+            # ...
+
         self._arg   = arg
-        self._shape = process_shape(False, arg.shape)
-        self._rank  = len(self._shape)
+        self._shape = shape
+        self._rank  = rank
         self._dtype = dtype
         self._order = order
         self._precision = prec
@@ -596,7 +604,7 @@ class NumpyMatmul(PyccelInternalFunction):
         if a.order == b.order:
             self._order = a.order
         else:
-            self._order = 'C'
+            self._order = None if self._rank < 2 else 'C'
 
     @property
     def a(self):
@@ -641,10 +649,12 @@ class NumpyLinspace(NumpyNewArray):
                         from start and stop, the calculated dtype will never be an integer.
     """
 
-    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind','_step','_py_argument')
-    _attribute_nodes = ('_start', '_stop', '_index', '_step', '_num', '_endpoint', '_ind')
+    __slots__ = ('_dtype','_precision','_index','_start','_stop',
+            '_num','_endpoint','_shape', '_rank','_ind','_step',
+            '_py_argument','_order')
+    _attribute_nodes = ('_start', '_stop', '_index', '_step', '_num',
+            '_endpoint', '_ind')
     name = 'linspace'
-    _order     = 'C'
 
     def __init__(self, start, stop, num=None, endpoint=True, dtype=None):
 
@@ -695,6 +705,8 @@ class NumpyLinspace(NumpyNewArray):
         if shape is not None:
             self._shape += shape
         self._rank  = len(self._shape)
+        self._order = None if self._rank < 2 else 'C'
+
         self._ind = None
 
         if isinstance(self.endpoint, LiteralFalse):
@@ -801,7 +813,7 @@ class NumpyWhere(PyccelInternalFunction):
 
         self._shape = process_shape(False, shape)
         self._rank  = len(shape)
-        self._order = 'C'
+        self._order = None if self._rank < 2 else 'C'
         super().__init__(condition, x, y)
 
     @property
@@ -833,16 +845,16 @@ class NumpyRand(PyccelInternalFunction):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    __slots__ = ('_shape','_rank')
+    __slots__ = ('_shape','_rank','_order')
     name = 'rand'
     _dtype = NativeFloat()
     _precision = default_precision['float']
-    _order = 'C'
 
     def __init__(self, *args):
         super().__init__(*args)
         self._rank  = len(args)
         self._shape = None if self._rank == 0 else args
+        self._order = None if self._rank < 2 else 'C'
 
 #==============================================================================
 class NumpyRandint(PyccelInternalFunction):
@@ -851,11 +863,10 @@ class NumpyRandint(PyccelInternalFunction):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    __slots__ = ('_rand','_low','_high','_shape','_rank')
+    __slots__ = ('_rand','_low','_high','_shape','_rank','_order')
     name = 'randint'
     _dtype     = NativeInteger()
     _precision = -1
-    _order     = 'C'
     _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
@@ -868,6 +879,7 @@ class NumpyRandint(PyccelInternalFunction):
 
         self._shape   = size
         self._rank    = 0 if size is None else len(self.shape)
+        self._order   = None if self._rank < 2 else 'C'
         self._rand    = NumpyRand() if size is None else NumpyRand(*size)
         self._low     = low
         self._high    = high
@@ -925,9 +937,6 @@ class NumpyFull(NumpyNewArray):
         # Verify dtype and get precision
         dtype, precision = process_dtype(dtype)
 
-        # Verify array ordering
-        order = NumpyNewArray._process_order(order)
-
         # Cast fill_value to correct type
         if fill_value:
             if fill_value.dtype != dtype or get_final_precision(fill_value) != precision:
@@ -936,7 +945,7 @@ class NumpyFull(NumpyNewArray):
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
-        self._order = order
+        self._order = NumpyNewArray._process_order(self._rank, order)
         self._precision = precision
 
         super().__init__(fill_value)
@@ -1088,13 +1097,12 @@ class NumpyNorm(PyccelInternalFunction):
             sh = list(arg.shape)
             del sh[self.axis]
             self._shape = tuple(sh)
-            self._order = arg.order
             self._rank = len(self._shape)
+            self._order = None if self._rank < 2 else arg.order
         else:
             self._shape = None
             self._order = None
             self._rank  = 0
-        self._order = arg.order
 
     @property
     def arg(self):
@@ -1176,7 +1184,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         if x1.order == x2.order:
             self._order = x1.order
         else:
-            self._order = 'C'
+            self._order = None if self._rank < 2 else 'C'
 
 #------------------------------------------------------------------------------
 # Math operations

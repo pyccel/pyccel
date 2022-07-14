@@ -386,10 +386,10 @@ class PythonInt(PyccelAstNode):
 class PythonTuple(PyccelAstNode):
     """ Represents a call to Python's native tuple() function.
     """
-    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous','_dtype','_precision','_rank','_shape')
+    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
+            '_dtype','_precision','_rank','_shape','_order')
     _iterable        = True
     _attribute_nodes = ('_args',)
-    _order = 'C'
 
     def __init__(self, *args):
         self._args = args
@@ -399,8 +399,9 @@ class PythonTuple(PyccelAstNode):
         elif len(args) == 0:
             self._dtype = NativeGeneric()
             self._precision = 0
-            self._rank = 0
+            self._rank  = 0
             self._shape = None
+            self._order = None
             self._is_homogeneous = False
             return
         arg0 = args[0]
@@ -452,6 +453,8 @@ class PythonTuple(PyccelAstNode):
                 self._shape     = (LiteralInteger(len(args)), )
             else:
                 self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+
+        self._order = None if self._rank < 2 else 'C'
 
     def __getitem__(self,i):
         def is_int(a):
