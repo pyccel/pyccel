@@ -2785,11 +2785,11 @@ class SemanticParser(BasicParser):
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
 
-        d_var['rank'] += 1
         d_var['memory_handling'] = 'heap'
         shape = [dim]
-        if d_var['rank'] == 0:
+        if d_var['rank'] != 0:
             shape += list(d_var['shape'])
+        d_var['rank'] += 1
         d_var['shape'] = shape
 
         # ...

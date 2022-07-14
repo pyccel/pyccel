@@ -682,7 +682,9 @@ class NumpyLinspace(NumpyNewArray):
             self._endpoint = endpoint
 
         shape = broadcast(self._start.shape, self._stop.shape)
-        self._shape = (self._num,) + shape
+        self._shape = (self._num,)
+        if shape is not None:
+            self._shape += shape
         self._rank  = len(self._shape)
         self._ind = None
 
@@ -830,8 +832,8 @@ class NumpyRand(PyccelInternalFunction):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._shape = args
-        self._rank  = len(self.shape)
+        self._rank  = len(args)
+        self._shape = None if self._rank == 0 else args
 
 #==============================================================================
 class NumpyRandint(PyccelInternalFunction):
@@ -848,7 +850,7 @@ class NumpyRandint(PyccelInternalFunction):
     _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
-        if not hasattr(size,'__iter__'):
+        if size is not None and not hasattr(size,'__iter__'):
             size = (size,)
 
         if high is None:
@@ -856,8 +858,8 @@ class NumpyRandint(PyccelInternalFunction):
             low  = None
 
         self._shape   = size
-        self._rank    = len(self.shape)
-        self._rand    = NumpyRand(*size)
+        self._rank    = 0 if size is None else len(self.shape)
+        self._rand    = NumpyRand() if size is None else NumpyRand(*size)
         self._low     = low
         self._high    = high
         super().__init__()
@@ -1078,10 +1080,11 @@ class NumpyNorm(PyccelInternalFunction):
             del sh[self.axis]
             self._shape = tuple(sh)
             self._order = arg.order
+            self._rank = len(self._shape)
         else:
             self._shape = None
             self._order = None
-        self._rank = len(self._shape)
+            self._rank  = 0
         self._order = arg.order
 
     @property
