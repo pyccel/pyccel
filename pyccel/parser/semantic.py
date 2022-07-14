@@ -125,7 +125,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP,
         INCOMPATIBLE_TYPES_IN_ASSIGNMENT, ARRAY_ALREADY_IN_USE, ASSIGN_ARRAYS_ONE_ANOTHER,
         INVALID_POINTER_REASSIGN, INCOMPATIBLE_REDEFINITION, ARRAY_IS_ARG,
-        INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION, IMPORTING_EXISTING_IDENTIFIED,
+        INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION,
         PYCCEL_RESTRICTION_INHOMOG_LIST, UNDEFINED_IMPORT_OBJECT, UNDEFINED_LAMBDA_VARIABLE,
         UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
         INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
@@ -213,8 +213,6 @@ class SemanticParser(BasicParser):
         self._code = parser._code
         # ...
 
-        # ... TOD add settings
-        settings = {}
         self.annotate()
         # ...
 
@@ -320,8 +318,8 @@ class SemanticParser(BasicParser):
         # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
-        for container in container.loops:
-            variables.extend(self.get_variables(container))
+        for sub_container in container.loops:
+            variables.extend(self.get_variables(sub_container))
         return variables
 
     def get_class_construct(self, name):
@@ -557,7 +555,7 @@ class SemanticParser(BasicParser):
 
         else:
             msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
-            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
+            return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
 
@@ -2010,7 +2008,8 @@ class SemanticParser(BasicParser):
 
     def _visit_MathSqrt(self, expr, **settings):
         func = self.scope.find(expr.funcdef, 'functions')
-        arg, = self._handle_function_args(expr.args, **settings)
+        args = self._handle_function_args(expr.args, **settings)
+        arg = args[0]
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
             mul1_syn, mul2_syn = expr.args[0].value.args
@@ -3199,8 +3198,6 @@ class SemanticParser(BasicParser):
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args
 
-            arg_vars = [a.var for a in args]
-
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
             global_vars = [g for g in global_vars if body.is_user_of(g)]
@@ -3765,7 +3762,6 @@ class SemanticParser(BasicParser):
         args = [a.value for a in func_call_args if not a.has_keyword]
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
         nargs = len(args)+len(kwargs)
-        arg0 = args[0] if args else kwargs['condition']
         if nargs == 1:
             return self._visit_NumpyNonZero(func_call)
         return NumpyWhere(*args, **kwargs)
@@ -3780,20 +3776,3 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
-
-#==============================================================================
-
-
-if __name__ == '__main__':
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError('Expecting an argument for filename')
-
-    parser = SyntaxParser(filename)
-#    print(parser.scope)
-    parser = SemanticParser(parser)
-#    print(parser.ast)
-#    parser.view_namespace('variables')
