@@ -1854,7 +1854,7 @@ class CCodePrinter(CodePrinter):
             return '{}'.format(self._print(expr.obj))
         if hasattr(expr.obj, 'name'):
             return '&{}'.format(expr.obj.name)
-        return '&{}'.format(expr.obj)
+        return '&{}'.format(self._print(expr.obj))
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
