@@ -45,8 +45,6 @@ from pyccel.ast.variable  import Variable, DottedName
 
 from pyccel.ast.c_concepts import ObjectAddress
 
-from pyccel.ast.cwrapper import PyBuildValueNode
-
 from pyccel.parser.scope  import Scope
 
 from pyccel.errors.errors   import Errors
