@@ -47,8 +47,8 @@ def not_a_copy(src_folder, dst_folder, filename):
     """
     abs_src_file = os.path.join(src_folder, filename)
     abs_dst_file = os.path.join(dst_folder, filename)
-    src_mod_time = os.path.getmtime(abs_src_file)
-    dst_mod_time = os.path.getmtime(abs_dst_file)
+    src_mod_time = os.path.getatime(abs_src_file)
+    dst_mod_time = os.path.getatime(abs_dst_file)
     return src_mod_time > dst_mod_time
 
 #==============================================================================
