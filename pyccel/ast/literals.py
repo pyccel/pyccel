@@ -7,8 +7,8 @@
 from pyccel.utilities.metaclasses import Singleton
 
 from .basic              import PyccelAstNode, Basic
-from .datatypes          import (NativeInteger, NativeBool, NativeFloat,
-                                  NativeComplex, NativeString, NativeFloat)
+from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, NativeFloat,
+                                  NativeComplex, NativeString, NativeFloat, NativeVoid)
 
 __all__ = (
     'LiteralTrue',
@@ -219,13 +219,21 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
-class Nil(Basic, metaclass=Singleton):
+class Nil(PyccelAstNode, metaclass=Singleton):
 
     """
     class for None object in the code.
     """
-    __slots__ = ()
+    __slots__ = ('_dtype', '_precision', '_rank', '_order', '_shape')
     _attribute_nodes = ()
+
+    def __init__(self):
+        self._dtype = NativeGeneric
+        self._precision = 0
+        self._rank = 0
+        self._shape = ()
+        self._order = None
+        super().__init__()
 
     def __str__(self):
         return 'None'
