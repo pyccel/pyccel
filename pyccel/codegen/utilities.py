@@ -38,6 +38,20 @@ internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_
                                                                              internal_libs["cwrapper"][1])))
 
 #==============================================================================
+
+def not_a_copy(src_folder, dst_folder, filename):
+    """ Check if the file filename present in src_folder
+    is a copy of the file filename present in dst_folder
+    or if the source file has been updated since the last
+    copy
+    """
+    abs_src_file = os.path.join(src_folder, filename)
+    abs_dst_file = os.path.join(dst_folder, filename)
+    src_mod_time = os.path.getmtime(abs_src_file)
+    dst_mod_time = os.path.getmtime(abs_dst_file)
+    return src_mod_time > dst_mod_time
+
+#==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
     Copy an internal library from its specified stdlib folder to the pyccel
@@ -79,21 +93,10 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # Check if all files are present in destination
             to_update = any(s not in dst_files for s in src_files)
 
-            # 
+            # Check if original files have been modified
             if not to_update:
-                def not_a_copy(src_folder, dst_folder, filename):
-                    """ Check if the file filename present in src_folder
-                    is a copy of the file filename present in dst_folder
-                    or if the source file has been updated since the last
-                    copy
-                    """
-                    abs_src_file = os.path.join(src_folder, filename)
-                    abs_dst_file = os.path.join(dst_folder, filename)
-                    src_mod_time = os.path.getmtime(abs_src_file)
-                    dst_mod_time = os.path.getmtime(abs_dst_file)
-                    return src_mod_time > dst_mod_time
-                to_update = True
-                #to_update = any(not_a_copy(lib_path, lib_dest_path, s) for s in src_files)
+                to_update = any(not_a_copy(lib_path, lib_dest_path, s) for s in src_files)
+
         if to_create:
             # Copy all files from the source to the destination
             shutil.copytree(lib_path, lib_dest_path)
