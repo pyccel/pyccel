@@ -45,6 +45,8 @@ from pyccel.ast.variable  import Variable, DottedName
 
 from pyccel.ast.c_concepts import ObjectAddress
 
+from pyccel.ast.cwrapper import PyBuildValueNode
+
 from pyccel.parser.scope  import Scope
 
 from pyccel.errors.errors   import Errors
@@ -88,6 +90,8 @@ class CWrapperCodePrinter(CCodePrinter):
         a : PyccelAstNode
         """
         if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
+            return True
+        elif isinstance(a, PyBuildValueNode):
             return True
         else:
             return CCodePrinter.stored_in_c_pointer(self,a)

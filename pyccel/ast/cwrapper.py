@@ -234,19 +234,24 @@ class PyArg_ParseTupleNode(Basic):
         """
         return self._arg_names
 
-class PyBuildValueNode(Basic):
+class PyBuildValueNode(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which create a new value based on a format string
+    Represents a call to the, function from Python.h which create a new value based on a format string
 
     Parameters
     ---------
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
-    __slots__ = ('_flags','_result_args',)
+    __slots__ = ('_flags','_result_args', '_rank', '_shape', '_precision', '_dtype', '_order')
     _attribute_nodes = ('_result_args',)
 
     def __init__(self, result_args = ()):
+        self._dtype = PyccelPyObject
+        self._rank = 0
+        self._precision = 0
+        self._shape = ()
+        self._order = None
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
