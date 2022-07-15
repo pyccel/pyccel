@@ -1652,11 +1652,7 @@ class CCodePrinter(CodePrinter):
         rhs_var = expr.rhs
 
         lhs_address = ObjectAddress(lhs_var)
-        # Ensure everything which can be stored in a ObjectAddress is
-        try:
-            rhs_address = ObjectAddress(rhs_var)
-        except TypeError:
-            rhs_address = rhs_var
+        rhs_address = ObjectAddress(rhs_var)
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
