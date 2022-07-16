@@ -11,7 +11,7 @@ def test_round_int(language):
     def round_int(x):
         return round(x)
 
-    f = epyccel(round_int, language=language, developer_mode=True)
+    f = epyccel(round_int, language=language)
     x = randint(100) / 10
 
     f_output = f(x)
@@ -48,7 +48,7 @@ def test_negative_round_int(language):
     def round_int(x):
         return round(x)
 
-    f = epyccel(round_int, language=language, developer_mode=True)
+    f = epyccel(round_int, language=language)
     x = -randint(100) / 10
 
     f_output = f(x)
@@ -85,7 +85,7 @@ def test_round_ndigits(language):
     def round_ndigits(x, i):
         return round(x,i)
 
-    f = epyccel(round_ndigits, language=language, developer_mode=True)
+    f = epyccel(round_ndigits, language=language)
     x = randint(100) / 10
 
     f_output = f(x, 1)
@@ -127,7 +127,7 @@ def test_round_ndigits_half(language):
     def round_ndigits(x, i):
         return round(x,i)
 
-    f = epyccel(round_ndigits, language=language, developer_mode=True)
+    f = epyccel(round_ndigits, language=language)
     x = randint(100) / 10
 
     f_output = f(x, 1)
