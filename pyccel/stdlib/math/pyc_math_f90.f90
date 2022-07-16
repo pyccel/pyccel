@@ -51,6 +51,11 @@ interface csign
     module procedure numpy_v2_sign_c64
 end interface csign
 
+interface pyc_bankers_round
+    module procedure pyc_bankers_round_4
+    module procedure pyc_bankers_round_8
+end interface pyc_bankers_round
+
 public :: pyc_gcd, &
           pyc_factorial, &
           pyc_lcm, &
@@ -363,7 +368,31 @@ function amin_4(arr) result(min_value)
 
   end function numpy_v2_sign_c64
 
-pure function pyc_bankers_round(arg, ndigits) result(rnd)
+pure function pyc_bankers_round_4(arg, ndigits) result(rnd)
+
+    implicit none
+
+    real(C_DOUBLE), value     :: arg
+    integer(C_INT32_T), value :: ndigits
+    real(C_DOUBLE)            :: rnd
+
+    real(C_DOUBLE) :: diff
+
+    arg = arg * 10._C_DOUBLE**ndigits
+
+    rnd = nint(arg, kind=C_INT64_T)
+
+    diff = arg - rnd
+
+    if (ndigits <= 0 .and. (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE)) then
+        rnd = nint(arg*0.5_C_DOUBLE, kind=C_INT64_T)*2_C_INT64_T
+    end if
+
+    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+
+end function pyc_bankers_round_4
+
+pure function pyc_bankers_round_8(arg, ndigits) result(rnd)
 
     implicit none
 
@@ -385,6 +414,6 @@ pure function pyc_bankers_round(arg, ndigits) result(rnd)
 
     rnd = rnd * 10._C_DOUBLE**(-ndigits)
 
-end function pyc_bankers_round
+end function pyc_bankers_round_8
 
 end module pyc_math_f90
