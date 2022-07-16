@@ -515,7 +515,6 @@ class PythonRound(PyccelAstNode):
         """
         return self._ndigits
 
-    @property
     def get_round_with_0_digits(self):
         """ Get expression returning the same value but containing
         a call to PyccelRound with ndigits=None

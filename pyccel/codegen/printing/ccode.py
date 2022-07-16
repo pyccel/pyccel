@@ -753,7 +753,7 @@ class CCodePrinter(CodePrinter):
         if expr.ndigits is None:
             self.add_import(c_imports['math'])
             arg = self._print(expr.arg)
-            return f"round({arg})"
+            return f"lrint({arg})"
         else:
             return self._print(expr.get_round_with_0_digits())
 

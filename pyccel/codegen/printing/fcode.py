@@ -1202,7 +1202,8 @@ class FCodePrinter(CodePrinter):
         """
         if expr.ndigits is None:
             arg = self._print(expr.arg)
-            return f"nint({arg})"
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f"pyc_bankers_round({arg})"
         else:
             return self._print(expr.get_round_with_0_digits())
 

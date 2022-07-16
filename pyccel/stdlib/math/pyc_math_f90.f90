@@ -51,6 +51,17 @@ interface csign
     module procedure numpy_v2_sign_c64
 end interface csign
 
+public :: pyc_gcd, &
+          pyc_factorial, &
+          pyc_lcm, &
+          pyc_radians, &
+          pyc_degrees, &
+          amax, &
+          amin, &
+          csgn, &
+          csign, &
+          pyc_bankers_round
+
 contains
 
 ! Implementation of math factorial function
@@ -351,4 +362,24 @@ function amin_4(arr) result(min_value)
     end if
 
   end function numpy_v2_sign_c64
+
+pure function pyc_bankers_round(arg) result(rnd)
+
+    implicit none
+
+    real(C_DOUBLE), value     :: arg
+    integer(C_INT64_T)        :: rnd
+
+    real(C_DOUBLE) :: diff
+
+    rnd = nint(arg, kind=C_INT64_T)
+
+    diff = arg - rnd
+
+    if (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE) then
+        rnd = nint(arg*0.5_C_DOUBLE, kind=C_INT64_T)*2_C_INT64_T
+    end if
+
+end function pyc_bankers_round
+
 end module pyc_math_f90
