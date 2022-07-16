@@ -25,7 +25,7 @@ from .internals import PyccelFunction, Slice, PyccelArrayShapeElement, Iterable
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
-from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
+from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot, PyccelDiv
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot, PyccelPow
 from .variable  import IndexedElement, Variable
 
@@ -521,7 +521,7 @@ class PythonRound(PyccelAstNode):
         """
         assert self.ndigits is not None
         factor = PyccelPow(LiteralFloat(10), self.ndigits)
-        return PyccelDiv(PyccelRound(PyccelMul(self.arg, factor)), factor)
+        return PyccelDiv(PythonRound(PyccelMul(self.arg, factor)), factor)
 
 #==============================================================================
 class PythonInt(PyccelFunction):
