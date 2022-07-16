@@ -224,16 +224,13 @@ class Nil(PyccelAstNode, metaclass=Singleton):
     """
     class for None object in the code.
     """
-    __slots__ = ('_dtype', '_precision', '_rank', '_order', '_shape')
+    __slots__ = ()
     _attribute_nodes = ()
-
-    def __init__(self):
-        self._dtype = NativeGeneric
-        self._precision = 0
-        self._rank = 0
-        self._shape = ()
-        self._order = None
-        super().__init__()
+    _dtype = NativeGeneric
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
 
     def __str__(self):
         return 'None'
