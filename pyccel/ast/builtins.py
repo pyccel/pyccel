@@ -496,10 +496,9 @@ class PythonRound(PyccelAstNode):
         self._arg = number
         if ndigits is None:
             self._dtype = NativeInteger()
-            self._ndigits = None
         else:
             self._dtype = NativeFloat()
-            self._ndigits = ndigits
+        self._ndigits = ndigits
         self._precision = -1
         super().__init__()
 
