@@ -509,8 +509,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonRound(self, expr):
         arg = self._print(expr.arg)
-        if self.ndigits:
-            ndigits = self._print(self.ndigits)
+        if expr.ndigits:
+            ndigits = self._print(expr.ndigits)
             return f'round({arg}, {ndigits})'
         else:
             return f'round({arg})'

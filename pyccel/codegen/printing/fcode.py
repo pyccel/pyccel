@@ -1200,7 +1200,7 @@ class FCodePrinter(CodePrinter):
         """ print the python builtin function round
         args : variable
         """
-        if self.ndigits is None:
+        if expr.ndigits is None:
             arg = self._print(expr.arg)
             return f"nint({arg})"
         else:
