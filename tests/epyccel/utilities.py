@@ -19,4 +19,4 @@ class epyccel_test:
     def compare_epyccel(self, *args):
         out1 = self._f(*args)
         out2 = self._f2(*args)
-        assert np.equal(out1, out2 )
+        assert np.equal(out1, out2 ).all()

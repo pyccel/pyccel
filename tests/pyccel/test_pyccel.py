@@ -356,6 +356,28 @@ def test_rel_imports_python_accessible_folder(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions are not handled"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_multi_imports_project(language):
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "project_multi_imports")
+    dependencies = ['project_multi_imports/file1.py',
+             'project_multi_imports/file2.py',
+             'project_multi_imports/file3.py']
+    pyccel_test("project_multi_imports/file4.py", dependencies,
+            cwd = path_dir,
+            language = language,
+            output_dtype = str)
+
+#------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 def test_imports_compile(language):
     pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
@@ -713,9 +735,10 @@ def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
-@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
                                         ] )
+@pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory" )
+@pytest.mark.external
 def test_lapack( test_file ):
     #TODO: Uncomment this when dgetri can be expressed with scipy
     #pyccel_test(test_file)
@@ -785,6 +808,15 @@ def test_type_print( language ):
         assert 'float32' in lang_out[3]
         assert 'float64' in lang_out[4]
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
+            pytest.mark.c]
+        )
+    )
+)
 def test_module_init( language ):
     test_mod  = get_abs_path("scripts/module_init.py")
     test_prog = get_abs_path("scripts/runtest_module_init.py")
@@ -815,6 +847,44 @@ def test_module_init( language ):
         lang_out = get_lang_output(test_prog, language)
 
     compare_pyth_fort_output(pyth_out, lang_out, str, language)
+
+#------------------------------------------------------------------------------
+def get_lang_exit_value(abs_path, language, cwd=None):
+    abs_path = get_exe(abs_path, language)
+    if language == "python":
+        if cwd is None:
+            p = subprocess.Popen([sys.executable , abs_path])
+        else:
+            p = subprocess.Popen([sys.executable , abs_path], cwd=cwd)
+    else:
+        p = subprocess.Popen([abs_path])
+    p.communicate()
+    return p.returncode
+
+@pytest.mark.parametrize( "test_file", ["scripts/asserts/valid_assert.py",
+                                        "scripts/asserts/unvalid_assert1.py",
+                                        "scripts/asserts/unvalid_assert2.py",
+                                        "scripts/asserts/unvalid_assert3.py",
+                                        ] )
+
+def test_assert(language, test_file):
+    test_dir = os.path.dirname(test_file)
+    test_file = get_abs_path(os.path.normpath(test_file))
+
+    output_dir   = os.path.join(get_abs_path(test_dir),'__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+
+    cwd = get_abs_path(test_dir)
+
+    if not language:
+        language = "fortran"
+    pyccel_commands = " --language="+language
+    pyccel_commands += " --output="+ output_dir
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+    lang_out = get_lang_exit_value(output_test_file, language)
+    pyth_out = get_lang_exit_value(test_file, "python")
+    assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
@@ -863,6 +933,15 @@ def test_inline(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
+            pytest.mark.c]
+        )
+    )
+)
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),

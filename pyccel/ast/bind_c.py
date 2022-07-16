@@ -135,9 +135,7 @@ def as_static_function(func, *, mod_scope, name=None):
             _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
-                              allocatable = a.allocatable,
-                              is_pointer  = a.is_pointer,
-                              is_target   = a.is_target,
+                              memory_handling = a.memory_handling,
                               is_optional = a.is_optional,
                               shape       = shape_new,
                               rank        = a.rank,
@@ -314,9 +312,8 @@ def wrap_array(var, scope, persistent):
     assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
     variables = [bind_var, *sizes]
     if not persistent:
-        ptr_var = Variable(dtype=var.dtype, name = scope.get_new_name(var.name+'_ptr'),
-                is_pointer=True, rank = var.rank,
-                order = var.order, shape = var.shape)
+        ptr_var = Variable(dtype=var.dtype, name=scope.get_new_name(var.name+'_ptr'),
+                memory_handling='alias', rank=var.rank, order=var.order, shape=var.shape)
         alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
         copy  = Assign(ptr_var, var)
         c_loc = CLocFunc(ptr_var, bind_var)
@@ -346,7 +343,7 @@ def wrap_module_array_var(var, scope, mod):
     func : FunctionDef
             A function which wraps an array and can be called from C
     """
-    func_name = 'bind_c_'+var.name
+    func_name = 'bind_c_'+var.name.lower()
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope, True)
     func_scope.insert_variable(necessary_vars[0])

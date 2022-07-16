@@ -1,10 +1,17 @@
 name: 'Pyccel pytest commands generating fortran or c'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: "bash"
+
 
 runs:
   using: "composite"
   steps:
     - name: Test with pytest
       run: |
+        which python
         python -m pytest -n auto -rX -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
         python -m pytest -rX -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
@@ -13,5 +20,5 @@ runs:
         pyccel-clean
         python -m pytest ndarrays/ -rX
         pyccel-clean
-      shell: bash
+      shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests

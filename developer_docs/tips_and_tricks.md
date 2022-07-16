@@ -4,5 +4,6 @@
 -   When using the `pyccel` command line tool, use the flag `--developer-mode` to see tracebacks for the (fatal) user-readable error messages
 -   When trying to find a bug where the generated code gives different results to the original Python code, a good first step is usually to generate the corresponding code and try to find where the implementation differs
 -   When there is a problem in the compile stage the first step must **always** be to run `pyccel` with the `--verbose` flag and test the generated compile commands manually. It is impossible to fix the compile problem without knowing what the correct command should be
+-   When you have broken previously working code, comparing the difference in the generated code before and after your changes should help you target which of your changes caused the problems
 
 _Please feel free to add any tips or tricks you find to this non-exhaustive list_

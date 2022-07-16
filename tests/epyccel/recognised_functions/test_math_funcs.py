@@ -8,8 +8,8 @@ from pyccel.epyccel import epyccel
 
 import sys
 
-RTOL = 2e-14
-ATOL = 1e-15
+RTOL = 1e-13
+ATOL = 1e-14
 
 max_float = 3.40282e5        # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float

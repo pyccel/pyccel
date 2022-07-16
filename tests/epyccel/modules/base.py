@@ -219,3 +219,12 @@ def use_optional(a : int = None):
     if a:
         b += a
     return b
+
+def none_equality(a : int = None):
+    return a == None, a != None #pylint: disable=singleton-comparison
+
+def none_none_equality():
+    return None == None, None != None #pylint: disable=singleton-comparison, comparison-with-itself
+
+def none_literal_equality():
+    return None == 1, 3.5 != None #pylint: disable=singleton-comparison

@@ -39,7 +39,8 @@ class FortranNameClashChecker(metaclass = Singleton):
             'critical', 'error', 'submodule', 'sync', 'lock',
             'unlock', 'test', 'abs', 'sqrt', 'sin', 'cos', 'tan',
             'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
-            'floor', 'fraction', 'real', 'max', 'mod'])
+            'floor', 'fraction', 'real', 'max', 'mod', 'count',
+            'pack'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
