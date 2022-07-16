@@ -5,9 +5,11 @@
 
 module pyc_math_f90
 
-use ISO_C_BINDING
+use, intrinsic :: ISO_C_BINDING
 
 implicit none
+
+private
 
 real(C_DOUBLE), parameter, private :: pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
@@ -25,6 +27,13 @@ interface pyc_lcm
     module procedure pyc_lcm_4
     module procedure pyc_lcm_8
 end interface pyc_lcm
+
+public :: pyc_gcd, &
+          pyc_factorial, &
+          pyc_lcm, &
+          pyc_radians, &
+          pyc_degrees, &
+          pyc_bankers_round
 
 contains
 
@@ -155,5 +164,24 @@ pure function pyc_degrees(rad) result(deg)
     return
 
 end function pyc_degrees
+
+pure function pyc_bankers_round(arg) result(rnd)
+
+    implicit none
+
+    real(C_DOUBLE), value     :: arg
+    integer(C_INT64_T)        :: rnd
+
+    real(C_DOUBLE) :: diff
+
+    rnd = nint(arg, kind=C_INT64_T)
+
+    diff = arg - rnd
+
+    if (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE) then
+        rnd = nint(arg*0.5_C_DOUBLE, kind=C_INT64_T)*2_C_INT64_T
+    end if
+
+end function pyc_bankers_round
 
 end module pyc_math_f90
