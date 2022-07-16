@@ -26,7 +26,7 @@ from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
-from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+from .operators import PyccelMinus, PyccelUnarySub, PyccelNot, PyccelPow
 from .variable  import IndexedElement, Variable
 
 pyccel_stage = PyccelStage()
@@ -514,6 +514,15 @@ class PythonRound(PyccelAstNode):
         """ Number of digits to which the argument is rounded
         """
         return self._ndigits
+
+    @property
+    def get_round_with_0_digits(self):
+        """ Get expression returning the same value but containing
+        a call to PyccelRound with ndigits=None
+        """
+        assert self.ndigits is not None
+        factor = PyccelPow(LiteralFloat(10), self.ndigits)
+        return PyccelDiv(PyccelRound(PyccelMul(self.arg, factor)), factor)
 
 #==============================================================================
 class PythonInt(PyccelFunction):

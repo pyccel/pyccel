@@ -1200,7 +1200,11 @@ class FCodePrinter(CodePrinter):
         """ print the python builtin function round
         args : variable
         """
-        return "nint({})".format(self._print(expr.arg))
+        if self.ndigits is None:
+            arg = self._print(expr.arg)
+            return f"nint({arg})"
+        else:
+            return self._print(expr.get_round_with_0_digits())
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))

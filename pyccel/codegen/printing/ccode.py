@@ -750,9 +750,12 @@ class CCodePrinter(CodePrinter):
         return "{}({})".format(func, self._print(expr.arg))
 
     def _print_PythonRound(self, expr):
-        self.add_import(c_imports['math'])
-        func = "round"
-        return "{}({})".format(func, self._print(expr.arg))
+        if self.ndigits is None:
+            self.add_import(c_imports['math'])
+            arg = self._print(expr.arg)
+            return f"round({arg})"
+        else:
+            return self._print(expr.get_round_with_0_digits())
 
     def _print_PythonMinMax(self, expr):
         arg = expr.args[0]
