@@ -330,11 +330,13 @@ def epyccel( python_function_or_module, **kwargs ):
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
+    # This will initialize the singleton ErrorsMode
+    # making this setting available everywhere
+    err_mode = ErrorsMode()
     if kwargs.pop('developer_mode', None):
-        # This will initialize the singleton ErrorsMode
-        # making this setting available everywhere
-        err_mode = ErrorsMode()
         err_mode.set_mode('developer')
+    else:
+        err_mode.set_mode('user')
 
     # Parallel version
     if comm is not None:
