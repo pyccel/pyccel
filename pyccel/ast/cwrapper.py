@@ -243,15 +243,15 @@ class PyBuildValueNode(PyccelAstNode):
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
-    __slots__ = ('_flags','_result_args', '_rank', '_shape', '_precision', '_dtype', '_order')
+    __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
+    _dtype = PyccelPyObject
+    _rank = 0
+    _precision = 0
+    _shape = ()
+    _order = None
 
     def __init__(self, result_args = ()):
-        self._dtype = PyccelPyObject
-        self._rank = 0
-        self._precision = 0
-        self._shape = ()
-        self._order = None
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
