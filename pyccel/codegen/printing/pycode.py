@@ -409,7 +409,12 @@ class PythonCodePrinter(CodePrinter):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
     def _print_PythonRound(self, expr):
-        return 'round({})'.format(self._print(expr.arg))
+        arg = self._print(expr.arg)
+        if self.ndigits:
+            ndigits = self._print(self.ndigits)
+            return f'round({arg}, {ndigits})'
+        else:
+            return f'round({arg})'
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
