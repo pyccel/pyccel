@@ -363,22 +363,27 @@ function amin_4(arr) result(min_value)
 
   end function numpy_v2_sign_c64
 
-pure function pyc_bankers_round(arg) result(rnd)
+pure function pyc_bankers_round(arg, ndigits) result(rnd)
 
     implicit none
 
     real(C_DOUBLE), value     :: arg
-    integer(C_INT64_T)        :: rnd
+    integer(C_INT64_T), value :: ndigits
+    real(C_DOUBLE)            :: rnd
 
     real(C_DOUBLE) :: diff
+
+    arg = arg * 10._C_DOUBLE**ndigits
 
     rnd = nint(arg, kind=C_INT64_T)
 
     diff = arg - rnd
 
-    if (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE) then
+    if (ndigits <= 0 .and. (diff == 0.5_C_DOUBLE .or. diff == -0.5_C_DOUBLE)) then
         rnd = nint(arg*0.5_C_DOUBLE, kind=C_INT64_T)*2_C_INT64_T
     end if
+
+    rnd = rnd * 10._C_DOUBLE**(-ndigits)
 
 end function pyc_bankers_round
 
