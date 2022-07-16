@@ -236,7 +236,7 @@ class PyArg_ParseTupleNode(Basic):
 
 class PyBuildValueNode(PyccelAstNode):
     """
-    Represents a call to the, function from Python.h which create a new value based on a format string
+    Represents a call to the function from Python.h which create a new value based on a format string
 
     Parameters
     ---------
