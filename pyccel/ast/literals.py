@@ -8,7 +8,7 @@ from pyccel.utilities.metaclasses import Singleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, NativeFloat,
-                                  NativeComplex, NativeString, NativeFloat)
+                                  NativeComplex, NativeString)
 
 __all__ = (
     'LiteralTrue',
