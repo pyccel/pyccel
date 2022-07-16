@@ -1200,12 +1200,15 @@ class FCodePrinter(CodePrinter):
         """ print the python builtin function round
         args : variable
         """
-        if expr.ndigits is None:
-            arg = self._print(expr.arg)
-            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-            return f"pyc_bankers_round({arg})"
+        arg     = self._print(expr.arg)
+        self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+        if expr.ndigits:
+            ndigits = self._print(expr.ndigits)
+            return f"pyc_bankers_round({arg}, {ndigits})"
         else:
-            return self._print(expr.get_round_with_0_digits())
+            prec = self.print_kind(expr)
+            zero = self._print(LiteralInteger(0))
+            return f"Int(pyc_bankers_round({arg}, {zero}), kind={prec})"
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
