@@ -1023,11 +1023,9 @@ class CCodePrinter(CodePrinter):
             arg_code = 'void'
         else:
             def get_var_arg(arg, var):
-                code = "const " if var.is_const else ""
+                code = "const " * var.is_const
                 code += self.get_declare_type(var)
-
-                if print_arg_names:
-                    code += arg.name
+                code += arg.name * print_arg_names
                 return code
 
             var_list = [a.var for a in args]
