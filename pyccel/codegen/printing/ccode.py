@@ -1022,10 +1022,18 @@ class CCodePrinter(CodePrinter):
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i.var, False))
-                        if isinstance(i.var, FunctionAddress)
-                        else '{1}{0}'.format(self.get_declare_type(i.var), 'const ' if i.var.is_const else '') + (i.name if print_arg_names else '')
-                        for i in args)
+            def get_var_arg(arg, var):
+                code = "const " if var.is_const else ""
+                code += self.get_declare_type(var)
+
+                if print_arg_names:
+                    code += arg.name
+                return code
+
+            vars = [a.var for a in args]
+            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg,var in zip(args, vars)]
+            arg_code = ', '.join(arg_code_list)
+
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
