@@ -1030,8 +1030,8 @@ class CCodePrinter(CodePrinter):
                     code += arg.name
                 return code
 
-            vars = [a.var for a in args]
-            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, vars)]
+            var_list = [a.var for a in args]
+            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
             arg_code = ', '.join(arg_code_list)
 
         if isinstance(expr, FunctionAddress):
