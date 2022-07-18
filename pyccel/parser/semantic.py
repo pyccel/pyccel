@@ -1480,8 +1480,7 @@ class SemanticParser(BasicParser):
                     for l in b.loops:
                         if isinstance(l, ScopedNode):
                             l.scope.update_parent_scope(init_scope, is_loop = True)
-            init_func_body = If(IfSection(PyccelNot(init_var),
-                                init_func_body+[Assign(init_var, LiteralTrue())]))
+
             self.exit_function_scope()
 
             # Update variable scope for temporaries
@@ -1490,10 +1489,24 @@ class SemanticParser(BasicParser):
                 if v.is_temp:
                     init_scope.insert_variable(v)
                     to_remove.append(v)
+
             # Remove in a second loop so the dictionary doesn't change during iteration
             for v in to_remove:
                 self.scope.remove_variable(v)
                 variables.remove(v)
+
+            # Get deallocations
+            deallocs = self._garbage_collector(CodeBlock(init_func_body))
+
+            # Deallocate temporaries in init function
+            dealloc_vars = [d.variable for d in deallocs]
+            for i,v in enumerate(dealloc_vars):
+                if v in to_remove:
+                    d = deallocs.pop(i)
+                    init_func_body.append(d)
+
+            init_func_body = If(IfSection(PyccelNot(init_var),
+                                init_func_body+[Assign(init_var, LiteralTrue())]))
 
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
                     global_vars = variables, scope=init_scope)
@@ -1501,7 +1514,6 @@ class SemanticParser(BasicParser):
 
         if init_func:
             free_func_name = self.scope.get_new_name(name_suffix+'__free')
-            deallocs = self._garbage_collector(init_func.body)
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
