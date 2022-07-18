@@ -6,7 +6,6 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-from pyccel.errors.errors import PyccelError
 
 RTOL = 2e-14
 ATOL = 1e-15
