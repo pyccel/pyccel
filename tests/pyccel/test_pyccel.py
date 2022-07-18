@@ -652,6 +652,7 @@ def test_arrays_view(language):
             [int] * 6 + [int] * 10
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
+#------------------------------------------------------------------------------
 def test_return_numpy_arrays(language):
     types = [int]*4 # 4 ints for a
     types += [int]*2 # 2 ints for b
@@ -660,20 +661,8 @@ def test_return_numpy_arrays(language):
     types += [complex]*2 # 2 complexs for e
     types += [float]*5 # 5 floats for h
     types += [int]*5 # 5 ints for g
+    types += [int]*4 # 4 ints for k
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Hidden memory allocation triggers pyccel error."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-def test_return_numpy_arrays_xfails(language):
-    types = [int]*4 # 4 ints for a
-    pyccel_test("scripts/return_numpy_arrays_xfails.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
