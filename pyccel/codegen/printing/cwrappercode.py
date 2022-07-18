@@ -569,7 +569,7 @@ class CWrapperCodePrinter(CCodePrinter):
         #check optional :
         if variable.is_optional :
             check = PyccelNot(ObjectAddress(collect_var))
-            body += [IfSection(check, [Assign(ObjectAddress(variable), Nil())])]
+            body += [IfSection(check, [AliasAssign(variable, Nil())])]
 
         check = array_checker(collect_var, variable, check_type, self._target_language)
         body += [IfSection(check, [Return([Nil()])])]
@@ -758,7 +758,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if var.rank != 0:
             self.add_import(cwrapper_ndarray_import)
 
-        collect_value = Assign(ObjectAddress(collect_var),
+        collect_value = AliasAssign(collect_var,
                                 FunctionCall(C_to_Python(var), [ObjectAddress(var)]))
         add_expr = PyModule_AddObject(mod_name, var_name, collect_var)
         if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
