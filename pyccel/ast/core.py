@@ -722,7 +722,7 @@ class AliasAssign(Basic):
     _attribute_nodes = ('_lhs','_rhs')
 
     def __init__(self, lhs, rhs):
-        if pyccel_stage != 'syntactic':
+        if pyccel_stage == 'semantic':
             if not lhs.is_alias:
                 raise TypeError('lhs must be a pointer')
 
