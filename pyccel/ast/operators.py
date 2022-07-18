@@ -2,8 +2,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# TODO [EB 12.03.21]: Remove pylint command with PR #797
-# pylint: disable=W0201
 """
 Module handling all python builtin operators
 These operators all have a precision as detailed here:
@@ -11,19 +9,24 @@ These operators all have a precision as detailed here:
 They also have specific rules to determine the dtype, precision, rank, shape
 """
 
+from pyccel.utilities.stage import PyccelStage
+
 from ..errors.errors        import Errors, PyccelSemanticError
 
 from .basic                 import PyccelAstNode
 
 from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
-                                    NativeComplex, NativeString, default_precision,
+                                    NativeComplex, NativeString,
                                     NativeNumeric)
+
+from .internals             import max_precision
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
 from .literals              import Nil, NilArgument
 from .literals              import convert_to_literal
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'PyccelOperator',
@@ -116,7 +119,7 @@ class PyccelOperator(PyccelAstNode):
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             super().__init__()
             return
         self._set_dtype()
@@ -305,7 +308,7 @@ class PyccelNot(PyccelUnaryOperator):
         a _dtype or _precision member
         """
         dtype = NativeBool()
-        precision = default_precision['bool']
+        precision = -1
         return dtype, precision
 
     @staticmethod
@@ -399,7 +402,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is a complex
         """
         dtype = NativeComplex()
-        precision = max(a.precision for a in complexes)
+        precision = max_precision(complexes)
         return dtype, precision
 
     @staticmethod
@@ -408,7 +411,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is a float
         """
         dtype = NativeFloat()
-        precision = max(a.precision for a in floats)
+        precision = max_precision(floats)
         return dtype, precision
 
     @staticmethod
@@ -417,7 +420,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is an integer
         """
         dtype = NativeInteger()
-        precision = max(a.precision for a in integers)
+        precision = max_precision(integers)
         return dtype, precision
 
     @staticmethod
@@ -499,6 +502,22 @@ class PyccelPow(PyccelArithmeticOperator):
 
     def __repr__(self):
         return '{} ** {}'.format(self.args[0], self.args[1])
+
+    def _handle_precedence(self, args):
+        precedence = [getattr(a, 'precedence', 17) for a in args]
+
+        if min(precedence) <= self._precedence:
+
+            new_args = []
+
+            for i, (a,p) in enumerate(zip(args, precedence)):
+                if (p < self._precedence or (p == self._precedence and i != 1)):
+                    new_args.append(PyccelAssociativeParenthesis(a))
+                else:
+                    new_args.append(a)
+            args = tuple(new_args)
+
+        return args
 
 #==============================================================================
 
@@ -668,11 +687,8 @@ class PyccelDiv(PyccelArithmeticOperator):
     @staticmethod
     def _handle_integer_type(integers):
         dtype = NativeFloat()
-        precision = default_precision['float']
+        precision = -1
         return dtype, precision
-
-    def __repr__(self):
-        return '{} + {}'.format(self.args[0], self.args[1])
 
     def __repr__(self):
         return '{} / {}'.format(self.args[0], self.args[1])
@@ -741,7 +757,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     @staticmethod
     def _calculate_dtype(*args):
         dtype = NativeBool()
-        precision = default_precision['bool']
+        precision = -1
         return dtype, precision
 
 #==============================================================================
@@ -763,6 +779,12 @@ class PyccelEq(PyccelComparisonOperator):
     """
     __slots__ = ()
 
+    def __new__(cls, arg1, arg2, simplify = False):
+        if isinstance(arg1, Nil) or isinstance(arg2, Nil):
+            return PyccelIs(arg1, arg2)
+        else:
+            return super().__new__(cls)
+
     def __repr__(self):
         return '{} == {}'.format(self.args[0], self.args[1])
 
@@ -772,7 +794,7 @@ class PyccelNe(PyccelComparisonOperator):
     I.e:
         a != b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelNe(a, b)
 
     Parameters
     ----------
@@ -782,6 +804,12 @@ class PyccelNe(PyccelComparisonOperator):
         The second argument passed to the operator
     """
     __slots__ = ()
+
+    def __new__(cls, arg1, arg2, simplify = False):
+        if isinstance(arg1, Nil) or isinstance(arg2, Nil):
+            return PyccelIsNot(arg1, arg2)
+        else:
+            return super().__new__(cls)
 
     def __repr__(self):
         return '{} != {}'.format(self.args[0], self.args[1])
@@ -880,7 +908,7 @@ class PyccelBooleanOperator(PyccelOperator):
         The second argument passed to the operator
     """
     dtype = NativeBool()
-    precision = default_precision['bool']
+    precision = -1
     rank = 0
     shape = ()
     order = None
@@ -1063,7 +1091,7 @@ class IfTernaryOperator(PyccelOperator):
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
 
-        if self.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
@@ -1087,7 +1115,7 @@ class IfTernaryOperator(PyccelOperator):
         else:
             dtype = value_true.dtype
 
-        precision = max([value_true.precision, value_false.precision])
+        precision = max_precision([value_true, value_false])
         return dtype, precision
 
     @staticmethod

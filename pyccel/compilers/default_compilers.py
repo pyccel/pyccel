@@ -3,11 +3,9 @@ Module responsible for the creation of the json files containing the default con
 This module only needs to be imported once. Once the json files have been generated they can be used directly thus
 avoiding the need for a large number of imports
 """
-import json
 import os
 import sys
 import sysconfig
-from itertools import chain
 from numpy import get_include as get_numpy_include
 from pyccel import __version__ as pyccel_version
 
@@ -187,67 +185,69 @@ def change_to_lib_flag(lib):
     else:
         return lib
 
-python_version = sysconfig.get_python_version()
 config_vars = sysconfig.get_config_vars()
-linker_flags = [change_to_lib_flag(l) for l in
-                    config_vars.get("LIBRARY","").split() + \
-                    config_vars.get("LDSHARED","").split()[1:]]
+
 python_info = {
         "libs" : config_vars.get("LIBM","").split(), # Strip -l from beginning
-        "libdirs" : config_vars.get("LIBDIR","").split(),
         'python': {
             'flags' : config_vars.get("CFLAGS","").split()\
                 + config_vars.get("CC","").split()[1:],
             'includes' : [*config_vars.get("INCLUDEPY","").split(), get_numpy_include()],
-            'libs' : [l[2:] for l in linker_flags if l.startswith('-l')],
-            'libdirs' : [l[2:] for l in linker_flags if l.startswith('-L')]+config_vars.get("LIBPL","").split(),
-            "shared_suffix" : config_vars.get("EXT_SUFFIX",".so"),
+            "shared_suffix" : config_vars['EXT_SUFFIX'],
             }
         }
+
 if sys.platform == "win32":
-    python_info['python']['libs'].append('python{}'.format(config_vars["VERSION"]))
-    python_info['python']['libdirs'].extend(config_vars.get("installed_base","").split())
+    python_lib = os.path.join(config_vars["prefix"], 'python{}.dll'.format(config_vars["VERSION"]))
+    if os.path.exists(python_lib):
+        python_info['python']['dependencies'] = (python_lib,)
+    else:
+        python_info['python']['libs'] = ('python{}'.format(config_vars["VERSION"]),)
+        python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
+
+else:
+    # Collect library according to python config file
+    python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
+
+    # Collect a list of all possible libraries matching the name in the configs
+    # which can be found on the system
+    possible_shared_lib = python_lib_base.replace('.a','.so')
+    possible_shared_lib = possible_shared_lib if os.path.exists(possible_shared_lib) else ''
+    possible_static_lib = python_lib_base.replace('.so','.a')
+    possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
+    # Prefer the static library where possible to avoid unnecessary libdirs
+    # which may lead to the wrong libraries being linked
+    if possible_shared_lib == '' and possible_static_lib == '':
+        # If the proposed library does not exist use different config flags
+        # to specify the library
+        linker_flags = [change_to_lib_flag(l) for l in
+                        config_vars.get("LIBRARY","").split() + \
+                        config_vars.get("LDSHARED","").split()[1:]]
+        python_info['python']['libs'] = [l[2:] for l in linker_flags if l.startswith('-l')]
+        python_info['python']['libdirs'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
+                            config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split()
+    elif possible_static_lib != '':
+        python_info['python']['dependencies'] = (possible_static_lib,)
+    else:
+        python_info['python']['dependencies'] = (possible_shared_lib,)
 
 #------------------------------------------------------------
-save_folder = os.path.dirname(os.path.abspath(__file__))
+gcc_info.update(python_info)
+gfort_info.update(python_info)
+icc_info.update(python_info)
+ifort_info.update(python_info)
+pgcc_info.update(python_info)
+pgfortran_info.update(python_info)
+nvc_info.update(python_info)
+nvfort_info.update(python_info)
 
-#------------------------------------------------------------
-def print_json(filename, info):
-    """
-    Print the json file described by info into the specied file
+available_compilers = {('GNU', 'c') : gcc_info,
+                       ('GNU', 'fortran') : gfort_info,
+                       ('intel', 'c') : icc_info,
+                       ('intel', 'fortran') : ifort_info,
+                       ('PGI', 'c') : pgcc_info,
+                       ('PGI', 'fortran') : pgfortran_info,
+                       ('nvidia', 'c') : nvc_info,
+                       ('nvidia', 'fortran') : nvfort_info}
 
-    Parameters
-    ----------
-    filename : str
-               The name of the json file where the configuration information
-               will be saved
-    info     : dict
-               A dictionary containing information about the flags, libraries, etc
-               associated with a given compiler
-    """
-    print(json.dumps(dict(chain(info.items(),
-                                python_info.items(),
-                                [('pyccel_version', pyccel_version),
-                                 ('python_version', python_version)])),
-                     indent=4),
-          file=open(os.path.join(save_folder, filename),'w'))
-
-#------------------------------------------------------------
-def generate_default():
-    """
-    Generate the json files containing the default configurations for the
-    available compilers
-    """
-    files = {
-            'gfortran.json'  : gfort_info,
-            'gcc.json'       : gcc_info,
-            'ifort.json'     : ifort_info,
-            'icc.json'       : icc_info,
-            'pgfortran.json' : pgfortran_info,
-            'pgcc.json'      : pgcc_info,
-            'nvfort.json'    : nvfort_info,
-            'nvc.json'       : nvc_info,
-            }
-    for f, d in files.items():
-        print_json(f,d)
-    return files.keys()
+vendors = ('GNU','intel','PGI','nvidia')

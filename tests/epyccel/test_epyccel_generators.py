@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 import numpy as np
-from numpy.random import randint
+from numpy.random import randint, rand
 
 from pyccel.epyccel import epyccel
 
@@ -135,31 +135,41 @@ def test_expression2(language):
 
     assert f(x) == f_epyc(x)
 
-def nested_generators1(language):
+def test_nested_generators1(language):
     def f(a : 'float[:,:,:,:]'):
         return sum(sum(sum(a[i,k,o,2] for i in range(5)) for k in range(5)) for o in range(5))
 
-    x = randint(50,size=(5,5,5,5))
+    x = randint(0, 50, size=(5,5,5,5)).astype(float)
 
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
-def nested_generators2(language):
+def test_nested_generators2(language):
     def f(a : 'float[:,:,:,:]'):
         return min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
 
-    x = randint(50,size=(5,5,5,5))
+    x = randint(0, 50, size=(5,5,5,5)).astype(float)
 
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
-def nested_generators3(language):
+def test_nested_generators3(language):
     def f(a : 'float[:,:,:,:]'):
         return sum(sum(a[i,k,4,2] for i in range(5)) for k in range(5))**2
 
-    x = randint(10,size=(5,5,5,5))
+    x = randint(0, 10, size=(5,5,5,5)).astype(float)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert f(x) == f_epyc(x)
+
+def test_nested_generators4(language):
+    def f(a : 'float[:,:,:,:]'):
+        return min(max(a[i,k,4,2] for i in range(5)) for k in range(5))**2
+
+    x = randint(0, 10, size=(5,5,5,5)).astype(float)
 
     f_epyc = epyccel(f, language = language)
 

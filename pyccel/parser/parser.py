@@ -9,7 +9,6 @@ Module containing the Parser object
 """
 
 import os
-from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
@@ -30,7 +29,7 @@ class Parser(object):
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
         self._sons      = []
-        self._d_parsers = OrderedDict()
+        self._d_parsers = {}
 
         self._syntax_parser   = None
         self._semantic_parser = None
@@ -102,31 +101,28 @@ class Parser(object):
             return self._syntax_parser.metavars
 
     @property
-    def namespace(self):
+    def scope(self):
         if self._semantic_parser:
-            return self._semantic_parser.namespace
+            return self._semantic_parser.scope
         else:
-            return self._syntax_parser.namespace
+            return self._syntax_parser.scope
 
     @property
     def imports(self):
-        if self._semantic_parser:
-            return self._semantic_parser.namespace.imports['imports']
-        else:
-            return self._syntax_parser.namespace.imports['imports']
+        return self.scope.collect_all_imports()
 
     @property
     def fst(self):
         return self._syntax_parser.fst
 
-    def parse(self, d_parsers=None, verbose=False):
+    def parse(self, d_parsers_by_filename=None, verbose=False):
         """
           Parse the parent file an all its dependencies.
 
           Parameters
           ----------
-          d_parsers : dict
-            A dictionary of parsed sons.
+          d_parsers_by_filename : dict
+            A dictionary of parsed sons indexed by filename.
 
           verbose: bool
             Determine the verbosity.
@@ -143,10 +139,10 @@ class Parser(object):
         self.syntax_parser = parser
         parser.ast        = parser.ast
 
-        if d_parsers is None:
-            d_parsers = self._d_parsers
+        if d_parsers_by_filename is None:
+            d_parsers_by_filename = {}
 
-        self._d_parsers = self.parse_sons(d_parsers, verbose=verbose)
+        self._d_parsers = self.parse_sons(d_parsers_by_filename, verbose=verbose)
 
         return parser.ast
 
@@ -184,15 +180,15 @@ class Parser(object):
 
         self._sons.append(son)
 
-    def parse_sons(self, d_parsers, verbose=False):
+    def parse_sons(self, d_parsers_by_filename, verbose=False):
         """Recursive algorithm for syntax analysis on a given file and its
         dependencies.
-        This function always terminates with an OrderedDict that contains parsers
+        This function always terminates with an dict that contains parsers
         for all involved files.
 
          Parameters
          ----------
-         d_parsers : dict
+         d_parsers_by_filename : dict
           A dictionary of parsed sons.
 
         verbose: bool
@@ -205,24 +201,30 @@ class Parser(object):
 
         """
 
-        imports     = self.imports.keys()
-        treated     = d_parsers.keys()
-        not_treated = [i for i in imports if i not in treated]
-        for source in not_treated:
+        imports     = self.imports
+        source_to_filename = {i: get_filename_from_import(i, self._input_folder) for i in imports}
+        treated     = d_parsers_by_filename.keys()
+        not_treated = [i for i in source_to_filename.values() if i not in treated]
+        for filename in not_treated:
             if verbose:
-                print ('>>> treating :: {}'.format(source))
+                print ('>>> treating :: {}'.format(filename))
 
             # get the absolute path corresponding to source
+            if filename in d_parsers_by_filename:
+                q = d_parsers_by_filename[filename]
+            else:
+                q = Parser(filename)
+            q.parse(d_parsers_by_filename=d_parsers_by_filename)
+            d_parsers_by_filename[filename] = q
 
-            filename = get_filename_from_import(source, self._input_folder)
-            q = Parser(filename)
-            q.parse(d_parsers=d_parsers)
-            d_parsers[source] = q
-
+        d_parsers = {}
         # link self to its sons
         for source in imports:
-            d_parsers[source].append_parent(self)
-            self.append_son(d_parsers[source])
+            filename = source_to_filename[source]
+            son = d_parsers_by_filename[filename]
+            son.append_parent(self)
+            self.append_son(son)
+            d_parsers[source] = son
 
         return d_parsers
 

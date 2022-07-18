@@ -5,12 +5,13 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
-from .builtins  import PythonImag, PythonReal
+from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal, NumpyTranspose)
+                        NumpyImag, NumpyReal, NumpyTranspose,
+                        NumpyConjugate, NumpyArraySize)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -30,7 +31,8 @@ ComplexClass = ClassDef('complex',
                 decorators={'property':'property', 'numpy_wrapper':PythonImag}),
             FunctionDef('real',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':PythonReal}),
-            #conjugate
+            FunctionDef('conjugate',[],[],body=[],
+                decorators={'numpy_wrapper':PythonConjugate}),
             ])
 
 #=======================================================================================
@@ -135,6 +137,8 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':Shape}),
+            FunctionDef('size',[],[],body=[],
+                decorators={'property':'property', 'numpy_wrapper':NumpyArraySize}),
             FunctionDef('T',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyTranspose}),
             FunctionDef('transpose',[],[],body=[],
@@ -148,7 +152,11 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
             FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
+                decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
+            FunctionDef('conj',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyConjugate}),
+            FunctionDef('conjugate',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyConjugate})])
 
 #=======================================================================================
 
@@ -162,11 +170,11 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(dtype, rank):
+def get_cls_base(dtype, precision, rank):
     """
     From the dtype and rank, determine the base class of an object
     """
-    if rank == 0:
+    if precision == -1 and rank == 0:
         return literal_classes[dtype]
     else:
         return NumpyArrayClass

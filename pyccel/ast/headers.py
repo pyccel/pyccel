@@ -4,12 +4,12 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .core              import create_incremented_string
 from .datatypes         import datatype, DataTypeFactory, UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
@@ -147,9 +147,9 @@ class Template(Header):
     Examples
     --------
     >>> from pyccel.ast.headers import Template
-    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
-    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
     >>> T = Template('T', [d_var0, d_var1])
     """
@@ -277,8 +277,7 @@ class FunctionHeader(Header):
         def build_argument(var_name, dc):
             #Constructs an argument variable from a dictionary.
             dtype    = dc['datatype']
-            allocatable = dc['allocatable']
-            is_pointer = dc['is_pointer']
+            memory_handling = dc['memory_handling']
             precision = dc['precision']
             rank = dc['rank']
             is_const = dc['is_const']
@@ -294,9 +293,10 @@ class FunctionHeader(Header):
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
             var = Variable(dtype, var_name,
-                           allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
-                           rank=rank, shape=shape ,order = order, precision = precision,
-                           is_argument=True)
+                           memory_handling=memory_handling, is_const=is_const,
+                           rank=rank, shape=shape ,order=order, precision=precision,
+                           is_argument=True, is_temp=True)
+
             return var
 
         def process_template(signature, Tname, d_type):
@@ -364,7 +364,7 @@ class FunctionHeader(Header):
             for i,d_var in enumerate(self.results):
                 is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
-                var = Variable(dtype, 'res_{}'.format(i), **d_var)
+                var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
                 results.append(var)
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
@@ -372,7 +372,6 @@ class FunctionHeader(Header):
                 d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
-                              local_vars=[],
                               global_vars=[],
                               cls_name=cls_name,
                               is_static=is_static,
@@ -394,7 +393,7 @@ class FunctionHeader(Header):
         """ add a dimension to one of the arguments specified by it's position"""
         types = self.dtypes
         types[index]['rank'] += 1
-        types[index]['allocatable'] = True
+        types[index]['memory_handling'] = 'heap'
         return FunctionHeader(self.name,
                               types,
                               self.results,

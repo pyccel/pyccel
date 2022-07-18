@@ -7,6 +7,10 @@ As Pyccel converts a dynamically typed language (Python) to statically typed lan
 This decorator indicates that all arrays mentioned as arguments (of the decorator) should be stored
 on the stack.
 
+In order to store the array on the stack it is important that the size be known at the declaration.
+In Fortran all declarations must occur at the start of the function.
+As a result, Pyccel requires that the size of the stack array object is expressed as a function of arguments and [pure](#Pure) function results only.
+
 This example shows how the decorators can affect the conversion of the array between the supported languages. Pyccel here is told by the decorator `stack_array` to store the array `array_in_stack` in the stack, for the array `array_in_heap` Pyccel is assuming that it should be stored in the heap:
 
 ```python
@@ -362,11 +366,6 @@ end module boo
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
-
-### Current Restrictions
-Currently `inline` functions cannot be imported. This should be fixed shortly.
-
-Due to this restriction, the function cannot be included in the python wrapper. It is therefore not currently exposed to the user in a non-translated file.
 
 ### Basic Example
 

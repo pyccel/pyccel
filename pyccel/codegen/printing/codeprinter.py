@@ -3,8 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
-
 
 
 from pyccel.ast.basic import Basic
@@ -26,6 +24,8 @@ class CodePrinter:
     The base class for code-printing subclasses.
     """
     language = None
+    def __init__(self):
+        self._scope = None
 
     def doprint(self, expr, assign_to=None):
         """
@@ -53,6 +53,23 @@ class CodePrinter:
 
         # Format the output
         return ''.join(self._format_code(lines))
+
+    @property
+    def scope(self):
+        """ Return the scope associated with the object being printed
+        """
+        return self._scope
+
+    def set_scope(self, scope):
+        """ Change the current scope
+        """
+        assert scope is not None
+        self._scope = scope
+
+    def exit_scope(self):
+        """ Exit the current scope and return to the enclosing scope
+        """
+        self._scope = self._scope.parent_scope
 
     def _print(self, expr):
         """Print the AST node in the printer language

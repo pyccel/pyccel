@@ -85,7 +85,6 @@ class ErrorInfo:
                  severity=None,
                  message='',
                  symbol=None,
-                 blocker=False,
                  traceback=None):
         # The parser stage
         self.stage = stage
@@ -104,7 +103,8 @@ class ErrorInfo:
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = blocker or (severity == 'fatal')
+        self.blocker = (ErrorsMode().value == 'developer' and severity != 'warning') \
+                or (severity == 'fatal')
         # The traceback at the moment that the error was raised
         self.traceback = traceback
 
@@ -213,7 +213,6 @@ class Errors(metaclass = Singleton):
                line = None,
                column = None,
                bounding_box = None,
-               blocker = False,
                severity = 'error',
                symbol = None,
                filename = None,
@@ -236,10 +235,6 @@ class Errors(metaclass = Singleton):
                   then this column is used
         bounding_box : tuple
                   An optional tuple containing the line and column
-        blocker : bool
-                  Indicates whether this error should prevent further execution
-                  of any code
-                  Default: False unless severity is 'fatal'
         severity : str
                   Indicates the seriousness of the error. Should be one of:
                   'warning', 'error', 'fatal'
@@ -256,9 +251,6 @@ class Errors(metaclass = Singleton):
         # filter internal errors
         if (self.mode == 'user') and (severity == 'internal'):
             return
-
-        if (severity == 'fatal'):
-            blocker = True
 
         if filename is None:
             filename = self.target['file']
@@ -281,8 +273,8 @@ class Errors(metaclass = Singleton):
                 fst = symbol.fst
 
         if fst:
-            line   = fst.lineno
-            column = fst.col_offset
+            line   = getattr(fst, 'lineno', None)
+            column = getattr(fst, 'col_offset', None)
 
         traceback = None
         if self.mode == 'developer':
@@ -295,14 +287,13 @@ class Errors(metaclass = Singleton):
                          severity=severity,
                          message=message,
                          symbol=symbol,
-                         blocker=blocker,
                          traceback=traceback)
 
         if verbose: print(info)
 
         self.add_error_info(info)
 
-        if blocker:
+        if info.blocker:
             if self._parser_stage == 'syntax':
                 raise PyccelSyntaxError(message)
             elif self._parser_stage == 'semantic':
@@ -366,27 +357,4 @@ class Errors(metaclass = Singleton):
                 text += ' ' + str(err) + '\n'
 
         return text
-
-if __name__ == '__main__':
-    from pyccel.errors.messages import NO_RETURN_VALUE_EXPECTED
-    from pyccel.errors.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
-    from pyccel.errors.messages import UNDEFINED_VARIABLE
-
-    errors = Errors()
-    errors.set_parser_stage('semantic')
-
-    errors.set_target('script.py', 'file')
-
-    errors.report(NO_RETURN_VALUE_EXPECTED, severity='warning', line=24)
-
-    errors.set_target('make_knots', 'function')
-    errors.report(INCOMPATIBLE_RETURN_VALUE_TYPE, symbol='y', severity='error',
-                 line=34, column=17)
-    errors.unset_target('function')
-
-    errors.check()
-
-    errors.set_target('eval_bsplines', 'function')
-    errors.report(UNDEFINED_VARIABLE, symbol='x', severity='error', blocker=True)
-    errors.unset_target('function')
 

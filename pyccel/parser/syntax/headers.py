@@ -13,7 +13,6 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
-from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import FunctionDefArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
@@ -21,9 +20,11 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
 from pyccel.errors.errors import Errors
+from pyccel.utilities.stage import PyccelStage
 
 DEBUG = False
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 class Header(object):
     """Class for Header syntax."""
@@ -100,8 +101,7 @@ class ListType(BasicStmt):
         d_var = {}
         d_var['datatype'] = str(dtypes[0])
         d_var['rank'] = len(dtypes)
-        d_var['is_pointer'] = len(dtypes)>0
-        d_var['allocatable'] = False
+        d_var['memory_handling'] = 'alias' if len(dtypes) > 0 else 'stack'
         d_var['precision'] = max(precisions)
         d_var['order'] = 'C'
         d_var['is_func'] = False
@@ -145,8 +145,7 @@ class Type(BasicStmt):
         d_var={}
         d_var['datatype']=dtype
         d_var['rank'] = len(trailer)
-        d_var['allocatable'] = len(trailer)>0
-        d_var['is_pointer'] = False
+        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else 'stack'
         d_var['precision']  = precision
         d_var['is_func'] = False
         d_var['is_const'] = False
@@ -585,8 +584,8 @@ def parse(filename=None, stmts=None):
         model = meta.model_from_str(stmts)
     else:
         raise ValueError('Expecting a filename or a string')
-    # Ensure PyccelAstNode is in correct stage
-    PyccelAstNode.stage = 'syntactic'
+    # Ensure correct stage
+    pyccel_stage.set_stage('syntactic')
 
     stmts = []
     for stmt in model.statements:

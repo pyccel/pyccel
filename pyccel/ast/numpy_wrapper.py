@@ -15,10 +15,12 @@ from .datatypes         import (NativeInteger, NativeFloat, NativeComplex,
 from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
 
 from .core              import FunctionDef, FunctionCall
-from .operators         import PyccelNot, PyccelEq
 
+from .internals         import get_final_precision
 
 from .literals          import LiteralInteger
+
+from .operators         import PyccelNot, PyccelEq
 
 from .variable          import Variable
 
@@ -64,13 +66,13 @@ def get_numpy_max_acceptable_version_file():
 # https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE
 numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                              body      = [],
-                             arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                             arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', memory_handling='alias')],
                              results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
 # numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
-                arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
+                arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), memory_handling = 'alias')],
                 body      = [],
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
@@ -78,7 +80,7 @@ pyarray_to_ndarray = FunctionDef(
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
-                        Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True),
+                        Variable(name = 'a', dtype = PyccelPyArrayObject(), memory_handling='alias'),
                         Variable(name = 'dtype', dtype = NativeInteger()),
                         Variable(name = 'rank', dtype = NativeInteger()),
                         Variable(name = 'flag', dtype = NativeInteger())
@@ -89,15 +91,15 @@ pyarray_check = FunctionDef(
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
-                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True),
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias'),
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
 # Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
-                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias')],
+                           results   = [Variable(dtype=NativeVoid(), name = 'v', memory_handling='alias', rank = 1)])
 
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
@@ -196,7 +198,7 @@ def find_in_numpy_dtype_registry(var):
     """ Find the numpy dtype key for a given variable
     """
     dtype = str(var.dtype)
-    prec  = var.precision
+    prec  = get_final_precision(var)
     try :
         return numpy_dtype_registry[(dtype, prec)]
     except KeyError:
@@ -272,7 +274,7 @@ def scalar_type_check(py_variable, c_variable):
 
     check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
                               body      = [],
-                              arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                              arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'),
                                            check_numpy_ref],
                               results   = [Variable(dtype=NativeBool(), name = 'r')])
 

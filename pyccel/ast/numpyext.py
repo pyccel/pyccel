@@ -4,25 +4,33 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" Module containing objects from the numpy module understood by pyccel
+"""
+
+from functools import reduce
+import operator
 
 import numpy
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT
+from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS, NON_LITERAL_AXIS
+
+from pyccel.utilities.stage import PyccelStage
 
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
-                             PythonType)
+                             PythonType, PythonConjugate)
 
-from .core           import process_shape
+from .core           import process_shape, Module, Import, PyccelFunctionDef
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction, Slice
+from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
+from .internals      import PyccelArraySize
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -32,6 +40,7 @@ from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 errors = Errors()
+pyccel_stage = PyccelStage()
 
 __all__ = (
     'NumpyAbs',
@@ -75,7 +84,12 @@ __all__ = (
     'NumpyMatmul',
     'NumpyAmax',
     'NumpyAmin',
+    'NumpyArange',
+    'NumpyArraySize',
+    'NumpyCountNonZero',
     'NumpyMod',
+    'NumpyNonZero',
+    'NumpyNonZeroElement',
     'NumpyNorm',
     'NumpySum',
     'NumpyOnes',
@@ -88,7 +102,6 @@ __all__ = (
     'NumpyWhere',
     'NumpyZeros',
     'NumpyZerosLike',
-    'NumpyArange'
 )
 
 #=======================================================================================
@@ -176,7 +189,7 @@ class NumpyReal(PythonReal):
     > np.real(a)
     1.0
     """
-    __slots__ = ('_rank','_shape','_order')
+    __slots__ = ('_precision','_rank','_shape','_order')
     name = 'real'
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
@@ -207,7 +220,7 @@ class NumpyImag(PythonImag):
     > np.imag(a)
     2.0
     """
-    __slots__ = ('_rank','_shape','_order')
+    __slots__ = ('_precision','_rank','_shape','_order')
     name = 'imag'
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
@@ -263,29 +276,32 @@ class NumpyComplex128(NumpyComplex):
 
 DtypePrecisionToCastFunction = {
     'Int' : {
+       -1 : PythonInt,
         1 : NumpyInt8,
         2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Float' : {
+       -1 : PythonFloat,
         4 : NumpyFloat32,
         8 : NumpyFloat64},
     'Complex' : {
+       -1 : PythonComplex,
         4 : NumpyComplex64,
         8 : NumpyComplex,
         16 : NumpyComplex128,},
     'Bool':  {
+       -1 : PythonBool,
         4 : NumpyBool}
 }
 
 #==============================================================================
-numpy_constants = {
-    'pi': Constant('float', 'pi', value=numpy.pi),
-}
 
 def process_dtype(dtype):
     if isinstance(dtype, PythonType):
-        return dtype.dtype, dtype.precision
+        return dtype.dtype, get_final_precision(dtype)
+    if isinstance(dtype, PyccelFunctionDef):
+        dtype = dtype.cls_name
 
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
@@ -297,6 +313,8 @@ def process_dtype(dtype):
     else:
         dtype            = str(dtype).replace('\'', '').lower()
     dtype, precision = dtype_registry[dtype]
+    if precision == -1:
+        precision        = default_precision[dtype]
     dtype            = datatype(dtype)
 
     return dtype, precision
@@ -414,7 +432,7 @@ class NumpyArange(NumpyNewArray):
 
         if dtype is None:
             self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
-            self._precision = max([i.precision for i in self.arg])
+            self._precision = max_precision(self.arg, allow_native=False)
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
@@ -456,7 +474,7 @@ class NumpySum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = arg.dtype
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(arg)
 
     @property
     def arg(self):
@@ -480,10 +498,10 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
-                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
+                    (isinstance(arg.dtype, NativeInteger) and get_final_precision(self._arg) < default_precision['int']))\
                     else self._arg
         self._dtype = self._arg.dtype
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(self._arg)
 
     @property
     def arg(self):
@@ -500,7 +518,7 @@ class NumpyMatmul(PyccelInternalFunction):
 
     def __init__(self, a ,b):
         super().__init__(a, b)
-        if PyccelAstNode.stage == 'syntactic':
+        if pyccel_stage == 'syntactic':
             return
 
         if not isinstance(a, PyccelAstNode):
@@ -516,16 +534,16 @@ class NumpyMatmul(PyccelInternalFunction):
 
         if complexs:
             self._dtype     = NativeComplex()
-            self._precision = max(e.precision for e in complexs)
+            self._precision = max_precision(complexs, allow_native = False)
         elif floats:
             self._dtype     = NativeFloat()
-            self._precision = max(e.precision for e in floats)
+            self._precision = max_precision(floats, allow_native = False)
         elif integers:
             self._dtype     = NativeInteger()
-            self._precision = max(e.precision for e in integers)
+            self._precision = max_precision(integers, allow_native = False)
         elif booleans:
             self._dtype     = NativeBool()
-            self._precision = max(e.precision for e in booleans)
+            self._precision = max_precision(booleans, allow_native = False)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -561,11 +579,16 @@ class NumpyMatmul(PyccelInternalFunction):
 
 #==============================================================================
 
-def Shape(arg):
-    if isinstance(arg.shape, PythonTuple):
-        return arg.shape
-    else:
-        return PythonTuple(*arg.shape)
+class Shape(PyccelInternalFunction):
+    """ Represents a call to numpy.shape for code generation
+    """
+    __slots__ = ()
+    name = 'shape'
+    def __new__(cls, arg):
+        if isinstance(arg.shape, PythonTuple):
+            return arg.shape
+        else:
+            return PythonTuple(*arg.shape)
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -614,10 +637,10 @@ class NumpyLinspace(NumpyNewArray):
 
             if complexs:
                 self._dtype     = NativeComplex()
-                self._precision = max(e.precision for e in complexs)
+                self._precision = max_precision(complexs, allow_native = False)
             elif floats:
                 self._dtype     = NativeFloat()
-                self._precision = max(e.precision for e in floats)
+                self._precision = max_precision(floats, allow_native = False)
             elif integers:
                 self._dtype     = NativeFloat()
                 self._precision = default_precision['float']
@@ -707,24 +730,71 @@ class NumpyLinspace(NumpyNewArray):
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
-    __slots__ = ()
+
+    __slots__ = ('_condition', '_value_true', '_value_false', '_dtype',
+                 '_rank', '_shape', '_order', '_precision')
+    _attribute_nodes = ('_condition','_value_true','_value_false')
     name = 'where'
 
-    def __init__(self, mask):
-        super().__init__(mask)
+    def __new__(cls, condition, x = None, y = None):
+        if x is None and y is None:
+            return NumpyNonZero(condition)
+        else:
+            return super().__new__(cls)
 
+    def __init__(self, condition, x = None, y = None):
+        self._condition = condition
+        self._value_true = x
+        self._value_false = y
+
+        args      = (x, y)
+        integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
+        floats    = [e for e in args if e.dtype is NativeFloat()]
+        complexs  = [e for e in args if e.dtype is NativeComplex()]
+
+        if complexs:
+            self._dtype     = NativeComplex()
+            self._precision = max_precision(args, allow_native = False)
+        elif floats:
+            self._dtype     = NativeFloat()
+            self._precision = max_precision(args, allow_native = False)
+        elif integers:
+            self._dtype     = NativeInteger()
+            self._precision = max_precision(args, allow_native = False)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
+        shape = broadcast(x.shape, y.shape)
+        shape = broadcast(condition.shape, shape)
+
+        self._rank  = len(shape)
+        self._shape = shape
+        self._order = 'C'
+        super().__init__(condition, x, y)
 
     @property
-    def mask(self):
-        return self._args[0]
+    def condition(self):
+        """Boolean argument determining which value is returned"""
+        return self._condition
 
     @property
-    def index(self):
-        ind = Variable('int','ind1')
+    def value_true(self):
+        """Value returned when the condition is evaluated to True."""
+        return self._value_true
 
-        return ind
+    @property
+    def value_false(self):
+        """Value returned when the condition is evaluated to False."""
+        return self._value_false
 
- #==============================================================================
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
+#==============================================================================
 class NumpyRand(PyccelInternalFunction):
 
     """
@@ -752,7 +822,7 @@ class NumpyRandint(PyccelInternalFunction):
     __slots__ = ('_rand','_low','_high','_shape','_rank')
     name = 'randint'
     _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _precision = -1
     _order     = 'C'
     _attribute_nodes = ('_low', '_high')
 
@@ -830,7 +900,7 @@ class NumpyFull(NumpyNewArray):
 
         # Cast fill_value to correct type
         if fill_value:
-            if fill_value.dtype != dtype or fill_value.precision != precision:
+            if fill_value.dtype != dtype or get_final_precision(fill_value) != precision:
                 cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
                 fill_value = cast_func(fill_value)
         self._shape = shape
@@ -912,7 +982,7 @@ class NumpyOnes(NumpyAutoFill):
         return value
 
 #=======================================================================================
-class NumpyFullLike:
+class NumpyFullLike(PyccelInternalFunction):
     """ Represents a call to numpy.full_like for code generation.
     """
     __slots__ = ()
@@ -926,7 +996,7 @@ class NumpyFullLike:
         return NumpyFull(shape, fill_value, dtype, order)
 
 #=======================================================================================
-class NumpyEmptyLike:
+class NumpyEmptyLike(PyccelInternalFunction):
     """ Represents a call to numpy.empty_like for code generation.
     """
     __slots__ = ()
@@ -941,7 +1011,7 @@ class NumpyEmptyLike:
         return NumpyEmpty(shape, dtype, order)
 
 #=======================================================================================
-class NumpyOnesLike:
+class NumpyOnesLike(PyccelInternalFunction):
     """ Represents a call to numpy.ones_like for code generation.
     """
     __slots__ = ()
@@ -956,7 +1026,7 @@ class NumpyOnesLike:
         return NumpyOnes(shape, dtype, order)
 
 #=======================================================================================
-class NumpyZerosLike:
+class NumpyZerosLike(PyccelInternalFunction):
     """ Represents a call to numpy.zeros_like for code generation.
     """
     __slots__ = ()
@@ -983,7 +1053,7 @@ class NumpyNorm(PyccelInternalFunction):
         if not isinstance(arg.dtype, (NativeComplex, NativeFloat)):
             arg = NumpyFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
-        self._precision = arg.precision
+        self._precision = get_final_precision(arg)
         if self.axis is not None:
             sh = list(arg.shape)
             del sh[self.axis]
@@ -1224,10 +1294,14 @@ class NumpyMod(NumpyUfuncBinary):
 
         if floats:
             self._dtype     = NativeFloat()
-            self._precision = max(a.precision for a in floats)
+            self._precision = max_precision(floats, allow_native = False)
         elif integers:
             self._dtype     = NativeInteger()
-            self._precision = max(a.precision for a in integers)
+            integers  = [a for a in args if a.dtype is NativeInteger()]
+            if integers:
+                self._precision = max_precision(integers, NativeInteger(), allow_native = False)
+            else:
+                self._precision = 1
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -1241,7 +1315,7 @@ class NumpyAmin(NumpyUfuncUnary):
 
     def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
-        self._precision = x.precision
+        self._precision = get_final_precision(x)
 
     @property
     def is_elemental(self):
@@ -1257,7 +1331,7 @@ class NumpyAmax(NumpyUfuncUnary):
 
     def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
-        self._precision = x.precision
+        self._precision = get_final_precision(x)
 
     @property
     def is_elemental(self):
@@ -1295,7 +1369,7 @@ class NumpyTranspose(NumpyUfuncUnary):
 
     def _set_dtype_precision(self, x):
         self._dtype      = x.dtype
-        self._precision  = x.precision
+        self._precision  = get_final_precision(x)
 
     def _set_shape_rank(self, x):
         self._shape      = tuple(reversed(x.shape))
@@ -1308,84 +1382,332 @@ class NumpyTranspose(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
+class NumpyConjugate(PythonConjugate):
+    """Represents a call to  numpy.conj for code generation.
+
+    > a = 1+2j
+    > np.conj(a)
+    1-2j
+    """
+    __slots__ = ('_precision','_rank','_shape','_order')
+    name = 'conj'
+
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._precision = arg.precision
+        self._order = arg.order
+        self._shape = process_shape(self.internal_var.shape)
+        self._rank  = len(self._shape)
+
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
+class NumpyNonZeroElement(NumpyNewArray):
+    """ Represents an element of the tuple returned by
+    NumpyNonZero which represents a call to numpy.nonzero
+
+    Parameters
+    ----------
+    a   : array_like
+          The argument which was passed to numpy.nonzero
+    dim : int
+          The index of the element in the tuple
+    """
+    __slots__ = ('_arr','_dim','_shape')
+    _attribute_nodes = ('_arr',)
+    name = 'nonzero'
+    _dtype = NativeInteger()
+    _precision = 8
+    _rank = 1
+    _order = None
+
+    def __init__(self, a, dim):
+        self._arr = a
+        self._dim = dim
+
+        self._shape = (NumpyCountNonZero(a),)
+        super().__init__(a)
+
+    @property
+    def array(self):
+        """ The argument which was passed to numpy.nonzero
+        """
+        return self._arr
+
+    @property
+    def dim(self):
+        """ The dimension which the results describe
+        """
+        return self._dim
+
+class NumpyNonZero(NumpyNewArray):
+    """
+    Class representing a call to the function numpy.nonzero
+
+    Example:
+    >>> x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
+    >>> np.nonzero(x)
+    (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
+
+    Parameters
+    ----------
+    a : array_like
+    """
+    __slots__ = ('_elements','_arr','_shape')
+    _attribute_nodes = ('_elements',)
+    name = 'nonzero'
+    _dtype = NativeInteger()
+    _precision = 8
+    _rank  = 2
+    _order = 'C'
+    def __init__(self, a):
+        if (a.rank > 1):
+            raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
+        self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
+        self._arr = a
+        self._shape = self._elements.shape
+        super().__init__()
+
+    @property
+    def array(self):
+        """ The array argument
+        """
+        return self._arr
+
+    @property
+    def elements(self):
+        """ The elements of the tuple
+        """
+        return self._elements
+
+    def __iter__(self):
+        return self._elements.__iter__()
+
+class NumpyCountNonZero(PyccelInternalFunction):
+    """
+    Class representing a call to the numpy size function which
+    returns the shape of an object in a given dimension
+
+    Parameters
+    ==========
+    arg   : PyccelAstNode
+            An array for which the non-zero elements should be counted
+    axis  : int
+            The dimension along which the non-zero elements are counted
+    keep_dims : NativeBool
+            Indicates if output arrays should have the same number of dimensions
+            as arg
+    """
+    __slots__ = ('_precision', '_rank', '_shape', '_order', '_arr', '_axis', '_keep_dims')
+    _attribute_nodes = ('_arr','_axis')
+    name   = 'count_nonzero'
+    _dtype = NativeInteger()
+    def __init__(self, a, axis = None, *, keepdims = LiteralFalse()):
+        if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
+            errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")
+        if axis is not None and not isinstance(axis, LiteralInteger):
+            errors.report(NON_LITERAL_AXIS, symbol=axis, severity="fatal")
+
+        if keepdims.python_value:
+            self._precision = 8
+            self._rank  = a.rank
+            self._order = a.order
+            if axis is not None:
+                self._shape = list(a.shape)
+                self._shape[axis.python_value] = LiteralInteger(1)
+            else:
+                self._shape = (LiteralInteger(1),)*a.rank
+        else:
+            self._precision  = -1
+            if axis is not None:
+                self._shape = list(a.shape)
+                self._shape.pop(axis.python_value)
+                self._rank  = a.rank-1
+                self._order = a.order if a.rank>2 else None
+            else:
+                self._rank  = 0
+                self._shape = ()
+                self._order = None
+
+        self._arr = a
+        self._axis = axis
+        self._keep_dims = keepdims
+
+        super().__init__(a)
+
+    @property
+    def array(self):
+        """ The argument which was passed to numpy.nonzero
+        """
+        return self._arr
+
+    @property
+    def axis(self):
+        """ The dimension which the results describe
+        """
+        return self._axis
+
+    @property
+    def keep_dims(self):
+        """ Indicates if output arrays should have the same number
+        of dimensions as arg
+        """
+        return self._keep_dims
+
+class NumpyArraySize(PyccelInternalFunction):
+    """
+    Class representing a call to the numpy size function which
+    returns the shape of an object in a given dimension
+
+    Parameters
+    ==========
+    arg   : PyccelAstNode
+            A PyccelAstNode of unknown shape
+    axis  : int
+            The dimension along which the size is
+            requested
+    """
+    __slots__ = ('_arg',)
+    _attribute_nodes = ('_arg',)
+    name   = 'size'
+    _dtype = NativeInteger()
+    _precision = -1
+    _rank  = 0
+    _shape = ()
+    _order = None
+
+    def __new__(cls, a, axis = None):
+        if axis is not None:
+            return PyccelArraySize(a, axis)
+        elif not isinstance(a, (list,
+                                    tuple,
+                                    PyccelAstNode)):
+            raise TypeError('Unknown type of  %s.' % type(a))
+        elif all(isinstance(s, LiteralInteger) for s in a.shape):
+            return LiteralInteger(reduce(operator.mul, [s.python_value for s in a.shape]))
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, a, axis = None):
+        self._arg   = a
+        super().__init__(a)
+
+    @property
+    def arg(self):
+        """ Object whose size is investigated
+        """
+        return self._arg
+
+    def __str__(self):
+        return 'Size({})'.format(str(self.arg))
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
-numpy_functions = {
+
+numpy_linalg_mod = Module('linalg', (),
+    [PyccelFunctionDef('norm', NumpyNorm)])
+
+numpy_random_mod = Module('random', (),
+    [PyccelFunctionDef('rand'   , NumpyRand),
+     PyccelFunctionDef('random' , NumpyRand),
+     PyccelFunctionDef('randint', NumpyRandint)])
+
+numpy_constants = {
+        'pi': Constant('float', 'pi', value=numpy.pi),
+    }
+
+numpy_funcs = {
     # ... array creation routines
-    'full'      : NumpyFull,
-    'empty'     : NumpyEmpty,
-    'zeros'     : NumpyZeros,
-    'ones'      : NumpyOnes,
-    'full_like' : NumpyFullLike,
-    'empty_like': NumpyEmptyLike,
-    'zeros_like': NumpyZerosLike,
-    'ones_like' : NumpyOnesLike,
-    'array'     : NumpyArray,
-    'arange'    : NumpyArange,
+    'full'      : PyccelFunctionDef('full'      , NumpyFull),
+    'empty'     : PyccelFunctionDef('empty'     , NumpyEmpty),
+    'zeros'     : PyccelFunctionDef('zeros'     , NumpyZeros),
+    'ones'      : PyccelFunctionDef('ones'      , NumpyOnes),
+    'full_like' : PyccelFunctionDef('full_like' , NumpyFullLike),
+    'empty_like': PyccelFunctionDef('empty_like', NumpyEmptyLike),
+    'zeros_like': PyccelFunctionDef('zeros_like', NumpyZerosLike),
+    'ones_like' : PyccelFunctionDef('ones_like' , NumpyOnesLike),
+    'array'     : PyccelFunctionDef('array'     , NumpyArray),
+    'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     # ...
-    'shape'     : Shape,
-    'norm'      : NumpyNorm,
-    'int'       : NumpyInt,
-    'real'      : NumpyReal,
-    'imag'      : NumpyImag,
-    'float'     : NumpyFloat,
-    'double'    : NumpyFloat64,
-    'mod'       : NumpyMod,
-    'float32'   : NumpyFloat32,
-    'float64'   : NumpyFloat64,
-    'bool'      : NumpyBool,
-    'int8'      : NumpyInt8,
-    'int16'     : NumpyInt16,
-    'int32'     : NumpyInt32,
-    'int64'     : NumpyInt64,
-    'complex'   : NumpyComplex,
-    'complex128': NumpyComplex128,
-    'complex64' : NumpyComplex64,
-    'matmul'    : NumpyMatmul,
-    'sum'       : NumpySum,
-    'max'       : NumpyAmax,
-    'amax'      : NumpyAmax,
-    'min'       : NumpyAmin,
-    'amin'      : NumpyAmin,
-    'prod'      : NumpyProduct,
-    'product'   : NumpyProduct,
-    'linspace'  : NumpyLinspace,
-    'where'     : NumpyWhere,
+    'shape'     : PyccelFunctionDef('shape'     , Shape),
+    'size'      : PyccelFunctionDef('size'      , NumpyArraySize),
+    'norm'      : PyccelFunctionDef('norm'      , NumpyNorm),
+    'int'       : PyccelFunctionDef('int'       , NumpyInt),
+    'real'      : PyccelFunctionDef('real'      , NumpyReal),
+    'imag'      : PyccelFunctionDef('imag'      , NumpyImag),
+    'conj'      : PyccelFunctionDef('conj'      , NumpyConjugate),
+    'conjugate' : PyccelFunctionDef('conjugate' , NumpyConjugate),
+    'float'     : PyccelFunctionDef('float'     , NumpyFloat),
+    'double'    : PyccelFunctionDef('double'    , NumpyFloat64),
+    'mod'       : PyccelFunctionDef('mod'       , NumpyMod),
+    'float32'   : PyccelFunctionDef('float32'   , NumpyFloat32),
+    'float64'   : PyccelFunctionDef('float64'   , NumpyFloat64),
+    'bool'      : PyccelFunctionDef('bool'      , NumpyBool),
+    'int8'      : PyccelFunctionDef('int8'      , NumpyInt8),
+    'int16'     : PyccelFunctionDef('int16'     , NumpyInt16),
+    'int32'     : PyccelFunctionDef('int32'     , NumpyInt32),
+    'int64'     : PyccelFunctionDef('int64'     , NumpyInt64),
+    'complex'   : PyccelFunctionDef('complex'   , NumpyComplex),
+    'complex128': PyccelFunctionDef('complex128', NumpyComplex128),
+    'complex64' : PyccelFunctionDef('complex64' , NumpyComplex64),
+    'matmul'    : PyccelFunctionDef('matmul'    , NumpyMatmul),
+    'sum'       : PyccelFunctionDef('sum'       , NumpySum),
+    'max'       : PyccelFunctionDef('max'       , NumpyAmax),
+    'amax'      : PyccelFunctionDef('amax'      , NumpyAmax),
+    'min'       : PyccelFunctionDef('min'       , NumpyAmin),
+    'amin'      : PyccelFunctionDef('amin'      , NumpyAmin),
+    'prod'      : PyccelFunctionDef('prod'      , NumpyProduct),
+    'product'   : PyccelFunctionDef('product'   , NumpyProduct),
+    'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
+    'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
-    'abs'       : NumpyAbs,
-    'floor'     : NumpyFloor,
-    'absolute'  : NumpyAbs,
-    'fabs'      : NumpyFabs,
-    'exp'       : NumpyExp,
-    'log'       : NumpyLog,
-    'sqrt'      : NumpySqrt,
+    'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
+    'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
+    'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
+    'fabs'      : PyccelFunctionDef('fabs'      , NumpyFabs),
+    'exp'       : PyccelFunctionDef('exp'       , NumpyExp),
+    'log'       : PyccelFunctionDef('log'       , NumpyLog),
+    'sqrt'      : PyccelFunctionDef('sqrt'      , NumpySqrt),
     # ---
-    'sin'       : NumpySin,
-    'cos'       : NumpyCos,
-    'tan'       : NumpyTan,
-    'arcsin'    : NumpyArcsin,
-    'arccos'    : NumpyArccos,
-    'arctan'    : NumpyArctan,
-    'arctan2'   : NumpyArctan2,
-    # 'hypot'     : NumpyHypot,
-    'sinh'      : NumpySinh,
-    'cosh'      : NumpyCosh,
-    'tanh'      : NumpyTanh,
-    'arcsinh'   : NumpyArcsinh,
-    'arccosh'   : NumpyArccosh,
-    'arctanh'   : NumpyArctanh,
-    # 'deg2rad'   : NumpyDeg2rad,
-    # 'rad2deg'   : NumpyRad2deg,
-    'transpose' : NumpyTranspose,
+    'sin'       : PyccelFunctionDef('sin'       , NumpySin),
+    'cos'       : PyccelFunctionDef('cos'       , NumpyCos),
+    'tan'       : PyccelFunctionDef('tan'       , NumpyTan),
+    'arcsin'    : PyccelFunctionDef('arcsin'    , NumpyArcsin),
+    'arccos'    : PyccelFunctionDef('arccos'    , NumpyArccos),
+    'arctan'    : PyccelFunctionDef('arctan'    , NumpyArctan),
+    'arctan2'   : PyccelFunctionDef('arctan2'   , NumpyArctan2),
+    # 'hypot'     : PyccelFunctionDef('hypot'     , NumpyHypot),
+    'sinh'      : PyccelFunctionDef('sinh'      , NumpySinh),
+    'cosh'      : PyccelFunctionDef('cosh'      , NumpyCosh),
+    'tanh'      : PyccelFunctionDef('tanh'      , NumpyTanh),
+    'arcsinh'   : PyccelFunctionDef('arcsinh'   , NumpyArcsinh),
+    'arccosh'   : PyccelFunctionDef('arccosh'   , NumpyArccosh),
+    'arctanh'   : PyccelFunctionDef('arctanh'   , NumpyArctanh),
+    # 'deg2rad'   : PyccelFunctionDef('deg2rad'   , NumpyDeg2rad),
+    # 'rad2deg'   : PyccelFunctionDef('rad2deg'   , NumpyRad2deg),
+    'transpose' : PyccelFunctionDef('transpose' , NumpyTranspose),
+    'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
+    'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
 }
 
-numpy_linalg_functions = {
-    'norm'      : NumpyNorm,
-}
+numpy_mod = Module('numpy',
+    variables = numpy_constants.values(),
+    funcs = numpy_funcs.values(),
+    imports = [
+        Import('linalg', numpy_linalg_mod),
+        Import('random', numpy_random_mod),
+        ])
 
-numpy_random_functions = {
-    'rand'      : NumpyRand,
-    'random'    : NumpyRand,
-    'randint'   : NumpyRandint,
-}
+#==============================================================================
+
+numpy_target_swap = {
+        numpy_funcs['full_like']  : numpy_funcs['full'],
+        numpy_funcs['empty_like'] : numpy_funcs['empty'],
+        numpy_funcs['zeros_like'] : numpy_funcs['zeros'],
+        numpy_funcs['ones_like']  : numpy_funcs['ones']
+    }
