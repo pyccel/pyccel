@@ -1104,9 +1104,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
+        if self.stored_in_c_pointer(expr.lhs):
+            code = '{}->{}'.format(self._print(ObjectAddress(expr.lhs)), self._print(expr.name))
+        else:
+            code =  '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
         if self.stored_in_c_pointer(expr):
-            return '{}->{}'.format(self._print(ObjectAddress(expr.lhs)), self._print(expr.name))
-        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
+            return f'(*{code})'
+        else:
+            return code
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -1480,9 +1485,14 @@ class CCodePrinter(CodePrinter):
         args += self._temporary_args
         self._temporary_args = []
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
+
+        call_code = f'{func.name}({args})'
         if not func.results:
-            return '{}({});\n'.format(func.name, args)
-        return '{}({})'.format(func.name, args)
+            return f'{call_code};\n'
+        elif len(func.results) == 1 and self.stored_in_c_pointer(func.results[0]):
+            return f'(*{call_code})'
+        else:
+            return call_code
 
     def _print_Constant(self, expr):
         """ Convert a Python expression with a math constant call to C
@@ -1857,15 +1867,15 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.value)
 
     def _print_ObjectAddress(self, expr):
+        obj_code = self._print(expr.obj)
         if isinstance(expr.obj, ObjectAddress):
-            return '&{}'.format(self._print(expr.obj))
-        if self.stored_in_c_pointer(expr.obj):
-            if hasattr(expr.obj, 'name'):
-                return '{}'.format(expr.obj.name)
-            return '{}'.format(self._print(expr.obj))
-        if hasattr(expr.obj, 'name'):
-            return '&{}'.format(expr.obj.name)
-        return '&{}'.format(self._print(expr.obj))
+            return '&{}'.format(obj_code)
+        elif self.stored_in_c_pointer(expr.obj):
+            assert obj_code.startswith('(*')
+            assert obj_code.endswith(')')
+            return f'{obj_code[2:-1]}'
+        else:
+            return f'&{obj_code}'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)

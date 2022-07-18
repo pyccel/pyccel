@@ -338,7 +338,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body.append(Allocate(result, shape = sizes, order = result.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=result), ObjectAddress(nd_var)))
+                lhs=result), nd_var))
 
             static_results = [ObjectAddress(nd_var), *sizes]
 
@@ -824,7 +824,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     body.append(alloc)
                     # Save raw_data into ndarray to obtain useable pointer
                     set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
-                            memory_handling = 'alias', lhs=nd_var), ObjectAddress(var))
+                            memory_handling = 'alias', lhs=nd_var), var)
                     body.append(set_data)
                     # Save the ndarray to vars_to_wrap to be handled as if it came from C
                     vars_to_wrap.append(nd_var)
@@ -1111,9 +1111,9 @@ class CWrapperCodePrinter(CCodePrinter):
         args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
-            code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
+            code = '(*{name}("{flags}", {args}))'.format(name=name, flags=flags, args=args)
         else :
-            code = '{name}("")'.format(name=name)
+            code = '(*{name}(""))'.format(name=name)
         return code
 
     def _print_PyArgKeywords(self, expr):
