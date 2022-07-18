@@ -793,6 +793,10 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
+            if self._current_function == func.name:
+                if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
+                    errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
+
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
             if not parent_assign and len(func.results) == 1 and func.results[0].rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
@@ -800,6 +804,7 @@ class SemanticParser(BasicParser):
                 assign.set_fst(expr.fst)
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
+
             if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
