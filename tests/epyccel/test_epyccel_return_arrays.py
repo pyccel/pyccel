@@ -219,7 +219,7 @@ def test_multi_returns(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Hidden memory allocation triggers pyccel error."),
+            pytest.mark.xfail(reason="Function in function not implemented in C"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
