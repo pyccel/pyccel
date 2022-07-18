@@ -2020,8 +2020,7 @@ class SemanticParser(BasicParser):
 
     def _visit_MathSqrt(self, expr, **settings):
         func = self.scope.find(expr.funcdef, 'functions')
-        args = self._handle_function_args(expr.args, **settings)
-        arg = args[0]
+        arg, = self._handle_function_args(expr.args, **settings) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
             mul1_syn, mul2_syn = expr.args[0].value.args
