@@ -1869,7 +1869,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.obj, ObjectAddress) or not self.stored_in_c_pointer(expr.obj):
             return '&{}'.format(obj_code)
         else:
-            if obj_code.startswith('(*') or obj_code.endswith(')'):
+            if obj_code.startswith('(*') and obj_code.endswith(')'):
                 return f'{obj_code[2:-1]}'
             else:
                 return obj_code
