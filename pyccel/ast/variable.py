@@ -925,3 +925,9 @@ class DottedVariable(Variable):
 
     def __hash__(self):
         return hash((type(self).__name__, self.name, self.lhs))
+
+    def __str__(self):
+        return str(self.lhs)+'.'+str(self.name)
+
+    def __repr__(self):
+        return '{}({}, dtype={})'.format(type(self).__name__, repr(self.lhs)+'.'+str(self.name), repr(self.dtype))
