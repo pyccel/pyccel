@@ -274,7 +274,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_args = [
                 FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)
             ]
-            static_args.append(FunctionCall(array_get_data, [arg_address]))
+            static_args.append(ObjectAddress(FunctionCall(array_get_data, [arg_address])))
         else:
             static_args = [argument]
 
