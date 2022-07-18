@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
 
 from collections import OrderedDict
 
@@ -41,7 +40,9 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
-from pyccel.ast.variable  import VariableAddress, Variable, DottedVariable
+from pyccel.ast.variable  import Variable, DottedName
+
+from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.parser.scope  import Scope
 
@@ -88,6 +89,8 @@ class CWrapperCodePrinter(CCodePrinter):
         a : PyccelAstNode
         """
         if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
+            return True
+        elif isinstance(a, PyBuildValueNode):
             return True
         else:
             return CCodePrinter.stored_in_c_pointer(self,a)
@@ -267,7 +270,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         if self._target_language == 'fortran' and argument.rank > 0:
-            arg_address = VariableAddress(argument)
+            arg_address = ObjectAddress(argument)
             static_args = [
                 FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)
             ]
@@ -408,9 +411,9 @@ class CWrapperCodePrinter(CCodePrinter):
             check = scalar_object_check(collect_var, variable)
 
         if not compulsory:
-            default = PyccelNot(VariableAddress(collect_var)) \
+            default = PyccelNot(ObjectAddress(collect_var)) \
                             if variable.rank > 0 else \
-                      PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+                      PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
         return check
@@ -481,7 +484,7 @@ class CWrapperCodePrinter(CCodePrinter):
             list containing the lines necessary to collect the new optional variable value
         """
 
-        valued_var_check  = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+        valued_var_check  = PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
         collect_body      = []
 
         if variable.is_optional:
@@ -565,8 +568,8 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         #check optional :
         if variable.is_optional :
-            check = PyccelNot(VariableAddress(collect_var))
-            body += [IfSection(check, [Assign(VariableAddress(variable), Nil())])]
+            check = PyccelNot(ObjectAddress(collect_var))
+            body += [IfSection(check, [Assign(ObjectAddress(variable), Nil())])]
 
         check = array_checker(collect_var, variable, check_type, self._target_language)
         body += [IfSection(check, [Return([Nil()])])]
@@ -719,7 +722,7 @@ class CWrapperCodePrinter(CCodePrinter):
             self.add_import(cwrapper_ndarray_import)
 
 
-        cast_function = FunctionCall(C_to_Python(variable), [VariableAddress(variable)])
+        cast_function = FunctionCall(C_to_Python(variable), [ObjectAddress(variable)])
 
         collect_type = PyccelPyObject()
         collect_var = Variable(dtype = collect_type, memory_handling='alias',
@@ -755,8 +758,8 @@ class CWrapperCodePrinter(CCodePrinter):
         if var.rank != 0:
             self.add_import(cwrapper_ndarray_import)
 
-        collect_value = Assign(VariableAddress(collect_var),
-                                FunctionCall(C_to_Python(var), [VariableAddress(var)]))
+        collect_value = Assign(ObjectAddress(collect_var),
+                                FunctionCall(C_to_Python(var), [ObjectAddress(var)]))
         add_expr = PyModule_AddObject(mod_name, var_name, collect_var)
         if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
                         [FunctionCall(Py_DECREF, [collect_var]),
@@ -809,7 +812,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     # Get the bind_c function which wraps a fortran array and returns c objects
                     var_wrapper = wrap_module_array_var(v, scope, expr)
                     # Call bind_c function
-                    call = Assign(PythonTuple(VariableAddress(var), *sizes), FunctionCall(var_wrapper, ()))
+                    call = Assign(PythonTuple(ObjectAddress(var), *sizes), FunctionCall(var_wrapper, ()))
                     body.append(call)
 
                     # Create ndarray to store array data
@@ -821,7 +824,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     body.append(alloc)
                     # Save raw_data into ndarray to obtain useable pointer
                     set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
-                            memory_handling = 'alias', lhs=nd_var), VariableAddress(var))
+                            memory_handling = 'alias', lhs=nd_var), ObjectAddress(var))
                     body.append(set_data)
                     # Save the ndarray to vars_to_wrap to be handled as if it came from C
                     vars_to_wrap.append(nd_var)
@@ -973,7 +976,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
-                res_args.append(VariableAddress(collect_var) if collect_var.is_alias else collect_var)
+                res_args.append(ObjectAddress(collect_var) if collect_var.is_alias else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
@@ -1212,7 +1215,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
 
-            res_args.append(VariableAddress(collect_var) if collect_var.is_alias else collect_var)
+            res_args.append(ObjectAddress(collect_var) if collect_var.is_alias else collect_var)
 
         # Call PyBuildNode
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
