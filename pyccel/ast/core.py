@@ -3812,25 +3812,21 @@ class CommentBlock(Basic):
 
 
 class Assert(Basic):
-
-    """Represents a assert statement in the code.
+    """
+    Represents an assert statement in the code.
 
     Parameters
     ----------
     test: PyccelAstNode
         boolean expression to check
-
-    Examples
-    --------
     """
     __slots__ = ('_test',)
     _attribute_nodes = ('_test',)
-    #TODO add type check in the semantic stage
-    def __init__(self, test):
-        #if not isinstance(test, (bool, Relational, sp_Boolean)):
-        #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
-        #                     % (test, type(test)))
 
+    def __init__(self, test):
+        if pyccel_stage != 'syntactic':
+            if test.dtype is not NativeBool():
+                test = PythonBool(test)
         self._test = test
         super().__init__()
 

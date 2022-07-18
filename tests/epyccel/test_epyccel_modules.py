@@ -130,7 +130,7 @@ def test_module_7(language):
         assert np.array_equal(mod_att, modnew_att)
         assert mod_att.dtype == modnew_att.dtype
 
-    assert np.array_equal(mod.f, modnew.f)
+    assert np.array_equal(mod.F, modnew.F)
 
     modnew.update_a()
     mod.update_a()
