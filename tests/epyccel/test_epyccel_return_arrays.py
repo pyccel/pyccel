@@ -237,3 +237,27 @@ def test_return_arrays_in_expression(language):
     epyccel_function = epyccel(return_arrays_in_expression, language=language)
 
     assert np.allclose(epyccel_function(), return_arrays_in_expression())
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Function in function not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_return_arrays_in_expression2(language):
+    def return_arrays_in_expression2(n : int):
+        def single_return(n : int):
+            from numpy import ones
+            return ones(n)
+        b = single_return(n)+1
+
+        return b
+
+    epyccel_function = epyccel(return_arrays_in_expression2, language=language)
+
+    n = randint(5)
+
+    assert np.allclose(epyccel_function(n), return_arrays_in_expression2(n))
