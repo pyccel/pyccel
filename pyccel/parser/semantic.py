@@ -3,8 +3,11 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" File containing SemanticParser. This class handles the semantic stage of the translation.
+See the developer docs for more details
+"""
 
-# pylint: disable=R0201, missing-function-docstring
+# pylint: disable=missing-function-docstring
 
 from itertools import chain
 
@@ -23,7 +26,7 @@ from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
-from pyccel.ast.builtins import PythonList
+from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
@@ -54,6 +57,7 @@ from pyccel.ast.core import Iterable
 from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
+from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -85,8 +89,8 @@ from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
-from pyccel.ast.numpyext import NumpyTranspose
-from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
+from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
@@ -94,7 +98,8 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd
+from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -113,8 +118,22 @@ from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
-# TODO - remove import * and only import what we need
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
+        UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
+        INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
+        UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
+        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP,
+        INCOMPATIBLE_TYPES_IN_ASSIGNMENT, ARRAY_ALREADY_IN_USE, ASSIGN_ARRAYS_ONE_ANOTHER,
+        INVALID_POINTER_REASSIGN, INCOMPATIBLE_REDEFINITION, ARRAY_IS_ARG,
+        INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION,
+        PYCCEL_RESTRICTION_INHOMOG_LIST, UNDEFINED_IMPORT_OBJECT, UNDEFINED_LAMBDA_VARIABLE,
+        UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
+        INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
+        PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
+        UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
+        UNSUPPORTED_ARRAY_RETURN_VALUE, PYCCEL_MISSING_HEADER, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -142,7 +161,8 @@ def _get_name(var):
         return var.funcdef
     if isinstance(var, AsName):
         return var.target
-    msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
+    name = type(var).__name__
+    msg = f'Name of Object : {name} cannot be determined'
     return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
                 severity='fatal')
 
@@ -193,8 +213,6 @@ class SemanticParser(BasicParser):
         self._code = parser._code
         # ...
 
-        # ... TOD add settings
-        settings = {}
         self.annotate()
         # ...
 
@@ -284,19 +302,24 @@ class SemanticParser(BasicParser):
         """
         var = self.check_for_variable(name)
         if var is None:
-            return errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal')
-        else:
-            return var
+            if name == '_':
+                errors.report(UNDERSCORE_NOT_A_THROWAWAY,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
+            else:
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
+
+        return var
 
     def get_variables(self, container):
         # this only works if called on a function scope
         # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
-        for container in container.loops:
-            variables.extend(self.get_variables(container))
+        for sub_container in container.loops:
+            variables.extend(self.get_variables(sub_container))
         return variables
 
     def get_class_construct(self, name):
@@ -306,7 +329,7 @@ class SemanticParser(BasicParser):
         result = self.scope.find(name, 'cls_constructs')
 
         if result is None:
-            msg = 'class construct {} not found'.format(name)
+            msg = f'class construct {name} not found'
             return errors.report(msg,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
@@ -384,7 +407,6 @@ class SemanticParser(BasicParser):
         """
         type inference for expressions
         """
-
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
@@ -408,28 +430,24 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Variable):
-
-            d_var['datatype'      ] = expr.dtype
-            d_var['allocatable'   ] = expr.allocatable if expr.rank>0 else False
-            d_var['shape'         ] = expr.shape
-            d_var['rank'          ] = expr.rank
-            d_var['cls_base'      ] = expr.cls_base
-            d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_target'     ] = expr.is_target
-            d_var['order'         ] = expr.order
-            d_var['precision'     ] = expr.precision
-            d_var['is_stack_array'] = expr.is_stack_array
+            d_var['datatype'       ] = expr.dtype
+            d_var['memory_handling'] = expr.memory_handling
+            d_var['shape'          ] = expr.shape
+            d_var['rank'           ] = expr.rank
+            d_var['cls_base'       ] = expr.cls_base
+            d_var['is_target'      ] = expr.is_target
+            d_var['order'          ] = expr.order
+            d_var['precision'      ] = expr.precision
             return d_var
 
         elif isinstance(expr, PythonTuple):
-            d_var['datatype'      ] = expr.dtype
-            d_var['precision'     ] = expr.precision
-            d_var['allocatable'   ] = True
-            d_var['shape'         ] = expr.shape
-            d_var['rank'          ] = expr.rank
-            d_var['order'         ] = expr.order
-            d_var['is_pointer'    ] = False
-            d_var['cls_base'      ] = TupleClass
+            d_var['datatype'       ] = expr.dtype
+            d_var['precision'      ] = expr.precision
+            d_var['memory_handling'] = 'heap'
+            d_var['shape'          ] = expr.shape
+            d_var['rank'           ] = expr.rank
+            d_var['order'          ] = expr.order
+            d_var['cls_base'       ] = TupleClass
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -438,10 +456,11 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['order'         ] = expr.order
-            d_var['is_pointer'    ] = False
-            d_var['allocatable'   ] = any(getattr(a, 'allocatable', False) for a in expr.args)
-            d_var['is_stack_array'] = not d_var['allocatable'   ]
             d_var['cls_base'      ] = TupleClass
+            if any(getattr(a, 'on_heap', False) for a in expr.args):
+                d_var['memory_handling'] = 'heap'
+            else:
+                d_var['memory_handling'] = 'stack'
             return d_var
 
         elif isinstance(expr, Duplicate):
@@ -453,15 +472,16 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['shape'         ] = expr.shape
             d_var['order'         ] = expr.order
-            d_var['is_stack_array'] = d.get('is_stack_array',False) and isinstance(expr.length, LiteralInteger)
-            d_var['allocatable'   ] = not d_var['is_stack_array']
-            d_var['is_pointer'    ] = False
             d_var['cls_base'      ] = TupleClass
+            if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
+                d_var['memory_handling'] = 'stack'
+            else:
+                d_var['memory_handling'] = 'heap'
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -473,27 +493,25 @@ class SemanticParser(BasicParser):
 
             var = expr.internal_var
 
+            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             d_var['datatype'      ] = var.dtype
-            d_var['allocatable'   ] = var.allocatable
             d_var['shape'         ] = tuple(reversed(var.shape))
             d_var['rank'          ] = var.rank
             d_var['cls_base'      ] = var.cls_base
-            d_var['is_pointer'    ] = isinstance(var, Variable)
             d_var['is_target'     ] = var.is_target
             d_var['order'         ] = 'C' if var.order=='F' else 'F'
             d_var['precision'     ] = var.precision
-            d_var['is_stack_array'] = var.is_stack_array
             return d_var
 
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
-            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.rank)
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):
@@ -502,7 +520,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
-            d_var['allocatable'] = False
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
@@ -511,8 +529,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = False
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['rank'       ] = 0
             return d_var
 
@@ -523,7 +540,7 @@ class SemanticParser(BasicParser):
             dtype = self.get_class_construct(cls_name)()
 
             d_var['datatype'   ] = dtype
-            d_var['allocatable'] = False
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
@@ -537,8 +554,9 @@ class SemanticParser(BasicParser):
             return self._infere_type(expr.lhs)
 
         else:
-            msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
-            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
+            type_name = type(expr).__name__
+            msg = f'Type of Object : {type_name} cannot be infered'
+            return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
 
@@ -554,7 +572,8 @@ class SemanticParser(BasicParser):
 
         if isinstance(var, PythonTuple):
             def is_literal_index(a):
-                is_int = lambda a: isinstance(a, (int, LiteralInteger)) or \
+                def is_int(a):
+                    return isinstance(a, (int, LiteralInteger)) or \
                         (isinstance(a, PyccelUnarySub) and \
                          isinstance(a.args[0], (int, LiteralInteger)))
                 if isinstance(a, Slice):
@@ -581,7 +600,8 @@ class SemanticParser(BasicParser):
                 else:
                     return self._visit(var[indices[0]][indices[1:]])
             else:
-                errors.report("Can't index {}".format(type(var)), symbol=expr,
+                var_type = type(var)
+                errors.report(f"Can't index {var_type}", symbol=expr,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
@@ -702,11 +722,12 @@ class SemanticParser(BasicParser):
                        Indicates whether rank information should be included
                        Default : True
         """
-        descr = '{dtype}(kind={precision})'.format(
-                        dtype     = var.dtype,
-                        precision = get_final_precision(var))
+        dtype = var.dtype
+        prec  = get_final_precision(var)
+        descr = f'{dtype}(kind={prec})'
         if include_rank and var.rank>0:
-            descr += '[{}]'.format(','.join(':'*var.rank))
+            dims = ','.join(':'*var.rank)
+            descr += f'[{dims}]'
         return descr
 
     def _check_argument_compatibility(self, input_args, func_args, expr, elemental):
@@ -725,12 +746,12 @@ class SemanticParser(BasicParser):
                      Indicates if the function is elemental
         """
         if elemental:
-            incompatible = lambda i_arg, f_arg: \
-                        (i_arg.dtype is not f_arg.dtype or \
+            def incompatible(i_arg, f_arg):
+                return (i_arg.dtype is not f_arg.dtype or \
                         get_final_precision(i_arg) != get_final_precision(f_arg))
         else:
-            incompatible = lambda i_arg, f_arg: \
-                        (i_arg.dtype is not f_arg.dtype or \
+            def incompatible(i_arg, f_arg):
+                return (i_arg.dtype is not f_arg.dtype or \
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
@@ -744,8 +765,9 @@ class SemanticParser(BasicParser):
                 continue
             # Check for compatibility
             if incompatible(i_arg, f_arg):
-                expected = self.get_type_description(f_arg, not elemental)
-                received = '{} ({})'.format(i_arg, self.get_type_description(i_arg, not elemental))
+                expected  = self.get_type_description(f_arg, not elemental)
+                type_name = self.get_type_description(i_arg, not elemental)
+                received  = f'{i_arg} ({type_name})'
 
                 errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
                         symbol = expr,
@@ -782,12 +804,6 @@ class SemanticParser(BasicParser):
             for a in kwargs.values():
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
-
-            if func is NumpyWhere:
-                if len(args) != 3:
-                    errors.report(INVALID_WHERE_ARGUMENT,
-                        symbol=expr,
-                        severity='fatal')
 
             try:
                 new_expr = func(*args, **kwargs)
@@ -841,7 +857,7 @@ class SemanticParser(BasicParser):
         else:
             is_temp = False
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable)) or \
+        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
                 (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = rhs.funcdef.results
@@ -866,9 +882,12 @@ class SemanticParser(BasicParser):
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
 
-            d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
-            d_lhs['is_stack_array'] = d_lhs.get('is_stack_array', False) and not d_lhs['is_pointer']
-            if is_homogeneous and not (d_lhs['is_pointer'] and isinstance(rhs, PythonTuple)):
+            if any(v.is_alias for v in elem_vars):
+                d_lhs['memory_handling'] = 'alias'
+            else:
+                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
+
+            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
@@ -883,27 +902,21 @@ class SemanticParser(BasicParser):
 
     def _ensure_target(self, rhs, d_lhs):
         """ Function using data about the new lhs to determine
-        whether the lhs is a pointer and the rhs is a target
+        whether the lhs is an alias and the rhs is a target
         """
-        if isinstance(rhs, NumpyTranspose) and rhs.internal_var.allocatable:
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
 
+        if isinstance(rhs, NumpyTranspose) and rhs.internal_var.on_heap:
+            d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
+
         if isinstance(rhs, Variable) and rhs.is_ndarray:
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
+            d_lhs['memory_handling'] = 'alias'
+            rhs.is_target = not rhs.is_alias
 
-            rhs.is_target = not rhs.is_pointer
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and \
-                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_pointer', False)):
-            d_lhs['allocatable'] = False
-            d_lhs['is_pointer' ] = True
-            d_lhs['is_stack_array'] = False
-
-            rhs.base.is_target = not rhs.base.is_pointer
+                (getattr(rhs.base, 'is_ndarray', False) or getattr(rhs.base, 'is_alias', False)):
+            d_lhs['memory_handling'] = 'alias'
+            rhs.base.is_target = not rhs.base.is_alias
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -946,7 +959,7 @@ class SemanticParser(BasicParser):
             dtype = d_var.pop('datatype')
 
             d_lhs = d_var.copy()
-            # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+            # ISSUES #177: lhs must be a pointer when rhs is heap array
             self._ensure_target(rhs, d_lhs)
 
             var = self.check_for_variable(name)
@@ -959,11 +972,27 @@ class SemanticParser(BasicParser):
                 if decorators:
                     if 'stack_array' in decorators:
                         if name in decorators['stack_array']:
-                            d_lhs.update(is_stack_array=True,
-                                    allocatable=False, is_pointer=False)
+                            d_lhs.update(memory_handling='stack')
                     if 'allow_negative_index' in decorators:
                         if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
+
+                # We cannot allow the definition of a stack array from a shape which
+                # is unknown at the declaration
+                if d_lhs['rank'] > 0 and d_lhs.get('memory_handling', None) == 'stack':
+                    for a in d_lhs['shape']:
+                        if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
+                                any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
+                            errors.report(STACK_ARRAY_SHAPE_UNPURE_FUNC, symbol=a.funcdef.name,
+                            severity='error',
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
+                        if (isinstance(a, Variable) and not a.is_argument) \
+                                or not all(b.is_argument for b in a.get_attribute_nodes(Variable)):
+                            errors.report(STACK_ARRAY_UNKNOWN_SHAPE, symbol=name,
+                            severity='error',
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
 
                 new_name = self.scope.get_expected_name(name)
 
@@ -975,7 +1004,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory allocation if needed
-                if lhs.allocatable:
+                if lhs.on_heap:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
                         errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -991,7 +1020,7 @@ class SemanticParser(BasicParser):
                     if isinstance(lhs, InhomogeneousTupleVariable):
                         args = [v for v in lhs.get_vars() if v.rank>0]
                         new_args = []
-                        while len(args)>0:
+                        while len(args) > 0:
                             for a in args:
                                 if isinstance(a, InhomogeneousTupleVariable):
                                     new_args.extend(v for v in a.get_vars() if v.rank>0)
@@ -1007,7 +1036,7 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory deallocation for array variables
-                if lhs.is_ndarray and not lhs.is_stack_array:
+                if lhs.is_ndarray and not lhs.on_stack:
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
@@ -1025,7 +1054,7 @@ class SemanticParser(BasicParser):
                     or (lhs.rank == 0)
 
                 if not know_lhs_shape:
-                    msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
+                    msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
@@ -1063,7 +1092,7 @@ class SemanticParser(BasicParser):
                 d_lhs    = d_var.copy()
 
 
-                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                # ISSUES #177: lhs must be a pointer when rhs is heap array
                 self._ensure_target(rhs, d_lhs)
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
@@ -1076,7 +1105,8 @@ class SemanticParser(BasicParser):
             else:
                 lhs = self._visit(lhs, **settings)
         else:
-            raise NotImplementedError("_assign_lhs_variable does not handle {}".format(str(type(lhs))))
+            lhs_type = str(type(lhs))
+            raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
 
         return lhs
 
@@ -1109,8 +1139,9 @@ class SemanticParser(BasicParser):
 
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
+            name = var.name
             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
-                    symbol='{}={}'.format(var.name, dtype),
+                    symbol=f'{name}={dtype}',
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
@@ -1120,19 +1151,19 @@ class SemanticParser(BasicParser):
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+        elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.on_heap:
             errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                 bounding_box=(self._current_fst_node.lineno,
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var)
 
-        elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+        elif var.is_ndarray and var.is_alias and isinstance(rhs, NumpyNewArray):
             errors.report(INVALID_POINTER_REASSIGN,
                 bounding_box=(self._current_fst_node.lineno,
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif var.is_ndarray and var.is_pointer:
+        elif var.is_ndarray and var.is_alias:
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
@@ -1160,8 +1191,10 @@ class SemanticParser(BasicParser):
                 except KeyError:
                     d2 = str(var.dtype)
 
+                name = var.name
+                rhs_str = str(rhs)
                 errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
-                    symbol='{}={}'.format(var.name, str(rhs)),
+                    symbol=f'{name}={rhs_str}',
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')
 
@@ -1174,7 +1207,8 @@ class SemanticParser(BasicParser):
             if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                format_shape = lambda s: "" if len(s)==0 else s
+                def format_shape(s):
+                    return "" if len(s)==0 else s
                 txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
@@ -1451,11 +1485,27 @@ class SemanticParser(BasicParser):
             for b in init_func_body:
                 if isinstance(b, ScopedNode):
                     b.scope.update_parent_scope(init_scope, is_loop = True)
+                if isinstance(b, FunctionalFor):
+                    for l in b.loops:
+                        if isinstance(l, ScopedNode):
+                            l.scope.update_parent_scope(init_scope, is_loop = True)
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
+            self.exit_function_scope()
+
+            # Update variable scope for temporaries
+            to_remove = []
+            for v in self.scope.variables.values():
+                if v.is_temp:
+                    init_scope.insert_variable(v)
+                    to_remove.append(v)
+            # Remove in a second loop so the dictionary doesn't change during iteration
+            for v in to_remove:
+                self.scope.remove_variable(v)
+                variables.remove(v)
+
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
                     global_vars = variables, scope=init_scope)
-            self.exit_function_scope()
             self.insert_function(init_func)
 
         if init_func:
@@ -1515,6 +1565,10 @@ class SemanticParser(BasicParser):
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                 symbol=name,
                                 severity='fatal')
+
+        for v in variables:
+            if v.rank > 0 and not v.is_alias:
+                v.is_target = True
 
         mod = Module(mod_name,
                     variables,
@@ -1646,7 +1700,8 @@ class SemanticParser(BasicParser):
                     end_expr.append('nowait')
                 code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
             else:
-                msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
+                type_name = type(expr).__name__
+                msg = f"Statement after {type_name} must be a for loop."
                 errors.report(msg, symbol=expr,
                     severity='fatal')
 
@@ -1722,10 +1777,14 @@ class SemanticParser(BasicParser):
             var = python_builtin_datatype(name)
 
         if var is None:
-
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal')
+            if name == '_':
+                errors.report(UNDERSCORE_NOT_A_THROWAWAY,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
+            else:
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal')
         return var
 
 
@@ -1798,7 +1857,7 @@ class SemanticParser(BasicParser):
 
         d_var = self._infere_type(first)
         if d_var.get('cls_base', None) is None:
-            errors.report('Attribute {} not found'.format(rhs_name),
+            errors.report(f'Attribute {rhs_name} not found',
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
 
@@ -1881,7 +1940,7 @@ class SemanticParser(BasicParser):
                 return FunctionCall(macro.master, args, self._current_function)
 
         # did something go wrong?
-        return errors.report('Attribute {} not found'.format(rhs_name),
+        return errors.report(f'Attribute {rhs_name} not found',
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal')
 
@@ -1909,7 +1968,8 @@ class SemanticParser(BasicParser):
                                     symbol=expr, severity='fatal')
                         return [a[i] for i in range(n_vars)]
                     else:
-                        raise NotImplementedError("Unexpected type {} in tuple addition".format(type(a)))
+                        a_type = type(a)
+                        raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
                 tuple_args = [ai for a in args for ai in get_vars(a)]
                 expr_new = PythonTuple(*tuple_args)
         else:
@@ -1926,8 +1986,97 @@ class SemanticParser(BasicParser):
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
 
+    def _visit_PyccelPow(self, expr, **settings):
+        base, exponent = [self._visit(a, **settings) for a in expr.args]
+
+        exp_val = exponent
+        if isinstance(exponent, LiteralInteger):
+            exp_val = exponent.python_value
+        elif isinstance(exponent, PyccelAssociativeParenthesis):
+            exp = exponent.args[0]
+            # Handle (1/2)
+            if isinstance(exp, PyccelDiv) and all(isinstance(a, Literal) for a in exp.args):
+                exp_val = exp.args[0].python_value / exp.args[1].python_value
+
+        if isinstance(base, (Literal, Variable)) and exp_val == 2:
+            return PyccelMul(base, base)
+        elif exp_val == 0.5:
+            pyccel_stage.set_stage('syntactic')
+
+            sqrt_name = self.scope.get_new_name('sqrt')
+            imp_name = AsName('sqrt', sqrt_name)
+            new_import = Import('math',imp_name)
+            self._visit(new_import)
+            if isinstance(expr.args[0], PyccelAssociativeParenthesis):
+                new_call = FunctionCall(sqrt_name, [expr.args[0].args[0]])
+            else:
+                new_call = FunctionCall(sqrt_name, [expr.args[0]])
+
+            pyccel_stage.set_stage('semantic')
+
+            return self._visit(new_call)
+        else:
+            return PyccelPow(base, exponent)
+
+    def _visit_MathSqrt(self, expr, **settings):
+        func = self.scope.find(expr.funcdef, 'functions')
+        arg, = self._handle_function_args(expr.args, **settings) #pylint: disable=unbalanced-tuple-unpacking
+        if isinstance(arg.value, PyccelMul):
+            mul1, mul2 = arg.value.args
+            mul1_syn, mul2_syn = expr.args[0].value.args
+            is_abs = False
+            if mul1 is mul2 and mul1.dtype in (NativeInteger(), NativeFloat()):
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [mul1_syn])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
+            elif isinstance(mul1, (NumpyConjugate, PythonConjugate)) and mul1.internal_var is mul2:
+                is_abs = True
+                abs_arg = mul2_syn
+            elif isinstance(mul2, (NumpyConjugate, PythonConjugate)) and mul1 is mul2.internal_var:
+                is_abs = True
+                abs_arg = mul1_syn
+
+            if is_abs:
+                pyccel_stage.set_stage('syntactic')
+
+                abs_name = self.scope.get_new_name('abs')
+                imp_name = AsName('abs', abs_name)
+                new_import = Import('numpy',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(abs_name, [abs_arg])
+
+                pyccel_stage.set_stage('semantic')
+
+                # Cast to preserve final dtype
+                return PythonComplex(self._visit(new_call))
+        elif isinstance(arg.value, PyccelPow):
+            base, exponent = arg.value.args
+            base_syn, _ = expr.args[0].value.args
+            if exponent == 2 and base.dtype in (NativeInteger(), NativeFloat()):
+                pyccel_stage.set_stage('syntactic')
+
+                fabs_name = self.scope.get_new_name('fabs')
+                imp_name = AsName('fabs', fabs_name)
+                new_import = Import('math',imp_name)
+                self._visit(new_import)
+                new_call = FunctionCall(fabs_name, [base_syn])
+
+                pyccel_stage.set_stage('semantic')
+
+                return self._visit(new_call)
+
+        return self._handle_function(expr, func, (arg,), **settings)
+
     def _visit_Lambda(self, expr, **settings):
-        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol, excluded_nodes = FunctionDef))
+        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -1956,12 +2105,13 @@ class SemanticParser(BasicParser):
         except RuntimeError:
             pass
 
-        # Check for specialised method
-        annotation_method = '_visit_' + name
-        if hasattr(self, annotation_method):
-            return getattr(self, annotation_method)(expr, **settings)
-
         func     = self.scope.find(name, 'functions')
+
+        # Check for specialised method
+        if isinstance(func, PyccelFunctionDef):
+            annotation_method = '_visit_' + func.cls_name.__name__
+            if hasattr(self, annotation_method):
+                return getattr(self, annotation_method)(expr, **settings)
 
         args = self._handle_function_args(expr.args, **settings)
 
@@ -2217,10 +2367,10 @@ class SemanticParser(BasicParser):
                     if not all(same_ranks):
                         assert(len(c_ranks) == 1)
                         arg = call_args[0].value
-                        d_var['shape'      ] = arg.shape
-                        d_var['rank'       ] = arg.rank
-                        d_var['allocatable'] = arg.allocatable
-                        d_var['order'      ] = arg.order
+                        d_var['shape'          ] = arg.shape
+                        d_var['rank'           ] = arg.rank
+                        d_var['memory_handling'] = arg.memory_handling
+                        d_var['order'          ] = arg.order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -2251,7 +2401,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infere_type(rhs, **settings)
-            if d_var['is_pointer'] and not isinstance(lhs, IndexedElement):
+            if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
 
         else:
@@ -2265,7 +2415,10 @@ class SemanticParser(BasicParser):
                     name = name[6:]
                     d['cls_base'] = self.scope.find(name, 'classes')
                     #TODO: Avoid writing the default variables here
-                    d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
+                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
+                        d['memory_handling'] = 'alias'
+                    else:
+                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
@@ -2273,7 +2426,7 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
                     d['is_target' ] = False
-                    d['is_pointer'] = True
+                    d['memory_handling'] = 'alias'
 
         lhs = expr.lhs
         if isinstance(lhs, (PyccelSymbol, DottedName)):
@@ -2368,15 +2521,15 @@ class SemanticParser(BasicParser):
             lhs = lhs[0]
 
         if isinstance(lhs, Variable):
-            is_pointer = lhs.is_pointer
+            is_pointer = lhs.is_alias
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
         elif isinstance(lhs, (PythonTuple, PythonList)):
-            is_pointer = any(l.is_pointer for l in lhs if isinstance(lhs, Variable))
+            is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
-        is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
+        is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_alias
 
         lhs = [lhs]
         rhs = [rhs]
@@ -2402,7 +2555,7 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
-            is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
+            is_pointer_i = l.is_alias if isinstance(l, Variable) else is_pointer
 
             new_expr = Assign(l, r)
 
@@ -2448,15 +2601,18 @@ class SemanticParser(BasicParser):
         start = LiteralInteger(0)
         iterator_d_var = self._infere_type(start)
 
+        iterator = expr.target
+
         if iterable.num_loop_counters_required:
             indices = [Variable('int', self.scope.get_new_name(), is_temp=True)
                         for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
             if isinstance(iterable.iterable, PythonEnumerate):
-                syntactic_index = expr.target[0]
+                syntactic_index = iterator[0]
             else:
-                syntactic_index = expr.target
+                iterator = self.scope.get_expected_name(iterator)
+                syntactic_index = iterator
             index = self.check_for_variable(syntactic_index)
             if index is None:
                 index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
@@ -2464,11 +2620,10 @@ class SemanticParser(BasicParser):
                                 is_augassign=False, **settings)
             iterable.set_loop_counter(index)
 
-        iterator = expr.target
-
         if isinstance(iterator, PyccelSymbol):
             iterator_rhs = iterable.get_target_from_range()
             iterator_d_var = self._infere_type(iterator_rhs)
+
             target = self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr,
                             is_augassign=False, **settings)
@@ -2512,25 +2667,26 @@ class SemanticParser(BasicParser):
 
         target  = expr.expr
         index   = new_index
-        indices = expr.indices
+        indices = [self.scope.get_expected_name(i) for i in expr.indices]
         dims    = []
         body    = expr.loops[1]
 
-        sp_indices  = [sp_Symbol(i) for i in indices]
-        idx_subs = dict()
+        idx_subs = {}
         #scope = self.create_new_loop_scope()
 
         # The symbols created to represent unknown valued objects are temporary
         tmp_used_names = self.scope.all_used_symbols.copy()
+        i = 0
         while isinstance(body, For):
 
             stop  = None
             start = LiteralInteger(0)
             step  = LiteralInteger(1)
-            var   = body.target
+            var   = indices[i]
+            i += 1
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
-                var   = Variable('int', var)
+                var   = self._create_variable(var, 'int', start, {})
                 dvar  = self._infere_type(var, **settings)
                 stop  = a.stop
                 start = a.start
@@ -2542,7 +2698,7 @@ class SemanticParser(BasicParser):
                     dvar['rank' ] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
-                    dvar['allocatable'] = dvar['is_pointer'] = False
+                    dvar['memory_handling'] = 'stack'
                 var  = Variable(dtype, var, **dvar)
                 stop = a.element.shape[0]
             elif isinstance(a, Variable):
@@ -2552,7 +2708,7 @@ class SemanticParser(BasicParser):
                     dvar['rank'] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
-                    dvar['allocatable'] = dvar['is_pointer'] = False
+                    dvar['memory_handling'] = 'stack'
 
                 var  = Variable(dtype, var, **dvar)
                 stop = a.shape[0]
@@ -2563,7 +2719,7 @@ class SemanticParser(BasicParser):
             existing_var = self.scope.find(var.name, 'variables')
             if existing_var:
                 if self._infere_type(existing_var, **settings) != dvar:
-                    errors.report("Variable {} already exists with different type".format(var),
+                    errors.report(f"Variable {var} already exists with different type",
                             symbol = expr, severity='error')
             else:
                 self.scope.insert_variable(var)
@@ -2586,6 +2742,8 @@ class SemanticParser(BasicParser):
             var = self.get_variable(idx)
             idx_subs[idx] = var
 
+
+        sp_indices  = [sp_Symbol(i) for i in indices]
 
         dim = sp_Integer(1)
 
@@ -2634,7 +2792,7 @@ class SemanticParser(BasicParser):
         try:
             dim = sympy_to_pyccel(dim, idx_subs)
         except TypeError:
-            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + '\n Deduced size : {}'.format(dim),
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + f'\n Deduced size : {dim}',
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
 
@@ -2655,11 +2813,10 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['rank'] += 1
-        d_var['allocatable'] = True
+        d_var['memory_handling'] = 'heap'
         shape = list(d_var['shape'])
         shape.insert(0, dim)
         d_var['shape'] = shape
-        d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
         # ...
         # TODO [YG, 30.10.2020]:
@@ -2679,6 +2836,15 @@ class SemanticParser(BasicParser):
 
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
+
+        l = loops[-1]
+        for idx in indices:
+            assert isinstance(l, For)
+            # Sub in indices as defined here for coherent naming
+            if idx.is_temp:
+                self.scope.remove_variable(l.target)
+                l.substitute(l.target, idx_subs[idx])
+            l = l.body.body[-1]
 
         #self.exit_loop_scope()
 
@@ -2837,7 +3003,6 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionDef(self, expr, **settings):
-
         name            = self.scope.get_expected_name(expr.name)
         cls_name        = expr.cls_name
         decorators      = expr.decorators
@@ -2876,8 +3041,9 @@ class SemanticParser(BasicParser):
                         severity='warning')
         for hd in headers:
             if (args_number != len(hd.dtypes)):
-                msg = """The number of arguments in the function {} ({}) does not match the number
-                        of types in decorator/header ({}).""".format(name ,args_number, len(hd.dtypes))
+                n_types = len(hd.dtypes)
+                msg = f"""The number of arguments in the function {name} ({args_number}) does not match the number
+                        of types in decorator/header ({n_types})."""
                 if (args_number < len(hd.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
@@ -2960,7 +3126,7 @@ class SemanticParser(BasicParser):
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
-                        d_var['is_pointer'] = True
+                        d_var['memory_handling'] = 'alias'
                         if a.has_default:
                             # optional argument only if the value is None
                             if isinstance(a.value, Nil):
@@ -2973,8 +3139,8 @@ class SemanticParser(BasicParser):
                         d_var['is_argument'] = True
                         d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
-                        if d_var['rank']>0:
-                            d_var['cls_base'] = NumpyArrayClass
+                        if not d_var['cls_base']:
+                            d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
 
                         if 'allow_negative_index' in self.scope.decorators:
                             if a.name in decorators['allow_negative_index']:
@@ -2984,6 +3150,7 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
                         a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
+
 
                     value = None if a.value is None else self._visit(a.value)
                     if isinstance(value, Literal) and \
@@ -3042,8 +3209,6 @@ class SemanticParser(BasicParser):
                 cls_base = self.scope.find(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args
-
-            arg_vars = [a.var for a in args]
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -3121,17 +3286,17 @@ class SemanticParser(BasicParser):
                 if isinstance(a.var, Variable):
                     v = a.var
                     if v.is_const and (args_inout[i] or (v.name in local_assign)):
-                        msg = "Cannot modify 'const' argument ({})".format(v)
+                        msg = f"Cannot modify 'const' argument ({v})"
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal')
             # ...
 
             # Raise an error if one of the return arguments is either:
-            #   a) a pointer
+            #   a) an alias
             #   b) array which is not among arguments, hence intent(out)
             for r in results:
-                if r.is_pointer:
+                if r.is_alias:
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
@@ -3213,8 +3378,9 @@ class SemanticParser(BasicParser):
         if len(args) == 0:
             return PythonPrint(args)
 
-        is_symbolic = lambda var: isinstance(var, Variable) \
-            and isinstance(var.dtype, NativeSymbol)
+        def is_symbolic(var):
+            return isinstance(var, Variable) \
+                and isinstance(var.dtype, NativeSymbol)
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
@@ -3289,7 +3455,7 @@ class SemanticParser(BasicParser):
 
         attributes = self.scope.find(name, 'classes').attributes
 
-        for i in methods:
+        for i in methods.copy():
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
@@ -3326,7 +3492,12 @@ class SemanticParser(BasicParser):
             var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
-            if not var1.is_optional:
+            if not isinstance(var1, Variable):
+                if IsClass == PyccelIsNot:
+                    return LiteralTrue()
+                elif IsClass == PyccelIs:
+                    return LiteralFalse()
+            elif not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error')
@@ -3391,7 +3562,7 @@ class SemanticParser(BasicParser):
                 for t in expr.target:
                     t_name = t.name if isinstance(t, AsName) else t
                     if t_name not in pyccel_builtin_import_registery[source]:
-                        errors.report("Function '{}' from module '{}' is not currently supported by pyccel".format(t, source),
+                        errors.report(f"Function '{t}' from module '{source}' is not currently supported by pyccel",
                                 symbol=expr,
                                 severity='error')
                 for (name, atom) in imports:
@@ -3411,7 +3582,7 @@ class SemanticParser(BasicParser):
             self.insert_import(source, [AsName(v,n) for n,v in imports], source_target)
 
         elif recognised_source(source):
-            errors.report("Module {} is not currently supported by pyccel".format(source),
+            errors.report(f"Module {source} is not currently supported by pyccel",
                     symbol=expr,
                     severity='error')
         else:
@@ -3585,24 +3756,36 @@ class SemanticParser(BasicParser):
         return StarredArguments([var[i] for i in range(size)])
 
     def _visit_NumpyMatmul(self, expr, **settings):
-        self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
-        a = self._visit(expr.a)
-        b = self._visit(expr.b)
+        if isinstance(expr, FunctionCall):
+            a = self._visit(expr.args[0].value)
+            b = self._visit(expr.args[1].value)
+        else:
+            self.insert_import('numpy', AsName(NumpyMatmul, 'matmul'))
+            a = self._visit(expr.a)
+            b = self._visit(expr.b)
         return NumpyMatmul(a, b)
 
-#==============================================================================
+    def _visit_Assert(self, expr, **settings):
+        test = self._visit(expr.test, **settings)
+        return Assert(test)
 
+    def _visit_NumpyWhere(self, func_call, **settings):
+        func_call_args = self._handle_function_args(func_call.args, **settings)
+        # expr is a FunctionCall
+        args = [a.value for a in func_call_args if not a.has_keyword]
+        kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
+        nargs = len(args)+len(kwargs)
+        if nargs == 1:
+            return self._visit_NumpyNonZero(func_call)
+        return NumpyWhere(*args, **kwargs)
 
-if __name__ == '__main__':
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError('Expecting an argument for filename')
-
-    parser = SyntaxParser(filename)
-#    print(parser.scope)
-    parser = SemanticParser(parser)
-#    print(parser.ast)
-#    parser.view_namespace('variables')
+    def _visit_NumpyNonZero(self, func_call, **settings):
+        func_call_args = self._handle_function_args(func_call.args, **settings)
+        # expr is a FunctionCall
+        arg = func_call_args[0].value
+        if not isinstance(arg, Variable):
+            new_symbol = PyccelSymbol(self.scope.get_new_name())
+            creation = self._visit(Assign(new_symbol, arg, fst=func_call.fst))
+            self._additional_exprs[-1].append(creation)
+            arg = self._visit(new_symbol)
+        return NumpyWhere(arg)

@@ -12,7 +12,8 @@
 ** allocation
 */
 
-t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
+t_ndarray   array_create(int32_t nd, int64_t *shape,
+        enum e_types type, bool is_view)
 {
     t_ndarray arr;
 
@@ -48,7 +49,7 @@ t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
             arr.type_size = sizeof(double complex);
             break;
     }
-    arr.is_view = false;
+    arr.is_view = is_view;
     arr.length = 1;
     arr.shape = malloc(arr.nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
@@ -64,7 +65,8 @@ t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
         for (int32_t j = i + 1; j < arr.nd; j++)
             arr.strides[i] *= arr.shape[j];
     }
-    arr.raw_data = malloc(arr.buffer_size);
+    if (!is_view)
+        arr.raw_data = malloc(arr.buffer_size);
     return (arr);
 }
 

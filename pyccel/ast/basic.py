@@ -40,7 +40,7 @@ class Basic:
 
             from pyccel.ast.literals import convert_to_literal
 
-            if self.ignore(c):
+            if Basic._ignore(c):
                 continue
 
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -51,7 +51,7 @@ class Basic:
             elif iterable(c):
                 size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or self.ignore(ci)) \
+                                 or Basic._ignore(ci)) \
                         else convert_to_literal(ci) for ci in c if not iterable(ci))
                 if len(c) != size:
                     raise TypeError("Basic child cannot be a tuple of tuples")
@@ -63,15 +63,16 @@ class Basic:
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if not self.ignore(ci):
+                    if not Basic._ignore(ci):
                         ci.set_current_user_node(self)
             else:
                 c.set_current_user_node(self)
 
-    def ignore(self, c):
+    @classmethod
+    def _ignore(cls, c):
         """ Indicates if a node should be ignored when recursing
         """
-        return c is None or isinstance(c, self._ignored_types)
+        return c is None or isinstance(c, cls._ignored_types)
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.
@@ -81,10 +82,10 @@ class Basic:
         for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
 
-            if self.ignore(c):
+            if self._ignore(c):
                 continue
             elif isinstance(c, tuple):
-                _ = [ci.remove_user_node(self) for ci in c if not self.ignore(ci)]
+                _ = [ci.remove_user_node(self) for ci in c if not self._ignore(ci)]
             else:
                 c.remove_user_node(self)
 
@@ -112,7 +113,7 @@ class Basic:
             results  = [p for p in self._user_nodes if     isinstance(p, search_type) and \
                                                        not isinstance(p, excluded_nodes)]
 
-            results += [r for p in self._user_nodes if not self.ignore(p) and \
+            results += [r for p in self._user_nodes if not self._ignore(p) and \
                                                        not isinstance(p, (search_type, excluded_nodes)) \
                           for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
             self._recursion_in_progress = False
@@ -154,11 +155,11 @@ class Basic:
                         continue
                     elif isinstance(vi, search_type):
                         results.append(vi)
-                    elif not self.ignore(vi):
+                    elif not self._ignore(vi):
                         results.extend(vi.get_attribute_nodes(
                             search_type, excluded_nodes=excluded_nodes))
 
-            elif not self.ignore(v):
+            elif not self._ignore(v):
                 results.extend(v.get_attribute_nodes(
                     search_type, excluded_nodes = excluded_nodes))
 
@@ -208,7 +209,7 @@ class Basic:
             elif isinstance(v, excluded_nodes):
                 continue
 
-            elif not self.ignore(v):
+            elif not self._ignore(v):
                 res = self.is_user_of(v, excluded_nodes=excluded_nodes)
                 if res:
                     node.toggle_recursion()
@@ -250,12 +251,12 @@ class Basic:
             rep = replacement[idx]
             if iterable(rep):
                 for r in rep:
-                    if not self.ignore(r):
+                    if not self._ignore(r):
                         r.set_current_user_node(self)
             else:
-                if not self.ignore(rep):
+                if not self._ignore(rep):
                     rep.set_current_user_node(self)
-            if not self.ignore(found_node):
+            if not self._ignore(found_node):
                 found_node.remove_user_node(self, invalidate)
             return rep
 
@@ -265,7 +266,7 @@ class Basic:
             if isinstance(v, excluded_nodes):
                 continue
 
-            elif v in original:
+            elif any(v is oi for oi in original):
                 setattr(self, n, prepare_sub(v))
 
             elif isinstance(v, tuple):
@@ -273,16 +274,16 @@ class Basic:
                 for vi in v:
                     new_vi = vi
                     if not isinstance(vi, excluded_nodes):
-                        if vi in original:
+                        if any(vi is oi for oi in original):
                             new_vi = prepare_sub(vi)
-                        elif not self.ignore(vi):
+                        elif not self._ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes, invalidate)
                     if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
-            elif not self.ignore(v):
+            elif not self._ignore(v):
                 v.substitute(original, replacement, excluded_nodes, invalidate)
         self._recursion_in_progress = False
 
