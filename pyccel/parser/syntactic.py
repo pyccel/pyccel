@@ -1065,8 +1065,8 @@ class SyntaxParser(BasicParser):
         return While(test, body, scope=scope)
 
     def _visit_Assert(self, stmt):
-        expr = self._visit(stmt.test)
-        return Assert(expr)
+        test = self._visit(stmt.test)
+        return Assert(test)
 
     def _visit_CommentMultiLine(self, stmt):
 
