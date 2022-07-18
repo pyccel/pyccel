@@ -185,7 +185,7 @@ type_to_print_format = {
 
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
-               r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
+               r'(recursive )?(elemental )?(pure )?((subroutine)|(function))\b',
                r'interface\b',r'module\b(?! *procedure)',r'program\b')
 inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
 
