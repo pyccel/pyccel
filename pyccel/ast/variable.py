@@ -29,8 +29,7 @@ __all__ = (
     'DottedVariable',
     'IndexedElement',
     'TupleVariable',
-    'Variable',
-    'VariableAddress'
+    'Variable'
 )
 
 class Variable(PyccelAstNode):
@@ -886,35 +885,6 @@ class IndexedElement(PyccelAstNode):
                 j += 1
             new_indexes.append(i)
         return IndexedElement(base, *new_indexes)
-
-class VariableAddress(PyccelAstNode):
-
-    """Represents the address of a variable.
-    E.g. In C
-    VariableAddress(Variable('int','a'))                            is  &a
-    VariableAddress(Variable('int','a', memory_handling='alias'))   is   a
-    """
-    __slots__ = ('_variable','_dtype','_precision','_shape','_rank','_order')
-    _attribute_nodes = ('_variable',)
-
-    def __init__(self, variable):
-        if not isinstance(variable, (Variable, IndexedElement, VariableAddress)):
-            # Address of Address should only be used in the wrapper
-            raise TypeError('variable must be a variable or indexed element')
-        self._variable = variable
-
-        self._shape     = variable.shape
-        self._rank      = variable.rank
-        self._dtype     = variable.dtype
-        self._precision = variable.precision
-        self._order     = variable.order
-        super().__init__()
-
-    @property
-    def variable(self):
-        """ The variable whose address is of interest
-        """
-        return self._variable
 
 class DottedVariable(Variable):
 
