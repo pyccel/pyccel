@@ -40,7 +40,7 @@ from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
-from pyccel.ast.variable  import Variable, DottedName
+from pyccel.ast.variable  import Variable, DottedVariable
 
 from pyccel.ast.c_concepts import ObjectAddress
 
@@ -338,9 +338,9 @@ class CWrapperCodePrinter(CCodePrinter):
             body.append(Allocate(result, shape = sizes, order = result.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=result), VariableAddress(nd_var)))
+                lhs=result), ObjectAddress(nd_var)))
 
-            static_results = [VariableAddress(nd_var), *sizes]
+            static_results = [ObjectAddress(nd_var), *sizes]
 
         else:
             static_results = [result]
