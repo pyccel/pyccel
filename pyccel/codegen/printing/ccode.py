@@ -1489,8 +1489,6 @@ class CCodePrinter(CodePrinter):
         call_code = f'{func.name}({args})'
         if not func.results:
             return f'{call_code};\n'
-        elif len(func.results) == 1 and self.stored_in_c_pointer(func.results[0]):
-            return f'(*{call_code})'
         else:
             return call_code
 
@@ -1868,14 +1866,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
-        if isinstance(expr.obj, ObjectAddress):
+        if isinstance(expr.obj, ObjectAddress) or not self.stored_in_c_pointer(expr.obj):
             return '&{}'.format(obj_code)
-        elif self.stored_in_c_pointer(expr.obj):
-            assert obj_code.startswith('(*')
-            assert obj_code.endswith(')')
-            return f'{obj_code[2:-1]}'
         else:
-            return f'&{obj_code}'
+            if obj_code.startswith('(*') or obj_code.endswith(')'):
+                return f'{obj_code[2:-1]}'
+            else:
+                return obj_code
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
