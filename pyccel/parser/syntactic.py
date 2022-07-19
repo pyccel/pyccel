@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: disable=R0201, missing-function-docstring
+# pylint: disable=missing-function-docstring
 
 import os
 import re
