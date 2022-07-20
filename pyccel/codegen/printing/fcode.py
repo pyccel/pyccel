@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
 """Print to F90 standard. Trying to follow the information provided at
@@ -185,7 +184,7 @@ type_to_print_format = {
 
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
-               r'(recursive )?(pure )?(elemental )?((subroutine)|(function))\b',
+               r'(elemental )?(pure )?(recursive )?((subroutine)|(function))\b',
                r'interface\b',r'module\b(?! *procedure)',r'program\b')
 inc_regex = re.compile('|'.join('({})'.format(i) for i in inc_keyword))
 
@@ -1877,12 +1876,12 @@ class FCodePrinter(CodePrinter):
             if i in out_args:
                 out_args.remove(i)
 
-        # treate case of pure function
+        # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)
         if is_pure:
             sig = 'pure {}'.format(sig)
 
-        # treate case of elemental function
+        # treat case of elemental function
         if is_elemental:
             sig = 'elemental {}'.format(sig)
 
@@ -2392,19 +2391,13 @@ class FCodePrinter(CodePrinter):
         return 'STOP'
 
     def _print_Assert(self, expr):
-        # we first create an If statement
-        # TODO: depending on a debug flag we should print 'PASSED' or not.
-        DEBUG = True
+        prolog = "if ( .not. ({0})) then".format(self._print(expr.test))
+        body = 'stop 1'
+        epilog = 'end if'
+        return ('{prolog}\n'
+                '{body}\n'
+                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
-        err = ErrorExit()
-        args = [IfSection(PyccelNot(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
-
-        if DEBUG:
-            args.append((True, PythonPrint(["'PASSED'"])))
-
-        stmt = If(*args)
-        code = self._print(stmt)
-        return self._get_statement(code)
 
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)

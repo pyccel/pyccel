@@ -3,8 +3,11 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" File containing SemanticParser. This class handles the semantic stage of the translation.
+See the developer docs for more details
+"""
 
-# pylint: disable=R0201, missing-function-docstring
+# pylint: disable=missing-function-docstring
 
 from itertools import chain
 
@@ -54,6 +57,7 @@ from pyccel.ast.core import Iterable
 from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
+from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -114,8 +118,22 @@ from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
-# TODO - remove import * and only import what we need
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
+        UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
+        INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
+        UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
+        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP,
+        INCOMPATIBLE_TYPES_IN_ASSIGNMENT, ARRAY_ALREADY_IN_USE, ASSIGN_ARRAYS_ONE_ANOTHER,
+        INVALID_POINTER_REASSIGN, INCOMPATIBLE_REDEFINITION, ARRAY_IS_ARG,
+        INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION,
+        PYCCEL_RESTRICTION_INHOMOG_LIST, UNDEFINED_IMPORT_OBJECT, UNDEFINED_LAMBDA_VARIABLE,
+        UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
+        INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
+        PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
+        UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
+        UNSUPPORTED_ARRAY_RETURN_VALUE, PYCCEL_MISSING_HEADER, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -143,7 +161,8 @@ def _get_name(var):
         return var.funcdef
     if isinstance(var, AsName):
         return var.target
-    msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
+    name = type(var).__name__
+    msg = f'Name of Object : {name} cannot be determined'
     return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
                 severity='fatal')
 
@@ -194,8 +213,6 @@ class SemanticParser(BasicParser):
         self._code = parser._code
         # ...
 
-        # ... TOD add settings
-        settings = {}
         self.annotate()
         # ...
 
@@ -301,8 +318,8 @@ class SemanticParser(BasicParser):
         # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
-        for container in container.loops:
-            variables.extend(self.get_variables(container))
+        for sub_container in container.loops:
+            variables.extend(self.get_variables(sub_container))
         return variables
 
     def get_class_construct(self, name):
@@ -312,7 +329,7 @@ class SemanticParser(BasicParser):
         result = self.scope.find(name, 'cls_constructs')
 
         if result is None:
-            msg = 'class construct {} not found'.format(name)
+            msg = f'class construct {name} not found'
             return errors.report(msg,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
@@ -537,8 +554,9 @@ class SemanticParser(BasicParser):
             return self._infere_type(expr.lhs)
 
         else:
-            msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
-            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
+            type_name = type(expr).__name__
+            msg = f'Type of Object : {type_name} cannot be infered'
+            return errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
 
@@ -554,7 +572,8 @@ class SemanticParser(BasicParser):
 
         if isinstance(var, PythonTuple):
             def is_literal_index(a):
-                is_int = lambda a: isinstance(a, (int, LiteralInteger)) or \
+                def is_int(a):
+                    return isinstance(a, (int, LiteralInteger)) or \
                         (isinstance(a, PyccelUnarySub) and \
                          isinstance(a.args[0], (int, LiteralInteger)))
                 if isinstance(a, Slice):
@@ -581,7 +600,8 @@ class SemanticParser(BasicParser):
                 else:
                     return self._visit(var[indices[0]][indices[1:]])
             else:
-                errors.report("Can't index {}".format(type(var)), symbol=expr,
+                var_type = type(var)
+                errors.report(f"Can't index {var_type}", symbol=expr,
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
@@ -702,11 +722,12 @@ class SemanticParser(BasicParser):
                        Indicates whether rank information should be included
                        Default : True
         """
-        descr = '{dtype}(kind={precision})'.format(
-                        dtype     = var.dtype,
-                        precision = get_final_precision(var))
+        dtype = var.dtype
+        prec  = get_final_precision(var)
+        descr = f'{dtype}(kind={prec})'
         if include_rank and var.rank>0:
-            descr += '[{}]'.format(','.join(':'*var.rank))
+            dims = ','.join(':'*var.rank)
+            descr += f'[{dims}]'
         return descr
 
     def _check_argument_compatibility(self, input_args, func_args, expr, elemental):
@@ -725,12 +746,12 @@ class SemanticParser(BasicParser):
                      Indicates if the function is elemental
         """
         if elemental:
-            incompatible = lambda i_arg, f_arg: \
-                        (i_arg.dtype is not f_arg.dtype or \
+            def incompatible(i_arg, f_arg):
+                return (i_arg.dtype is not f_arg.dtype or \
                         get_final_precision(i_arg) != get_final_precision(f_arg))
         else:
-            incompatible = lambda i_arg, f_arg: \
-                        (i_arg.dtype is not f_arg.dtype or \
+            def incompatible(i_arg, f_arg):
+                return (i_arg.dtype is not f_arg.dtype or \
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
@@ -744,8 +765,9 @@ class SemanticParser(BasicParser):
                 continue
             # Check for compatibility
             if incompatible(i_arg, f_arg):
-                expected = self.get_type_description(f_arg, not elemental)
-                received = '{} ({})'.format(i_arg, self.get_type_description(i_arg, not elemental))
+                expected  = self.get_type_description(f_arg, not elemental)
+                type_name = self.get_type_description(i_arg, not elemental)
+                received  = f'{i_arg} ({type_name})'
 
                 errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
                         symbol = expr,
@@ -966,7 +988,7 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
                         if (isinstance(a, Variable) and not a.is_argument) \
-                                or not all([b.is_argument for b in a.get_attribute_nodes(Variable)]):
+                                or not all(b.is_argument for b in a.get_attribute_nodes(Variable)):
                             errors.report(STACK_ARRAY_UNKNOWN_SHAPE, symbol=name,
                             severity='error',
                             bounding_box=(self._current_fst_node.lineno,
@@ -1032,7 +1054,7 @@ class SemanticParser(BasicParser):
                     or (lhs.rank == 0)
 
                 if not know_lhs_shape:
-                    msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
+                    msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
@@ -1083,7 +1105,8 @@ class SemanticParser(BasicParser):
             else:
                 lhs = self._visit(lhs, **settings)
         else:
-            raise NotImplementedError("_assign_lhs_variable does not handle {}".format(str(type(lhs))))
+            lhs_type = str(type(lhs))
+            raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
 
         return lhs
 
@@ -1116,8 +1139,9 @@ class SemanticParser(BasicParser):
 
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
+            name = var.name
             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
-                    symbol='{}={}'.format(var.name, dtype),
+                    symbol=f'{name}={dtype}',
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
@@ -1167,8 +1191,10 @@ class SemanticParser(BasicParser):
                 except KeyError:
                     d2 = str(var.dtype)
 
+                name = var.name
+                rhs_str = str(rhs)
                 errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
-                    symbol='{}={}'.format(var.name, str(rhs)),
+                    symbol=f'{name}={rhs_str}',
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')
 
@@ -1181,7 +1207,8 @@ class SemanticParser(BasicParser):
             if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                format_shape = lambda s: "" if len(s)==0 else s
+                def format_shape(s):
+                    return "" if len(s)==0 else s
                 txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
@@ -1673,7 +1700,8 @@ class SemanticParser(BasicParser):
                     end_expr.append('nowait')
                 code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
             else:
-                msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
+                type_name = type(expr).__name__
+                msg = f"Statement after {type_name} must be a for loop."
                 errors.report(msg, symbol=expr,
                     severity='fatal')
 
@@ -1829,7 +1857,7 @@ class SemanticParser(BasicParser):
 
         d_var = self._infere_type(first)
         if d_var.get('cls_base', None) is None:
-            errors.report('Attribute {} not found'.format(rhs_name),
+            errors.report(f'Attribute {rhs_name} not found',
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
 
@@ -1912,7 +1940,7 @@ class SemanticParser(BasicParser):
                 return FunctionCall(macro.master, args, self._current_function)
 
         # did something go wrong?
-        return errors.report('Attribute {} not found'.format(rhs_name),
+        return errors.report(f'Attribute {rhs_name} not found',
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal')
 
@@ -1940,7 +1968,8 @@ class SemanticParser(BasicParser):
                                     symbol=expr, severity='fatal')
                         return [a[i] for i in range(n_vars)]
                     else:
-                        raise NotImplementedError("Unexpected type {} in tuple addition".format(type(a)))
+                        a_type = type(a)
+                        raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
                 tuple_args = [ai for a in args for ai in get_vars(a)]
                 expr_new = PythonTuple(*tuple_args)
         else:
@@ -1991,7 +2020,7 @@ class SemanticParser(BasicParser):
 
     def _visit_MathSqrt(self, expr, **settings):
         func = self.scope.find(expr.funcdef, 'functions')
-        arg, = self._handle_function_args(expr.args, **settings)
+        arg, = self._handle_function_args(expr.args, **settings) #pylint: disable=unbalanced-tuple-unpacking
         if isinstance(arg.value, PyccelMul):
             mul1, mul2 = arg.value.args
             mul1_syn, mul2_syn = expr.args[0].value.args
@@ -2642,7 +2671,7 @@ class SemanticParser(BasicParser):
         dims    = []
         body    = expr.loops[1]
 
-        idx_subs = dict()
+        idx_subs = {}
         #scope = self.create_new_loop_scope()
 
         # The symbols created to represent unknown valued objects are temporary
@@ -2690,7 +2719,7 @@ class SemanticParser(BasicParser):
             existing_var = self.scope.find(var.name, 'variables')
             if existing_var:
                 if self._infere_type(existing_var, **settings) != dvar:
-                    errors.report("Variable {} already exists with different type".format(var),
+                    errors.report(f"Variable {var} already exists with different type",
                             symbol = expr, severity='error')
             else:
                 self.scope.insert_variable(var)
@@ -2763,7 +2792,7 @@ class SemanticParser(BasicParser):
         try:
             dim = sympy_to_pyccel(dim, idx_subs)
         except TypeError:
-            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + '\n Deduced size : {}'.format(dim),
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + f'\n Deduced size : {dim}',
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
 
@@ -3012,8 +3041,9 @@ class SemanticParser(BasicParser):
                         severity='warning')
         for hd in headers:
             if (args_number != len(hd.dtypes)):
-                msg = """The number of arguments in the function {} ({}) does not match the number
-                        of types in decorator/header ({}).""".format(name ,args_number, len(hd.dtypes))
+                n_types = len(hd.dtypes)
+                msg = f"""The number of arguments in the function {name} ({args_number}) does not match the number
+                        of types in decorator/header ({n_types})."""
                 if (args_number < len(hd.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
@@ -3180,8 +3210,6 @@ class SemanticParser(BasicParser):
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args
 
-            arg_vars = [a.var for a in args]
-
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
             global_vars = [g for g in global_vars if body.is_user_of(g)]
@@ -3258,7 +3286,7 @@ class SemanticParser(BasicParser):
                 if isinstance(a.var, Variable):
                     v = a.var
                     if v.is_const and (args_inout[i] or (v.name in local_assign)):
-                        msg = "Cannot modify 'const' argument ({})".format(v)
+                        msg = f"Cannot modify 'const' argument ({v})"
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal')
@@ -3350,8 +3378,9 @@ class SemanticParser(BasicParser):
         if len(args) == 0:
             return PythonPrint(args)
 
-        is_symbolic = lambda var: isinstance(var, Variable) \
-            and isinstance(var.dtype, NativeSymbol)
+        def is_symbolic(var):
+            return isinstance(var, Variable) \
+                and isinstance(var.dtype, NativeSymbol)
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
@@ -3426,7 +3455,7 @@ class SemanticParser(BasicParser):
 
         attributes = self.scope.find(name, 'classes').attributes
 
-        for i in methods:
+        for i in methods.copy():
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
@@ -3533,7 +3562,7 @@ class SemanticParser(BasicParser):
                 for t in expr.target:
                     t_name = t.name if isinstance(t, AsName) else t
                     if t_name not in pyccel_builtin_import_registery[source]:
-                        errors.report("Function '{}' from module '{}' is not currently supported by pyccel".format(t, source),
+                        errors.report(f"Function '{t}' from module '{source}' is not currently supported by pyccel",
                                 symbol=expr,
                                 severity='error')
                 for (name, atom) in imports:
@@ -3553,7 +3582,7 @@ class SemanticParser(BasicParser):
             self.insert_import(source, [AsName(v,n) for n,v in imports], source_target)
 
         elif recognised_source(source):
-            errors.report("Module {} is not currently supported by pyccel".format(source),
+            errors.report(f"Module {source} is not currently supported by pyccel",
                     symbol=expr,
                     severity='error')
         else:
@@ -3736,13 +3765,16 @@ class SemanticParser(BasicParser):
             b = self._visit(expr.b)
         return NumpyMatmul(a, b)
 
+    def _visit_Assert(self, expr, **settings):
+        test = self._visit(expr.test, **settings)
+        return Assert(test)
+
     def _visit_NumpyWhere(self, func_call, **settings):
         func_call_args = self._handle_function_args(func_call.args, **settings)
         # expr is a FunctionCall
         args = [a.value for a in func_call_args if not a.has_keyword]
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
         nargs = len(args)+len(kwargs)
-        arg0 = args[0] if args else kwargs['condition']
         if nargs == 1:
             return self._visit_NumpyNonZero(func_call)
         return NumpyWhere(*args, **kwargs)
@@ -3757,20 +3789,3 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
-
-#==============================================================================
-
-
-if __name__ == '__main__':
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except IndexError:
-        raise ValueError('Expecting an argument for filename')
-
-    parser = SyntaxParser(filename)
-#    print(parser.scope)
-    parser = SemanticParser(parser)
-#    print(parser.ast)
-#    parser.view_namespace('variables')

@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
 from itertools import chain
@@ -44,10 +43,11 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
+from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
+from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -234,7 +234,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdint',
                  'pyc_math_c',
                  'stdio',
-                 'stdbool']}
+                 'stdbool',
+                 'assert']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -452,7 +453,7 @@ class CCodePrinter(CodePrinter):
             results = dict(zip(func.results, parent_assign[0].lhs))
             orig_res_vars = list(results.keys())
             new_res_vars  = self._temporary_args
-            new_res_vars = [a.variable if isinstance(a, VariableAddress) else a for a in new_res_vars]
+            new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
             self._temporary_args = []
             body.substitute(orig_res_vars, new_res_vars)
 
@@ -1021,10 +1022,16 @@ class CCodePrinter(CodePrinter):
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i.var, False))
-                        if isinstance(i.var, FunctionAddress)
-                        else '{0}'.format(self.get_declare_type(i.var)) + (i.name if print_arg_names else '')
-                        for i in args)
+            def get_var_arg(arg, var):
+                code = "const " * var.is_const
+                code += self.get_declare_type(var)
+                code += arg.name * print_arg_names
+                return code
+
+            var_list = [a.var for a in args]
+            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
+            arg_code = ', '.join(arg_code_list)
+
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
@@ -1091,6 +1098,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
+        if self.stored_in_c_pointer(expr):
+            return '{}->{}'.format(self._print(ObjectAddress(expr.lhs)), self._print(expr.name))
         return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
 
     @staticmethod
@@ -1145,11 +1154,16 @@ class CCodePrinter(CodePrinter):
         return Slice(start, stop, step)
 
     def _print_NumpyArraySize(self, expr):
-        return '{}.length'.format(self._print(expr.arg))
+        arg = expr.arg
+        if self.stored_in_c_pointer(arg):
+            return '{}->length'.format(self._print(ObjectAddress(arg)))
+        return '{}.length'.format(self._print(arg))
 
     def _print_PyccelArraySize(self, expr):
-        return '{}.shape[{}]'.format(self._print(expr.arg),
-            self._print(expr.index))
+        arg    = expr.arg
+        if self.stored_in_c_pointer(arg):
+            return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
+        return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -1421,7 +1435,7 @@ class CCodePrinter(CodePrinter):
         ----------
         a : PyccelAstNode
         """
-        if isinstance(a, (Nil, VariableAddress)):
+        if isinstance(a, (Nil, ObjectAddress)):
             return True
         if isinstance(a, FunctionCall):
             results = a.funcdef.results
@@ -1446,12 +1460,12 @@ class CCodePrinter(CodePrinter):
             f = f.var
             if self.stored_in_c_pointer(f):
                 if isinstance(a, Variable):
-                    args.append(VariableAddress(a))
+                    args.append(ObjectAddress(a))
                 elif not self.stored_in_c_pointer(a):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, a)
                     self._additional_code += self._print(assign)
-                    args.append(VariableAddress(tmp_var))
+                    args.append(ObjectAddress(tmp_var))
                 else:
                     args.append(a)
             else :
@@ -1488,7 +1502,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [VariableAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
+        args = [ObjectAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
@@ -1625,7 +1639,7 @@ class CCodePrinter(CodePrinter):
             # Point optional variable at an allocated memory space
             prefix_code = self._print(AliasAssign(lhs, tmp_var))
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
-            self._temporary_args = [VariableAddress(a) for a in lhs]
+            self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
         if isinstance(rhs, (NumpyArray, PythonTuple)):
@@ -1642,12 +1656,8 @@ class CCodePrinter(CodePrinter):
         lhs_var = expr.lhs
         rhs_var = expr.rhs
 
-        lhs_address = VariableAddress(lhs_var)
-        # Ensure everything which can be stored in a VariableAddress is
-        try:
-            rhs_address = VariableAddress(rhs_var)
-        except TypeError:
-            rhs_address = rhs_var
+        lhs_address = ObjectAddress(lhs_var)
+        rhs_address = ObjectAddress(rhs_var)
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
@@ -1764,8 +1774,8 @@ class CCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if Nil() in expr.args:
-            lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
-            rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
+            lhs = ObjectAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
+            rhs = ObjectAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
 
             lhs = self._print(lhs)
             rhs = self._print(rhs)
@@ -1840,18 +1850,26 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionCallArgument(self, expr):
         return self._print(expr.value)
 
-    def _print_VariableAddress(self, expr):
-        if isinstance(expr.variable, (IndexedElement, VariableAddress)):
-            return '&{}'.format(self._print(expr.variable))
-        elif self.stored_in_c_pointer(expr.variable):
-            return '{}'.format(expr.variable.name)
-        else:
-            return '&{}'.format(expr.variable.name)
+    def _print_ObjectAddress(self, expr):
+        if isinstance(expr.obj, ObjectAddress):
+            return '&{}'.format(self._print(expr.obj))
+        if self.stored_in_c_pointer(expr.obj):
+            if hasattr(expr.obj, 'name'):
+                return '{}'.format(expr.obj.name)
+            return '{}'.format(self._print(expr.obj))
+        if hasattr(expr.obj, 'name'):
+            return '&{}'.format(expr.obj.name)
+        return '&{}'.format(self._print(expr.obj))
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
 
         return '/*' + comments + '*/\n'
+
+    def _print_Assert(self, expr):
+        condition = self._print(expr.test)
+        self.add_import(c_imports['assert'])
+        return "assert({0});\n".format(condition)
 
     def _print_PyccelSymbol(self, expr):
         return expr

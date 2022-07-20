@@ -849,6 +849,44 @@ def test_module_init( language ):
     compare_pyth_fort_output(pyth_out, lang_out, str, language)
 
 #------------------------------------------------------------------------------
+def get_lang_exit_value(abs_path, language, cwd=None):
+    abs_path = get_exe(abs_path, language)
+    if language == "python":
+        if cwd is None:
+            p = subprocess.Popen([sys.executable , abs_path])
+        else:
+            p = subprocess.Popen([sys.executable , abs_path], cwd=cwd)
+    else:
+        p = subprocess.Popen([abs_path])
+    p.communicate()
+    return p.returncode
+
+@pytest.mark.parametrize( "test_file", ["scripts/asserts/valid_assert.py",
+                                        "scripts/asserts/unvalid_assert1.py",
+                                        "scripts/asserts/unvalid_assert2.py",
+                                        "scripts/asserts/unvalid_assert3.py",
+                                        ] )
+
+def test_assert(language, test_file):
+    test_dir = os.path.dirname(test_file)
+    test_file = get_abs_path(os.path.normpath(test_file))
+
+    output_dir   = os.path.join(get_abs_path(test_dir),'__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+
+    cwd = get_abs_path(test_dir)
+
+    if not language:
+        language = "fortran"
+    pyccel_commands = " --language="+language
+    pyccel_commands += " --output="+ output_dir
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+    lang_out = get_lang_exit_value(output_test_file, language)
+    pyth_out = get_lang_exit_value(test_file, "python")
+    assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
+
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),

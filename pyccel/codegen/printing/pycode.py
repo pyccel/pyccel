@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
 from pyccel.decorators import __all__ as pyccel_decorators
@@ -425,6 +424,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_CommentBlock(self, expr):
         txt = '\n'.join(self._print(c) for c in expr.comments)
         return '"""{0}"""\n'.format(txt)
+
+    def _print_Assert(self, expr):
+        condition = self._print(expr.test)
+        return "assert {0}\n".format(condition)
 
     def _print_EmptyNode(self, expr):
         return ''
