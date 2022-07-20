@@ -1200,8 +1200,12 @@ class FCodePrinter(CodePrinter):
         """ print the python builtin function round
         args : variable
         """
-        arg     = self._print(expr.arg)
+        arg = expr.arg
         self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+        if arg.dtype != -1:
+            arg = DtypePrecisionToCastFunction[arg.dtype.name][arg.precision]
+
+        arg_code = self._print(arg)
         if expr.ndigits:
             ndigits = self._print(expr.ndigits)
             return f"pyc_bankers_round({arg}, {ndigits})"
