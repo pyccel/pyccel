@@ -367,7 +367,7 @@ class NumpyArray(NumpyNewArray):
 
         # Verify dtype and get precision
         if dtype is None:
-            dtype = arg.dtype
+            dtype = DtypePrecisionToCastFunction[str(arg.dtype).capitalize()][arg.precision]
         dtype, prec = process_dtype(dtype)
         # ... Determine ordering
         order = str(order).strip("\'")
