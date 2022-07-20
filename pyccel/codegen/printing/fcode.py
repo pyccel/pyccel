@@ -1201,18 +1201,22 @@ class FCodePrinter(CodePrinter):
         args : variable
         """
         arg = expr.arg
+        ndigits = expr.ndigits
         self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
-        if arg.dtype != -1:
+        if arg.prec != -1:
             arg = DtypePrecisionToCastFunction[arg.dtype.name][arg.precision]
 
         arg_code = self._print(arg)
-        if expr.ndigits:
-            ndigits = self._print(expr.ndigits)
-            return f"pyc_bankers_round({arg}, {ndigits})"
+        if ndigits:
+            if ndigits.prec != -1:
+                ndigits = DtypePrecisionToCastFunction[ndigits.dtype.name][ndigits.precision]
+
+            ndigits_code = self._print(ndigits)
+            return f"pyc_bankers_round({arg_code}, {ndigits_code})"
         else:
             prec = self.print_kind(expr)
             zero = self._print(LiteralInteger(0))
-            return f"Int(pyc_bankers_round({arg}, {zero}), kind={prec})"
+            return f"Int(pyc_bankers_round({arg_code}, {zero}), kind={prec})"
 
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(expr.shape))
