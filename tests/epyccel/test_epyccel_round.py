@@ -155,3 +155,37 @@ def test_round_ndigits_half(language):
     round_ndigits_output = round_ndigits(x,-1)
     assert np.isclose(round_ndigits_output, f_output)
     assert isinstance(f_output, type(round_ndigits_output))
+
+def test_round_ndigits_int(language):
+    @types('int','int')
+    def round_ndigits(x, i):
+        return round(x,i)
+
+    f = epyccel(round_ndigits, language=language)
+    x = randint(100) // 10
+
+    f_output = f(x, 1)
+    round_ndigits_output = round_ndigits(x, 1)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3
+
+    f_output = f(x,2)
+    round_ndigits_output = round_ndigits(x,2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = 3323
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
+
+    x = -3390
+
+    f_output = f(x,-2)
+    round_ndigits_output = round_ndigits(x, -2)
+    assert np.isclose(round_ndigits_output, f_output)
+    assert isinstance(f_output, type(round_ndigits_output))
