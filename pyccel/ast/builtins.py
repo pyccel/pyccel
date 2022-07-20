@@ -881,9 +881,10 @@ class PythonType(Basic):
         can be used in a print  statement
         """
         prec = self.precision
+        str_dtype = str(self.dtype)
         return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else prec*8))
+            dtype = str_dtype,
+            precision = '' if prec in (None, -1) else (prec*8*[1, 2][str_dtype=="complex"])))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
