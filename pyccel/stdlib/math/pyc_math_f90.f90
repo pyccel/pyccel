@@ -54,6 +54,8 @@ end interface csign
 interface pyc_bankers_round
     module procedure pyc_bankers_round_4
     module procedure pyc_bankers_round_8
+    module procedure pyc_bankers_round_int_4
+    module procedure pyc_bankers_round_int_8
 end interface pyc_bankers_round
 
 public :: pyc_gcd, &
@@ -415,5 +417,41 @@ pure function pyc_bankers_round_8(arg, ndigits) result(rnd)
     rnd = rnd * 10._C_DOUBLE**(-ndigits)
 
 end function pyc_bankers_round_8
+
+pure function pyc_bankers_round_int_4(arg, ndigits) result(rnd)
+
+    implicit none
+
+    integer(C_INT32_T), value :: arg
+    integer(C_INT32_T), value :: ndigits
+    integer(C_INT32_T)        :: rnd
+
+    real(C_DOUBLE) :: val
+
+    val = arg * 10._C_DOUBLE**ndigits
+
+    rnd = nint(val, kind=C_INT64_T)
+
+    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+
+end function pyc_bankers_round_int_4
+
+pure function pyc_bankers_round_int_8(arg, ndigits) result(rnd)
+
+    implicit none
+
+    integer(C_INT64_T), value :: arg
+    integer(C_INT64_T), value :: ndigits
+    integer(C_INT64_T)        :: rnd
+
+    real(C_DOUBLE) :: val
+
+    val = arg * 10._C_DOUBLE**ndigits
+
+    rnd = nint(val, kind=C_INT64_T)
+
+    rnd = rnd * 10._C_DOUBLE**(-ndigits)
+
+end function pyc_bankers_round_int_8
 
 end module pyc_math_f90
