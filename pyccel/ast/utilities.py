@@ -244,7 +244,7 @@ def insert_index(expr, pos, index_var):
     >>> a = Variable('int', 'a', shape=(4,), rank=1)
     >>> b = Variable('int', 'b', shape=(4,), rank=1)
     >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
+    >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
     >>> insert_index(expr, 0, i, language_has_vectors = False)
@@ -684,7 +684,7 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     >>> a = Variable('int', 'a', shape=(4,), rank=1)
     >>> b = Variable('int', 'b', shape=(4,), rank=1)
     >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
+    >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = [Assign(c,d)]
     >>> expand_to_loops(expr, language_has_vectors = False)
