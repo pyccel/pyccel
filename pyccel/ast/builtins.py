@@ -884,7 +884,7 @@ class PythonType(Basic):
         str_dtype = str(self.dtype)
         return LiteralString("<class '{dtype}{precision}'>".format(
             dtype = str_dtype,
-            precision = '' if prec in (None, -1) else (prec*8*[1, 2][str_dtype=="complex"])))
+            precision = '' if prec in (None, -1) else (prec * 8 * (2 if str_dtype=="complex" else 1))))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
