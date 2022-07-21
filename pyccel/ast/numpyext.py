@@ -310,10 +310,8 @@ def process_dtype(dtype):
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
-    elif isinstance(dtype, LiteralString):
-        dtype = str(dtype).replace('\'', '').lower()
     else:
-        raise TypeError('Unknown type of  %s.' % type(dtype))
+        dtype = str(dtype).replace('\'', '').lower()
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
         precision        = default_precision[dtype]
