@@ -32,7 +32,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
 from .internals      import PyccelArraySize
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
+from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
