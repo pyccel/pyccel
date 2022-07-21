@@ -229,7 +229,7 @@ class Nil(PyccelAstNode, metaclass=Singleton):
     _dtype = NativeGeneric
     _precision = 0
     _rank = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __str__(self):

@@ -3970,7 +3970,7 @@ class InProgram(PyccelAstNode):
     _dtype = NativeBool()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     _attribute_nodes = ()
     __slots__ = ()
