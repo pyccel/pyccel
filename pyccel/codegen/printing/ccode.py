@@ -310,7 +310,7 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        if rhs.rank > 1:
+        if rhs.rank > 1 and not(isinstance(arg, Variable)):
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
 
