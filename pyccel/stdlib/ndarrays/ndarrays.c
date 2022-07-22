@@ -376,7 +376,7 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 void array_copy_data(t_ndarray dest, t_ndarray src)
 {
-    int64_t i_src = 0;
+    int64_t i_src;
     int64_t i_dest = 0;
     int64_t shape_product = 1;
     int64_t var = 0;
