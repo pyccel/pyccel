@@ -376,14 +376,13 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 void array_copy_data(t_ndarray dest, t_ndarray src)
 {
-    int64_t i_src;
     int64_t i_dest = 0;
     int64_t shape_product = 1;
     int64_t var = 0;
     while (i_dest < dest.length)
     {
         int ndim = src.nd - 1;
-        i_src = (i_dest % src.shape[ndim]) * src.strides[ndim];
+        int64_t i_src = (i_dest % src.shape[ndim]) * src.strides[ndim];
         ndim--;
         while (ndim >= 0)
         {
