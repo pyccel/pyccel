@@ -896,6 +896,8 @@ class NumpyFull(NumpyNewArray):
         if not dtype:
             dtype = DtypePrecisionToCastFunction[fill_value.dtype.name][fill_value.precision]
         # Verify dtype and get precision
+        if dtype in NativeNumeric:
+            dtype = DtypePrecisionToCastFunction[dtype.name][-1]
         dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
