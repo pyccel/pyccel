@@ -994,7 +994,6 @@ class NumpyFullLike(PyccelInternalFunction):
         # NOTE: we ignore 'subok' argument
         if not dtype:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
-        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -1010,7 +1009,6 @@ class NumpyEmptyLike(PyccelInternalFunction):
         # NOTE: we ignore 'subok' argument
         if not dtype:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
-        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -1027,7 +1025,6 @@ class NumpyOnesLike(PyccelInternalFunction):
         # NOTE: we ignore 'subok' argument
         if not dtype:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
-        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -1044,7 +1041,6 @@ class NumpyZerosLike(PyccelInternalFunction):
         # NOTE: we ignore 'subok' argument
         if not dtype:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
-        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
