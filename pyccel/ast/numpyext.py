@@ -310,7 +310,7 @@ def process_dtype(dtype):
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
-    elif isinstance(dtype, LiteralString):
+    elif isinstance(dtype, (LiteralString, str)):
         dtype = str(dtype).replace('\'', '').lower()
         if dtype not in dtype_registry:
             raise TypeError(f'Unknown type of {dtype}.')
@@ -895,8 +895,6 @@ class NumpyFull(NumpyNewArray):
         # TODO: must get dtype from an annotated node
         if not dtype:
             dtype = DtypePrecisionToCastFunction[fill_value.dtype.name][fill_value.precision]
-        if dtype in NativeNumeric:
-            dtype = DtypePrecisionToCastFunction[dtype.name][-1]
         # Verify dtype and get precision
         dtype, precision = process_dtype(dtype)
 
@@ -927,7 +925,7 @@ class NumpyAutoFill(NumpyFull):
         the fill_value is implicitly specified
     """
     __slots__ = ()
-    def __init__(self, shape, dtype=NativeFloat(), order='C'):
+    def __init__(self, shape, dtype=PythonFloat, order='C'):
         if not dtype:
             raise TypeError("Data type must be provided")
         super().__init__(shape, Nil(), dtype, order)
@@ -994,7 +992,9 @@ class NumpyFullLike(PyccelInternalFunction):
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = dtype or a.dtype
+        if not dtype:
+            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -1008,7 +1008,9 @@ class NumpyEmptyLike(PyccelInternalFunction):
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = dtype or a.dtype
+        if not dtype:
+            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -1023,7 +1025,9 @@ class NumpyOnesLike(PyccelInternalFunction):
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = dtype or a.dtype
+        if not dtype:
+            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -1038,7 +1042,9 @@ class NumpyZerosLike(PyccelInternalFunction):
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = dtype or a.dtype
+        if not dtype:
+            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+        dtype = dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
