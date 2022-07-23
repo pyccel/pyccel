@@ -32,7 +32,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
 from .internals      import PyccelArraySize
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
+from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
@@ -310,8 +310,12 @@ def process_dtype(dtype):
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
-    else:
+    elif isinstance(dtype, LiteralString):
         dtype = str(dtype).replace('\'', '').lower()
+        if dtype not in dtype_registry:
+            raise TypeError('Unknown type of  %s.' % dtype)
+    else:
+        raise TypeError('Unknown type of  %s.' % dtype)
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
         precision        = default_precision[dtype]
