@@ -319,7 +319,7 @@ class CCodePrinter(CodePrinter):
             pad = f"+ ({pad} / {expr}.type_size)"
         cpy_data = "memcpy({0}.{2}{3}, {1}.{2}, {1}.buffer_size);\n".format(lhs,
         expr, dtype, pad)
-        return '%s' % (cpy_data)
+        return f'{cpy_data}'
 
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
@@ -350,7 +350,7 @@ class CCodePrinter(CodePrinter):
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
-            if order=="F" and transpose_arg != None:
+            if order=="F" and transpose_arg is not None:
                 arg = [list(i) for i in self._flatten_list(transpose_arg)]
             arg = self._flatten_list(arg)
         self.add_import(c_imports['string'])
@@ -369,7 +369,7 @@ class CCodePrinter(CodePrinter):
             i = ', '.join([self._print(i) for i in arg])
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
-            return '%s%s' % (dummy_array, cpy_data)
+            return f'{dummy_array}{cpy_data}'
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
