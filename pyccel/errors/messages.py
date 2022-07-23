@@ -8,7 +8,6 @@
 	that do not have any parameters.
 """
 
-ARRAYS_IN_MULTIPLE_RETURNS = "returning an array in multiple returns is not supported yet."
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
 INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
@@ -32,7 +31,6 @@ INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is in
 UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
 UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
-UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
