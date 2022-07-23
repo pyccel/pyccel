@@ -366,7 +366,6 @@ class CCodePrinter(CodePrinter):
                         assignations += self.varCpy(lhs, rhs, i)
             return assignations
         else:
-            print("bruh we come here")
             i = ', '.join([self._print(i) for i in arg])
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
@@ -998,6 +997,7 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});\n'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
+        print()
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
@@ -1210,9 +1210,9 @@ class CCodePrinter(CodePrinter):
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.allocatable else 'true'
-        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
+        alloc_code = "{} = array_create({}, {}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
-                is_view)
+                is_view, "order_f" if expr.order == "F" else "order_c")
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):

@@ -13,12 +13,13 @@
 */
 
 t_ndarray   array_create(int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view)
+        enum e_types type, bool is_view, enum e_order order)
 {
     t_ndarray arr;
 
     arr.nd = nd;
     arr.type = type;
+    arr.order = order;
     switch (type)
     {
         case nd_int8:
@@ -59,11 +60,23 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
     }
     arr.buffer_size = arr.length * arr.type_size;
     arr.strides = malloc(nd * sizeof(int64_t));
-    for (int32_t i = 0; i < arr.nd; i++)
+    if (arr.order == order_c)
     {
-        arr.strides[i] = 1;
-        for (int32_t j = i + 1; j < arr.nd; j++)
-            arr.strides[i] *= arr.shape[j];
+        for (int32_t i = 0; i < arr.nd; i++)
+        {
+            arr.strides[i] = 1;
+            for (int32_t j = i + 1; j < arr.nd; j++)
+                arr.strides[i] *= arr.shape[j];
+        }
+    }
+    else if (arr.order == order_f)
+    {
+        for (int32_t i = 0; i < arr.nd; i++)
+        {
+            arr.strides[i] = 1;
+            for (int32_t j = 0; j < i; j++)
+                arr.strides[i] *= arr.shape[j];
+        }
     }
     if (!is_view)
         arr.raw_data = malloc(arr.buffer_size);
