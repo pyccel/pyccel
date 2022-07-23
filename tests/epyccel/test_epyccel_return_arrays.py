@@ -276,4 +276,8 @@ def test_return_arrays_in_expression2(language):
 
     n = randint(5)
 
-    assert np.allclose(epyccel_function(n), return_arrays_in_expression2(n))
+    epyccel_function_output = epyccel_function(n)
+    return_arrays_in_expression2_output = return_arrays_in_expression2(n)
+
+    assert np.allclose(epyccel_function_output, return_arrays_in_expression2_output)
+    assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
