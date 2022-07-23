@@ -1674,7 +1674,7 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
-    'sign'      : PyccelFunctionDef('sign',     , NumpySign),
+    'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
