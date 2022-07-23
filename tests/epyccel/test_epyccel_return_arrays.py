@@ -165,56 +165,68 @@ def test_multi_returns(language):
     assert np.allclose(f_bl_true_output, test_bool_true_output)
     assert np.allclose(f_bl_false_output, test_bool_false_output)
 
+    assert f_bl_false_output[0].dtype == test_bool_false_output[0].dtype
+    assert f_bl_true_output[0].dtype == test_bool_true_output[0].dtype
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = return_array(integer, integer)
 
     assert np.allclose(f_integer_output, test_int_output)
+    assert f_integer_output[0].dtype == test_int_output[0].dtype
 
     f_integer8_output = epyccel_func(integer8, integer8)
     test_int8_output = return_array(integer8, integer8)
 
     assert np.allclose(f_integer8_output, test_int8_output)
+    assert f_integer8_output[0].dtype == test_int8_output[0].dtype
 
     f_integer16_output = epyccel_func(integer16, integer16)
     test_int16_output = return_array(integer16, integer16)
 
     assert np.allclose(f_integer16_output, test_int16_output)
+    assert f_integer16_output[0].dtype == test_int16_output[0].dtype
 
     f_integer32_output = epyccel_func(integer32, integer32)
     test_int32_output = return_array(integer32, integer32)
 
     assert np.allclose(f_integer32_output, test_int32_output)
+    assert f_integer32_output[0].dtype == test_int32_output[0].dtype
 
     f_integer64_output = epyccel_func(integer64, integer64)
     test_int64_output = return_array(integer64, integer64)
 
     assert np.allclose(f_integer64_output, test_int64_output)
+    assert f_integer64_output[0].dtype == test_int64_output[0].dtype
 
     f_fl_output = epyccel_func(fl, fl)
     test_float_output = return_array(fl, fl)
 
     assert np.allclose(f_fl_output, test_float_output)
+    assert f_fl_output[0].dtype == test_float_output[0].dtype
 
     f_fl32_output = epyccel_func(fl32, fl32)
     test_float32_output = return_array(fl32, fl32)
 
     assert np.allclose(f_fl32_output, test_float32_output)
+    assert f_fl32_output[0].dtype == test_float32_output[0].dtype
 
     f_fl64_output = epyccel_func(fl64, fl64)
     test_float64_output = return_array(fl64, fl64)
 
     assert np.allclose(f_fl64_output, test_float64_output)
+    assert f_fl64_output[0].dtype == test_float64_output[0].dtype
 
     f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
     test_cmplx64_output = return_array(cmplx64, cmplx64)
 
     assert np.allclose(f_cmplx64_output, test_cmplx64_output)
+    assert f_cmplx64_output[0].dtype == test_cmplx64_output[0].dtype
 
     f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
     test_cmplx128_output = return_array(cmplx128, cmplx128)
 
     assert np.allclose(f_cmplx128_output, test_cmplx128_output)
+    assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -236,7 +248,11 @@ def test_return_arrays_in_expression(language):
 
     epyccel_function = epyccel(return_arrays_in_expression, language=language)
 
-    assert np.allclose(epyccel_function(), return_arrays_in_expression())
+    epyccel_function_output = epyccel_function()
+    return_arrays_in_expression_output = return_arrays_in_expression()
+
+    assert np.allclose(epyccel_function_output, return_arrays_in_expression_output)
+    assert epyccel_function_output.dtype == return_arrays_in_expression_output.dtype
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
