@@ -313,9 +313,9 @@ def process_dtype(dtype):
     elif isinstance(dtype, LiteralString):
         dtype = str(dtype).replace('\'', '').lower()
         if dtype not in dtype_registry:
-            raise TypeError('Unknown type of {}.'.format(dtype))
+            raise TypeError(f'Unknown type of {dtype}.')
     else:
-        raise TypeError('Unknown type of {}.'.format(dtype))
+        raise TypeError(f'Unknown type of {dtype}.')
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
         precision        = default_precision[dtype]
