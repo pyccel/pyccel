@@ -66,10 +66,11 @@ __all__ = ["CCodePrinter", "ccode"]
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
-    'NumpyFabs'  : 'fabs',
+    'NumpyFabs' : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    'NumpySign' : 'sign',
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'log',
@@ -91,6 +92,7 @@ numpy_ufunc_to_c_float = {
 }
 
 numpy_ufunc_to_c_complex = {
+    'NumpySign' : 'csign',
     'NumpyAbs'  : 'cabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
