@@ -1112,9 +1112,9 @@ class CWrapperCodePrinter(CCodePrinter):
         args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
-            code = '(*{name}("{flags}", {args}))'.format(name=name, flags=flags, args=args)
+            code = f'(*{name}("{flags}", {args}))'
         else :
-            code = '(*{name}(""))'.format(name=name)
+            code = f'(*{name}(""))'
         return code
 
     def _print_PyArgKeywords(self, expr):
