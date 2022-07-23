@@ -43,6 +43,7 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'NumpySign',
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -1673,6 +1674,7 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
+    'sign'      : PyccelFunctionDef('sign',     , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
