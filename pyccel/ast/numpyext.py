@@ -313,9 +313,9 @@ def process_dtype(dtype):
     elif isinstance(dtype, LiteralString):
         dtype = str(dtype).replace('\'', '').lower()
         if dtype not in dtype_registry:
-            raise TypeError('Unknown type of  %s.' % dtype)
+            raise TypeError('Unknown type of {}.'.format(dtype))
     else:
-        raise TypeError('Unknown type of  %s.' % dtype)
+        raise TypeError('Unknown type of {}.'.format(dtype))
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
         precision        = default_precision[dtype]
@@ -894,8 +894,9 @@ class NumpyFull(NumpyNewArray):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if not dtype:
-            dtype = fill_value.dtype
-
+            dtype = DtypePrecisionToCastFunction[fill_value.dtype.name][fill_value.precision]
+        if dtype in NativeNumeric:
+            dtype = DtypePrecisionToCastFunction[dtype.name][-1]
         # Verify dtype and get precision
         dtype, precision = process_dtype(dtype)
 
@@ -926,10 +927,9 @@ class NumpyAutoFill(NumpyFull):
         the fill_value is implicitly specified
     """
     __slots__ = ()
-    def __init__(self, shape, dtype='float', order='C'):
+    def __init__(self, shape, dtype=NativeFloat(), order='C'):
         if not dtype:
             raise TypeError("Data type must be provided")
-
         super().__init__(shape, Nil(), dtype, order)
 
 #==============================================================================
