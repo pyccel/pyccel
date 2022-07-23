@@ -1242,8 +1242,9 @@ class NumpyArctanh(NumpyUfuncUnary):
 class NumpySign(NumpyUfuncUnary):
     """Represent a call to the sign function in the Numpy library"""
     __slots__ = ()
+    name = 'sign'
     def _set_dtype_precision(self, x):
-        self._dtype = NativeComplex() if x.dtype is NativeComplex() else NativeInteger()
+        self._dtype = x.dtype
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyAbs(NumpyUfuncUnary):
