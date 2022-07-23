@@ -9,6 +9,7 @@
 # include <complex.h>
 # include <stdbool.h>
 # include <stdint.h>
+# include <math.h>
 
 /* mapping the function array_fill to the correct type */
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
@@ -139,5 +140,17 @@ int64_t         get_index(t_ndarray arr, ...);
 /* data converting between numpy and ndarray */
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
+
+/* numpy.sign for float, double and integers */
+inline double  sign(double x)
+{
+    return x / sqrt(x*x);
+}
+
+/* numpy.sign for complex */
+inline complex csign(complex x)
+{
+    return creal(x) || cimag(x) ? ((creal(x)<0) || (cimag(x)<0) ? -1 : 1) : 0;
+}
 
 #endif
