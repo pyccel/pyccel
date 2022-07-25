@@ -7,6 +7,22 @@ a_1d   = np.array([1 << i for i in range(21)], dtype=int)
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
 
+
+@types('int', 'int')
+@types('int8', 'int8')
+@types('int16', 'int16')
+@types('int32', 'int32')
+@types('int64', 'int64')
+@types('float', 'float')
+@types('float32', 'float32')
+@types('float64', 'float64')
+@types('complex64', 'complex64')
+@types('complex128', 'complex128')
+def array_return_first_element(a, b):
+    from numpy import array
+    x = array([a,b])
+    return x[0]
+
 #==============================================================================
 # 1D ARRAYS OF INT-32
 #==============================================================================
