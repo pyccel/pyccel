@@ -1228,7 +1228,7 @@ class CCodePrinter(CodePrinter):
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
-        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
+        alloc_code = "{} = array_create({}, {}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view, "order_f" if expr.order == "F" else "order_c")
         return '{}{}'.format(free_code, alloc_code)
