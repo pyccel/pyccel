@@ -150,4 +150,7 @@ int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 void print_ndarray_memory(t_ndarray nd);
 
+/* copy data from ndarray */
+void array_copy_data(t_ndarray dest, t_ndarray src);
+
 #endif

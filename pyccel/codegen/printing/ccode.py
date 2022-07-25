@@ -352,6 +352,7 @@ class CCodePrinter(CodePrinter):
             import numpy as np
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
+
             # flattening the args to use them in C initialization.
             # TODO: remove this transpose stuff
             if order=="F" and transpose_arg is not None:
