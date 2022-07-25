@@ -21,48 +21,48 @@ def test_array_assigned_dtype(language):
     fl = float(integer)
     fl32 = np.float32(fl)
     fl64 = np.float64(fl)
-    
+
     cmplx64 = np.complex64(fl32)
     cmplx128 = np.complex128(fl64)
-    
+
     epyccel_func = epyccel(arrays.array_return_first_element, language=language)
-        
+
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = arrays.array_return_first_element(integer, integer)
     assert isinstance(f_integer_output, type(test_int_output))
-    
+
     f_integer8_output = epyccel_func(integer8, integer8)
     test_int8_output = arrays.array_return_first_element(integer8, integer8)
     assert isinstance(f_integer8_output, type(test_int8_output))
-    
+
     f_integer16_output = epyccel_func(integer16, integer16)
     test_int16_output = arrays.array_return_first_element(integer16, integer16)
     assert isinstance(f_integer16_output, type(test_int16_output))
-    
+
     f_integer32_output = epyccel_func(integer32, integer32)
     test_int32_output = arrays.array_return_first_element(integer32, integer32)
     assert isinstance(f_integer32_output, type(test_int32_output))
-    
+
     f_integer64_output = epyccel_func(integer64, integer64)
     test_int64_output = arrays.array_return_first_element(integer64, integer64)
     assert isinstance(f_integer64_output, type(test_int64_output))
-    
+
     f_fl_output = epyccel_func(fl, fl)
     test_float_output = arrays.array_return_first_element(fl, fl)
     assert isinstance(f_fl_output, type(test_float_output))
-    
+
     f_fl32_output = epyccel_func(fl32, fl32)
     test_float32_output = arrays.array_return_first_element(fl32, fl32)
     assert isinstance(f_fl32_output, type(test_float32_output))
-    
+
     f_fl64_output = epyccel_func(fl64, fl64)
     test_float64_output = arrays.array_return_first_element(fl64, fl64)
     assert isinstance(f_fl64_output, type(test_float64_output))
-    
+
     f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
     test_cmplx64_output = arrays.array_return_first_element(cmplx64, cmplx64)
     assert isinstance(f_cmplx64_output, type(test_cmplx64_output))
-    
+
     f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
     test_cmplx128_output = arrays.array_return_first_element(cmplx128, cmplx128)
     assert isinstance(f_cmplx128_output, type(test_cmplx128_output))
