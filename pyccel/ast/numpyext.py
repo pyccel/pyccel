@@ -1242,7 +1242,7 @@ class NumpyArctanh(NumpyUfuncUnary):
 
 class NumpySign(NumpyUfuncUnary):
     """Represent a call to the sign function in the Numpy library"""
-    __slots__ = ('_x')
+    __slots__ = ('_x',)
     name = 'sign'
 
     def __init__(self, x):
@@ -1251,6 +1251,7 @@ class NumpySign(NumpyUfuncUnary):
 
     @property
     def x(self):
+        """Represents the first argument of numpy.sign function"""
         return self._x
 
     def _set_dtype_precision(self, x):
