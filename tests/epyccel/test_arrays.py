@@ -1,8 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-from random import uniform
 import pytest
 import numpy as np
-from numpy import iinfo, finfo
+from numpy import iinfo
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
@@ -18,8 +17,8 @@ def test_array_assigned_dtype(language):
     integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max, dtype=np.int16)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max, dtype=np.int32)
     integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64)
-    
-    fl = uniform(finfo('float').min / 2, finfo('float').max / 2)
+
+    fl = float(integer)
     fl32 = np.float32(fl)
     fl64 = np.float64(fl)
     
