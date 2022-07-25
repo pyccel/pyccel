@@ -43,30 +43,13 @@ void print_ndarray_memory(t_ndarray nd)
                 break;
             default:
                 printf("none\n");
-            /* case nd_cfloat:
-            *     printf("[%cf]", nd.nd_cfloat[i]);
-            *     break;
-            * case nd_cdouble:
-            *     printf("[%lcf]", nd.nd_cdouble[i]);
-                 break;
-            */
         }
         ++i;
     }
     printf("\n");
     return;
 }
-/* TODO:
-void order_C_to_F(t_ndarray nd)
-{
-    return;
-}
 
-void order_F_to_C(t_ndarray nd)
-{
-    return;
-}
-*/
 t_ndarray   array_create(int32_t nd, int64_t *shape,
         enum e_types type, bool is_view, enum e_order order)
 {
