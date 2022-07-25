@@ -1220,7 +1220,6 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self.add_import(c_imports['math'])
         type_name = type(expr).__name__
         try:
             func_name = numpy_ufunc_to_c_float[type_name]
@@ -1240,6 +1239,10 @@ class CCodePrinter(CodePrinter):
             else :
                 args.append(self._print(arg))
         code_args = ', '.join(args)
+        if func_name in ('sign', 'csign'):
+            self.add_import(c_imports['ndarrays'])
+        else:
+            self.add_import(c_imports['math'])
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathFunctionBase(self, expr):
