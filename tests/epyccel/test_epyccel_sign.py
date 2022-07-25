@@ -206,7 +206,7 @@ def test_sign_literal_float(language):
 #         a = [0, 1, 2, -13, -37, 0]
 #         b = np.sign(a)
 #         return b
-    
+
 #     def f_2d():
 #         import numpy as np
 #         b = np.sign([[0, 1], [2, -13], [-37, -0]])
