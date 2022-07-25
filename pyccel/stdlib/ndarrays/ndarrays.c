@@ -7,11 +7,65 @@
 # include <string.h>
 # include <stdarg.h>
 # include <stdlib.h>
+# include <stdio.h>
 
 /*
 ** allocation
 */
 
+void print_ndarray_memory(t_ndarray nd)
+{
+    int i = 0;
+    while (i < nd.length)
+    {
+        switch (nd.type)
+        {
+            case nd_int8:
+                printf("[%hhd]", nd.nd_int8[i]);
+                break;
+            case nd_int16:
+                printf("[%hd]", nd.nd_int16[i]);
+                break;
+            case nd_int32:
+                printf("[%d]", nd.nd_int32[i]);
+                break;
+            case nd_int64:
+                printf("[%lld]", nd.nd_int64[i]);
+                break;
+            case nd_float:
+                printf("[%f]", nd.nd_float[i]);
+                break;
+            case nd_double:
+                printf("[%lf]", nd.nd_double[i]);
+                break;
+            case nd_bool:
+                printf("[%d]", nd.nd_bool[i]);
+                break;
+            default:
+                printf("none\n");
+            // case nd_cfloat:
+            //     printf("[%f]", nd.nd_cfloat[i]);
+            //     break;
+            // case nd_cdouble:
+            //     printf("[%lf]", nd.nd_cdouble[i]);
+            //     break;
+        }
+        ++i;
+    }
+    printf("\n");
+    return;
+}
+/* TODO:
+void order_C_to_F(t_ndarray nd)
+{
+    return;
+}
+
+void order_F_to_C(t_ndarray nd)
+{
+    return;
+}
+*/
 t_ndarray   array_create(int32_t nd, int64_t *shape,
         enum e_types type, bool is_view, enum e_order order)
 {

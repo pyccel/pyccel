@@ -318,8 +318,9 @@ class CCodePrinter(CodePrinter):
         expr = self._print(expr)
         if pad != "":
             pad = f"+ ({pad} / {expr}.type_size)"
-        cpy_data = "memcpy({0}.{2}{3}, {1}.{2}, {1}.buffer_size);\n".format(lhs,
-        expr, dtype, pad)
+        #cpy_data = "memcpy({0}.{2}{3}, {1}.{2}, {1}.buffer_size);\n".format(lhs,
+        #expr, dtype, pad)
+        cpy_data = "array_copy_data({0}, {1});\n".format(lhs, rhs)
         return f'{cpy_data}'
 
     def copy_NumpyArray_Data(self, expr):
@@ -346,11 +347,13 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        # TODO: remove this transpose stuff
         if isinstance(arg, PythonList) and not isinstance(arg[0], Variable) and order=="F":
             import numpy as np
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
+            # TODO: remove this transpose stuff
             if order=="F" and transpose_arg is not None:
                 arg = [list(i) for i in self._flatten_list(transpose_arg)]
             arg = self._flatten_list(arg)
@@ -1216,10 +1219,10 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
-        if  (expr.status == 'unknown'):
+        if (expr.status == 'unknown'):
             free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
-        elif  (expr.status == 'allocated'):
+        elif (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
         self.add_import(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
@@ -1228,6 +1231,8 @@ class CCodePrinter(CodePrinter):
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
+        print("This is the order", expr.variable.order)
+        print("type of expr:", type(expr.variable))
         alloc_code = "{} = array_create({}, {}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view, "order_f" if expr.order == "F" else "order_c")
