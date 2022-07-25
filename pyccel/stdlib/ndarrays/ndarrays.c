@@ -376,22 +376,35 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 void array_copy_data(t_ndarray dest, t_ndarray src)
 {
-    int64_t i_dest = 0;
-    int64_t shape_product = 1;
+    int64_t index = 0;
+    int64_t shape_product_src = 1;
+    int64_t shape_product_dest = 1;
     int64_t var = 0;
-    while (i_dest < dest.length)
+    while (index < dest.length)
     {
-        int ndim = src.nd - 1;
-        int64_t i_src = (i_dest % src.shape[ndim]) * src.strides[ndim];
-        ndim--;
-        while (ndim >= 0)
+        int64_t ndim_src = src.nd - 1;
+        int64_t ndim_dest = dest.nd - 1;
+        int64_t i_src = (index % src.shape[ndim_src]) * src.strides[ndim_src];
+        int64_t i_dest = (index % dest.shape[ndim_dest]) * dest.strides[ndim_dest];
+        ndim_src--;
+        ndim_dest--;
+        while (ndim_src >= 0)
         {
-            shape_product *= src.shape[ndim + 1];
-            var = i_dest / shape_product;
-            if(var >= src.shape[ndim])
-                var = var % src.shape[ndim];
-            i_src += (var) * src.strides[ndim];
-            ndim--;
+            // i_src calculation
+            shape_product_src *= src.shape[ndim_src + 1];
+            var = index / shape_product_src;
+            if(var >= src.shape[ndim_src])
+                var = var % src.shape[ndim_src];
+            i_src += (var) * src.strides[ndim_src];
+            ndim_src--;
+            // i_dest calculation
+            shape_product_dest *= dest.shape[ndim_dest + 1];
+            var = index / shape_product_dest;
+            if(var >= dest.shape[ndim_dest])
+                var = var % dest.shape[ndim_dest];
+            i_dest += (var) * dest.strides[ndim_dest];
+            ndim_dest--;
+
         }
         switch (dest.type)
         {
@@ -423,7 +436,8 @@ void array_copy_data(t_ndarray dest, t_ndarray src)
                 dest.nd_int64[i_dest] = src.nd_cdouble[i_src];
                 break;
         }
-        shape_product = 1;
-        i_dest++;
+        shape_product_src = 1;
+        shape_product_dest = 1;
+        index++;
     }
 }
