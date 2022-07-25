@@ -313,14 +313,12 @@ class CCodePrinter(CodePrinter):
                 that contains the necessary 'memcpy' line that copies(or concats) an ndarray to
                     another
         """
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype),
-        rhs.precision)
         expr = self._print(expr)
         if pad != "":
             pad = f"{pad}"
         else:
             pad = "0"
-        cpy_data = "array_copy_data({0}, {1}, {2});\n".format(lhs, expr, pad)
+        cpy_data = f"array_copy_data({lhs}, {expr}, {pad});\n"
         return f'{cpy_data}'
 
     def copy_NumpyArray_Data(self, expr):
@@ -355,7 +353,7 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             # TODO: remove this transpose stuff
             if order=="F" and transpose_arg is not None:
-                while isinstance(transpose_arg[0], np.ndarray) or isinstance(transpose_arg[0], list):
+                while isinstance(transpose_arg[0], (np.ndarray, list)):
                     arg = [list(i) if isinstance(i, np.ndarray) else i for i in self._flatten_list(transpose_arg)]
                     transpose_arg = arg
             arg = self._flatten_list(arg)
@@ -376,8 +374,8 @@ class CCodePrinter(CodePrinter):
                         assignations += self.varCpy(lhs, rhs, i)
             return assignations
         else:
-            i = ', '.join([self._print(i) for i in arg])
-            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, i)
+            i = "{" + ', '.join([self._print(i) for i in arg]) + "}"
+            dummy_array = f"{declare_dtype} {dummy_array_name}[] = {i};\n"
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
             return f'{dummy_array}{cpy_data}'
 
@@ -1236,9 +1234,8 @@ class CCodePrinter(CodePrinter):
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
-        alloc_code = "{} = array_create({}, {}, {}, {}, {});\n".format(
-                expr.variable, len(expr.shape), shape_Assign, dtype,
-                is_view, "order_f" if expr.order == "F" else "order_c")
+        order = "order_f" if expr.order == "F" else "order_c"
+        alloc_code = f"{expr.variable} = array_create({len(expr.shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):

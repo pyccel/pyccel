@@ -30,7 +30,7 @@ void print_ndarray_memory(t_ndarray nd)
                 printf("[%d]", nd.nd_int32[i]);
                 break;
             case nd_int64:
-                printf("[%lld]", nd.nd_int64[i]);
+                printf("[%ld]", nd.nd_int64[i]);
                 break;
             case nd_float:
                 printf("[%f]", nd.nd_float[i]);
