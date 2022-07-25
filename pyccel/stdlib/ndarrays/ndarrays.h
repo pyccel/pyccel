@@ -126,7 +126,6 @@ void        _array_fill_bool(bool c, t_ndarray arr);
 void        _array_fill_cfloat(float complex c, t_ndarray arr);
 void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
-void array_copy_data(t_ndarray dest, t_ndarray src);
 
 /* slicing */
                 /* creating a Slice object */
@@ -151,6 +150,6 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 void print_ndarray_memory(t_ndarray nd);
 
 /* copy data from ndarray */
-void array_copy_data(t_ndarray dest, t_ndarray src);
+void array_copy_data(t_ndarray dest, t_ndarray src, int64_t pad);
 
 #endif

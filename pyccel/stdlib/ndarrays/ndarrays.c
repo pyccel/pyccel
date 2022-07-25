@@ -442,7 +442,7 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
-void array_copy_data(t_ndarray dest, t_ndarray src)
+void array_copy_data(t_ndarray dest, t_ndarray src, int64_t pad)
 {
     int64_t index = 0;
     int64_t shape_product_src = 1;
@@ -477,31 +477,31 @@ void array_copy_data(t_ndarray dest, t_ndarray src)
         switch (dest.type)
         {
             case nd_int8:
-                dest.nd_int8[i_dest] = src.nd_int8[i_src];
+                dest.nd_int8[i_dest + pad] = src.nd_int8[i_src];
                 break;
             case nd_int16:
-                dest.nd_int16[i_dest] = src.nd_int16[i_src];
+                dest.nd_int16[i_dest + pad] = src.nd_int16[i_src];
                 break;
             case nd_int32:
-                dest.nd_int32[i_dest] = src.nd_int32[i_src];
+                dest.nd_int32[i_dest + pad] = src.nd_int32[i_src];
                 break;
             case nd_int64:
-                dest.nd_int64[i_dest] = src.nd_int64[i_src];
+                dest.nd_int64[i_dest + pad] = src.nd_int64[i_src];
                 break;
             case nd_float:
-                dest.nd_float[i_dest] = src.nd_float[i_src];
+                dest.nd_float[i_dest + pad] = src.nd_float[i_src];
                 break;
             case nd_double:
-                dest.nd_double[i_dest] = src.nd_double[i_src];
+                dest.nd_double[i_dest + pad] = src.nd_double[i_src];
                 break;
             case nd_bool:
-                dest.nd_bool[i_dest] = src.nd_bool[i_src];
+                dest.nd_bool[i_dest + pad] = src.nd_bool[i_src];
                 break;
             case nd_cfloat:
-                dest.nd_cfloat[i_dest] = src.nd_cfloat[i_src];
+                dest.nd_cfloat[i_dest + pad] = src.nd_cfloat[i_src];
                 break;
             case nd_cdouble:
-                dest.nd_int64[i_dest] = src.nd_cdouble[i_src];
+                dest.nd_int64[i_dest + pad] = src.nd_cdouble[i_src];
                 break;
         }
         shape_product_src = 1;
