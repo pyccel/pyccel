@@ -22,7 +22,9 @@ from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .internals import get_final_precision
 
-from .variable  import Variable, VariableAddress
+from .variable  import Variable
+
+from .c_concepts import ObjectAddress
 
 
 errors = Errors()
@@ -232,7 +234,7 @@ class PyArg_ParseTupleNode(Basic):
         """
         return self._arg_names
 
-class PyBuildValueNode(Basic):
+class PyBuildValueNode(PyccelAstNode):
     """
     Represents a call to the function from Python.h which create a new value based on a format string
 
@@ -241,8 +243,13 @@ class PyBuildValueNode(Basic):
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
-    __slots__ = ('_flags','_result_args',)
+    __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
+    _dtype = PyccelPyObject
+    _rank = 0
+    _precision = 0
+    _shape = ()
+    _order = None
 
     def __init__(self, result_args = ()):
         self._flags = ''
@@ -289,7 +296,7 @@ class PyModule_AddObject(PyccelAstNode):
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
-        self._var = VariableAddress(variable)
+        self._var = ObjectAddress(variable)
         super().__init__()
 
     @property
@@ -315,16 +322,16 @@ class PyModule_AddObject(PyccelAstNode):
 #-------------------------------------------------------------------
 
 # Python.h object  representing Booleans True and False
-Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
-Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
+Py_True = Variable(PyccelPyObject(), 'Py_True', memory_handling='alias')
+Py_False = Variable(PyccelPyObject(), 'Py_False', memory_handling='alias')
 
 # Python.h object representing None
-Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        arguments = [Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias')],
                         results = [])
 
 #-------------------------------------------------------------------
@@ -350,7 +357,7 @@ def Python_to_C(c_object):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')],
                        results   = [Variable(dtype=dtype, name = 'v', precision = prec)])
 
     return cast_func
@@ -394,7 +401,7 @@ def C_to_Python(c_object):
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
-                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
+                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')])
 
     return cast_func
 
@@ -422,7 +429,7 @@ c_to_py_registry = {
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
+                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias')],
                              body      = [])
 
 def PyErr_SetString(exception, message):
@@ -519,7 +526,7 @@ def scalar_object_check(py_object, c_object):
 
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'alias')],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     return FunctionCall(check_func, [py_object])

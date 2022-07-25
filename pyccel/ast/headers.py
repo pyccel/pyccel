@@ -147,9 +147,9 @@ class Template(Header):
     Examples
     --------
     >>> from pyccel.ast.headers import Template
-    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
-    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'memory_handling': 'stack',\
     >>>        'precision': 8, 'is_func': False, 'is_const': False}
     >>> T = Template('T', [d_var0, d_var1])
     """
@@ -277,8 +277,7 @@ class FunctionHeader(Header):
         def build_argument(var_name, dc):
             #Constructs an argument variable from a dictionary.
             dtype    = dc['datatype']
-            allocatable = dc['allocatable']
-            is_pointer = dc['is_pointer']
+            memory_handling = dc['memory_handling']
             precision = dc['precision']
             rank = dc['rank']
             is_const = dc['is_const']
@@ -294,9 +293,10 @@ class FunctionHeader(Header):
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
             var = Variable(dtype, var_name,
-                           allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
-                           rank=rank, shape=shape ,order = order, precision = precision,
-                           is_argument=True, is_temp = True)
+                           memory_handling=memory_handling, is_const=is_const,
+                           rank=rank, shape=shape ,order=order, precision=precision,
+                           is_argument=True, is_temp=True)
+
             return var
 
         def process_template(signature, Tname, d_type):
@@ -393,7 +393,7 @@ class FunctionHeader(Header):
         """ add a dimension to one of the arguments specified by it's position"""
         types = self.dtypes
         types[index]['rank'] += 1
-        types[index]['allocatable'] = True
+        types[index]['memory_handling'] = 'heap'
         return FunctionHeader(self.name,
                               types,
                               self.results,
