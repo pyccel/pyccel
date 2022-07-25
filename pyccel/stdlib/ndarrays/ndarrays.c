@@ -43,12 +43,13 @@ void print_ndarray_memory(t_ndarray nd)
                 break;
             default:
                 printf("none\n");
-            // case nd_cfloat:
-            //     printf("[%f]", nd.nd_cfloat[i]);
-            //     break;
-            // case nd_cdouble:
-            //     printf("[%lf]", nd.nd_cdouble[i]);
-            //     break;
+            /* case nd_cfloat:
+            *     printf("[%cf]", nd.nd_cfloat[i]);
+            *     break;
+            * case nd_cdouble:
+            *     printf("[%lcf]", nd.nd_cdouble[i]);
+                 break;
+            */
         }
         ++i;
     }

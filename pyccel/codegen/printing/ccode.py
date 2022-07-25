@@ -356,7 +356,9 @@ class CCodePrinter(CodePrinter):
             # flattening the args to use them in C initialization.
             # TODO: remove this transpose stuff
             if order=="F" and transpose_arg is not None:
-                arg = [list(i) for i in self._flatten_list(transpose_arg)]
+                while isinstance(transpose_arg[0], np.ndarray) or isinstance(transpose_arg[0], list):
+                    arg = [list(i) if isinstance(i, np.ndarray) else i for i in self._flatten_list(transpose_arg)]
+                    transpose_arg = arg
             arg = self._flatten_list(arg)
         self.add_import(c_imports['string'])
         assignations = ""
@@ -1002,7 +1004,6 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});\n'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
-        print()
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
@@ -1232,8 +1233,6 @@ class CCodePrinter(CodePrinter):
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
-        print("This is the order", expr.variable.order)
-        print("type of expr:", type(expr.variable))
         alloc_code = "{} = array_create({}, {}, {}, {}, {});\n".format(
                 expr.variable, len(expr.shape), shape_Assign, dtype,
                 is_view, "order_f" if expr.order == "F" else "order_c")
