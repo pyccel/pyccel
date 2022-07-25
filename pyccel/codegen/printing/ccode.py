@@ -320,8 +320,6 @@ class CCodePrinter(CodePrinter):
             pad = f"{pad}"
         else:
             pad = "0"
-        #cpy_data = "memcpy({0}.{2}{3}, {1}.{2}, {1}.buffer_size);\n".format(lhs,
-        #expr, dtype, pad)
         cpy_data = "array_copy_data({0}, {1}, {2});\n".format(lhs, expr, pad)
         return f'{cpy_data}'
 
@@ -343,7 +341,6 @@ class CCodePrinter(CodePrinter):
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         order = lhs.order
-        # cause currently variables with order f are not working
         transpose_arg = None
         dummy_array_name = self.scope.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
@@ -367,7 +364,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(arg, Variable):
             return self.varCpy(lhs, rhs, arg)
         if isinstance(arg[0], Variable):
-            print(arg, "This is le arg")
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
                     if n:
