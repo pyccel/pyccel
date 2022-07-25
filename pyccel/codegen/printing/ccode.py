@@ -348,7 +348,6 @@ class CCodePrinter(CodePrinter):
             import numpy as np
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
-
             # flattening the args to use them in C initialization.
             if order=="F" and transpose_arg is not None:
                 while isinstance(transpose_arg[0], (np.ndarray, list)):
