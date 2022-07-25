@@ -223,7 +223,7 @@ def test_sign_literal_float(language):
 #         import numpy as np
 #         b = np.sign([0., 1., 2., -1.3, -3.7, -0.])
 #         return b
-    
+
 #     def f_2d():
 #         import numpy as np
 #         b = np.sign([[0., 1.], [2., -1.3], [-3.7, -0.]])
@@ -240,7 +240,7 @@ def test_sign_literal_float(language):
 #         import numpy as np
 #         b = np.sign([0.+.1j, -2.-1.3j, -3.7j])
 #         return b
-    
+
 #     def f_2d():
 #         import numpy as np
 #         b = np.sign([[0.+1.], [-2.-1.3j], [-3.7j]])
