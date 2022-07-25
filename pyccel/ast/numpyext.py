@@ -896,8 +896,6 @@ class NumpyFull(NumpyNewArray):
         if not dtype:
             dtype = DtypePrecisionToCastFunction[fill_value.dtype.name][fill_value.precision]
         # Verify dtype and get precision
-        if dtype in NativeNumeric:
-            dtype = DtypePrecisionToCastFunction[dtype.name][-1]
         dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
@@ -927,7 +925,7 @@ class NumpyAutoFill(NumpyFull):
         the fill_value is implicitly specified
     """
     __slots__ = ()
-    def __init__(self, shape, dtype=PythonFloat, order='C'):
+    def __init__(self, shape, dtype='float', order='C'):
         if not dtype:
             raise TypeError("Data type must be provided")
         super().__init__(shape, Nil(), dtype, order)
