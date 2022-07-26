@@ -317,7 +317,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "array_copy_data({0}, {1});\n".format(lhs, arg)
+            cpy_data = f"array_copy_data({lhs}, {arg});\n"
             return '%s' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
