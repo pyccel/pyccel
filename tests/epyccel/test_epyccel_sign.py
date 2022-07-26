@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
 import numpy as np
+import modules.numpy_sign as mod
 
 from pyccel.epyccel import epyccel
-import modules.numpy_sign as mod
 
 def test_sign_complex(language):
     f_pos = mod.complex_pos
