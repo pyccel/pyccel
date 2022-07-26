@@ -290,27 +290,24 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def varCpy(self, lhs, rhs, expr, pad=""):
-        """ generates the 'memcpy' line needed to cpy a 'Variable/ndarray' to another
+    def varCpy(self, lhs, expr, pad=""):
+        """ generates the 'array_copy_data' line needed to cpy/concat a 'Variable/ndarray' to another
 
         parameters
         ----------
             lhs : 'Variable'
                 Used to extract the name of the assignee
 
-            rhs : 'Variable'
-                Used to extract the dtype and its precision
-
             expr : 'Variable'
                 Used to extract the name of the variable to copy from
 
             pad : 'str'
-                Contains the opertion needed to avoid overwriting previous data
+                Contains the value needed ad padding to avoid overwriting any existing data
 
         Return
         ------
             String
-                that contains the necessary 'memcpy' line that copies(or concats) an ndarray to
+                that contains the necessary 'array_copy_data' line that copies(or concats) an ndarray to
                     another
         """
         expr = self._print(expr)
@@ -366,9 +363,9 @@ class CCodePrinter(CodePrinter):
                             pad = f"(({i}.buffer_size) * {n}) / {self._print(i)}.type_size"
                         else:
                             pad = n
-                        assignations += self.varCpy(lhs, rhs, i, pad)
+                        assignations += self.varCpy(lhs, i, pad)
                     else:
-                        assignations += self.varCpy(lhs, rhs, i)
+                        assignations += self.varCpy(lhs, i)
             return assignations
         else:
             i = "{" + ', '.join([self._print(i) for i in arg]) + "}"
