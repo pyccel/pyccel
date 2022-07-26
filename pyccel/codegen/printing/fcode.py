@@ -2822,7 +2822,7 @@ class FCodePrinter(CodePrinter):
                     inds[i] = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
-                            PyccelAdd(base_shape[i], ind, simplify = True), ind)
+                            PyccelAdd(_shape, ind, simplify = True), ind)
 
         inds = [self._print(i) for i in inds]
 
