@@ -1078,9 +1078,9 @@ class FCodePrinter(CodePrinter):
         str_x = self._print(expr.x)
 
         if expr.dtype == NativeComplex():
-            is_zero = '(REALPART({}) .ne. 0) .or. (IMAGPART({}) .ne. 0)'.format(str_x, str_x)
-            lt_zero = '(REALPART({}) .lt. 0) .or. (IMAGPART({}) .lt. 0)'.format(str_x, str_x)
-            merge = f'merge(-1, 1, {lt_zero})'
+            is_zero = f'(REALPART({str_x}) .ne. 0) .or. (IMAGPART({str_x}) .ne. 0)'
+            lt_zero = f'(REALPART({str_x}) .lt. 0) .or. (IMAGPART({str_x}) .lt. 0)'
+            merge   = f'merge(-1, 1, {lt_zero})'
             return f'merge({merge}, 0, {is_zero})'
 
         value_true  = 'real(0)'
