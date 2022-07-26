@@ -1078,12 +1078,12 @@ class FCodePrinter(CodePrinter):
         str_x = self._print(expr.x)
 
         if expr.dtype == NativeComplex():
-            is_zero = '(Real({}) .ne. 0) .or. (aimag({}) .ne. 0)'.format(str_x, str_x)
-            lt_zero = '(Real({}) .lt. 0) .or. (aimag({}) .lt. 0)'.format(str_x, str_x)
+            is_zero = '(REALPART({}) .ne. 0) .or. (IMAGPART({}) .ne. 0)'.format(str_x, str_x)
+            lt_zero = '(REALPART({}) .lt. 0) .or. (IMAGPART({}) .lt. 0)'.format(str_x, str_x)
             merge = 'merge(-1, 1, {})'.format(lt_zero)
             return 'merge({}, 0, {})'.format(merge, is_zero)
 
-        return 'sign({} / {}, {})'.format(str_x, str_x, str_x)
+        return 'merge(real(0), real({} / abs({})), {} .eq. 0)'.format(str_x, str_x, str_x)
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
