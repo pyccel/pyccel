@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
+import numpy as np
+
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
-
-import numpy as np
 
 def test_sign_complex(language):
 
