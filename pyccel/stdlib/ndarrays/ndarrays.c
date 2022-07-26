@@ -7,18 +7,57 @@
 # include <string.h>
 # include <stdarg.h>
 # include <stdlib.h>
+# include <stdio.h>
 
 /*
 ** allocation
 */
 
+void print_ndarray_memory(t_ndarray nd)
+{
+    int i = 0;
+    while (i < nd.length)
+    {
+        switch (nd.type)
+        {
+            case nd_int8:
+                printf("[%hhd]", nd.nd_int8[i]);
+                break;
+            case nd_int16:
+                printf("[%hd]", nd.nd_int16[i]);
+                break;
+            case nd_int32:
+                printf("[%d]", nd.nd_int32[i]);
+                break;
+            case nd_int64:
+                printf("[%ld]", nd.nd_int64[i]);
+                break;
+            case nd_float:
+                printf("[%f]", nd.nd_float[i]);
+                break;
+            case nd_double:
+                printf("[%lf]", nd.nd_double[i]);
+                break;
+            case nd_bool:
+                printf("[%d]", nd.nd_bool[i]);
+                break;
+            default:
+                printf("none\n");
+        }
+        ++i;
+    }
+    printf("\n");
+    return;
+}
+
 t_ndarray   array_create(int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view)
+        enum e_types type, bool is_view, enum e_order order)
 {
     t_ndarray arr;
 
     arr.nd = nd;
     arr.type = type;
+    arr.order = order;
     switch (type)
     {
         case nd_int8:
@@ -59,11 +98,23 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
     }
     arr.buffer_size = arr.length * arr.type_size;
     arr.strides = malloc(nd * sizeof(int64_t));
-    for (int32_t i = 0; i < arr.nd; i++)
+    if (arr.order == order_c)
     {
-        arr.strides[i] = 1;
-        for (int32_t j = i + 1; j < arr.nd; j++)
-            arr.strides[i] *= arr.shape[j];
+        for (int32_t i = 0; i < arr.nd; i++)
+        {
+            arr.strides[i] = 1;
+            for (int32_t j = i + 1; j < arr.nd; j++)
+                arr.strides[i] *= arr.shape[j];
+        }
+    }
+    else if (arr.order == order_f)
+    {
+        for (int32_t i = 0; i < arr.nd; i++)
+        {
+            arr.strides[i] = 1;
+            for (int32_t j = 0; j < i; j++)
+                arr.strides[i] *= arr.shape[j];
+        }
     }
     if (!is_view)
         arr.raw_data = malloc(arr.buffer_size);
@@ -374,7 +425,7 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
-void array_copy_data(t_ndarray dest, t_ndarray src)
+void array_copy_data(t_ndarray dest, t_ndarray src, int64_t pad)
 {
     int64_t index = 0;
     int64_t shape_product_src = 1;
@@ -409,31 +460,31 @@ void array_copy_data(t_ndarray dest, t_ndarray src)
         switch (dest.type)
         {
             case nd_int8:
-                dest.nd_int8[i_dest] = src.nd_int8[i_src];
+                dest.nd_int8[i_dest + pad] = src.nd_int8[i_src];
                 break;
             case nd_int16:
-                dest.nd_int16[i_dest] = src.nd_int16[i_src];
+                dest.nd_int16[i_dest + pad] = src.nd_int16[i_src];
                 break;
             case nd_int32:
-                dest.nd_int32[i_dest] = src.nd_int32[i_src];
+                dest.nd_int32[i_dest + pad] = src.nd_int32[i_src];
                 break;
             case nd_int64:
-                dest.nd_int64[i_dest] = src.nd_int64[i_src];
+                dest.nd_int64[i_dest + pad] = src.nd_int64[i_src];
                 break;
             case nd_float:
-                dest.nd_float[i_dest] = src.nd_float[i_src];
+                dest.nd_float[i_dest + pad] = src.nd_float[i_src];
                 break;
             case nd_double:
-                dest.nd_double[i_dest] = src.nd_double[i_src];
+                dest.nd_double[i_dest + pad] = src.nd_double[i_src];
                 break;
             case nd_bool:
-                dest.nd_bool[i_dest] = src.nd_bool[i_src];
+                dest.nd_bool[i_dest + pad] = src.nd_bool[i_src];
                 break;
             case nd_cfloat:
-                dest.nd_cfloat[i_dest] = src.nd_cfloat[i_src];
+                dest.nd_cfloat[i_dest + pad] = src.nd_cfloat[i_src];
                 break;
             case nd_cdouble:
-                dest.nd_int64[i_dest] = src.nd_cdouble[i_src];
+                dest.nd_int64[i_dest + pad] = src.nd_cdouble[i_src];
                 break;
         }
         shape_product_src = 1;
