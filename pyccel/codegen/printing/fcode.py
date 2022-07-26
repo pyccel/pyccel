@@ -1076,17 +1076,18 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpySign(self, expr):
         str_x = self._print(expr.x)
+        kind  = self.print_kind(expr.x)
 
         if expr.dtype == NativeComplex():
-            is_zero = f'(REALPART({str_x}) .ne. 0) .or. (IMAGPART({str_x}) .ne. 0)'
-            lt_zero = f'(REALPART({str_x}) .lt. 0) .or. (IMAGPART({str_x}) .lt. 0)'
-            merge   = f'merge(-1, 1, {lt_zero})'
-            return f'merge({merge}, 0, {is_zero})'
+            ne_zero = f'(REALPART({str_x}) .ne. 0_{kind}) .or. (IMAGPART({str_x}) .ne. 0_{kind})'
+            lt_zero = f'(REALPART({str_x}) .lt. 0_{kind}) .or. (IMAGPART({str_x}) .lt. 0_{kind})'
+        else:
+            ne_zero = f'({str_x} .ne. 0_{kind})'
+            lt_zero = f'({str_x} .lt. 0_{kind})'
 
-        value_true  = 'real(0)'
-        value_false = f'real({str_x} / abs({str_x}))'
-        cond        = f'{str_x} .eq. 0'
-        return f'merge({value_true}, {value_false}, {cond})'
+        merge_non_zero = f'merge(-1_{kind}, 1_{kind}, {lt_zero})'
+
+        return f'merge({merge_non_zero}, 0_{kind}, {ne_zero})'
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
