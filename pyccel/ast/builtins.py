@@ -883,7 +883,7 @@ class PythonType(Basic):
         prec = self.precision
         return LiteralString("<class '{dtype}{precision}'>".format(
             dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else prec*8))
+            precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
