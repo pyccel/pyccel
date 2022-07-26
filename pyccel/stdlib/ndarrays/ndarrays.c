@@ -333,6 +333,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
             view.length *= view.shape[i];
+    view.buffer_size =  view.length * view.type_size;
     return (view);
 }
 
