@@ -33,17 +33,17 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              If, IfSection, For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
-                             IndexedElement, HomogeneousTupleVariable,
+                             IndexedElement,
                              InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelDiv, PyccelMul, PyccelMinus, PyccelNot
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
-from pyccel.ast.builtins  import (PythonInt, PythonList, PythonType,
+from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
                                   PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
@@ -1080,10 +1080,13 @@ class FCodePrinter(CodePrinter):
         if expr.dtype == NativeComplex():
             is_zero = '(REALPART({}) .ne. 0) .or. (IMAGPART({}) .ne. 0)'.format(str_x, str_x)
             lt_zero = '(REALPART({}) .lt. 0) .or. (IMAGPART({}) .lt. 0)'.format(str_x, str_x)
-            merge = 'merge(-1, 1, {})'.format(lt_zero)
-            return 'merge({}, 0, {})'.format(merge, is_zero)
+            merge = f'merge(-1, 1, {lt_zero})'
+            return f'merge({merge}, 0, {is_zero})'
 
-        return 'merge(real(0), real({} / abs({})), {} .eq. 0)'.format(str_x, str_x, str_x)
+        value_true  = 'real(0)'
+        value_false = f'real({str_x} / abs({str_x}))'
+        cond        = f'{str_x} .eq. 0'
+        return f'merge({value_true}, {value_false}, {cond})'
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
