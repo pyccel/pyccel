@@ -2,21 +2,12 @@
 
 import numpy as np
 
-from pyccel.decorators import types
 from pyccel.epyccel import epyccel
+import modules.numpy_sign as mod
 
 def test_sign_complex(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(complex(1+2j))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(complex(-1-2j))
-        return b
-
+    f_pos = mod.complex_pos
+    f_neg = mod.complex_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -24,17 +15,8 @@ def test_sign_complex(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_complex64(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.complex64(64+64j))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.complex64(-64-64j))
-        return b
-
+    f_pos = mod.complex64_pos
+    f_neg = mod.complex64_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -42,17 +24,8 @@ def test_sign_complex64(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_complex128(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.complex128(128+128j))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.complex128(-128-128j))
-        return b
-
+    f_pos = mod.complex128_pos
+    f_neg = mod.complex128_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -60,17 +33,8 @@ def test_sign_complex128(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_int16(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.int16(16))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.int16(-16))
-        return b
-
+    f_pos = mod.int16_pos
+    f_neg = mod.int16_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -78,17 +42,8 @@ def test_sign_int16(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_int32(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.int32(32))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.int32(-32))
-        return b
-
+    f_pos = mod.int32_pos
+    f_neg = mod.int32_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -96,35 +51,17 @@ def test_sign_int32(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_int64(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.int64(64))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.int64(-64))
-        return b
-
+    f_pos = mod.int64_pos
+    f_neg = mod.int64_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
     assert f_pos_epyc() == f_pos()
     assert f_neg_epyc() == f_neg()
 
-def test_sign_float32(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.float(32.32))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.float(-32.32))
-        return b
-
+def test_sign_float(language):
+    f_pos = mod.float_pos
+    f_neg = mod.float_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -132,17 +69,8 @@ def test_sign_float32(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_float64(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(np.float64(64.64))
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(np.float64(-64.64))
-        return b
-
+    f_pos = mod.float64_pos
+    f_neg = mod.float64_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -150,17 +78,8 @@ def test_sign_float64(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_literal_complex(language):
-
-    def f_pos():
-        import numpy as np
-        b = np.sign(1+2j)
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(-1-2j)
-        return b
-
+    f_pos = mod.literal_complex_pos
+    f_neg = mod.literal_complex_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -168,16 +87,8 @@ def test_sign_literal_complex(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_literal_int(language):
-    def f_pos():
-        import numpy as np
-        b = np.sign(42)
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(-42)
-        return b
-
+    f_pos = mod.literal_int_pos
+    f_neg = mod.literal_int_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -185,16 +96,8 @@ def test_sign_literal_int(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_literal_float(language):
-    def f_pos():
-        import numpy as np
-        b = np.sign(42.42)
-        return b
-
-    def f_neg():
-        import numpy as np
-        b = np.sign(-42.42)
-        return b
-
+    f_pos = mod.literal_float_pos
+    f_neg = mod.literal_float_neg
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
@@ -204,16 +107,8 @@ def test_sign_literal_float(language):
 # Tests on arrays
 
 def test_sign_arr_int(language):
-
-    @types('int64[:]')
-    def f_1d(x):
-        import numpy as np
-        x[:] = np.sign(x)
-
-    @types('int64[:,:]')
-    def f_2d(x):
-        import numpy as np
-        x[:,:] = np.sign(x)
+    f_1d = mod.array_int_1d
+    f_2d = mod.array_int_2d
 
     f_1d_epyc = epyccel(f_1d, language = language)
     f_2d_epyc = epyccel(f_2d, language = language)
@@ -232,16 +127,8 @@ def test_sign_arr_int(language):
     assert np.array_equal(x1_2d, x2_2d)
 
 def test_sign_arr_float(language):
-
-    @types('float64[:]')
-    def f_1d(x):
-        import numpy as np
-        x[:] = np.sign(x)
-
-    @types('float64[:,:]')
-    def f_2d(x):
-        import numpy as np
-        x[:,:] = np.sign(x)
+    f_1d = mod.array_float_1d
+    f_2d = mod.array_float_2d
 
     f_1d_epyc = epyccel(f_1d, language = language)
     f_2d_epyc = epyccel(f_2d, language = language)
@@ -260,16 +147,8 @@ def test_sign_arr_float(language):
     assert np.array_equal(x1_2d, x2_2d)
 
 def test_sign_arr_complex(language):
-
-    @types('complex64[:]')
-    def f_1d(x):
-        import numpy as np
-        x[:] = np.sign(x)
-
-    @types('complex64[:,:]')
-    def f_2d(x):
-        import numpy as np
-        x[:,:] = np.sign(x)
+    f_1d = mod.array_complex_1d
+    f_2d = mod.array_complex_2d
 
     f_1d_epyc = epyccel(f_1d, language = language)
     f_2d_epyc = epyccel(f_2d, language = language)
