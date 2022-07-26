@@ -354,7 +354,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['string'])
         assignations = ""
         if isinstance(arg, Variable):
-            return self.varCpy(lhs, rhs, arg)
+            return self.varCpy(lhs, arg)
         if isinstance(arg[0], Variable):
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
