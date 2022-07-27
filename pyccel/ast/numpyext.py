@@ -223,10 +223,12 @@ class NumpyImag(PythonImag):
     __slots__ = ('_precision','_rank','_shape','_order')
     name = 'imag'
     def __new__(cls, arg):
+
         if not isinstance(arg.dtype, NativeComplex):
-            dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
+            dtype = NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
             if arg.rank == 0:
                 return convert_to_literal(0, dtype, arg.precision)
+            dtype = DtypePrecisionToCastFunction[dtype.name][arg.precision]
             return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
 
