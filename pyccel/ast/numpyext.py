@@ -370,9 +370,12 @@ class NumpyArray(NumpyNewArray):
             raise TypeError('we only accept homogeneous arguments')
 
         # Verify dtype and get precision
-        if dtype is None:
-            dtype = DtypePrecisionToCastFunction[arg.dtype.name][arg.precision]
-        dtype, prec = process_dtype(dtype)
+        if not dtype:
+            dtype = arg.dtype
+            prec = get_final_precision(arg)
+        else:
+            # Verify array ordering
+            dtype, prec = process_dtype(dtype)
         # ... Determine ordering
         order = str(order).strip("\'")
 
@@ -894,9 +897,11 @@ class NumpyFull(NumpyNewArray):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if not dtype:
-            dtype = DtypePrecisionToCastFunction[fill_value.dtype.name][fill_value.precision]
-        # Verify dtype and get precision
-        dtype, precision = process_dtype(dtype)
+            dtype = fill_value.dtype
+            precision = get_final_precision(fill_value)
+        else:
+            # Verify array ordering
+            dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
         order = NumpyNewArray._process_order(order)
