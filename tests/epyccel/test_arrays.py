@@ -1903,6 +1903,20 @@ def test_argument_negative_index_2(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a, a), f2(a, a))
 
+def test_c_order_argument_negative_index(language):
+    a = np.random.randint(20, size=(3,4))
+
+    f1 = arrays.test_c_order_argument_negative_index
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a, a), f2(a, a))
+
+def test_f_order_argument_negative_index(language):
+    a = np.array(np.random.randint(20, size=(3,4)), order='F')
+
+    f1 = arrays.test_f_order_argument_negative_index
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(a, a), f2(a, a))
+
 #==============================================================================
 # TEST: shape initialisation
 #==============================================================================

@@ -807,6 +807,20 @@ def test_argument_negative_index_2(a, b):
     d = 3
     return a[c], a[d], b[c], b[d]
 
+@allow_negative_index('a', 'b')
+@types('int[:,:]', 'int[:,:]')
+def test_c_order_argument_negative_index(a, b):
+    c = -2
+    d = 2
+    return a[c,0], a[1,d], b[c,1], b[d,0]
+
+@allow_negative_index('a', 'b')
+@types('int[:,:](order=F)', 'int[:,:](order=F)')
+def test_f_order_argument_negative_index(a, b):
+    c = -2
+    d = 3
+    return a[c,0], a[1,d], b[c,1], b[0,d]
+
 #==============================================================================
 # SHAPE INITIALISATION
 #==============================================================================
