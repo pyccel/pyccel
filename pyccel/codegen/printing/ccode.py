@@ -7,6 +7,7 @@
 import functools
 from itertools import chain
 import re
+import numpy as np
 
 from pyccel.ast.basic     import ScopedNode
 
@@ -290,7 +291,7 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def varCpy(self, lhs, rhs, expr, pad=""):
+    def varCpy(self, lhs, rhs, expr, offset=""):
         """ generates the 'memcpy' line needed to cpy a 'Variable/ndarray' to another
 
         parameters
@@ -304,7 +305,7 @@ class CCodePrinter(CodePrinter):
             expr : 'Variable'
                 Used to extract the name of the variable to copy from
 
-            pad : 'str'
+            offset : 'str'
                 Contains the opertion needed to avoid overwriting previous data
 
         Return
@@ -314,12 +315,12 @@ class CCodePrinter(CodePrinter):
                     another
         """
         expr = self._print(expr)
-        if pad != "":
-            pad = f"{pad}"
+        if offset != "":
+            offset = f"{offset}"
         else:
-            pad = "0"
-        cpy_data = f"array_copy_data({lhs}, {expr}, {pad});\n"
-        return f'{cpy_data}'
+            offset = "0"
+        cpy_data = f"array_copy_data({lhs}, {expr}, {offset});\n"
+        return cpy_data
 
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
@@ -345,7 +346,6 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         if isinstance(arg, PythonList) and not isinstance(arg[0], Variable) and order=="F":
-            import numpy as np
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
@@ -363,10 +363,10 @@ class CCodePrinter(CodePrinter):
                 if isinstance(i, Variable):
                     if n:
                         if order == "C":
-                            pad = f"(({i}.buffer_size) * {n}) / {self._print(i)}.type_size"
+                            offset = f"(({i}.buffer_size) * {n}) / {self._print(i)}.type_size"
                         else:
-                            pad = n
-                        assignations += self.varCpy(lhs, rhs, i, pad)
+                            offset = n
+                        assignations += self.varCpy(lhs, rhs, i, offset)
                     else:
                         assignations += self.varCpy(lhs, rhs, i)
             return assignations
