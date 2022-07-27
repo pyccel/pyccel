@@ -948,7 +948,7 @@ class NumpyEmpty(NumpyAutoFill):
         if dtype in NativeNumeric:
             precision = default_precision[str(dtype)]
             dtype = DtypePrecisionToCastFunction[dtype.name][precision]
-        return super().__init__(shape, dtype, order)
+        super().__init__(shape, dtype, order)
     @property
     def fill_value(self):
         return None
