@@ -291,16 +291,13 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def varCpy(self, lhs, rhs, expr, offset=""):
+    def varCpy(self, lhs, expr, offset=""):
         """ generates the 'memcpy' line needed to cpy a 'Variable/ndarray' to another
 
         parameters
         ----------
             lhs : 'Variable'
                 Used to extract the name of the assignee
-
-            rhs : 'Variable'
-                Used to extract the dtype and its precision
 
             expr : 'Variable'
                 Used to extract the name of the variable to copy from
@@ -311,7 +308,7 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                that contains the necessary 'memcpy' line that copies(or concats) an ndarray to
+                that contains the necessary 'array_copy_data' line that copies(or concats) an ndarray to
                     another
         """
         expr = self._print(expr)
@@ -357,7 +354,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['string'])
         assignations = ""
         if isinstance(arg, Variable):
-            return self.varCpy(lhs, rhs, arg)
+            return self.varCpy(lhs, arg)
         if isinstance(arg[0], Variable):
             for n, i in enumerate(arg):
                 if isinstance(i, Variable):
@@ -366,9 +363,9 @@ class CCodePrinter(CodePrinter):
                             offset = f"(({i}.buffer_size) * {n}) / {self._print(i)}.type_size"
                         else:
                             offset = n
-                        assignations += self.varCpy(lhs, rhs, i, offset)
+                        assignations += self.varCpy(lhs, i, offset)
                     else:
-                        assignations += self.varCpy(lhs, rhs, i)
+                        assignations += self.varCpy(lhs, i)
             return assignations
         else:
             i = "{" + ', '.join([self._print(i) for i in arg]) + "}"
