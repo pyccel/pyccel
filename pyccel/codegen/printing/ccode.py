@@ -342,7 +342,7 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        if isinstance(arg, PythonList) and not isinstance(arg[0], Variable) and order=="F":
+        if isinstance(arg, PythonTuple) and not isinstance(arg[0], Variable) and order=="F":
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
