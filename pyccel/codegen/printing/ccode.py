@@ -312,12 +312,9 @@ class CCodePrinter(CodePrinter):
                     another
         """
         expr = self._print(expr)
-        if offset != "":
-            offset = f"{offset}"
-        else:
+        if offset == "":
             offset = "0"
-        cpy_data = f"array_copy_data({lhs}, {expr}, {offset});\n"
-        return cpy_data
+        return f"array_copy_data({lhs}, {expr}, {offset});\n"
 
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
@@ -356,22 +353,22 @@ class CCodePrinter(CodePrinter):
         if isinstance(arg, Variable):
             return self.varCpy(lhs, arg)
         if isinstance(arg[0], Variable):
-            for n, i in enumerate(arg):
-                if isinstance(i, Variable):
+            for n, a in enumerate(arg):
+                if isinstance(a, Variable):
                     if n:
                         if order == "C":
-                            offset = f"(({i}.buffer_size) * {n}) / {self._print(i)}.type_size"
+                            offset = f"(({a}.buffer_size) * {n}) / {self._print(a)}.type_size"
                         else:
                             offset = n
-                        assignations += self.varCpy(lhs, i, offset)
+                        assignations += self.varCpy(lhs, a, offset)
                     else:
-                        assignations += self.varCpy(lhs, i)
+                        assignations += self.varCpy(lhs, a)
             return assignations
         else:
-            i = "{" + ', '.join([self._print(i) for i in arg]) + "}"
-            dummy_array = f"{declare_dtype} {dummy_array_name}[] = {i};\n"
+            literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"
+            dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
-            return f'{dummy_array}{cpy_data}'
+            return dummy_array + cpy_data
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
