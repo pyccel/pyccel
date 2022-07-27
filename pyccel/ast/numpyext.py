@@ -372,7 +372,7 @@ class NumpyArray(NumpyNewArray):
             raise TypeError('we only accept homogeneous arguments')
 
         # Verify dtype and get precision
-        if not dtype:
+        if dtype is None:
             dtype = arg.dtype
             prec = get_final_precision(arg)
         else:
@@ -898,7 +898,7 @@ class NumpyFull(NumpyNewArray):
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
-        if not dtype:
+        if dtype is None:
             dtype = fill_value.dtype
             precision = get_final_precision(fill_value)
         else:
@@ -1005,7 +1005,7 @@ class NumpyFullLike(PyccelInternalFunction):
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        if not dtype:
+        if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
@@ -1020,7 +1020,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        if not dtype:
+        if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
@@ -1036,7 +1036,7 @@ class NumpyOnesLike(PyccelInternalFunction):
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        if not dtype:
+        if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
@@ -1052,7 +1052,7 @@ class NumpyZerosLike(PyccelInternalFunction):
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        if not dtype:
+        if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
