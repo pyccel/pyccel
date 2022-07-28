@@ -105,9 +105,11 @@ def broadcast(shape_1, shape_2):
             shape1_code = '-'
             shape2_code = '-'
             if shape_1:
-                shape1_code = '({})'.format(' '.join([str(s)+',' for s in shape_1]))
+                shape1_code = ' '.join(f'{s},' for s in shape_1)
+                shape1_code = f"({shape1_code})"
             if shape_2:
-                shape2_code = '({})'.format(' '.join([str(s)+',' for s in shape_2]))
+                shape2_code = ' '.join(f"{s}," for s in shape_2)
+                shape2_code = f"({shape2_code})"
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape1_code, shape2_code)
             raise PyccelSemanticError(msg)

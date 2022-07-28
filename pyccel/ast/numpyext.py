@@ -410,7 +410,7 @@ class NumpyArray(NumpyNewArray):
             order = str(order).strip("\'")
 
             if order not in ('K', 'A', 'C', 'F'):
-                raise ValueError("Cannot recognize '{:s}' order".format(order))
+                raise ValueError(f"Cannot recognize '{order}' order")
 
             # TODO [YG, 18.02.2020]: set correct order based on input array
             if order in ('K', 'A'):
