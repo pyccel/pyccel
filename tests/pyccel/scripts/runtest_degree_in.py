@@ -6,8 +6,8 @@ from pyccel.decorators import stack_array, pure
 def test_degree(degree : int):
     from numpy import empty
 
-    tmp = empty(degree+1, dtype=float)
-    for i in range(degree+1):
+    tmp = empty(degree, dtype=float)
+    for i in range(degree):
         tmp[i]=0.
     return 1
 

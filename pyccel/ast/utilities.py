@@ -30,7 +30,9 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
 from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable,
-                            VariableAddress, HomogeneousTupleVariable )
+                            HomogeneousTupleVariable )
+
+from .c_concepts import ObjectAddress
 
 errors = Errors()
 
@@ -252,7 +254,7 @@ def insert_index(expr, pos, index_var):
     """
     if expr.rank==0:
         return expr
-    elif isinstance(expr, (Variable, VariableAddress)):
+    elif isinstance(expr, (Variable, ObjectAddress)):
         if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
@@ -360,7 +362,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (FunctionDef)) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
             # Collect lhs variable
@@ -376,7 +378,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Get all objects which affect where indices are inserted
             notable_nodes = line.get_attribute_nodes((Variable,
                                                        IndexedElement,
-                                                       VariableAddress,
+                                                       ObjectAddress,
                                                        NumpyTranspose,
                                                        FunctionCall,
                                                        PyccelInternalFunction,
@@ -392,14 +394,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Collect all objects into which indices may be inserted
             variables       = [v for v in notable_nodes if isinstance(v, (Variable,
                                                                           IndexedElement,
-                                                                          VariableAddress))]
+                                                                          ObjectAddress))]
             variables      += [v for f in elemental_func_calls \
-                                 for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
-                                                            excluded_nodes = (FunctionDef))]
+                                 for v in f.get_attribute_nodes((Variable, IndexedElement, ObjectAddress))]
             transposed_vars = [v for v in notable_nodes if isinstance(v, NumpyTranspose)] \
                                 + [v for f in elemental_func_calls \
-                                     for v in f.get_attribute_nodes(NumpyTranspose,
-                                                            excluded_nodes = (FunctionDef))]
+                                     for v in f.get_attribute_nodes(NumpyTranspose)]
 
             is_checks = [n for n in notable_nodes if isinstance(n, PyccelIs)]
 
@@ -422,8 +422,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Collect all variables for which values other than the value indexed in the loop are important
             # E.g. x = np.sum(a) has a dependence on a
             dependencies = set(v for f in chain(funcs, internal_funcs) \
-                                 for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
-                                     excluded_nodes = (FunctionDef)))
+                                 for v in f.get_attribute_nodes((Variable, IndexedElement, ObjectAddress)))
 
             # Replace function calls with temporary variables
             # This ensures that the function is only called once and stops problems
@@ -480,8 +479,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
             line.substitute(transposed_vars, new_vars_t, excluded_nodes = (FunctionCall))
-            _ = [f.substitute(variables, new_vars, excluded_nodes = (FunctionDef)) for f in elemental_func_calls]
-            _ = [f.substitute(transposed_vars, new_vars_t, excluded_nodes = (FunctionDef)) for f in elemental_func_calls]
+            _ = [f.substitute(variables, new_vars) for f in elemental_func_calls]
+            _ = [f.substitute(transposed_vars, new_vars_t) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
@@ -639,8 +638,8 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
-                    ), a) if a.lhs.is_stack_array
-                    else (a) if a.lhs.allocatable
+                    ), a) if a.lhs.on_stack
+                    else (a) if a.lhs.on_heap
                     else (Allocate(a.lhs,
                             shape=a.lhs.shape,
                             order = a.lhs.order,

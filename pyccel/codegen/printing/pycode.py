@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
 from pyccel.decorators import __all__ as pyccel_decorators
@@ -16,7 +15,7 @@ from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
-from pyccel.ast.numpyext   import NumpyArray
+from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities  import builtin_import_registery as pyccel_builtin_import_registery
@@ -402,6 +401,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonImag(self, expr):
         return '({}).imag'.format(self._print(expr.internal_var))
 
+    def _print_PythonConjugate(self, expr):
+        return '({}).conjugate()'.format(self._print(expr.internal_var))
+
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
@@ -422,6 +424,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_CommentBlock(self, expr):
         txt = '\n'.join(self._print(c) for c in expr.comments)
         return '"""{0}"""\n'.format(txt)
+
+    def _print_Assert(self, expr):
+        condition = self._print(expr.test)
+        return "assert {0}\n".format(condition)
 
     def _print_EmptyNode(self, expr):
         return ''
@@ -518,7 +524,13 @@ class PythonCodePrinter(CodePrinter):
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 
-        return '{} = [{} {}]\n'.format(lhs, body, for_loops)
+        name = self._aliases.get(type(expr),'array')
+        if name == 'array':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyArray, 'array'))
+
+        return '{} = {}([{} {}])\n'.format(lhs, name, body, for_loops)
 
     def _print_GeneratorComprehension(self, expr):
         body, iterators = self._find_functional_expr_and_iterables(expr)
@@ -709,6 +721,32 @@ class PythonCodePrinter(CodePrinter):
         if axis:
             return  "{name}({arg},axis={axis})".format(name = name, arg  = self._print(expr.python_arg), axis=axis)
         return  "{name}({arg})".format(name = name, arg  = self._print(expr.python_arg))
+
+    def _print_NumpyNonZero(self, expr):
+        name = self._aliases.get(type(expr),'nonzero')
+        if name == 'nonzero':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyNonZero, 'nonzero'))
+        arg = self._print(expr.array)
+        return "{}({})".format(name, arg)
+
+    def _print_NumpyCountNonZero(self, expr):
+        name = self._aliases.get(type(expr),'count_nonzero')
+        if name == 'count_nonzero':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyNonZero, 'count_nonzero'))
+
+        axis_arg = expr.axis
+
+        arr = self._print(expr.array)
+        axis = '' if axis_arg is None else (self._print(axis_arg) + ', ')
+        keep_dims = 'keepdims = {}'.format(self._print(expr.keep_dims))
+
+        arg = '{}, {}{}'.format(arr, axis, keep_dims)
+
+        return "{}({})".format(name, arg)
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''

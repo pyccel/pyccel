@@ -31,6 +31,7 @@ pyccel_stage = PyccelStage()
 __all__ = (
     'PythonReal',
     'PythonImag',
+    'PythonConjugate',
     'PythonBool',
     'PythonComplex',
     'PythonEnumerate',
@@ -60,23 +61,19 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
-    __slots__ = ('_precision')
     _dtype = NativeFloat()
+    _precision = -1
     _rank  = 0
     _shape = ()
     _order = None
 
     def __init__(self, arg):
-        self._precision = arg.precision
         super().__init__(arg)
 
     @property
     def internal_var(self):
         """Return the variable on which the function was called"""
         return self._args[0]
-
-    def __str__(self):
-        return 'Real({0})'.format(str(self.internal_var))
 
 #==============================================================================
 class PythonReal(PythonComplexProperty):
@@ -99,6 +96,9 @@ class PythonReal(PythonComplexProperty):
         else:
             return super().__new__(cls)
 
+    def __str__(self):
+        return 'Real({0})'.format(str(self.internal_var))
+
 #==============================================================================
 class PythonImag(PythonComplexProperty):
     """Represents a call to the .imag property
@@ -118,6 +118,37 @@ class PythonImag(PythonComplexProperty):
         else:
             return super().__new__(cls)
 
+    def __str__(self):
+        return 'Imag({0})'.format(str(self.internal_var))
+
+#==============================================================================
+class PythonConjugate(PyccelInternalFunction):
+    """Represents a call to the .conjugate() function
+
+    e.g:
+    > a = 1+2j
+    > a.conjugate()
+    1-2j
+
+    arg : Variable, Literal
+    """
+    _dtype = NativeComplex()
+    _precision = -1
+    _rank  = 0
+    _shape = ()
+    _order = None
+    name = 'conjugate'
+
+    def __init__(self, arg):
+        super().__init__(arg)
+
+    @property
+    def internal_var(self):
+        """Return the variable on which the function was called"""
+        return self._args[0]
+
+    def __str__(self):
+        return 'Conjugate({0})'.format(str(self.internal_var))
 
 #==============================================================================
 class PythonBool(PyccelAstNode):
@@ -852,7 +883,7 @@ class PythonType(Basic):
         prec = self.precision
         return LiteralString("<class '{dtype}{precision}'>".format(
             dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else prec*8))
+            precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
