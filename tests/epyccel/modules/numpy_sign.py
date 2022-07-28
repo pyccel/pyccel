@@ -64,12 +64,12 @@ def int64_neg():
 
 def float_pos():
     import numpy as np
-    b = np.sign(np.float(32.32))
+    b = np.sign(float(32.32))
     return b
 
 def float_neg():
     import numpy as np
-    b = np.sign(np.float(-32.32))
+    b = np.sign(float(-32.32))
     return b
 
 def float64_pos():
