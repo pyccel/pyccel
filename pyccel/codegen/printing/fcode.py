@@ -3017,7 +3017,7 @@ class FCodePrinter(CodePrinter):
         lhs = self._print(expr.result)
         rhs = self._print(expr.arg)
         self._constantImports.add('c_loc')
-        return '{} = c_loc({})\n'.format(lhs, rhs)
+        return f'{lhs} = c_loc({rhs})\n'
 
 #=======================================================================================
 
