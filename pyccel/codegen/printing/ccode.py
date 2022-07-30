@@ -327,6 +327,27 @@ class CCodePrinter(CodePrinter):
     def get_var_num_elements(self, variable):
         return functools.reduce(lambda x, y: x * y, [int(self._print(elem)) for elem in variable.shape])
 
+    def parse_arrays(self, arg):
+        if isinstance(arg, PythonTuple):
+            t = []
+            for elem in arg:
+                print(elem, "We checking this elem now")
+                t.append(self.parse_arrays(elem))
+            print(t, "this is T")
+            if all(isinstance(elem, str) for elem in t):
+                composed_name = functools.reduce(lambda x, y: x + y, t)
+                print("We will create the Variable array:", composed_name)
+                return composed_name
+            else:
+                print("We will create the literals array:", t)
+                return t
+        else:
+            if isinstance(arg, Variable):
+                return self._print(arg)
+            else:
+                return arg
+
+
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
 
@@ -349,9 +370,10 @@ class CCodePrinter(CodePrinter):
         dummy_array_name = self.scope.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        # print(arg.shape, "shape")
-        # print(arg)
+        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs # is this needed?
+        if order == "F":
+            final_array = self.parse_arrays(arg)
+            print("FINALLY WE CREATE THE ARRAY:", final_array)
         if isinstance(arg, PythonTuple) and not isinstance(arg[0], Variable) and order=="F":
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
@@ -375,7 +397,6 @@ class CCodePrinter(CodePrinter):
         #         pass
         #     else:
         #         pass
-        print(arg)
         if isinstance(arg[0], Variable):
             for n, a in enumerate(arg):
                 if isinstance(a, Variable):
