@@ -7,6 +7,7 @@
 import functools
 from itertools import chain
 import re
+from xml.etree.ElementInclude import include
 import numpy as np
 
 from pyccel.ast.basic     import ScopedNode
@@ -292,7 +293,7 @@ class CCodePrinter(CodePrinter):
     #========================== Numpy Elements ===============================#
 
     def varCpy(self, lhs, expr, offset=""):
-        """ generates the 'memcpy' line needed to cpy a 'Variable/ndarray' to another
+        """ generates the 'array_copy_data' line needed to copy a 'Variable/ndarray' to another
 
         parameters
         ----------
@@ -308,13 +309,23 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                that contains the necessary 'array_copy_data' line that copies(or concats) an ndarray to
+                that contains the necessary 'array_copy_data' line that copies (or concats) an ndarray to
                     another
         """
         expr = self._print(expr)
         if offset == "":
             offset = "0"
         return f"array_copy_data({lhs}, {expr}, {offset});\n"
+
+    def varIndex(self, array):
+        for n, elem in enumerate(array):
+            if isinstance(elem, Variable):
+                return n
+            return -1
+
+
+    def get_var_num_elements(self, variable):
+        return functools.reduce(lambda x, y: x * y, [int(self._print(elem)) for elem in variable.shape])
 
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
@@ -339,6 +350,8 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        # print(arg.shape, "shape")
+        # print(arg)
         if isinstance(arg, PythonTuple) and not isinstance(arg[0], Variable) and order=="F":
             transpose_arg = list(np.transpose(arg))
         if rhs.rank > 1:
@@ -348,21 +361,29 @@ class CCodePrinter(CodePrinter):
                     arg = [list(i) if isinstance(i, np.ndarray) else i for i in self._flatten_list(transpose_arg)]
                     transpose_arg = arg
             arg = self._flatten_list(arg)
+        var_index = self.varIndex(arg) # should check if there are literals as well
+        # elem_shape = -1
+        # if var_index != -1:
+        #     elem_shape = self.get_var_num_elements(arg[var_index])
         self.add_import(c_imports['string'])
         assignations = ""
-        if isinstance(arg, Variable):
+        # print(arg, "Thi sis aarg")
+        if isinstance(arg, Variable): # can fix issue #1171
             return self.varCpy(lhs, arg)
+        # for n, a in enumerate(arg):
+        #     if isinstance(a, Variable):
+        #         pass
+        #     else:
+        #         pass
+        print(arg)
         if isinstance(arg[0], Variable):
             for n, a in enumerate(arg):
                 if isinstance(a, Variable):
-                    if n:
-                        if order == "C":
-                            offset = f"(({a}.buffer_size) * {n}) / {self._print(a)}.type_size"
-                        else:
-                            offset = n
-                        assignations += self.varCpy(lhs, a, offset)
+                    if order == "C" and n:
+                        offset = f"(({a}.buffer_size) * {n}) / {self._print(a)}.type_size"
                     else:
-                        assignations += self.varCpy(lhs, a)
+                        offset = n
+                    assignations += self.varCpy(lhs, a, offset)
             return assignations
         else:
             literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"

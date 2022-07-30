@@ -107,6 +107,7 @@ typedef struct  s_ndarray
     int32_t                 buffer_size;
     /* True if the array does not own the data */
     bool                    is_view;
+    /* stores the order of the array: order_f or order_c */
     enum e_order            order;
 }               t_ndarray;
 
