@@ -317,32 +317,26 @@ class CCodePrinter(CodePrinter):
             offset = "0"
         return f"array_copy_data({lhs}, {expr}, {offset});\n"
 
-    def varIndex(self, array):
-        for n, elem in enumerate(array):
-            if isinstance(elem, Variable):
-                return n
-            return -1
-
-
-    def get_var_num_elements(self, variable):
-        return functools.reduce(lambda x, y: x * y, [int(self._print(elem)) for elem in variable.shape])
-
-    def parse_arrays(self, arg):
+    def parse_arrays(self, arg, dtype): # TODO: gotta free the temp arrays
         if isinstance(arg, PythonTuple):
             t = []
             for elem in arg:
                 print(elem, "We checking this elem now")
-                t.append(self.parse_arrays(elem))
+                t.append(self.parse_arrays(elem, dtype))
             print(t, "this is T")
             if all(isinstance(elem, str) for elem in t):
                 composed_name = functools.reduce(lambda x, y: x + y, t)
                 print("We will create the Variable array:", composed_name)
                 return composed_name
             else:
-                print("We will create the literals array:", t)
+                print(self.scope.get_new_name("temps"), "This is the name created for this t:", t)
+                # chose name
+                # array_create
+                # array_copy to next big array
+                # remove the temporary arrays
                 return t
         else:
-            if isinstance(arg, Variable):
+            if isinstance(arg, Variable) and arg.rank >= 1:
                 return self._print(arg)
             else:
                 return arg
@@ -372,7 +366,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs # is this needed?
         if order == "F":
-            final_array = self.parse_arrays(arg)
+            final_array = self.parse_arrays(arg, dtype)
             print("FINALLY WE CREATE THE ARRAY:", final_array)
         if isinstance(arg, PythonTuple) and not isinstance(arg[0], Variable) and order=="F":
             transpose_arg = list(np.transpose(arg))
@@ -383,20 +377,12 @@ class CCodePrinter(CodePrinter):
                     arg = [list(i) if isinstance(i, np.ndarray) else i for i in self._flatten_list(transpose_arg)]
                     transpose_arg = arg
             arg = self._flatten_list(arg)
-        var_index = self.varIndex(arg) # should check if there are literals as well
-        # elem_shape = -1
-        # if var_index != -1:
-        #     elem_shape = self.get_var_num_elements(arg[var_index])
+
         self.add_import(c_imports['string'])
         assignations = ""
         # print(arg, "Thi sis aarg")
         if isinstance(arg, Variable): # can fix issue #1171
             return self.varCpy(lhs, arg)
-        # for n, a in enumerate(arg):
-        #     if isinstance(a, Variable):
-        #         pass
-        #     else:
-        #         pass
         if isinstance(arg[0], Variable):
             for n, a in enumerate(arg):
                 if isinstance(a, Variable):
