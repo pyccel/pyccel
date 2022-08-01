@@ -358,15 +358,19 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Parameters
         ----------
-        expr        : FunctionDef
-                     The function being wrapped
+        expr             : FunctionDef
+                           The function being wrapped
         static_func_args : List of arguments
-                     Arguments compatible with the static function
-        results     : List of results
-                     Results of the wrapped function
+                           Arguments compatible with the static function
+        results          : List of results
+                           Results of the wrapped function
 
-        Returns     : List of Basic Nodes
-        -----------
+        Returns
+        -------
+        body             : List of Basic Nodes
+                           List of nodes describing the instructions which call the
+                           wrapped function
+                    
         """
         body = []
         static_function = self.get_static_function(expr)
