@@ -321,9 +321,13 @@ class CWrapperCodePrinter(CCodePrinter):
         result      : Variable
             Variable holding information needed (rank)
 
-        Returns     : List of arguments
-            List that can contains Variables and FunctionCalls
-        -----------
+        Returns
+        -------
+        body : list
+            Additional instructions (allocations and pointer assignments) for function body
+        
+        static_results : list
+            Expanded list of function arguments corresponding to the given result
         """
 
         body = []
