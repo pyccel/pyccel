@@ -1075,8 +1075,8 @@ class FCodePrinter(CodePrinter):
         return rhs_code
 
     def _print_NumpySign(self, expr):
-        str_x = self._print(expr.x)
-        kind  = self.print_kind(expr.x)
+        str_x = self._print(expr.args[0])
+        kind  = self.print_kind(expr.args[0])
 
         if isinstance(expr.dtype, NativeComplex):
             ne_zero = f'(REALPART({str_x}) .ne. 0_{kind}) .or. (IMAGPART({str_x}) .ne. 0_{kind})'
