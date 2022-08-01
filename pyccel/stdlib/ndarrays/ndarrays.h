@@ -144,7 +144,7 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 /* numpy.sign for float, double and integers */
 inline double  sign(double x)
 {
-    return x ? x < 0 ? -1 : 1 : 0;
+    return x ? (x < 0 ? -1 : 1) : 0;
 }
 
 /* numpy.sign for complex */
