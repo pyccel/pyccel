@@ -1078,7 +1078,7 @@ class FCodePrinter(CodePrinter):
         str_x = self._print(expr.x)
         kind  = self.print_kind(expr.x)
 
-        if expr.dtype == NativeComplex():
+        if isinstance(expr.dtype, NativeComplex):
             ne_zero = f'(REALPART({str_x}) .ne. 0_{kind}) .or. (IMAGPART({str_x}) .ne. 0_{kind})'
             lt_zero = f'(REALPART({str_x}) .lt. 0_{kind}) .or. (IMAGPART({str_x}) .lt. 0_{kind})'
         else:
