@@ -1243,6 +1243,7 @@ class NumpyArctanh(NumpyUfuncUnary):
 class NumpySign(NumpyUfuncUnary):
     """Represent a call to the sign function in the Numpy library"""
     __slots__ = ('_x',)
+    _attribute_nodes = ('_x',)
     name = 'sign'
 
     def __init__(self, x):
