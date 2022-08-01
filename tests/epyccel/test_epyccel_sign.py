@@ -62,11 +62,14 @@ def test_sign_int64(language):
 def test_sign_float(language):
     f_pos = mod.float_pos
     f_neg = mod.float_neg
+    f_nul = mod.float_nul
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
+    f_nul_epyc = epyccel(f_nul, language = language)
 
     assert f_pos_epyc() == f_pos()
     assert f_neg_epyc() == f_neg()
+    assert f_nul_epyc() == f_nul()
 
 def test_sign_float64(language):
     f_pos = mod.float64_pos
@@ -78,31 +81,46 @@ def test_sign_float64(language):
     assert f_neg_epyc() == f_neg()
 
 def test_sign_literal_complex(language):
-    f_pos = mod.literal_complex_pos
-    f_neg = mod.literal_complex_neg
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos      = mod.literal_complex_pos
+    f_neg      = mod.literal_complex_neg
+    f_nul      = mod.literal_complex_nul_nul
+    f_nul_imag = mod.literal_complex_nul_imag
+    f_real_nul = mod.literal_complex_real_nul
+    f_pos_epyc      = epyccel(f_pos, language = language)
+    f_neg_epyc      = epyccel(f_neg, language = language)
+    f_nul_epyc      = epyccel(f_nul, language = language)
+    f_nul_imag_epyc = epyccel(f_nul_imag, language = language)
+    f_real_nul_epyc = epyccel(f_real_nul, language = language)
 
     assert f_pos_epyc() == f_pos()
     assert f_neg_epyc() == f_neg()
+    assert f_nul_epyc() == f_nul()
+    assert f_nul_imag_epyc() == f_nul_imag()
+    assert f_real_nul_epyc() == f_real_nul()
 
 def test_sign_literal_int(language):
     f_pos = mod.literal_int_pos
     f_neg = mod.literal_int_neg
+    f_nul = mod.literal_int_nul
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
+    f_nul_epyc = epyccel(f_nul, language = language)
 
     assert f_pos_epyc() == f_pos()
     assert f_neg_epyc() == f_neg()
+    assert f_nul_epyc() == f_nul()
 
 def test_sign_literal_float(language):
     f_pos = mod.literal_float_pos
     f_neg = mod.literal_float_neg
+    f_nul = mod.literal_float_nul
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
+    f_nul_epyc = epyccel(f_nul, language = language)
 
     assert f_pos_epyc() == f_pos()
     assert f_neg_epyc() == f_neg()
+    assert f_nul_epyc() == f_nul()
 
 # Tests on arrays
 

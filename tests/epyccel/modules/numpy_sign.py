@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring\
 
 from pyccel.decorators import types
 
@@ -72,6 +72,11 @@ def float_neg():
     b = np.sign(float(-32.32))
     return b
 
+def float_nul():
+    import numpy as np
+    b = np.sign(float(0.0))
+    return b
+
 def float64_pos():
     import numpy as np
     b = np.sign(np.float64(64.64))
@@ -92,6 +97,21 @@ def literal_complex_neg():
     b = np.sign(-1-2j)
     return b
 
+def literal_complex_nul_imag():
+    import numpy as np
+    b = np.sign(0-42j)
+    return b
+
+def literal_complex_real_nul():
+    import numpy as np
+    b = np.sign(-42+0j)
+    return b
+
+def literal_complex_nul_nul():
+    import numpy as np
+    b = np.sign(-0-0j)
+    return b
+
 def literal_int_pos():
     import numpy as np
     b = np.sign(42)
@@ -102,6 +122,11 @@ def literal_int_neg():
     b = np.sign(-42)
     return b
 
+def literal_int_nul():
+    import numpy as np
+    b = np.sign(0)
+    return b
+
 def literal_float_pos():
     import numpy as np
     b = np.sign(42.42)
@@ -110,6 +135,11 @@ def literal_float_pos():
 def literal_float_neg():
     import numpy as np
     b = np.sign(-42.42)
+    return b
+
+def literal_float_nul():
+    import numpy as np
+    b = np.sign(0.0)
     return b
 
 ###################
