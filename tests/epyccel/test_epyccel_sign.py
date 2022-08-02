@@ -141,10 +141,8 @@ def test_sign_arr_int(language):
     f_1d_epyc(x2_1d)
     f_2d_epyc(x2_2d)
 
-    assert(x1_1d.dtype is x2_1d.dtype)
-    assert(x1_2d.dtype is x2_2d.dtype)
-    assert np.array_equal(x1_1d, x2_1d) and isinstance(x1_1d, type(x2_1d))
-    assert np.array_equal(x1_2d, x2_2d) and isinstance(x1_2d, type(x2_2d))
+    assert np.array_equal(x1_1d, x2_1d) and (x1_1d.dtype is x2_1d.dtype)
+    assert np.array_equal(x1_2d, x2_2d) and (x1_2d.dtype is x2_2d.dtype)
 
 def test_sign_arr_float(language):
     f_1d = mod.array_float_1d
@@ -163,10 +161,8 @@ def test_sign_arr_float(language):
     f_1d_epyc(x2_1d)
     f_2d_epyc(x2_2d)
 
-    assert(x1_1d.dtype is x2_1d.dtype)
-    assert(x1_2d.dtype is x2_2d.dtype)
-    assert np.array_equal(x1_1d, x2_1d) and isinstance(x1_1d, type(x2_1d))
-    assert np.array_equal(x1_2d, x2_2d) and isinstance(x1_2d, type(x2_2d))
+    assert np.array_equal(x1_1d, x2_1d) and (x1_1d.dtype is x2_1d.dtype)
+    assert np.array_equal(x1_2d, x2_2d) and (x1_2d.dtype is x2_2d.dtype)
 
 def test_sign_arr_complex(language):
     f_1d = mod.array_complex_1d
@@ -185,7 +181,5 @@ def test_sign_arr_complex(language):
     f_1d_epyc(x2_1d)
     f_2d_epyc(x2_2d)
 
-    assert(x1_1d.dtype is x2_1d.dtype)
-    assert(x1_2d.dtype is x2_2d.dtype)
-    assert np.array_equal(x1_1d, x2_1d) and isinstance(x1_1d, type(x2_1d))
-    assert np.array_equal(x1_2d, x2_2d) and isinstance(x1_2d, type(x2_2d))
+    assert np.array_equal(x1_1d, x2_1d) and (x1_1d.dtype is x2_1d.dtype)
+    assert np.array_equal(x1_2d, x2_2d) and (x1_2d.dtype is x2_2d.dtype)
