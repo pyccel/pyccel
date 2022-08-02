@@ -376,7 +376,6 @@ class NumpyArray(NumpyNewArray):
             dtype = arg.dtype
             prec = get_final_precision(arg)
         else:
-            # Verify array ordering
             dtype, prec = process_dtype(dtype)
         # ... Determine ordering
         order = str(order).strip("\'")
@@ -902,7 +901,6 @@ class NumpyFull(NumpyNewArray):
             dtype = fill_value.dtype
             precision = get_final_precision(fill_value)
         else:
-            # Verify array ordering
             dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
@@ -946,7 +944,7 @@ class NumpyEmpty(NumpyAutoFill):
 
     def __init__(self, shape, dtype='float', order='C'):
         if dtype in NativeNumeric:
-            precision = default_precision[str(dtype)]
+            precision = default_precision[str_dtype(dtype)]
             dtype = DtypePrecisionToCastFunction[dtype.name][precision]
         super().__init__(shape, dtype, order)
     @property
