@@ -885,7 +885,7 @@ class FCodePrinter(CodePrinter):
         arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
         if expr.axis:
             axis = expr.axis
-            if expr.order != 'F':
+            if arg.order != 'F':
                 axis = PyccelMinus(LiteralInteger(arg.rank), expr.axis, simplify=True)
             else:
                 axis = LiteralInteger(expr.axis.python_value + 1)
@@ -1072,6 +1072,8 @@ class FCodePrinter(CodePrinter):
                 rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
             else:
                 rhs_code = self._print(expr.arg)
+        elif expr.order is None:
+            rhs_code = self._print(expr.arg)
         return rhs_code
 
     def _print_NumpySign(self, expr):
