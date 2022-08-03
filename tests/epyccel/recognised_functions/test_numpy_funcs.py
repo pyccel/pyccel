@@ -1417,7 +1417,8 @@ def test_full_dtype(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
-            pytest.mark.skip,
+            pytest.mark.skip("full handles types in __new__ so it "
+                "cannot be used in a translated interface in python"),
             pytest.mark.python]
         ),
     )
@@ -1437,8 +1438,8 @@ def test_full_dtype_auto(language):
         a = full(3,val)
         return a[0]
 
-    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max,   dtype=int)
-    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max, dtype=np.int32)
+    integer   = randint(low = min_int,   high = max_int,   dtype=int)
+    integer32 = randint(low = min_int32, high = max_int32, dtype=np.int32)
 
     fl = float(integer)
     fl32 = np.float32(fl)
