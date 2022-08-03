@@ -521,7 +521,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'   ] = NativeRange()
             d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = ()
+            d_var['shape'      ] = None
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
             return d_var
@@ -541,7 +541,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'   ] = dtype
             d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = ()
+            d_var['shape'      ] = None
             d_var['rank'       ] = 0
             d_var['is_target'  ] = False
 
@@ -1050,8 +1050,7 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
-                    or (lhs.rank == 0)
+                know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
 
                 if not know_lhs_shape:
                     msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
@@ -1208,7 +1207,7 @@ class SemanticParser(BasicParser):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
                 def format_shape(s):
-                    return "" if len(s)==0 else s
+                    return "" if s is None else s
                 txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
                     new=format_shape(d_var['shape']))
                 errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
@@ -2704,7 +2703,10 @@ class SemanticParser(BasicParser):
             elif isinstance(a, Variable):
                 dvar  = self._infere_type(a, **settings)
                 dtype = dvar.pop('datatype')
-                if dvar['rank'] > 0:
+                if dvar['rank'] == 1:
+                    dvar['rank']  = 0
+                    dvar['shape'] = None
+                if dvar['rank'] > 1:
                     dvar['rank'] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
@@ -2812,10 +2814,14 @@ class SemanticParser(BasicParser):
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
 
-        d_var['rank'] += 1
         d_var['memory_handling'] = 'heap'
-        shape = list(d_var['shape'])
-        shape.insert(0, dim)
+        d_var['rank'] += 1
+        shape = [dim]
+        if d_var['rank'] != 1:
+            d_var['order'] = 'C'
+            shape += list(d_var['shape'])
+        else:
+            d_var['order'] = None
         d_var['shape'] = shape
 
         # ...
