@@ -325,7 +325,7 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         body : list
             Additional instructions (allocations and pointer assignments) for function body
-        
+
         static_results : list
             Expanded list of function arguments corresponding to the given result
         """
