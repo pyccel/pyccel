@@ -1243,7 +1243,7 @@ class NumpyAbs(NumpyUfuncUnary):
     name = 'abs'
     def _set_dtype_precision(self, x):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
-        self._precision = x.precision
+        self._precision = get_final_precision(x)
 
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
