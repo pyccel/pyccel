@@ -1104,7 +1104,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
-        
+ 
         if self.stored_in_c_pointer(expr.lhs):
             code = f'{self._print(ObjectAddress(expr.lhs))}->{self._print(expr.name)}'
         else:
