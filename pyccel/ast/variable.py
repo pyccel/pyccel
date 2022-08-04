@@ -233,7 +233,7 @@ class Variable(PyccelAstNode):
             if self.shape_can_change(i):
                 # Shape of a pointer can change
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
-            elif isinstance(s,LiteralInteger):
+            elif isinstance(s, LiteralInteger):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))

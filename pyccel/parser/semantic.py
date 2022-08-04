@@ -931,7 +931,7 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False ,**settings):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False, **settings):
         """
         Create a lhs based on the information in d_var
         If the lhs already exists then check that it has the expected properties.
