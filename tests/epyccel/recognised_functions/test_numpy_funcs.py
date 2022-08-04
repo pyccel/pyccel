@@ -5,7 +5,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose, iinfo, finfo
 import numpy as np
 
-from pyccel.decorators import types
+from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -169,6 +169,27 @@ def test_absolute_call_i(language):
     assert(isclose(f1(x), absolute_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), absolute_call_i(-x), rtol=RTOL, atol=ATOL))
     assert matching_types(f1(x), absolute_call_i(x))
+
+def test_absolute_call_c(language):
+    @template(name='T', types=['complex','complex64','complex128'])
+    @types('T')
+    def absolute_call_c(x):
+        from numpy import absolute
+        return absolute(x)
+
+    f1 = epyccel(absolute_call_c, language = language)
+    x = uniform(high=1e6)+1j*uniform(high=1e6)
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL))
+    assert(isclose(f1(-x), absolute_call_c(-x), rtol=RTOL, atol=ATOL))
+    assert matching_types(f1(x), absolute_call_c(x))
+
+    x = np.complex64(uniform(high=1e6)-1j*uniform(high=1e6))
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL))
+    assert matching_types(f1(x), absolute_call_c(x))
+
+    x = np.complex128(uniform(high=1e6)-1j*uniform(high=1e6))
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL))
+    assert matching_types(f1(x), absolute_call_c(x))
 
 def test_absolute_phrase_r_r(language):
     @types('real','real')
