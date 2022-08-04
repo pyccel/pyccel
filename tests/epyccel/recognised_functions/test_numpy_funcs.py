@@ -5,7 +5,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose, iinfo, finfo
 import numpy as np
 
-from pyccel.decorators import types
+from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -1425,14 +1425,9 @@ def test_full_dtype(language):
 )
 
 def test_full_dtype_auto(language):
-    @types('int')
-    @types('float')
-    @types('complex')
-    @types('int32')
-    @types('float32')
-    @types('float64')
-    @types('complex64')
-    @types('complex128')
+    @types('T')
+    @template(name='T', types=['int','float', 'complex', 'int32',
+                               'float32', 'float64', 'complex64', 'complex128'])
     def create_full_val_auto(val):
         from numpy import full
         a = full(3,val)
