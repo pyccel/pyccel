@@ -317,19 +317,36 @@ class CCodePrinter(CodePrinter):
             offset = "0"
         return f"array_copy_data({lhs}, {expr}, {offset});\n"
 
-    def parse_arrays(self, arg, dtype): # TODO: gotta free the temp arrays
+    def create_literal_array(self, arg, dtype, declare_dtype):
+        self.add_import(c_imports['ndarrays']) # TODO: not sure this is necessary
+        shape = ', '.join([str(n) for n in np.shape(arg)]) # is arg a list
+        shape_dtype = self.find_in_dtype_registry('int', 8) # what is this?
+        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+        is_view = 'false' # TODO: check
+        order = 'order_c' # for now it's always going to be order_c
+        temp_array_name = self.scope.get_new_name('temp_array')
+        alloc_code = f"{temp_array_name} = array_create({len(shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        dummy_array_name = self.scope.get_new_name('array_dummy')
+        print(type(arg))
+        literalList = "{" + ', '.join(str(elem) for elem in arg) + "}"
+        dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
+        cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(temp_array_name, dummy_array_name, dtype)
+        return alloc_code + dummy_array + cpy_data
+
+    def parse_arrays(self, arg, dtype, declare_dtype): # TODO: gotta free the temp arrays
         if isinstance(arg, PythonTuple):
             t = []
             for elem in arg:
                 print(elem, "We checking this elem now")
-                t.append(self.parse_arrays(elem, dtype))
+                t.append(self.parse_arrays(elem, dtype, declare_dtype))
             print(t, "this is T")
-            if all(isinstance(elem, str) for elem in t):
+            if isinstance(t[0], str):
                 composed_name = functools.reduce(lambda x, y: x + y, t)
                 print("We will create the Variable array:", composed_name)
                 return composed_name
             else:
-                print(self.scope.get_new_name("temps"), "This is the name created for this t:", t)
+                print(self.create_literal_array(t, dtype, declare_dtype), "what happend")
+                print("bruh")
                 # chose name
                 # array_create
                 # array_copy to next big array
@@ -366,7 +383,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs # is this needed?
         if order == "F":
-            final_array = self.parse_arrays(arg, dtype)
+            final_array = self.parse_arrays(arg, dtype, declare_dtype)
             print("FINALLY WE CREATE THE ARRAY:", final_array)
         if isinstance(arg, PythonTuple) and not isinstance(arg[0], Variable) and order=="F":
             transpose_arg = list(np.transpose(arg))
