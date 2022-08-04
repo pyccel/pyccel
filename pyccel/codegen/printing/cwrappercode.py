@@ -814,7 +814,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
                             memory_handling = 'alias',
-                            rank = 0)
+                            rank = 0, shape = None, order = None)
                     # Create variables to store sizes of array
                     sizes = [scope.get_temporary_variable(NativeInteger(),
                             v.name+'_size') for _ in range(v.rank)]

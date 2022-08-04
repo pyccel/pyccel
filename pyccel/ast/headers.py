@@ -763,7 +763,7 @@ class MacroFunction(Header):
                     new=arg
 
                 newargs.append(new)
-            newargs = tuple(newargs)
+            newargs = None if len(newargs) == 0 else tuple(newargs)
             results_shapes.append(newargs)
         return results_shapes
 

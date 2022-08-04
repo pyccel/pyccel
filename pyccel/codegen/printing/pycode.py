@@ -710,7 +710,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             args = ""
         args += "{}".format(self._print(expr.high))
-        if expr.shape != ():
+        if expr.rank != 0:
             size = self._print(expr.shape)
             args += ", size = {}".format(size)
         return "{}({})".format(name, args)
