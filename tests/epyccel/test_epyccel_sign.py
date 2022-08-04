@@ -11,8 +11,11 @@ def test_sign_complex(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_complex64(language):
     f_pos = mod.complex64_pos
@@ -20,8 +23,11 @@ def test_sign_complex64(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_complex128(language):
     f_pos = mod.complex128_pos
@@ -29,8 +35,11 @@ def test_sign_complex128(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_int16(language):
     f_pos = mod.int16_pos
@@ -38,8 +47,11 @@ def test_sign_int16(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_int32(language):
     f_pos = mod.int32_pos
@@ -47,8 +59,11 @@ def test_sign_int32(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_int64(language):
     f_pos = mod.int64_pos
@@ -56,8 +71,11 @@ def test_sign_int64(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_float(language):
     f_pos = mod.float_pos
@@ -67,9 +85,13 @@ def test_sign_float(language):
     f_neg_epyc = epyccel(f_neg, language = language)
     f_nul_epyc = epyccel(f_nul, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
-    assert f_nul_epyc() == f_nul()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
 
 def test_sign_float64(language):
     f_pos = mod.float64_pos
@@ -77,8 +99,11 @@ def test_sign_float64(language):
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
 
 def test_sign_literal_complex(language):
     f_pos      = mod.literal_complex_pos
@@ -92,11 +117,17 @@ def test_sign_literal_complex(language):
     f_nul_imag_epyc = epyccel(f_nul_imag, language = language)
     f_real_nul_epyc = epyccel(f_real_nul, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
-    assert f_nul_epyc() == f_nul()
-    assert f_nul_imag_epyc() == f_nul_imag()
-    assert f_real_nul_epyc() == f_real_nul()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
+    x1_nul_imag, x2_nul_imag = f_nul_imag(), f_nul_imag_epyc()
+    x1_real_nul, x2_real_nul = f_real_nul(), f_real_nul_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
+    assert x1_nul_imag == x2_nul_imag and x1_nul_imag.dtype == x2_nul_imag.dtype
+    assert x1_real_nul == x2_real_nul and x1_real_nul.dtype == x2_real_nul.dtype
 
 def test_sign_literal_int(language):
     f_pos = mod.literal_int_pos
@@ -106,9 +137,13 @@ def test_sign_literal_int(language):
     f_neg_epyc = epyccel(f_neg, language = language)
     f_nul_epyc = epyccel(f_nul, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
-    assert f_nul_epyc() == f_nul()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
 
 def test_sign_literal_float(language):
     f_pos = mod.literal_float_pos
@@ -118,9 +153,13 @@ def test_sign_literal_float(language):
     f_neg_epyc = epyccel(f_neg, language = language)
     f_nul_epyc = epyccel(f_nul, language = language)
 
-    assert f_pos_epyc() == f_pos()
-    assert f_neg_epyc() == f_neg()
-    assert f_nul_epyc() == f_nul()
+    x1_pos, x2_pos = f_pos(), f_pos_epyc()
+    x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
+
+    assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
+    assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
 
 # Tests on arrays
 
