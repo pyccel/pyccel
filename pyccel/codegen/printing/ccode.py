@@ -327,31 +327,31 @@ class CCodePrinter(CodePrinter):
         temp_array_name = self.scope.get_new_name('temp_array')
         alloc_code = f"{temp_array_name} = array_create({len(shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         dummy_array_name = self.scope.get_new_name('array_dummy')
-        print(type(arg))
         literalList = "{" + ', '.join(str(elem) for elem in arg) + "}"
         dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
         cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(temp_array_name, dummy_array_name, dtype)
-        return alloc_code + dummy_array + cpy_data
+        return [alloc_code + dummy_array + cpy_data, temp_array_name]
 
     def parse_arrays(self, arg, dtype, declare_dtype): # TODO: gotta free the temp arrays
+        array_creations = ""
         if isinstance(arg, PythonTuple):
             t = []
             for elem in arg:
                 print(elem, "We checking this elem now")
                 t.append(self.parse_arrays(elem, dtype, declare_dtype))
-            print(t, "this is T")
             if isinstance(t[0], str):
                 composed_name = functools.reduce(lambda x, y: x + y, t)
                 print("We will create the Variable array:", composed_name)
                 return composed_name
             else:
-                print(self.create_literal_array(t, dtype, declare_dtype), "what happend")
-                print("bruh")
-                # chose name
+                print("This is T", t)
+                array_creation, array_name = self.create_literal_array(t, dtype, declare_dtype)
+                array_creations += array_creation
                 # array_create
                 # array_copy to next big array
                 # remove the temporary arrays
-                return t
+                print("we made this with it:", array_name)
+                return array_name
         else:
             if isinstance(arg, Variable) and arg.rank >= 1:
                 return self._print(arg)
