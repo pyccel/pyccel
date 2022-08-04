@@ -370,7 +370,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body             : List of Basic Nodes
                            List of nodes describing the instructions which call the
                            wrapped function
-                    
+
         """
         body = []
         static_function = self.get_static_function(expr)

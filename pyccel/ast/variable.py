@@ -940,4 +940,4 @@ class DottedVariable(Variable):
         return str(self.lhs)+'.'+str(self.name)
 
     def __repr__(self):
-        return '{}({}, dtype={})'.format(type(self).__name__, repr(self.lhs)+'.'+str(self.name), repr(self.dtype))
+        return f'{type(self).__name__}({repr(self.lhs)+'.'+str(self.name)}, dtype={repr(self.dtype)})'
