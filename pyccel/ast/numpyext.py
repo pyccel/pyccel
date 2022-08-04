@@ -288,8 +288,7 @@ DtypePrecisionToCastFunction = {
     'Complex' : {
        -1 : PythonComplex,
         4 : NumpyComplex64,
-        8 : NumpyComplex,
-        16 : NumpyComplex128,},
+        8 : NumpyComplex128,},
     'Bool':  {
        -1 : PythonBool,
         4 : NumpyBool}
