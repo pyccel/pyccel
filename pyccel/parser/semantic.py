@@ -860,7 +860,7 @@ class SemanticParser(BasicParser):
         rhs : Variable
             The value assigned to the lhs. This is required to call
             self._infere_type recursively for tuples
-        
+
         arr_in_multirets : bool
             If True, the variable that will be created is an array
             in multi-values return, false otherwise.
