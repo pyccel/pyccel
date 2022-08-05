@@ -332,7 +332,7 @@ DtypePrecisionToCastFunction = {
 def process_dtype(dtype):
     """
     Returns the corresponding type and precision to the dtype.
-    
+
     Args:
         dtype     : Datatype
 
