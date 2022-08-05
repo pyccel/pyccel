@@ -233,7 +233,7 @@ class Variable(PyccelAstNode):
             if self.shape_can_change(i):
                 # Shape of a pointer can change
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
-            elif isinstance(s,(LiteralInteger, PyccelArraySize)):
+            elif isinstance(s, LiteralInteger):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
@@ -935,3 +935,13 @@ class DottedVariable(Variable):
 
     def __hash__(self):
         return hash((type(self).__name__, self.name, self.lhs))
+
+    def __str__(self):
+        return str(self.lhs)+'.'+str(self.name)
+
+    def __repr__(self):
+        lhs = repr(self.lhs)
+        name = str(self.name)
+        dtype = repr(self.dtype)
+        classname = type(self).__name__
+        return f'{classname}({lhs}.{name}, dtype={dtype}'

@@ -1335,6 +1335,7 @@ class FCodePrinter(CodePrinter):
         is_static       = expr.static
         is_external     = expr.external
         intent          = expr.intent
+        intent_in = intent and intent != 'out'
 
         if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
@@ -1365,7 +1366,7 @@ class FCodePrinter(CodePrinter):
         # ...
             if isinstance(expr_dtype, NativeString):
 
-                if expr.intent:
+                if intent_in:
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
             elif isinstance(expr_dtype, BindCPointer):
@@ -1407,7 +1408,7 @@ class FCodePrinter(CodePrinter):
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent:
+            elif on_heap and not intent_in:
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1442,7 +1443,7 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and on_heap and intent:
+        elif (rank > 0) and on_heap and intent_in:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
         elif (rank > 0) and (on_heap or is_alias):
@@ -1457,7 +1458,7 @@ class FCodePrinter(CodePrinter):
             mod_str = ', bind(c)'
 
         # Construct declaration
-        left  = dtype + intentstr + allocatablestr + optionalstr + privatestr + externalstr + mod_str
+        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
@@ -1811,10 +1812,9 @@ class FCodePrinter(CodePrinter):
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
 
-        if len(results) != 1:
-            func_type = 'subroutine'
-            func_end  = ''
-        else:
+        func_type = 'subroutine'
+        func_end  = ''
+        if len(results) == 1 and results[0].rank == 0:
             func_type = 'function'
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
@@ -1854,7 +1854,7 @@ class FCodePrinter(CodePrinter):
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(expr.results) != 1:
+        if len(expr.results) != 1 or expr.results[0].rank > 0:
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
@@ -1919,6 +1919,7 @@ class FCodePrinter(CodePrinter):
         if expr.is_inline:
             return ''
         self.set_scope(expr.scope)
+
 
         name = self._print(expr.name)
 
@@ -2922,6 +2923,7 @@ class FCodePrinter(CodePrinter):
         args   = expr.args
         func_results  = func.results
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+        is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
         if (not self._additional_code):
             self._additional_code = ''
@@ -2944,7 +2946,7 @@ class FCodePrinter(CodePrinter):
                     newarg = arg
                 args.append(FunctionCallArgument(newarg, key))
             results = list(lhs_vars.values())
-            if len(func_results) == 1:
+            if is_function:
                 results_strs = []
             else:
                 # If func body is unknown then we may not know result names
@@ -2955,17 +2957,14 @@ class FCodePrinter(CodePrinter):
                 else:
                     results_strs = [self._print(r) for r in lhs_vars.values()]
 
-        elif len(func_results)>1:
+        elif not is_function and len(func_results)!=0:
             results = [r.clone(name = self.scope.get_new_name()) \
                         for r in func_results]
             for var in results:
                 self.scope.insert_variable(var)
 
-            if len(func_results) == 1:
-                results_strs = []
-            else:
-                results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
-                                for n,r in zip(func_results, results)]
+            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+                            for n,r in zip(func_results, results)]
 
         else:
             results_strs = []
@@ -2980,16 +2979,19 @@ class FCodePrinter(CodePrinter):
             args_code = ', '.join(args_strs+results_strs)
             code = '{name}({args})'.format( name = f_name,
                                             args = args_code )
-            if len(func_results) != 1:
+            if not is_function:
                 code = 'call {}\n'.format(code)
 
         if not parent_assign:
-            if len(func_results) <= 1:
+            if is_function or len(func_results) == 0:
                 return code
             else:
                 self._additional_code += code
-                return self._print(tuple(results))
-        elif len(func_results) == 1:
+                if len(func_results) == 1:
+                    return self._print(results[0])
+                else:
+                    return self._print(tuple(results))
+        elif is_function:
             return '{0} = {1}\n'.format(self._print(results[0]), code)
         else:
             return code
@@ -3032,7 +3034,7 @@ class FCodePrinter(CodePrinter):
         lhs = self._print(expr.result)
         rhs = self._print(expr.arg)
         self._constantImports.add('c_loc')
-        return '{} = c_loc({})'.format(lhs, rhs)
+        return f'{lhs} = c_loc({rhs})\n'
 
 #=======================================================================================
 
