@@ -1010,12 +1010,14 @@ class CCodePrinter(CodePrinter):
         String
             Signature of the function
         """
+        if len(expr.results) > 1:
+            self._additional_args.append(expr.results)
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int')) + ' '
-            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='alias')) for a in expr.results]
+            args += [FunctionDefArgument(a) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -1029,8 +1031,12 @@ class CCodePrinter(CodePrinter):
                 return code
 
             var_list = [a.var for a in args]
-            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
+            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
+                                else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
             arg_code = ', '.join(arg_code_list)
+
+        if self._additional_args :
+            self._additional_args.pop()
 
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
@@ -1098,9 +1104,17 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
+
+        name_code = self._print(expr.name)
+        if self.stored_in_c_pointer(expr.lhs):
+            code = f'{self._print(ObjectAddress(expr.lhs))}->{name_code}'
+        else:
+            lhs_code = self._print(expr.lhs)
+            code = f'{lhs_code}.{name_code}'
         if self.stored_in_c_pointer(expr):
-            return '{}->{}'.format(self._print(ObjectAddress(expr.lhs)), self._print(expr.name))
-        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
+            return f'(*{code})'
+        else:
+            return code
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -1181,7 +1195,7 @@ class CCodePrinter(CodePrinter):
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
         alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
-                expr.variable, len(expr.shape), shape_Assign, dtype,
+                self._print(expr.variable), len(expr.shape), shape_Assign, dtype,
                 is_view)
         return '{}{}'.format(free_code, alloc_code)
 
@@ -1474,9 +1488,12 @@ class CCodePrinter(CodePrinter):
         args += self._temporary_args
         self._temporary_args = []
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
+
+        call_code = f'{func.name}({args})'
         if not func.results:
-            return '{}({});\n'.format(func.name, args)
-        return '{}({})'.format(func.name, args)
+            return f'{call_code};\n'
+        else:
+            return call_code
 
     def _print_Constant(self, expr):
         """ Convert a Python expression with a math constant call to C
@@ -1851,15 +1868,14 @@ class CCodePrinter(CodePrinter):
         return self._print(expr.value)
 
     def _print_ObjectAddress(self, expr):
-        if isinstance(expr.obj, ObjectAddress):
-            return '&{}'.format(self._print(expr.obj))
-        if self.stored_in_c_pointer(expr.obj):
-            if hasattr(expr.obj, 'name'):
-                return '{}'.format(expr.obj.name)
-            return '{}'.format(self._print(expr.obj))
-        if hasattr(expr.obj, 'name'):
-            return '&{}'.format(expr.obj.name)
-        return '&{}'.format(self._print(expr.obj))
+        obj_code = self._print(expr.obj)
+        if isinstance(expr.obj, ObjectAddress) or not self.stored_in_c_pointer(expr.obj):
+            return f'&{obj_code}'
+        else:
+            if obj_code.startswith('(*') and obj_code.endswith(')'):
+                return f'{obj_code[2:-1]}'
+            else:
+                return obj_code
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
