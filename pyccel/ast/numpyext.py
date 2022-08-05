@@ -330,6 +330,21 @@ DtypePrecisionToCastFunction = {
 #==============================================================================
 
 def process_dtype(dtype):
+    """
+    Returns the corresponding type and precision to the dtype.
+    
+    Args:
+        dtype     : Datatype
+
+    Raises:
+        TypeError: In the case of unrecognized argument type.
+        TypeError: In the case of passed string argument not recognized as valid dtype.
+
+    Returns:
+        dtype     : Datatype
+        precision : int
+    """
+
     if isinstance(dtype, PythonType):
         return dtype.dtype, get_final_precision(dtype)
     if isinstance(dtype, PyccelFunctionDef):
