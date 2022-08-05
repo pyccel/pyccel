@@ -209,12 +209,12 @@ def compatible_operation(*args, language_has_vectors = True):
     """
     if language_has_vectors:
         # If the shapes don't match then an index must be required
-        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
+        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
     else:
-        return all(a.shape==() for a in args)
+        return all(a.rank == 0 for a in args)
 
 #==============================================================================
 def insert_index(expr, pos, index_var):
@@ -244,7 +244,7 @@ def insert_index(expr, pos, index_var):
     >>> a = Variable('int', 'a', shape=(4,), rank=1)
     >>> b = Variable('int', 'b', shape=(4,), rank=1)
     >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
+    >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
     >>> insert_index(expr, 0, i, language_has_vectors = False)
@@ -444,7 +444,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             if assigns:
                 # For now we do not handle memory allocation in loop unravelling
-                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_vars1):
+                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_results):
                     errors.report("Loop unravelling cannot handle extraction of function calls "\
                             "which return arrays as this requires allocation. Please place the function "\
                             "call on its own line",
@@ -684,7 +684,7 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     >>> a = Variable('int', 'a', shape=(4,), rank=1)
     >>> b = Variable('int', 'b', shape=(4,), rank=1)
     >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
+    >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = [Assign(c,d)]
     >>> expand_to_loops(expr, language_has_vectors = False)
