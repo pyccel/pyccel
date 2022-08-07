@@ -1636,22 +1636,8 @@ class CCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
-        op = expr.op
-        lhs = expr.lhs
-        rhs = expr.rhs
-        lhs_code = self._print(lhs)
-        rhs_code = self._print(rhs)
-        if op == '%':
-            # Two cases where this works: (NativeFloat and NativeFloat), (NativeFloat and NativeInt)
-            # The case (NativeInt and NativeFloat) would cause a type change error.
-            if isinstance(lhs.dtype, NativeFloat) or isinstance(rhs.dtype, NativeFloat):
-                self.add_import(c_imports['math'])
-                # Get (dtype, precision) pair for dtype_registry
-                key  = (str(lhs.dtype), get_final_precision(lhs))
-                # Get the proper modulo function (fmod for doubles, fmodf for floats)
-                func = modulo_fmod[dtype_registry[key]]
-                return "{0} = {1}({0}, {2});\n".format(lhs_code, func, rhs_code)
-        return "{0} {1}= {2};\n".format(self._print(lhs), op, self._print(rhs))
+        _expr = expr.to_basic_assign()
+        return self._print(_expr)
 
     def _print_Assign(self, expr):
         prefix_code = ''
