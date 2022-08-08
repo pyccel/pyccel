@@ -317,51 +317,66 @@ class CCodePrinter(CodePrinter):
             offset = "0"
         return f"array_copy_data({lhs}, {expr}, {offset});\n"
 
-    def create_literal_array(self, arg, dtype, declare_dtype, order):
+    def create_literal_array(self, arg, dtype, declare_dtype, order, name=None):
         self.add_import(c_imports['ndarrays']) # TODO: not sure this is necessary
+        self.add_import(c_imports['string'])
+        print("THIS IS ARG", arg)
         shape = str(len(arg)) # is arg a list
         shape_dtype = self.find_in_dtype_registry('int', 8) # what is this?
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false'
-        temp_literal_array_name = self.scope.get_new_name('temp_array')
-        temp_array_declaration = f"t_ndarray {temp_literal_array_name} = " "{.shape = NULL};\n"
-        array_create = f"{temp_literal_array_name} = array_create({len(shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        temp_literal_array_name = name
+        temp_array_declaration = ""
+        array_create = ""
+        nd = "1"
+        if name is None:
+            temp_literal_array_name = self.scope.get_new_name('temp_array')
+            temp_array_declaration = f"t_ndarray {temp_literal_array_name} = " "{.shape = NULL};\n"
+            array_create = f"{temp_literal_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         dummy_array_name = self.scope.get_new_name('array_dummy')
         literalList = "{" + ', '.join(str(elem) for elem in arg) + "}"
         dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
         cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(temp_literal_array_name, dummy_array_name, dtype)
+        print("*************************************************")
+        # print(temp_array_declaration + array_create + dummy_array + cpy_data)
+        print("*************************************************")
         return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
 
-    def create_variable_array(self, shape, array_names, dtype, order):
-        temp_variable_array_name = self.scope.get_new_name("composed")
+    def create_variable_array(self, shape, array_names, dtype, order, name=None):
+        self.add_import(c_imports['ndarrays'])
+        if not name:
+            temp_variable_array_name = self.scope.get_new_name("composed")
+        else:
+            temp_variable_array_name = name
+        nd = len(shape)
         shape = ', '.join(self._print(elem) for elem in shape)
         is_view = 'false'
-        temp_array_declaration = f"t_ndarray {temp_variable_array_name} = " "{.shape = NULL};\n"
-        shape_dtype = self.find_in_dtype_registry('int', 8) # what is this?
-        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        array_create = f"{temp_variable_array_name} = array_create({len(shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        temp_array_declaration = ""
+        array_create = ""
+        if name == None:
+            temp_array_declaration = f"t_ndarray {temp_variable_array_name} = " "{.shape = NULL};\n"
+            shape_dtype = self.find_in_dtype_registry('int', 8) # what is this?
+            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+            array_create = f"{temp_variable_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         copy_operations = ""
         for index, array in enumerate(array_names):
-            offset = f"(({array}.buffer_size) * {index}) / {array}.type_size"
+            offset = f"(({array}.buffer_size) * {index}) / {array}.type_size" if order == "order_c" else index
             copy_operations += f"array_copy_data({temp_variable_array_name}, {array}, {offset});\n"
         return (temp_array_declaration + array_create + copy_operations, temp_variable_array_name)
 
-    def parse_arrays(self, arg, dtype, declare_dtype, shape, order, array_creations): # TODO: gotta free the temp arrays, TODO: can remove declare_dtype?
+    def parse_arrays(self, arg, dtype, declare_dtype, shape, order, array_creations, lhs_name=None): # TODO: gotta free the temp arrays, TODO: can remove declare_dtype?
         elem_shape = shape[1:]
         if isinstance(arg, PythonTuple):
             t = []
-            for elem in arg:
+            for elem in arg:   
                 t.append(self.parse_arrays(elem, dtype, declare_dtype, elem_shape, 'order_c', array_creations))
-            if len(t) == 1:
-                print(t, "This is t")
-                return array_creations
             if isinstance(t[0], str):
-                array_creation, array_name = self.create_variable_array(shape, t, dtype, order)
-                array_creations += array_creation
+                array_creation, array_name = self.create_variable_array(shape, t, dtype, order, lhs_name)
+                array_creations.append(array_creation)
                 return array_name
             else:
-                array_creation, array_name = self.create_literal_array(t, dtype, declare_dtype, order)
-                array_creations += array_creation
+                array_creation, array_name = self.create_literal_array(t, dtype, declare_dtype, order, lhs_name)
+                array_creations.append(array_creation)
                 return array_name
         else:
             if isinstance(arg, Variable) and arg.rank >= 1:
@@ -385,48 +400,15 @@ class CCodePrinter(CodePrinter):
         """
         rhs = expr.rhs
         lhs = expr.lhs
-        print(lhs.shape, "this is le shape")
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         order = lhs.order
-        transpose_arg = None
-        dummy_array_name = self.scope.get_new_name('array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs # is this needed?
-        array_creations = ""
-        self.parse_arrays(arg, dtype, declare_dtype, lhs.shape, 'order_c' if order == 'C' else 'order_f', array_creations)
-        return array_creations
-        #     print("FINALLY WE CREATE THE ARRAY:", final_array)
-        # # if isinstance(arg, PythonTuple) and not isinstance(arg[0], Variable) and order=="F":
-        # #     transpose_arg = list(np.transpose(arg))
-        # if rhs.rank > 1:
-        #     # flattening the args to use them in C initialization.
-        #     if order=="F" and transpose_arg is not None:
-        #         while isinstance(transpose_arg[0], (np.ndarray, list)):
-        #             arg = [list(i) if isinstance(i, np.ndarray) else i for i in self._flatten_list(transpose_arg)]
-        #             transpose_arg = arg
-        #     arg = self._flatten_list(arg)
-
-        # self.add_import(c_imports['string'])
-        # assignations = ""
-        # # print(arg, "Thi sis aarg")
-        # if isinstance(arg, Variable): # can fix issue #1171
-        #     return self.varCpy(lhs, arg)
-        # if isinstance(arg[0], Variable):
-        #     for n, a in enumerate(arg):
-        #         if isinstance(a, Variable):
-        #             if order == "C" and n:
-        #                 offset = f"(({a}.buffer_size) * {n}) / {self._print(a)}.type_size"
-        #             else:
-        #                 offset = n
-        #             assignations += self.varCpy(lhs, a, offset)
-        #     return assignations
-        # else:
-        #     literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"
-        #     dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
-        #     cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
-        #     return dummy_array + cpy_data
+        array_creations = []
+        self.parse_arrays(arg, dtype, declare_dtype, lhs.shape, 'order_c' if order == 'C' else 'order_f', array_creations, self._print(lhs))
+        return ''.join(array_creations)
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
