@@ -292,31 +292,6 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def varCpy(self, lhs, expr, offset=""):
-        """ generates the 'array_copy_data' line needed to copy a 'Variable/ndarray' to another
-
-        parameters
-        ----------
-            lhs : 'Variable'
-                Used to extract the name of the assignee # TODO: NEED TO CHANGE
-
-            expr : 'Variable'
-                Used to extract the name of the variable to copy from
-
-            offset : 'str'
-                Contains the opertion needed to avoid overwriting previous data
-
-        Return
-        ------
-            String
-                that contains the necessary 'array_copy_data' line that copies (or concats) an ndarray to
-                    another
-        """
-        expr = self._print(expr)
-        if offset == "":
-            offset = "0"
-        return f"array_copy_data({lhs}, {expr}, {offset});\n"
-
     def create_literal_array(self, arg, dtype, declare_dtype, order, name=None):
         self.add_import(c_imports['ndarrays'])
         self.add_import(c_imports['string'])
