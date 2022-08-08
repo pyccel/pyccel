@@ -318,11 +318,10 @@ class CCodePrinter(CodePrinter):
         return f"array_copy_data({lhs}, {expr}, {offset});\n"
 
     def create_literal_array(self, arg, dtype, declare_dtype, order, name=None):
-        self.add_import(c_imports['ndarrays']) # TODO: not sure this is necessary
+        self.add_import(c_imports['ndarrays'])
         self.add_import(c_imports['string'])
-        print("THIS IS ARG", arg)
-        shape = str(len(arg)) # is arg a list
-        shape_dtype = self.find_in_dtype_registry('int', 8) # what is this?
+        shape = str(len(arg))
+        shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false'
         temp_literal_array_name = name
@@ -337,9 +336,7 @@ class CCodePrinter(CodePrinter):
         literalList = "{" + ', '.join(str(elem) for elem in arg) + "}"
         dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
         cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(temp_literal_array_name, dummy_array_name, dtype)
-        print("*************************************************")
-        # print(temp_array_declaration + array_create + dummy_array + cpy_data)
-        print("*************************************************")
+
         return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
 
     def create_variable_array(self, shape, array_names, dtype, order, name=None):
@@ -355,7 +352,7 @@ class CCodePrinter(CodePrinter):
         array_create = ""
         if name == None:
             temp_array_declaration = f"t_ndarray {temp_variable_array_name} = " "{.shape = NULL};\n"
-            shape_dtype = self.find_in_dtype_registry('int', 8) # what is this?
+            shape_dtype = self.find_in_dtype_registry('int', 8)
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             array_create = f"{temp_variable_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         copy_operations = ""
