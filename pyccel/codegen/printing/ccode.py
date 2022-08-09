@@ -308,7 +308,7 @@ class CCodePrinter(CodePrinter):
             temp_array_declaration = f"t_ndarray {temp_literal_array_name} = " "{.shape = NULL};\n"
             array_create = f"{temp_literal_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         dummy_array_name = self.scope.get_new_name('array_dummy')
-        literalList = "{" + ', '.join(str(elem) for elem in arg) + "}"
+        literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"
         dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
         cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(temp_literal_array_name, dummy_array_name, dtype)
 
@@ -340,7 +340,7 @@ class CCodePrinter(CodePrinter):
         elem_shape = shape[1:]
         if isinstance(arg, PythonTuple):
             t = []
-            for elem in arg:   
+            for elem in arg:
                 t.append(self.parse_arrays(elem, dtype, declare_dtype, elem_shape, 'order_c', array_creations))
             if isinstance(t[0], str):
                 array_creation, array_name = self.create_variable_array(shape, t, dtype, order, lhs_name)
@@ -1238,7 +1238,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         free_code = ''
-        #free the array if its already allocated and checking if its not null if the status is unknown
+            #free the array if its already allocated and checking if its not null if the status is unknown
         if (expr.status == 'unknown'):
             free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
@@ -1252,7 +1252,7 @@ class CCodePrinter(CodePrinter):
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
         order = "order_f" if expr.order == "F" else "order_c"
-        alloc_code = f"{expr.variable} = array_create({len(expr.shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        alloc_code = f"{self._print(expr.variable)} = array_create({len(expr.shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
