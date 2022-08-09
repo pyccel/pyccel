@@ -873,6 +873,19 @@ def test_array_real_1d_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_1d_scalar_mod(language):
+    f1 = arrays.array_real_1d_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_1d_scalar_idiv(language):
 
     f1 = arrays.array_real_1d_scalar_idiv
@@ -942,6 +955,20 @@ def test_array_real_1d_div(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
+def test_array_real_1d_mod(language):
+
+    f1 = arrays.array_real_1d_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a  = np.array( [1.,2.,3.] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2)
 
 def test_array_real_1d_idiv(language):
 
@@ -1017,6 +1044,20 @@ def test_array_real_2d_C_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_C_scalar_mod(language):
+
+    f1 = arrays.array_real_2d_C_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_2d_C_add(language):
 
     f1 = arrays.array_real_2d_C_add
@@ -1062,6 +1103,20 @@ def test_array_real_2d_C_mul(language):
 def test_array_real_2d_C_div(language):
 
     f1 = arrays.array_real_2d_C_div
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
+    x2 = np.copy(x1)
+    a  = np.array( [[-1.,-2.,-3.], [-4.,-5.,-6.]] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_C_mod(language):
+
+    f1 = arrays.array_real_2d_C_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1206,6 +1261,20 @@ def test_array_real_2d_F_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_F_scalar_mod(language):
+
+    f1 = arrays.array_real_2d_F_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_2d_F_add(language):
 
     f1 = arrays.array_real_2d_F_add
@@ -1251,6 +1320,20 @@ def test_array_real_2d_F_mul(language):
 def test_array_real_2d_F_div(language):
 
     f1 = arrays.array_real_2d_F_div
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
+    x2 = np.copy(x1)
+    a  = np.array( [[-1.,-2.,-3.], [-4.,-5.,-6.]], order='F' )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_F_mod(language):
+
+    f1 = arrays.array_real_2d_F_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
