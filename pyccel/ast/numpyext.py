@@ -331,18 +331,29 @@ DtypePrecisionToCastFunction = {
 
 def process_dtype(dtype):
     """
-    Returns the corresponding type and precision to the dtype.
+    This function will take a dtype passed to a numpy array creation function
+    and depending on the type of the passed argument, it will do the necessary treatments
+    to extract the corresponding type and precision from it then return the result.
 
-    Args:
-        dtype     : Datatype
+    This function could be useful when working with numpy creation function having a dtype argument,
+    like numpy.array, nump.arrange, numpy.linspace...
+
+    Parameters:
+    ----------
+        dtype     : PythonType | PyccelFunctionDef | String
+        The actual dtype passed to the numpy function
 
     Raises:
-        TypeError: In the case of unrecognized argument type.
-        TypeError: In the case of passed string argument not recognized as valid dtype.
+    ----------
+        TypeError : In the case of unrecognized argument type.
+        TypeError : In the case of passed string argument not recognized as valid dtype.
 
     Returns:
+    ----------
         dtype     : Datatype
+        The Datatype corresponding to the passed dtype.
         precision : int
+        The precision corresponding to the passed dtype.
     """
 
     if isinstance(dtype, PythonType):
