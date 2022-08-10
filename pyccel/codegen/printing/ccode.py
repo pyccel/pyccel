@@ -1642,7 +1642,7 @@ class CCodePrinter(CodePrinter):
 
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
-        return '{} {}= {};\n'.format(lhs_code, op, rhs_code)
+        return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
         prefix_code = ''
