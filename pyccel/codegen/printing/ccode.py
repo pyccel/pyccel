@@ -222,10 +222,6 @@ ndarray_type_registry = {
                   ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
-modulo_fmod = {
-    'double': 'fmod',
-    'float' : 'fmodf'}
-
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
