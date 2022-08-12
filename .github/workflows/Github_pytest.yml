@@ -65,6 +65,7 @@ jobs:
         run: |
           pytest test_epyccel_modules.py -vs
           pytest test_epyccel_functions.py -vs -k decorator
+        working-directory: ./tests/epyccel
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
