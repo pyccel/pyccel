@@ -1,30 +1,45 @@
+/* --------------------------------------------------------------------------------------- */
+/* This file is part of Pyccel which is released under MIT License. See the LICENSE file   */
+/* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
+/* --------------------------------------------------------------------------------------- */
+
 #ifndef LISTS_H
-# define LISTS_H
+#define LISTS_H
 
-# include <stdlib.h>
-# include <stdbool.h>
-# include <Python.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
-typedef struct  s_node
+#define DEFAULT_CAP 10
+
+typedef enum e_type
 {
-    void    *ptr;
-    // Need to know the type of the object pointed to by 'ptr'
-}               t_node;
+    lst_bool     ,
+    lst_int8     ,
+    lst_int16    ,
+    lst_int32    ,
+    lst_int64    ,
+    lst_float    ,
+    lst_double   ,
+    lst_cfloat   ,
+    lst_cdouble  ,
+    lst_list
+};
+
+typedef struct  s_elem
+{
+    void*       raw_data;
+    enum e_type         type;
+}               t_elem;
 
 typedef struct  s_list
 {
-    t_node  **nodes;
-    size_t  counter;  // Current nodes count in the buffer
-    size_t  size;  // Total size of the buffer
+    t_elem**   elements;
+    size_t  capacity;
+    size_t  size;
 }               t_list;
 
-
-/** Utilities **/
-t_list *list_alloc(size_t size);
-void    list_free(t_list *list);
-
-
-/** List functions **/
+t_list   *allocate_list(size_t size);
+t_list   *fill_list(t_list *list, ...);
 void*    append(t_list* list_1, t_list* list_2);
 void     clear(t_list* list);
 t_list*  copy(t_list* list);
@@ -35,6 +50,5 @@ void     insert(t_list* list, int index, void* object);
 void*    pop(t_list* list, int index);
 void     remove(t_list* list, void* value);
 void     reverse(t_list* list);
-void     sort(t_list* list, /*key*/ bool reverse);
-
+void     sort(t_list* list, bool reverse);
 #endif
