@@ -32,7 +32,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dty
 from pyccel.ast.datatypes import datatype, NativeVoid
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
-from pyccel.ast.literals  import Nil, LiteralTrue, LiteralFalse
+from pyccel.ast.literals  import Nil, LiteralFalse
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
