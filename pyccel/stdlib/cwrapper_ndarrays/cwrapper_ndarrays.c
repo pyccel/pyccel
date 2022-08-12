@@ -327,10 +327,11 @@ PyObject* ndarray_to_pyarray(t_ndarray *o, bool release_data)
     }
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
+    PyArray_Descr* type_descr = PyArray_DescrFromType(npy_type);
 
-    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, type_descr,
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _c_ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _c_ndarray_to_numpy_strides(o->strides, type_descr->elsize, o->nd),
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
@@ -342,10 +343,11 @@ PyObject* c_ndarray_to_pyarray(t_ndarray *o, bool release_data)
     int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
+    PyArray_Descr* type_descr = PyArray_DescrFromType(npy_type);
 
-    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, type_descr,
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _c_ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _c_ndarray_to_numpy_strides(o->strides, type_descr->elsize, o->nd),
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
@@ -357,10 +359,11 @@ PyObject* fortran_ndarray_to_pyarray(t_ndarray *o, bool release_data)
     int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
+    PyArray_Descr* type_descr = PyArray_DescrFromType(npy_type);
 
-    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, type_descr,
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _f_ndarray_to_numpy_strides(o->strides, o->shape, o->type_size, o->nd),
+            _f_ndarray_to_numpy_strides(o->strides, o->shape, type_descr->elsize, o->nd),
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
