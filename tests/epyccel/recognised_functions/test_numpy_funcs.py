@@ -60,6 +60,11 @@ def matching_types(pyccel_result, python_result):
             or \
            (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))
 
+def compare_arrays(x1, x2):
+    assert np.array_equal(x1, x2)
+    assert x1.dtype is x2.dtype
+    assert x1.flags == x2.flags
+
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
     @types('real')
@@ -1923,35 +1928,46 @@ def test_zeros_combined_args(language):
     assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_zeros_3_val())
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Arrays can't be initialised from other arrays. See 1179"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_array(language):
-    def create_array_list_val():
+    def create_array_list():
         from numpy import array
         a = array([[1,2,3],[4,5,6]])
-        return a[0,0]
-    def create_array_list_shape():
-        from numpy import array, shape
-        a = array([[1,2,3],[4,5,6]])
-        s = shape(a)
-        return len(s), s[0], s[1]
-    def create_array_tuple_val():
+        return a
+    def create_array_tuple():
         from numpy import array
         a = array(((1,2,3),(4,5,6)))
-        return a[0,0]
-    def create_array_tuple_shape():
-        from numpy import array, shape
-        a = array(((1,2,3),(4,5,6)))
-        s = shape(a)
-        return len(s), s[0], s[1]
-    f1_shape = epyccel(create_array_list_shape, language = language)
-    f1_val   = epyccel(create_array_list_val, language = language)
-    assert(f1_shape() == create_array_list_shape())
-    assert(f1_val()   == create_array_list_val())
-    assert matching_types(f1_val(), create_array_list_val())
-    f2_shape = epyccel(create_array_tuple_shape, language = language)
-    f2_val   = epyccel(create_array_tuple_val, language = language)
-    assert(f2_shape() == create_array_tuple_shape())
-    assert(f2_val()   == create_array_tuple_val())
-    assert matching_types(f2_val(), create_array_tuple_val())
+        return a
+    def create_array_c_array(b : 'int[:,:]'):
+        from numpy import array
+        a = array(b)
+        return a
+    def create_array_f_array(b : 'int[:,:](order=F)'):
+        from numpy import array
+        a = array(b)
+        return a
+
+    f1 = epyccel(create_array_list, language = language)
+    compare_arrays(create_array_list(), f1())
+
+    f1 = epyccel(create_array_tuple, language = language)
+    compare_arrays(create_array_tuple(), f1())
+
+    f1 = epyccel(create_array_c_array, language = language)
+    x = randint(99,size=(4,10))
+    compare_arrays(create_array_c_array(x), f1(x))
+
+    f1 = epyccel(create_array_f_array, language = language)
+    x = np.array(randint(99,size=(4,10)), order='F')
+    compare_arrays(create_array_f_array(x), f1(x))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
