@@ -68,7 +68,7 @@ jobs:
           Get-Content results.txt
           pytest test_epyccel_modules.py -vs
         working-directory: ./tests/epyccel
-        shell: bash
+        shell: cmd
       #- name: Fortran/C tests with pytest
       #  uses: ./.github/actions/pytest_run
       #- name: Python tests with pytest
