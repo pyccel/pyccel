@@ -356,7 +356,6 @@ class CCodePrinter(CodePrinter):
             else:
                 return arg
 
-
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
 
@@ -374,10 +373,12 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
+        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        if isinstance(arg, Variable):
+            return f"array_copy_data({self._print(lhs)}, {self._print(arg)}, 0);\n"
         order = lhs.order
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs # is this needed?
         array_creations = []
         self.parse_arrays(arg, dtype, declare_dtype, lhs.shape, 'order_c' if order == 'C' else 'order_f', array_creations, self._print(lhs))
         return ''.join(array_creations)
