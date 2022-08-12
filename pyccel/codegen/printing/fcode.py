@@ -1037,7 +1037,8 @@ class FCodePrinter(CodePrinter):
         if expr.order == 'F':
             if expr.rank == 2:
                 rhs_code = self._print(expr.arg)
-                rhs_code = 'transpose({})'.format(rhs_code)
+                if expr.arg.order != 'F':
+                    rhs_code = 'transpose({})'.format(rhs_code)
             elif expr.rank > 2:
                 args     = [self._print(a) for a in expr.arg]
                 new_args = []
@@ -1072,6 +1073,8 @@ class FCodePrinter(CodePrinter):
                 rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
             else:
                 rhs_code = self._print(expr.arg)
+                if expr.arg.order != 'C':
+                    rhs_code = 'transpose({})'.format(rhs_code)
         elif expr.order is None:
             rhs_code = self._print(expr.arg)
         return rhs_code
