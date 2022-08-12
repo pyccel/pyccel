@@ -300,7 +300,7 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
 	return array;
 }
 
-PyObject* ndarray_to_pyarray(t_ndarray *o)
+PyObject* ndarray_to_pyarray(t_ndarray *o, bool release_data)
 {
     int FLAGS;
     if (o->nd == 1) {
@@ -312,28 +312,37 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
 
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
+    if (release_data)
+        PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    return arr;
 }
 
-PyObject* c_ndarray_to_pyarray(t_ndarray *o)
+PyObject* c_ndarray_to_pyarray(t_ndarray *o, bool release_data)
 {
     int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
+    if (release_data)
+        PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    return arr;
 }
 
-PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
+PyObject* fortran_ndarray_to_pyarray(t_ndarray *o, bool release_data)
 {
     int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
+    if (release_data)
+        PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    return arr;
 }
 
 /*

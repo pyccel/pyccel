@@ -32,7 +32,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dty
 from pyccel.ast.datatypes import datatype, NativeVoid
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
-from pyccel.ast.literals  import Nil
+from pyccel.ast.literals  import Nil, LiteralTrue, LiteralFalse
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
@@ -727,11 +727,13 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_func_stmts : functionCall
             call to cast function responsible for the conversion of one data type into another
         """
+        C_to_Python_args = [ObjectAddress(variable)]
+
         if variable.rank != 0:
             self.add_import(cwrapper_ndarray_import)
+            C_to_Python_args.append(LiteralTrue())
 
-
-        cast_function = FunctionCall(C_to_Python(variable), [ObjectAddress(variable)])
+        cast_function = FunctionCall(C_to_Python(variable), C_to_Python_args)
 
         collect_type = PyccelPyObject()
         collect_var = Variable(dtype = collect_type, memory_handling='alias',
@@ -764,11 +766,15 @@ class CWrapperCodePrinter(CCodePrinter):
         list : A list of PyccelAstNodes to be appended to the body of the
                 pymodule initialisation function
         """
+
+        C_to_Python_args = [ObjectAddress(var)]
+
         if var.rank != 0:
             self.add_import(cwrapper_ndarray_import)
+            C_to_Python_args.append(LiteralFalse())
 
         collect_value = AliasAssign(collect_var,
-                                FunctionCall(C_to_Python(var), [ObjectAddress(var)]))
+                                FunctionCall(C_to_Python(var), C_to_Python_args))
         add_expr = PyModule_AddObject(mod_name, var_name, collect_var)
         if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
                         [FunctionCall(Py_DECREF, [collect_var]),
