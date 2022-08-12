@@ -29,13 +29,29 @@ static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, 
     return ndarray_strides;
 }
 
-static npy_intp	*_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd)
+static npy_intp	*_c_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd)
 {
     npy_intp *numpy_strides;
 
     numpy_strides = (npy_intp*)malloc(sizeof(npy_intp) * nd);
     for (int i = 0; i < nd; i++)
         numpy_strides[i] = (npy_intp) nd_strides[i] * type_size;
+
+    return numpy_strides;
+}
+
+static npy_intp	*_f_ndarray_to_numpy_strides(int64_t *nd_strides, int64_t *nd_shape, int32_t type_size, int nd)
+{
+    npy_intp *numpy_strides;
+
+    numpy_strides = (npy_intp*)malloc(sizeof(npy_intp) * nd);
+    for (int32_t i = 0; i < nd; i++)
+    {
+        numpy_strides[i] = 1;
+        for (int32_t j = 0; j < i; j++)
+            numpy_strides[i] *= nd_shape[j];
+        numpy_strides[i] *= type_size;
+    }
 
     return numpy_strides;
 }
@@ -314,7 +330,7 @@ PyObject* ndarray_to_pyarray(t_ndarray *o, bool release_data)
 
     PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _c_ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
@@ -326,7 +342,7 @@ PyObject* c_ndarray_to_pyarray(t_ndarray *o, bool release_data)
     int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _c_ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
@@ -338,7 +354,7 @@ PyObject* fortran_ndarray_to_pyarray(t_ndarray *o, bool release_data)
     int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _f_ndarray_to_numpy_strides(o->strides, o->shape, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
