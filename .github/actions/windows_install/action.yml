@@ -85,8 +85,6 @@ runs:
       shell: powershell
     - name: DrMem
       run: |
-        choco install drmemory
-        ls C:\ProgramData\chocolatey\lib\drmemory
-        cat C:\ProgramData\chocolatey\.chocolatey\drmemory.2.5.0\.files
-        C:\ProgramData\chocolatey\lib\drmemory\drmemory.exe -version
+        curl https://github.com/DynamoRIO/drmemory/releases/download/release_2.5.0/DrMemory-Windows-2.5.0.msi -o DrMemory.msi
+        ./DrMemory.msi
       shell: powershell
