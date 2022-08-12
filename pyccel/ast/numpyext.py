@@ -383,7 +383,7 @@ class NumpyArray(NumpyNewArray):
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='K'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -412,9 +412,8 @@ class NumpyArray(NumpyNewArray):
             if order not in ('K', 'A', 'C', 'F'):
                 raise ValueError(f"Cannot recognize '{order}' order")
 
-            # TODO [YG, 18.02.2020]: set correct order based on input array
             if order in ('K', 'A'):
-                order = 'C'
+                order = arg.order
             # ...
 
         self._arg   = arg
