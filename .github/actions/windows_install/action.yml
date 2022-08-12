@@ -86,7 +86,7 @@ runs:
     - name: DrMem
       run: |
         choco install drmemory
-        ls C:\ProgramData\chocolatey\lib
-        choco list --local-only --exact drmemory --trace
-        drmemory.exe -version
+        ls C:\ProgramData\chocolatey\lib\drmemory
+        cat C:\ProgramData\chocolatey\.chocolatey\drmemory.2.5.0\.files
+        C:\ProgramData\chocolatey\lib\drmemory\drmemory.exe -version
       shell: powershell
