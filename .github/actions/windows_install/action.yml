@@ -83,3 +83,7 @@ runs:
         popd
         echo "MS MPI set up for use"
       shell: powershell
+    - name: DrMem
+      run: |
+        choco install drmemory
+      shell: powershell

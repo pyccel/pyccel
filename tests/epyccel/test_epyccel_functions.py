@@ -117,7 +117,7 @@ def test_decorator_f3(language):
         y[:] = x - 1
         return y
 
-    f = epyccel(f3, language=language)
+    f = epyccel(f3, language=language, verbose=True, debug=True, fflags='-static-libgcc -static-libstdc++ -ggdb')
     x = np.array([3, 4, 5, 6], dtype=int)
     assert np.all(f(x) == f3(x))
 
