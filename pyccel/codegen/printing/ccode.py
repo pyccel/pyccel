@@ -292,10 +292,12 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def create_literal_array(self, arg, dtype, declare_dtype, order, name=None):
+    def create_literal_array(self, arg, dvar, name=None):
         self.add_import(c_imports['ndarrays'])
         self.add_import(c_imports['string'])
         shape = str(len(arg))
+        dtype = dvar["dtype"]
+        declare_dtype = dvar["declare_dtype"]
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false'
@@ -304,9 +306,12 @@ class CCodePrinter(CodePrinter):
         array_create = ""
         nd = "1"
         if name is None:
+            order = 'order_c'
             temp_literal_array_name = self.scope.get_new_name('temp_array')
             temp_array_declaration = f"t_ndarray {temp_literal_array_name} = " "{.shape = NULL};\n"
             array_create = f"{temp_literal_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        else:
+            order = dvar['order']
         dummy_array_name = self.scope.get_new_name('array_dummy')
         literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"
         dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
@@ -314,17 +319,20 @@ class CCodePrinter(CodePrinter):
 
         return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
 
-    def create_variable_array(self, shape, array_names, dtype, order, name=None):
+    def create_variable_array(self, shape, array_names, dvar, name=None):
         self.add_import(c_imports['ndarrays'])
         if not name:
+            order = 'order_c'
             temp_variable_array_name = self.scope.get_new_name("composed")
         else:
+            order = dvar["order"]
             temp_variable_array_name = name
         nd = len(shape)
         shape = ', '.join(self._print(elem) for elem in shape)
         is_view = 'false'
         temp_array_declaration = ""
         array_create = ""
+        dtype = dvar["dtype"]
         if name == None:
             temp_array_declaration = f"t_ndarray {temp_variable_array_name} = " "{.shape = NULL};\n"
             shape_dtype = self.find_in_dtype_registry('int', 8)
@@ -334,21 +342,23 @@ class CCodePrinter(CodePrinter):
         for index, array in enumerate(array_names):
             offset = f"(({array}.buffer_size) * {index}) / {array}.type_size" if order == "order_c" else index
             copy_operations += f"array_copy_data({temp_variable_array_name}, {array}, {offset});\n"
+            if array not in dvar["original_vars"]:
+                copy_operations += f"free_array({array});\n"
         return (temp_array_declaration + array_create + copy_operations, temp_variable_array_name)
 
-    def parse_arrays(self, arg, dtype, declare_dtype, shape, order, array_creations, lhs_name=None): # TODO: gotta free the temp arrays, TODO: can remove declare_dtype?
+    def parse_arrays(self, arg, shape, dvar, lhs_name=None):
         elem_shape = shape[1:]
         if isinstance(arg, PythonTuple):
             t = []
             for elem in arg:
-                t.append(self.parse_arrays(elem, dtype, declare_dtype, elem_shape, 'order_c', array_creations))
+                t.append(self.parse_arrays(elem, elem_shape, dvar))
             if isinstance(t[0], str):
-                array_creation, array_name = self.create_variable_array(shape, t, dtype, order, lhs_name)
-                array_creations.append(array_creation)
+                array_creation, array_name = self.create_variable_array(shape, t, dvar, lhs_name)
+                dvar["array_creations"].append(array_creation)
                 return array_name
             else:
-                array_creation, array_name = self.create_literal_array(t, dtype, declare_dtype, order, lhs_name)
-                array_creations.append(array_creation)
+                array_creation, array_name = self.create_literal_array(t, dvar, lhs_name)
+                dvar["array_creations"].append(array_creation)
                 return array_name
         else:
             if isinstance(arg, Variable) and arg.rank >= 1:
@@ -380,7 +390,12 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         array_creations = []
-        self.parse_arrays(arg, dtype, declare_dtype, lhs.shape, 'order_c' if order == 'C' else 'order_f', array_creations, self._print(lhs))
+        dvar = {"dtype": dtype,
+                "declare_dtype": declare_dtype,
+                "order": ('order_c' if order == 'C' else 'order_f'),
+                "array_creations": array_creations,
+                "original_vars": list(self._scope._original_symbol.keys())}
+        self.parse_arrays(arg, lhs.shape, dvar, self._print(lhs))
         return ''.join(array_creations)
 
     def arrayFill(self, expr):
