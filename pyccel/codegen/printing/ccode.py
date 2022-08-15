@@ -6,6 +6,7 @@
 # pylint: disable=missing-function-docstring
 import functools
 from itertools import chain
+from numbers import Integral
 import re
 
 from pyccel.ast.basic     import ScopedNode
@@ -551,6 +552,10 @@ class CCodePrinter(CodePrinter):
         return '({} != 0)'.format(value)
 
     def _print_Literal(self, expr):
+        if isinstance(expr, LiteralInteger) and get_final_precision(expr) == 8:
+            return "{}l".format(repr(expr.python_value))
+        elif isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
+            return "{}f".format(repr(expr.python_value))
         return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
