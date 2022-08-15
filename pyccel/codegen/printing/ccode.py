@@ -6,7 +6,6 @@
 # pylint: disable=missing-function-docstring
 import functools
 from itertools import chain
-from numbers import Integral
 import re
 
 from pyccel.ast.basic     import ScopedNode
