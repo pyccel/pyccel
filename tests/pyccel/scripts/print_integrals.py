@@ -11,7 +11,6 @@ if __name__ == '__main__':
     print(10000)
     print(-10000)
     print(2147483647)
-    print(-2147483648)
     print(int64(2147483648))
     print(int64(9223372036854775807))
     print(int32(0))
@@ -22,4 +21,6 @@ if __name__ == '__main__':
     print(int32(10000))
     print(int32(-10000))
     print(int32(2147483647))
-    print(int32(-2147483648))
+    # Fortran on windows doesn't compile with literal -2147483648
+    # print(int64(-2147483648))
+    # print(int32(-2147483648))
