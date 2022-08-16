@@ -4,6 +4,8 @@
 /* --------------------------------------------------------------------------------------- */
 
 #include "cwrapper_ndarrays.h"
+#include <assert.h>
+#include <crtdbg.h>
 
 /*
  * Function : _numpy_to_ndarray_strides
