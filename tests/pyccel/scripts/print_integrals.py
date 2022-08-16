@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # ------------------------------- Strings ------------------------------------
 
-from numpy import int32
+from numpy import int32, int64
 if __name__ == '__main__':
     print(0)
     print(00)
@@ -12,8 +12,8 @@ if __name__ == '__main__':
     print(-10000)
     print(2147483647)
     print(-2147483648)
-    print(2147483648)
-    print(9223372036854775807)
+    print(int64(2147483648))
+    print(int64(9223372036854775807))
     print(int32(0))
     print(int32(00))
     print(int32(1))
