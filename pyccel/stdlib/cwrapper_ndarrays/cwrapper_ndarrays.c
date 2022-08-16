@@ -24,12 +24,12 @@ static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, 
 
     ndarray_strides = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        ndarray_strides[i] = (int64_t) np_strides[i] / type_size;
+        ndarray_strides[i] = int64_t(np_strides[i]) / type_size;
 
     return ndarray_strides;
 }
 
-static npy_intp	*_c_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd)
+static npy_intp	*_c_ndarray_to_numpy_strides(int64_t  *nd_strides, int type_size, int nd)
 {
     npy_intp *numpy_strides;
 
@@ -40,7 +40,7 @@ static npy_intp	*_c_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_
     return numpy_strides;
 }
 
-static npy_intp	*_f_ndarray_to_numpy_strides(int64_t *nd_strides, int64_t *nd_shape, int32_t type_size, int nd)
+static npy_intp	*_f_ndarray_to_numpy_strides(int64_t *nd_strides, int64_t *nd_shape, int type_size, int nd)
 {
     npy_intp *numpy_strides;
 
@@ -76,7 +76,7 @@ static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
 
     nd_shape = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        nd_shape[i] = (int64_t) np_shape[i];
+        nd_shape[i] = int64_t(np_shape[i]);
     return nd_shape;
 }
 
@@ -86,7 +86,7 @@ static npy_intp *_ndarray_to_numpy_shape(int64_t *nd_shape, int nd)
 
     np_shape = (npy_intp*)malloc(sizeof(npy_intp) * nd);
     for (int i = 0; i < nd; i++)
-        np_shape[i] = (npy_intp) nd_shape[i];
+        np_shape[i] = npy_intp(nd_shape[i]);
     return np_shape;
 }
 
