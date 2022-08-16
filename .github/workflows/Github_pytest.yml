@@ -63,9 +63,10 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Fortran/C tests with pytest
         run: |
-          drmemory.exe -logdir . -- pytest test_epyccel_functions.py -vs -k decorator
-          ls
-          Get-Content results.txt
+          #drmemory.exe -logdir . -- pytest test_epyccel_functions.py -vs -k decorator
+          pytest test_epyccel_functions.py -vs -k decorator
+          #ls
+          #Get-Content results.txt
           pytest test_epyccel_modules.py -vs
         working-directory: ./tests/epyccel
       #- name: Fortran/C tests with pytest
