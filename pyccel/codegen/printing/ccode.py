@@ -554,7 +554,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr, LiteralInteger) and get_final_precision(expr) == 8:
             return f"{repr(expr.python_value)}l"
         elif isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
-            return f"{repr(expr.python_value)}l"
+            return f"{repr(expr.python_value)}f"
         return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
