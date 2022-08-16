@@ -337,7 +337,7 @@ PyObject* ndarray_to_pyarray(t_ndarray *o, bool release_data)
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
-    ASSERT(_CrtCheckMemory());
+    assert(_CrtCheckMemory());
     return arr;
 }
 
@@ -354,7 +354,7 @@ PyObject* c_ndarray_to_pyarray(t_ndarray *o, bool release_data)
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
-    ASSERT(_CrtCheckMemory());
+    assert(_CrtCheckMemory());
     return arr;
 }
 
@@ -371,7 +371,7 @@ PyObject* fortran_ndarray_to_pyarray(t_ndarray *o, bool release_data)
             o->raw_data, FLAGS, NULL);
     if (release_data)
         PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
-    ASSERT(_CrtCheckMemory());
+    assert(_CrtCheckMemory());
     return arr;
 }
 
