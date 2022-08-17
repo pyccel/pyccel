@@ -371,7 +371,21 @@ def array_real_4d_C_array_initialization(x, y, a):
     from numpy import array
     tmp      = array([x, y], dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
+##==============================================================================
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
+##==============================================================================
 
+@types('real[:,:,:]','real[:,:]', 'real[:,:]', 'real[:,:,:,:]')
+def array_real_nested_C_array_initialization(x, y, z, a):
+    from numpy import array
+    tmp      = array([x, [y, z]], dtype='float')
+    a[:,:,:,:] = tmp[:,:,:,:]
+
+@types('real[:,:,:]','real[:,:]', 'real[:]', 'real[:,:,:,:]')
+def array_real_nested_C_array_initialization(x, y, z, a):
+    from numpy import array
+    tmp      = array([x, [y, z]], dtype='float')
+    a[:,:,:,:] = tmp[:,:,:,:]
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH F ORDERING

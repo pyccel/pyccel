@@ -684,6 +684,7 @@ def test_array_int_2d_C_initialization(language):
 
     assert np.array_equal(x1, x2)
 
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
@@ -1126,6 +1127,7 @@ def test_array_real_3d_C_array_initialization_2(language):
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
+
 def test_array_real_4d_C_array_initialization(language):
 
     f1 = arrays.array_real_4d_C_array_initialization
@@ -3853,7 +3855,46 @@ def test_iterate_slice(language):
     assert f1(i) == f2(i)
 
 ##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
+##==============================================================================
+def test_array_real_nested_C_array_initialization(language):
+
+    f1 = arrays.array_real_nested_C_array_initialization
+    f2 = epyccel(f1, language = language)
+
+    x  = np.random.random((3,2,4))
+    y  = np.random.random((2,4))
+    z  = np.random.random((2,4))
+    a  = np.array([x, [y, z]])
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_nested_C_array_initialization_2(language):
+    f1 = arrays.array_real_nested_C_array_initialization_2
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    f = np.random.random(3)
+    nested = np.array([[e, [f, f]], a, [[f, f], [f, f]]])
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeroes_like(nested)
+
+    f1(a, e, f, x1)
+    f2(a, e, f, x2)
+
+    assert np.array_equal(x1, x2)
+ 
+
+##==============================================================================
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER F
 ##==============================================================================
 #
 #def teardown_module():
