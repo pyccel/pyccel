@@ -382,10 +382,26 @@ def array_real_nested_C_array_initialization(x, y, z, a):
     a[:,:,:,:] = tmp[:,:,:,:]
 
 @types('real[:,:,:]','real[:,:]', 'real[:]', 'real[:,:,:,:]')
-def array_real_nested_C_array_initialization(x, y, z, a):
+def array_real_nested_C_array_initialization_2(a, e, f, x):
     from numpy import array
-    tmp      = array([x, [y, z]], dtype='float')
+    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float')
+    x[:,:,:,:] = tmp[:,:,:,:]
+
+##==============================================================================
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER F
+##==============================================================================
+
+@types('real[:,:,:]','real[:,:]', 'real[:,:]', 'real[:,:,:,:]')
+def array_real_nested_F_array_initialization(x, y, z, a):
+    from numpy import array
+    tmp      = array([x, [y, z]], dtype='float', order="F")
     a[:,:,:,:] = tmp[:,:,:,:]
+
+@types('real[:,:,:]','real[:,:]', 'real[:]', 'real[:,:,:,:]')
+def array_real_nested_C_array_initialization_2(a, e, f, x):
+    from numpy import array
+    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float', order="F")
+    x[:,:,:,:] = tmp[:,:,:,:]
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH F ORDERING
