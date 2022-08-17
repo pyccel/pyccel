@@ -5,7 +5,7 @@ from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
-'''
+
 #==============================================================================
 # TEST: 1D ARRAYS OF INT-32
 #==============================================================================
@@ -3853,7 +3853,6 @@ def test_iterate_slice(language):
     f2 = epyccel(f1, language = language)
     i = randint(2,10)
     assert f1(i) == f2(i)
-'''
 ##==============================================================================
 ## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
 ##==============================================================================
