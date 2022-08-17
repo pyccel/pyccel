@@ -794,7 +794,7 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
-        print('handle func -- ', func, type(func))
+
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
@@ -2222,7 +2222,6 @@ class SemanticParser(BasicParser):
             # first we check if it is a macro, in this case, we will create
             # an appropriate FunctionCall
 
-            print('func call -- ', expr, type(expr))
             macro = self.scope.find(name, 'macros')
             if macro is not None:
                 func = macro.master.funcdef
@@ -2230,7 +2229,6 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
             else:
                 func = self.scope.find(name, 'functions')
-                print('func -- ', func, type(func))
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),

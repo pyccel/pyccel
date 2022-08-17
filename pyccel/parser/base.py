@@ -102,7 +102,6 @@ def get_filename_from_import(module,input_folder=''):
 
     filename_pyh = os.path.join(package_dir, filename_pyh)
     filename_py = os.path.join(package_dir, filename_py)
-    print("hemS", filename_py, filename_pyh)
     if os.path.isfile(filename_pyh):
         return filename_pyh
     elif os.path.isfile(filename_py):
