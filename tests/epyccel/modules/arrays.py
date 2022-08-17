@@ -378,7 +378,7 @@ def array_real_4d_C_array_initialization(x, y, a):
 @types('real[:,:,:]','real[:,:]', 'real[:,:]', 'real[:,:,:,:]')
 def array_real_nested_C_array_initialization(x, y, z, a):
     from numpy import array
-    tmp      = array([x, [y, z], x], dtype='float')
+    tmp      = array([x, [y, z, z], x], dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
 
 @types('real[:,:,:]','real[:,:]', 'real[:]', 'real[:,:,:,:]')
@@ -391,14 +391,14 @@ def array_real_nested_C_array_initialization_2(a, e, f, x):
 ## TEST NESTED ARRAYS INITIALIZATION WITH ORDER F
 ##==============================================================================
 
-@types('real[:,:,:]','real[:,:]', 'real[:,:]', 'real[:,:,:,:]')
+@types('real[:,:,:]','real[:,:]', 'real[:,:]', 'real[:,:,:,:](order=F)')
 def array_real_nested_F_array_initialization(x, y, z, a):
     from numpy import array
-    tmp      = array([x, [y, z], x], dtype='float', order="F")
+    tmp      = array([x, [y, z, z], x], dtype='float', order="F")
     a[:,:,:,:] = tmp[:,:,:,:]
 
-@types('real[:,:,:]','real[:,:]', 'real[:]', 'real[:,:,:,:]')
-def array_real_nested_C_array_initialization_2(a, e, f, x):
+@types('real[:,:,:]','real[:,:]', 'real[:]', 'real[:,:,:,:](order=F)')
+def array_real_nested_F_array_initialization_2(a, e, f, x):
     from numpy import array
     tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]

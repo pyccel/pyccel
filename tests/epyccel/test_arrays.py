@@ -5,7 +5,7 @@ from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
-
+'''
 #==============================================================================
 # TEST: 1D ARRAYS OF INT-32
 #==============================================================================
@@ -3853,7 +3853,7 @@ def test_iterate_slice(language):
     f2 = epyccel(f1, language = language)
     i = randint(2,10)
     assert f1(i) == f2(i)
-
+'''
 ##==============================================================================
 ## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
 ##==============================================================================
@@ -3866,13 +3866,13 @@ def test_array_real_nested_C_array_initialization(language):
     x  = np.random.random((3,2,4))
     y  = np.random.random((2,4))
     z  = np.random.random((2,4))
-    a  = np.array([x, [y, z], x])
+    a  = np.array([x, [y, z, z], x])
 
     x1 = np.zeros_like(a)
     x2 = np.zeros_like(a)
 
-    f1(x, y, x1)
-    f2(x, y, x2)
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
 
     assert np.array_equal(x1, x2)
 
@@ -3886,7 +3886,7 @@ def test_array_real_nested_C_array_initialization_2(language):
     nested = np.array([[e, [f, f]], a, [[f, f], [f, f]]])
 
     x1 = np.zeros_like(nested)
-    x2 = np.zeroes_like(nested)
+    x2 = np.zeros_like(nested)
 
     f1(a, e, f, x1)
     f2(a, e, f, x2)
@@ -3899,24 +3899,25 @@ def test_array_real_nested_C_array_initialization_2(language):
 
 def test_array_real_nested_F_array_initialization(language):
 
-    f1 = arrays.array_real_nested_C_array_initialization
+
+    f1 = arrays.array_real_nested_F_array_initialization
     f2 = epyccel(f1, language = language)
 
     x  = np.random.random((3,2,4))
     y  = np.random.random((2,4))
     z  = np.random.random((2,4))
-    a  = np.array([x, [y, z]], order="F")
+    a  = np.array([x, [y, z, z], x], order="F")
 
     x1 = np.zeros_like(a)
     x2 = np.zeros_like(a)
 
-    f1(x, y, x1)
-    f2(x, y, x2)
+    f1(x, y, z, x1)
+    f2(x, y, z, x2)
 
     assert np.array_equal(x1, x2)
 
 def test_array_real_nested_F_array_initialization_2(language):
-    f1 = arrays.array_real_nested_C_array_initialization_2
+    f1 = arrays.array_real_nested_F_array_initialization_2
     f2 = epyccel(f1, language = language)
 
     a = np.random.random((2,2,3))
@@ -3925,7 +3926,7 @@ def test_array_real_nested_F_array_initialization_2(language):
     nested = np.array([[e, [f, f]], a, [[f, f], [f, f]]], order="F")
 
     x1 = np.zeros_like(nested)
-    x2 = np.zeroes_like(nested)
+    x2 = np.zeros_like(nested)
 
     f1(a, e, f, x1)
     f2(a, e, f, x2)
