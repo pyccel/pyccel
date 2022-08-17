@@ -3866,7 +3866,7 @@ def test_array_real_nested_C_array_initialization(language):
     x  = np.random.random((3,2,4))
     y  = np.random.random((2,4))
     z  = np.random.random((2,4))
-    a  = np.array([x, [y, z]])
+    a  = np.array([x, [y, z], x])
 
     x1 = np.zeros_like(a)
     x2 = np.zeros_like(a)
