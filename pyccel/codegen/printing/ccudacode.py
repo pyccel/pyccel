@@ -1,0 +1,369 @@
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+# pylint: disable=missing-function-docstring
+import functools
+from itertools import chain
+import re
+
+from pyccel.ast.basic     import ScopedNode
+
+from pyccel.ast.builtins  import PythonRange, PythonComplex
+from pyccel.ast.builtins  import PythonPrint, PythonType
+from pyccel.ast.builtins  import PythonList, PythonTuple
+
+from pyccel.ast.core      import Declare, For, CodeBlock
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
+from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
+from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
+from pyccel.ast.core      import SeparatorComment
+from pyccel.ast.core      import Module, AsName
+
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
+from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
+from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
+
+from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
+
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
+from pyccel.ast.literals  import Nil
+
+from pyccel.ast.mathext  import math_constants
+
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+
+from pyccel.ast.utilities import expand_to_loops
+
+from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import PyccelArraySize, Variable
+from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
+
+from pyccel.ast.c_concepts import ObjectAddress
+
+from pyccel.codegen.printing.ccode import CCodePrinter
+
+from pyccel.errors.errors   import Errors
+from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
+                                    PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
+
+
+errors = Errors()
+
+# TODO: add examples
+
+__all__ = ["CCudaCodePrinter", "ccudacode"]
+
+# dictionary mapping numpy function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
+numpy_ufunc_to_c_float = {
+    'NumpyAbs'  : 'fabs',
+    'NumpyFabs'  : 'fabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    # ---
+    'NumpyExp' : 'exp',
+    'NumpyLog' : 'log',
+    'NumpySqrt': 'sqrt',
+    # ---
+    'NumpySin'    : 'sin',
+    'NumpyCos'    : 'cos',
+    'NumpyTan'    : 'tan',
+    'NumpyArcsin' : 'asin',
+    'NumpyArccos' : 'acos',
+    'NumpyArctan' : 'atan',
+    'NumpyArctan2': 'atan2',
+    'NumpySinh'   : 'sinh',
+    'NumpyCosh'   : 'cosh',
+    'NumpyTanh'   : 'tanh',
+    'NumpyArcsinh': 'asinh',
+    'NumpyArccosh': 'acosh',
+    'NumpyArctanh': 'atanh',
+}
+
+numpy_ufunc_to_c_complex = {
+    'NumpyAbs'  : 'cabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    # ---
+    'NumpyExp' : 'cexp',
+    'NumpyLog' : 'clog',
+    'NumpySqrt': 'csqrt',
+    # ---
+    'NumpySin'    : 'csin',
+    'NumpyCos'    : 'ccos',
+    'NumpyTan'    : 'ctan',
+    'NumpyArcsin' : 'casin',
+    'NumpyArccos' : 'cacos',
+    'NumpyArctan' : 'catan',
+    'NumpySinh'   : 'csinh',
+    'NumpyCosh'   : 'ccosh',
+    'NumpyTanh'   : 'ctanh',
+    'NumpyArcsinh': 'casinh',
+    'NumpyArccosh': 'cacosh',
+    'NumpyArctanh': 'catanh',
+}
+
+# dictionary mapping Math function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_MathFunctionBase(self, expr)
+# Math function ref https://docs.python.org/3/library/math.html
+math_function_to_c = {
+    # ---------- Number-theoretic and representation functions ------------
+    'MathCeil'     : 'ceil',
+    # 'MathComb'   : 'com' # TODO
+    'MathCopysign': 'copysign',
+    'MathFabs'   : 'fabs',
+    'MathFloor'    : 'floor',
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathRexp'   : '???'   TODO requires two output
+    # 'MathFsum'   : '???',  # TODO
+    # 'MathIsclose' : '???',  # TODO
+    'MathIsfinite': 'isfinite', # int isfinite(real-floating x);
+    'MathIsinf'   : 'isinf', # int isinf(real-floating x);
+    'MathIsnan'   : 'isnan', # int isnan(real-floating x);
+    # 'MathIsqrt'  : '???' TODO
+    'MathLdexp'  : 'ldexp',
+    # 'MathModf'  : '???' TODO return two value
+    # 'MathPerm'  : '???' TODO
+    # 'MathProd'  : '???' TODO
+    'MathRemainder'  : 'remainder',
+    'MathTrunc'  : 'trunc',
+
+    # ----------------- Power and logarithmic functions -----------------------
+
+    'MathExp'    : 'exp',
+    'MathExpm1'  : 'expm1',
+    'MathLog'    : 'log',      # take also an option arg [base]
+    'MathLog1p'  : 'log1p',
+    'MathLog2'  : 'log2',
+    'MathLog10'  : 'log10',
+    'MathPow'    : 'pow',
+    'MathSqrt'   : 'sqrt',
+
+    # --------------------- Trigonometric functions ---------------------------
+
+    'MathAcos'   : 'acos',
+    'MathAsin'   : 'asin',
+    'MathAtan'   : 'atan',
+    'MathAtan2'  : 'atan2',
+    'MathCos'    : 'cos',
+    # 'MathDist'  : '???', TODO
+    'MathHypot'  : 'hypot',
+    'MathSin'    : 'sin',
+    'MathTan'    : 'tan',
+
+
+    # -------------------------- Hyperbolic functions -------------------------
+
+    'MathAcosh'  : 'acosh',
+    'MathAsinh'  : 'asinh',
+    'MathAtanh'  : 'atanh',
+    'MathCosh'   : 'cosh',
+    'MathSinh'   : 'sinh',
+    'MathTanh'   : 'tanh',
+
+    # --------------------------- Special functions ---------------------------
+
+    'MathErf'    : 'erf',
+    'MathErfc'   : 'erfc',
+    'MathGamma'  : 'tgamma',
+    'MathLgamma' : 'lgamma',
+
+    # --------------------------- internal functions --------------------------
+    'MathFactorial' : 'pyc_factorial',
+    'MathGcd'       : 'pyc_gcd',
+    'MathDegrees'   : 'pyc_degrees',
+    'MathRadians'   : 'pyc_radians',
+    'MathLcm'       : 'pyc_lcm',
+}
+
+c_library_headers = (
+    "complex",
+    "ctype",
+    "float",
+    "math",
+    "stdarg",
+    "stdbool",
+    "stddef",
+    "stdint",
+    "stdio",
+    "stdlib",
+    "string",
+    "tgmath",
+)
+
+dtype_registry = {('float',8)   : 'double',
+                  ('float',4)   : 'float',
+                  ('complex',8) : 'double complex',
+                  ('complex',4) : 'float complex',
+                  ('int',4)     : 'int32_t',
+                  ('int',8)     : 'int64_t',
+                  ('int',2)     : 'int16_t',
+                  ('int',1)     : 'int8_t',
+                  ('bool',4)    : 'bool'}
+
+ndarray_type_registry = {
+                  ('float',8)   : 'nd_double',
+                  ('float',4)   : 'nd_float',
+                  ('complex',8) : 'nd_cdouble',
+                  ('complex',4) : 'nd_cfloat',
+                  ('int',8)     : 'nd_int64',
+                  ('int',4)     : 'nd_int32',
+                  ('int',2)     : 'nd_int16',
+                  ('int',1)     : 'nd_int8',
+                  ('bool',4)    : 'nd_bool'}
+
+import_dict = {'omp_lib' : 'omp' }
+
+c_imports = {n : Import(n, Module(n, (), ())) for n in
+                ['stdlib',
+                 'math',
+                 'string',
+                 'ndarrays',
+                 'math',
+                 'complex',
+                 'stdint',
+                 'pyc_math_c',
+                 'stdio',
+                 'stdbool',
+                 'assert']}
+
+class CcudaCodePrinter(CCodePrinter):
+    """A printer to convert python expressions to strings of ccuda code"""
+    printmethod = "_ccudacode"
+    language = "ccuda"
+
+    _default_settings = {
+        'tabwidth': 4,
+    }
+
+    def __init__(self, filename, prefix_module = None):
+
+        errors.set_target(filename, 'file')
+
+        super().__init__(filename)
+        self.prefix_module = prefix_module
+        self._additional_imports = {'stdlib':c_imports['stdlib']}
+        self._additional_code = ''
+        self._additional_args = []
+        self._temporary_args = []
+        self._current_module = None
+        self._in_header = False
+        # Dictionary linking optional variables to their
+        # temporary counterparts which provide allocated
+        # memory
+        # Key is optional variable
+        self._optional_partners = {}
+
+    def function_signature(self, expr, print_arg_names = True):
+        """Extract from function definition all the information
+        (name, input, output) needed to create the signature
+
+        Parameters
+        ----------
+        expr            : FunctionDef
+            the function defintion
+
+        print_arg_names : Bool
+            default value True and False when we don't need to print
+            arguments names
+
+        Return
+        ------
+        String
+            Signature of the function
+        """
+
+        args = list(expr.arguments)
+        if len(expr.results) == 1:
+            ret_type = self.get_declare_type(expr.results[0])
+        elif len(expr.results) > 1:
+            ret_type = self._print(datatype('int')) + ' '
+            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='alias')) for a in expr.results]
+        else:
+            ret_type = self._print(datatype('void')) + ' '
+        name = expr.name
+        if not args:
+            arg_code = 'void'
+        else:
+            def get_var_arg(arg, var):
+                code = "const " * var.is_const
+                code += self.get_declare_type(var)
+                code += arg.name * print_arg_names
+                return code
+
+            var_list = [a.var for a in args]
+            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
+            arg_code = ', '.join(arg_code_list)
+
+        cuda_deco = "__global__ " if 'kernel' in expr.decorators else ''
+        if isinstance(expr, FunctionAddress):
+            return '{}(*{})({})'.format(ret_type, name, arg_code)
+        else:
+            return '{0}{1}{2}({3})'.format(cuda_deco, ret_type, name, arg_code)
+
+    def _print_KernelCall(self, expr):
+        func = expr.funcdef
+        if func.is_inline:
+            return self._handle_inline_func_call(expr)
+         # Ensure the correct syntax is used for pointers
+        args = []
+        for a, f in zip(expr.args, func.arguments):
+            a = a.value if a else Nil()
+            f = f.var
+            if self.stored_in_c_pointer(f):
+                if isinstance(a, Variable):
+                    args.append(ObjectAddress(a))
+                elif not self.stored_in_c_pointer(a):
+                    tmp_var = self.scope.get_temporary_variable(f.dtype)
+                    assign = Assign(tmp_var, a)
+                    self._additional_code += self._print(assign)
+                    args.append(ObjectAddress(tmp_var))
+                else:
+                    args.append(a)
+            else :
+                args.append(a)
+
+        args += self._temporary_args
+        self._temporary_args = []
+        args = ', '.join(['{}'.format(self._print(a)) for a in args])
+        # TODO: need to raise error in semantic if we have result , kernel can't return
+        if not func.results:
+            return '{}<<<{},{}>>>({});\n'.format(func.name, expr.numBlocks, expr.tpblock,args)
+
+
+def ccudacode(expr, filename, assign_to=None, **settings):
+    """Converts an expr to a string of ccuda code
+
+    expr : Expr
+        A pyccel expression to be converted.
+    filename : str
+        The name of the file being translated. Used in error printing
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+    user_functions : dict, optional
+        A dictionary where keys are ``FunctionClass`` instances and values are
+        their string representations. Alternatively, the dictionary value can
+        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
+        for examples.
+    dereference : iterable, optional
+        An iterable of symbols that should be dereferenced in the printed code
+        expression. These would be values passed by address to the function.
+        For example, if ``dereference=[a]``, the resulting code would print
+        ``(*a)`` instead of ``a``.
+    """
+    return CCudaCodePrinter(filename, **settings).doprint(expr, assign_to)
