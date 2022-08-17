@@ -2095,6 +2095,60 @@ class DottedFunctionCall(FunctionCall):
         """
         return self._prefix
 
+class KernelCall(FunctionCall):
+    """
+    Represents a kernel call
+    (e.g. a[c, b]())
+
+
+
+    Parameters
+    ==========
+    func             : FunctionDef
+                       The definition of the function being called
+    args             : tuple
+                       The arguments being passed to the function
+
+    numBlocks        : NativeInteger
+                       The number of blocks
+    tpblock          : NativeInteger
+                       The number of threads per block
+    """
+    __slots__ = ('_numBlocks','_tpblock', '_func', '_args')
+    _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock')
+
+    def __init__(self, func, args, numBlocks, tpblock, current_function=None):
+
+        self._func = func
+        self._args = args
+        self._numBlocks = numBlocks
+        self._tpblock = tpblock
+        super().__init__(func, args, current_function)
+
+    @property
+    def func(self):
+        """ The number of blocks in which the kernel will run
+        """
+        return self._func
+
+    @property
+    def args(self):
+        """ The number of blocks in which the kernel will run
+        """
+        return self._args
+
+    @property
+    def numBlocks(self):
+        """ The number of blocks in which the kernel will run
+        """
+        return self._numBlocks
+
+    @property
+    def tpblock(self):
+        """ The number of threads in each block
+        """
+        return self._tpblock
+
 class Return(Basic):
 
     """Represents a function return in the code.

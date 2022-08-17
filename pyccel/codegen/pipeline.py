@@ -198,6 +198,9 @@ def execute_pyccel(fname, *,
     if compiler is None:
         compiler = 'GNU'
 
+    # Choose cuda vendor
+    if language == 'ccuda':
+        compiler = 'nvidia'
     fflags = [] if fflags is None else fflags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 

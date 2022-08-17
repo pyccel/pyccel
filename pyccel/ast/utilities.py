@@ -25,6 +25,7 @@ from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
 from .mathext       import math_mod
 
+from .cudaext       import cuda_mod
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
@@ -76,7 +77,9 @@ def builtin_function(expr, args=None):
 decorators_mod = Module('decorators',(),
         funcs = [PyccelFunctionDef(d, PyccelInternalFunction) for d in pyccel_decorators.__all__])
 pyccel_mod = Module('pyccel',(),(),
-        imports = [Import('decorators', decorators_mod)])
+        imports = [Import('decorators', decorators_mod),
+                    Import('cuda', AsName(cuda_mod,'cuda')),
+                    ])
 
 # TODO add documentation
 builtin_import_registery = Module('__main__',

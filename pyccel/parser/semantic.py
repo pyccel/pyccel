@@ -39,6 +39,7 @@ from pyccel.ast.core import Return, FunctionDefArgument
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
+from pyccel.ast.core import KernelCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
@@ -212,7 +213,6 @@ class SemanticParser(BasicParser):
         #
         self._code = parser._code
         # ...
-
         self.annotate()
         # ...
 
@@ -419,7 +419,6 @@ class SemanticParser(BasicParser):
 
         d_var = {}
         # TODO improve => put settings as attribut of Parser
-
         if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
 					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
@@ -795,6 +794,7 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
+        print('handle func -- ', func, type(func))
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
@@ -819,6 +819,58 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             new_expr = FunctionCall(func, args, self._current_function)
+            if None in new_expr.args:
+                errors.report("Too few arguments passed in function call",
+                        symbol = expr,
+                        severity='error')
+            elif isinstance(func, FunctionDef):
+                self._check_argument_compatibility(new_expr.args, func.arguments,
+                        expr, func.is_elemental)
+            return new_expr
+    
+    def _handle_kernel(self, expr, func, args, **settings):
+        """
+        Create a FunctionCall or an instance of a PyccelInternalFunction
+        from the function information and arguments
+
+        Parameters
+        ==========
+        expr : PyccelAstNode
+               The expression where this call is found (used for error output)
+        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+               The function being called
+        args : tuple
+               The arguments passed to the function
+
+        Returns
+        =======
+        new_expr : FunctionCall or PyccelInternalFunction
+        """
+        if isinstance(func, PyccelFunctionDef):
+            func = func.cls_name
+            args, kwargs = split_positional_keyword_arguments(*args)
+            for a in args:
+                if getattr(a,'dtype',None) == 'tuple':
+                    self._infere_type(a, **settings)
+            for a in kwargs.values():
+                if getattr(a,'dtype',None) == 'tuple':
+                    self._infere_type(a, **settings)
+
+            try:
+                new_expr = func(*args, **kwargs)
+            except TypeError:
+                errors.report(UNRECOGNISED_FUNCTION_CALL,
+                        symbol = expr,
+                        severity = 'fatal')
+
+            return new_expr
+        else:
+            if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
+                errors.report("Too many arguments passed in function call",
+                        symbol = expr,
+                        severity='fatal')
+            # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
+            new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
@@ -1789,7 +1841,7 @@ class SemanticParser(BasicParser):
 
 
     def _visit_DottedName(self, expr, **settings):
-
+        
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
@@ -1854,7 +1906,11 @@ class SemanticParser(BasicParser):
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
-
+        from pyccel.ast.cudaext import CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
+        # if first isinstance():
+        if (first in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim)):
+            dim = {'x':0, 'y':1, 'z':2}
+            return first(LiteralInteger(dim[rhs_name]))
         d_var = self._infere_type(first)
         if d_var.get('cls_base', None) is None:
             errors.report(f'Attribute {rhs_name} not found',
@@ -1943,6 +1999,19 @@ class SemanticParser(BasicParser):
         return errors.report(f'Attribute {rhs_name} not found',
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal')
+
+    def _visit_KernelCall(self, expr, **settings):
+        name     = expr.funcdef
+        try:
+            name = self.scope.get_expected_name(name)
+        except RuntimeError:
+            pass
+        func     = self.scope.find(name, 'functions')
+
+        args = self._handle_function_args(expr.args, **settings)
+
+        return self._handle_kernel(expr, func, args, **settings)
+        # return KernelCall(func, expr.args, expr.numBlocks, expr.tpblock)
 
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
@@ -2153,6 +2222,7 @@ class SemanticParser(BasicParser):
             # first we check if it is a macro, in this case, we will create
             # an appropriate FunctionCall
 
+            print('func call -- ', expr, type(expr))
             macro = self.scope.find(name, 'macros')
             if macro is not None:
                 func = macro.master.funcdef
@@ -2160,6 +2230,7 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
             else:
                 func = self.scope.find(name, 'functions')
+                print('func -- ', func, type(func))
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),

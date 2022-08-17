@@ -19,7 +19,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic
 
-from pyccel.ast.core import FunctionCall, FunctionCallArgument
+from pyccel.ast.core import FunctionCall, FunctionCallArgument, KernelCall
 from pyccel.ast.core import Module
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
@@ -899,6 +899,10 @@ class SyntaxParser(BasicParser):
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
+        elif isinstance(func, IndexedElement):
+            if len(func.indices) != 2:
+                raise NotImplementedError
+            func = KernelCall(func.base, args, func.indices[0], func.indices[1])
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
 
