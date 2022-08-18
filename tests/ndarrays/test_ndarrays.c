@@ -1063,6 +1063,31 @@ int32_t test_array_fill_int64(void)
     return (0);
 }
 
+int32_t test_array_fill_int64_order_f(void)
+{
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    int64_t value;
+    int64_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int64, false, order_f);
+    array_fill((int64_t)64, x);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_int64[index];
+    c_value = 64;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
+
 int32_t test_array_fill_int32(void)
 {
     int64_t m_1_shape[] = {5, 2};
@@ -1087,6 +1112,31 @@ int32_t test_array_fill_int32(void)
     return (0);
 }
 
+int32_t test_array_fill_int32_order_f(void)
+{
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    int32_t value;
+    int32_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int32, false, order_f);
+    array_fill((int32_t)32, x);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_int32[index];
+    c_value = 32;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
+
 int32_t test_array_fill_int16(void)
 {
     int64_t m_1_shape[] = {5, 2};
@@ -1106,6 +1156,30 @@ int32_t test_array_fill_int16(void)
     // testing the value with the index [3, 1]
     value = x.nd_int16[index];
     c_value = 32;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
+int32_t test_array_fill_int16_order_f(void)
+{
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    int16_t value;
+    int16_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int16, false, order_f);
+    array_fill((int16_t)16, x);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_int16[index];
+    c_value = 16;
     my_assert(value , c_value, "testing the value");
     free_array(x);
     return (0);
@@ -1135,6 +1209,30 @@ int32_t test_array_fill_int8(void)
     return (0);
 }
 
+int32_t test_array_fill_int8_order_f(void)
+{
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    int8_t value;
+    int8_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int8, false, order_f);
+    array_fill((int8_t)8, x);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_int8[index];
+    c_value = 8;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
 int32_t test_array_fill_double(void)
 {
     int64_t m_1_shape[] = {5, 2};
@@ -1159,6 +1257,30 @@ int32_t test_array_fill_double(void)
     return (0);
 }
 
+int32_t test_array_fill_double_order_f(void)
+{
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    double value;
+    double c_value;
+
+    x = array_create(2, m_1_shape, nd_double, false, order_f);
+    array_fill(2., x);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_double[index];
+    c_value = 2.;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
 int32_t test_array_fill_cdouble(void)
 {
     int64_t m_1_shape[] = {5, 2};
@@ -1173,6 +1295,30 @@ int32_t test_array_fill_cdouble(void)
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_cdouble[index];
+    c_value = 0.3+0.54*I;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
+int32_t test_array_fill_cdouble_order_f(void)
+{
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    double complex value;
+    double complex c_value;
+
+    x = array_create(2, m_1_shape, nd_cdouble, false, order_f);
+    array_fill(0.3+0.54*I, x);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
     // testing the value with the index [3, 1]
@@ -1306,15 +1452,11 @@ int32_t main(void)
     test_slicing_double_order_f();
     test_slicing_cdouble_order_f();
     // /* array_fill tests */
-    // test_array_fill_int64_order_f();
-    // test_array_fill_int32_order_f();
-    // test_array_fill_int16_order_f();
-    // test_array_fill_int8_order_f();
-    // test_array_fill_double_order_f();
-    // test_array_fill_cdouble_order_f();
-    // /* array_zeros tests */
-    // test_array_zeros_int32_order_f();
-    // test_array_zeros_double_order_f();
-    // test_array_zeros_cdouble_order_f();
+    test_array_fill_int64_order_f();
+    test_array_fill_int32_order_f();
+    test_array_fill_int16_order_f();
+    test_array_fill_int8_order_f();
+    test_array_fill_double_order_f();
+    test_array_fill_cdouble_order_f();
     return (0);
 }
