@@ -1000,30 +1000,30 @@ int32_t test_array_zeros_cdouble(void)
 int32_t main(void)
 {
     /* indexing tests */
-    // test_indexing_double();
-    // test_indexing_int64();
-    // test_indexing_int32();
-    // test_indexing_int16();
-    // test_indexing_int8();
-    // test_indexing_cdouble();
-    // /* slicing tests */
-    // test_slicing_double();
-    // test_slicing_int64();
-    // test_slicing_int32();
-    // test_slicing_int16();
-    // test_slicing_int8();
-    // test_slicing_cdouble();
-    // /* array_fill tests */
-    // test_array_fill_int64();
-    // test_array_fill_int32();
-    // test_array_fill_int16();
-    // test_array_fill_int8();
-    // test_array_fill_double();
-    // test_array_fill_cdouble();
-    // /* array_zeros tests */
-    // test_array_zeros_int32();
-    // test_array_zeros_double();
-    // test_array_zeros_cdouble();
+    test_indexing_double();
+    test_indexing_int64();
+    test_indexing_int32();
+    test_indexing_int16();
+    test_indexing_int8();
+    test_indexing_cdouble();
+    /* slicing tests */
+    test_slicing_double();
+    test_slicing_int64();
+    test_slicing_int32();
+    test_slicing_int16();
+    test_slicing_int8();
+    test_slicing_cdouble();
+    /* array_fill tests */
+    test_array_fill_int64();
+    test_array_fill_int32();
+    test_array_fill_int16();
+    test_array_fill_int8();
+    test_array_fill_double();
+    test_array_fill_cdouble();
+    /* array_zeros tests */
+    test_array_zeros_int32();
+    test_array_zeros_double();
+    test_array_zeros_cdouble();
 
     /*************ORDER F**********************/
 
