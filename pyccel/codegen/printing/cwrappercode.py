@@ -224,7 +224,7 @@ class CWrapperCodePrinter(CCodePrinter):
             Signature of the function
         """
         #if target_language is C no need for the binding
-        if self._target_language == 'c':
+        if self._target_language in ('c', 'ccuda'):
             return self.function_signature(expr)
 
         args = [a.var for a in expr.arguments]
@@ -236,6 +236,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
+        print(expr.arguments[0].var.is_ndarray)
         if not args:
             arg_code = 'void'
         else:
@@ -293,10 +294,12 @@ class CWrapperCodePrinter(CCodePrinter):
         string
 
         """
+
         dtype = self._print(variable.dtype)
         prec  = variable.precision
 
         dtype = self.find_in_dtype_registry(dtype, prec)
+        print(variable, variable.dtype, variable.is_ndarray, dtype)
 
         if self.stored_in_c_pointer(variable):
             return '{0}*'.format(dtype)

@@ -42,12 +42,14 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
         case nd_bool:
             arr.type_size = sizeof(bool);
             break;
+        #ifndef __NVCC__
         case nd_cfloat:
             arr.type_size = sizeof(float complex);
             break;
         case nd_cdouble:
             arr.type_size = sizeof(double complex);
             break;
+        #endif
     }
     arr.is_view = is_view;
     arr.length = 1;
@@ -95,12 +97,14 @@ void    stack_array_init(t_ndarray *arr)
         case nd_bool:
             arr->type_size = sizeof(bool);
             break;
+        #ifndef __NVCC__
         case nd_cfloat:
             arr->type_size = sizeof(float complex);
             break;
         case nd_cdouble:
             arr->type_size = sizeof(double complex);
             break;
+        #endif
     }
     arr->length = 1;
     for (int32_t i = 0; i < arr->nd; i++)
@@ -177,6 +181,7 @@ void   _array_fill_double(double c, t_ndarray arr)
             arr.nd_double[i] = c;
 }
 
+#ifndef __NVCC__
 void   _array_fill_cfloat(float complex c, t_ndarray arr)
 {
     if (c == 0)
@@ -195,6 +200,7 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
         for (int32_t i = 0; i < arr.length; i++)
             arr.nd_cdouble[i] = c;
 }
+#endif
 
 /*
 ** deallocation

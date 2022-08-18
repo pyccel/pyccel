@@ -18,7 +18,8 @@ void cuda_array_fill_int(int64_t c, t_ndarray arr)
 		arr.nd_int64[i] = c;
 }
 
-t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type)
+t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
+        enum e_types type, bool is_view)
 {
     t_ndarray arr;
 
@@ -48,7 +49,7 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type)
             arr.type_size = sizeof(bool);
             break;
     }
-    arr.is_view = false;
+    arr.is_view = is_view;
     arr.length = 1;
     cudaMallocManaged(&(arr.shape), arr.nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
@@ -64,7 +65,9 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type)
         for (int32_t j = i + 1; j < arr.nd; j++)
             arr.strides[i] *= arr.shape[j];
     }
-    cudaMallocManaged(&(arr.raw_data), arr.buffer_size);
+    printf("abbah");
+    if (!is_view)
+        cudaMallocManaged(&(arr.raw_data), arr.buffer_size);
     return (arr);
 }
 

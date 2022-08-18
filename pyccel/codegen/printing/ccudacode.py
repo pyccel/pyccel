@@ -309,10 +309,11 @@ class CcudaCodePrinter(CCodePrinter):
             arg_code = ', '.join(arg_code_list)
 
         cuda_deco = "__global__ " if 'kernel' in expr.decorators else ''
+        # print(expr, ret_type, name, arg_code)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
-            return '{0}{1}{2}({3})'.format(cuda_deco, ret_type, name, arg_code)
+            return '{}{}{}({})'.format(cuda_deco, ret_type, name, arg_code)
 
     def _print_Allocate(self, expr):
         free_code = ''
@@ -323,22 +324,35 @@ class CcudaCodePrinter(CCodePrinter):
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
         shape = ", ".join(self._print(i) for i in expr.shape)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
+        tmp_shape = self.scope.get_new_name('tmp_shape')
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_dtype = self.find_in_dtype_registry('int', 8)
-        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+
+        shape_Assign = "{} {}[] = {{{}}};".format(shape_dtype, tmp_shape, shape)
         is_view = 'false' if expr.variable.on_heap else 'true'
         if expr.variable.is_managed or expr.variable.on_device:
             self.add_import(c_imports['cuda_ndarrays'])
-            alloc_code = "{} = cuda_array_create({}, {}, {}, {});\n".format(
-                expr.variable, len(expr.shape), shape_Assign, dtype,
+            alloc_code = "{} = cuda_array_create({}, {}, {}, {});".format(
+                expr.variable, len(expr.shape), tmp_shape, dtype,
                 is_view)
         else:
             self.add_import(c_imports['ndarrays'])
-            alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
-                expr.variable, len(expr.shape), shape_Assign, dtype,
+            alloc_code = "{} = array_create({}, {}, {}, {});".format(
+                expr.variable, len(expr.shape), tmp_shape, dtype,
                 is_view)
-        return '{}{}'.format(free_code, alloc_code)
+        return '{}\n{}\n{}\n'.format(free_code, shape_Assign, alloc_code)
+
+    def _print_Deallocate(self, expr):
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
+            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
+        cuda = ''
+        if expr.variable.on_device or expr.variable.is_managed:
+            cuda = 'cuda_'
+            return ''
+        if expr.variable.is_alias:
+            return '{}free_pointer({});\n'.format(cuda, self._print(expr.variable))
+        return '{}free_array({});\n'.format(cuda, self._print(expr.variable))
 
     def _print_KernelCall(self, expr):
         func = expr.funcdef
@@ -433,12 +447,12 @@ class CcudaCodePrinter(CCodePrinter):
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "cudaMemcpy({0}.{2}, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
             return '%s' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s' % (dummy_array, cpy_data)
 
     def _print_CudaDeviceSynchronize(self, expr):

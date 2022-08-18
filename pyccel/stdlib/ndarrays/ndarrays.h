@@ -10,6 +10,9 @@
 # include <stdbool.h>
 # include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* mapping the function array_fill to the correct type */
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
                                         int32_t : _array_fill_int32,\
@@ -66,8 +69,10 @@ enum e_types
         nd_int64    = 7,
         nd_float    = 11,
         nd_double   = 12,
+        #ifndef __NVCC__
         nd_cfloat   = 14,
         nd_cdouble  = 15
+        #endif
 };
 
 typedef struct  s_ndarray
@@ -82,8 +87,10 @@ typedef struct  s_ndarray
             float           *nd_float;
             double          *nd_double;
             bool            *nd_bool;
+            #ifndef __NVCC__
             double complex  *nd_cdouble;
             float  complex  *nd_cfloat;
+            #endif
             };
     /* number of dimensions */
     int32_t                 nd;
@@ -116,8 +123,10 @@ void        _array_fill_int64(int64_t c, t_ndarray arr);
 void        _array_fill_float(float c, t_ndarray arr);
 void        _array_fill_double(double c, t_ndarray arr);
 void        _array_fill_bool(bool c, t_ndarray arr);
+#ifndef __NVCC__
 void        _array_fill_cfloat(float complex c, t_ndarray arr);
 void        _array_fill_cdouble(double complex c, t_ndarray arr);
+#endif
 
 /* slicing */
                 /* creating a Slice object */
@@ -139,5 +148,9 @@ int64_t         get_index(t_ndarray arr, ...);
 /* data converting between numpy and ndarray */
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

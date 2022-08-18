@@ -146,8 +146,15 @@ class CudaArray(CudaNewArray):
 
 class CudaDeviceSynchronize(PyccelAstNode):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
-    _attribute_nodes = ()
-    pass
+
+    def __init__(self):
+        #...
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = NativeInteger()
+        self._precision = 0
+        self._order     = None
+        super().__init__()
 
 class CudaInternalVar(PyccelAstNode):
     _attribute_nodes = ('_dim',)

@@ -21,13 +21,14 @@ stdlib_path = os.path.dirname(stdlib_folder.__file__)
 __all__ = ['copy_internal_library','recompile_object']
 
 #==============================================================================
-language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
+language_extension = {'fortran':'f90', 'c':'c', 'python':'py', 'ccuda':'cu'}
 
 #==============================================================================
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
     "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "cuda_ndarrays"     : ("cuda_ndarrays", CompileObj("cuda_ndarrays.cu",folder="cuda_ndarrays")),
     "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
     "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
     "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
