@@ -3892,6 +3892,22 @@ def test_array_real_nested_C_array_initialization_2(language):
 
     assert np.array_equal(x1, x2)
 
+def test_array_real_nested_C_array_initialization_3(language):
+    f1 = arrays.array_real_nested_C_array_initialization_3
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    nested = np.array([[e, [[1., 2., 3.], [1., 2., 3.]]], a, [[[1., 2., 3.], [1., 2., 3.]], [[1., 2., 3.], [1., 2., 3.]]]], order="C")
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeros_like(nested)
+
+    f1(a, e, x1)
+    f2(a, e, x2)
+
+    assert np.array_equal(x1, x2)
+
 ##==============================================================================
 ## TEST NESTED ARRAYS INITIALIZATION WITH ORDER F
 ##==============================================================================
@@ -3929,6 +3945,22 @@ def test_array_real_nested_F_array_initialization_2(language):
 
     f1(a, e, f, x1)
     f2(a, e, f, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_nested_F_array_initialization_3(language):
+    f1 = arrays.array_real_nested_F_array_initialization_3
+    f2 = epyccel(f1, language = language)
+
+    a = np.random.random((2,2,3))
+    e = np.random.random((2,3))
+    nested = np.array([[e, [[1., 2., 3.], [1., 2., 3.]]], a, [[[1., 2., 3.], [1., 2., 3.]], [[1., 2., 3.], [1., 2., 3.]]]], order="F")
+
+    x1 = np.zeros_like(nested)
+    x2 = np.zeros_like(nested)
+
+    f1(a, e, x1)
+    f2(a, e, x2)
 
     assert np.array_equal(x1, x2)
 
