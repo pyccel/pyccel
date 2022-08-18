@@ -532,6 +532,35 @@ int32_t test_indexing_cfloat(void)
     return (0);
 }
 
+int32_t test_indexing_cfloat_order_f(void)
+{
+    float complex m_1[] = {(0.7531014552678067+0.3212445034096577*I), (0.9124849621552715+0.5009509557101085*I),
+                            (0.516709098068522+0.8742994690327561*I), (0.8641458676501654+0.1568974703392113*I),
+                            (0.6840573468633404+0.7427309400709274*I), (0.8727371859517135+0.19214143697029318*I),
+                            (0.8299801130099297+0.476220186802197*I), (0.9218646531661248+0.8437506286920766*I),
+                            (0.8023905547293535+0.17882460280193202*I), (0.8096431613369838+0.7072085622315805*I)};
+    int64_t m_1_shape[] = {5, 2};
+    t_ndarray x;
+    int32_t index;
+    int32_t c_index;
+    float complex value;
+    float complex c_value;
+
+    x = array_create(2, m_1_shape, nd_cfloat, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    // testing the index [3, 1]
+    index = 3 * x.strides[0] + 1 * x.strides[1];
+    c_index = 8;
+    my_assert(index , c_index, "testing the strides");
+    my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
+    // testing the value with the index [3, 1]
+    value = x.nd_cfloat[index];
+    c_value = 0.8023905547293535+0.17882460280193202*I;
+    my_assert(value , c_value, "testing the value");
+    free_array(x);
+    return (0);
+}
+
 /*
 **  slicing tests
 */
@@ -1006,6 +1035,7 @@ int32_t main(void)
     test_indexing_int16();
     test_indexing_int8();
     test_indexing_cdouble();
+    test_indexing_cfloat();
     /* slicing tests */
     test_slicing_double();
     test_slicing_int64();
@@ -1034,8 +1064,9 @@ int32_t main(void)
     test_indexing_int8_order_f();
     test_indexing_double_order_f();
     test_indexing_cdouble_order_f();
+    test_indexing_cfloat_order_f();
     // /* slicing tests */
-    // test_slicing_double_order_f();
+    // test_slicing_double_order_f(); 
     // test_slicing_int64_order_f();
     // test_slicing_int32_order_f();
     // test_slicing_int16_order_f();
