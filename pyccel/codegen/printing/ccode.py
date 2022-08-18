@@ -7,8 +7,6 @@
 import functools
 from itertools import chain
 import re
-from xml.etree.ElementInclude import include
-import numpy as np
 
 from pyccel.ast.basic     import ScopedNode
 
@@ -315,7 +313,7 @@ class CCodePrinter(CodePrinter):
         dummy_array_name = self.scope.get_new_name('array_dummy')
         literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"
         dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
-        cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(temp_literal_array_name, dummy_array_name, dtype)
+        cpy_data = f"memcpy({temp_literal_array_name}.{dtype}, {dummy_array_name}, {temp_literal_array_name}.buffer_size);\n"
 
         return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
 
@@ -333,7 +331,7 @@ class CCodePrinter(CodePrinter):
         temp_array_declaration = ""
         array_create = ""
         dtype = dvar["dtype"]
-        if name == None:
+        if name is None:
             temp_array_declaration = f"t_ndarray {temp_variable_array_name} = " "{.shape = NULL};\n"
             shape_dtype = self.find_in_dtype_registry('int', 8)
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
@@ -394,7 +392,7 @@ class CCodePrinter(CodePrinter):
                 "declare_dtype": declare_dtype,
                 "order": ('order_c' if order == 'C' else 'order_f'),
                 "array_creations": array_creations,
-                "original_vars": list(self._scope._original_symbol.keys())}
+                "original_vars": list(self._scope.local_used_symbols.keys())}
         self.parse_arrays(arg, lhs.shape, dvar, self._print(lhs))
         return ''.join(array_creations)
 
