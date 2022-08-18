@@ -30,19 +30,21 @@ from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
-from .numpyext       import process_dtype
+from .numpyext       import process_dtype, NumpyNewArray
 
 #==============================================================================
 __all__ = (
+    'CudaMemCopy',
+    'CudaNewArray',
     'CudaArray',
-    'CudaMalloc'
+    'CudaDeviceSynchronize',
+    'CudaInternalVar',
+    'CudaThreadIdx',
+    'CudaBlockDim',
+    'CudaBlockIdx',
+    'CudaGridDim'
 )
 
-
-#------------------------------------------------------------------------------
-# cuda_constants = {
-#         'pi': Constant('float', 'pi', value=cuda.),
-#     }
 #==============================================================================
 class CudaMemCopy():
     """Represents a call to  cuda malloc for code generation.
@@ -88,31 +90,6 @@ class CudaNewArray(PyccelInternalFunction):
         return order
 
 #==============================================================================
-class CudaMalloc(CudaNewArray):
-    """Represents a call to  cuda malloc for code generation.
-
-     arg : str
-    """
-    # _attribute_nodes = ('_alloct',)
-    def __init__(self, size, alloct, dtype):
-        # Verify dtype and get precision
-        dtype, prec = process_dtype(dtype)
-        self._shape     = process_shape(size)
-        self._alloct       = alloct
-        self._rank      = len(size)
-        self._dtype     = dtype
-        self._precision = prec
-        super().__init__()
-
-    @property
-    def shape(self):
-        return self._shape
-    @property
-    def dtype(self):
-        return self._dtype
-    @property
-    def precision(self):
-        return self._precision
 
 #==============================================================================
 class CudaArray(CudaNewArray):
@@ -200,13 +177,20 @@ class CudaGridDim(CudaInternalVar)   : pass
 
 
 cuda_funcs = {
-    'cudaMalloc'        : PyccelFunctionDef('cudaMalloc'      , CudaMalloc),
     # 'deviceSynchronize' : CudaDeviceSynchronize,
-    'array'             : PyccelFunctionDef('array'      , CudaArray),
-    'threadIdx'         : PyccelFunctionDef('threadIdx'      , CudaThreadIdx)
-    # 'blockDim'          : CudaBlockDim,
-    # 'blockIdx'          : CudaBlockIdx,
-    # 'gridDim'           : CudaGridDim
+    'array'             : PyccelFunctionDef('array'             , CudaArray),
+    'deviceSynchronize' : PyccelFunctionDef('deviceSynchronize' , CudaDeviceSynchronize),
+    'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
+    'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),
+    'blockIdx'          : PyccelFunctionDef('blockIdx'          , CudaBlockIdx),
+    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim)
+}
+
+cuda_Internal_Var = {
+    'CudaThreadIdx' : 'threadIdx',
+    'CudaBlockDim'  : 'blockDim',
+    'CudaBlockIdx'  : 'blockIdx',
+    'CudaGridDim'   : 'gridDim'
 }
 
 cuda_constants = {

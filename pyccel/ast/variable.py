@@ -54,6 +54,12 @@ class Variable(PyccelAstNode):
         'stack' if memory should be allocated on the stack, represents stack arrays and scalars
         'alias' if object allows access to memory stored in another variable
         [Default value: 'stack']
+    
+    memory_location: str
+        'host' the variable can only be accessed by the CPU
+        'device' the variable can only be accessed by the GPU
+        'managed' the variable can be accessed by CPU and GPU and is being managed by the Cuda API (memory transfer is being done implicitly)
+        [Default value: 'host']
 
     is_target: bool
         if object is pointed to by another variable [Default value: False]
@@ -100,7 +106,7 @@ class Variable(PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_memory_location', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
             '_rank','_shape','_order','_is_private')
@@ -113,6 +119,7 @@ class Variable(PyccelAstNode):
         *,
         rank=0,
         memory_handling='stack',
+        memory_location='host',
         is_const=False,
         is_target=False,
         is_optional=False,
@@ -147,6 +154,10 @@ class Variable(PyccelAstNode):
         if memory_handling not in ('heap', 'stack', 'alias'):
             raise ValueError("memory_handling must be 'heap', 'stack' or 'alias'")
         self._memory_handling = memory_handling
+
+        if memory_location not in ('host', 'device', 'managed'):
+            raise ValueError("memory_location must be 'host', 'device' or 'managed'")
+        self._memory_location = memory_location
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
@@ -292,6 +303,36 @@ class Variable(PyccelAstNode):
         """ Indicates if memory is allocated on the stack
         """
         return self.memory_handling == 'stack'
+
+    @property
+    def memory_location(self):
+        """ Indicates whether a Variable has a dynamic size
+        """
+        return self._memory_location
+
+    @memory_location.setter
+    def memory_location(self, memory_location):
+        if memory_location not in ('host', 'device', 'managed'):
+            raise ValueError("memory_location must be 'host', 'device' or 'managed'")
+        self._memory_location = memory_location
+
+    @property
+    def on_host(self):
+        """  Indicates if memory is only accessible by the CPU
+        """
+        return self.memory_location == 'host'
+
+    @property
+    def on_device(self):
+        """ Indicates if memory is only accessible by the GPU
+        """
+        return self.memory_location == 'device'
+
+    @property
+    def is_managed(self):
+        """ Indicates if memory is being managed by CUDA API
+        """
+        return self.memory_location == 'managed'
 
     @property
     def is_stack_array(self):

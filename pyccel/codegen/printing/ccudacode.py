@@ -40,6 +40,8 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
+from pyccel.ast.cudaext import cuda_Internal_Var, CudaArray
+
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import IndexedElement
@@ -229,6 +231,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'math',
                  'string',
                  'ndarrays',
+                 'cuda_ndarrays',
                  'math',
                  'complex',
                  'stdint',
@@ -311,6 +314,32 @@ class CcudaCodePrinter(CCodePrinter):
         else:
             return '{0}{1}{2}({3})'.format(cuda_deco, ret_type, name, arg_code)
 
+    def _print_Allocate(self, expr):
+        free_code = ''
+        #free the array if its already allocated and checking if its not null if the status is unknown
+        if  (expr.status == 'unknown'):
+            free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+            free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
+        elif  (expr.status == 'allocated'):
+            free_code += self._print(Deallocate(expr.variable))
+        shape = ", ".join(self._print(i) for i in expr.shape)
+        dtype = self._print(expr.variable.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
+        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+        is_view = 'false' if expr.variable.on_heap else 'true'
+        if expr.variable.is_managed or expr.variable.on_device:
+            self.add_import(c_imports['cuda_ndarrays'])
+            alloc_code = "{} = cuda_array_create({}, {}, {}, {});\n".format(
+                expr.variable, len(expr.shape), shape_Assign, dtype,
+                is_view)
+        else:
+            self.add_import(c_imports['ndarrays'])
+            alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
+                expr.variable, len(expr.shape), shape_Assign, dtype,
+                is_view)
+        return '{}{}'.format(free_code, alloc_code)
+
     def _print_KernelCall(self, expr):
         func = expr.funcdef
         if func.is_inline:
@@ -339,6 +368,87 @@ class CcudaCodePrinter(CCodePrinter):
         # TODO: need to raise error in semantic if we have result , kernel can't return
         if not func.results:
             return '{}<<<{},{}>>>({});\n'.format(func.name, expr.numBlocks, expr.tpblock,args)
+
+    def _print_Assign(self, expr):
+        prefix_code = ''
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(lhs, Variable) and lhs.is_optional:
+            if lhs in self._optional_partners:
+                # Collect temporary variable which provides
+                # allocated memory space for this optional variable
+                tmp_var = self._optional_partners[lhs]
+            else:
+                # Create temporary variable to provide allocated
+                # memory space before assigning to the pointer value
+                # (may be NULL)
+                tmp_var = self.scope.get_temporary_variable(lhs,
+                        is_optional = False)
+                self._optional_partners[lhs] = tmp_var
+            # Point optional variable at an allocated memory space
+            prefix_code = self._print(AliasAssign(lhs, tmp_var))
+        if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
+            self._temporary_args = [ObjectAddress(a) for a in lhs]
+            return prefix_code+'{};\n'.format(self._print(rhs))
+        # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
+
+        if isinstance(rhs, CudaArray):
+            return prefix_code+self.copy_CudaArray_Data(expr)
+        if isinstance(rhs, (NumpyArray, PythonTuple)):
+            return prefix_code+self.copy_NumpyArray_Data(expr)
+        if isinstance(rhs, (NumpyFull)):
+            return prefix_code+self.arrayFill(expr)
+        if isinstance(rhs, NumpyArange):
+            return prefix_code+self.fill_NumpyArange(rhs, lhs)
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        return prefix_code+'{} = {};\n'.format(lhs, rhs)
+
+    def copy_CudaArray_Data(self, expr):
+        """ print the assignment of a Cuda NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains the declaration of a dummy data_buffer
+                       and a call to an operator which copies it to a Cuda NdArray struct
+                if the ndarray is a stack_array the str will contain the initialization
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        if rhs.rank == 0:
+            raise NotImplementedError(str(expr))
+        dummy_array_name = self.scope.get_new_name('cuda_array_dummy')
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        arg = rhs.arg if isinstance(rhs, CudaArray) else rhs
+        if rhs.rank > 1:
+            # flattening the args to use them in C initialization.
+            arg = self._flatten_list(arg)
+
+        self.add_import(c_imports['string'])
+        if isinstance(arg, Variable):
+            arg = self._print(arg)
+            cpy_data = "cudaMemcpy({0}.{2}, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
+            return '%s' % (cpy_data)
+        else :
+            arg = ', '.join(self._print(i) for i in arg)
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+            cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+            return  '%s%s' % (dummy_array, cpy_data)
+
+    def _print_CudaDeviceSynchronize(self, expr):
+        return 'cudaDeviceSynchronize();'
+
+    def _print_CudaInternalVar(self, expr):
+        var_name = type(expr).__name__
+        var_name = cuda_Internal_Var[var_name]
+        dim_c = ('x', 'y', 'z')[expr.dim]
+        return '{}.{}'.format(var_name, dim_c)
 
 
 def ccudacode(expr, filename, assign_to=None, **settings):
