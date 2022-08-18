@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h> // to remove
 
 
 #define getname(X) #X
@@ -606,6 +607,44 @@ int32_t test_slicing_int64(void)
     return (0);
 }
 
+int32_t test_slicing_int64_order_f(void)
+{
+    int64_t m_1[] = {0, 5, 10, 15, 20, 25, 30, 35,
+                    1, 6, 11, 16, 21, 26, 31, 36,
+                    2, 7, 12, 17, 22, 27, 32, 37,
+                    3, 8, 13, 18, 23, 28, 33, 38,
+                    4, 9, 14, 19, 24, 29, 34, 39};
+    int64_t m_1_shape[] = {8, 5};
+    t_ndarray x;
+    t_ndarray xview;
+    int32_t c_index;
+    int64_t value;
+    int64_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int64, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2)); // [5, 7, 9] is the resulting view
+    c_index = 1; 
+    for (int32_t i = 0; i < xview.shape[0]; i++)
+    {
+        for (int32_t j = 0; j < xview.shape[1]; j++)
+        {
+            value = xview.nd_int64[get_index(xview, i, j)];
+            c_value = m_1[c_index];
+            c_index+=16;
+            if (value != c_value)
+                my_assert(value , c_value, "testing xview values");
+        }
+    }
+    c_value = 1337;
+    xview.nd_int64[get_index(xview, 0, 1)] = c_value;
+    value = x.nd_int64[get_index(x, 1, 2)];
+    my_assert(value , c_value, "testing xview assignment");
+    free_array(x);
+    free_pointer(xview);
+    return (0);
+}
+
 int32_t test_slicing_int32(void)
 {
     int32_t m_1[] = {2, 3, 5, 5, 6,
@@ -646,6 +685,45 @@ int32_t test_slicing_int32(void)
     free_pointer(xview);
     return (0);
 }
+
+int32_t test_slicing_int32_order_f(void)
+{
+    int32_t m_1[] = {0, 5, 10, 15, 20, 25, 30, 35,
+                    1, 6, 11, 16, 21, 26, 31, 36,
+                    2, 7, 12, 17, 22, 27, 32, 37,
+                    3, 8, 13, 18, 23, 28, 33, 38,
+                    4, 9, 14, 19, 24, 29, 34, 39};
+    int64_t m_1_shape[] = {8, 5};
+    t_ndarray x;
+    t_ndarray xview;
+    int32_t c_index;
+    int32_t value;
+    int32_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int32, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    c_index = 1; 
+    for (int32_t i = 0; i < xview.shape[0]; i++)
+    {
+        for (int32_t j = 0; j < xview.shape[1]; j++)
+        {
+            value = xview.nd_int32[get_index(xview, i, j)];
+            c_value = m_1[c_index];
+            c_index+=16;
+            if (value != c_value)
+                my_assert(value , c_value, "testing xview values");
+        }
+    }
+    c_value = 1337;
+    xview.nd_int32[get_index(xview, 0, 1)] = c_value;
+    value = x.nd_int32[get_index(x, 1, 2)];
+    my_assert(value , c_value, "testing xview assignment");
+    free_array(x);
+    free_pointer(xview);
+    return (0);
+}
+
 int32_t test_slicing_int16(void)
 {
     int16_t m_1[] = {2, 3, 5, 5, 6,
@@ -674,6 +752,44 @@ int32_t test_slicing_int16(void)
             value = xview.nd_int16[get_index(xview, i, j)];
             c_value = m_1[c_index];
             c_index+=2;
+            if (value != c_value)
+                my_assert(value , c_value, "testing xview values");
+        }
+    }
+    c_value = 1337;
+    xview.nd_int16[get_index(xview, 0, 1)] = c_value;
+    value = x.nd_int16[get_index(x, 1, 2)];
+    my_assert(value , c_value, "testing xview assignment");
+    free_array(x);
+    free_pointer(xview);
+    return (0);
+}
+
+int32_t test_slicing_int16_order_f(void)
+{
+    int16_t m_1[] = {0, 5, 10, 15, 20, 25, 30, 35,
+                    1, 6, 11, 16, 21, 26, 31, 36,
+                    2, 7, 12, 17, 22, 27, 32, 37,
+                    3, 8, 13, 18, 23, 28, 33, 38,
+                    4, 9, 14, 19, 24, 29, 34, 39};
+    int64_t m_1_shape[] = {8, 5};
+    t_ndarray x;
+    t_ndarray xview;
+    int32_t c_index;
+    int16_t value;
+    int16_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int16, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    c_index = 1; 
+    for (int32_t i = 0; i < xview.shape[0]; i++)
+    {
+        for (int32_t j = 0; j < xview.shape[1]; j++)
+        {
+            value = xview.nd_int16[get_index(xview, i, j)];
+            c_value = m_1[c_index];
+            c_index+=16;
             if (value != c_value)
                 my_assert(value , c_value, "testing xview values");
         }
@@ -728,16 +844,54 @@ int32_t test_slicing_int8(void)
     return (0);
 }
 
+int32_t test_slicing_int8_order_f(void)
+{
+    int8_t m_1[] = {0, 5, 10, 15, 20, 25, 30, 35,
+                    1, 6, 11, 16, 21, 26, 31, 36,
+                    2, 7, 12, 17, 22, 27, 32, 37,
+                    3, 8, 13, 18, 23, 28, 33, 38,
+                    4, 9, 14, 19, 24, 29, 34, 39};
+    int64_t m_1_shape[] = {8, 5};
+    t_ndarray x;
+    t_ndarray xview;
+    int32_t c_index;
+    int8_t value;
+    int8_t c_value;
+
+    x = array_create(2, m_1_shape, nd_int8, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    c_index = 1; 
+    for (int32_t i = 0; i < xview.shape[0]; i++)
+    {
+        for (int32_t j = 0; j < xview.shape[1]; j++)
+        {
+            value = xview.nd_int8[get_index(xview, i, j)];
+            c_value = m_1[c_index];
+            c_index+=16;
+            if (value != c_value)
+                my_assert(value , c_value, "testing xview values");
+        }
+    }
+    c_value = 254;
+    xview.nd_int8[get_index(xview, 0, 1)] = c_value;
+    value = x.nd_int8[get_index(x, 1, 2)];
+    my_assert(value , c_value, "testing xview assignment");
+    free_array(x);
+    free_pointer(xview);
+    return (0);
+}
+
 int32_t test_slicing_double(void)
 {
     double m_1[] = {2, 3, 5, 5, 6,
-                    7, 10, 11, 12, 260,
-                    6.34, 8, 8.002, 0.056, 45,
-                    0.1, 1.02, 0.25, 0.00005, 1,
-                    200, 33, 5, 57, 62,
-                    103.009, 141, 122, 26.50, 36.334,
-                    82, 8.44002, 10.056, 4115, 22.1,
-                    1.1102, 011.25, 1.01110005, 19, 70};
+                7, 10, 11, 12, 260,
+                6.34, 8, 8.002, 0.056, 45,
+                0.1, 1.02, 0.25, 0.00005, 1,
+                200, 33, 5, 57, 62,
+                103.009, 141, 122, 26.50, 36.334,
+                82, 8.44002, 10.056, 4115, 22.1,
+                1.1102, 011.25, 1.01110005, 19, 70};
     int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
@@ -756,6 +910,44 @@ int32_t test_slicing_double(void)
             value = xview.nd_double[get_index(xview, i, j)];
             c_value = m_1[c_index];
             c_index+=2;
+            if (value != c_value) // to not spam the test because of the loop
+                my_assert(value , c_value, "testing xview values");
+        }
+    }
+    c_value = 0.1337;
+    xview.nd_double[get_index(xview, 0, 1)] = c_value;
+    value = x.nd_double[get_index(x, 1, 2)];
+    my_assert(value, c_value, "testing xview assignment");
+    free_array(x);
+    free_pointer(xview);
+    return (0);
+}
+
+int32_t test_slicing_double_order_f(void)
+{
+    double m_1[] = {.0, .5, .10, .15, .20, .25, .30, .35,
+                    .1, .6, .11, .16, .21, .26, .31, .36,
+                    .2, .7, .12, .17, .22, .27, .32, .37,
+                    .3, .8, .13, .18, .23, .28, .33, .38,
+                    .4, .9, .14, .19, .24, .29, .34, .39};
+    int64_t m_1_shape[] = {8, 5};
+    t_ndarray x;
+    t_ndarray xview;
+    int32_t c_index;
+    double value;
+    double c_value;
+
+    x = array_create(2, m_1_shape, nd_double, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    c_index = 1;
+    for (int32_t i = 0; i < xview.shape[0]; i++)
+    {
+        for (int32_t j = 0; j < xview.shape[1]; j++)
+        {
+            value = xview.nd_double[get_index(xview, i, j)];
+            c_value = m_1[c_index];
+            c_index+=16;
             if (value != c_value) // to not spam the test because of the loop
                 my_assert(value , c_value, "testing xview values");
         }
@@ -793,6 +985,45 @@ int32_t test_slicing_cdouble(void)
             value = xview.nd_cdouble[get_index(xview, i, j)];
             c_value = m_1[c_index];
             c_index+=2;
+            if (value != c_value) // to not spam the test because of the loop
+                my_assert(value , c_value, "testing xview values");
+        }
+    }
+    c_value = 0.13 + 0.37*I;
+    xview.nd_cdouble[get_index(xview, 0, 1)] = c_value;
+    value = x.nd_cdouble[get_index(x, 1, 2)];
+    my_assert(value, c_value, "testing xview assignment");
+    free_array(x);
+    free_pointer(xview);
+    return (0);
+}
+
+int32_t test_slicing_cdouble_order_f(void)
+{
+    double complex m_1[] = {(0.01155429742163272+0.8434047534139181*I), (0.6708962942795746+0.7899918807430825*I),
+                            (0.03753686440380166+0.8122524072995655*I), (0.16325109115080305+0.5483841122139524*I),
+                            (0.1464506288395122+0.9068262955220873*I), (0.5124547225966671+0.5843860899075526*I),
+                            (0.758038809105398+0.6062573686379302*I), (0.29394537852759395+0.24406369358911972*I),
+                            (0.4819055755095919+0.9815668938802014*I), (0.3907440258926417+0.5648389124624602*I)};
+
+    int64_t m_1_shape[] = {2, 5};
+    t_ndarray x;
+    t_ndarray xview;
+    int32_t c_index;
+    double complex value;
+    double complex c_value;
+
+    x = array_create(2, m_1_shape, nd_cdouble, false, order_f);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    c_index = 1;
+    for (int32_t i = 0; i < xview.shape[0]; i++)
+    {
+        for (int32_t j = 0; j < xview.shape[1]; j++)
+        {
+            value = xview.nd_cdouble[get_index(xview, i, j)];
+            c_value = m_1[c_index];
+            c_index+=4;
             if (value != c_value) // to not spam the test because of the loop
                 my_assert(value , c_value, "testing xview values");
         }
@@ -1042,6 +1273,7 @@ int32_t main(void)
     test_slicing_int32();
     test_slicing_int16();
     test_slicing_int8();
+    test_slicing_double();
     test_slicing_cdouble();
     /* array_fill tests */
     test_array_fill_int64();
@@ -1055,7 +1287,7 @@ int32_t main(void)
     test_array_zeros_double();
     test_array_zeros_cdouble();
 
-    /*************ORDER F**********************/
+    // /*************ORDER F**********************/
 
     /* indexing tests */
     test_indexing_int64_order_f();
@@ -1065,13 +1297,14 @@ int32_t main(void)
     test_indexing_double_order_f();
     test_indexing_cdouble_order_f();
     test_indexing_cfloat_order_f();
-    // /* slicing tests */
-    // test_slicing_double_order_f(); 
-    // test_slicing_int64_order_f();
-    // test_slicing_int32_order_f();
-    // test_slicing_int16_order_f();
-    // test_slicing_int8_order_f();
-    // test_slicing_cdouble_order_f();
+    /* slicing tests */
+    test_slicing_double_order_f();
+    test_slicing_int64_order_f();
+    test_slicing_int32_order_f();
+    test_slicing_int16_order_f();
+    test_slicing_int8_order_f();
+    test_slicing_double_order_f();
+    test_slicing_cdouble_order_f();
     // /* array_fill tests */
     // test_array_fill_int64_order_f();
     // test_array_fill_int32_order_f();
