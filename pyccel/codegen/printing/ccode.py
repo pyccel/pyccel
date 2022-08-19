@@ -281,13 +281,6 @@ class CCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def _flatten_list(self, irregular_list):
-        if isinstance(irregular_list, (PythonList, PythonTuple, list)):
-            f_list = [element for item in irregular_list for element in self._flatten_list(item)]
-            return f_list
-        else:
-            return [irregular_list]
-
     #========================== Numpy Elements ===============================#
 
     def create_literal_array(self, arg, dvar, name=None):
@@ -1252,7 +1245,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         free_code = ''
-            #free the array if its already allocated and checking if its not null if the status is unknown
+         #free the array if its already allocated and checking if its not null if the status is unknown
         if (expr.status == 'unknown'):
             free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))

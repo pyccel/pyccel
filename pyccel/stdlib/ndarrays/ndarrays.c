@@ -9,9 +9,6 @@
 # include <stdlib.h>
 # include <stdio.h>
 
-/*
-** allocation
-*/
 
 void print_ndarray_memory(t_ndarray nd)
 {
@@ -49,6 +46,10 @@ void print_ndarray_memory(t_ndarray nd)
     printf("\n");
     return;
 }
+
+/*
+** allocation
+*/
 
 t_ndarray   array_create(int32_t nd, int64_t *shape,
         enum e_types type, bool is_view, enum e_order order)
