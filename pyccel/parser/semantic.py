@@ -58,6 +58,7 @@ from pyccel.ast.core import InProgram
 from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
+from pyccel.ast.core import Declare
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
@@ -1423,6 +1424,38 @@ class SemanticParser(BasicParser):
         expr_new.set_fst(expr.fst)
         return expr_new
 
+    def _handle_unamed_var(self, code_block, scope):
+        program_body = [line for line in code_block.body]
+        body = [item for item in program_body]
+        new_code_block = False
+        for ind, line in enumerate(body):
+                if isinstance(line, FunctionCall) or (isinstance(line, Assign) and isinstance(line.rhs, FunctionCall)):
+                    arg_changed = False
+                    fun_call = line if isinstance(line, FunctionCall) else line.rhs
+                    args = [arg for arg in fun_call.args]
+                    for arg_ind, arg in enumerate(args):
+                        if isinstance(arg.value, (PythonTuple, PythonList, NumpyArray)):
+                            print(type(arg.value), hasattr(arg.value, "dtype"))
+                            temp_var = scope.get_temporary_variable(dtype=arg.value.dtype, memory_handling='heap', \
+                                shape=arg.value.shape, order=arg.value.order, rank=arg.value.rank)
+                            program_body.insert(program_body.index(line, ind), Declare(temp_var.dtype, temp_var))
+                            program_body.insert(program_body.index(line, ind), Allocate(variable=temp_var,\
+                                shape=arg.value.shape, order=arg.value.order, status='unallocated'))
+                            program_body.insert(program_body.index(line, ind), Assign(temp_var, arg.value))
+                            program_body.insert(program_body.index(line, ind) + 1, Deallocate(temp_var))
+                            args.pop(arg_ind)
+                            args.insert(arg_ind, FunctionCallArgument(temp_var))
+                            arg_changed = True
+                            pass
+                    if arg_changed:
+                        new_code_block = True
+                        index = program_body.index(line, ind)
+                        program_body.pop(index)
+                        program_body.insert(index, FunctionCall(fun_call.funcdef, args) if isinstance(line, FunctionCall)\
+                             else Assign(line.lhs, FunctionCall(fun_call.funcdef, args)))
+        if new_code_block:
+            code_block = CodeBlock(program_body, code_block.unravelled)
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -1668,6 +1701,7 @@ class SemanticParser(BasicParser):
     def _visit_CodeBlock(self, expr, **settings):
         ls = []
         self._additional_exprs.append([])
+        print(expr.body, type(expr.body))
         for b in expr.body:
 
             # Save parsed code
@@ -1679,6 +1713,7 @@ class SemanticParser(BasicParser):
             else:
                 ls.append(line)
         self._additional_exprs.pop()
+        self._handle_unamed_var(expr, self.scope)
 
         return CodeBlock(ls)
 
@@ -3070,7 +3105,6 @@ class SemanticParser(BasicParser):
         if decorators['template']:
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
-
         tmp_headers = expr.headers
         python_name = expr.scope.get_python_name(name)
         if cls_name:
@@ -3155,7 +3189,6 @@ class SemanticParser(BasicParser):
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy())
-
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
                 arguments = arguments[1:]
