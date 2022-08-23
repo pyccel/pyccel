@@ -442,12 +442,28 @@ bool    is_same_shape(t_ndarray dest, t_ndarray src)
     return true;
 }
 
+int index_position(t_ndarray arr, int index)
+{
+    int64_t shape_product_arr = 1;
+    int64_t var = 0;
+    int64_t ndim_arr = arr.nd - 1;
+    int64_t i_arr = (index % arr.shape[ndim_arr]) * arr.strides[ndim_arr];
+    ndim_arr--;
+    while (ndim_arr >= 0)
+    {
+        // i_arr calculation
+        shape_product_arr *= arr.shape[ndim_arr + 1];
+        var = index / shape_product_arr;
+        if(var >= arr.shape[ndim_arr])
+            var = var % arr.shape[ndim_arr];
+        i_arr += (var) * arr.strides[ndim_arr];
+        ndim_arr--;
+    }
+    return i_arr;
+}
+
 void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
 {
-    int64_t index = 0;
-    int64_t shape_product_src = 1;
-    int64_t shape_product_dest = 1;
-    int64_t var = 0;
     if (dest.order == src.order)
     {
         if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
@@ -456,64 +472,14 @@ void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
             return ;
         }
     }
+
+    int64_t index = 0;
+
     while (index < dest.length)
     {
-        int64_t ndim_src = src.nd - 1;
-        int64_t ndim_dest = dest.nd - 1;
-        int64_t i_src = (index % src.shape[ndim_src]) * src.strides[ndim_src];
-        int64_t i_dest = (index % dest.shape[ndim_dest]) * dest.strides[ndim_dest];
-        ndim_src--;
-        ndim_dest--;
-        while (ndim_src >= 0)
-        {
-            // i_src calculation
-            shape_product_src *= src.shape[ndim_src + 1];
-            var = index / shape_product_src;
-            if(var >= src.shape[ndim_src])
-                var = var % src.shape[ndim_src];
-            i_src += (var) * src.strides[ndim_src];
-            ndim_src--;
-            // i_dest calculation
-            shape_product_dest *= dest.shape[ndim_dest + 1];
-            var = index / shape_product_dest;
-            if(var >= dest.shape[ndim_dest])
-                var = var % dest.shape[ndim_dest];
-            i_dest += (var) * dest.strides[ndim_dest];
-            ndim_dest--;
 
-        }
-        switch (dest.type)
-        {
-            case nd_int8:
-                dest.nd_int8[i_dest + offset] = src.nd_int8[i_src];
-                break;
-            case nd_int16:
-                dest.nd_int16[i_dest + offset] = src.nd_int16[i_src];
-                break;
-            case nd_int32:
-                dest.nd_int32[i_dest + offset] = src.nd_int32[i_src];
-                break;
-            case nd_int64:
-                dest.nd_int64[i_dest + offset] = src.nd_int64[i_src];
-                break;
-            case nd_float:
-                dest.nd_float[i_dest + offset] = src.nd_float[i_src];
-                break;
-            case nd_double:
-                dest.nd_double[i_dest + offset] = src.nd_double[i_src];
-                break;
-            case nd_bool:
-                dest.nd_bool[i_dest + offset] = src.nd_bool[i_src];
-                break;
-            case nd_cfloat:
-                dest.nd_cfloat[i_dest + offset] = src.nd_cfloat[i_src];
-                break;
-            case nd_cdouble:
-                dest.nd_int64[i_dest + offset] = src.nd_cdouble[i_src];
-                break;
-        }
-        shape_product_src = 1;
-        shape_product_dest = 1;
+        offset = (offset + index) * dest.type_size;
+        memcpy((&dest.raw_data[index_position(dest, index)]) + offset * dest.type_size, &src.raw_data[index_position(src, index)], src.type_size); // copying element by element
         index++;
     }
 }
