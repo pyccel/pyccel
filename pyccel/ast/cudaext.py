@@ -144,15 +144,16 @@ class CudaArray(CudaNewArray):
     def arg(self):
         return self._arg
 
-class CudaDeviceSynchronize(PyccelAstNode):
+class CudaDeviceSynchronize(PyccelInternalFunction):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
-
+    # pass
+    _attribute_nodes = ()
     def __init__(self):
         #...
         self._shape     = ()
         self._rank      = 0
         self._dtype     = NativeInteger()
-        self._precision = 0
+        self._precision = None
         self._order     = None
         super().__init__()
 

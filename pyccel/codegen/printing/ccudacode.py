@@ -453,10 +453,10 @@ class CcudaCodePrinter(CCodePrinter):
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
             cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
-            return  '%s%s' % (dummy_array, cpy_data)
+            return  '%s%s\n' % (dummy_array, cpy_data)
 
     def _print_CudaDeviceSynchronize(self, expr):
-        return 'cudaDeviceSynchronize();'
+        return 'cudaDeviceSynchronize()'
 
     def _print_CudaInternalVar(self, expr):
         var_name = type(expr).__name__
