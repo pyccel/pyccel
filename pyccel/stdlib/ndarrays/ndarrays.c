@@ -450,14 +450,9 @@ void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
     int64_t var = 0;
     if (dest.order == src.order)
     {
-        if (dest.order == order_c)
+        if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
         {
-            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size); // Care for cast
-            return ;
-        }
-        else if (dest.order == order_f && is_same_shape(dest, src))
-        {
-            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size); // Care for cast
+            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size);
             return ;
         }
     }
