@@ -427,6 +427,21 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
+bool    is_same_shape(t_ndarray dest, t_ndarray src)
+{
+    int i = 0;
+
+    if (dest.nd != src.nd)
+        return false;
+    while (i < dest.nd)
+    {
+        if (dest.shape[i] != src.shape[i])
+            return false;
+        ++i;
+    }
+    return true;
+}
+
 void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
 {
     int64_t index = 0;
@@ -436,6 +451,11 @@ void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
     if (dest.order == src.order)
     {
         if (dest.order == order_c)
+        {
+            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size); // Care for cast
+            return ;
+        }
+        else if (dest.order == order_f && is_same_shape(dest, src))
         {
             memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size); // Care for cast
             return ;
