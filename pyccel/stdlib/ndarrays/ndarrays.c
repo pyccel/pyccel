@@ -433,6 +433,14 @@ void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
     int64_t shape_product_src = 1;
     int64_t shape_product_dest = 1;
     int64_t var = 0;
+    if (dest.order == src.order)
+    {
+        if (dest.order == order_c)
+        {
+            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size); // Care for cast
+            return ;
+        }
+    }
     while (index < dest.length)
     {
         int64_t ndim_src = src.nd - 1;
