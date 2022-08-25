@@ -239,7 +239,6 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
-        print(expr.arguments[0].var.is_ndarray)
         if not args:
             arg_code = 'void'
         else:

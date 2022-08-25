@@ -13,7 +13,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType, PythonConjugate)
 
-from .core           import process_shape, Module, Import, PyccelFunctionDef
+from .core           import Module, Import, PyccelFunctionDef
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -30,7 +30,7 @@ from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
-from .numpyext       import process_dtype, NumpyNewArray
+from .numpyext       import process_dtype, NumpyNewArray, process_shape
 
 #==============================================================================
 __all__ = (
@@ -44,32 +44,6 @@ __all__ = (
     'CudaBlockIdx',
     'CudaGridDim'
 )
-
-#==============================================================================
-class CudaMemCopy():
-    """Represents a call to  cuda malloc for code generation.
-
-    arg : list , tuple , PythonTuple, List, Variable
-    """
-    def __init__(self, x, size):
-        self._shape     = ()
-        self._rank      = 0
-        self._dtype     = x.dtype
-        self._precision = x.precision
-
-    @property
-    def dest(self):
-        return self._args[0]
-    @property
-    def src(self):
-        return self._args[1]
-    @property
-    def size(self):
-        return self._args[2]
-    @property
-    def copy_mode(self):
-        return self._args[3]
-
 
 #==============================================================================
 class CudaNewArray(PyccelInternalFunction):
@@ -119,19 +93,27 @@ class CudaArray(CudaNewArray):
         if dtype is None:
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
-        # ... Determine ordering
-        order = str(order).strip("\'")
 
-        if order not in ('K', 'A', 'C', 'F'):
-            raise ValueError("Cannot recognize '{:s}' order".format(order))
+        shape = process_shape(False, arg.shape)
+        rank  = len(shape)
 
-        # TODO [YG, 18.02.2020]: set correct order based on input array
-        if order in ('K', 'A'):
-            order = 'C'
-        # ...
+        if rank < 2:
+            order = None
+        else:
+            # ... Determine ordering
+            order = str(order).strip("\'")
+
+            if order not in ('K', 'A', 'C', 'F'):
+                raise ValueError(f"Cannot recognize '{order}' order")
+
+            # TODO [YG, 18.02.2020]: set correct order based on input array
+            if order in ('K', 'A'):
+                order = 'C'
+            # ...
+
         self._arg   = arg
-        self._shape = process_shape(arg.shape)
-        self._rank  = len(self._shape)
+        self._shape = shape
+        self._rank  = rank
         self._dtype = dtype
         self._order = order
         self._precision = prec
@@ -150,7 +132,7 @@ class CudaDeviceSynchronize(PyccelInternalFunction):
     _attribute_nodes = ()
     def __init__(self):
         #...
-        self._shape     = ()
+        self._shape     = None
         self._rank      = 0
         self._dtype     = NativeInteger()
         self._precision = None
@@ -167,7 +149,7 @@ class CudaInternalVar(PyccelAstNode):
             raise ValueError("dimension need to be 0, 1 or 2")
         #...
         self._dim       = dim
-        self._shape     = ()
+        self._shape     = None
         self._rank      = 0
         self._dtype     = dim.dtype
         self._precision = dim.precision
