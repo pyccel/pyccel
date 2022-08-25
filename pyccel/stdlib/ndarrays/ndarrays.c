@@ -118,7 +118,10 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
         }
     }
     if (!is_view)
+    {
         arr.raw_data = malloc(arr.buffer_size);
+        memset(arr.raw_data, 0, arr.buffer_size);
+    }
     return (arr);
 }
 
@@ -450,60 +453,38 @@ int get_shape_product(int64_t *shape, int nd, int max_nd)
         product *= shape[i];
     return (product);
 }
-
-
+// 3   5
 int index_position(t_ndarray arr, int index, int nd)
 {
-    printf("HOw many times do we come here\n");
     if (arr.order == order_c)
         return index;
     if (nd == 0)
         return (0);
     if (nd == arr.nd)
-    {
-        printf("We come here and we get %ld\n", arr.shape[nd - 1]);
         return (index % arr.shape[nd - 1]) * arr.strides[nd - 1] + index_position(arr, index, nd - 1);
-    }
-    int true_index = (index / (get_shape_product(arr.shape, nd, arr.nd)) * arr.strides[nd - 1]);
-    if (true_index > arr.shape[nd - 1])
+    int true_index = (index / (get_shape_product(arr.shape, nd, arr.nd)));
+    if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
-    printf("true index %d\n", true_index);
-    return (true_index + index_position(arr, index, nd - 1));
+    return (true_index * arr.strides[nd - 1] + index_position(arr, index, nd - 1));
 }
 
-// void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
-// {
-//     if (dest.order == src.order)
-//     {
-//         if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
-//         {
-//             memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size);
-//             return ;
-//         }
-//     }
-
-//     int64_t index = 0;
-//     int64_t revert = 0;
-//     while (index < dest.length)
-//     {
-//         offset = (offset + index) * dest.type_size;
-//         memcpy((&dest.raw_data[index_position(dest, index, dest.nd)]) +
-//                 offset * dest.type_size,
-//                 &src.raw_data[index_position(src, index, src.nd)], src.type_size); // copying element by element
-//         index++;
-//     }
-// }
-
-int main(void)
+void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
 {
-    t_ndarray a = {.shape = NULL};
-    a = array_create(3, (int64_t[]){3, 2, 2}, nd_int8, false, order_f);
-    int8_t dummy[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    printf("a.nd %d\n", a.nd);
-    memcpy(a.nd_int8, dummy, a.buffer_size);
-    printf("a.nd %d\n", a.nd);
-    int x = 11;
-    printf("%d should move to %d\n", x, index_position(a, x, a.nd));
+    if (dest.order == src.order)
+    {
+        if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
+        {
+            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size);
+            return ;
+        }
+    }
+
+    int64_t index = 0;
+
+    while (index < src.length)
+    {
+        memcpy(dest.raw_data + ((index_position(dest, index, dest.nd) + offset) * dest.type_size),
+               src.raw_data + (index_position(src, index, src.nd) * src.type_size), src.type_size); // copying element by element
+        index++;
+    }
 }
-//['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
-//['0', '4', '8', '2', '6', '10', '1', '5', '9', '3', '7', '11']
