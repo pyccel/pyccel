@@ -10,8 +10,9 @@ for different languages.
 from .fortrannameclashchecker import FortranNameClashChecker
 from .cnameclashchecker import CNameClashChecker
 from .pythonnameclashchecker import PythonNameClashChecker
+from .ccudaNameClashChecker import CCudaNameClashChecker
 
 name_clash_checkers = {'fortran':FortranNameClashChecker(),
         'c':CNameClashChecker(),
-        'ccuda':CNameClashChecker(),
+        'ccuda':CCudaNameClashChecker(),
         'python':PythonNameClashChecker()}

@@ -9,7 +9,7 @@ Handles name clash problems in Ccuda
 from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
 
-class CNameClashChecker(metaclass = Singleton):
+class CCudaNameClashChecker(metaclass = Singleton):
     """ Class containing functions to help avoid problematic names in Ccuda
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
@@ -33,7 +33,8 @@ class CNameClashChecker(metaclass = Singleton):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size'])
+        'numpy_to_ndarray_shape', 'get_size',
+        'cuda_free_array', 'cuda_free_pointer', 'cuda_array_create', 'threadIdx', 'blockIdx'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
