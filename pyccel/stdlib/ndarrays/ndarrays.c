@@ -442,44 +442,68 @@ bool    is_same_shape(t_ndarray dest, t_ndarray src)
     return true;
 }
 
-int index_position(t_ndarray arr, int index)
+int get_shape_product(int64_t *shape, int nd, int max_nd)
 {
-    int64_t shape_product_arr = 1;
-    int64_t var = 0;
-    int64_t ndim_arr = arr.nd - 1;
-    int64_t i_arr = (index % arr.shape[ndim_arr]) * arr.strides[ndim_arr];
-    ndim_arr--;
-    while (ndim_arr >= 0)
-    {
-        // i_arr calculation
-        shape_product_arr *= arr.shape[ndim_arr + 1];
-        var = index / shape_product_arr;
-        if(var >= arr.shape[ndim_arr])
-            var = var % arr.shape[ndim_arr];
-        i_arr += (var) * arr.strides[ndim_arr];
-        ndim_arr--;
-    }
-    return i_arr;
+    int product = 1;
+
+    for (int i = nd; i < max_nd; ++i)
+        product *= shape[i];
+    return (product);
 }
 
-void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
+
+int index_position(t_ndarray arr, int index, int nd)
 {
-    if (dest.order == src.order)
+    printf("HOw many times do we come here\n");
+    if (arr.order == order_c)
+        return index;
+    if (nd == 0)
+        return (0);
+    if (nd == arr.nd)
     {
-        if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
-        {
-            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size);
-            return ;
-        }
+        printf("We come here and we get %ld\n", arr.shape[nd - 1]);
+        return (index % arr.shape[nd - 1]) * arr.strides[nd - 1] + index_position(arr, index, nd - 1);
     }
-
-    int64_t index = 0;
-
-    while (index < dest.length)
-    {
-
-        offset = (offset + index) * dest.type_size;
-        memcpy((&dest.raw_data[index_position(dest, index)]) + offset * dest.type_size, &src.raw_data[index_position(src, index)], src.type_size); // copying element by element
-        index++;
-    }
+    int true_index = (index / (get_shape_product(arr.shape, nd, arr.nd)) * arr.strides[nd - 1]);
+    if (true_index > arr.shape[nd - 1])
+        true_index = true_index % arr.shape[nd - 1];
+    printf("true index %d\n", true_index);
+    return (true_index + index_position(arr, index, nd - 1));
 }
+
+// void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
+// {
+//     if (dest.order == src.order)
+//     {
+//         if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
+//         {
+//             memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size);
+//             return ;
+//         }
+//     }
+
+//     int64_t index = 0;
+//     int64_t revert = 0;
+//     while (index < dest.length)
+//     {
+//         offset = (offset + index) * dest.type_size;
+//         memcpy((&dest.raw_data[index_position(dest, index, dest.nd)]) +
+//                 offset * dest.type_size,
+//                 &src.raw_data[index_position(src, index, src.nd)], src.type_size); // copying element by element
+//         index++;
+//     }
+// }
+
+int main(void)
+{
+    t_ndarray a = {.shape = NULL};
+    a = array_create(3, (int64_t[]){3, 2, 2}, nd_int8, false, order_f);
+    int8_t dummy[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    printf("a.nd %d\n", a.nd);
+    memcpy(a.nd_int8, dummy, a.buffer_size);
+    printf("a.nd %d\n", a.nd);
+    int x = 11;
+    printf("%d should move to %d\n", x, index_position(a, x, a.nd));
+}
+//['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
+//['0', '4', '8', '2', '6', '10', '1', '5', '9', '3', '7', '11']
