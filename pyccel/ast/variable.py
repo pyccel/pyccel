@@ -126,7 +126,7 @@ class Variable(PyccelAstNode):
         is_private=False,
         shape=None,
         cls_base=None,
-        order='C',
+        order=None,
         precision=0,
         is_argument=False,
         is_kwonly=False,
@@ -196,10 +196,18 @@ class Variable(PyccelAstNode):
             raise TypeError('rank must be an instance of int.')
 
         if rank == 0:
-            shape = ()
+            assert shape is None
+            assert order is None
 
-        if shape is None:
+        elif shape is None:
             shape = tuple(None for i in range(rank))
+        else:
+            assert len(shape) == rank
+
+        if rank == 1:
+            assert order is None
+        elif rank > 1:
+            assert order in ('C', 'F')
 
         if not precision:
             if isinstance(dtype, (NativeInteger, NativeFloat, NativeComplex, NativeBool)):
@@ -226,7 +234,9 @@ class Variable(PyccelAstNode):
         replaces those expressions with calls to
         PyccelArraySize
         """
-        if not hasattr(shape,'__iter__'):
+        if self.rank == 0:
+            return None
+        elif not hasattr(shape,'__iter__'):
             shape = [shape]
 
         new_shape = []
@@ -234,7 +244,7 @@ class Variable(PyccelAstNode):
             if self.shape_can_change(i):
                 # Shape of a pointer can change
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
-            elif isinstance(s,(LiteralInteger, PyccelArraySize)):
+            elif isinstance(s, LiteralInteger):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
@@ -874,8 +884,8 @@ class IndexedElement(PyccelAstNode):
 
                         _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                     new_shape.append(_shape)
-            self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
+            self._shape = None if self._rank == 0 else tuple(new_shape)
         else:
             new_rank = rank
             for i in range(rank):
@@ -966,3 +976,13 @@ class DottedVariable(Variable):
 
     def __hash__(self):
         return hash((type(self).__name__, self.name, self.lhs))
+
+    def __str__(self):
+        return str(self.lhs)+'.'+str(self.name)
+
+    def __repr__(self):
+        lhs = repr(self.lhs)
+        name = str(self.name)
+        dtype = repr(self.dtype)
+        classname = type(self).__name__
+        return f'{classname}({lhs}.{name}, dtype={dtype}'

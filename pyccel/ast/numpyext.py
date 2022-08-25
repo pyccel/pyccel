@@ -22,7 +22,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType, PythonConjugate)
 
-from .core           import process_shape, Module, Import, PyccelFunctionDef
+from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -43,6 +43,8 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'process_shape',
+    # ---
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -103,6 +105,34 @@ __all__ = (
     'NumpyZeros',
     'NumpyZerosLike',
 )
+
+#=======================================================================================
+def process_shape(is_scalar, shape):
+    """ Modify the input shape to the expected type
+
+    Parameters
+    ----------
+    is_scalar : bool
+                True if the result is a scalar, False if it is an array
+    shape     : PyccelAstNode/iterable/int
+                input shape
+    """
+    if is_scalar:
+        return None
+    elif shape is None:
+        return ()
+    elif not hasattr(shape,'__iter__'):
+        shape = [shape]
+
+    new_shape = []
+    for s in shape:
+        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
+            new_shape.append(s)
+        elif isinstance(s, int):
+            new_shape.append(LiteralInteger(s))
+        else:
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
+    return tuple(new_shape)
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -201,8 +231,8 @@ class NumpyReal(PythonReal):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = process_shape(self.internal_var.shape)
-        self._rank  = len(self._shape)
+        self._rank  = self.internal_var.rank
+        self._shape = process_shape(self._rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):
@@ -234,8 +264,8 @@ class NumpyImag(PythonImag):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = self.internal_var.shape
-        self._rank  = len(self._shape)
+        self._rank  = self.internal_var.rank
+        self._shape = process_shape(self._rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):
@@ -328,9 +358,9 @@ class NumpyNewArray(PyccelInternalFunction):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def _process_order(order):
+    def _process_order(rank, order):
 
-        if not order:
+        if rank < 2:
             return None
 
         order = str(order).strip('\'"')
@@ -369,19 +399,27 @@ class NumpyArray(NumpyNewArray):
         if dtype is None:
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
-        # ... Determine ordering
-        order = str(order).strip("\'")
 
-        if order not in ('K', 'A', 'C', 'F'):
-            raise ValueError("Cannot recognize '{:s}' order".format(order))
+        shape = process_shape(False, arg.shape)
+        rank  = len(shape)
 
-        # TODO [YG, 18.02.2020]: set correct order based on input array
-        if order in ('K', 'A'):
-            order = 'C'
-        # ...
+        if rank < 2:
+            order = None
+        else:
+            # ... Determine ordering
+            order = str(order).strip("\'")
+
+            if order not in ('K', 'A', 'C', 'F'):
+                raise ValueError(f"Cannot recognize '{order}' order")
+
+            # TODO [YG, 18.02.2020]: set correct order based on input array
+            if order in ('K', 'A'):
+                order = 'C'
+            # ...
+
         self._arg   = arg
-        self._shape = process_shape(arg.shape)
-        self._rank  = len(self._shape)
+        self._shape = shape
+        self._rank  = rank
         self._dtype = dtype
         self._order = order
         self._precision = prec
@@ -437,7 +475,7 @@ class NumpyArange(NumpyNewArray):
             self._dtype, self._precision = process_dtype(dtype)
 
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
-        self._shape = process_shape(self._shape)
+        self._shape = process_shape(False, self._shape)
         super().__init__()
 
     @property
@@ -466,7 +504,7 @@ class NumpySum(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name = 'sum'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -489,7 +527,7 @@ class NumpyProduct(PyccelInternalFunction):
     __slots__ = ('_arg','_dtype','_precision')
     name = 'product'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -554,10 +592,10 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = (m, n)
 
         if a.rank == 1 and b.rank == 1:
-            self._rank = 0
-            self._shape = ()
+            self._rank  = 0
+            self._shape = None
         elif a.rank == 1 or b.rank == 1:
-            self._rank = 1
+            self._rank  = 1
             self._shape = (b.shape[1] if a.rank == 1 else a.shape[0],)
         else:
             self._rank = 2
@@ -566,7 +604,7 @@ class NumpyMatmul(PyccelInternalFunction):
         if a.order == b.order:
             self._order = a.order
         else:
-            self._order = 'C'
+            self._order = None if self._rank < 2 else 'C'
 
     @property
     def a(self):
@@ -611,10 +649,12 @@ class NumpyLinspace(NumpyNewArray):
                         from start and stop, the calculated dtype will never be an integer.
     """
 
-    __slots__ = ('_dtype','_precision','_index','_start','_stop','_num','_endpoint','_shape', '_rank','_ind','_step','_py_argument')
-    _attribute_nodes = ('_start', '_stop', '_index', '_step', '_num', '_endpoint', '_ind')
+    __slots__ = ('_dtype','_precision','_index','_start','_stop',
+            '_num','_endpoint','_shape', '_rank','_ind','_step',
+            '_py_argument','_order')
+    _attribute_nodes = ('_start', '_stop', '_index', '_step', '_num',
+            '_endpoint', '_ind')
     name = 'linspace'
-    _order     = 'C'
 
     def __init__(self, start, stop, num=None, endpoint=True, dtype=None):
 
@@ -661,8 +701,12 @@ class NumpyLinspace(NumpyNewArray):
             self._endpoint = endpoint
 
         shape = broadcast(self._start.shape, self._stop.shape)
-        self._shape = (self._num,) + shape
+        self._shape = (self._num,)
+        if shape is not None:
+            self._shape += shape
         self._rank  = len(self._shape)
+        self._order = None if self._rank < 2 else 'C'
+
         self._ind = None
 
         if isinstance(self.endpoint, LiteralFalse):
@@ -767,9 +811,9 @@ class NumpyWhere(PyccelInternalFunction):
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
 
+        self._shape = process_shape(False, shape)
         self._rank  = len(shape)
-        self._shape = shape
-        self._order = 'C'
+        self._order = None if self._rank < 2 else 'C'
         super().__init__(condition, x, y)
 
     @property
@@ -801,16 +845,16 @@ class NumpyRand(PyccelInternalFunction):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    __slots__ = ('_shape','_rank')
+    __slots__ = ('_shape','_rank','_order')
     name = 'rand'
     _dtype = NativeFloat()
     _precision = default_precision['float']
-    _order = 'C'
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._shape = args
-        self._rank  = len(self.shape)
+        self._rank  = len(args)
+        self._shape = None if self._rank == 0 else args
+        self._order = None if self._rank < 2 else 'C'
 
 #==============================================================================
 class NumpyRandint(PyccelInternalFunction):
@@ -819,17 +863,14 @@ class NumpyRandint(PyccelInternalFunction):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    __slots__ = ('_rand','_low','_high','_shape','_rank')
+    __slots__ = ('_rand','_low','_high','_shape','_rank','_order')
     name = 'randint'
     _dtype     = NativeInteger()
     _precision = -1
-    _order     = 'C'
     _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
-        if size is None:
-            size = ()
-        if not hasattr(size,'__iter__'):
+        if size is not None and not hasattr(size,'__iter__'):
             size = (size,)
 
         if high is None:
@@ -837,8 +878,9 @@ class NumpyRandint(PyccelInternalFunction):
             low  = None
 
         self._shape   = size
-        self._rank    = len(self.shape)
-        self._rand    = NumpyRand(*size)
+        self._rank    = 0 if size is None else len(self.shape)
+        self._order   = None if self._rank < 2 else 'C'
+        self._rand    = NumpyRand() if size is None else NumpyRand(*size)
         self._low     = low
         self._high    = high
         super().__init__()
@@ -885,7 +927,7 @@ class NumpyFull(NumpyNewArray):
     def __init__(self, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
-        shape = process_shape(shape)
+        shape = process_shape(False, shape)
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
@@ -895,9 +937,6 @@ class NumpyFull(NumpyNewArray):
         # Verify dtype and get precision
         dtype, precision = process_dtype(dtype)
 
-        # Verify array ordering
-        order = NumpyNewArray._process_order(order)
-
         # Cast fill_value to correct type
         if fill_value:
             if fill_value.dtype != dtype or get_final_precision(fill_value) != precision:
@@ -906,7 +945,7 @@ class NumpyFull(NumpyNewArray):
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
-        self._order = order
+        self._order = NumpyNewArray._process_order(self._rank, order)
         self._precision = precision
 
         super().__init__(fill_value)
@@ -1058,12 +1097,12 @@ class NumpyNorm(PyccelInternalFunction):
             sh = list(arg.shape)
             del sh[self.axis]
             self._shape = tuple(sh)
-            self._order = arg.order
+            self._rank = len(self._shape)
+            self._order = None if self._rank < 2 else arg.order
         else:
-            self._shape = ()
+            self._shape = None
             self._order = None
-        self._rank = len(self._shape)
-        self._order = arg.order
+            self._rank  = 0
 
     @property
     def arg(self):
@@ -1134,8 +1173,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._set_order(x1, x2)
 
     def _set_shape_rank(self, x1, x2):
-        self._shape     = x1.shape  # TODO ^^
-        self._rank      = x1.rank   # TODO ^^
+        self._shape = broadcast(x1.shape, x2.shape)
+        self._rank  = 0 if self._shape is None else len(self._shape)
 
     def _set_dtype_precision(self, x1, x2):
         self._dtype     = NativeFloat()
@@ -1145,7 +1184,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         if x1.order == x2.order:
             self._order = x1.order
         else:
-            self._order = 'C'
+            self._order = None if self._rank < 2 else 'C'
 
 #------------------------------------------------------------------------------
 # Math operations
@@ -1267,9 +1306,13 @@ class NumpyMod(NumpyUfuncBinary):
 
     def _set_shape_rank(self, x1, x2):
         args   = (x1, x2)
+        ranks  = [a.rank  for a in args]
         shapes = [a.shape for a in args]
 
-        if all(sh is not None for sh in shapes):
+        if all(r == 0 for r in ranks):
+            self._rank  = 0
+            self._shape = None
+        else:
             if len(args) == 1:
                 shape = args[0].shape
             else:
@@ -1280,8 +1323,6 @@ class NumpyMod(NumpyUfuncBinary):
 
             self._shape = shape
             self._rank  = len(shape)
-        else:
-            self._rank = max(a.rank for a in args)
 
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
@@ -1310,7 +1351,7 @@ class NumpyAmin(NumpyUfuncUnary):
     __slots__ = ()
     name = 'amin'
     def _set_shape_rank(self, x):
-        self._shape     = ()
+        self._shape     = None
         self._rank      = 0
 
     def _set_dtype_precision(self, x):
@@ -1326,7 +1367,7 @@ class NumpyAmax(NumpyUfuncUnary):
     __slots__ = ()
     name = 'amax'
     def _set_shape_rank(self, x):
-        self._shape     = ()
+        self._shape     = None
         self._rank      = 0
 
     def _set_dtype_precision(self, x):
@@ -1396,8 +1437,8 @@ class NumpyConjugate(PythonConjugate):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = process_shape(self.internal_var.shape)
-        self._rank  = len(self._shape)
+        self._rank  = self.internal_var.rank
+        self._shape = process_shape(self._rank == 0, self.internal_var.shape)
 
     @property
     def is_elemental(self):
@@ -1530,7 +1571,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
                 self._order = a.order if a.rank>2 else None
             else:
                 self._rank  = 0
-                self._shape = ()
+                self._shape = None
                 self._order = None
 
         self._arr = a
@@ -1577,7 +1618,7 @@ class NumpyArraySize(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __new__(cls, a, axis = None):
