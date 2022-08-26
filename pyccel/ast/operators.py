@@ -19,11 +19,12 @@ from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
                                     NativeComplex, NativeString,
                                     NativeNumeric)
 
-from .internals             import max_precision
+from .internals             import max_precision, ndarray_precision
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
 from .literals              import Nil, NilArgument
 from .literals              import convert_to_literal
+
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -409,12 +410,13 @@ class PyccelBinaryOperator(PyccelOperator):
         raise TypeError("unsupported operand type(s) for /: 'str' and 'str'")
 
     @staticmethod
+
     def _handle_complex_type(complexes):
         """
         Set dtype and precision when the result is a complex
         """
         dtype = NativeComplex()
-        precision = max_precision(complexes)
+        precision = ndarray_precision(complexes)
         return dtype, precision
 
     @staticmethod
@@ -423,7 +425,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is a float
         """
         dtype = NativeFloat()
-        precision = max_precision(floats)
+        precision = ndarray_precision(floats)
         return dtype, precision
 
     @staticmethod
@@ -432,7 +434,7 @@ class PyccelBinaryOperator(PyccelOperator):
         Set dtype and precision when the result is an integer
         """
         dtype = NativeInteger()
-        precision = max_precision(integers)
+        precision = ndarray_precision(integers)
         return dtype, precision
 
     @staticmethod

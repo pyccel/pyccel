@@ -14,6 +14,8 @@ from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
+# from .variable  import Variable
+
 pyccel_stage = PyccelStage()
 
 __all__ = (
@@ -271,6 +273,16 @@ def symbols(names):
     names = names.split(',')
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
+
+def ndarray_precision(objs):
+    from .variable import Variable
+    
+    nd_integers = [o for o in objs if isinstance(o, Variable) and o.is_ndarray]
+    if len(nd_integers) == 1:
+        precision = nd_integers[0].precision
+    else:
+        precision = max_precision(objs)
+    return precision
 
 def max_precision(objs : list, dtype = None, allow_native = True):
     """
