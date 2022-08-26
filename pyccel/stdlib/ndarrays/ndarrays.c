@@ -453,7 +453,7 @@ int get_shape_product(int64_t *shape, int nd, int max_nd)
         product *= shape[i];
     return (product);
 }
-// 3   5
+
 int index_position(t_ndarray arr, int index, int nd)
 {
     if (arr.order == order_c)
@@ -470,11 +470,14 @@ int index_position(t_ndarray arr, int index, int nd)
 
 void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
 {
+    unsigned char *d = (unsigned char*)dest.raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+
     if (dest.order == src.order)
     {
         if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
         {
-            memcpy(dest.raw_data + offset * dest.type_size, src.raw_data, src.buffer_size);
+            memcpy(d + offset * dest.type_size, s, src.buffer_size);
             return ;
         }
     }
@@ -483,8 +486,8 @@ void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
 
     while (index < src.length)
     {
-        memcpy(dest.raw_data + ((index_position(dest, index, dest.nd) + offset) * dest.type_size),
-               src.raw_data + (index_position(src, index, src.nd) * src.type_size), src.type_size); // copying element by element
+        memcpy(d + ((index_position(dest, index, dest.nd) + offset) * dest.type_size),
+               s + (index_position(src, index, src.nd) * src.type_size), src.type_size); // copying element by element
         index++;
     }
 }
