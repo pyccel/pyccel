@@ -385,10 +385,10 @@ class PyccelBinaryOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
+        floats    = [a for a in args if a.dtype is NativeFloat() or a in integers]
+        complexes = [a for a in args if a.dtype in NativeComplex() or a in floats]
         strs      = [a for a in args if a.dtype is NativeString()]
-
+        
         if strs:
             return cls._handle_str_type(strs)
             assert len(integers + floats + complexes) == 0

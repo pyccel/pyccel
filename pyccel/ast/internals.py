@@ -288,7 +288,6 @@ def max_precision(objs : list, dtype = None, allow_native = True):
             precision of objects with this dtype are
             considered
     """
-
     if allow_native and all(o.precision == -1 for o in objs):
         return -1
     elif dtype:
