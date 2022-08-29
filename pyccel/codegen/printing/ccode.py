@@ -843,12 +843,10 @@ class CCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            macro_args = {arg for arg in args_format if arg.startswith("PRI")}
             args_format = sep.join(args_format)
             args_format += end
             args_format = self._print(LiteralString(args_format))
-            for macro_arg in macro_args:
-                args_format = args_format.replace(macro_arg, f'%"{macro_arg}"')
+            args_format = args_format.replace("PRId64", '%"PRId64"')
             args_code = ', '.join([args_format, *args])
             return "printf({});\n".format(args_code)
 
