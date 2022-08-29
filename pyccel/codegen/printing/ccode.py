@@ -234,6 +234,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdint',
                  'pyc_math_c',
                  'stdio',
+                 "inttypes",
                  'stdbool',
                  'assert']}
 
@@ -552,7 +553,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Literal(self, expr):
         if isinstance(expr, LiteralInteger) and get_final_precision(expr) == 8:
-            return f"{repr(expr.python_value)}ll"
+            self.add_import(c_imports['stdint'])
+            return f"INT64_C({repr(expr.python_value)})"
         elif isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
             return f"{repr(expr.python_value)}f"
         return repr(expr.python_value)
@@ -802,7 +804,7 @@ class CCodePrinter(CodePrinter):
                           ('complex',8) : '(%.12lf + %.12lfj)',
                           ('complex',4) : '(%.12f + %.12fj)',
                           ('int',4)     : '%d',
-                          ('int',8)     : '%lld',
+                          ('int',8)     : 'PRId64',
                           ('int',2)     : '%hd',
                           ('int',1)     : '%c',
                           ('bool',4)    : '%s',
@@ -825,6 +827,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonPrint(self, expr):
         self.add_import(c_imports['stdio'])
+        self.add_import(c_imports['inttypes'])
         end = '\n'
         sep = ' '
         code = ''
@@ -840,9 +843,12 @@ class CCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
+            macro_args = {arg for arg in args_format if not arg.startswith("%")}
             args_format = sep.join(args_format)
             args_format += end
             args_format = self._print(LiteralString(args_format))
+            for macro_arg in macro_args:
+                args_format = args_format.replace(macro_arg, f'%"{macro_arg}"')
             args_code = ', '.join([args_format, *args])
             return "printf({});\n".format(args_code)
 
