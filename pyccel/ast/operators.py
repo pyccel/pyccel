@@ -384,18 +384,19 @@ class PyccelBinaryOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
+
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        floats    = [a for a in args if a.dtype is NativeFloat() or a in integers]
-        complexes = [a for a in args if a.dtype in NativeComplex() or a in floats]
+        floats    = [a for a in args if a.dtype is NativeFloat()]
+        complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
-        
+
         if strs:
             return cls._handle_str_type(strs)
             assert len(integers + floats + complexes) == 0
         elif complexes:
-            return cls._handle_complex_type(complexes)
+            return cls._handle_complex_type(complexes + integers + floats)
         elif floats:
-            return cls._handle_float_type(floats)
+            return cls._handle_float_type(floats + integers)
         elif integers:
             return cls._handle_integer_type(integers)
         else:
