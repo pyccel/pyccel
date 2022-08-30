@@ -15,8 +15,6 @@ from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
-# from .variable  import Variable
-
 pyccel_stage = PyccelStage()
 
 __all__ = (

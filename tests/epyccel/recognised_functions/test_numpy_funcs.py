@@ -4895,7 +4895,9 @@ def test_numpy_where_array_like_1d_with_condition(language):
     @types('float64[:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        a = where(arr > 5, arr, arr*2)
+        import numpy as np
+
+        a = where(arr > 5, arr, arr * np.float64(2))
         s = shape(a)
         return len(s), s[0], a[1], a[0]
 
@@ -4988,7 +4990,8 @@ def test_numpy_where_array_like_2d_with_condition(language):
     @types('float64[:,:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        a = where(arr < 0, arr, arr+1)
+        import numpy as np
+        a = where(arr < 0, arr, arr + np.float64(1))
         s = shape(a)
         return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
 
@@ -5102,9 +5105,10 @@ def test_numpy_linspace_scalar(language):
     @types('float64', 'int', 'int')
     def get_linspace(start, steps, num):
         from numpy import linspace
+        import numpy as np
         stop = start + steps
         b = linspace(start, stop, num)
-        x = 0.0
+        x = np.float64(0.0)
         for bi in b:
             x += bi
         return x
@@ -5163,7 +5167,7 @@ def test_numpy_linspace_scalar(language):
     epyccel_func_type2(0, 10, out)
     assert (np.allclose(x, out))
     arr = np.zeros
-    x = randint(100, 200)
+    x = randint(100, 200) // 2
     assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
     assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
     x = randint(100, 200)
