@@ -150,7 +150,7 @@ inline double  sign(double x)
 /* numpy.sign for complex */
 inline double complex csign(double complex x)
 {
-    return creal(x) || cimag(x) ? ((creal(x)<0) || (cimag(x)<0) ? -1 : 1) : 0;
+    return x ? ((!creal(x) && cimag(x) < 0) || (creal(x) < 0) ? -1 : 1) : 0;
 }
 
 #endif

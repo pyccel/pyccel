@@ -1082,7 +1082,7 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.dtype, NativeComplex):
             ne_zero = f'(REALPART({str_x}) .ne. 0_{kind}) .or. (IMAGPART({str_x}) .ne. 0_{kind})'
-            lt_zero = f'(REALPART({str_x}) .lt. 0_{kind}) .or. (IMAGPART({str_x}) .lt. 0_{kind})'
+            lt_zero = f'((REALPART({str_x}) .eq. 0_{kind}) .and. IMAGPART({str_x}) .lt. 0_{kind}) .or. (REALPART({str_x}) .lt. 0_{kind})'
         else:
             ne_zero = f'({str_x} .ne. 0_{kind})'
             lt_zero = f'({str_x} .lt. 0_{kind})'

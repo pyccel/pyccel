@@ -2,6 +2,11 @@
 
 from pyccel.decorators import types
 
+def complex_nul():
+    import numpy as np
+    b = np.sign(complex(0+0j))
+    return b
+
 def complex_pos():
     import numpy as np
     b = np.sign(complex(1+2j))
@@ -10,6 +15,11 @@ def complex_pos():
 def complex_neg():
     import numpy as np
     b = np.sign(complex(-1-2j))
+    return b
+
+def complex64_nul():
+    import numpy as np
+    b = np.sign(np.complex64(0+0j))
     return b
 
 def complex64_pos():
@@ -22,6 +32,11 @@ def complex64_neg():
     b = np.sign(np.complex64(-64-64j))
     return b
 
+def complex128_nul():
+    import numpy as np
+    b = np.sign(np.complex128(0+0j))
+    return b
+
 def complex128_pos():
     import numpy as np
     b = np.sign(np.complex128(128+128j))
@@ -31,6 +46,38 @@ def complex128_neg():
     import numpy as np
     b = np.sign(np.complex128(-128-128j))
     return b
+
+def complex_pos_neg():
+    import numpy as np
+    b = np.sign(np.complex(1-2j))
+    return b
+
+def complex_neg_pos():
+    import numpy as np
+    b = np.sign(np.complex(-1+2j))
+    return b
+
+def complex64_pos_neg():
+    import numpy as np
+    b = np.sign(np.complex128(64-64j))
+    return b
+
+def complex64_neg_pos():
+    import numpy as np
+    b = np.sign(np.complex128(-64+64j))
+    return b
+
+def complex128_pos_neg():
+    import numpy as np
+    b = np.sign(np.complex128(128-128j))
+    return b
+
+def complex128_neg_pos():
+    import numpy as np
+    b = np.sign(np.complex128(-128+128j))
+    return b
+
+# ADD test of 0+21j  and 0-21j and null
 
 def int16_pos():
     import numpy as np

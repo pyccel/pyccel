@@ -6,40 +6,76 @@ import modules.numpy_sign as mod
 from pyccel.epyccel import epyccel
 
 def test_sign_complex(language):
+    f_nul = mod.complex_nul
     f_pos = mod.complex_pos
     f_neg = mod.complex_neg
+    f_pos_neg = mod.complex_pos_neg
+    f_neg_pos = mod.complex_neg_pos
+    f_nul_epyc = epyccel(f_nul, language = language)
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_neg_epyc = epyccel(f_pos_neg, language = language)
+    f_neg_pos_epyc = epyccel(f_neg_pos, language = language)
 
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_pos_neg, x2_pos_neg = f_pos_neg(), f_pos_neg_epyc()
+    x1_neg_pos, x2_neg_pos = f_neg_pos(), f_neg_pos_epyc()
 
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
     assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_pos_neg == x2_pos_neg and x1_pos_neg.dtype == x2_pos_neg.dtype
+    assert x1_neg_pos == x2_neg_pos and x1_neg_pos.dtype == x2_neg_pos.dtype
 
 def test_sign_complex64(language):
+    f_nul = mod.complex64_nul
     f_pos = mod.complex64_pos
     f_neg = mod.complex64_neg
+    f_pos_neg = mod.complex64_pos_neg
+    f_neg_pos = mod.complex64_neg_pos
+    f_nul_epyc = epyccel(f_nul, language = language)
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_neg_epyc = epyccel(f_pos_neg, language = language)
+    f_neg_pos_epyc = epyccel(f_neg_pos, language = language)
 
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_pos_neg, x2_pos_neg = f_pos_neg(), f_pos_neg_epyc()
+    x1_neg_pos, x2_neg_pos = f_neg_pos(), f_neg_pos_epyc()
 
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
     assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_pos_neg == x2_pos_neg and x1_pos_neg.dtype == x2_pos_neg.dtype
+    assert x1_neg_pos == x2_neg_pos and x1_neg_pos.dtype == x2_neg_pos.dtype
 
 def test_sign_complex128(language):
+    f_nul = mod.complex128_nul
     f_pos = mod.complex128_pos
     f_neg = mod.complex128_neg
+    f_pos_neg = mod.complex128_pos_neg
+    f_neg_pos = mod.complex128_neg_pos
+    f_nul_epyc = epyccel(f_nul, language = language)
     f_pos_epyc = epyccel(f_pos, language = language)
     f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_neg_epyc = epyccel(f_pos_neg, language = language)
+    f_neg_pos_epyc = epyccel(f_neg_pos, language = language)
 
+    x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
+    x1_pos_neg, x2_pos_neg = f_pos_neg(), f_pos_neg_epyc()
+    x1_neg_pos, x2_neg_pos = f_neg_pos(), f_neg_pos_epyc()
 
+    assert x1_nul == x2_nul and x1_nul.dtype == x2_nul.dtype
     assert x1_pos == x2_pos and x1_pos.dtype == x2_pos.dtype
     assert x1_neg == x2_neg and x1_neg.dtype == x2_neg.dtype
+    assert x1_pos_neg == x2_pos_neg and x1_pos_neg.dtype == x2_pos_neg.dtype
+    assert x1_neg_pos == x2_neg_pos and x1_neg_pos.dtype == x2_neg_pos.dtype
 
 def test_sign_int16(language):
     f_pos = mod.int16_pos
@@ -210,8 +246,8 @@ def test_sign_arr_complex(language):
     f_1d_epyc = epyccel(f_1d, language = language)
     f_2d_epyc = epyccel(f_2d, language = language)
 
-    x1_1d = np.array([0.+.1j, -2.-1.3j, -3.7j], dtype=np.complex64)
-    x1_2d = np.array([[0.+1.], [-2.-1.3j], [-3.7j]], dtype=np.complex64)
+    x1_1d = np.array([0.+0j, 0.j, 1.+2.j, -1.+2.j, 1.-2.j, -1.-2.j, 2.j, -2.j], dtype=np.complex64)
+    x1_2d = np.array([[0.+0j, 0.j], [1.+2.j, -1.+2.j], [1.-2.j, -1.-2.j], [2.j, -2.j]], dtype=np.complex64)
     x2_1d = np.copy(x1_1d)
     x2_2d = np.copy(x1_2d)
 
