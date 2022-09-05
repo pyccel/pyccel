@@ -331,28 +331,28 @@ DtypePrecisionToCastFunction = {
 
 def process_dtype(dtype):
     """
-    This function will take a dtype passed to a numpy array creation function
-    and depending on the type of the passed argument, it will do the necessary treatments
-    to extract the corresponding type and precision from it then return the result.
+    This function takes a dtype passed to a numpy array creation function,
+    processes it in different ways depending on its type, and finally extracts
+    the corresponding type and precision from the `dtype_registry` dictionary.
 
-    This function could be useful when working with numpy creation function having a dtype argument,
-    like numpy.array, nump.arrange, numpy.linspace...
+    This function could be useful when working with numpy creation function
+    having a dtype argument, like numpy.array, numpy.arrange, numpy.linspace...
 
-    Parameters:
+    Parameters
     ----------
-        dtype     : PythonType | PyccelFunctionDef | String
+    dtype: PythonType | PyccelFunctionDef | String
         The actual dtype passed to the numpy function
 
-    Raises:
-    ----------
-        TypeError : In the case of unrecognized argument type.
-        TypeError : In the case of passed string argument not recognized as valid dtype.
+    Raises
+    ------
+    TypeError: In the case of unrecognized argument type.
+    TypeError: In the case of passed string argument not recognized as valid dtype.
 
     Returns:
     ----------
-        dtype     : Datatype
+    dtype: Datatype
         The Datatype corresponding to the passed dtype.
-        precision : int
+    precision: int
         The precision corresponding to the passed dtype.
     """
 
@@ -361,10 +361,10 @@ def process_dtype(dtype):
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
 
-    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
+    if dtype in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
-    elif dtype  in (NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
+    elif dtype in (NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
@@ -376,8 +376,8 @@ def process_dtype(dtype):
         raise TypeError(f'Unknown type of {dtype}.')
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
-        precision        = default_precision[dtype]
-    dtype            = datatype(dtype)
+        precision = default_precision[dtype]
+    dtype = datatype(dtype)
 
     return dtype, precision
 
