@@ -796,6 +796,7 @@ class CCodePrinter(CodePrinter):
                                .replace('\v', '\\v')\
                                .replace('"', '\\"')\
                                .replace("'", "\\'")
+        format_str = re.sub(r"__C_MACRO__\(([^)]*)\)", '"\\1"', format_str)
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
@@ -804,7 +805,7 @@ class CCodePrinter(CodePrinter):
                           ('complex',8) : '(%.12lf + %.12lfj)',
                           ('complex',4) : '(%.12f + %.12fj)',
                           ('int',4)     : '%d',
-                          ('int',8)     : 'PRId64',
+                          ('int',8)     : '%__C_MACRO__(PRId64)',
                           ('int',2)     : '%hd',
                           ('int',1)     : '%c',
                           ('bool',4)    : '%s',
@@ -846,7 +847,6 @@ class CCodePrinter(CodePrinter):
             args_format = sep.join(args_format)
             args_format += end
             args_format = self._print(LiteralString(args_format))
-            args_format = args_format.replace("PRId64", '%"PRId64"')
             args_code = ', '.join([args_format, *args])
             return "printf({});\n".format(args_code)
 
