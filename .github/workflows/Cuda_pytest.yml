@@ -17,8 +17,8 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: 3.7
-      # - name: Install dependencies
-      #   uses: ./.github/actions/linux_install
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Coverage install
