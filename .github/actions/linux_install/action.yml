@@ -11,6 +11,10 @@ runs:
       run:
         apt-get -y install gfortran
       shell: bash
+    - name: Install python
+      run:
+        apt-get -y install python3-dev
+      shell: bash
     - name: Install LaPack
       run:
         apt-get -y install libblas-dev liblapack-dev
