@@ -21,14 +21,8 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
-      - name: Test with valgrind for memory leaks
-        uses: ./.github/actions/valgrind_run
+      - name: CCUDA Compilation test
+        run: nvcc --version # cuda install check
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
