@@ -8,7 +8,7 @@ jobs:
   Linux:
 
     runs-on: ubuntu-latest
-
+    container: nvidia/cuda:11.7.1-base-ubuntu20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
@@ -17,9 +17,7 @@ jobs:
           python-version: 3.7
       - name: Install dependencies
         uses: ./.github/actions/linux_install
-      - name: CUDA install
-        uses: ./.github/actions/cuda_install
-      - name: CCUDA Compilation test
+      - name: CUDA Version
         run: nvcc --version # cuda install check
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
