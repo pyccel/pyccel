@@ -17,8 +17,7 @@ runs:
       shell: bash
     - name: Install MPI
       run: |
-        DEBIAN_FRONTEND=noninteractive
-        apt-get -y install libopenmpi-dev openmpi-bin
+        DEBIAN_FRONTEND=noninteractive TZ=Africa/Morocco apt-get -y install libopenmpi-dev openmpi-bin
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
     - name: Install OpenMP
