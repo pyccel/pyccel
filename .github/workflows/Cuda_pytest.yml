@@ -8,7 +8,7 @@ jobs:
   Linux:
 
     runs-on: ubuntu-latest
-    container: nvidia/cuda:11.7.1-base-ubuntu20.04
+    container: nvidia/cuda:11.7.1-devel-ubuntu20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.7
