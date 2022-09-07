@@ -111,6 +111,8 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+    # --------------------------- internal functions --------------------------
+    'NumpySign'   : 'numpy_sign'
 }
 
 math_function_to_fortran = {
@@ -2651,6 +2653,8 @@ class FCodePrinter(CodePrinter):
             func_name = numpy_ufunc_to_fortran[type_name]
         except KeyError:
             self._print_not_supported(expr)
+        if func_name.startswith('numpy_'):
+            self._additional_imports.add(Import('numpy_f90', Module('numpy_f90',(),())))
         args = [self._print(NumpyFloat(a) if a.dtype is NativeInteger() else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
