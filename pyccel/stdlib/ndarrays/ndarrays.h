@@ -141,16 +141,4 @@ int64_t         get_index(t_ndarray arr, ...);
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 
-/* numpy.sign for float, double and integers */
-inline double  sign(double x)
-{
-    return x ? (x < 0 ? -1 : 1) : 0;
-}
-
-/* numpy.sign for complex */
-inline double complex csign(double complex x)
-{
-    return x ? ((!creal(x) && cimag(x) < 0) || (creal(x) < 0) ? -1 : 1) : 0;
-}
-
 #endif
