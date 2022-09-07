@@ -1076,21 +1076,6 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.arg)
         return rhs_code
 
-    def _print_NumpySign(self, expr):
-        str_x = self._print(expr.args[0])
-        kind  = self.print_kind(expr.args[0])
-
-        if isinstance(expr.dtype, NativeComplex):
-            ne_zero = f'(REALPART({str_x}) .ne. 0_{kind}) .or. (IMAGPART({str_x}) .ne. 0_{kind})'
-            lt_zero = f'((REALPART({str_x}) .eq. 0_{kind}) .and. IMAGPART({str_x}) .lt. 0_{kind}) .or. (REALPART({str_x}) .lt. 0_{kind})'
-        else:
-            ne_zero = f'({str_x} .ne. 0_{kind})'
-            lt_zero = f'({str_x} .lt. 0_{kind})'
-
-        merge_non_zero = f'merge(-1_{kind}, 1_{kind}, {lt_zero})'
-
-        return f'merge({merge_non_zero}, 0_{kind}, {ne_zero})'
-
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
         return 'real({}, {})'.format(result_code, self.print_kind(expr))
