@@ -237,7 +237,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'pyc_math_c',
                  'stdio',
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'numpy_c']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -1237,10 +1238,8 @@ class CCodePrinter(CodePrinter):
         type_name = type(expr).__name__
         try:
             func_name = numpy_ufunc_to_c_float[type_name]
-            if func_name in ('sign', 'csign'):
-                self.add_import(c_imports['ndarrays'])
-            else:
-                self.add_import(c_imports['math'])
+            if func_name in ('sign'):
+                self.add_import(c_imports['numpy_c'])
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []
@@ -1249,6 +1248,8 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['complex'])
                 try:
                     func_name = numpy_ufunc_to_c_complex[type_name]
+                    if func_name in ('csign'):
+                        self.add_import(c_imports['numpy_c'])
                     args.append(self._print(arg))
                 except KeyError:
                     errors.report(INCOMPATIBLE_TYPEVAR_TO_FUNC.format(type_name) ,severity='fatal')
