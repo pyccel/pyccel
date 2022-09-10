@@ -212,15 +212,11 @@ class LiteralString(Literal):
 
     def __str__(self):
         return str(self.python_value)
-    
+
     def __add__(self, o):
-        from .internals import CStringExpression, CMacro
         if isinstance(o, LiteralString):
             return LiteralString(self._string + o._string)
-        elif isinstance(o, (CMacro, CStringExpression)):
-            return CStringExpression(self, o)
-        else:
-            raise TypeError("unsupported operand type(s) for +: '{}' and '{}'").format(self.__class__, type(o))
+        return NotImplemented
 
     @property
     def python_value(self):

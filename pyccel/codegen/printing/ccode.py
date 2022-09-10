@@ -30,7 +30,6 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
-from pyccel.ast.internals import CMacro, CStringExpression
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -48,7 +47,7 @@ from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
-from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -553,10 +552,16 @@ class CCodePrinter(CodePrinter):
         return '({} != 0)'.format(value)
 
     def _print_Literal(self, expr):
+        return repr(expr.python_value)
+
+    def _print_LiteralInteger(self, expr):
         if isinstance(expr, LiteralInteger) and get_final_precision(expr) == 8:
             self.add_import(c_imports['stdint'])
             return f"INT64_C({repr(expr.python_value)})"
-        elif isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
+        return repr(expr.python_value)
+    
+    def _print_LiteralFloat(self, expr):
+        if isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
             return f"{repr(expr.python_value)}f"
         return repr(expr.python_value)
 
@@ -850,7 +855,7 @@ class CCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            args_format = args_format.join(sep)
+            args_format = args_format.intersperse(sep)
             args_format += end
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
@@ -871,7 +876,7 @@ class CCodePrinter(CodePrinter):
                     arg_format, arg = self.get_print_format_and_arg(a)
                     tmp_arg_format_list += arg_format
                     args.append(arg)
-                tmp_arg_format_list = tmp_arg_format_list.join(', ')
+                tmp_arg_format_list = tmp_arg_format_list.intersperse(', ')
                 args_format += CStringExpression('(', tmp_arg_format_list, ')')
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)

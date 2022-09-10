@@ -12,7 +12,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
-from .literals  import LiteralInteger, LiteralString
+from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
 
@@ -244,103 +244,6 @@ class PrecomputedCode(Basic):
         """ The string containing the precomputed code
         """
         return self._code
-
-#------------------------------------------------------------------------------
-class CStringExpression(Basic):
-    """
-    Internal class used to hold a C string that has LiteralStrings and C macros
-    """
-    __slots__  = ('_expression',)
-    _attribute_nodes  = ()
-
-    def __init__(self, *args):
-        super().__init__()
-        self._expression = []
-        for arg in args:
-            self += arg
-
-    def __repr__(self):
-        return ''.join([str(e) for e in self._expression])
-
-    def __str__(self):
-        return ''.join([str(e) for e in self._expression])
-
-    def __add__(self, o):
-        if isinstance(o, str):
-            o = LiteralString(o)
-        if not isinstance(o, (LiteralString, CMacro, CStringExpression)):
-            raise TypeError("unsupported operand type(s) for +: '{}' and '{}'").format(self.__class__, type(o))
-        self._expression.append(o)
-        return self
-    
-    def join(self, chr=""):
-        if isinstance(chr, str):
-            chr = LiteralString(chr)
-        if not isinstance(chr, (LiteralString, CMacro, CStringExpression)):
-            raise TypeError("unsupported operand type(s) for join: '{}' using '{}'")\
-                        .format(self.__class__, type(chr))
-        tmp = [chr] * (len(self._expression) * 2 - 1)
-        tmp[0::2] = self._expression
-        result = CStringExpression()
-        result._expression = tmp
-        return result
-    
-    def get_flat_expression_list(self):
-        """ 
-        returns an list of LiteralStrings and CMacros after merging every
-        consecutive LiteralString
-        """
-        tmp_res = []
-        for e in self._expression:
-            if isinstance(e, CStringExpression):
-                tmp_res.extend(e.get_flat_expression_list())
-            else:
-                tmp_res.append(e)
-        if not tmp_res:
-            return []
-        result = [tmp_res[0]]
-        for e in tmp_res[1:]:
-            if isinstance(e, LiteralString) and isinstance(result[-1], LiteralString):
-                result[-1] += e
-            else:
-                result.append(e)
-        return result
-    
-    @property
-    def expression(self):
-        """ The list containing the literal strings and c macros
-        """
-        return self._expression
-
-#------------------------------------------------------------------------------
-class CMacro(Basic):
-    """Represents a c macro"""
-    __slots__ = ('_macro',)
-    _attribute_nodes  = ()
-
-    def __init__(self, arg):
-        super().__init__()
-        if not isinstance(arg, str):
-            raise TypeError('arg must be of type str')
-        self._macro = arg
-
-    def __repr__(self):
-        return str(self._macro)
-
-    def __str__(self):
-        return str(self._macro)
-
-    def __add__(self, o):
-        if isinstance(o, (LiteralString, CStringExpression)):
-            return CStringExpression(self, o)
-        else:
-            raise TypeError("unsupported operand type(s) for +: '{}' and '{}'").format(self.__class__, type(o))
-    
-    @property
-    def macro(self):
-        """ The string containing macro name
-        """
-        return self._macro
 
 def symbols(names):
     """
