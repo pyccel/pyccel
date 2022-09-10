@@ -559,7 +559,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['stdint'])
             return f"INT64_C({repr(expr.python_value)})"
         return repr(expr.python_value)
-    
+
     def _print_LiteralFloat(self, expr):
         if isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
             return f"{repr(expr.python_value)}f"
