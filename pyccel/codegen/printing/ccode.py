@@ -1652,10 +1652,17 @@ class CCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
-        lhs_code = self._print(expr.lhs)
         op = expr.op
-        rhs_code = self._print(expr.rhs)
-        return "{0} {1}= {2};\n".format(lhs_code, op, rhs_code)
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        if op == '%' and isinstance(lhs.dtype, NativeFloat):
+            _expr = expr.to_basic_assign()
+            return self._print(_expr)
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
         prefix_code = ''
