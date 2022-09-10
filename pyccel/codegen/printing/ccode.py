@@ -30,6 +30,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
+from pyccel.ast.internals import CMacro, CStringExpression
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -796,7 +797,6 @@ class CCodePrinter(CodePrinter):
                                .replace('\v', '\\v')\
                                .replace('"', '\\"')\
                                .replace("'", "\\'")
-        format_str = re.sub(r"__C_MACRO__\(([^)]*)\)", '"\\1"', format_str)
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
@@ -805,7 +805,7 @@ class CCodePrinter(CodePrinter):
                           ('complex',8) : '(%.12lf + %.12lfj)',
                           ('complex',4) : '(%.12f + %.12fj)',
                           ('int',4)     : '%d',
-                          ('int',8)     : '%__C_MACRO__(PRId64)',
+                          ('int',8)     : LiteralString("%") + CMacro('PRId64'),
                           ('int',2)     : '%hd',
                           ('int',1)     : '%c',
                           ('bool',4)    : '%s',
@@ -821,6 +821,12 @@ class CCodePrinter(CodePrinter):
         else:
             arg = self._print(var)
         return arg_format, arg
+
+    def _print_CStringExpression(self, expr):
+        return "".join([self._print(e) for e in expr.get_flat_expression_list()])
+
+    def _print_CMacro(self, expr):
+        return str(expr.macro)
 
     def extract_function_call_results(self, expr):
         tmp_list = [self.scope.get_temporary_variable(a.dtype) for a in expr.funcdef.results]
@@ -839,14 +845,14 @@ class CCodePrinter(CodePrinter):
             if f.keyword == 'sep'      :   sep = str(f.value)
             elif f.keyword == 'end'    :   end = str(f.value)
             else: errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
-        args_format = []
+        args_format = CStringExpression()
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            args_format = sep.join(args_format)
+            args_format = args_format.join(sep)
             args_format += end
-            args_format = self._print(LiteralString(args_format))
+            args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
             return "printf({});\n".format(args_code)
 
@@ -860,18 +866,19 @@ class CCodePrinter(CodePrinter):
 
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
-                tmp_arg_format_list = []
+                tmp_arg_format_list = CStringExpression()
                 for a in tmp_list:
                     arg_format, arg = self.get_print_format_and_arg(a)
-                    tmp_arg_format_list.append(arg_format)
+                    tmp_arg_format_list += arg_format
                     args.append(arg)
-                args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
+                tmp_arg_format_list = tmp_arg_format_list.join(', ')
+                args_format += CStringExpression('(', tmp_arg_format_list, ')')
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
             elif f.rank > 0:
-                if args_format:
+                if args_format.expression:
                     code += formatted_args_to_printf(args_format, args, sep)
-                    args_format = []
+                    args_format = CStringExpression()
                     args = []
                 for_index = self.scope.get_temporary_variable(NativeInteger(), name = 'i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
@@ -892,9 +899,9 @@ class CCodePrinter(CodePrinter):
                 code += self._print(body)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
-                args_format.append(arg_format)
+                args_format += arg_format
                 args.append(arg)
-        if args_format:
+        if args_format.expression:
             code += formatted_args_to_printf(args_format, args, end)
         return code
 
