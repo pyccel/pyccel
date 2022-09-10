@@ -310,6 +310,19 @@ class CCodePrinter(CodePrinter):
 
         return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
 
+    def offset_mul(self, s1, s2, simplify=False):
+        if not isinstance(s1, str):
+            s1 = self._print(s1)
+        if simplify:
+            if (s2 == 0):
+                return "0"
+            if (s2 == 1):
+                return f"{s1}.length"
+            else:
+                return f"{s1}.length * {s2}"
+        else:
+            return f"{s1}.length * {s2}"
+
     def create_variable_array(self, shape, array_names, dvar, name=None):
         self.add_import(c_imports['ndarrays'])
         if not name:
@@ -331,7 +344,7 @@ class CCodePrinter(CodePrinter):
             array_create = f"{temp_variable_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         copy_operations = ""
         for index, array in enumerate(array_names):
-            offset = f"(({array}.buffer_size) * {index}) / {array}.type_size" if order == "order_c" else index
+            offset = self.offset_mul(array, index, simplify=True) if order == "order_c" else index
             copy_operations += f"array_copy_data({temp_variable_array_name}, {array}, {offset});\n"
             if array not in dvar["original_vars"]:
                 copy_operations += f"free_array({array});\n"
