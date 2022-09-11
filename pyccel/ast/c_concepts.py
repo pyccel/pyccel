@@ -87,40 +87,38 @@ class CStringExpression(Basic):
             return CStringExpression(o, self)
         return NotImplemented
 
-    def intersperse(self, join_by=""):
+    def intersperse(self, lst):
         """
-        inserts separator 'join_by' between the elements of expression
+        insert self between each element of the list `lst`
         Parameter:
-            join_by (Optional): str or LiteralString or CMacro or CStringExpression
-            the separetor
+            lst: list of (str or LiteralString or CMacro or CStringExpression)
+            the list to insert self between its elements
         Example:
-            a = CStringExpression(
+            a = [
                 CMacro("m"),
                 CStringExpression(LiteralString("the macro is: ")),
                 LiteralString("."),
-            )
+            ]
 
-            b = a.isinstance('?')
+            b = CStringExpression("?").intersperse(a)
 
             is the same as:
 
             b = CStringExpression(
                 CMacro("m"),
-                LiteralString("?"),
+                CStringExpression("?"),
                 CStringExpression(LiteralString("the macro is: ")),
-                LiteralString("?"),
+                CStringExpression("?"),
                 LiteralString("."),
             )
         """
-        if isinstance(join_by, str):
-            join_by = LiteralString(join_by)
-        if not isinstance(join_by, (LiteralString, CMacro, CStringExpression)):
-            raise TypeError(f"unsupported operand type(s) for join: '{self.__class__}' using '{type(join_by)}'")
-        tmp = [join_by] * (len(self._expression) * 2 - 1)
-        tmp[0::2] = self._expression
         result = CStringExpression()
-        # pylint: disable=protected-access
-        result._expression = tmp
+        if not lst:
+            return result
+        result += lst[0]
+        for elm in lst[1:]:
+            result += self
+            result += elm
         return result
 
     def get_flat_expression_list(self):

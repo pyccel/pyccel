@@ -850,12 +850,12 @@ class CCodePrinter(CodePrinter):
             if f.keyword == 'sep'      :   sep = str(f.value)
             elif f.keyword == 'end'    :   end = str(f.value)
             else: errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
-        args_format = CStringExpression()
+        args_format = []
         args = []
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            args_format = args_format.intersperse(sep)
+            args_format = CStringExpression(sep).intersperse(args_format)
             args_format += end
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
@@ -871,19 +871,19 @@ class CCodePrinter(CodePrinter):
 
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
-                tmp_arg_format_list = CStringExpression()
+                tmp_arg_format_list = []
                 for a in tmp_list:
                     arg_format, arg = self.get_print_format_and_arg(a)
-                    tmp_arg_format_list += arg_format
+                    tmp_arg_format_list.append(arg_format)
                     args.append(arg)
-                tmp_arg_format_list = tmp_arg_format_list.intersperse(', ')
-                args_format += CStringExpression('(', tmp_arg_format_list, ')')
+                tmp_arg_format_list = CStringExpression(', ').intersperse(tmp_arg_format_list)
+                args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
             elif f.rank > 0:
-                if args_format.expression:
+                if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
-                    args_format = CStringExpression()
+                    args_format = []
                     args = []
                 for_index = self.scope.get_temporary_variable(NativeInteger(), name = 'i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
@@ -904,9 +904,9 @@ class CCodePrinter(CodePrinter):
                 code += self._print(body)
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
-                args_format += arg_format
+                args_format.append(arg_format)
                 args.append(arg)
-        if args_format.expression:
+        if args_format:
             code += formatted_args_to_printf(args_format, args, end)
         return code
 
