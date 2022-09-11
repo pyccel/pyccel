@@ -1,7 +1,31 @@
 #include "cuda_ndarrays.h"
 
 __global__
-void cuda_array_arange(t_ndarray arr, int start)
+void cuda_array_arange_int8_t(t_ndarray arr, int start)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = gridDim.x * blockDim.x;
+	for(int i = index ; i < arr.length; i+=stride)
+		arr.nd_int8[i] = (i + start);
+}
+__global__
+void cuda_array_arange_int32_t(t_ndarray arr, int start)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = gridDim.x * blockDim.x;
+	for(int i = index ; i < arr.length; i+=stride)
+		arr.nd_int32[i] = (i + start);
+}
+__global__
+void cuda_array_arange_int64_t(t_ndarray arr, int start)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = gridDim.x * blockDim.x;
+	for(int i = index ; i < arr.length; i+=stride)
+		arr.nd_int64[i] = (i + start);
+}
+__global__
+void cuda_array_arange_double(t_ndarray arr, int start)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = gridDim.x * blockDim.x;
@@ -10,12 +34,38 @@ void cuda_array_arange(t_ndarray arr, int start)
 }
 
 __global__
-void cuda_array_fill_int(int64_t c, t_ndarray arr)
+void _cuda_array_fill_int8_t(int8_t c, t_ndarray arr)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = gridDim.x * blockDim.x;
+	for(int i = index ; i < arr.length; i+=stride)
+		arr.nd_int8[i] = c;
+}
+
+__global__
+void _cuda_array_fill_int32_t(int32_t c, t_ndarray arr)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = gridDim.x * blockDim.x;
+	for(int i = index ; i < arr.length; i+=stride)
+		arr.nd_int32[i] = c;
+}
+
+__global__
+void _cuda_array_fill_int64_t(int64_t c, t_ndarray arr)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = gridDim.x * blockDim.x;
 	for(int i = index ; i < arr.length; i+=stride)
 		arr.nd_int64[i] = c;
+}
+__global__
+void _cuda_array_fill_double(double c, t_ndarray arr)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = gridDim.x * blockDim.x;
+	for(int i = index ; i < arr.length; i+=stride)
+		arr.nd_double[i] = c;
 }
 
 t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
@@ -65,7 +115,6 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
         for (int32_t j = i + 1; j < arr.nd; j++)
             arr.strides[i] *= arr.shape[j];
     }
-    printf("abbah");
     if (!is_view)
         cudaMallocManaged(&(arr.raw_data), arr.buffer_size);
     return (arr);

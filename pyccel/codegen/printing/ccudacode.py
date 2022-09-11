@@ -40,6 +40,8 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
+from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange
+
 from pyccel.ast.cudaext import cuda_Internal_Var, CudaArray
 
 from pyccel.ast.utilities import expand_to_loops
@@ -309,7 +311,6 @@ class CcudaCodePrinter(CCodePrinter):
             arg_code = ', '.join(arg_code_list)
 
         cuda_deco = "__global__ " if 'kernel' in expr.decorators else ''
-        # print(expr, ret_type, name, arg_code)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
@@ -406,7 +407,11 @@ class CcudaCodePrinter(CCodePrinter):
             return prefix_code+'{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
 
-        if isinstance(rhs, CudaArray):
+        if isinstance(rhs, (CupyFull)):
+            return prefix_code+self.cuda_arrayFill(expr)
+        if isinstance(rhs, CupyArange):
+            return prefix_code+self.cuda_Arange(expr)
+        if isinstance(rhs, (CudaArray, CupyArray)):
             return prefix_code+self.copy_CudaArray_Data(expr)
         if isinstance(rhs, (NumpyArray, PythonTuple)):
             return prefix_code+self.copy_NumpyArray_Data(expr)
@@ -417,6 +422,74 @@ class CcudaCodePrinter(CCodePrinter):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
+
+    def arrayFill(self, expr):
+        """ print the assignment of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains a call to the C function array_fill using Cuda api,
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        code_init = ''
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+
+        if rhs.fill_value is not None:
+            if isinstance(rhs.fill_value, Literal):
+                code_init += '_array_fill_{0}(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+            else:
+                code_init += '_array_fill_{0}({1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+        return code_init
+
+    def cuda_Arange(self, expr):
+        """ print the assignment of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains a call to the C function array_arange using Cuda api,
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        code_init = ''
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+
+        code_init += 'cuda_array_arange_{0}<<<1,1>>>({1}, {2});\n'.format(declare_dtype, self._print(lhs), self._print(rhs.start))
+        return code_init
+
+    def cuda_arrayFill(self, expr):
+        """ print the assignment of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains a call to the C function array_fill using Cuda api,
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        code_init = ''
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+
+        if rhs.fill_value is not None:
+            if isinstance(rhs.fill_value, Literal):
+                code_init += '_cuda_array_fill_{0}<<<1,1>>>(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+            else:
+                code_init += '_cuda_array_fill_{0}<<<1,1>>>({1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+        return code_init
 
     def copy_CudaArray_Data(self, expr):
         """ print the assignment of a Cuda NdArray
@@ -439,7 +512,7 @@ class CcudaCodePrinter(CCodePrinter):
         dummy_array_name = self.scope.get_new_name('cuda_array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        arg = rhs.arg if isinstance(rhs, CudaArray) else rhs
+        arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
@@ -448,7 +521,7 @@ class CcudaCodePrinter(CCodePrinter):
         if isinstance(arg, Variable):
             arg = self._print(arg)
             cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
-            return '%s' % (cpy_data)
+            return '%s\n' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)

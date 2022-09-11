@@ -164,26 +164,10 @@ CudaArrayClass = ClassDef('cuda.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':Shape})])
-            # FunctionDef('size',[],[],body=[],
-            #     decorators={'property':'property', 'numpy_wrapper':NumpyArraySize}),
-            # FunctionDef('T',[],[],body=[],
-            #     decorators={'property':'property', 'numpy_wrapper':NumpyTranspose}),
-            # FunctionDef('transpose',[],[],body=[],
-            #     decorators={'numpy_wrapper':NumpyTranspose}),
-            # FunctionDef('sum',[],[],body=[],
-            #     decorators={'numpy_wrapper':NumpySum}),
-            # FunctionDef('min',[],[],body=[],
-            #     decorators={'numpy_wrapper':NumpyAmin}),
-            # FunctionDef('max',[],[],body=[],
-            #     decorators={'numpy_wrapper':NumpyAmax}),
-            # FunctionDef('imag',[],[],body=[],
-            #     decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
-            # FunctionDef('real',[],[],body=[],
-            #     decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
-            # FunctionDef('conj',[],[],body=[],
-            #     decorators={'numpy_wrapper':NumpyConjugate}),
-            # FunctionDef('conjugate',[],[],body=[],
-            #     decorators={'numpy_wrapper':NumpyConjugate})])
+# CupyArrayClass = ClassDef('cupy.ndarray',
+#         methods=[
+#             FunctionDef('shape',[],[],body=[],
+#                 decorators={'property':'property', 'numpy_wrapper':Shape})])
 
 #=======================================================================================
 
