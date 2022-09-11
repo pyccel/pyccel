@@ -66,14 +66,15 @@ from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
-                                  NativeGeneric, NativeComplex)
+                                  NativeGeneric, NativeComplex,
+                                  NativeVoid)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -2338,7 +2339,7 @@ class SemanticParser(BasicParser):
 
         else:
             rhs = self._visit(rhs, **settings)
-
+        
         if isinstance(rhs, FunctionDef):
 
             # case of lambdify
@@ -2440,6 +2441,11 @@ class SemanticParser(BasicParser):
             d_var  = self._infere_type(rhs, **settings)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
+        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, NativeVoid):
+            if expr.lhs.is_temp:
+                return rhs
+            else:
+                raise NotImplementedError("Cannot assign result of a function without a return")
 
         else:
             d_var  = self._infere_type(rhs, **settings)

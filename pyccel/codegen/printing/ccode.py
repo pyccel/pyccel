@@ -535,6 +535,10 @@ class CCodePrinter(CodePrinter):
             return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
                     severity='fatal')
 
+    def _print_SysExit(self, expr):
+        arg = self._print(expr.arg)
+        return f"exit({arg});\n"
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('float', expr.precision)

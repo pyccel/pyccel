@@ -2645,6 +2645,10 @@ class FCodePrinter(CodePrinter):
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
 
+    def _print_SysExit(self, expr):
+        arg = self._print(expr.arg)
+        return f'call exit({arg})\n'
+
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
         try:
