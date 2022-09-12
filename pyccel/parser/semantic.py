@@ -2339,7 +2339,7 @@ class SemanticParser(BasicParser):
 
         else:
             rhs = self._visit(rhs, **settings)
-        
+
         if isinstance(rhs, FunctionDef):
 
             # case of lambdify
