@@ -858,6 +858,8 @@ class CCodePrinter(CodePrinter):
                     args_format = []
                     args = []
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
                 if i + 1 == len(orig_args):
                     end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
                 else:
