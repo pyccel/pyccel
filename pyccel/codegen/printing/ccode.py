@@ -199,6 +199,7 @@ c_library_headers = (
     "stdlib",
     "string",
     "tgmath",
+    "inttypes",
 )
 
 dtype_registry = {('float',8)   : 'double',
@@ -811,8 +812,8 @@ class CCodePrinter(CodePrinter):
                           ('complex',4) : '(%.12f + %.12fj)',
                           ('int',4)     : '%d',
                           ('int',8)     : LiteralString("%") + CMacro('PRId64'),
-                          ('int',2)     : '%hd',
-                          ('int',1)     : '%c',
+                          ('int',2)     : LiteralString("%") + CMacro('PRId16'),
+                          ('int',1)     : LiteralString("%") + CMacro('PRId8'),
                           ('bool',4)    : '%s',
                           ('string', 0) : '%s'}
         try:
