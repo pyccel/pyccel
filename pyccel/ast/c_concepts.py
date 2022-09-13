@@ -123,7 +123,7 @@ class CStringExpression(Basic):
 
     def get_flat_expression_list(self):
         """
-        returns an list of LiteralStrings and CMacros after merging every
+        returns a list of LiteralStrings and CMacros after merging every
         consecutive LiteralString
         """
         tmp_res = []
