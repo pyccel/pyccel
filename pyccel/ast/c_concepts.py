@@ -86,6 +86,10 @@ class CStringExpression(Basic):
             return CStringExpression(o, self)
         return NotImplemented
 
+    def __iadd__(self, o):
+        self.append(o)
+        return self
+
     def append(self, o):
         """
         append the argument `o` to the end of the list _expression
