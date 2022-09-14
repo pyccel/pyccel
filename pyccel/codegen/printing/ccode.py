@@ -223,6 +223,17 @@ ndarray_type_registry = {
                   ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
+type_to_format = {('float',8)   : '%.12lf',
+                  ('float',4)   : '%.12f',
+                  ('complex',8) : '(%.12lf + %.12lfj)',
+                  ('complex',4) : '(%.12f + %.12fj)',
+                  ('int',4)     : '%d',
+                  ('int',8)     : LiteralString("%") + CMacro('PRId64'),
+                  ('int',2)     : LiteralString("%") + CMacro('PRId16'),
+                  ('int',1)     : LiteralString("%") + CMacro('PRId8'),
+                  ('bool',4)    : '%s',
+                  ('string', 0) : '%s'}
+
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
@@ -806,16 +817,6 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
-        type_to_format = {('float',8)   : '%.12lf',
-                          ('float',4)   : '%.12f',
-                          ('complex',8) : '(%.12lf + %.12lfj)',
-                          ('complex',4) : '(%.12f + %.12fj)',
-                          ('int',4)     : '%d',
-                          ('int',8)     : LiteralString("%") + CMacro('PRId64'),
-                          ('int',2)     : LiteralString("%") + CMacro('PRId16'),
-                          ('int',1)     : LiteralString("%") + CMacro('PRId8'),
-                          ('bool',4)    : '%s',
-                          ('string', 0) : '%s'}
         try:
             arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
         except KeyError:

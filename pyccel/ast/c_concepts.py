@@ -162,7 +162,7 @@ class CStringExpression(Basic):
     def expression(self):
         """ The list containing the literal strings and c macros
         """
-        return tuple(self._expression)
+        return self._expression
 
 #------------------------------------------------------------------------------
 class CMacro(Basic):
