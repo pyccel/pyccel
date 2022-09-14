@@ -55,23 +55,23 @@ class CStringExpression(Basic):
         )
     """
     __slots__  = ('_expression',)
-    _attribute_nodes  = ()
+    _attribute_nodes  = ('_expression',)
 
     def __init__(self, *args):
-        super().__init__()
         self._expression = []
+        super().__init__()
         for arg in args:
-            self += arg
+            self.append(arg)
 
     def __repr__(self):
-        return ''.join([repr(e) for e in self._expression])
+        return ''.join(repr(e) for e in self._expression)
 
     def __str__(self):
-        return ''.join([str(e) for e in self._expression])
+        return ''.join(str(e) for e in self._expression)
 
     def __add__(self, o):
         """
-        append the argument o to the end of the list _expression
+        return new CStringExpression that has `o` at the end
         Parameter:
             o: str or LiteralString or CMacro or CStringExpression
         """
@@ -79,13 +79,25 @@ class CStringExpression(Basic):
             o = LiteralString(o)
         if not isinstance(o, (LiteralString, CMacro, CStringExpression)):
             raise TypeError(f"unsupported operand type(s) for +: '{self.__class__}' and '{type(o)}'")
-        self.expression.append(o)
-        return self
+        return CStringExpression(*self._expression, o)
 
     def __radd__(self, o):
         if isinstance(o, LiteralString):
             return CStringExpression(o, self)
         return NotImplemented
+
+    def append(self, o):
+        """
+        append the argument `o` to the end of the list _expression
+        Parameter:
+            o: str or LiteralString or CMacro or CStringExpression
+        """
+        if isinstance(o, str):
+            o = LiteralString(o)
+        if not isinstance(o, (LiteralString, CMacro, CStringExpression)):
+            raise TypeError(f"unsupported operand type(s) for append: '{self.__class__}' and '{type(o)}'")
+        self._expression += (o,)
+        o.set_current_user_node(self)
 
     def intersperse(self, lst):
         """
@@ -146,7 +158,7 @@ class CStringExpression(Basic):
     def expression(self):
         """ The list containing the literal strings and c macros
         """
-        return self._expression
+        return tuple(self._expression)
 
 #------------------------------------------------------------------------------
 class CMacro(Basic):
@@ -161,9 +173,6 @@ class CMacro(Basic):
         self._macro = arg
 
     def __repr__(self):
-        return str(self._macro)
-
-    def __str__(self):
         return str(self._macro)
 
     def __add__(self, o):

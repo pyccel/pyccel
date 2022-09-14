@@ -829,7 +829,7 @@ class CCodePrinter(CodePrinter):
         return arg_format, arg
 
     def _print_CStringExpression(self, expr):
-        return "".join([self._print(e) for e in expr.get_flat_expression_list()])
+        return "".join(self._print(e) for e in expr.get_flat_expression_list())
 
     def _print_CMacro(self, expr):
         return str(expr.macro)
