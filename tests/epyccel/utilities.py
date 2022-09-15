@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
 from pyccel.epyccel import epyccel
-
+from multiprocessing import Process
 
 #==============================================================================
 class epyccel_test:
@@ -20,3 +20,9 @@ class epyccel_test:
         out1 = self._f(*args)
         out2 = self._f2(*args)
         assert np.equal(out1, out2 ).all()
+
+def getExitStatus(fn, *args):
+    p = Process(target=fn, args=args)
+    p.start()
+    p.join()
+    return p.exitcode

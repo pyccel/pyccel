@@ -10,7 +10,7 @@ from .core import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
 from .datatypes import NativeVoid
 from .internals import LiteralInteger
-from .operators import PyccelUnarySub
+from pyccel.ast.datatypes import NativeInteger
 
 class SysExit(PyccelInternalFunction):
     """Represents a call to  sys.exit
@@ -28,7 +28,7 @@ class SysExit(PyccelInternalFunction):
     def __init__(self, arg=None):
         if arg is None:
             arg = LiteralInteger(0)
-        if not (isinstance(arg, LiteralInteger) or (isinstance(arg, PyccelUnarySub) and isinstance(arg.args[0], LiteralInteger))):
+        if not isinstance(arg.dtype, NativeInteger) or arg.rank > 0:
             raise TypeError('args must be an integer')
         super().__init__(arg)
 
