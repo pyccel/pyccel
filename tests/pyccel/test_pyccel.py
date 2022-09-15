@@ -635,9 +635,9 @@ def test_print_strings(language):
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-def test_print_integrals(language):
+def test_print_integers(language):
     types = str
-    pyccel_test("scripts/print_integrals.py", language=language, output_dtype=types)
+    pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_print_sp_and_end(language):

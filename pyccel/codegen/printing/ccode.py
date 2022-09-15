@@ -857,7 +857,7 @@ class CCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            args_format = CStringExpression(sep).intersperse(args_format)
+            args_format = CStringExpression(sep).join(args_format)
             args_format += end
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
@@ -878,7 +878,7 @@ class CCodePrinter(CodePrinter):
                     arg_format, arg = self.get_print_format_and_arg(a)
                     tmp_arg_format_list.append(arg_format)
                     args.append(arg)
-                tmp_arg_format_list = CStringExpression(', ').intersperse(tmp_arg_format_list)
+                tmp_arg_format_list = CStringExpression(', ').join(tmp_arg_format_list)
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)

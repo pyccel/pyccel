@@ -39,20 +39,24 @@ class ObjectAddress(PyccelAstNode):
 #------------------------------------------------------------------------------
 class CStringExpression(Basic):
     """
-    Internal class used to hold a C string that has LiteralStrings and C macros
-    Parameters:
-        *args: str or LiteralString or CMacro or CStringExpression
+    Internal class used to hold a C string that has LiteralStrings and C macros.
+
+    Parameters
+    ----------
+    *args : str / LiteralString / CMacro / CStringExpression
             any number of arguments to be added to the expression
             note: they will get added in the order provided
-    Example:
-        CStringExpression(
-            CMacro("m"),
-            CStringExpression(
-                LiteralString("the macro is: "),
-                CMacro("mc")
-            ),
-            LiteralString("."),
-        )
+
+    Example
+    ------
+    >>> expr = CStringExpression(
+    ...     CMacro("m"),
+    ...     CStringExpression(
+    ...         LiteralString("the macro is: "),
+    ...         CMacro("mc")
+    ...     ),
+    ...     LiteralString("."),
+    ... )
     """
     __slots__  = ('_expression',)
     _attribute_nodes  = ('_expression',)
@@ -72,8 +76,11 @@ class CStringExpression(Basic):
     def __add__(self, o):
         """
         return new CStringExpression that has `o` at the end
-        Parameter:
-            o: str or LiteralString or CMacro or CStringExpression
+
+        Parameter
+        ----------
+        o : str / LiteralString / CMacro / CStringExpression
+            the expression to add
         """
         if isinstance(o, str):
             o = LiteralString(o)
@@ -93,8 +100,11 @@ class CStringExpression(Basic):
     def append(self, o):
         """
         append the argument `o` to the end of the list _expression
-        Parameter:
-            o: str or LiteralString or CMacro or CStringExpression
+
+        Parameter
+        ---------
+        o : str / LiteralString / CMacro / CStringExpression
+            the expression to append
         """
         if isinstance(o, str):
             o = LiteralString(o)
@@ -103,30 +113,33 @@ class CStringExpression(Basic):
         self._expression += (o,)
         o.set_current_user_node(self)
 
-    def intersperse(self, lst):
+    def join(self, lst):
         """
         insert self between each element of the list `lst`
-        Parameter:
-            lst: list of (str or LiteralString or CMacro or CStringExpression)
+
+        Parameter
+        ---------
+        lst : list
             the list to insert self between its elements
-        Example:
-            a = [
-                CMacro("m"),
-                CStringExpression(LiteralString("the macro is: ")),
-                LiteralString("."),
-            ]
 
-            b = CStringExpression("?").intersperse(a)
-
-            is the same as:
-
-            b = CStringExpression(
-                CMacro("m"),
+        Example
+        -------
+        >>> a = [
+        ...     CMacro("m"),
+        ...     CStringExpression(LiteralString("the macro is: ")),
+        ...     LiteralString("."),
+        ... ]
+        >>> b = CStringExpression("?").join(a)
+        ...
+        ... # is the same as:
+        ...
+        >>> b = CStringExpression(
+        ...     CMacro("m"),
+        ...     CStringExpression("?"),
+        ...     CStringExpression(LiteralString("the macro is: ")),
                 CStringExpression("?"),
-                CStringExpression(LiteralString("the macro is: ")),
-                CStringExpression("?"),
-                LiteralString("."),
-            )
+        ...     LiteralString("."),
+        ... )
         """
         result = CStringExpression()
         if not lst:
