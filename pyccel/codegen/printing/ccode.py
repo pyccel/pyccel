@@ -1987,6 +1987,15 @@ class CCodePrinter(CodePrinter):
     def _print_PrecomputedCode(self, expr):
         return expr.code
 
+    def _print_PythonRound(self, expr):
+        self.add_import(c_imports['math'])
+        self.add_import(c_imports['pyc_math_c'])
+        if expr.ndigits is None:
+            return f"int_round({self._print(expr.arg)})"
+        ndigits = self._print(expr.ndigits)
+        arg = self._print(expr.arg)
+        return f"double_round({arg}, {ndigits})"
+
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

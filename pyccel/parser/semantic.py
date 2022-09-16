@@ -28,7 +28,7 @@ from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComple
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonMap, PythonTuple, Lambda)
+                                 PythonMap, PythonTuple, Lambda, PythonRound)
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -3411,6 +3411,10 @@ class SemanticParser(BasicParser):
 #           funcs = Interface(name, funcs)
 #           self.insert_function(funcs)
         return EmptyNode()
+
+    def _visit_PythonRound(self, expr):
+        test = expr.__visit(expr.arg)
+        return PythonRound(test)
 
     def _visit_PythonPrint(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]

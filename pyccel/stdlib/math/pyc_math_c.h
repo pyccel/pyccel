@@ -16,6 +16,8 @@
 int64_t             pyc_factorial(int64_t n);
 int64_t             pyc_gcd (int64_t a, int64_t b);
 int64_t             pyc_lcm (int64_t a, int64_t b);
+double              double_round(double x, int64_t ndigits);
+int64_t             int_round(double x);
 
 inline double       pyc_radians(double degrees)
 {

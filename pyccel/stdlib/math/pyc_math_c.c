@@ -7,6 +7,27 @@
 #include <math.h>
 
 /*---------------------------------------------------------------------------*/
+double  double_round(double x, int64_t ndigits)
+{
+    double step = pow(10, ndigits);
+    double x_min = floor(x * step) / step;
+    double x_max = ceil(x * step) / step;
+
+    if (x - x_min == x_max - x)
+        return (int)((int)(x * pow(10, ndigits)) % 10) % 2 == 0 ? x_min : x_max;
+    return x - x_min < x_max - x ? x_min : x_max;
+}
+/*---------------------------------------------------------------------------*/
+int64_t  int_round(double x)
+{
+    double x_minus = (int)x;
+    double x_plus = x_minus + 1;
+
+    if (x - x_minus == x_plus - x)
+        return (int)x_minus % 2 == 0 ? x_minus : x_plus;
+    return x - x_minus < x_plus - x ? x_minus : x_plus;
+}
+/*---------------------------------------------------------------------------*/
 int64_t                     pyc_factorial(int64_t n)
 {
     int64_t    res = 1;

@@ -47,6 +47,7 @@ __all__ = (
     'PythonZip',
     'PythonMax',
     'PythonMin',
+    'PythonRound',
     'python_builtin_datatype'
 )
 
@@ -802,6 +803,37 @@ class PythonMin(PyccelInternalFunction):
         super().__init__(x)
 
 #==============================================================================
+class PythonRound(PyccelInternalFunction):
+
+    """Represents a round function in the code.
+
+    Examples
+
+    >>> from pyccel.ast.core import Round
+    >>> numToRound = 1.5
+    >>> roundedNum = Round(numToRound)
+    Print(roundedNum)
+    """
+    __slots__ = ('_dtype', '_precision', '_rank', '_shape', '_order')
+    name = 'round'
+
+    def __init__(self, expr, ndigits=None):
+        self._dtype = NativeInteger() if ndigits is None else expr.dtype 
+        self._precision = expr.precision
+        self._rank = expr.rank
+        self._shape = expr.shape
+        self._order = expr.order
+        super().__init__(expr, ndigits)
+
+    @property
+    def arg(self):
+        return self._args[0]
+    
+    @property
+    def ndigits(self):
+        return self._args[1]
+
+#==============================================================================
 class Lambda(Basic):
     """Represents a call to python lambda for temporary functions
 
@@ -930,4 +962,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'round'    : PythonRound,
 }
