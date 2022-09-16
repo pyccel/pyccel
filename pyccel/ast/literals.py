@@ -213,6 +213,11 @@ class LiteralString(Literal):
     def __str__(self):
         return str(self.python_value)
 
+    def __add__(self, o):
+        if isinstance(o, LiteralString):
+            return LiteralString(self._string + o._string)
+        return NotImplemented
+
     @property
     def python_value(self):
         return self.arg
