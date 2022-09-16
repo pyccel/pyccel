@@ -1,10 +1,13 @@
 # Multidimensional ndarrays memory layout
 
-`ndarrays` are stored as contiguous data in memory to increase efficiency
-We use `copy_array_data(t_ndarray *dest, t_ndarray *src, t_uint32 offset, enum order)` to achieve this wether the order is `order_f` or `order_c`.
+## Order
 
-`order_c` is a row-major order, where we store data contiguously row by row
-`order_f` is a column-major order, where we store data contiguously column by column
+### Ordering in C
+
+### Ordering in Fortran
+
+`ndarrays` are stored as contiguous data in memory to increase efficiency
+We use `copy_array_data(t_ndarray *dest, t_ndarray *src, t_uint32 offset, enum order)` to achieve this whether the order is `order_f` or `order_c`.
 
 Taking as an example: `ab = array([a, b])` where `a = array([1, 2, 3])` and `b = array([4, 5, 6])`  
 
@@ -31,11 +34,14 @@ after allocating space for the ndarray `ab` (and supposing that arrays `a` and `
 
 ![C order memory layout](media/c_order_memory_layout.png)
 
-// TODO: this should be changed for `order_c`, since we can just call `memcpy` twice instead of looping through `sizeof(arr)` twice.
-
 For `order_f`:
 after allocating space for the ndarray `ab` (and supposing that arrays `a` and `b` have already been created), we would call:  
  1. ```array_copy_data(ab, a, 0, order_f)```, this will copy N elements of `a` (N=size-of(`a`)) into their correct memory position using strides and shape, so it will be copying one element to `index=0` + `offset`, but jumping one to copy the next element to `index=2` + `offset`, the result is:  
  
  ![F order memory layout](media/first_order_f_array_copy.png)
 
+ 2. ```array_copy_data(ab, b, 1, order_f)```, This will do the same for `b`, but since the `offset` is 1, the copying will start from `index=0` + 1, this will result in the final array:  
+
+ ![F order memory layout](media/f_order_memory_layout.png) 
+ 
+ ## Nested arrays handling (for now)
