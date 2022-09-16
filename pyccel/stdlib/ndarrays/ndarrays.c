@@ -445,7 +445,7 @@ bool    is_same_shape(t_ndarray dest, t_ndarray src)
     return true;
 }
 
-int get_shape_product(int64_t *shape, int nd, int max_nd)
+int get_shape_product(int64_t *shape, int nd, int max_nd) // TODO: ADD IT TO create_array
 {
     int product = 1;
 
@@ -454,15 +454,15 @@ int get_shape_product(int64_t *shape, int nd, int max_nd)
     return (product);
 }
 
-int index_position(t_ndarray arr, int index, int nd)
+int index_position(t_ndarray arr, uint32_t element_num, int nd)
 {
     if (arr.order == order_c)
-        return index;
+        return element_num;
     if (nd == 0)
         return (0);
     if (nd == arr.nd)
-        return (index % arr.shape[nd - 1]) * arr.strides[nd - 1] + index_position(arr, index, nd - 1);
-    int true_index = (index / (get_shape_product(arr.shape, nd, arr.nd)));
+        return (element_num % arr.shape[nd - 1]) * arr.strides[nd - 1] + index_position(arr, index, nd - 1);
+    int true_index = (element_num / (get_shape_product(arr.shape, nd, arr.nd)));
     if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
     return (true_index * arr.strides[nd - 1] + index_position(arr, index, nd - 1));
@@ -473,21 +473,14 @@ void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
     unsigned char *d = (unsigned char*)dest.raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
 
-    if (dest.order == src.order)
+    if (dest.order == src.order && ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src))))
     {
-        if ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src)))
-        {
-            memcpy(d + offset * dest.type_size, s, src.buffer_size);
-            return ;
-        }
+        memcpy(d + offset * dest.type_size, s, src.buffer_size);
+        return ;
     }
-
-    int64_t index = 0;
-
-    while (index < src.length)
+    for (uint32_t element_num = 0; element_num < src.length; ++element_num)
     {
-        memcpy(d + ((index_position(dest, index, dest.nd) + offset) * dest.type_size),
-               s + (index_position(src, index, src.nd) * src.type_size), src.type_size); // copying element by element
-        index++;
+        memcpy(d + ((index_position(dest, element_num, dest.nd) + offset) * dest.type_size),
+               s + (index_position(src, element_num, src.nd) * src.type_size), src.type_size); // copying element by element
     }
 }
