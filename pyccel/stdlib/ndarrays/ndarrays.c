@@ -461,11 +461,11 @@ int index_position(t_ndarray arr, uint32_t element_num, int nd)
     if (nd == 0)
         return (0);
     if (nd == arr.nd)
-        return (element_num % arr.shape[nd - 1]) * arr.strides[nd - 1] + index_position(arr, index, nd - 1);
+        return (element_num % arr.shape[nd - 1]) * arr.strides[nd - 1] + index_position(arr, element_num, nd - 1);
     int true_index = (element_num / (get_shape_product(arr.shape, nd, arr.nd)));
     if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
-    return (true_index * arr.strides[nd - 1] + index_position(arr, index, nd - 1));
+    return (true_index * arr.strides[nd - 1] + index_position(arr, element_num, nd - 1));
 }
 
 void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
