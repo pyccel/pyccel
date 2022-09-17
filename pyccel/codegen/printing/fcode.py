@@ -64,7 +64,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyEmpty
+from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
 from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
@@ -2646,8 +2646,11 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_SysExit(self, expr):
-        arg = self._print(expr.arg)
-        return f'call exit({arg})\n'
+        arg = expr.arg
+        if arg.precision != 4:
+            arg = NumpyInt32(arg)
+        arg = self._print(arg)
+        return f'stop {arg}\n'
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
