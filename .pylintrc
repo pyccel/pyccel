@@ -90,7 +90,6 @@ disable=invalid-name,
         useless-object-inheritance,
         trailing-newlines,
         arguments-differ, # Parameters differ from overridden method, raised by many _print_X functions existing in sympy
-        misplaced-comparison-constant,
         unused-argument,
         redefined-outer-name,
         not-callable,
@@ -99,8 +98,9 @@ disable=invalid-name,
         abstract-method, # Raised when a method contains raise NotImplementedError
         redundant-keyword-arg,
         duplicate-code,
-        unused-wildcard-import # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
-
+        unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
+	; isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
+        
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -207,13 +207,6 @@ max-line-length=100
 
 # Maximum number of lines in a module.
 max-module-lines=1000
-
-# List of optional constructs for which whitespace checking is disabled. `dict-
-# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
-# `trailing-comma` allows a space between comma and closing bracket: (a, ).
-# `empty-line` allows space-only lines.
-no-space-check=trailing-comma,
-               dict-separator
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.
