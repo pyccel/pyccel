@@ -47,7 +47,7 @@ from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
-from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -199,6 +199,7 @@ c_library_headers = (
     "stdlib",
     "string",
     "tgmath",
+    "inttypes",
 )
 
 dtype_registry = {('float',8)   : 'double',
@@ -222,6 +223,17 @@ ndarray_type_registry = {
                   ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
+type_to_format = {('float',8)   : '%.12lf',
+                  ('float',4)   : '%.12f',
+                  ('complex',8) : '(%.12lf + %.12lfj)',
+                  ('complex',4) : '(%.12f + %.12fj)',
+                  ('int',4)     : '%d',
+                  ('int',8)     : LiteralString("%") + CMacro('PRId64'),
+                  ('int',2)     : LiteralString("%") + CMacro('PRId16'),
+                  ('int',1)     : LiteralString("%") + CMacro('PRId8'),
+                  ('bool',4)    : '%s',
+                  ('string', 0) : '%s'}
+
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
@@ -234,6 +246,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdint',
                  'pyc_math_c',
                  'stdio',
+                 "inttypes",
                  'stdbool',
                  'assert']}
 
@@ -557,6 +570,17 @@ class CCodePrinter(CodePrinter):
     def _print_Literal(self, expr):
         return repr(expr.python_value)
 
+    def _print_LiteralInteger(self, expr):
+        if isinstance(expr, LiteralInteger) and get_final_precision(expr) == 8:
+            self.add_import(c_imports['stdint'])
+            return f"INT64_C({repr(expr.python_value)})"
+        return repr(expr.python_value)
+
+    def _print_LiteralFloat(self, expr):
+        if isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
+            return f"{repr(expr.python_value)}f"
+        return repr(expr.python_value)
+
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
             return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
@@ -797,16 +821,6 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
-        type_to_format = {('float',8)   : '%.12lf',
-                          ('float',4)   : '%.12f',
-                          ('complex',8) : '(%.12lf + %.12lfj)',
-                          ('complex',4) : '(%.12f + %.12fj)',
-                          ('int',4)     : '%d',
-                          ('int',8)     : '%ld',
-                          ('int',2)     : '%hd',
-                          ('int',1)     : '%c',
-                          ('bool',4)    : '%s',
-                          ('string', 0) : '%s'}
         try:
             arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
         except KeyError:
@@ -819,12 +833,19 @@ class CCodePrinter(CodePrinter):
             arg = self._print(var)
         return arg_format, arg
 
+    def _print_CStringExpression(self, expr):
+        return "".join(self._print(e) for e in expr.get_flat_expression_list())
+
+    def _print_CMacro(self, expr):
+        return str(expr.macro)
+
     def extract_function_call_results(self, expr):
         tmp_list = [self.scope.get_temporary_variable(a.dtype) for a in expr.funcdef.results]
         return tmp_list
 
     def _print_PythonPrint(self, expr):
         self.add_import(c_imports['stdio'])
+        self.add_import(c_imports['inttypes'])
         end = '\n'
         sep = ' '
         code = ''
@@ -840,9 +861,9 @@ class CCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            args_format = sep.join(args_format)
+            args_format = CStringExpression(sep).join(args_format)
             args_format += end
-            args_format = self._print(LiteralString(args_format))
+            args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
             return "printf({});\n".format(args_code)
 
@@ -861,7 +882,8 @@ class CCodePrinter(CodePrinter):
                     arg_format, arg = self.get_print_format_and_arg(a)
                     tmp_arg_format_list.append(arg_format)
                     args.append(arg)
-                args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
+                tmp_arg_format_list = CStringExpression(', ').join(tmp_arg_format_list)
+                args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
             elif f.rank > 0:
