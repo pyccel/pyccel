@@ -8,9 +8,8 @@
 """
 from .core import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
-from .datatypes import NativeVoid
+from .datatypes import NativeVoid, NativeInteger
 from .internals import LiteralInteger
-from pyccel.ast.datatypes import NativeInteger
 
 class SysExit(PyccelInternalFunction):
     """Represents a call to  sys.exit
