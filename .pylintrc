@@ -44,6 +44,9 @@ suggestion-mode=yes
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
 
+# Minimum Python version to use for version dependent checks. Will default to
+# the version used to run pylint.
+py-version=3.7 # Set to last python which has not reached end-of-life
 
 [MESSAGES CONTROL]
 
@@ -60,8 +63,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=bad-whitespace,
-        invalid-name,
+disable=invalid-name,
         import-outside-toplevel,
         no-else-return,
         no-else-break,
@@ -87,7 +89,6 @@ disable=bad-whitespace,
         superfluous-parens,
         useless-object-inheritance,
         trailing-newlines,
-        bad-continuation, # wrong indentation on multi-line object
         arguments-differ, # Parameters differ from overridden method, raised by many _print_X functions existing in sympy
         misplaced-comparison-constant,
         unused-argument,
