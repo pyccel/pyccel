@@ -98,7 +98,7 @@ disable=invalid-name,
         abstract-method, # Raised when a method contains raise NotImplementedError
         redundant-keyword-arg,
         duplicate-code,
-        unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
+        unused-wildcard-import # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
 	; isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
         
 
