@@ -541,7 +541,6 @@ valid-classmethod-first-arg=cls
 # List of valid names for the first argument in a metaclass class method.
 valid-metaclass-classmethod-first-arg=cls
 
-
 [EXCEPTIONS]
 
 # Exceptions that will emit a warning when being caught. Defaults to
