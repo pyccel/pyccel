@@ -283,81 +283,6 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def create_literal_array(self, arg, dvar, name=None):
-        self.add_import(c_imports['ndarrays'])
-        self.add_import(c_imports['string'])
-        shape = str(len(arg))
-        dtype = dvar["dtype"]
-        declare_dtype = dvar["declare_dtype"]
-        shape_dtype = self.find_in_dtype_registry('int', 8)
-        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false'
-        temp_literal_array_name = name
-        temp_array_declaration = ""
-        array_create = ""
-        nd = "1"
-        if name is None:
-            order = 'order_c'
-            temp_literal_array_name = self.scope.get_new_name('temp_array')
-            temp_array_declaration = f"t_ndarray {temp_literal_array_name} = " "{.shape = NULL};\n"
-            array_create = f"{temp_literal_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-        else:
-            order = dvar['order']
-        dummy_array_name = self.scope.get_new_name('array_dummy')
-        literalList = "{" + ', '.join(self._print(elem) for elem in arg) + "}"
-        dummy_array = f"{declare_dtype} {dummy_array_name}[] = {literalList};\n"
-        cpy_data = f"memcpy({temp_literal_array_name}.{dtype}, {dummy_array_name}, {temp_literal_array_name}.buffer_size);\n"
-
-        return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
-
-
-    def create_variable_array(self, shape, array_names, dvar, name=None):
-        self.add_import(c_imports['ndarrays'])
-        if not name:
-            order = 'order_c'
-            temp_variable_array_name = self.scope.get_new_name("composed")
-        else:
-            order = dvar["order"]
-            temp_variable_array_name = name
-        nd = len(shape)
-        shape = ', '.join(self._print(elem) for elem in shape)
-        is_view = 'false'
-        temp_array_declaration = ""
-        array_create = ""
-        dtype = dvar["dtype"]
-        if name is None:
-            temp_array_declaration = f"t_ndarray {temp_variable_array_name} = " "{.shape = NULL};\n"
-            shape_dtype = self.find_in_dtype_registry('int', 8)
-            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-            array_create = f"{temp_variable_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-        copy_operations = ""
-        for index, array in enumerate(array_names):
-            offset = self.offset_mul(array, index, simplify=True) if order == "order_c" else index
-            copy_operations += f"array_copy_data({temp_variable_array_name}, {array}, {offset});\n"
-            if array not in dvar["original_vars"]:
-                copy_operations += f"free_array({array});\n"
-        return (temp_array_declaration + array_create + copy_operations, temp_variable_array_name)
-
-    def parse_arrays(self, arg, shape, dvar, lhs_name=None):
-        elem_shape = shape[1:]
-        if isinstance(arg, PythonTuple):
-            t = []
-            for elem in arg:
-                t.append(self.parse_arrays(elem, elem_shape, dvar))
-            if isinstance(t[0], str):
-                array_creation, array_name = self.create_variable_array(shape, t, dvar, lhs_name)
-                dvar["array_creations"].append(array_creation)
-                return array_name
-            else:
-                array_creation, array_name = self.create_literal_array(t, dvar, lhs_name)
-                dvar["array_creations"].append(array_creation)
-                return array_name
-        else:
-            if isinstance(arg, Variable) and arg.rank >= 1:
-                return self._print(arg)
-            else:
-                return arg
-
     def _flatten_list(self, irregular_list):
         if isinstance(irregular_list, (PythonList, PythonTuple)):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
@@ -383,6 +308,8 @@ class CCodePrinter(CodePrinter):
         for i in flattened_list:
             if isinstance(i, Literal) or ((isinstance(i, Variable)) and i.rank == 0):
                 largest_subset.append(i)
+            else:
+                return largest_subset
         return largest_subset
 
     def copy_NumpyArray_Data(self, expr):
@@ -395,69 +322,56 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                Return a str that contains the declaration of a dummy data_buffer
-                       and a call to an operator which copies it to an NdArray struct
+                Return a str that contains the necessary declarations, allocations and copy operations
+                to create a NdArray
         """
+        self.add_import(c_imports['string'])
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         if isinstance(arg, Variable):
-            return f"array_copy_data({self._print(lhs)}, {self._print(arg)}, 0);\n"
+            return f"array_copy_data(&{self._print(lhs)}, {self._print(arg)});\n"
         order = lhs.order
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         # flatten_tuple
         flattened_list = self._flatten_list(arg)
-        print(flattened_list, "this is the flatten list")
         i = 0
         creations = ""
         lhs_name = self._print(lhs)
         num_copied = 0
         if order == "F":
+            nd = len(lhs.shape)
             temp_array_name = self.scope.get_new_name('temp_array')
+            shape_dtype = self.find_in_dtype_registry('int', 8)
+            shape = ', '.join(self._print(elem) for elem in lhs.shape)
+            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+            temp_array_declaration = f"t_ndarray {temp_array_name} = " "{.shape = NULL};\n"
+            array_creation = f"{temp_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {'false'}, {'order_c'});\n"
+            creations += temp_array_declaration + array_creation
+            copy_to = temp_array_name 
+        else:
+            copy_to = lhs_name
         while i < len(flattened_list):
-            offset = self.offset_mul(elem_name, num_copied)
-            if isinstance(flattened_list[i], Variable) and flattened_list.rank >= 1:
-                elem_name = self._print(self._print(flattened_list[num_copied]))
-                copy_to = temp_array_name if order == "F" else lhs_name
-                creations += f"array_copy_data({copy_to}, {elem_name}, {offset});\n"
+            if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
+                elem_name = self._print(self._print(flattened_list[i]))
+                creations += f"array_copy_data(&{copy_to}, {elem_name});\n"
                 i += 1
             else:
                 subset = self._largest_literal_subset(flattened_list[i:])
-                subset = "{" + ', '.joing(self._print(elem) for elem in subset) + "}"
+                lenSubset = len(subset)
+                subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
                 dummy_array_name = self.scope.get_new_name('array_dummy')
                 dummy_array = f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
-                cpy_data = f"memcpy({0}.{2} + ({offset}) , {1}, {len(subset)} * {0}.type_size);\n".format(copy_to, dummy_array_name, dtype)
+                cpy_data = f"memcpy({copy_to}.{dtype} + ({copy_to}.current_length) , {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
                 creations += dummy_array + cpy_data
-                i += len(subset)
+                i += lenSubset
             num_copied += 1
         if order == "F":
-            pass # copy to the actual array, and free temp
-        # loop through flattened tuple
-            # if element is variable
-                # if order_c
-                    # array_copy_data straight to element
-                # elif order_f
-                    # array_copy_data to temporary_var
-            # if elemenet is literal
-                # find largest subset of literal
-                # create array dummy from it
-                    # if order_c
-                        # array_copy_data straight to element
-                    # elif order_f
-                        # array_cpoy_data to temporary_var
-        # if order_f
-            # copy from temporary_var to actual order_f array
-        array_creations = []
-        dvar = {"dtype": dtype,
-                "declare_dtype": declare_dtype,
-                "order": ('order_c' if order == 'C' else 'order_f'),
-                "array_creations": array_creations,
-                "original_vars": list(self._scope.local_used_symbols.keys())}
-        self.parse_arrays(arg, lhs.shape, dvar, self._print(lhs))
-        return ''.join(array_creations)
+            creations += f"array_copy_data(&{lhs_name}, {copy_to});\n" + f"free_array({copy_to});\n"
+        return creations
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray

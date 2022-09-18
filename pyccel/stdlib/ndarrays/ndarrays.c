@@ -118,10 +118,8 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
         }
     }
     if (!is_view)
-    {
         arr.raw_data = malloc(arr.buffer_size);
-        memset(arr.raw_data, 0, arr.buffer_size);
-    }
+    arr.current_length = 0;
     return (arr);
 }
 
@@ -468,19 +466,20 @@ int element_index(t_ndarray arr, uint32_t element_num, int nd)
     return (true_index * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1));
 }
 
-void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset)
+void array_copy_data(t_ndarray *dest, t_ndarray src)
 {
-    unsigned char *d = (unsigned char*)dest.raw_data;
+    unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
 
-    if (dest.order == src.order && ((dest.order == order_c) || (dest.order == order_f && is_same_shape(dest, src))))
+    if (dest->order == src.order && ((dest->order == order_c) || (dest->order == order_f && is_same_shape(*dest, src))))
+        memcpy(d + dest->current_length * dest->type_size, s, src.buffer_size);
+    else
     {
-        memcpy(d + offset * dest.type_size, s, src.buffer_size);
-        return ;
+        for (uint32_t element_num = 0; element_num < src.length; ++element_num)
+        {
+            memcpy(d + ((element_index(*dest, element_num, dest->nd) + dest->current_length) * dest->type_size),
+                s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size); // copying element by element
+        }
     }
-    for (uint32_t element_num = 0; element_num < src.length; ++element_num)
-    {
-        memcpy(d + ((element_index(dest, element_num, dest.nd) + offset) * dest.type_size),
-               s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size); // copying element by element
-    }
+    dest->current_length += src.length;
 }

@@ -101,8 +101,10 @@ typedef struct  s_ndarray
     enum e_types            type;
     /* type size of the array elements */
     int32_t                 type_size;
-    /* number of element in the array */
+    /* max number of element in the array */
     int32_t                 length;
+    /* number of element currently in the array (for the copy operations)*/
+    int32_t                 current_length;
     /* size of the array */
     int32_t                 buffer_size;
     /* True if the array does not own the data */
@@ -151,6 +153,6 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 void print_ndarray_memory(t_ndarray nd);
 
 /* copy data from ndarray */
-void array_copy_data(t_ndarray dest, t_ndarray src, int64_t offset);
+void array_copy_data(t_ndarray* dest, t_ndarray src);
 
 #endif
