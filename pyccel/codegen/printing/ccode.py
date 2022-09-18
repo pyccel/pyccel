@@ -310,18 +310,6 @@ class CCodePrinter(CodePrinter):
 
         return (temp_array_declaration + array_create + dummy_array + cpy_data, temp_literal_array_name)
 
-    def offset_mul(self, s1, s2, simplify=False):
-        if not isinstance(s1, str):
-            s1 = self._print(s1)
-        if simplify:
-            if (s2 == 0):
-                return "0"
-            if (s2 == 1):
-                return f"{s1}.length"
-            else:
-                return f"{s1}.length * {s2}"
-        else:
-            return f"{s1}.length * {s2}"
 
     def create_variable_array(self, shape, array_names, dvar, name=None):
         self.add_import(c_imports['ndarrays'])
@@ -370,6 +358,33 @@ class CCodePrinter(CodePrinter):
             else:
                 return arg
 
+    def _flatten_list(self, irregular_list):
+        if isinstance(irregular_list, (PythonList, PythonTuple)):
+            f_list = [element for item in irregular_list for element in self._flatten_list(item)]
+            return f_list
+        else:
+            return [irregular_list]
+
+    def offset_mul(self, s1, s2, simplify=False):
+        if not isinstance(s1, str):
+            s1 = self._print(s1)
+        if simplify:
+            if (s2 == 0):
+                return "0"
+            if (s2 == 1):
+                return f"{s1}.length"
+            else:
+                return f"{s1}.length * {s2}"
+        else:
+            return f"{s1}.length * {s2}"
+
+    def _largest_literal_subset(self, flattened_list):
+        largest_subset = []
+        for i in flattened_list:
+            if isinstance(i, Literal) or ((isinstance(i, Variable)) and i.rank == 0):
+                largest_subset.append(i)
+        return largest_subset
+
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
 
@@ -393,6 +408,48 @@ class CCodePrinter(CodePrinter):
         order = lhs.order
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        # flatten_tuple
+        flattened_list = self._flatten_list(arg)
+        print(flattened_list, "this is the flatten list")
+        i = 0
+        creations = ""
+        lhs_name = self._print(lhs)
+        num_copied = 0
+        if order == "F":
+            temp_array_name = self.scope.get_new_name('temp_array')
+        while i < len(flattened_list):
+            offset = self.offset_mul(elem_name, num_copied)
+            if isinstance(flattened_list[i], Variable) and flattened_list.rank >= 1:
+                elem_name = self._print(self._print(flattened_list[num_copied]))
+                copy_to = temp_array_name if order == "F" else lhs_name
+                creations += f"array_copy_data({copy_to}, {elem_name}, {offset});\n"
+                i += 1
+            else:
+                subset = self._largest_literal_subset(flattened_list[i:])
+                subset = "{" + ', '.joing(self._print(elem) for elem in subset) + "}"
+                dummy_array_name = self.scope.get_new_name('array_dummy')
+                dummy_array = f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
+                cpy_data = f"memcpy({0}.{2} + ({offset}) , {1}, {len(subset)} * {0}.type_size);\n".format(copy_to, dummy_array_name, dtype)
+                creations += dummy_array + cpy_data
+                i += len(subset)
+            num_copied += 1
+        if order == "F":
+            pass # copy to the actual array, and free temp
+        # loop through flattened tuple
+            # if element is variable
+                # if order_c
+                    # array_copy_data straight to element
+                # elif order_f
+                    # array_copy_data to temporary_var
+            # if elemenet is literal
+                # find largest subset of literal
+                # create array dummy from it
+                    # if order_c
+                        # array_copy_data straight to element
+                    # elif order_f
+                        # array_cpoy_data to temporary_var
+        # if order_f
+            # copy from temporary_var to actual order_f array
         array_creations = []
         dvar = {"dtype": dtype,
                 "declare_dtype": declare_dtype,
