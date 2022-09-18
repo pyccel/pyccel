@@ -336,7 +336,7 @@ class CCodePrinter(CodePrinter):
             temp_array_declaration = f"t_ndarray {temp_array_name} = " "{.shape = NULL};\n"
             array_creation = f"{temp_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {'false'}, {'order_c'});\n"
             creations += temp_array_declaration + array_creation
-            copy_to = temp_array_name 
+            copy_to = temp_array_name
         else:
             copy_to = lhs_name
         while i < len(flattened_list):
