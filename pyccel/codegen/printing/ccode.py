@@ -290,19 +290,6 @@ class CCodePrinter(CodePrinter):
         else:
             return [irregular_list]
 
-    def offset_mul(self, s1, s2, simplify=False):
-        if not isinstance(s1, str):
-            s1 = self._print(s1)
-        if simplify:
-            if (s2 == 0):
-                return "0"
-            if (s2 == 1):
-                return f"{s1}.length"
-            else:
-                return f"{s1}.length * {s2}"
-        else:
-            return f"{s1}.length * {s2}"
-
     def _largest_literal_subset(self, flattened_list):
         largest_subset = []
         for i in flattened_list:
@@ -336,12 +323,10 @@ class CCodePrinter(CodePrinter):
         order = lhs.order
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        # flatten_tuple
         flattened_list = self._flatten_list(arg)
         i = 0
         creations = ""
         lhs_name = self._print(lhs)
-        num_copied = 0
         if order == "F":
             nd = len(lhs.shape)
             temp_array_name = self.scope.get_new_name('temp_array')
@@ -368,7 +353,6 @@ class CCodePrinter(CodePrinter):
                 cpy_data = f"memcpy({copy_to}.{dtype} + ({copy_to}.current_length) , {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
                 creations += dummy_array + cpy_data
                 i += lenSubset
-            num_copied += 1
         if order == "F":
             creations += f"array_copy_data(&{lhs_name}, {copy_to});\n" + f"free_array({copy_to});\n"
         return creations
