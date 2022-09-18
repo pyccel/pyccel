@@ -428,21 +428,6 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
-bool    is_same_shape(t_ndarray dest, t_ndarray src)
-{
-    int i = 0;
-
-    if (dest.nd != src.nd)
-        return false;
-    while (i < dest.nd)
-    {
-        if (dest.shape[i] != src.shape[i])
-            return false;
-        ++i;
-    }
-    return true;
-}
-
 int get_shape_product(int64_t *shape, int nd, int max_nd) // TODO: ADD IT TO create_array
 {
     int product = 1;
@@ -471,7 +456,7 @@ void array_copy_data(t_ndarray *dest, t_ndarray src)
     unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
 
-    if (dest->order == src.order && ((dest->order == order_c) || (dest->order == order_f && is_same_shape(*dest, src))))
+    if (dest->order == src.order && dest->order == order_c)
         memcpy(d + dest->current_length * dest->type_size, s, src.buffer_size);
     else
     {
