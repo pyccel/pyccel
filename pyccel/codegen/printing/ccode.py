@@ -325,7 +325,6 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         flattened_list = self._flatten_list(arg)
         i = 0
-        print("hello, my name is Jeff")
         creations = ""
         lhs_name = self._print(lhs)
         if order == "F":
@@ -340,14 +339,12 @@ class CCodePrinter(CodePrinter):
             copy_to = temp_array_name
         else:
             copy_to = lhs_name
-        print("hello jeff",flattened_list[0])
         while i < len(flattened_list):
             if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
                 elem_name = self._print(self._print(flattened_list[i]))
                 creations += f"array_copy_data(&{copy_to}, {elem_name});\n"
                 i += 1
             else:
-                print("We come here right")
                 subset = self._largest_literal_subset(flattened_list[i:])
                 lenSubset = len(subset)
                 subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
@@ -356,7 +353,6 @@ class CCodePrinter(CodePrinter):
                 cpy_data = f"memcpy({copy_to}.{dtype} + ({copy_to}.current_length) , {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
                 creations += dummy_array + cpy_data
                 i += lenSubset
-        print("hello jeff again")
         if order == "F":
             creations += f"array_copy_data(&{lhs_name}, {copy_to});\n" + f"free_array({copy_to});\n"
         return creations
