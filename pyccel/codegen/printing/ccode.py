@@ -351,7 +351,8 @@ class CCodePrinter(CodePrinter):
                 dummy_array_name = self.scope.get_new_name('array_dummy')
                 dummy_array = f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
                 cpy_data = f"memcpy({copy_to}.{dtype} + ({copy_to}.current_length) , {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
-                creations += dummy_array + cpy_data
+                current_length_increment = f"{copy_to}.current_length += {lenSubset};\n"
+                creations += dummy_array + cpy_data + current_length_increment
                 i += lenSubset
         if order == "F":
             creations += f"array_copy_data(&{lhs_name}, {copy_to});\n" + f"free_array({copy_to});\n"
