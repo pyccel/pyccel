@@ -41,6 +41,14 @@ def test_mpi(f):
 def test_openmp(f, language):
     execute_pyccel(f, accelerators=['openmp'], language=language)
 
+@pytest.mark.parametrize("f", get_files_from_folder('ccuda'))
+@pytest.mark.parametrize( 'language',
+        (pytest.param("ccuda", marks = pytest.mark.ccuda),)
+)
+@pytest.mark.external
+def test_ccuda(f, language):
+    execute_pyccel(f, language=language)
+
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #@pytest.mark.external
 #def test_openacc():
@@ -98,3 +106,13 @@ if __name__ == '__main__':
 #        print('> testing {0}'.format(str(os.path.basename(f))))
 #        test_openacc(f)
 #    print('\n')
+
+    print('*********************************')
+    print('***                           ***')
+    print('***  TESTING INTERNAL/Cuda ***')
+    print('***                           ***')
+    print('*********************************')
+    for f in get_files_from_folder('ccuda'):
+       print('> testing {0}'.format(str(os.path.basename(f))))
+       test_ccuda(f)
+    print('\n')
