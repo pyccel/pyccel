@@ -1,21 +1,21 @@
 #include "cuda_ndarrays.h"
 
 __global__
-void cuda_array_arange_int8_t(t_ndarray arr, int start)
+void cuda_array_arange_int8(t_ndarray arr, int start)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	for(int i = index ; i < arr.length; i+=1)
 		arr.nd_int8[i] = (i + start);
 }
 __global__
-void cuda_array_arange_int32_t(t_ndarray arr, int start)
+void cuda_array_arange_int32(t_ndarray arr, int start)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	for(int i = index ; i < arr.length; i+=1)
 		arr.nd_int32[i] = (i + start);
 }
 __global__
-void cuda_array_arange_int64_t(t_ndarray arr, int start)
+void cuda_array_arange_int64(t_ndarray arr, int start)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	for(int i = index ; i < arr.length; i+=1)
@@ -30,7 +30,7 @@ void cuda_array_arange_double(t_ndarray arr, int start)
 }
 
 __global__
-void _cuda_array_fill_int8_t(int8_t c, t_ndarray arr)
+void cuda_array_fill_int8(int8_t c, t_ndarray arr)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = gridDim.x * blockDim.x;
@@ -39,7 +39,7 @@ void _cuda_array_fill_int8_t(int8_t c, t_ndarray arr)
 }
 
 __global__
-void _cuda_array_fill_int32_t(int32_t c, t_ndarray arr)
+void cuda_array_fill_int32(int32_t c, t_ndarray arr)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = gridDim.x * blockDim.x;
@@ -48,7 +48,7 @@ void _cuda_array_fill_int32_t(int32_t c, t_ndarray arr)
 }
 
 __global__
-void _cuda_array_fill_int64_t(int64_t c, t_ndarray arr)
+void cuda_array_fill_int64(int64_t c, t_ndarray arr)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = gridDim.x * blockDim.x;
@@ -56,7 +56,7 @@ void _cuda_array_fill_int64_t(int64_t c, t_ndarray arr)
 		arr.nd_int64[i] = c;
 }
 __global__
-void _cuda_array_fill_double(double c, t_ndarray arr)
+void cuda_array_fill_double(double c, t_ndarray arr)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = gridDim.x * blockDim.x;
