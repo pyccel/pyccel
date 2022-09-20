@@ -19,7 +19,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
-      - name: cuda tests with pytest
+      - name: Ccuda tests with pytest
         uses: ./.github/actions/pytest_run_cuda
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
