@@ -440,12 +440,13 @@ class CcudaCodePrinter(CCodePrinter):
         lhs = expr.lhs
         code_init = ''
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        ftype = declare_dtype if self._print(rhs.dtype) != 'int' else declare_dtype[:-2]
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                code_init += '_array_fill_{0}(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'cuda_array_fill_{0}(({1}){2}, {3});\n'.format(ftype, declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
-                code_init += '_array_fill_{0}({1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'cuda_array_fill_{0}({1}, {2});\n'.format(ftype, self._print(rhs.fill_value), self._print(lhs))
         return code_init
 
     def cuda_Arange(self, expr):
@@ -464,8 +465,10 @@ class CcudaCodePrinter(CCodePrinter):
         lhs = expr.lhs
         code_init = ''
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        ftype = declare_dtype if self._print(rhs.dtype) != 'int' else declare_dtype[:-2]
 
-        code_init += 'cuda_array_arange_{0}<<<1,1>>>({1}, {2});\n'.format(declare_dtype, self._print(lhs), self._print(rhs.start))
+        #TODO: calculate best thread number to run the kernel
+        code_init += 'cuda_array_arange_{0}<<<1,32>>>({1}, {2});\n'.format(ftype, self._print(lhs), self._print(rhs.start))
         return code_init
 
     def cuda_arrayFill(self, expr):
@@ -484,12 +487,13 @@ class CcudaCodePrinter(CCodePrinter):
         lhs = expr.lhs
         code_init = ''
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        ftype = declare_dtype if self._print(rhs.dtype) != 'int' else declare_dtype[:-2]
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                code_init += '_cuda_array_fill_{0}<<<1,1>>>(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'cuda_array_fill_{0}<<<1,1>>>(({1}){2}, {3});\n'.format(ftype, declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
-                code_init += '_cuda_array_fill_{0}<<<1,1>>>({1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'cuda_array_fill_{0}<<<1,1>>>({1}, {2});\n'.format(ftype, self._print(rhs.fill_value), self._print(lhs))
         return code_init
 
     def copy_CudaArray_Data(self, expr):
