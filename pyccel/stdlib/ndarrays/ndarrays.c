@@ -118,7 +118,7 @@ void    stack_array_init(t_ndarray *arr)
     }
 }
 
-void   _array_fill_int8_t(int8_t c, t_ndarray arr)
+void   array_fill_int8(int8_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -127,7 +127,7 @@ void   _array_fill_int8_t(int8_t c, t_ndarray arr)
             arr.nd_int8[i] = c;
 }
 
-void   _array_fill_int16_t(int16_t c, t_ndarray arr)
+void   array_fill_int16(int16_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -136,7 +136,7 @@ void   _array_fill_int16_t(int16_t c, t_ndarray arr)
             arr.nd_int16[i] = c;
 }
 
-void   _array_fill_int32_t(int32_t c, t_ndarray arr)
+void   array_fill_int32(int32_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -145,7 +145,7 @@ void   _array_fill_int32_t(int32_t c, t_ndarray arr)
             arr.nd_int32[i] = c;
 }
 
-void   _array_fill_int64_t(int64_t c, t_ndarray arr)
+void   array_fill_int64(int64_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -154,7 +154,7 @@ void   _array_fill_int64_t(int64_t c, t_ndarray arr)
             arr.nd_int64[i] = c;
 }
 
-void   _array_fill_bool(bool c, t_ndarray arr)
+void   array_fill_bool(bool c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -163,7 +163,7 @@ void   _array_fill_bool(bool c, t_ndarray arr)
             arr.nd_bool[i] = c;
 }
 
-void   _array_fill_float(float c, t_ndarray arr)
+void   array_fill_float(float c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -172,7 +172,7 @@ void   _array_fill_float(float c, t_ndarray arr)
             arr.nd_float[i] = c;
 }
 
-void   _array_fill_double(double c, t_ndarray arr)
+void   array_fill_double(double c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -182,7 +182,7 @@ void   _array_fill_double(double c, t_ndarray arr)
 }
 
 #ifndef __NVCC__
-void   _array_fill_cfloat(float complex c, t_ndarray arr)
+void   array_fill_cfloat(float complex c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
@@ -192,7 +192,7 @@ void   _array_fill_cfloat(float complex c, t_ndarray arr)
 }
 
 
-void   _array_fill_cdouble(double complex c, t_ndarray arr)
+void   array_fill_cdouble(double complex c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
