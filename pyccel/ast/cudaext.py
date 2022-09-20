@@ -50,6 +50,7 @@ class CudaNewArray(PyccelInternalFunction):
     """ Class from which all Cuda functions which imply a call to Allocate
     inherit
     """
+    __slots__ = ()
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_order(rank, order):
@@ -91,7 +92,11 @@ class CudaArray(CudaNewArray):
         # Verify dtype and get precision
         if dtype is None:
             dtype = arg.dtype
-        dtype, prec = process_dtype(dtype)
+            prec = get_final_precision(arg)
+        else:
+            dtype, prec = process_dtype(dtype)
+        # ... Determine ordering
+        order = str(order).strip("\'")
 
         shape = process_shape(False, arg.shape)
         rank  = len(shape)
