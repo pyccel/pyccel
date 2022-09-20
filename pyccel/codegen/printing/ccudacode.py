@@ -289,6 +289,7 @@ class CcudaCodePrinter(CCodePrinter):
         """
 
         args = list(expr.arguments)
+        extern_word = 'extern "C" '
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
@@ -312,9 +313,9 @@ class CcudaCodePrinter(CCodePrinter):
 
         cuda_deco = "__global__ " if 'kernel' in expr.decorators else ''
         if isinstance(expr, FunctionAddress):
-            return '{}(*{})({})'.format(ret_type, name, arg_code)
+            return '{}{}(*{})({})'.format(extern_word, ret_type, name, arg_code)
         else:
-            return '{}{}{}({})'.format(cuda_deco, ret_type, name, arg_code)
+            return '{}{}{}{}({})'.format(extern_word, cuda_deco, ret_type, name, arg_code)
 
     def _print_Allocate(self, expr):
         free_code = ''
