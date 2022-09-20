@@ -17,17 +17,14 @@ jobs:
         uses: ./.github/actions/linux_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Coverage install
-        uses: ./.github/actions/coverage_install
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: cuda tests with pytest
+        uses: ./.github/actions/pytest_run_cuda
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
 
   # Windows:
 
