@@ -1956,11 +1956,7 @@ class SemanticParser(BasicParser):
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
-        from pyccel.ast.cudaext import CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
-        # if first isinstance():
-        if (first in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim)):
-            dim = {'x':0, 'y':1, 'z':2}
-            return first(LiteralInteger(dim[rhs_name]))
+
         d_var = self._infere_type(first)
         if d_var.get('cls_base', None) is None:
             errors.report(f'Attribute {rhs_name} not found',
