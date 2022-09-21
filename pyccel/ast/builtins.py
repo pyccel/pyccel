@@ -603,7 +603,7 @@ class PythonPrint(Basic):
     name = 'print'
 
     def __init__(self, expr, output_unit="stdout"):
-        if not output_unit in ('stdout', 'stderr'):
+        if output_unit not in ('stdout', 'stderr'):
             raise ValueError('output_unit can be `stdout` or `stderr`')
         self._expr = expr
         self._output_unit = output_unit
@@ -615,6 +615,8 @@ class PythonPrint(Basic):
 
     @property
     def output_unit(self):
+        """ returns the output unit (`stdout` or `stderr`)
+        """
         return self._output_unit
 
 #==============================================================================

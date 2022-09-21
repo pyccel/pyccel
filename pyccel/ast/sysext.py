@@ -8,13 +8,18 @@
 """
 from .core import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
-from .datatypes import NativeVoid, NativeInteger
+from .datatypes import NativeVoid
 from .internals import LiteralInteger
 
 class SysExit(PyccelInternalFunction):
     """Represents a call to  sys.exit
 
-    arg : LiteralInteger, PyccelUnarySub(LiteralInteger)
+    Parameters
+    ----------
+
+    arg : PyccelAstNode (optional)
+        if arg.dtype is NativeInteger it will be used as the exit_code
+        else the arg will be printed to the stderror
     """
     __slots__ = ()
     name      = 'exit'
