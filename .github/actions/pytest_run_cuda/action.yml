@@ -11,6 +11,5 @@ runs:
     - name: Ccuda tests with pytest
       run: |
         python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and ccuda" --ignore=symbolic --ignore=ndarrays
-        pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
