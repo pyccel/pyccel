@@ -27,8 +27,6 @@ class SysExit(PyccelInternalFunction):
     def __init__(self, arg=None):
         if arg is None:
             arg = LiteralInteger(0)
-        if not isinstance(arg.dtype, NativeInteger) or arg.rank > 0:
-            raise TypeError('args must be an integer')
         super().__init__(arg)
 
     @property

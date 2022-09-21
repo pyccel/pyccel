@@ -549,8 +549,14 @@ class CCodePrinter(CodePrinter):
                     severity='fatal')
 
     def _print_SysExit(self, expr):
-        arg = self._print(expr.arg)
-        return f"exit({arg});\n"
+        code = ""
+        if not expr.arg.dtype is NativeInteger():
+            print_arg = FunctionCallArgument(expr.arg)
+            code = self._print(PythonPrint((print_arg, ), output_unit="stderr"))
+            arg = "1"
+        else:
+            arg = self._print(expr.arg)
+        return f"{code}exit({arg});\n"
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)

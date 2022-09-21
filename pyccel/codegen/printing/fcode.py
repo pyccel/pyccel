@@ -2658,11 +2658,17 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_SysExit(self, expr):
-        arg = expr.arg
-        if arg.precision != 4:
-            arg = NumpyInt32(arg)
-        arg = self._print(arg)
-        return f'stop {arg}\n'
+        code = ""
+        if not expr.arg.dtype is NativeInteger():
+            print_arg = FunctionCallArgument(expr.arg)
+            code = self._print(PythonPrint((print_arg, ), output_unit="stderr"))
+            arg = "1"
+        else:
+            arg = expr.arg
+            if arg.precision != 4:
+                arg = NumpyInt32(arg)
+            arg = self._print(arg)
+        return f'{code}stop {arg}\n'
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
