@@ -605,8 +605,8 @@ class PythonList(PyccelAstNode):
 
                 self._rank = self._args[0].rank + 1
                 self._order = None if self._rank < 2 else 'C'
-                self._shape = (LiteralInteger(len(self._args)),) +(self._args[0].shape or ())
-                print(self._args, self._rank, self._order, self._shape)
+                self._shape = (LiteralInteger(len(self._args)),) + (self._args[0].shape or ())
+
             else:
                 raise TypeError('Inhomogeneous lists are not supported.')
 
