@@ -724,7 +724,7 @@ class SemanticParser(BasicParser):
         """
         dtype = var.dtype
         prec  = get_final_precision(var)
-        descr = f'{dtype}{(prec * 2 if dtype == NativeComplex() else prec) * 8 if prec else ""}'
+        descr = f'{dtype}{(prec * 2 if isinstance(dtype, NativeComplex) else prec) * 8 if prec else ""}'
         if include_rank and var.rank>0:
             dims = ','.join(':'*var.rank)
             descr += f'[{dims}]'
