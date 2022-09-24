@@ -6,7 +6,10 @@
 # include <stdint.h>
 # include <math.h>
 
-double sign(double x);
+#define SIGN(x) (x ? (x < 0 ? -1 : 1): 0)
+
+long int isign(long int x);
+double fsign(double x);
 double complex csign(double complex x);
 
 #endif
