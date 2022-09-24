@@ -1277,10 +1277,30 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_NumpySign(self, expr):
+        """ Print the corresponding C function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in C
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => isign(x)   (x is integer or boolean)
+            numpy.sign(x) => fsign(x)   (x if float)
+            numpy.sign(x) => csign(x)   (x is complex)
+
+        """
         self.add_import(c_imports['numpy_c'])
-        args = expr.args
         func = ''
-        if isinstance(expr.dtype, (NativeInteger, NativeBool)):
+        if isinstance(expr.dtype, NativeInteger):
             func = 'isign'
         elif isinstance(expr.dtype, NativeFloat):
             func = 'fsign'
