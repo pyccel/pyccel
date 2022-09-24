@@ -5167,7 +5167,7 @@ def test_numpy_linspace_scalar(language):
     epyccel_func_type2(0, 10, out)
     assert (np.allclose(x, out))
     arr = np.zeros
-    x = randint(100, 200) // 2
+    x = randint(1, 20) # issue with numpy linspace
     assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
     assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
     x = randint(100, 200)
