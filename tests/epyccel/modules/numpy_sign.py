@@ -59,12 +59,12 @@ def complex_neg_pos():
 
 def complex64_pos_neg():
     import numpy as np
-    b = np.sign(np.complex128(64-64j))
+    b = np.sign(np.complex64(64-64j))
     return b
 
 def complex64_neg_pos():
     import numpy as np
-    b = np.sign(np.complex128(-64+64j))
+    b = np.sign(np.complex64(-64+64j))
     return b
 
 def complex128_pos_neg():
@@ -76,8 +76,6 @@ def complex128_neg_pos():
     import numpy as np
     b = np.sign(np.complex128(-128+128j))
     return b
-
-# ADD test of 0+21j  and 0-21j and null
 
 def int16_pos():
     import numpy as np
