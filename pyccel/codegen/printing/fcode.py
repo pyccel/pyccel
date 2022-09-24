@@ -2668,7 +2668,7 @@ class FCodePrinter(CodePrinter):
         Returns
         -------
             string
-                Equivalent internal function in C
+                Equivalent internal function in Fortran
 
         Example
         -------
