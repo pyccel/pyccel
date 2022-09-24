@@ -2674,11 +2674,12 @@ class FCodePrinter(CodePrinter):
         -------
             import numpy
 
-            numpy.sign(x) => i64_sign(x)   (x is integer of precision 8)
+            numpy.sign(x) => numpy_sign(x)
+            numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
         self._additional_imports.add(Import('numpy_f90', Module('numpy_f90',(),())))
-        return 'numpy_sign({})'.format(self._print(expr.args[0]))
+        return f'numpy_sign({self._print(expr.args[0])})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var

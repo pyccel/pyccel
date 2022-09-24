@@ -1309,7 +1309,7 @@ class CCodePrinter(CodePrinter):
         else:
             errors.report(f'{PYCCEL_RESTRICTION_TODO} ({expr.dtype}[kind = {expr.precision}])', severity='fatal')
 
-        return '{}({})'.format(func, self._print(expr.args[0]))
+        return f'{func}({self._print(expr.args[0])})'
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
