@@ -2658,6 +2658,25 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_NumpySign(self, expr):
+        """ Print the corresponding Fortran function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in C
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => i64_sign(x)   (x is integer of precision 8)
+
+        """
         self._additional_imports.add(Import('numpy_f90', Module('numpy_f90',(),())))
         return 'numpy_sign({})'.format(self._print(expr.args[0]))
 

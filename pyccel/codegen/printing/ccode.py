@@ -1293,7 +1293,7 @@ class CCodePrinter(CodePrinter):
         -------
             import numpy
 
-            numpy.sign(x) => isign(x)   (x is integer or boolean)
+            numpy.sign(x) => isign(x)   (x is integer)
             numpy.sign(x) => fsign(x)   (x if float)
             numpy.sign(x) => csign(x)   (x is complex)
 
