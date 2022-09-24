@@ -1276,6 +1276,21 @@ class CCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
+    def _print_NumpySign(self, expr):
+        self.add_import(c_imports['numpy_c'])
+        args = expr.args
+        func = ''
+        if isinstance(expr.dtype, (NativeInteger, NativeBool)):
+            func = 'isign'
+        elif isinstance(expr.dtype, NativeFloat):
+            func = 'fsign'
+        elif isinstance(expr.dtype, NativeComplex):
+            func = 'csign'
+        else:
+            errors.report(f'{PYCCEL_RESTRICTION_TODO} ({expr.dtype}[kind = {expr.precision}])', severity='fatal')
+
+        return '{}({})'.format(func, self._print(expr.args[0]))
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
