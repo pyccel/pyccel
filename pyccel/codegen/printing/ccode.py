@@ -70,7 +70,6 @@ numpy_ufunc_to_c_float = {
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
-    'NumpySign' : 'sign',
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'log',
@@ -92,7 +91,6 @@ numpy_ufunc_to_c_float = {
 }
 
 numpy_ufunc_to_c_complex = {
-    'NumpySign' : 'csign',
     'NumpyAbs'  : 'cabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
@@ -1260,8 +1258,6 @@ class CCodePrinter(CodePrinter):
         type_name = type(expr).__name__
         try:
             func_name = numpy_ufunc_to_c_float[type_name]
-            if func_name in ('sign'):
-                self.add_import(c_imports['numpy_c'])
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []
@@ -1270,8 +1266,6 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['complex'])
                 try:
                     func_name = numpy_ufunc_to_c_complex[type_name]
-                    if func_name in ('csign'):
-                        self.add_import(c_imports['numpy_c'])
                     args.append(self._print(arg))
                 except KeyError:
                     errors.report(INCOMPATIBLE_TYPEVAR_TO_FUNC.format(type_name) ,severity='fatal')
