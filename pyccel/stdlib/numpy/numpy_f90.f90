@@ -9,6 +9,10 @@ module numpy_f90
     
     implicit none
     
+    private
+
+    public :: numpy_sign
+
     interface numpy_sign
         module procedure i8_sign
         module procedure i16_sign
