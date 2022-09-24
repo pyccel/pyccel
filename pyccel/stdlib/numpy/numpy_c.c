@@ -1,9 +1,14 @@
 #include "numpy_c.h"
 
-/* numpy.sign for float, double and integers */
-double  sign(double x)
+long int isign(long int x)
 {
-    return x ? (x < 0 ? -1 : 1) : 0;
+    return SIGN(x);
+}
+
+/* numpy.sign for float, double and integers */
+double  fsign(double x)
+{
+    return SIGN(x);
 }
 
 /* numpy.sign for complex */
