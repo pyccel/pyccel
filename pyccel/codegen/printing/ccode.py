@@ -1254,6 +1254,7 @@ class CCodePrinter(CodePrinter):
             numpy.cos(x) ==> cos(x)
 
         """
+        # add necessary include
         self.add_import(c_imports['math'])
         type_name = type(expr).__name__
         try:
