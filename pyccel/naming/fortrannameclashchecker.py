@@ -40,8 +40,7 @@ class FortranNameClashChecker(metaclass = Singleton):
             'unlock', 'test', 'abs', 'sqrt', 'sin', 'cos', 'tan',
             'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
             'floor', 'fraction', 'real', 'max', 'mod', 'count',
-            'pack', 'numpy_sign', 'i8_sign', 'i16_sign', 'i32_sign', 'i64_sign',
-            'float_sign', 'double_sign', 'cmplx_float_sign', 'cmplx_double_sign'])
+            'pack', 'numpy_sign'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
