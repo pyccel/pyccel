@@ -22,7 +22,6 @@ if __name__ == "__main__":
     print(np.sign(np.int32(-42)))
     print(np.sign(np.int64(42)))
     print(np.sign(np.int64(-42)))
-
     print(np.sign(0.0))
     print(np.sign(-0.0))
     print(np.sign(np.float32(0.0)))
@@ -35,7 +34,6 @@ if __name__ == "__main__":
     print(np.sign(np.float32(-4.2)))
     print(np.sign(np.float64(4.2)))
     print(np.sign(np.float64(-4.2)))
-
     print(np.sign(0-0j))
     print(np.sign(-0-0j))
     print(np.sign(np.complex64(0-0j)))
