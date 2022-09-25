@@ -5143,7 +5143,7 @@ def test_numpy_linspace_scalar(language):
         for i in range(len(x)):
             result[i] = x[i]
 
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
@@ -5167,8 +5167,8 @@ def test_numpy_linspace_scalar(language):
     epyccel_func_type2(0, 10, out)
     assert (np.allclose(x, out))
     arr = np.zeros
-    x = randint(1, 20) # issue with numpy linspace
-    assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
+    x = randint(1, 60)
+    assert np.isclose(epyccel_func(integer8, x, 30), get_linspace(integer8, x, 30), rtol=RTOL, atol=ATOL)
     assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
