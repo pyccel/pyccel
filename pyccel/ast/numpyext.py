@@ -1329,6 +1329,8 @@ class NumpySign(NumpyUfuncUnary):
     __slots__ = ()
     name = 'sign'
     def _set_dtype_precision(self, x):
+        if not isinstance(x.dtype, (NativeInteger, NativeFloat, NativeComplex)):
+            raise TypeError(f'{x.dtype} not supported')
         self._dtype     = x.dtype
         self._precision = get_final_precision(x)
 
