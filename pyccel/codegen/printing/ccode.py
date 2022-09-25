@@ -1300,15 +1300,14 @@ class CCodePrinter(CodePrinter):
 
         """
         self.add_import(c_imports['numpy_c'])
+        dtype = expr.dtype
         func = ''
-        if isinstance(expr.dtype, NativeInteger):
+        if isinstance(dtype, NativeInteger):
             func = 'isign'
-        elif isinstance(expr.dtype, NativeFloat):
+        elif isinstance(dtype, NativeFloat):
             func = 'fsign'
-        elif isinstance(expr.dtype, NativeComplex):
+        elif isinstance(dtype, NativeComplex):
             func = 'csign'
-        else:
-            errors.report(f'{PYCCEL_RESTRICTION_TODO} ({expr.dtype}[kind = {expr.precision}])', severity='fatal')
 
         return f'{func}({self._print(expr.args[0])})'
 
