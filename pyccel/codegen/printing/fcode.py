@@ -2678,7 +2678,8 @@ class FCodePrinter(CodePrinter):
             numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
-        self._additional_imports.add(Import('numpy_f90', Module('numpy_f90',(),())))
+        func = FunctionDef('numpy_sign', [], [], [])
+        self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
         return f'numpy_sign({self._print(expr.args[0])})'
 
     def _print_NumpyTranspose(self, expr):
