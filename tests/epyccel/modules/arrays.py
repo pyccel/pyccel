@@ -513,6 +513,8 @@ def array_int32_in_bool_out_2d_F_complex_3d_expr( x, y, ri ):
 @stack_array('a')
 def array_real_1d_sum_stack_array():
     from numpy import zeros
+    import numpy as np
+
     a = zeros(10)
     s = np.float64(0.0)
     for i in range(10):
@@ -522,6 +524,8 @@ def array_real_1d_sum_stack_array():
 @stack_array('a')
 def array_real_1d_div_stack_array():
     from numpy import ones
+    import numpy as np
+
     a = ones(10)
     s = np.float64(0.0)
     for i in range(10):
@@ -532,9 +536,11 @@ def array_real_1d_div_stack_array():
 @stack_array('b')
 def multiple_stack_array_1():
     from numpy import ones, array
+    import numpy as np
+
     a = ones(5)
     b = array([1, 3, 5, 7, 9])
-    s = 0.0
+    s = np.float64(0.0)
     for i in range(5):
         s += a[i] / b[i]
     return s
@@ -543,10 +549,12 @@ def multiple_stack_array_1():
 @stack_array('b', 'c')
 def multiple_stack_array_2():
     from numpy import ones, array
+    import numpy as np
+
     a = ones(5)
     b = array([2, 4, 6, 8, 10])
     c = array([1, 3, 5, 7, 9])
-    s = 0.0
+    s = np.float64(0.0)
     for i in range(5):
         s = s + b[i] - a[i] / c[i]
     return s
@@ -558,6 +566,8 @@ def multiple_stack_array_2():
 @stack_array('a')
 def array_real_2d_sum_stack_array():
     from numpy import zeros
+    import numpy as np
+
     a = zeros((10, 10))
     s = np.float64(0.)
     for i in range(10):
@@ -581,6 +591,8 @@ def array_real_2d_div_stack_array():
 @stack_array('b')
 def multiple_2d_stack_array_1():
     from numpy import ones, array
+    import numpy as np
+
     a = ones((2, 5))
     b = array([[1, 3, 5, 7, 9], [11, 13, 17, 19, 23]])
     s = np.float64(0.0)
@@ -594,6 +606,8 @@ def multiple_2d_stack_array_1():
 @stack_array('b', 'c')
 def multiple_2d_stack_array_2():
     from numpy import ones, array
+    import numpy as np
+
     a = ones(5)
     b = array([[2, 4, 6, 8, 10], [1, 3, 5, 7, 9]])
     c = array([[1, 3, 5, 7, 9], [2, 4, 6, 8, 10]])
