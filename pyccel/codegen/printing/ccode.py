@@ -872,8 +872,8 @@ class CCodePrinter(CodePrinter):
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
             if expr.output_unit == 'stderr':
-                return "fprintf(stderr, {});\n".format(args_code)
-            return "printf({});\n".format(args_code)
+                return f"fprintf(stderr, {args_code});\n"
+            return f"printf({args_code});\n"
 
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)

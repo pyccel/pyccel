@@ -210,7 +210,7 @@ class FCodePrinter(CodePrinter):
         errors.set_target(filename, 'file')
 
         super().__init__()
-        self._constantImports = dict()
+        self._constantImports = {}
         self._current_class    = None
 
         self._additional_code = None
@@ -221,7 +221,7 @@ class FCodePrinter(CodePrinter):
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
         macros = []
-        for key in self._constantImports:
+        for key in self._constantImports.items():
 
             macro = f"use, intrinsic :: {key}, only : "
             rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in self._constantImports[key]]
@@ -632,9 +632,11 @@ class FCodePrinter(CodePrinter):
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
-                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end], output_unit=expr.output_unit),
+                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end], 
+                                                output_unit=expr.output_unit),
                                   for_loop,
-                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end], output_unit=expr.output_unit)],
+                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end],
+                                                output_unit=expr.output_unit)],
                                  unravelled=True)
                 code += self._print(body)
             else:
@@ -679,11 +681,10 @@ class FCodePrinter(CodePrinter):
         args_code       = ' , '.join(args_list)
         args_formatting = ' '.join(fargs_format)
         if expr.output_unit == "stderr":
-            self._constantImports.setdefault('ISO_FORTRAN_ENV', set()).add(("stderr", "error_unit"))
-            return "write(stderr, '({})', advance=\"{}\") {}\n"\
-                    .format(args_formatting, advance, args_code)
-        return "write(*, '({})', advance=\"{}\") {}\n"\
-            .format(args_formatting, advance, args_code)
+            self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
+                .add(("stderr", "error_unit"))
+            return f"write(stderr, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
+        return f"write(*, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
     def _get_print_format_and_arg(self,var):
         """ Get the format string and the printable argument for an object.
