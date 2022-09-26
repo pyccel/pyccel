@@ -49,12 +49,12 @@ def complex128_neg():
 
 def complex_pos_neg():
     import numpy as np
-    b = np.sign(np.complex(1-2j))
+    b = np.sign(complex(1-2j))
     return b
 
 def complex_neg_pos():
     import numpy as np
-    b = np.sign(np.complex(-1+2j))
+    b = np.sign(complex(-1+2j))
     return b
 
 def complex64_pos_neg():
