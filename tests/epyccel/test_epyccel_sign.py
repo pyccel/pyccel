@@ -199,62 +199,112 @@ def test_sign_literal_float(language):
 
 # Tests on arrays
 
-def test_sign_arr_int(language):
-    f_1d = mod.array_int_1d
-    f_2d = mod.array_int_2d
+def test_sign_array_1d_int(language):
+    f_int8  = mod.array_1d_int8
+    f_int16 = mod.array_1d_int16
+    f_int32 = mod.array_1d_int32
+    f_int64 = mod.array_1d_int64
+    f_int8_epyc  = epyccel(f_int8, language = language)
+    f_int16_epyc = epyccel(f_int16, language = language)
+    f_int32_epyc = epyccel(f_int32, language = language)
+    f_int64_epyc = epyccel(f_int64, language = language)
 
-    f_1d_epyc = epyccel(f_1d, language = language)
-    f_2d_epyc = epyccel(f_2d, language = language)
+    arr8  = np.array([2, 0, -0, -13, 37, 42], dtype=np.int8)
+    arr16 = np.array([2, 0, -0, -13, 37, 42], dtype=np.int16)
+    arr32 = np.array([2, 0, -0, -13, 37, 42], dtype=np.int32)
+    arr64 = np.array([2, 0, -0, -13, 37, 42], dtype=np.int64)
 
-    x1_1d = np.array([2, 0, 2, -13, 37, 42], dtype=np.int64)
-    x1_2d = np.array([[2, 0], [2, -13], [37, 42]], dtype=np.int64)
-    x2_1d = np.copy(x1_1d)
-    x2_2d = np.copy(x1_2d)
+    x_int8, y_int8 = f_int8(arr8), f_int8_epyc(arr8)
+    x_int16, y_int16 = f_int16(arr16), f_int16_epyc(arr16)
+    x_int32, y_int32 = f_int32(arr32), f_int32_epyc(arr32)
+    x_int64, y_int64 = f_int64(arr64), f_int64_epyc(arr64)
 
-    f_1d(x1_1d)
-    f_2d(x1_2d)
-    f_1d_epyc(x2_1d)
-    f_2d_epyc(x2_2d)
+    assert np.array_equal(x_int8, y_int8) and x_int8.dtype == y_int8.dtype
+    assert np.array_equal(x_int16, y_int16) and x_int16.dtype == y_int16.dtype
+    assert np.array_equal(x_int32, y_int32) and x_int32.dtype == y_int32.dtype
+    assert np.array_equal(x_int64, y_int64) and x_int64.dtype == y_int64.dtype
 
-    assert np.array_equal(x1_1d, x2_1d) and (x1_1d.dtype is x2_1d.dtype)
-    assert np.array_equal(x1_2d, x2_2d) and (x1_2d.dtype is x2_2d.dtype)
+def test_sign_array_2d_int(language):
+    f_int8  = mod.array_2d_int8
+    f_int16 = mod.array_2d_int16
+    f_int32 = mod.array_2d_int32
+    f_int64 = mod.array_2d_int64
+    f_int8_epyc  = epyccel(f_int8, language = language)
+    f_int16_epyc = epyccel(f_int16, language = language)
+    f_int32_epyc = epyccel(f_int32, language = language)
+    f_int64_epyc = epyccel(f_int64, language = language)
 
-def test_sign_arr_float(language):
-    f_1d = mod.array_float_1d
-    f_2d = mod.array_float_2d
+    arr8  = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int8)
+    arr16 = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int16)
+    arr32 = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int32)
+    arr64 = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int64)
 
-    f_1d_epyc = epyccel(f_1d, language = language)
-    f_2d_epyc = epyccel(f_2d, language = language)
+    x_int8, y_int8 = f_int8(arr8), f_int8_epyc(arr8)
+    x_int16, y_int16 = f_int16(arr16), f_int16_epyc(arr16)
+    x_int32, y_int32 = f_int32(arr32), f_int32_epyc(arr32)
+    x_int64, y_int64 = f_int64(arr64), f_int64_epyc(arr64)
 
-    x1_1d = np.array([0., 1., 2., -1.3, -3.7, -0.], dtype=np.float64)
-    x1_2d = np.array([[0., 1.], [2., -1.3], [-3.7, -0.]], dtype=np.float64)
-    x2_1d = np.copy(x1_1d)
-    x2_2d = np.copy(x1_2d)
+    assert np.array_equal(x_int8, y_int8) and x_int8.dtype == y_int8.dtype
+    assert np.array_equal(x_int16, y_int16) and x_int16.dtype == y_int16.dtype
+    assert np.array_equal(x_int32, y_int32) and x_int32.dtype == y_int32.dtype
+    assert np.array_equal(x_int64, y_int64) and x_int64.dtype == y_int64.dtype
 
-    f_1d(x1_1d)
-    f_2d(x1_2d)
-    f_1d_epyc(x2_1d)
-    f_2d_epyc(x2_2d)
+def test_sign_array_1d_float(language):
+    f_float32 = mod.array_1d_float32
+    f_float64 = mod.array_1d_float64
+    f_float32_epyc = epyccel(f_float32, language = language)
+    f_float64_epyc = epyccel(f_float64, language = language)
 
-    assert np.array_equal(x1_1d, x2_1d) and (x1_1d.dtype is x2_1d.dtype)
-    assert np.array_equal(x1_2d, x2_2d) and (x1_2d.dtype is x2_2d.dtype)
+    arr32 = np.array([2., 0., -0., -1.3, 3.7, .42], dtype=np.float32)
+    arr64 = np.array([2., 0., -0., -1.3, 3.7, .42], dtype=np.float64)
 
-def test_sign_arr_complex(language):
-    f_1d = mod.array_complex_1d
-    f_2d = mod.array_complex_2d
+    x_float32, y_float32 = f_float32(arr32), f_float32_epyc(arr32)
+    x_float64, y_float64 = f_float64(arr64), f_float64_epyc(arr64)
 
-    f_1d_epyc = epyccel(f_1d, language = language)
-    f_2d_epyc = epyccel(f_2d, language = language)
+    assert np.array_equal(x_float32, y_float32) and x_float32.dtype == y_float32.dtype
+    assert np.array_equal(x_float64, y_float64) and x_float64.dtype == y_float64.dtype
 
-    x1_1d = np.array([0.+0j, 0.j, 1.+2.j, -1.+2.j, 1.-2.j, -1.-2.j, 2.j, -2.j], dtype=np.complex64)
-    x1_2d = np.array([[0.+0j, 0.j], [1.+2.j, -1.+2.j], [1.-2.j, -1.-2.j], [2.j, -2.j]], dtype=np.complex64)
-    x2_1d = np.copy(x1_1d)
-    x2_2d = np.copy(x1_2d)
+def test_sign_array_2d_float(language):
+    f_float32 = mod.array_2d_float32
+    f_float64 = mod.array_2d_float64
+    f_float32_epyc = epyccel(f_float32, language = language)
+    f_float64_epyc = epyccel(f_float64, language = language)
 
-    f_1d(x1_1d)
-    f_2d(x1_2d)
-    f_1d_epyc(x2_1d)
-    f_2d_epyc(x2_2d)
+    arr32 = np.array([[2., 0.], [-0., -1.3], [3.7, .42]], dtype=np.float32)
+    arr64 = np.array([[2., 0.], [-0., -1.3], [3.7, .42]], dtype=np.float64)
 
-    assert np.array_equal(x1_1d, x2_1d) and (x1_1d.dtype is x2_1d.dtype)
-    assert np.array_equal(x1_2d, x2_2d) and (x1_2d.dtype is x2_2d.dtype)
+    x_float32, y_float32 = f_float32(arr32), f_float32_epyc(arr32)
+    x_float64, y_float64 = f_float64(arr64), f_float64_epyc(arr64)
+
+    assert np.array_equal(x_float32, y_float32) and x_float32.dtype == y_float32.dtype
+    assert np.array_equal(x_float64, y_float64) and x_float64.dtype == y_float64.dtype
+
+def test_sign_array_1d_complex(language):
+    f_complex64 = mod.array_1d_complex64
+    f_complex128 = mod.array_1d_complex128
+    f_complex64_epyc = epyccel(f_complex64, language = language)
+    f_complex128_epyc = epyccel(f_complex128, language = language)
+
+    arr64 = np.array([0.+0j, 0.j, 1.+2.j, -1.+2.j, 1.-2.j, -1.-2.j, 2.j, -2.j], dtype=np.complex64)
+    arr128 = np.array([0.+0j, 0.j, 1.+2.j, -1.+2.j, 1.-2.j, -1.-2.j, 2.j, -2.j], dtype=np.complex128)
+
+    x_complex64, y_complex64 = f_complex64(arr64), f_complex64_epyc(arr64)
+    x_complex128, y_complex128 = f_complex128(arr128), f_complex128_epyc(arr128)
+
+    assert np.array_equal(x_complex64, y_complex64) and x_complex64.dtype == y_complex64.dtype
+    assert np.array_equal(x_complex128, y_complex128) and x_complex128.dtype == y_complex128.dtype
+
+def test_sign_array_2d_complex(language):
+    f_complex64 = mod.array_2d_complex64
+    f_complex128 = mod.array_2d_complex128
+    f_complex64_epyc = epyccel(f_complex64, language = language)
+    f_complex128_epyc = epyccel(f_complex128, language = language)
+
+    arr64 = np.array([[0.+0j, 0.j], [1.+2.j, -1.+2.j], [1.-2.j, -1.-2.j], [2.j, -2.j]], dtype=np.complex64)
+    arr128 = np.array([[0.+0j, 0.j], [1.+2.j, -1.+2.j], [1.-2.j, -1.-2.j], [2.j, -2.j]], dtype=np.complex128)
+
+    x_complex64, y_complex64 = f_complex64(arr64), f_complex64_epyc(arr64)
+    x_complex128, y_complex128 = f_complex128(arr128), f_complex128_epyc(arr128)
+
+    assert np.array_equal(x_complex64, y_complex64) and x_complex64.dtype == y_complex64.dtype
+    assert np.array_equal(x_complex128, y_complex128) and x_complex128.dtype == y_complex128.dtype

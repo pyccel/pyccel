@@ -191,32 +191,105 @@ def literal_float_nul():
 # Arrays tests
 ###################
 
-@types('int64[:]')
-def array_int_1d(x):
+# Intergers
+
+@types('int8[:]')
+def array_1d_int8(x):
     import numpy as np
-    x[:] = np.sign(x)
+    y = np.sign(x)
+    return y
+
+@types('int16[:]')
+def array_1d_int16(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
+
+@types('int32[:]')
+def array_1d_int32(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
+
+@types('int64[:]')
+def array_1d_int64(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
+
+@types('int8[:,:]')
+def array_2d_int8(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
+
+@types('int16[:,:]')
+def array_2d_int16(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
+
+@types('int32[:,:]')
+def array_2d_int32(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
 
 @types('int64[:,:]')
-def array_int_2d(x):
+def array_2d_int64(x):
     import numpy as np
-    x[:,:] = np.sign(x)
+    y = np.sign(x)
+    return y
+
+# Floats
+
+@types('float32[:]')
+def array_1d_float32(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
 
 @types('float64[:]')
-def array_float_1d(x):
+def array_1d_float64(x):
     import numpy as np
-    x[:] = np.sign(x)
+    y = np.sign(x)
+    return y
+
+@types('float32[:,:]')
+def array_2d_float32(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
 
 @types('float64[:,:]')
-def array_float_2d(x):
+def array_2d_float64(x):
     import numpy as np
-    x[:,:] = np.sign(x)
+    y = np.sign(x)
+    return y
+
+# # Complexs
 
 @types('complex64[:]')
-def array_complex_1d(x):
+def array_1d_complex64(x):
     import numpy as np
-    x[:] = np.sign(x)
+    y = np.sign(x)
+    return y
+
+@types('complex128[:]')
+def array_1d_complex128(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
 
 @types('complex64[:,:]')
-def array_complex_2d(x):
+def array_2d_complex64(x):
     import numpy as np
-    x[:,:] = np.sign(x)
+    y = np.sign(x)
+    return y
+
+
+@types('complex128[:,:]')
+def array_2d_complex128(x):
+    import numpy as np
+    y = np.sign(x)
+    return y
