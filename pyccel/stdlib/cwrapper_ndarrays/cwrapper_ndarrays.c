@@ -322,7 +322,7 @@ PyObject* c_ndarray_to_pyarray(t_ndarray *o)
 {
     int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
 
-    enum NYP_TYPES npy_type = get_numpy_type(o);
+    enum NPY_TYPES npy_type = get_numpy_type(o);
 
     return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
