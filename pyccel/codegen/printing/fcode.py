@@ -41,7 +41,7 @@ from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
 from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
@@ -70,6 +70,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
+from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
@@ -2678,7 +2679,7 @@ class FCodePrinter(CodePrinter):
             numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
-        func = FunctionDef('numpy_sign', [], [], [])
+        func = PyccelFunctionDef('numpy_sign', NumpySign)
         self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
         return f'numpy_sign({self._print(expr.args[0])})'
 
