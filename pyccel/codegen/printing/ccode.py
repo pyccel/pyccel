@@ -911,9 +911,11 @@ class CCodePrinter(CodePrinter):
                 for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
-                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end], output_unit=expr.output_unit),
+                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
+                                                output_unit=expr.output_unit),
                                   for_loop,
-                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end], output_unit=expr.output_unit)],
+                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
+                                                output_unit=expr.output_unit)],
                                  unravelled = True)
                 code += self._print(body)
             else:
