@@ -221,10 +221,10 @@ class FCodePrinter(CodePrinter):
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
         macros = []
-        for key in self._constantImports.items():
+        for (name, imports) in self._constantImports.items():
 
-            macro = f"use, intrinsic :: {key}, only : "
-            rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in self._constantImports[key]]
+            macro = f"use, intrinsic :: {name}, only : "
+            rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in imports]
             if len(rename) == 0:
                 continue
             macro += " , ".join(rename)
