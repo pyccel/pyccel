@@ -6,6 +6,9 @@ from numpy.random import randint
 from pyccel.epyccel import epyccel
 from modules        import arrays
 
+RTOL = 2e-14
+ATOL = 1e-15
+
 #==============================================================================
 # TEST: 1D ARRAYS OF INT-32
 #==============================================================================
@@ -3837,7 +3840,7 @@ def test_numpy_arange_two_arg(language):
 def test_numpy_arange_full_arg(language):
     f1 = arrays.arr_arange_3
     f2 = epyccel(f1, language = language)
-    np.testing.assert_allclose(f1(), f2(),  rtol=1e-9, atol=0)
+    np.testing.assert_allclose(f1(), f2(),  rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_with_dtype(language):
     f1 = arrays.arr_arange_4
@@ -3847,12 +3850,12 @@ def test_numpy_arange_with_dtype(language):
 def test_numpy_arange_negative_step(language):
     f1 = arrays.arr_arange_5
     f2 = epyccel(f1, language = language)
-    np.testing.assert_allclose(f1(), f2(),  rtol=1e-9, atol=0)
+    np.testing.assert_allclose(f1(), f2(),  rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_negative_step_2(language):
     f1 = arrays.arr_arange_6
     f2 = epyccel(f1, language = language)
-    np.testing.assert_allclose(f1(), f2(),  rtol=1e-9, atol=0)
+    np.testing.assert_allclose(f1(), f2(),  rtol=RTOL, atol=ATOL)
 
 def test_iterate_slice(language):
     f1 = arrays.iterate_slice
