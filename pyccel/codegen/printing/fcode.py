@@ -685,7 +685,7 @@ class FCodePrinter(CodePrinter):
                 .add(("stderr", "error_unit"))
             return f"write(stderr, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
         self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
-                .add(("stdout", "file"))
+                .add(("stdout", "output_unit"))
         return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
     def _get_print_format_and_arg(self,var):
