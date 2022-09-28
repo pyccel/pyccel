@@ -632,7 +632,7 @@ class FCodePrinter(CodePrinter):
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
-                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end], 
+                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end],
                                                 output_unit=expr.output_unit),
                                   for_loop,
                                   PythonPrint([FunctionCallArgument(f[max_index]), for_end],
