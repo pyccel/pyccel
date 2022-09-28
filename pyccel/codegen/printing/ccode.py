@@ -550,7 +550,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if not expr.status.dtype is NativeInteger():
+        if expr.status.dtype is not NativeInteger():
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
