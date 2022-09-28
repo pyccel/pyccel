@@ -267,7 +267,7 @@ def array_2d_float64(x):
     y = np.sign(x)
     return y
 
-# # Complexs
+# Complexs
 
 @types('complex64[:]')
 def array_1d_complex64(x):
