@@ -588,7 +588,7 @@ class PythonPrint(Basic):
 
     expr : PyccelAstNode
         The expression to print
-    output_unit: String (Optional)
+    file: String (Optional)
         Select 'stdout' (default) or 'stderr' to print to
     Examples
 
@@ -598,15 +598,15 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
-    __slots__ = ('_expr', '_output_unit')
+    __slots__ = ('_expr', '_file')
     _attribute_nodes = ('_expr',)
     name = 'print'
 
-    def __init__(self, expr, output_unit="stdout"):
-        if output_unit not in ('stdout', 'stderr'):
+    def __init__(self, expr, file="stdout"):
+        if file not in ('stdout', 'stderr'):
             raise ValueError('output_unit can be `stdout` or `stderr`')
         self._expr = expr
-        self._output_unit = output_unit
+        self._file = file
         super().__init__()
 
     @property
@@ -614,10 +614,10 @@ class PythonPrint(Basic):
         return self._expr
 
     @property
-    def output_unit(self):
+    def file(self):
         """ returns the output unit (`stdout` or `stderr`)
         """
-        return self._output_unit
+        return self._file
 
 #==============================================================================
 class PythonRange(Basic):

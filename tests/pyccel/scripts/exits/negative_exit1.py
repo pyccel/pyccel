@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
-import sys
+from sys import exit
 
 if __name__ == "__main__":
-    sys.exit(-1)
+    exit(-1)

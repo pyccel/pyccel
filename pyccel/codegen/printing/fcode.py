@@ -608,7 +608,7 @@ class FCodePrinter(CodePrinter):
                     args_format = []
                     args = []
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end], output_unit=expr.output_unit))
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end], file=expr.file))
                 args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
@@ -626,17 +626,17 @@ class FCodePrinter(CodePrinter):
                 if f.rank == 1:
                     print_body.append(space_end)
 
-                for_body = [PythonPrint(print_body, output_unit=expr.output_unit)]
+                for_body = [PythonPrint(print_body, file=expr.file)]
                 for_loop = For(for_index, for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
                 body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end],
-                                                output_unit=expr.output_unit),
+                                                file=expr.file),
                                   for_loop,
                                   PythonPrint([FunctionCallArgument(f[max_index]), for_end],
-                                                output_unit=expr.output_unit)],
+                                                file=expr.file)],
                                  unravelled=True)
                 code += self._print(body)
             else:
@@ -680,11 +680,13 @@ class FCodePrinter(CodePrinter):
 
         args_code       = ' , '.join(args_list)
         args_formatting = ' '.join(fargs_format)
-        if expr.output_unit == "stderr":
+        if expr.file == "stderr":
             self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
                 .add(("stderr", "error_unit"))
             return f"write(stderr, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
-        return f"write(*, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
+        self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
+                .add(("stdout", "file"))
+        return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
     def _get_print_format_and_arg(self,var):
         """ Get the format string and the printable argument for an object.
@@ -2660,9 +2662,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if not expr.arg.dtype is NativeInteger():
+        if expr.arg.dtype is not NativeInteger():
             print_arg = FunctionCallArgument(expr.arg)
-            code = self._print(PythonPrint((print_arg, ), output_unit="stderr"))
+            code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
             arg = expr.arg

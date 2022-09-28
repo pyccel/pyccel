@@ -550,12 +550,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if not expr.arg.dtype is NativeInteger():
-            print_arg = FunctionCallArgument(expr.arg)
-            code = self._print(PythonPrint((print_arg, ), output_unit="stderr"))
+        if not expr.status.dtype is NativeInteger():
+            print_arg = FunctionCallArgument(expr.status)
+            code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            arg = self._print(expr.arg)
+            arg = self._print(expr.status)
         return f"{code}exit({arg});\n"
 
     def _print_PythonFloat(self, expr):
@@ -871,7 +871,7 @@ class CCodePrinter(CodePrinter):
             args_format += end
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
-            if expr.output_unit == 'stderr':
+            if expr.file == 'stderr':
                 return f"fprintf(stderr, {args_code});\n"
             return f"printf({args_code});\n"
 
@@ -906,16 +906,16 @@ class CCodePrinter(CodePrinter):
                 if f.rank == 1:
                     print_body.append(space_end)
 
-                for_body  = [PythonPrint(print_body, output_unit=expr.output_unit)]
+                for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
                 for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
                 body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
-                                                output_unit=expr.output_unit),
+                                                file=expr.file),
                                   for_loop,
                                   PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
-                                                output_unit=expr.output_unit)],
+                                                file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
             else:

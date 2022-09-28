@@ -11,6 +11,13 @@ from .internals import PyccelInternalFunction
 from .datatypes import NativeVoid
 from .internals import LiteralInteger
 
+__all__ = (
+    'SysExit',
+    'sys_constants',
+    'sys_funcs',
+    'sys_mod',
+)
+
 class SysExit(PyccelInternalFunction):
     """Represents a call to  sys.exit
 
@@ -29,18 +36,18 @@ class SysExit(PyccelInternalFunction):
     _shape     = None
     _order     = None
 
-    def __init__(self, arg=None):
-        if arg is None:
-            arg = LiteralInteger(0)
-        super().__init__(arg)
+    def __init__(self, status=None):
+        if status is None:
+            status = LiteralInteger(0)
+        super().__init__(status)
 
     @property
-    def arg(self):
+    def status(self):
         """return the arg of exit"""
         return self._args[0]
 
     def __str__(self):
-        return f'exit({str(self.arg)})'
+        return f'exit({str(self.status)})'
 
 sys_constants = {
 
