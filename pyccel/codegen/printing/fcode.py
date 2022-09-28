@@ -2662,7 +2662,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if expr.status.dtype is not NativeInteger():
+        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
