@@ -124,7 +124,7 @@ def testNdigitsPositive():
 
     x = randint(1, 1000) / 100
 
-    n = randint(1, 1000)
+    n = randint(1, 10)
 
     print("testNdigitsPositive")
 
@@ -239,7 +239,7 @@ def testNdigitsNegative():
 
     x = randint(-1000, -1) / 100
 
-    n = randint(-1000, -1)
+    n = randint(-10, -1)
 
     print("testNdigitsNegative")
 
