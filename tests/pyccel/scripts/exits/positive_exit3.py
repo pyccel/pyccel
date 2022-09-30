@@ -4,4 +4,4 @@ from sys import exit as sys_exit
 
 if __name__ == "__main__":
     exit_code = 2147483647
-    sys_exit(status=exit_code)
+    sys_exit(exit_code)
