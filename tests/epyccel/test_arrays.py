@@ -3984,7 +3984,12 @@ def test_numpy_arange_two_arg(language):
 def test_numpy_arange_full_arg(language):
     f1 = arrays.arr_arange_3
     f2 = epyccel(f1, language = language)
+
+    r_f1 = f1()
+    r_f2 = f2()
+
     np.testing.assert_allclose(f1(), f2())
+    assert (type(r_f1[1]) is type(r_f2[1]))
 
 def test_numpy_arange_with_dtype(language):
     f1 = arrays.arr_arange_4
@@ -3994,12 +3999,22 @@ def test_numpy_arange_with_dtype(language):
 def test_numpy_arange_negative_step(language):
     f1 = arrays.arr_arange_5
     f2 = epyccel(f1, language = language)
+
+    r_f1 = f1()
+    r_f2 = f2()
+
     np.testing.assert_allclose(f1(), f2())
+    assert (type(r_f1[1]) is type(r_f2[1]))
 
 def test_numpy_arange_negative_step_2(language):
     f1 = arrays.arr_arange_6
     f2 = epyccel(f1, language = language)
+
+    r_f1 = f1()
+    r_f2 = f2()
+
     np.testing.assert_allclose(f1(), f2())
+    assert (type(r_f1[1]) is type(r_f2[1]))
 
 def test_iterate_slice(language):
     f1 = arrays.iterate_slice
