@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 # pylint: disable=missing-function-docstring
 import functools
+from http import server
 from itertools import chain
 import re
 
@@ -54,6 +55,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
+from sympy import factor
 
 
 errors = Errors()
@@ -1991,11 +1993,10 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['math'])
         self.add_import(c_imports['pyc_math_c'])
         if expr.ndigits is None:
-            return f"int_round({self._print(expr.arg)})"
+            return f"lrint({self._print(expr.arg)})"
         ndigits = self._print(expr.ndigits)
         arg = self._print(expr.arg)
         return f"double_round({arg}, {ndigits})"
-
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
