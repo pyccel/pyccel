@@ -17,14 +17,14 @@ jobs:
         uses: ./.github/actions/linux_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      # - name: Fortran/C tests with pytest
-      #   uses: ./.github/actions/pytest_run
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
       - name: Ccuda tests with pytest
         uses: ./.github/actions/pytest_run_cuda
-      # - name: Python tests with pytest
-      #   uses: ./.github/actions/pytest_run_python
-      # - name: Parallel tests with pytest
-      #   uses: ./.github/actions/pytest_parallel
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
 
   # Windows:
 
