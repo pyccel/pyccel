@@ -9,7 +9,6 @@
 
 // typedef enum e_type t_type;
 
-
 typedef enum    e_type
 {
     lst_bool    ,
@@ -25,7 +24,7 @@ typedef enum    e_type
 typedef struct  s_list
 {
     void*       elements;
-    enum e_type      type;
+    enum e_type type;
     size_t      capacity;
     size_t      size;
 }               t_list;
