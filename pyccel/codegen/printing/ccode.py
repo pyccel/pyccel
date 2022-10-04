@@ -847,6 +847,7 @@ class CCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
         kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
@@ -866,8 +867,27 @@ class CCodePrinter(CodePrinter):
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
 
+        tuple_start = FunctionCallArgument(LiteralString('('))
+        tuple_sep   = LiteralString(', ')
+        tuple_end   = FunctionCallArgument(LiteralString(')'))
+
         for i, f in enumerate(orig_args):
             f = f.value
+            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                if i + 1 == len(orig_args):
+                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                else:
+                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                args = []
+                continue
             if isinstance(f, PythonType):
                 f = f.print_string
 

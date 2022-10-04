@@ -573,6 +573,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
         for f in expr.expr:
             if f.has_keyword:
                 if f.keyword == 'sep':
@@ -591,7 +592,7 @@ class FCodePrinter(CodePrinter):
         tuple_sep   = LiteralString(', ')
         tuple_end   = FunctionCallArgument(LiteralString(')'))
 
-        for f in orig_args:
+        for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
             else:
@@ -601,8 +602,14 @@ class FCodePrinter(CodePrinter):
                     code += self._formatted_args_to_print(args_format, args, sep, separator)
                     args_format = []
                     args = []
+                if i + 1 == len(orig_args):
+                    end_of_tuple = empty_end
+                else:
+                    end_of_tuple = FunctionCallArgument(sep, 'end')
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end]))
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
                 args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
