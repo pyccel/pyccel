@@ -1,6 +1,15 @@
 #include "lists.h"
 
-int tSizes[8] = {1, sizeof(int8_t), sizeof(int16_t), sizeof(int32_t), sizeof(int64_t), sizeof(float), sizeof(double), sizeof(int*)};
+int tSizes[8] = {
+            1,
+            sizeof(int8_t), 
+            sizeof(int16_t), 
+            sizeof(int32_t), 
+            sizeof(int64_t), 
+            sizeof(float), 
+            sizeof(double), 
+            sizeof(void *)
+};
 
 t_list   *allocate_list(size_t size, t_type type, void *elemnts) // va_arg could alow us to take in multiple list of elements
 {
@@ -17,7 +26,8 @@ t_list   *allocate_list(size_t size, t_type type, void *elemnts) // va_arg could
         list->elements = NULL;
     else if (!(list->elements = malloc(list->capacity * tSizes[type])))
         return NULL;
-    memcpy(list->elements, elemnts, tSizes[type] * list->size);
+    if (elemnts)
+        memcpy(list->elements, elemnts, tSizes[type] * list->size);
     return list;
 }
 
@@ -131,7 +141,7 @@ void     insert(t_list** list, size_t index, void* item) // needs a redo
         elements = malloc(totalSize);
         memcpy(elements, &(*list)->elements, index);
         memcpy(&elements[index], item, tSizes[(*list)->type]);
-        memcpy(&elements[index + tSizes[(*list)->type]], &(*list)->elements[index], (*list)->size - index);
+        memcpy(&elements[index + tSizes[(*list)->type]], (int8_t*)(*list)->elements + index * (*list)->type, (*list)->size - index);
         *list = allocate_list(totalSize / (*list)->type, (*list)->type, elements);
     }
     else
