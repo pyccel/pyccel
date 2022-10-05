@@ -2805,6 +2805,7 @@ class Interface(Basic):
 
     def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""
+
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
@@ -2828,6 +2829,8 @@ class Interface(Basic):
             for (x, y) in enumerate(args):
                 func_arg = i[x].var
                 call_arg = y.value
+                if call_arg.rank:
+                    func_arg._precision = get_final_precision(func_arg)
                 dtype1 = str_dtype(call_arg.dtype)
                 dtype2 = str_dtype(func_arg.dtype)
                 found = found and type_match(dtype1, dtype2, call_arg, func_arg)
