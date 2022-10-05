@@ -8,7 +8,6 @@ File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
 
-from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
