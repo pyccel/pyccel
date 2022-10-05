@@ -205,3 +205,81 @@ void*   array_subscripting(t_list *list, size_t index)
     }
     return (NULL);
 }
+
+// Sorting ////////////////////////////
+
+size_t get_total_length(t_list *list)
+{
+    size_t size;
+
+    size = list->size / tSizes[list->type];
+    while (list->type == lst_list)
+    {
+        list = (t_list *)(((int8_t *)list->elements)[0]);
+        size *= list->size;
+    }
+    return size;
+}
+
+int8_t *group_node_items(t_list *list, int i)
+{
+    int8_t *group;
+
+    group = (int8_t *)malloc(get_total_length(list) * tSizes[list->type]);
+    
+}
+
+int compare(t_list *list, int i1, int i2)
+{
+    int8_t group_1;
+    int8_t group_2;
+
+    group_1 = group_node_items(list, i1);
+    group_2 = group_node_items(list, i2);
+    return 0;
+}
+
+int partition(t_list *list, int p, int r)
+{
+    int i;
+    int8_t *elements;
+    int8_t *tmp;
+    size_t step;
+
+    elements = (int8_t *)list->elements;
+    step = tSizes[list->type];
+    i = p - 1;
+    for (int j = p; j < r - 1; j++)
+    {
+        if (compare(list, j, r) <= 0)
+        {
+            i++;
+            tmp = elements[i*step];
+            elements[i*step] = elements[j*step];
+            elements[j] = tmp;
+        }
+    }
+    tmp = elements[(i+1)*step];
+    elements[(i+1)*step] = elements[r*step];
+    elements[r*step] = tmp;
+    return i+1;
+}
+
+void quicksort(t_list *list, size_t p, size_t r)
+{
+    int q;
+
+    if (p < r)
+    {
+        q = partition(list, p, r);
+        quicksort(list, p, q - 1);
+        quicksort(list, q + 1, r);
+    }
+}
+
+void sort(t_list *list)
+{
+    quicksort(list, 0, list->size / list->type);
+}
+
+///////////////////////////////////////
