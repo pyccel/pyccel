@@ -59,13 +59,57 @@ if __name__ == "__main__":
 
 
 ### Ordering in C
+For `C`, arrays are flattened into a one dimensional string, `strides` and `shape` are used to navigate the array.
+While the `order_c` `ndarrays` only require a simple copy to be created/populated, `order_f` arrays require an extra step, which is transposing the array.  
+Example:  
+  `order_c`  
+    1.  allocate `order_c` `ndarray`  
+    2.  copy values to `ndarray`  
+  `order_f`  
+    1. allocate temporary `order_c` `ndarray`  
+    2. copy values to temporary `ndarray`  
+    3. allocate `order_f` `ndarray`  
+    4. copy temporary `ndarray` to final `ndarray` using `strides` and `shape`, this will create a transposed version of the temporary `ndarray`
+
 ### Indexing in C
-// Should it work the same as numpy
+
+For indexing, the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order`.  
+If we take the following 2D array as an example:
+|   |   |   |
+|---|---|---|
+| 1 | 2 | 3 |
+| 4 | 5 | 6 |
+
+with `array.rows = 2` and `array.columns = 3`  
+`GET_ELEMENT(arr, int32, 0, 1)` which is equivelant to `arr[0][1]` would return `2` no matter the `order`.  
+
+To loop efficiently in an (`order_c`) array, we would do this:
+```c
+for (int i = 0; i < array.rows; ++i)
+{
+  for (int j = 0; j < array.columns; ++j)
+  {
+    printf("-%d-", GET_ELEMENT(array, int32, i, j);
+  }
+}
+```
+
+For (`order_f`) we would do this:
+
+```c
+for (int i = 0; i < array.columns; ++i)
+{
+  for (int j = 0; j < array.rows; ++j)
+  {
+    printf("-%d-", GET_ELEMENT(array, int32, i, j);
+  }
+}
+```
 
 ### Ordering in Fortran
 // TODO
 
-## ndarrays
+## ndarrays (obsolete)
 `ndarrays` are stored as contiguous data in memory to increase efficiency
 We use `copy_array_data(t_ndarray *dest, t_ndarray *src, t_uint32 offset, enum order)` to achieve this whether the order is `order_f` or `order_c`.
 
