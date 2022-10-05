@@ -66,7 +66,7 @@ __all__ = ["CCodePrinter", "ccode"]
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
-    'NumpyFabs'  : 'fabs',
+    'NumpyFabs' : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
@@ -248,7 +248,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'numpy_c']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -847,6 +848,7 @@ class CCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
         kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
@@ -866,8 +868,27 @@ class CCodePrinter(CodePrinter):
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
 
+        tuple_start = FunctionCallArgument(LiteralString('('))
+        tuple_sep   = LiteralString(', ')
+        tuple_end   = FunctionCallArgument(LiteralString(')'))
+
         for i, f in enumerate(orig_args):
             f = f.value
+            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                if i + 1 == len(orig_args):
+                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                else:
+                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                args = []
+                continue
             if isinstance(f, PythonType):
                 f = f.print_string
 
@@ -1275,6 +1296,40 @@ class CCodePrinter(CodePrinter):
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
+
+    def _print_NumpySign(self, expr):
+        """ Print the corresponding C function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in C
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => isign(x)   (x is integer)
+            numpy.sign(x) => fsign(x)   (x if float)
+            numpy.sign(x) => csign(x)   (x is complex)
+
+        """
+        self.add_import(c_imports['numpy_c'])
+        dtype = expr.dtype
+        func = ''
+        if isinstance(dtype, NativeInteger):
+            func = 'isign'
+        elif isinstance(dtype, NativeFloat):
+            func = 'fsign'
+        elif isinstance(dtype, NativeComplex):
+            func = 'csign'
+
+        return f'{func}({self._print(expr.args[0])})'
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
