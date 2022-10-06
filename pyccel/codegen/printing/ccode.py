@@ -66,7 +66,7 @@ __all__ = ["CCodePrinter", "ccode"]
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
-    'NumpyFabs'  : 'fabs',
+    'NumpyFabs' : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
@@ -248,7 +248,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdio',
                  "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'numpy_c']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -1295,6 +1296,40 @@ class CCodePrinter(CodePrinter):
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
+
+    def _print_NumpySign(self, expr):
+        """ Print the corresponding C function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in C
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => isign(x)   (x is integer)
+            numpy.sign(x) => fsign(x)   (x if float)
+            numpy.sign(x) => csign(x)   (x is complex)
+
+        """
+        self.add_import(c_imports['numpy_c'])
+        dtype = expr.dtype
+        func = ''
+        if isinstance(dtype, NativeInteger):
+            func = 'isign'
+        elif isinstance(dtype, NativeFloat):
+            func = 'fsign'
+        elif isinstance(dtype, NativeComplex):
+            func = 'csign'
+
+        return f'{func}({self._print(expr.args[0])})'
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
