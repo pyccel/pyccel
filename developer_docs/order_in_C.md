@@ -2,7 +2,7 @@
 
 ## Order  
 
-`order` is the parameter given the `numpy.array` in order (:)) to choose how the array is stored in memory, both  `Pyccel` supported orders are stored contiguously in memory, they differ in the order.
+`order` is the parameter given the `numpy.array` in order to choose how the array is stored in memory, both  `Pyccel` supported orders are stored contiguously in memory, they differ in the order - the order of the values -.
 `order='F'` would tell `numpy` to store the array column by column (column-major), example:
 ```python
 import numpy as np
