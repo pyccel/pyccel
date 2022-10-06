@@ -8,6 +8,7 @@ File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
 
+from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
@@ -272,6 +273,16 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
+def ndarray_precision(objs):
+    from .variable import Variable
+
+    nd_integers = [o for o in objs if isinstance(o, Variable) and o.is_ndarray]
+    if len(nd_integers) == 1:
+        precision = nd_integers[0].precision
+    else:
+        precision = max_precision(objs)
+    return precision
+
 def max_precision(objs : list, dtype = None, allow_native = True):
     """
     Returns the largest precision of an object in the list
@@ -292,7 +303,9 @@ def max_precision(objs : list, dtype = None, allow_native = True):
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
-        return max(get_final_precision(o) for o in objs)
+        if all((o.precision == -1) for o in objs):
+            return max(get_final_precision(o) for o in objs)
+        return get_final_precision(max(objs, key=attrgetter('precision')))
 
 def get_final_precision(obj):
     """
