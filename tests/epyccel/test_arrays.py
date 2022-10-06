@@ -3988,7 +3988,7 @@ def test_numpy_arange_full_arg(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    np.testing.assert_allclose(f1(), f2())
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
     assert (type(r_f1[1]) is type(r_f2[1]))
 
 def test_numpy_arange_with_dtype(language):
@@ -4003,7 +4003,7 @@ def test_numpy_arange_negative_step(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    np.testing.assert_allclose(f1(), f2())
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
     assert (type(r_f1[1]) is type(r_f2[1]))
 
 def test_numpy_arange_negative_step_2(language):
@@ -4013,7 +4013,7 @@ def test_numpy_arange_negative_step_2(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    np.testing.assert_allclose(f1(), f2())
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
     assert (type(r_f1[1]) is type(r_f2[1]))
 
 def test_iterate_slice(language):
