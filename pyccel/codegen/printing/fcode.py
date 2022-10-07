@@ -33,15 +33,15 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              If, IfSection, For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
-                             IndexedElement, HomogeneousTupleVariable,
+                             IndexedElement,
                              InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
 from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
@@ -70,6 +70,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
+from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
@@ -579,6 +580,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
         for f in expr.expr:
             if f.has_keyword:
                 if f.keyword == 'sep':
@@ -597,7 +599,7 @@ class FCodePrinter(CodePrinter):
         tuple_sep   = LiteralString(', ')
         tuple_end   = FunctionCallArgument(LiteralString(')'))
 
-        for f in orig_args:
+        for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
             else:
@@ -607,8 +609,14 @@ class FCodePrinter(CodePrinter):
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
                     args = []
+                if i + 1 == len(orig_args):
+                    end_of_tuple = empty_end
+                else:
+                    end_of_tuple = FunctionCallArgument(sep, 'end')
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end], file=expr.file))
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
                 args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
@@ -2684,6 +2692,31 @@ class FCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpySign(self, expr):
+        """ Print the corresponding Fortran function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in Fortran
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => numpy_sign(x)
+            numpy_sign is an interface which calls the proper function depending on the data type of x
+
+        """
+        func = PyccelFunctionDef('numpy_sign', NumpySign)
+        self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
+        return f'numpy_sign({self._print(expr.args[0])})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
