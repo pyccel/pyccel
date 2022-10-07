@@ -2819,8 +2819,9 @@ class Interface(Basic):
             type_match = lambda dtype1, dtype2, call_arg, func_arg: \
                     (dtype1 in dtype2 or dtype2 in dtype1) \
                     and (call_arg.rank == func_arg.rank) \
-                    and call_arg.precision == func_arg.precision
-
+                    and (call_arg.precision == (func_arg.precision\
+                        if not func_arg.is_ndarray \
+                        else get_final_precision(func_arg)))
 
         j = -1
         for i in fs_args:
@@ -2828,8 +2829,6 @@ class Interface(Basic):
             found = True
             for (x, y) in enumerate(args):
                 func_arg = i[x].var
-                if func_arg.is_ndarray:
-                    func_arg._precision = get_final_precision(func_arg)
                 call_arg = y.value
                 dtype1 = str_dtype(call_arg.dtype)
                 dtype2 = str_dtype(func_arg.dtype)
