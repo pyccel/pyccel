@@ -43,6 +43,7 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'NumpySign',
     'process_shape',
     # ---
     'NumpyAbs',
@@ -1321,6 +1322,17 @@ class NumpyArctanh(NumpyUfuncUnary):
 
 #=======================================================================================
 
+
+class NumpySign(NumpyUfuncUnary):
+    """Represent a call to the sign function in the Numpy library"""
+    __slots__ = ()
+    name = 'sign'
+    def _set_dtype_precision(self, x):
+        if not isinstance(x.dtype, (NativeInteger, NativeFloat, NativeComplex)):
+            raise TypeError(f'{x.dtype} not supported')
+        self._dtype     = x.dtype
+        self._precision = get_final_precision(x)
+
 class NumpyAbs(NumpyUfuncUnary):
     """Represent a call to the abs function in the Numpy library"""
     __slots__ = ()
@@ -1751,6 +1763,7 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
+    'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
