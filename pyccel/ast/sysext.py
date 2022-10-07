@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
@@ -36,9 +35,7 @@ class SysExit(PyccelInternalFunction):
     _shape     = None
     _order     = None
 
-    def __init__(self, status=None):
-        if status is None:
-            status = LiteralInteger(0)
+    def __init__(self, status=LiteralInteger(0)):
         super().__init__(status)
 
     @property
