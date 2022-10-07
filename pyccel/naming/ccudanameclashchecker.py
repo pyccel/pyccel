@@ -13,14 +13,15 @@ class CCudaNameClashChecker(metaclass = Singleton):
     """ Class containing functions to help avoid problematic names in Ccuda
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
-    keywords = set(['auto', 'break', 'case', 'char', 'const',
+    keywords = set(['auto', 'break', 'case', 'char', 'const', 'bool',
         'continue', 'default', 'do', 'double', 'else', 'enum',
-        'extern', 'float', 'for', 'goto', 'if', 'inline', 'int',
+        'extern', 'float', 'for', 'goto', 'if', 'inline', 
+        'int', 'int8_t', 'int16_t', 'int32_t', 'int64_t',
         'long', 'register', 'restrict', 'return', 'short', 'signed',
         'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
-        'unsigned', 'void', 'volatile', 'whie', '_Alignas',
+        'unsigned', 'void', 'volatile', 'while', '_Alignas',
         '_Alignof', '_Atomic', '_Bool', '_Complex', 'Decimal128',
-        '_Decimal32', '_Decimal64', '_Generic', '_Imaginary',
+        '_Decimal32', '_Decimal64', '_Generic', '_Imaginary', '__global__',
         '_Noreturn', '_Static_assert', '_Thread_local', 't_ndarray',
         'array_create', 'new_slice', 'array_slicing', 'alias_assign',
         'transpose_alias_assign', 'array_fill', 't_slice',
@@ -34,7 +35,13 @@ class CCudaNameClashChecker(metaclass = Singleton):
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
         'numpy_to_ndarray_shape', 'get_size',
-        'cuda_free_array', 'cuda_free_pointer', 'cuda_array_create', 'threadIdx', 'blockIdx'])
+        'cuda_free_array', 'cuda_free_pointer', 'cuda_array_create', 
+        'threadIdx', 'blockIdx', 'blockDim', 'gridDim', 
+        'cuda_array_fill_double', 'cuda_array_fill_int64', 
+        'cuda_array_fill_int32', 'cuda_array_fill_int8',
+        'cuda_array_arange_double', 'cuda_array_arange_int64', 
+        'cuda_array_arange_int32', 'cuda_array_arange_int8',
+        'cudaMallocManaged', 'cudaDeviceSynchronize'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
