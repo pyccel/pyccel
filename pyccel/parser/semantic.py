@@ -1890,7 +1890,7 @@ class SemanticParser(BasicParser):
         return var
 
 
-    def _visit_DottedName(self, expr, **settings): 
+    def _visit_DottedName(self, expr, **settings):
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var

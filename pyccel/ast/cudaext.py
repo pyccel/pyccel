@@ -73,7 +73,7 @@ class CudaArray(CudaNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','memory_location')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
@@ -123,7 +123,7 @@ class CudaArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
-        self.memory_location = memory_location
+        self._memory_location = memory_location
         super().__init__()
 
     def __str__(self):
@@ -132,6 +132,9 @@ class CudaArray(CudaNewArray):
     @property
     def arg(self):
         return self._arg
+    @property
+    def memory_location(self):
+        return self._memory_location
 
 class CudaDeviceSynchronize(PyccelInternalFunction):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
