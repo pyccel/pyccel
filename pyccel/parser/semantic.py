@@ -2169,7 +2169,10 @@ class SemanticParser(BasicParser):
                 return getattr(self, annotation_method)(expr, **settings)
 
         args = self._handle_function_args(expr.args, **settings)
-        if not isinstance(func, PyccelFunctionDef):
+        # Correct keyword names if scope is available
+        # The scope is only available if the function body has been parsed
+        # (i.e. not for headers or builtin functions)
+        if func.scope:
             args = [a if a.keyword is None else \
                     FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
                     for a in args]
