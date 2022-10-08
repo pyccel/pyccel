@@ -36,7 +36,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Litera
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 errors = Errors()
@@ -531,6 +531,9 @@ class NumpyArange(NumpyNewArray):
     def step(self):
         return self._step
 
+    def __getitem__(self, index):
+        step = PyccelMul(index, self.step, simplify=True)
+        return PyccelAdd(self.start, step, simplify=True)
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
