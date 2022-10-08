@@ -2169,9 +2169,10 @@ class SemanticParser(BasicParser):
                 return getattr(self, annotation_method)(expr, **settings)
 
         args = self._handle_function_args(expr.args, **settings)
-        args = [a if a.keyword is None else \
-                FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
-                for a in args]
+        if not isinstance(func, PyccelFunctionDef):
+            args = [a if a.keyword is None else \
+                    FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
+                    for a in args]
 
 
         if name == 'lambdify':
