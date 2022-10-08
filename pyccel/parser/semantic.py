@@ -832,11 +832,11 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
 
+            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
             # Sort arguments to match the order in the function definition
             input_no_kwargs = [a for a in args if a.keyword is None]
             nargs = len(input_no_kwargs)
             input_kwargs = []
-            func_args = func.arguments
             for ka in func_args[nargs:]:
                 key = ka.name
                 relevant_args = [a for a in args[nargs:] if a.keyword == key]
@@ -847,14 +847,15 @@ class SemanticParser(BasicParser):
                     input_kwargs.append(relevant_args[0])
 
             args = input_no_kwargs + input_kwargs
+
             new_expr = FunctionCall(func, args, self._current_function)
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
             elif isinstance(func, FunctionDef):
-                self._check_argument_compatibility(new_expr.args, func.arguments,
-                        expr, func.is_elemental)
+                self._check_argument_compatibility(args, func_args,
+                            expr, func.is_elemental)
             return new_expr
 
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
