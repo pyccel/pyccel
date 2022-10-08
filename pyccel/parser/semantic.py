@@ -755,21 +755,6 @@ class SemanticParser(BasicParser):
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
-        # Sort arguments to match the order in the function definition
-        input_no_kwargs = [a for a in input_args if a.keyword is None]
-        nargs = len(input_no_kwargs)
-        input_kwargs = []
-        for ka in func_args[nargs:]:
-            key = ka.name
-            relevant_args = [a for a in input_args[nargs:] if a.keyword == key]
-            assert len(relevant_args) <= 1
-            if len(relevant_args) == 0 and ka.has_default:
-                input_kwargs.append(FunctionCallArgument(Nil(), key))
-            else:
-                input_kwargs.append(relevant_args[0])
-
-        input_args = input_no_kwargs + input_kwargs
-
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
@@ -846,6 +831,22 @@ class SemanticParser(BasicParser):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
+
+            # Sort arguments to match the order in the function definition
+            input_no_kwargs = [a for a in args if a.keyword is None]
+            nargs = len(input_no_kwargs)
+            input_kwargs = []
+            func_args = func.arguments
+            for ka in func_args[nargs:]:
+                key = ka.name
+                relevant_args = [a for a in args[nargs:] if a.keyword == key]
+                assert len(relevant_args) <= 1
+                if len(relevant_args) == 0 and ka.has_default:
+                    input_kwargs.append(FunctionCallArgument(Nil(), key))
+                else:
+                    input_kwargs.append(relevant_args[0])
+
+            args = input_no_kwargs + input_kwargs
             new_expr = FunctionCall(func, args, self._current_function)
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
