@@ -2987,10 +2987,6 @@ class FCodePrinter(CodePrinter):
         else:
             results_strs = []
 
-        args = [a if a.keyword is None else \
-                FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
-                for a in args]
-
         if func.is_inline:
             if len(func_results)>1:
                 code = self._handle_inline_func_call(expr, args, assign_lhs = results)

@@ -755,6 +755,22 @@ class SemanticParser(BasicParser):
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
+        # Sort arguments to match the order in the function definition
+        input_no_kwargs = [a for a in input_args if a.keyword is None]
+        nargs = len(input_no_kwargs)
+        input_kwargs = []
+        for ka in func_args[nargs:]:
+            key = ka.name
+            relevant_args = [a for a in input_args[nargs:] if a.keyword == key]
+            assert len(relevant_args) <= 1
+            if len(relevant_args) == 0 and ka.has_default:
+                input_kwargs.append(FunctionCallArgument(Nil(), key))
+            else:
+                input_kwargs.append(relevant_args[0])
+
+        input_args = input_no_kwargs + input_kwargs
+
+        # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
             f_arg = f_arg.var
@@ -2151,6 +2167,10 @@ class SemanticParser(BasicParser):
                 return getattr(self, annotation_method)(expr, **settings)
 
         args = self._handle_function_args(expr.args, **settings)
+        args = [a if a.keyword is None else \
+                FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
+                for a in args]
+
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
