@@ -35,7 +35,8 @@ def circle_volume(radius):
     return volume
 
 def arr_mult_scalar(T: 'int[:]', t: int = 13):
-    return T * t
+    x = T * t
+    return x
 
 def alias(T: 'int[:]', t: int):
     x = arr_mult_scalar(T, t=t)
