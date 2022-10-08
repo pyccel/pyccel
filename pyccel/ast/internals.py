@@ -273,16 +273,6 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
-def ndarray_precision(objs):
-    from .variable import Variable
-
-    nd_integers = [o for o in objs if isinstance(o, Variable) and o.is_ndarray]
-    if len(nd_integers) == 1:
-        precision = nd_integers[0].precision
-    else:
-        precision = max_precision(objs)
-    return precision
-
 def max_precision(objs : list, dtype = None, allow_native = True):
     """
     Returns the largest precision of an object in the list
