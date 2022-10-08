@@ -73,11 +73,11 @@ class CudaArray(CudaNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','memory_location')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='C', memory_location='managed'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -114,13 +114,16 @@ class CudaArray(CudaNewArray):
             if order in ('K', 'A'):
                 order = 'C'
             # ...
-
+        #Verify memory location
+        if memory_location not in ('host', 'device', 'managed'):
+            raise ValueError("memory_location must be 'host', 'device' or 'managed'")
         self._arg   = arg
         self._shape = shape
         self._rank  = rank
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        self.memory_location = memory_location
         super().__init__()
 
     def __str__(self):

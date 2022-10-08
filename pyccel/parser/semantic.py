@@ -493,7 +493,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, CudaNewArray):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['memory_location'] = 'managed'
+            d_var['memory_location'] = expr.memory_location
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -852,7 +852,7 @@ class SemanticParser(BasicParser):
                 self._check_argument_compatibility(new_expr.args, func.arguments,
                         expr, func.is_elemental)
             return new_expr
-    
+
     def _handle_kernel(self, expr, func, args, **settings):
         """
         Create a FunctionCall or an instance of a PyccelInternalFunction
@@ -1890,8 +1890,7 @@ class SemanticParser(BasicParser):
         return var
 
 
-    def _visit_DottedName(self, expr, **settings):
-        
+    def _visit_DottedName(self, expr, **settings): 
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
