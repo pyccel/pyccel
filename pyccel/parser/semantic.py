@@ -2172,7 +2172,7 @@ class SemanticParser(BasicParser):
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
-        if func and func.scope:
+        if isinstance(func, FunctionDef) and func.scope:
             args = [a if a.keyword is None else \
                     FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
                     for a in args]
