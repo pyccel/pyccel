@@ -258,6 +258,10 @@ int compare(t_list *list, int i1, int i2)
                 return *((int32_t *)GET_INDEX(list, i1)) - *((int32_t *)GET_INDEX(list, i2));
             case lst_int64:
                 return *((int64_t *)GET_INDEX(list, i1)) - *((int64_t *)GET_INDEX(list, i2));
+            case lst_float:
+                return *((float *)GET_INDEX(list, i1)) - *((float *)GET_INDEX(list, i2));
+            case lst_double:
+                return *((double *)GET_INDEX(list, i1)) - *((double *)GET_INDEX(list, i2));
         }
     }
 
@@ -283,6 +287,12 @@ int compare(t_list *list, int i1, int i2)
                 break ;
             case lst_int64:
                 cmp = ((int64_t *)group_1)[i] - ((int64_t *)group_2)[i];
+                break ;
+            case lst_float:
+                cmp = ((float *)group_1)[i] - ((float *)group_2)[i];
+                break ;
+            case lst_double:
+                cmp = ((double *)group_1)[i] - ((double *)group_2)[i];
                 break ;
         }
     }
