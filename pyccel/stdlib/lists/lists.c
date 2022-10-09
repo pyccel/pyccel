@@ -12,12 +12,10 @@ t_list   *allocate_list(size_t size, t_type type, void *elemnts) // va_arg could
     list->capacity = DEFAULT_CAP;
     while (list->capacity <= list->size)
         list->capacity *= 2;
-    if (list->size == 0)
-        list->elements = NULL;
-    else if (!(list->elements = malloc(list->capacity * tSizes[type])))
+    if (!(list->elements = malloc(list->capacity)))
         return NULL;
     if (elemnts)
-        memcpy(list->elements, elemnts, tSizes[type] * list->size);
+        memcpy(list->elements, elemnts, list->size);
     return list;
 }
 
