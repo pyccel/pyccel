@@ -196,64 +196,130 @@ void*   array_subscripting(t_list *list, size_t index)
 
 // Sorting ////////////////////////////
 
-size_t get_total_length(t_list *list)
+void set_length_and_type(t_list *list, size_t *len, int8_t *type)
 {
-    size_t size;
+    t_list *tmp;
 
-    size = list->size / tSizes[list->type];
-    while (list->type == lst_list)
+    tmp = list;
+    *len = tmp->size / tSizes[tmp->type];
+    while (tmp->type == lst_list)
     {
-        list = (t_list *)(((int8_t *)list->elements)[0]);
-        size *= list->size;
+        tmp = ((t_list **)(tmp->elements))[0];
+        *len *= tmp->size / tSizes[tmp->type];
     }
-    return size;
+    *type = tmp->type;
 }
 
-int8_t *group_node_items(t_list *list, int i)
+size_t collect_data(t_list *list, int8_t *group, size_t offset)
+{
+    size_t length;
+
+    length = list->size / tSizes[list->type];
+    if (list->type == lst_list)
+    {
+        for (size_t i = 0; i < length; i++)
+            offset += collect_data(((t_list **)list->elements)[i], group, offset);
+    }
+    else
+    {
+        memcpy(group + offset*tSizes[list->type], list->elements, list->size);
+        offset += length;
+    }
+    return (offset);
+}
+
+int8_t *group_node_items(t_list *list, size_t *len, int8_t *type)
 {
     int8_t *group;
 
-    group = (int8_t *)malloc(get_total_length(list) * tSizes[list->type]);
-    
+    set_length_and_type(list, len, type);
+    group = (int8_t *)malloc(*len * tSizes[*type]);
+    collect_data(list, group, 0);
+    return (group);
 }
 
 int compare(t_list *list, int i1, int i2)
 {
-    int8_t group_1;
-    int8_t group_2;
+    int8_t *group_1;
+    int8_t *group_2;
+    int cmp;
+    size_t len;
+    int8_t type;
 
-    group_1 = group_node_items(list, i1);
-    group_2 = group_node_items(list, i2);
-    return 0;
+    if (list->type != lst_list)
+    {
+        switch (list->type)
+        {
+            case lst_int8:
+                return *((int8_t *)GET_INDEX(list, i1)) - *((int8_t *)GET_INDEX(list, i2));
+            case lst_int16:
+                return *((int16_t *)GET_INDEX(list, i1)) - *((int16_t *)GET_INDEX(list, i2));
+            case lst_int32:
+                return *((int32_t *)GET_INDEX(list, i1)) - *((int32_t *)GET_INDEX(list, i2));
+            case lst_int64:
+                return *((int64_t *)GET_INDEX(list, i1)) - *((int64_t *)GET_INDEX(list, i2));
+        }
+    }
+
+    cmp = 0;
+    len = 0;
+    type = 0;
+
+    group_1 = group_node_items(((t_list **)list->elements)[i1], &len, &type);
+    group_2 = group_node_items(((t_list **)list->elements)[i2], &len, &type);
+
+    for (size_t i = 0; i < len && cmp == 0; i++)
+    {
+        switch (type)
+        {
+            case lst_int8:
+                cmp = ((int8_t *)group_1)[i] - ((int8_t *)group_2)[i];
+                break ;
+            case lst_int16:
+                cmp = ((int16_t *)group_1)[i] - ((int16_t *)group_2)[i];
+                break ;
+            case lst_int32:
+                cmp = ((int32_t *)group_1)[i] - ((int32_t *)group_2)[i];
+                break ;
+            case lst_int64:
+                cmp = ((int64_t *)group_1)[i] - ((int64_t *)group_2)[i];
+                break ;
+        }
+    }
+    free(group_1);
+    free(group_2);
+    return cmp;
 }
 
 int partition(t_list *list, int p, int r)
 {
     int i;
-    int8_t *elements;
-    int8_t *tmp;
-    size_t step;
+    void *elements;
+    int8_t tmp[64];
+    size_t size;
 
-    elements = (int8_t *)list->elements;
-    step = tSizes[list->type];
+    elements = list->elements;
+    size = tSizes[list->type];
     i = p - 1;
-    for (int j = p; j < r - 1; j++)
+    for (int j = p; j < r; j++)
     {
         if (compare(list, j, r) <= 0)
         {
             i++;
-            tmp = elements[i*step];
-            elements[i*step] = elements[j*step];
-            elements[j] = tmp;
+            memcpy(tmp, elements + i*size, size);
+            memcpy(elements + i*size, elements + j*size, size);
+            memcpy(elements + j*size, tmp, size);
+            memset(tmp, 0, sizeof(tmp));
         }
     }
-    tmp = elements[(i+1)*step];
-    elements[(i+1)*step] = elements[r*step];
-    elements[r*step] = tmp;
+    memcpy(tmp, elements + (i+1)*size, size);
+    memcpy(elements + (i+1)*size, elements + r*size, size);
+    memcpy(elements + r*size, tmp, size);
+    memset(tmp, 0, sizeof(tmp));
     return i+1;
 }
 
-void quicksort(t_list *list, size_t p, size_t r)
+void quicksort(t_list *list, int p, int r)
 {
     int q;
 
@@ -267,7 +333,51 @@ void quicksort(t_list *list, size_t p, size_t r)
 
 void sort(t_list *list)
 {
-    quicksort(list, 0, list->size / list->type);
+    int8_t tmp[64] = {0};
+    size_t len;
+    size_t size;
+
+    size = tSizes[list->type];
+    len = list->size / size;
+    if (len == 2 && compare(list, 0, 1) > 0)
+    {
+        memcpy(tmp, list->elements, size);
+        memcpy(list->elements, list->elements + size, size);
+        memcpy(list->elements + size, tmp, size);
+    }
+    else if (len > 2)
+        quicksort(list, 0, (list->size / tSizes[list->type]) - 1);
 }
 
 ///////////////////////////////////////
+
+void print_list(t_list *list, int newline)
+{
+    printf("[");
+    if (list->type == lst_list)
+    {
+        for (int i = 0; i < list->size / tSizes[list->type]; i++)
+        {
+            print_list(((t_list **)list->elements)[i], 0);
+            if (i+1 < list->size / tSizes[list->type])
+                printf(", ");
+        }
+    }
+    else
+    {
+        for (int i = 0; i < list->size / tSizes[list->type]; i++)
+        {
+            switch(list->type)
+            {
+                case lst_int32:
+                    printf("%d", *(int32_t *)GET_INDEX(list, i));
+                    break;
+            }
+            if (i+1 < list->size / tSizes[list->type])
+                printf(", ");
+        }
+    }
+    printf("]");
+    if (newline)
+        printf("\n");
+}
