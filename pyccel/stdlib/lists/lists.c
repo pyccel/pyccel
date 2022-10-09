@@ -1,15 +1,5 @@
 #include "lists.h"
-
-int tSizes[8] = {
-            1,
-            sizeof(int8_t), 
-            sizeof(int16_t), 
-            sizeof(int32_t), 
-            sizeof(int64_t), 
-            sizeof(float), 
-            sizeof(double), 
-            sizeof(void *)
-};
+#include <stdio.h>
 
 t_list   *allocate_list(size_t size, t_type type, void *elemnts) // va_arg could alow us to take in multiple list of elements
 {
