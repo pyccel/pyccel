@@ -57,5 +57,5 @@ void    reverse(t_list* list);
 void    sort(t_list *list);
 int     default_cmp_func(void* item1, void* item2, t_type type);
 void*   array_subscripting(t_list *list, size_t index);
-void    print_list(t_list *list, int newline);
+void    print_list(t_list* list, int newline);
 #endif
