@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define GET_INDEX(list, i) (list->elements + (i * tSizes[list->type]))
+
 // typedef enum e_type t_type;
 
 typedef enum    e_type
@@ -29,6 +31,17 @@ typedef struct  s_list
     size_t      size;
 }               t_list;
 
+static const int tSizes[8] = {
+            1,
+            sizeof(int8_t), 
+            sizeof(int16_t), 
+            sizeof(int32_t), 
+            sizeof(int64_t), 
+            sizeof(float), 
+            sizeof(double), 
+            sizeof(t_list *)
+};
+
 t_list  *allocate_list(size_t size, t_type type, void *elemnts);
 void    free_list(t_list **list);
 void    append(t_list** list1, t_list* list2);
@@ -44,5 +57,5 @@ void    reverse(t_list* list);
 void    sort(t_list *list);
 int     default_cmp_func(void* item1, void* item2, t_type type);
 void*   array_subscripting(t_list *list, size_t index);
-
+void    print_list(t_list *list, int newline);
 #endif
