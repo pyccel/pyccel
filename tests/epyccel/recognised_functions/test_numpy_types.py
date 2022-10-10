@@ -12,6 +12,60 @@ from test_numpy_funcs import matching_types
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
+def test_numpy_scalar_addition_to_python_type(language):
+
+    @types('int8','int')
+    @types('int16','int')
+    @types('int32','int')
+    @types('int64','int')
+    @types('float32','int')
+    @types('float64','int')
+    def add_numpy_to_pure_type(numpy_scalar, python_scalar):
+        result = numpy_scalar + python_scalar
+        return result
+
+    integer         = randint(min_int8, max_int8, dtype=np.int8)
+    integer8    = randint(min_int8, max_int8, dtype=np.int8)
+    integer16   = randint(min_int16, max_int16, dtype=np.int16)
+    integer32   = randint(min_int32, max_int32, dtype=np.int32)
+    integer64   = randint(min_int64, max_int64, dtype=np.int64)
+    fl32        = uniform(min_float32 / 2, max_float32 / 2)
+    fl32        = np.float32(fl32)
+    fl64        = uniform(min_float64 / 2, max_float64 / 2)
+    fl64        = np.float64(fl64)
+
+    epyccel_func = epyccel(add_numpy_to_pure_type, language=language)
+
+    int_pyccel_result = epyccel_func(integer8, integer)
+    int_python_result = add_numpy_to_pure_type(integer8, integer)
+    assert int_pyccel_result == int_python_result
+    assert matching_types(int_pyccel_result, int_python_result)
+
+    int_pyccel_result = epyccel_func(integer16, integer)
+    int_python_result = add_numpy_to_pure_type(integer16, integer)
+    assert int_pyccel_result == int_python_result
+    assert matching_types(int_pyccel_result, int_python_result)
+
+    int_pyccel_result = epyccel_func(integer32, integer)
+    int_python_result = add_numpy_to_pure_type(integer32, integer)
+    assert int_pyccel_result == int_python_result
+    assert matching_types(int_pyccel_result, int_python_result)
+
+    int_pyccel_result = epyccel_func(integer64, integer)
+    int_python_result = add_numpy_to_pure_type(integer64, integer)
+    assert int_pyccel_result == int_python_result
+    assert matching_types(int_pyccel_result, int_python_result)
+
+    int_pyccel_result = epyccel_func(fl32, integer)
+    int_python_result = add_numpy_to_pure_type(fl32, integer)
+    assert int_pyccel_result == int_python_result
+    assert matching_types(int_pyccel_result, int_python_result)
+
+    int_pyccel_result = epyccel_func(fl64, integer)
+    int_python_result = add_numpy_to_pure_type(fl64, integer)
+    assert int_pyccel_result == int_python_result
+    assert matching_types(int_pyccel_result, int_python_result)
+
 def test_numpy_bool_scalar(language):
 
     @types('bool')
