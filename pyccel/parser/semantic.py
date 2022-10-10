@@ -852,7 +852,7 @@ class SemanticParser(BasicParser):
                 self._check_argument_compatibility(new_expr.args, func.arguments,
                         expr, func.is_elemental)
             return new_expr
-    
+
     def _handle_kernel(self, expr, func, args, **settings):
         """
         Create a FunctionCall or an instance of a PyccelInternalFunction
@@ -1891,7 +1891,6 @@ class SemanticParser(BasicParser):
 
 
     def _visit_DottedName(self, expr, **settings):
-        
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
