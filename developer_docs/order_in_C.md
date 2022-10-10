@@ -83,13 +83,13 @@ If we take the following 2D array as an example:
 with `array.rows = 2` and `array.columns = 3`  
 `GET_ELEMENT(arr, int32, 0, 1)` which is equivelant to `arr[0][1]` would return `2` no matter the `order`.  
 
-To loop efficiently in an (`order_c`) array, we would do this:
+To loop efficiently in an (`order_c`) array, we would do this:  
 ```c
 for (int i = 0; i < array.rows; ++i)
 {
   for (int j = 0; j < array.columns; ++j)
   {
-    printf("-%d-", GET_ELEMENT(array, int32, i, j);
+    GET_ELEMENT(array, int32, i, j) = ...;
   }
 }
 ```
@@ -101,11 +101,20 @@ for (int i = 0; i < array.columns; ++i)
 {
   for (int j = 0; j < array.rows; ++j)
   {
-    printf("-%d-", GET_ELEMENT(array, int32, j, i);
+    GET_ELEMENT(array, int32, j, i) = ...;
   }
 }
 ```
 
-### Ordering in Fortran
-// TODO
+## `order_c` array creation example
+ 
+## `order_f` array creation example
+this code:
+```python
 
+```
+
+
+
+examples
+indexing in fortran
