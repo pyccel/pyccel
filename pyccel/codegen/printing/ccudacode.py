@@ -311,7 +311,15 @@ class CcudaCodePrinter(CCodePrinter):
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
             arg_code = ', '.join(arg_code_list)
 
-        cuda_deco = "__global__ " if 'kernel' in expr.decorators else ''
+        print(expr.decorators, "These are the decorators for now")
+        # assuming there will only be one decorator defining host or gpu
+        print(expr.is_elemental, "this is the expr")
+        if 'device' in expr.decorators:
+            cuda_deco = "__device__"
+        elif 'kernel' in expr.decorators:
+            cuda_deco = "__global__"
+        else:
+            cuda_deco = ''
         if isinstance(expr, FunctionAddress):
             return '{}{}(*{})({})'.format(extern_word, ret_type, name, arg_code)
         else:

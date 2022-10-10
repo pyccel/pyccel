@@ -103,3 +103,6 @@ def allow_negative_index(f,*args):
 
 def kernel(f):
     return f
+
+def device(f):
+    return f
