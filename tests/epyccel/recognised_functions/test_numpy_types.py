@@ -21,14 +21,14 @@ def test_numpy_scalar_addition_to_python_type(language):
     @types('float32','int')
     @types('float64','int')
     def add_numpy_to_pure_type(numpy_scalar, python_scalar):
-        result = numpy_scalar + python_scalar
-        return result
+        rs = numpy_scalar + python_scalar
+        return rs
 
-    integer         = randint(min_int8, max_int8, dtype=np.int8)
-    integer8    = randint(min_int8, max_int8, dtype=np.int8)
-    integer16   = randint(min_int16, max_int16, dtype=np.int16)
-    integer32   = randint(min_int32, max_int32, dtype=np.int32)
-    integer64   = randint(min_int64, max_int64, dtype=np.int64)
+    integer     = randint(min_int8 // 2, max_int8 // 2)
+    integer8    = randint(min_int8 // 2, max_int8 // 2, dtype=np.int8)
+    integer16   = randint(min_int16 // 2, max_int16 // 2, dtype=np.int16)
+    integer32   = randint(min_int32 // 2, max_int32 // 2, dtype=np.int32)
+    integer64   = randint(min_int64 // 2, max_int64 // 2, dtype=np.int64)
     fl32        = uniform(min_float32 / 2, max_float32 / 2)
     fl32        = np.float32(fl32)
     fl64        = uniform(min_float64 / 2, max_float64 / 2)
