@@ -287,8 +287,16 @@ class CcudaCodePrinter(CCodePrinter):
         String
             Signature of the function
         """
-
+        # if a device function was used inside a host function (host space)
+            # a device function is a function with the device decorator
+            # a host function doesn't kernel/device decorator
+                # approach 1: check if host function calls device functions
+                # approach 2: check if device function is called from host function
         args = list(expr.arguments)
+        # print("expr.body", expr.body)
+        for i in expr.body._attribute_nodes:
+            print(i)
+        print("***********************************************************")
         extern_word = 'extern "C" '
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
@@ -311,9 +319,8 @@ class CcudaCodePrinter(CCodePrinter):
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
             arg_code = ', '.join(arg_code_list)
 
-        print(expr.decorators, "These are the decorators for now")
-        # assuming there will only be one decorator defining host or gpu
-        print(expr.is_elemental, "this is the expr")
+        if 'device' in expr.decorators and 'kernel' in expr.decorators:
+            raise NotImplementedError("Can't use both kernel and device decoratos") # must raise a diffrent error
         if 'device' in expr.decorators:
             cuda_deco = "__device__"
         elif 'kernel' in expr.decorators:

@@ -827,6 +827,9 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
+            if ('device' in func.decorators or 'kernel' in func.decorators)\
+            and ('device' not in self.scope.decorators and 'kernel' not in self.scope.decorators):
+                raise PyccelSemanticError("Cannot call GPU function from Host space.")
             if self._current_function == func.name:
                 if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
