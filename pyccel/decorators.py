@@ -22,6 +22,7 @@ __all__ = (
     'template',
     'types',
     'kernel',
+    'device'
 )
 
 def lambdify(f):
