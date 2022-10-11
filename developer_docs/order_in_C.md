@@ -109,16 +109,20 @@ for (int i = 0; i < array.columns; ++i)
 ## `order_c` array creation example
 
 To create an (`order_c`) `ndarray`, we simply copy the flattened data to our `ndarray`'s `raw_data`.  
+
 If the data is composed of literals only (ex: np.array([1, 2, 3])), a `array_dummy` is created, before copying it to our destination `ndarray`.  
 Example:  
+
 ```python
 if __name__ == "__main__":
   import numpy as np
   a = np.array([[1, 2, 3], [4, 5, 6]])
-```
-Would translate to:
+```  
+
+Would translate to:  
+
 ```c
-int main()// Creation of an array_dummy containing the literals
+int main()
 {
     t_ndarray a = {.shape = NULL};
     a = array_create(2, (int64_t[]){2, 3}, nd_int64, false, order_c);
@@ -130,7 +134,7 @@ int main()// Creation of an array_dummy containing the literals
 }
 ```  
   
-If the data is composed of at least one variable array, we would use a series of copy operations to our `ndarray`.
+If the data is composed of at least one variable array, we would use a series of copy operations to our `ndarray`.  
 Example:
 ```python
 if __name__ == "__main__":
@@ -138,8 +142,10 @@ if __name__ == "__main__":
   a = np.array([1, 2, 3])
   b = np.array([4, 5, 6])
   c = np.array([a, [7, 8, 9], b])
-```
-Would translate to this (focus on `c` creation):
+```  
+
+Would translate to this (focus on `c` creation):  
+
 ```c
 int main()
 {
