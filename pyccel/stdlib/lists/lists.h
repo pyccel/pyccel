@@ -42,16 +42,24 @@ static const int tSizes[8] = {
             sizeof(t_list *)
 };
 
+typedef struct s_pop_ret
+{
+    char *raw;
+    t_type type;
+}               t_pop_ret;
+
 t_list  *allocate_list(size_t size, t_type type, void *elemnts);
 void    free_list(t_list **list);
-void    append(t_list** list1, t_list* list2);
+void    free_pop(t_pop_ret** pop_val);
+size_t  calculate_index(long int index, size_t size);
+void    extend(t_list* list1, t_list* list2);
 void    clear(t_list* list);
 t_list* copy(t_list* list);
 size_t  count(t_list* list, void *item);
-void    extend(t_list** list, void* item);
+void    append(t_list* list, void* item);
 int     lst_index(t_list* list, void* item);
-void    insert(t_list** list, size_t index, void* item);
-void    pop(t_list* list, size_t index);
+void    insert(t_list* list, long int index, void* item);
+void    *pop(t_list* list, long int index);
 void    lst_remove(t_list* list, void* value);
 void    reverse(t_list* list);
 void    sort(t_list *list);
