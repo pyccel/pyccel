@@ -27,7 +27,7 @@ if __name__ == "__main__":
  ```
 This python program will output `[1 2 3 4 5 6 7 8 9]`, notice that the rows are stored one after the other.
 
-### printing and indexing in `numpy`
+### Printing and indexing in `numpy`
 
 `order` in `numpy` doesn't not affect the indexing or the printing, unlike `transposing`, the `shape` of the array remains the same, only the `strides` change, example:
 ```python
@@ -135,7 +135,9 @@ int main()
 ```  
   
 If the data is composed of at least one variable array, we would use a series of copy operations to our `ndarray`.  
-Example:
+
+Example:  
+
 ```python
 if __name__ == "__main__":
   import numpy as np
@@ -174,14 +176,87 @@ int main()
     free_array(c);
     return 0;
 }
-```
-
+```  
 
 ## `order_f` array creation example
-this code:
-```python
 
+For (`order_f`), the process is similar to (`order_c`), but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, then after finishing the copy operations, we copy a transposed version of `temp_ndarray` to our destination `ndarray`.  
+
+Example:
+
+```python
+if __name__ == "__main__":
+  import numpy as np
+  a = np.array([[1, 2, 3], [4, 5, 6]], order="F")
+  print(a[0][0]) output ==> 1
+```  
+
+Would be translated to this:  
+
+```c
+int main()
+{
+    t_ndarray a = {.shape = NULL};
+    a = array_create(2, (int64_t[]){2, 3}, nd_int64, false, order_f); // Allocation the required ndarray
+    t_ndarray temp_array = {.shape = NULL};
+    temp_array = array_create(2, (int64_t[]){2, 3}, nd_int64, false, order_c); // Allocating an order_c temp_array
+    int64_t array_dummy[] = {1, 2, 3, 4, 5, 6}; // array_dummy with our flattened data
+    memcpy(temp_array.nd_int64 + (temp_array.current_length) , array_dummy, 6 * temp_array.type_size); // Copying our array_dummy to our temp ndarray
+    temp_array.current_length += 6; // Usless in this situation
+    array_copy_data(&a, temp_array); // Copying/Transposing temp_array to the required ndarray
+    free_array(temp_array); // Freeing the temp_array right after we were done with it
+    printf("%ld\n", GET_ELEMENT(a, nd_int64, (int64_t)0, (int64_t)0)); // output ==> 1
+    free_array(a);
+    return 0;
+}
 ```
 
+If the data is composed of at least one variable array, the process would still be somewhat the same as an (`order_c`) ndarray creation, with the only changes being: the creation of a `temp_array` and the transpose/copy like operation at the end.  
+
+Example:  
+
+```python
+if __name__ == "__main__":
+  import numpy as np
+  a = np.array([1, 2, 3])
+  b = np.array([4, 5, 6])
+  c = np.array([a, [7, 8, 9], b], order="F")
+``` 
+
+Would be translated to (focus on `c` `ndarray` creation):
+
+```c
+int main()
+{
+    t_ndarray a = {.shape = NULL};
+    t_ndarray b = {.shape = NULL};
+    t_ndarray c = {.shape = NULL};
+    a = array_create(1, (int64_t[]){3}, nd_int64, false, order_c);
+    int64_t array_dummy[] = {1, 2, 3};
+    memcpy(a.nd_int64 + (a.current_length) , array_dummy, 3 * a.type_size);
+    a.current_length += 3;
+    b = array_create(1, (int64_t[]){3}, nd_int64, false, order_c);
+    int64_t array_dummy_0001[] = {4, 5, 6};
+    memcpy(b.nd_int64 + (b.current_length) , array_dummy_0001, 3 * b.type_size);
+    b.current_length += 3;
+    
+    // 'c' ndarray creation
+    
+    c = array_create(2, (int64_t[]){3, 3}, nd_int64, false, order_f); // Allocating the required ndarray (order_f)
+    t_ndarray temp_array = {.shape = NULL};
+    temp_array = array_create(2, (int64_t[]){3, 3}, nd_int64, false, order_c); // Allocating a temp_array (order_c)
+    array_copy_data(&temp_array, a); // Copying the first element to temp_array
+    int64_t array_dummy_0002[] = {7, 8, 9};
+    memcpy(temp_array.nd_int64 + (temp_array.current_length) , array_dummy_0002, 3 * temp_array.type_size); // Copying the second element to temp_array
+    temp_array.current_length += 3;
+    array_copy_data(&temp_array, b); // Copying the third element to temp_array
+    array_copy_data(&c, temp_array); // Copying and transposing our temp_array to the requied ndarray 'c'
+    free_array(temp_array); // freeing the temp_array
+    free_array(a);
+    free_array(b);
+    free_array(c);
+    return 0;
+}
+```
 
 // TODO: alternative to current_length, use memcpy directly for order_c, array_copy_data should only be used when trying to transpose for now
