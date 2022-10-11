@@ -228,12 +228,11 @@ size_t collect_data(t_list *list, int8_t *group, size_t offset)
     return (offset);
 }
 
-int8_t *group_node_items(t_list *list, size_t *len, int8_t *type)
+int8_t *group_node_items(t_list *list, size_t len, int8_t type)
 {
     int8_t *group;
 
-    set_length_and_type(list, len, type);
-    group = (int8_t *)malloc(*len * tSizes[*type]);
+    group = (int8_t *)malloc(len * tSizes[type]);
     collect_data(list, group, 0);
     return (group);
 }
@@ -268,9 +267,9 @@ int compare(t_list *list, int i1, int i2)
     cmp = 0;
     len = 0;
     type = 0;
-
-    group_1 = group_node_items(((t_list **)list->elements)[i1], &len, &type);
-    group_2 = group_node_items(((t_list **)list->elements)[i2], &len, &type);
+    set_length_and_type(((t_list **)list->elements)[0], &len, &type);
+    group_1 = group_node_items(((t_list **)list->elements)[i1], len, type);
+    group_2 = group_node_items(((t_list **)list->elements)[i2], len, type);
 
     for (size_t i = 0; i < len && cmp == 0; i++)
     {
@@ -379,9 +378,17 @@ void print_list(t_list *list, int newline)
         {
             switch(list->type)
             {
+                case lst_int8:
+                case lst_int16:
                 case lst_int32:
-                    printf("%d", *(int32_t *)GET_INDEX(list, i));
+                case lst_int64:
+                    printf("%ld", *(int64_t *)GET_INDEX(list, i));
                     break;
+                case lst_float:
+                    printf("%f", *(float *)GET_INDEX(list, i));
+                    break;
+                case lst_double:
+                    printf("%lf", *(double *)GET_INDEX(list, i));
             }
             if (i+1 < list->size / tSizes[list->type])
                 printf(", ");
