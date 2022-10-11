@@ -9,8 +9,20 @@ from test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
 from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 from test_numpy_funcs import matching_types
 
-from pyccel.decorators import types
+from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="This behaviour is pecific to pyccel."),
+            pytest.mark.python]
+        )
+    )
+)
 
 def test_numpy_scalar_addition_to_python_type(language):
 
@@ -37,34 +49,23 @@ def test_numpy_scalar_addition_to_python_type(language):
     epyccel_func = epyccel(add_numpy_to_pure_type, language=language)
 
     int_pyccel_result = epyccel_func(integer8, integer)
-    int_python_result = add_numpy_to_pure_type(integer8, integer)
-    assert int_pyccel_result == int_python_result
-    assert matching_types(int_pyccel_result, int_python_result)
+
+    assert matching_types(int_pyccel_result, integer8)
 
     int_pyccel_result = epyccel_func(integer16, integer)
-    int_python_result = add_numpy_to_pure_type(integer16, integer)
-    assert int_pyccel_result == int_python_result
-    assert matching_types(int_pyccel_result, int_python_result)
+    assert matching_types(int_pyccel_result, integer16)
 
     int_pyccel_result = epyccel_func(integer32, integer)
-    int_python_result = add_numpy_to_pure_type(integer32, integer)
-    assert int_pyccel_result == int_python_result
-    assert matching_types(int_pyccel_result, int_python_result)
+    assert matching_types(int_pyccel_result, integer32)
 
     int_pyccel_result = epyccel_func(integer64, integer)
-    int_python_result = add_numpy_to_pure_type(integer64, integer)
-    assert int_pyccel_result == int_python_result
-    assert matching_types(int_pyccel_result, int_python_result)
+    assert matching_types(int_pyccel_result, integer64)
 
     int_pyccel_result = epyccel_func(fl32, integer)
-    int_python_result = add_numpy_to_pure_type(fl32, integer)
-    assert int_pyccel_result == int_python_result
-    assert matching_types(int_pyccel_result, int_python_result)
+    assert matching_types(int_pyccel_result, fl32)
 
     int_pyccel_result = epyccel_func(fl64, integer)
-    int_python_result = add_numpy_to_pure_type(fl64, integer)
-    assert int_pyccel_result == int_python_result
-    assert matching_types(int_pyccel_result, int_python_result)
+    assert matching_types(int_pyccel_result, fl64)
 
 def test_numpy_bool_scalar(language):
 
