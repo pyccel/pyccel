@@ -914,18 +914,41 @@ class FCodePrinter(CodePrinter):
 
         if not isinstance(expr.endpoint, LiteralFalse):
             lhs = expr.get_user_nodes(Assign)[0].lhs
+            if isinstance(lhs, IndexedElement):
+                print(lhs)
+                arr = lhs.base
+                indices = lhs.indices
+                print(indices[0])
+                print(indices[0].start)
+                print(indices[0].stop)
+                if expr.rank > 1:
+                    #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
+                    lhs_source = expr.get_user_nodes(Assign)[0].lhs
+                    lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+                    lhs = self._print(lhs_source)
+                else:
+                    #Since the expr.rank == 1, we modify the last element in the array.
+                    if indices[0].step:
+                        indx = IndexedElement(arr, PyccelMinus(indices[0].stop, PyccelMod(indices[0].stop, indices[0].step),
+                                                        simplify = True))
+                    else:
+                        indx = IndexedElement(arr, PyccelMinus(indices[0].stop, LiteralInteger(1),
+                                                        simplify = True))
+                    lhs = self._print(indx)
+                print(arr)
+                print(indices)
 
-
-            if expr.rank > 1:
-                #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
-                lhs_source = expr.get_user_nodes(Assign)[0].lhs
-                lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
-                lhs = self._print(lhs_source)
             else:
-                #Since the expr.rank == 1, we modify the last element in the array.
-                lhs = self._print(IndexedElement(lhs,
-                                                 PyccelMinus(expr.num, LiteralInteger(1),
-                                                 simplify = True)))
+                if expr.rank > 1:
+                    #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
+                    lhs_source = expr.get_user_nodes(Assign)[0].lhs
+                    lhs_source.substitute(expr.ind, PyccelMinus(expr.num, LiteralInteger(1), simplify = True))
+                    lhs = self._print(lhs_source)
+                else:
+                    #Since the expr.rank == 1, we modify the last element in the array.
+                    lhs = self._print(IndexedElement(lhs,
+                                                    PyccelMinus(expr.num, LiteralInteger(1),
+                                                    simplify = True)))
 
             if isinstance(expr.endpoint, LiteralTrue):
                 cond_template = lhs + ' = {stop}'
