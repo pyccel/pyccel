@@ -293,10 +293,6 @@ class CcudaCodePrinter(CCodePrinter):
                 # approach 1: check if host function calls device functions
                 # approach 2: check if device function is called from host function
         args = list(expr.arguments)
-        # print("expr.body", expr.body)
-        for i in expr.body._attribute_nodes:
-            print(i)
-        print("***********************************************************")
         extern_word = 'extern "C" '
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
@@ -320,7 +316,7 @@ class CcudaCodePrinter(CCodePrinter):
             arg_code = ', '.join(arg_code_list)
 
         if 'device' in expr.decorators and 'kernel' in expr.decorators:
-            raise NotImplementedError("Can't use both kernel and device decoratos") # must raise a diffrent error
+            raise Exception("Can't use both kernel and device decoratos")
         if 'device' in expr.decorators:
             cuda_deco = "__device__"
         elif 'kernel' in expr.decorators:
