@@ -107,7 +107,70 @@ for (int i = 0; i < array.columns; ++i)
 ```
 
 ## `order_c` array creation example
- 
+
+To create an (`order_c`) `ndarray`, we simply copy the flattened data to our `ndarray`'s `raw_data`.  
+If the data is composed of literals only (ex: np.array([1, 2, 3])), a `array_dummy` is created, before copying it to our destination `ndarray`.  
+Example:  
+```python
+if __name__ == "__main__":
+  import numpy as np
+  a = np.array([[1, 2, 3], [4, 5, 6]])
+```
+Would translate to:
+```c
+int main()// Creation of an array_dummy containing the literals
+{
+    t_ndarray a = {.shape = NULL};
+    a = array_create(2, (int64_t[]){2, 3}, nd_int64, false, order_c);
+    int64_t array_dummy[] = {1, 2, 3, 4, 5, 6}; // Creation of an array_dummy containing the literals, notice the data has been flattened
+    memcpy(a.nd_int64 + (a.current_length) , array_dummy, 6 * a.type_size); // Copying from array_dummy to our ndarray 'a'
+    a.current_length += 6; // Current length helps us when multiple copy operations are needed, it is useless in this example (is there a better way?)
+    free_array(a);
+    return 0;
+}
+```  
+  
+If the data is composed of at least one variable array, we would use a series of copy operations to our `ndarray`.
+Example:
+```python
+if __name__ == "__main__":
+  import numpy as np
+  a = np.array([1, 2, 3])
+  b = np.array([4, 5, 6])
+  c = np.array([a, [7, 8, 9], b])
+```
+Would translate to this (focus on `c` creation):
+```c
+int main()
+{
+    t_ndarray a = {.shape = NULL};
+    t_ndarray b = {.shape = NULL};
+    t_ndarray c = {.shape = NULL};
+    a = array_create(1, (int64_t[]){3}, nd_int64, false, order_c);
+    int64_t array_dummy[] = {1, 2, 3};
+    memcpy(a.nd_int64 + (a.current_length) , array_dummy, 3 * a.type_size);
+    a.current_length += 3;
+    b = array_create(1, (int64_t[]){3}, nd_int64, false, order_c);
+    int64_t array_dummy_0001[] = {4, 5, 6};
+    memcpy(b.nd_int64 + (b.current_length) , array_dummy_0001, 3 * b.type_size);
+    b.current_length += 3;
+    
+    // 'c' ndarray creation starts here, 'c' is [a, [7, 8, 9], b]
+    
+    c = array_create(2, (int64_t[]){3, 3}, nd_int64, false, order_c); // Allocating 'c' ndarray
+    array_copy_data(&c, a); // Copying the first element of 'c'
+    int64_t array_dummy_0002[] = {7, 8, 9}; // Creating an array_dummy with 'c''s second element's literals ([7, 8, 9])
+    memcpy(c.nd_int64 + (c.current_length) , array_dummy_0002, 3 * c.type_size); // Copying the second element to 'c' ndarray, using 'current_length' as an offset
+    c.current_length += 3; // Incrementing 'current_length' to use as an offset
+    array_copy_data(&c, b); // Copying the third element to 'c' ndarray
+    free_array(a);
+    free_array(b);
+    free_array(c);
+    return 0;
+}
+```
+
+
 ## `order_f` array creation example
 this code:
 ```python
@@ -115,6 +178,4 @@ this code:
 ```
 
 
-
-examples
-indexing in fortran
+// TODO: alternative to current_length, use memcpy directly for order_c, array_copy_data should only be used when trying to transpose for now
