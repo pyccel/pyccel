@@ -918,9 +918,9 @@ class FCodePrinter(CodePrinter):
                 print(lhs)
                 arr = lhs.base
                 indices = lhs.indices
-                print(indices[0])
-                print(indices[0].start)
-                print(indices[0].stop)
+                # print(indices[0])
+                # print(indices[0].start)
+                # print(indices[0].stop)
                 if expr.rank > 1:
                     #expr.rank > 1, we need to replace the last index of the loop with the last index of the array.
                     lhs_source = expr.get_user_nodes(Assign)[0].lhs
