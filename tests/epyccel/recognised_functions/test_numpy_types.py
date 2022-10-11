@@ -12,60 +12,117 @@ from test_numpy_funcs import matching_types
 from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.skip(reason="This behaviour is pecific to pyccel."),
-            pytest.mark.python]
-        )
-    )
-)
+def test_mult_numpy_python_type(language):
 
-def test_numpy_scalar_addition_to_python_type(language):
+    def mult_on_array_int8():
+        import numpy as np
+        a = np.ones(5, dtype=np.int8)
+        b = a * 2
+        return b[0]
 
-    @types('int8','int')
-    @types('int16','int')
-    @types('int32','int')
-    @types('int64','int')
-    @types('float32','int')
-    @types('float64','int')
-    def add_numpy_to_pure_type(numpy_scalar, python_scalar):
-        rs = numpy_scalar + python_scalar
+    def mult_on_array_int16():
+        import numpy as np
+        a = np.ones(5, dtype=np.int16)
+        b = a * 2
+        return b[0]
+
+    def mult_on_array_int32():
+        import numpy as np
+        a = np.ones(5, dtype=np.int32)
+        b = a * 2
+        return b[0]
+
+    def mult_on_array_int64():
+        import numpy as np
+        a = np.ones(5, dtype=np.int64)
+        b = a * 2
+        return b[0]
+
+    def mult_on_array_float32():
+        import numpy as np
+        a = np.ones(5, dtype=np.float32)
+        b = a * 2
+        return b[0]
+
+    def mult_on_array_float64():
+        import numpy as np
+        a = np.ones(5, dtype=np.float64)
+        b = a * 2
+        return b[0]
+
+    epyccel_func = epyccel(mult_on_array_int8, language=language)
+    python_result = mult_on_array_int8()
+    pyccel_result = epyccel_func()
+    assert matching_types(pyccel_result, python_result)
+
+    epyccel_func = epyccel(mult_on_array_int16, language=language)
+    python_result = mult_on_array_int16()
+    pyccel_result = epyccel_func()
+    assert matching_types(pyccel_result, python_result)
+
+    epyccel_func = epyccel(mult_on_array_int32, language=language)
+    python_result = mult_on_array_int32()
+    pyccel_result = epyccel_func()
+    assert matching_types(pyccel_result, python_result)
+
+    epyccel_func = epyccel(mult_on_array_int64, language=language)
+    python_result = mult_on_array_int64()
+    pyccel_result = epyccel_func()
+    assert matching_types(pyccel_result, python_result)
+
+    epyccel_func = epyccel(mult_on_array_float32, language=language)
+    python_result = mult_on_array_float32()
+    pyccel_result = epyccel_func()
+    assert matching_types(pyccel_result, python_result)
+
+    epyccel_func = epyccel(mult_on_array_float64, language=language)
+    python_result = mult_on_array_float64()
+    pyccel_result = epyccel_func()
+    assert matching_types(pyccel_result, python_result)
+
+def test_numpy_scalar_promotion(language):
+
+    @types('T', 'D')
+    @template(name='T', types=['int32', 'int64', 'float32', 'float64', 'complex64', 'complex128'])
+    @template(name='D', types=['int32', 'int64', 'float32', 'float64', 'complex64', 'complex128'])
+    def add_numpy_to_numpy_type(np_s_l, np_s_r):
+        rs = np_s_l + np_s_r
         return rs
 
-    integer     = randint(min_int8 // 2, max_int8 // 2)
-    integer8    = randint(min_int8 // 2, max_int8 // 2, dtype=np.int8)
-    integer16   = randint(min_int16 // 2, max_int16 // 2, dtype=np.int16)
     integer32   = randint(min_int32 // 2, max_int32 // 2, dtype=np.int32)
     integer64   = randint(min_int64 // 2, max_int64 // 2, dtype=np.int64)
-    fl32        = uniform(min_float32 / 2, max_float32 / 2)
-    fl32        = np.float32(fl32)
-    fl64        = uniform(min_float64 / 2, max_float64 / 2)
-    fl64        = np.float64(fl64)
+    fl32        = np.float32(uniform(min_float32 / 2, max_float32 / 2))
+    fl64        = np.float64(uniform(min_float64 / 2, max_float64 / 2))
+    complex64   = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
+    complex128  = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
 
-    epyccel_func = epyccel(add_numpy_to_pure_type, language=language)
+    epyccel_func    = epyccel(add_numpy_to_numpy_type, language=language)
 
-    int_pyccel_result = epyccel_func(integer8, integer)
+    pyccel_result   = epyccel_func(integer32, integer64)
+    python_result   = add_numpy_to_numpy_type(integer32, integer64)
 
-    assert matching_types(int_pyccel_result, integer8)
+    assert pyccel_result == python_result
+    assert isinstance(pyccel_result, type(python_result))
 
-    int_pyccel_result = epyccel_func(integer16, integer)
-    assert matching_types(int_pyccel_result, integer16)
+    pyccel_result = epyccel_func(integer64, fl32)
+    python_result = add_numpy_to_numpy_type(integer64, fl32)
+    assert pyccel_result == python_result
+    assert isinstance(pyccel_result, type(python_result))
 
-    int_pyccel_result = epyccel_func(integer32, integer)
-    assert matching_types(int_pyccel_result, integer32)
+    pyccel_result = epyccel_func(integer64, fl64)
+    python_result = add_numpy_to_numpy_type(integer64, fl64)
+    assert pyccel_result == python_result
+    assert isinstance(pyccel_result, type(python_result))
 
-    int_pyccel_result = epyccel_func(integer64, integer)
-    assert matching_types(int_pyccel_result, integer64)
+    pyccel_result = epyccel_func(fl64, complex64)
+    python_result = add_numpy_to_numpy_type(fl64, complex64)
+    assert pyccel_result == python_result
+    assert isinstance(pyccel_result, type(python_result))
 
-    int_pyccel_result = epyccel_func(fl32, integer)
-    assert matching_types(int_pyccel_result, fl32)
-
-    int_pyccel_result = epyccel_func(fl64, integer)
-    assert matching_types(int_pyccel_result, fl64)
+    pyccel_result = epyccel_func(complex128, fl64)
+    python_result = add_numpy_to_numpy_type(complex128, fl64)
+    assert pyccel_result == python_result
+    assert isinstance(pyccel_result, type(python_result))
 
 def test_numpy_bool_scalar(language):
 
