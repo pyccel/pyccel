@@ -1,6 +1,4 @@
 #include "lists.h"
-#include <stdio.h>
-
 
 t_list   *allocate_list(size_t size, t_type type, void *elemnts) // va_arg could alow us to take in multiple list of elements
 {
@@ -278,6 +276,9 @@ int compare(t_list *list, int i1, int i2)
                 return *((float *)GET_INDEX(list, i1)) - *((float *)GET_INDEX(list, i2));
             case lst_double:
                 return *((double *)GET_INDEX(list, i1)) - *((double *)GET_INDEX(list, i2));
+            case lst_complex:
+                fprintf(stderr, "Ordering of complex numbers is not supported.");
+                exit(-1);
         }
     }
 
@@ -310,6 +311,9 @@ int compare(t_list *list, int i1, int i2)
             case lst_double:
                 cmp = ((double *)group_1)[i] - ((double *)group_2)[i];
                 break ;
+            case lst_complex:
+                fprintf(stderr, "Ordering of complex numbers is not supported.");
+                exit(-1);
         }
     }
 
@@ -416,6 +420,11 @@ void print_list(t_list *list, int newline)
                     break;
                 case lst_double:
                     printf("%lf", *(double *)GET_INDEX(list, i));
+                    break;
+                case lst_complex:
+                    double real = creal(*(complex *)GET_INDEX(list, i));
+                    double imag = cimag(*(complex *)GET_INDEX(list, i));
+                    printf("%lf%s%lfj", real, imag >= 0 ? "+" : "", imag);
                     break;
             }
             if (i+1 < list->size)

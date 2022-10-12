@@ -3,9 +3,12 @@
 #define _LISTS_
 #define DEFAULT_CAP 10
 
+#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <complex.h>
+#include <signal.h>
 
 #define GET_INDEX(list, i) (list->elements + (i * tSizes[list->type]))
 
@@ -20,6 +23,7 @@ typedef enum    e_type
     lst_int64   ,
     lst_float   ,
     lst_double  ,
+    lst_complex ,
     lst_list
 }       t_type;
 
@@ -31,7 +35,7 @@ typedef struct  s_list
     size_t      size;
 }               t_list;
 
-static const int tSizes[8] = {
+static const int tSizes[9] = {
             1,
             sizeof(int8_t), 
             sizeof(int16_t), 
@@ -39,6 +43,7 @@ static const int tSizes[8] = {
             sizeof(int64_t), 
             sizeof(float), 
             sizeof(double), 
+            sizeof(complex),
             sizeof(t_list *)
 };
 
