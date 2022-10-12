@@ -65,6 +65,13 @@ enum e_types
         #endif
 };
 
+enum e_memory_locations
+{
+        managed = 0,
+        host    = 1,
+        device  = 2
+}
+
 typedef struct  s_ndarray
 {
     /* raw data buffer*/
