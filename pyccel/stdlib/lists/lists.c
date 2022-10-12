@@ -221,29 +221,26 @@ void set_length_and_type(t_list *list, size_t *len, int8_t *type)
     t_list *tmp;
 
     tmp = list;
-    *len = tmp->size / tSizes[tmp->type];
+    *len = tmp->size;
     while (tmp->type == lst_list)
     {
         tmp = ((t_list **)(tmp->elements))[0];
-        *len *= tmp->size / tSizes[tmp->type];
+        *len *= tmp->size;
     }
     *type = tmp->type;
 }
 
 size_t collect_data(t_list *list, int8_t *group, size_t offset)
 {
-    size_t length;
-
-    length = list->size / tSizes[list->type];
     if (list->type == lst_list)
     {
-        for (size_t i = 0; i < length; i++)
+        for (size_t i = 0; i < list->size; i++)
             offset += collect_data(((t_list **)list->elements)[i], group, offset);
     }
     else
     {
         memcpy(group + offset*tSizes[list->type], list->elements, list->size);
-        offset += length;
+        offset += list->size;
     }
     return (offset);
 }
@@ -261,9 +258,9 @@ int compare(t_list *list, int i1, int i2)
 {
     int8_t *group_1;
     int8_t *group_2;
-    int cmp;
-    size_t len;
     int8_t type;
+    size_t len;
+    int cmp;
 
     if (list->type != lst_list)
     {
@@ -315,6 +312,7 @@ int compare(t_list *list, int i1, int i2)
                 break ;
         }
     }
+
     free(group_1);
     free(group_2);
     return cmp;
@@ -363,19 +361,19 @@ void quicksort(t_list *list, int p, int r)
 void sort(t_list *list)
 {
     int8_t tmp[64] = {0};
+    size_t tsize;
     size_t len;
-    size_t size;
 
-    size = tSizes[list->type];
-    len = list->size / size;
+    tsize = tSizes[list->type];
+    len = list->size;
     if (len == 2 && compare(list, 0, 1) > 0)
     {
-        memcpy(tmp, list->elements, size);
-        memcpy(list->elements, list->elements + size, size);
-        memcpy(list->elements + size, tmp, size);
+        memcpy(tmp, list->elements, tsize);
+        memcpy(list->elements, list->elements + tsize, tsize);
+        memcpy(list->elements + tsize, tmp, tsize);
     }
     else if (len > 2)
-        quicksort(list, 0, (list->size / tSizes[list->type]) - 1);
+        quicksort(list, 0, list->size - 1);
 }
 
 ///////////////////////////////////////
@@ -385,22 +383,28 @@ void print_list(t_list *list, int newline)
     printf("[");
     if (list->type == lst_list)
     {
-        for (int i = 0; i < list->size / tSizes[list->type]; i++)
+        for (int i = 0; i < list->size; i++)
         {
             print_list(((t_list **)list->elements)[i], 0);
-            if (i+1 < list->size / tSizes[list->type])
+            if (i+1 < list->size)
                 printf(", ");
         }
     }
     else
     {
-        for (int i = 0; i < list->size / tSizes[list->type]; i++)
+        for (int i = 0; i < list->size; i++)
         {
             switch(list->type)
             {
                 case lst_int8:
+                    printf("%hhd", *(int8_t *)GET_INDEX(list, i));
+                    break;
                 case lst_int16:
+                    printf("%hd", *(int16_t *)GET_INDEX(list, i));
+                    break;
                 case lst_int32:
+                    printf("%d", *(int32_t *)GET_INDEX(list, i));
+                    break;
                 case lst_int64:
                     printf("%ld", *(int64_t *)GET_INDEX(list, i));
                     break;
@@ -409,8 +413,9 @@ void print_list(t_list *list, int newline)
                     break;
                 case lst_double:
                     printf("%lf", *(double *)GET_INDEX(list, i));
+                    break;
             }
-            if (i+1 < list->size / tSizes[list->type])
+            if (i+1 < list->size)
                 printf(", ");
         }
     }
