@@ -139,7 +139,7 @@ void     insert(t_list* list, long int index, void* item)
     list->size = totalSize; 
 }
 
-void    *pop(t_list* list, long int index)
+t_pop_ret   *pop(t_list* list, long int index)
 {
 
     size_t tsize = tSizes[list->type];
@@ -151,11 +151,11 @@ void    *pop(t_list* list, long int index)
     {
         ret_val->type = list->type;
         if (list->type == lst_list)
-            ret_val->raw = ((t_list**)elements)[index];
+            ret_val->raw = (char *)((t_list**)elements)[index];
         else
         {
             ret_val->raw = malloc(list->type);
-            memcpy(ret_val->raw, elements[index * tsize], tsize);
+            memcpy(ret_val->raw, &elements[index * tsize], tsize);
         }
         memmove(&elements[index * tsize], &elements[(index + 1) * tsize], list->size - index);
         list->size -= 1;
@@ -181,8 +181,10 @@ void     lst_remove(t_list* list, void* item)
     t_pop_ret *ret;
 
     if ((index = lst_index(list, item)) != -1)
+    {
         ret = pop(list, (size_t)index);
-    free_pop(ret);
+        free_pop(&ret);
+    }
 }
 
 void     reverse(t_list* list)
