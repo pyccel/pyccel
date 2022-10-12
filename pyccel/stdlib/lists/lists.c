@@ -358,7 +358,7 @@ void quicksort(t_list *list, int p, int r)
     }
 }
 
-void sort(t_list *list)
+void sort(t_list *list, size_t rev)
 {
     int8_t tmp[64] = {0};
     size_t tsize;
@@ -374,6 +374,9 @@ void sort(t_list *list)
     }
     else if (len > 2)
         quicksort(list, 0, list->size - 1);
+
+    if (rev)
+        reverse(list);
 }
 
 ///////////////////////////////////////

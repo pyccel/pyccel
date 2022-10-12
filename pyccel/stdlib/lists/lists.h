@@ -62,7 +62,7 @@ void    insert(t_list* list, long int index, void* item);
 t_pop_ret *pop(t_list* list, long int index);
 void    lst_remove(t_list* list, void* value);
 void    reverse(t_list* list);
-void    sort(t_list *list);
+void    sort(t_list *list, size_t rev);
 int     default_cmp_func(void* item1, void* item2, t_type type);
 void*   array_subscripting(t_list *list, size_t index);
 void    print_list(t_list* list, int newline);
