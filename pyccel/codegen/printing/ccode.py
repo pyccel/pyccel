@@ -1268,6 +1268,12 @@ class CCodePrinter(CodePrinter):
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
 
     def _print_Allocate(self, expr):
+
+        # Code responsible for allocating lists
+        if expr.variable.cls_base.name == 'list':
+            return ""
+
+        # Code related to allocation of ndarrays
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
