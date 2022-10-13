@@ -33,6 +33,7 @@ internal_libs = {
     "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
     "numpy_f90"    : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
     "numpy_c"      : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
+    "lists"        : ("lists", CompileObj("lists.c",folder="lists"))
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
