@@ -293,7 +293,7 @@ def max_precision(objs : list, dtype = None, allow_native = True):
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
-        if any(o.is_ndarray for o in objs if o.precision != -1):
+        if any(getattr(o, 'is_ndarray', False) for o in objs):
             return get_final_precision(max(objs, key=attrgetter('precision')))
         else:
             return max(get_final_precision(o) for o in objs)
