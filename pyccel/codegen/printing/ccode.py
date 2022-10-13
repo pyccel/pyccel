@@ -1296,6 +1296,8 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
+        if expr.variable.cls_base.name == 'list':
+            return 'free_list({});\n'.format(self._print(ObjectAddress(expr.variable)))
         if expr.variable.is_alias:
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
