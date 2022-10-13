@@ -529,6 +529,24 @@ class CCodePrinter(CodePrinter):
 
     # ============ Elements ============ #
 
+    def _print_PythonList(self, expr):
+
+        def elements_array(expr, compound_type=None):
+            if compound_type == None:
+                compound_type = self.find_in_dtype_registry(self._print(expr.dtype), expr.precision)
+            args = ', \n'.join(self._print(arg) for arg in expr.args)
+            elements = f'({compound_type} []){{\n{args}\n}}'
+            return elements
+
+        if expr.rank == 1:
+
+            lst_type = self.find_in_list_type_registry(self._print(expr.dtype), expr.precision)
+            elements = elements_array(expr)
+        else:
+            lst_type = "lst_list"
+            elements = elements_array(expr, 't_list*')
+        return "allocate_list({}, {}, {})".format(expr.shape[0], lst_type, elements)
+
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
             self.add_import(c_imports['math'])
