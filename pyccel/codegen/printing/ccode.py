@@ -2134,7 +2134,7 @@ class CCodePrinter(CodePrinter):
 
         tab = " "*self._default_settings["tabwidth"]
         inc_token = ('{', '(', '{\n', '(\n')
-        dec_token = ('}', ')')
+        dec_token = ('}', ')', '\n}')
 
         code = [ line.lstrip(' \t') for line in code ]
 
