@@ -1000,7 +1000,10 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['stdint'])
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
-            if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
+            if expr.cls_base.name == 'list':
+                self.add_import(c_imports['lists'])
+                dtype = 't_list'
+            elif expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1008,7 +1011,7 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
-        if self.stored_in_c_pointer(expr):
+        if self.stored_in_c_pointer(expr) or dtype == 't_list':
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
