@@ -972,6 +972,16 @@ class CCodePrinter(CodePrinter):
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
+    def find_in_list_type_registry(elf, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
+        try:
+            return list_type_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity = 'fatal')
+
     def find_in_ndarray_type_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
