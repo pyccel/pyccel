@@ -223,6 +223,16 @@ ndarray_type_registry = {
                   ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
+list_type_registry = {
+                  ('float',8)   : 'lst_double',
+                  ('float',4)   : 'lst_float',
+                  ('complex',8) : 'lst_complex',
+                  ('int',8)     : 'lst_int64',
+                  ('int',4)     : 'lst_int32',
+                  ('int',2)     : 'lst_int16',
+                  ('int',1)     : 'lst_int8',
+                  ('bool',4)    : 'lst_bool'}
+
 type_to_format = {('float',8)   : '%.12lf',
                   ('float',4)   : '%.12f',
                   ('complex',8) : '(%.12lf + %.12lfj)',
@@ -249,7 +259,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  "inttypes",
                  'stdbool',
                  'assert',
-                 'numpy_c']}
+                 'numpy_c',
+                 'lists']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
