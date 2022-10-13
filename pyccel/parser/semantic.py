@@ -59,7 +59,7 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+from pyccel.ast.class_defs import ListClass, NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
@@ -448,6 +448,16 @@ class SemanticParser(BasicParser):
             d_var['rank'           ] = expr.rank
             d_var['order'          ] = expr.order
             d_var['cls_base'       ] = TupleClass
+            return d_var
+
+        elif isinstance(expr, PythonList):
+            d_var['datatype'       ] = expr.dtype
+            d_var['precision'      ] = expr.precision
+            d_var['memory_handling'] = 'heap'
+            d_var['shape'          ] = expr.shape
+            d_var['rank'           ] = expr.rank
+            d_var['order'          ] = expr.order
+            d_var['cls_base'       ] = ListClass
             return d_var
 
         elif isinstance(expr, Concatenate):
