@@ -15,38 +15,38 @@ from pyccel.epyccel import epyccel
 def test_mult_numpy_python_type(language):
 
     def mult_on_array_int8():
-        import numpy as np
-        a = np.ones(5, dtype=np.int8)
+        from numpy import ones, int8
+        a = ones(5, dtype=int8)
         b = a * 2
         return b[0]
 
     def mult_on_array_int16():
-        import numpy as np
-        a = np.ones(5, dtype=np.int16)
+        from numpy import ones, int16
+        a = ones(5, dtype=int16)
         b = a * 2
         return b[0]
 
     def mult_on_array_int32():
-        import numpy as np
-        a = np.ones(5, dtype=np.int32)
+        from numpy import ones, int32
+        a = ones(5, dtype=int32)
         b = a * 2
         return b[0]
 
     def mult_on_array_int64():
-        import numpy as np
-        a = np.ones(5, dtype=np.int64)
+        from numpy import ones, int64
+        a = ones(5, dtype=int64)
         b = a * 2
         return b[0]
 
     def mult_on_array_float32():
-        import numpy as np
-        a = np.ones(5, dtype=np.float32)
+        from numpy import ones, float32
+        a = ones(5, dtype=float32)
         b = a * 2
         return b[0]
 
     def mult_on_array_float64():
-        import numpy as np
-        a = np.ones(5, dtype=np.float64)
+        from numpy import ones, float64
+        a = ones(5, dtype=float64)
         b = a * 2
         return b[0]
 
