@@ -551,6 +551,9 @@ class PythonList(PyccelAstNode):
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
+
+        # TODO: Need to include empty lists. Now, an Inhomogeneous list error is raised
+
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
@@ -596,7 +599,7 @@ class PythonList(PyccelAstNode):
                     self._precision = max_precision(floats)
                 elif cmplxs:
                     self._dtype = NativeComplex()
-                    self._precsion = max_precision(cmplxs)
+                    self._precision = max_precision(cmplxs)
                 elif bools:
                     self._dtype = NativeBool()
                     self._precision = max_precision(bools)
