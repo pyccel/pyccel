@@ -244,6 +244,7 @@ def compatible_operation(*args, language_has_vectors = True):
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
+        print(shapes)
         return len(shapes) <= 1 and len(order) <= 1
     else:
         return all(a.rank == 0 for a in args)
@@ -554,22 +555,36 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             current_level = new_level
 
         elif isinstance(line, Assign) and isinstance(line.lhs, IndexedElement) \
-                and isinstance(line.rhs, (PythonTuple, NumpyArray)) and not language_has_vectors:
-
+                and isinstance(line.rhs, (PythonTuple, NumpyArray)):
             lhs = line.lhs
             rhs = line.rhs
-            if isinstance(rhs, NumpyArray):
-                rhs = rhs.arg
+            modified = False
+            if lhs.rank > rhs.rank:
+                modified = True
+                for index in range(lhs.rank-rhs.rank):
+                    # If an index exists at the same depth, reuse it if not create one
+                    if index >= len(indices):
+                        indices.append(new_index('int','i'))
+                    index_var = indices[index]
+                    lhs = insert_index(lhs, index, index_var)
+                collect_loops([Assign(lhs,rhs)], indices, new_index, language_has_vectors, result = result)
 
-            lhs_rank = lhs.rank
+            elif not language_has_vectors:
+                if isinstance(rhs, NumpyArray):
+                    rhs = rhs.arg
 
-            new_assigns = [Assign(
-                            insert_index(expr=lhs,
-                                pos       = -lhs_rank,
-                                index_var = LiteralInteger(j)),
-                            rj) # lhs[j] = rhs[j]
-                          for j, rj in enumerate(rhs)]
-            collect_loops(new_assigns, indices, new_index, language_has_vectors, result = result)
+                lhs_rank = lhs.rank
+
+                new_assigns = [Assign(
+                                insert_index(expr=lhs,
+                                    pos       = -lhs_rank,
+                                    index_var = LiteralInteger(j)),
+                                rj) # lhs[j] = rhs[j]
+                              for j, rj in enumerate(rhs)]
+                collect_loops(new_assigns, indices, new_index, language_has_vectors, result = result)
+
+            else:
+                result.append(line)
 
         elif isinstance(line, Assign) and isinstance(line.rhs, Concatenate):
             lhs = line.lhs
