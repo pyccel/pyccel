@@ -1,6 +1,7 @@
 #include "lists.h"
 
-t_list   *allocate_list(size_t size, t_type type, void *elemnts) // va_arg could alow us to take in multiple list of elements
+t_list   *allocate_list(size_t size, t_type type, void *elemnts)
+
 {
     t_list *list;
     size_t tsize = tSizes[type];
@@ -73,7 +74,7 @@ size_t   count(t_list* list, void *item)
     return (count);
 }
 
-void     append(t_list* list, void* item) // this could just be an insert call
+void     append(t_list* list, void* item)
 {
     t_list listTmp;
     listTmp.capacity = DEFAULT_CAP;

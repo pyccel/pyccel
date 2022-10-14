@@ -20,6 +20,7 @@ __all__ = ('BooleanClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
+        'ListClass',
         'literal_classes',
         'get_cls_base')
 
@@ -129,6 +130,13 @@ TupleClass = ClassDef('tuple',
         methods=[
             #index
             #count
+            ])
+
+ListClass = ClassDef('list',
+        methods=[
+            #index
+            #count
+            #and many more
             ])
 
 #=======================================================================================

@@ -223,6 +223,16 @@ ndarray_type_registry = {
                   ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
+list_type_registry = {
+                  ('float',8)   : 'lst_double',
+                  ('float',4)   : 'lst_float',
+                  ('complex',8) : 'lst_complex',
+                  ('int',8)     : 'lst_int64',
+                  ('int',4)     : 'lst_int32',
+                  ('int',2)     : 'lst_int16',
+                  ('int',1)     : 'lst_int8',
+                  ('bool',4)    : 'lst_bool'}
+
 type_to_format = {('float',8)   : '%.12lf',
                   ('float',4)   : '%.12f',
                   ('complex',8) : '(%.12lf + %.12lfj)',
@@ -249,7 +259,8 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  "inttypes",
                  'stdbool',
                  'assert',
-                 'numpy_c']}
+                 'numpy_c',
+                 'lists']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -517,6 +528,24 @@ class CCodePrinter(CodePrinter):
         return code
 
     # ============ Elements ============ #
+
+    def _print_PythonList(self, expr):
+
+        def elements_array(expr, compound_type=None):
+            if compound_type == None:
+                compound_type = self.find_in_dtype_registry(self._print(expr.dtype), expr.precision)
+            args = ', \n'.join(self._print(arg) for arg in expr.args)
+            elements = f'({compound_type} []){{\n{args}\n}}'
+            return elements
+
+        if expr.rank == 1:
+
+            lst_type = self.find_in_list_type_registry(self._print(expr.dtype), expr.precision)
+            elements = elements_array(expr)
+        else:
+            lst_type = "lst_list"
+            elements = elements_array(expr, 't_list*')
+        return "allocate_list({}, {}, {})".format(expr.shape[0], lst_type, elements)
 
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
@@ -943,6 +972,16 @@ class CCodePrinter(CodePrinter):
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
+    def find_in_list_type_registry(elf, dtype, prec):
+        if prec == -1:
+            prec = default_precision[dtype]
+        try:
+            return list_type_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity = 'fatal')
+
     def find_in_ndarray_type_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
@@ -961,7 +1000,10 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['stdint'])
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
-            if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
+            if expr.cls_base.name == 'list':
+                self.add_import(c_imports['lists'])
+                dtype = 't_list'
+            elif expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -969,7 +1011,7 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
-        if self.stored_in_c_pointer(expr):
+        if self.stored_in_c_pointer(expr) or dtype == 't_list':
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
@@ -1002,6 +1044,9 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
+        elif declaration_type == 't_list *':
+            preface = ''
+            init    = ' = NULL'
         elif declaration_type == 't_ndarray ' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
@@ -1223,6 +1268,12 @@ class CCodePrinter(CodePrinter):
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
 
     def _print_Allocate(self, expr):
+
+        # Code responsible for allocating lists
+        if expr.variable.cls_base.name == 'list':
+            return ""
+
+        # Code related to allocation of ndarrays
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
@@ -1245,6 +1296,8 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
+        if expr.variable.cls_base.name == 'list':
+            return 'free_list({});\n'.format(self._print(ObjectAddress(expr.variable)))
         if expr.variable.is_alias:
             return 'free_pointer({});\n'.format(self._print(expr.variable))
         return 'free_array({});\n'.format(self._print(expr.variable))
@@ -2081,7 +2134,7 @@ class CCodePrinter(CodePrinter):
 
         tab = " "*self._default_settings["tabwidth"]
         inc_token = ('{', '(', '{\n', '(\n')
-        dec_token = ('}', ')')
+        dec_token = ('}', ')', '\n}')
 
         code = [ line.lstrip(' \t') for line in code ]
 
