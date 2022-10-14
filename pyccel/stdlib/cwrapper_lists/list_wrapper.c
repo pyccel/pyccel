@@ -51,7 +51,7 @@ static t_type pylist_get_type(Py_LISTObject *list)
     return lst_none;
 }
 
-static  void* pylist_get_literal(PyObject * item, size_t type) // check if there is a better way than allocating a buffer
+static  void* pylist_get_literal(PyObject * item, size_t type)  // check if there is a better way than allocating a buffer
 {
     size_t tsize = tSizes[type];
     char * cItem = malloc(tsize);
@@ -63,11 +63,11 @@ static  void* pylist_get_literal(PyObject * item, size_t type) // check if there
     else if (type == lst_float)
         memcpy(cItem, &PyFloat_AsDouble(item), tsize);
     else if (type == lst_double)
-        memcpy(cItem, &PyFloat_AsDouble(item), tsize);//redundant
+        memcpy(cItem, &PyFloat_AsDouble(item), tsize);  //redundant
     return cItem;
 }
 
-PyObject * wrap_list(t_list list)
+PyObject * wrap_list(t_list *list)
 {
     size_t size = list->size;
     size_t index = 0;
@@ -76,7 +76,10 @@ PyObject * wrap_list(t_list list)
 
     while (index < size)
     {
-        obj = Py_BuildValue(typeStr[list->type], array_subscripting(list, index));
+        if (list->type == lst_list)
+            obj = Py_BuildValue(typeStr[list->type], wrap_list(list));
+        else
+            obj = Py_BuildValue(typeStr[list->type], array_subscripting(list, index));
         PyList_SetItem(list, index, obj);
         index++;
     }
