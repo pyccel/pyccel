@@ -13,13 +13,13 @@ test_types = ['int', 'float', 'complex']
 @types('complex[:]')
 def return_array_element(array):
     return array[0]
-def test_default_precision_template(language):  
+def test_default_precision_template(language):
     f1 = return_array_element
     f2 = epyccel(f1, language=language)
 
     for t in test_types:
         d1 = randint(1, 15)
-        arr = np.ones(d1).astype(t)
+        arr = np.ones(d1, dtype=t)
         python_result = f1(arr)
         pyccel_result = f2(arr)
 
