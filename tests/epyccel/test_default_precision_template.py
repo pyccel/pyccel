@@ -1,15 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import randint
+from numpy import isclose
 import numpy as np
 
-from pyccel.decorators import types, template
+from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
-test_types = ['int', 'float', 'complex']
+test_types = ['int64', 'float64', 'complex128']
 def test_default_precision_template(language):
-    @template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
-    @types('T')
+    @types('int[:]')
+    @types('float[:]')
+    @types('complex[:]')
     def return_array_element(array):
         return array[0]
     
@@ -21,7 +22,5 @@ def test_default_precision_template(language):
         arr = np.ones(d1).astype(t)
         python_result = f1(arr)
         pyccel_result = f2(arr)
-        
+
         assert isclose(pyccel_result, python_result)
-        
-    
