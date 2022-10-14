@@ -13,6 +13,7 @@ from pyccel.ast.basic     import ScopedNode
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
+from pyccel.ast.class_defs import ListClass
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
@@ -1270,7 +1271,7 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
 
         # Code responsible for allocating lists
-        if expr.variable.cls_base.name == 'list':
+        if expr.variable.cls_base == ListClass:
             return ""
 
         # Code related to allocation of ndarrays
