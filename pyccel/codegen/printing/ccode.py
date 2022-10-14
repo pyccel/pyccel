@@ -630,6 +630,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonLen(self, expr):
         var = expr.arg
+        if var.cls_base == ListClass:
+            return f"{var}->size"
         if var.rank > 0:
             return self._print(var.shape[0])
         else:
