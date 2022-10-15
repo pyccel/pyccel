@@ -64,5 +64,6 @@ void    *pop(t_list* list, long int index);
 void    lst_remove(t_list* list, void* value);
 void    reverse(t_list* list);
 void*   array_subscripting(t_list *list, size_t index);
+void    print_list(t_list *list, int newline);
 
 #endif
