@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <complex.h>
 
 // typedef enum e_type t_type;
 
@@ -18,6 +19,7 @@ typedef enum    e_type
     lst_int64   ,
     lst_float   ,
     lst_double  ,
+    lst_complex ,
     lst_list
 }       t_type;
 
@@ -35,7 +37,7 @@ typedef struct s_pop_ret
     t_type type;
 }               t_pop_ret;
 
-static const size_t tSizes[8] = {
+static const size_t tSizes[9] = {
             1,
             sizeof(int8_t),
             sizeof(int16_t),
@@ -43,6 +45,7 @@ static const size_t tSizes[8] = {
             sizeof(int64_t),
             sizeof(float),
             sizeof(double),
+            sizeof(complex),
             sizeof(void *)
 };
 
