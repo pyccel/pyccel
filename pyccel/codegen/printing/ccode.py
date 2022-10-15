@@ -935,6 +935,13 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
+            elif hasattr(f, 'cls_base') and f.cls_base == ListClass:
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                code += f"print_list({self._print(f)}, 0);\n"
+                code += formatted_args_to_printf(args_format, args, sep if (i+1 < len(orig_args)) else end)
             elif f.rank > 0:
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
