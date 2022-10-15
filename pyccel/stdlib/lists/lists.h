@@ -35,25 +35,13 @@ typedef struct  s_list
     size_t      size;
 }               t_list;
 
-static const int tSizes[9] = {
-            1,
-            sizeof(int8_t), 
-            sizeof(int16_t), 
-            sizeof(int32_t), 
-            sizeof(int64_t), 
-            sizeof(float), 
-            sizeof(double), 
-            sizeof(complex),
-            sizeof(t_list *)
-};
-
 typedef struct s_pop_ret
 {
     char *raw;
     t_type type;
 }               t_pop_ret;
 
-static const size_t tSizes[8] = {
+static const size_t tSizes[9] = {
             1,
             sizeof(int8_t),
             sizeof(int16_t),
@@ -61,6 +49,7 @@ static const size_t tSizes[8] = {
             sizeof(int64_t),
             sizeof(float),
             sizeof(double),
+            sizeof(complex),
             sizeof(void *)
 };
 
