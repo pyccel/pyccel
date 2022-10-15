@@ -215,6 +215,13 @@ void*   array_subscripting(t_list *list, size_t index)
 
 // Sorting ////////////////////////////
 
+/**
+ * @brief Set the length and type object for group allocation.
+ * 
+ * @param list 
+ * @param len 
+ * @param type 
+ */
 void set_length_and_type(t_list *list, size_t *len, int8_t *type)
 {
     t_list *tmp;
@@ -229,6 +236,16 @@ void set_length_and_type(t_list *list, size_t *len, int8_t *type)
     *type = tmp->type;
 }
 
+/**
+ * @brief Branch recursively through every element in the list and copy 
+ * it's value in the array pointed to by `int8_t *group`.
+ * Returns the number of elements copied on every recursion.
+ * 
+ * @param list 
+ * @param group 
+ * @param offset 
+ * @return size_t 
+ */
 size_t collect_data(t_list *list, int8_t *group, size_t offset)
 {
     if (list->type == lst_list)
@@ -244,6 +261,14 @@ size_t collect_data(t_list *list, int8_t *group, size_t offset)
     return (offset);
 }
 
+/**
+ * @brief Allocate and collect the sub-elements of a list.
+ * 
+ * @param list 
+ * @param len 
+ * @param type 
+ * @return int8_t* 
+ */
 int8_t *group_node_items(t_list *list, size_t len, int8_t type)
 {
     int8_t *group;
@@ -253,6 +278,18 @@ int8_t *group_node_items(t_list *list, size_t len, int8_t type)
     return (group);
 }
 
+/**
+ * @brief If the list consists of pointers over other lists, it attempts
+ * to collect the sub-elements of the lists pointed to by the indexs `i1`
+ * and `i2`, putting them in two seperate allocated arrays, then compare 
+ * every value.
+ * Returns comparision value.
+ * 
+ * @param list 
+ * @param i1 
+ * @param i2 
+ * @return int 
+ */
 int compare(t_list *list, int i1, int i2)
 {
     int8_t *group_1;
@@ -261,6 +298,9 @@ int compare(t_list *list, int i1, int i2)
     size_t len;
     int cmp;
 
+    cmp = 0;
+    len = 0;
+    type = 0;
     if (list->type != lst_list)
     {
         switch (list->type)
@@ -283,9 +323,6 @@ int compare(t_list *list, int i1, int i2)
         }
     }
 
-    cmp = 0;
-    len = 0;
-    type = 0;
     set_length_and_type(((t_list **)list->elements)[0], &len, &type);
     group_1 = group_node_items(((t_list **)list->elements)[i1], len, type);
     group_2 = group_node_items(((t_list **)list->elements)[i2], len, type);
@@ -323,6 +360,19 @@ int compare(t_list *list, int i1, int i2)
     return cmp;
 }
 
+/**
+ * @brief Always take the last element of the list and use it as an anchor
+ * for sorting the elements with values less than it's value, while updating 
+ * the index where the anchor should exist, then swap the value in the index 
+ * `r` (the current position of the anchor) with new found position, this 
+ * ensures that the anchor is always in the right position.
+ * Returns the index of the anchor.
+ * 
+ * @param list 
+ * @param p 
+ * @param r 
+ * @return int 
+ */
 int partition(t_list *list, int p, int r)
 {
     int i;
@@ -351,6 +401,16 @@ int partition(t_list *list, int p, int r)
     return i+1;
 }
 
+/**
+ * @brief Implementation of quicksort algorithm.
+ * step 1: find the index of the pivot point `q` using `partition`
+ * step 2: run quicksort recursivly on the two sides
+ *         from list[p .. q-1] and list[q+1 .. r]
+ * 
+ * @param list 
+ * @param p 
+ * @param r 
+ */
 void quicksort(t_list *list, int p, int r)
 {
     int q;
@@ -363,6 +423,16 @@ void quicksort(t_list *list, int p, int r)
     }
 }
 
+/**
+ * @brief Sort the list pointed to by `t_list *list` in ascending order,
+ * or in descending order depending on the value of `size_t rev`.
+ * It runs the quicksort algorithm on lists with size greater than 2, or simply 
+ * swap the elements if they happen to be not sorted without going through 
+ * the recursion of quicksort function.
+ * 
+ * @param list 
+ * @param rev 
+ */
 void sort(t_list *list, size_t rev)
 {
     int8_t tmp[64] = {0};
@@ -380,7 +450,7 @@ void sort(t_list *list, size_t rev)
     else if (len > 2)
         quicksort(list, 0, list->size - 1);
 
-    if (rev)
+    if (rev && len > 1)
         reverse(list);
 }
 
