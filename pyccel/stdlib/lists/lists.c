@@ -456,6 +456,12 @@ void sort(t_list *list, size_t rev)
 
 ///////////////////////////////////////
 
+/**
+ * @brief Prints recursively the list.
+ * 
+ * @param list 
+ * @param newline 
+ */
 void print_list(t_list *list, int newline)
 {
     printf("[");
