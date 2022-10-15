@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <complex.h>
-#include <signal.h>
 
 #define GET_INDEX(list, i) (list->elements + (i * tSizes[list->type]))
 
