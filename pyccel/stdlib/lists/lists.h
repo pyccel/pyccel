@@ -10,6 +10,8 @@
 
 // typedef enum e_type t_type;
 
+#define GET_INDEX(list, i) (list->elements + (i * tSizes[list->type]))
+
 typedef enum    e_type
 {
     lst_bool    ,
