@@ -210,3 +210,35 @@ void*   array_subscripting(t_list *list, size_t index)
         return ((void*)(&elements[index * tSizes[list->type]]));
     return (NULL);
 }
+
+void print_list(t_list *list, int newline)
+{
+    printf("[");
+    for (int i = 0; i < list->size; i++)
+    {
+        if (list->type == lst_list)
+            print_list(((t_list **)list->elements)[i], 0);
+        else
+        {
+            switch (list->type)
+            {
+                case lst_int8:   printf("%hhd", *(int8_t *)GET_INDEX(list, i));  break;
+                case lst_int16:  printf("%hd",  *(int16_t *)GET_INDEX(list, i)); break;
+                case lst_int32:  printf("%d",   *(int32_t *)GET_INDEX(list, i)); break;
+                case lst_int64:  printf("%ld",  *(int64_t *)GET_INDEX(list, i)); break;
+                case lst_float:  printf("%f",   *(float *)GET_INDEX(list, i));   break;
+                case lst_double: printf("%lf",  *(double *)GET_INDEX(list, i));  break;
+                case lst_complex: 
+                    double real = creal(*(complex *)GET_INDEX(list, i));
+                    double imag = cimag(*(complex *)GET_INDEX(list, i));
+                    printf("%lf%s%lfj", real, imag >= 0 ? "+" : "", imag);
+                    break;
+            }
+        }
+        if (i+1 < list->size)
+            printf(", ");
+    }
+    printf("]");
+    if (newline)
+        printf("\n");
+}
