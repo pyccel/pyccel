@@ -3,6 +3,7 @@
 #define _LISTS_
 #define DEFAULT_CAP 10
 
+#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
