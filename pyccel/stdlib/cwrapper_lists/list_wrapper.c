@@ -24,7 +24,7 @@ static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
     return elements;
 }
 
-t_list* unwrap_list(PyObject *self, PyObject *list)
+t_list* unwrap_list(PyObject *list)
 {
     if (!PyList_CheckExact(list))
         return (NULL);
