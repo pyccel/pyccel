@@ -1941,6 +1941,8 @@ class SemanticParser(BasicParser):
                         self.insert_import('numpy', AsName(func, rhs_name))
                         return func(visited_lhs, *args)
                     else:
+                        if i in ListClass.methods:
+                            args = [lhs] + args
                         return DottedFunctionCall(i, args, prefix = visited_lhs,
                                     current_function = self._current_function)
 

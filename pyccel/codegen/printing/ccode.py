@@ -13,6 +13,7 @@ from pyccel.ast.basic     import ScopedNode
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
+from pyccel.ast.class_defs import ListClass
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
@@ -629,6 +630,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonLen(self, expr):
         var = expr.arg
+        if var.cls_base == ListClass:
+            return f"{var}->size"
         if var.rank > 0:
             return self._print(var.shape[0])
         else:
@@ -932,6 +935,13 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
+            elif hasattr(f, 'cls_base') and f.cls_base == ListClass:
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                code += f"print_list({self._print(f)}, 0);\n"
+                code += formatted_args_to_printf(args_format, args, sep if (i+1 < len(orig_args)) else end)
             elif f.rank > 0:
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
@@ -1270,7 +1280,7 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
 
         # Code responsible for allocating lists
-        if expr.variable.cls_base.name == 'list':
+        if expr.variable.cls_base == ListClass:
             return ""
 
         # Code related to allocation of ndarrays
