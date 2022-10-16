@@ -40,7 +40,7 @@ void    extend(t_list* list1, t_list* list2)
         elements = realloc(elements, list1->capacity * tsize);
         list1->elements = elements;
     }
-    memcpy(&elements[list1->size], list2->elements, list2->size * tsize);
+    memcpy(&elements[list1->size * tsize], list2->elements, list2->size * tsize);
     list1->size = totalSize;
 }
 
@@ -78,7 +78,10 @@ void     append(t_list* list, void* item)
 {
     t_list listTmp;
     listTmp.capacity = DEFAULT_CAP;
-    listTmp.elements = item;
+    if (list->type == lst_list)
+        listTmp.elements = &item;
+    else
+        listTmp.elements = item;
     listTmp.size = 1;
     listTmp.type = list->type;
     extend(list, &listTmp);
@@ -229,9 +232,9 @@ void print_list(t_list *list, int newline)
                 case lst_float:  printf("%f",   *(float *)GET_INDEX(list, i));   break;
                 case lst_double: printf("%lf",  *(double *)GET_INDEX(list, i));  break;
                 case lst_complex: 
-                    double real = creal(*(complex *)GET_INDEX(list, i));
-                    double imag = cimag(*(complex *)GET_INDEX(list, i));
-                    printf("%lf%s%lfj", real, imag >= 0 ? "+" : "", imag);
+                    // double real = creal(*(complex *)GET_INDEX(list, i));
+                    // double imag = cimag(*(complex *)GET_INDEX(list, i));
+                    // printf("%lf%s%lfj", creal, imag >= 0 ? "+" : "", imag);
                     break;
             }
         }
