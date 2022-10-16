@@ -1,7 +1,7 @@
 #include "list_wrapper.h"
 
 
-char *typeStr[5] = {"p", "i", "f", "d", "p"};//TODO: double check these.
+char *typeStr[5] = {"p", "i", "f", "d"};//TODO: double check these.
 
 static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
 {
