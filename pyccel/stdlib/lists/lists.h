@@ -35,7 +35,16 @@ typedef struct s_pop_ret
     t_type type;
 }               t_pop_ret;
 
-typedef  int(*cmp_function)(void*, void*, t_type);
+static const size_t tSizes[8] = {
+            1,
+            sizeof(int8_t),
+            sizeof(int16_t),
+            sizeof(int32_t),
+            sizeof(int64_t),
+            sizeof(float),
+            sizeof(double),
+            sizeof(void *)
+};
 
 t_list  *allocate_list(size_t size, t_type type, void *elemnts);
 void    free_list(t_list **list);
@@ -51,7 +60,6 @@ void    insert(t_list* list, long int index, void* item);
 void    *pop(t_list* list, long int index);
 void    lst_remove(t_list* list, void* value);
 void    reverse(t_list* list);
-int     default_cmp_func(void* item1, void* item2, t_type type);
 void*   array_subscripting(t_list *list, size_t index);
 
 #endif
