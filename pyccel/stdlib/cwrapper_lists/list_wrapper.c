@@ -1,7 +1,7 @@
 #include "list_wrapper.h"
 
 
-char *typeStr[5] = {"b", "i", "f", "d", "p"};//TODO: double check these.
+char *typeStr[5] = {"p", "i", "f", "d", "p"};//TODO: double check these.
 
 static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
 {
@@ -12,7 +12,7 @@ static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
     while (index < size)
     {
         if (type == lst_list)
-            memcpy(&(elements[index * tsize]), list_wrapper(list->ob_item[index]), tsize);
+            memcpy(&(elements[index * tsize]), unwrap_list(list->ob_item[index]), tsize);
         else
         {
             char * item = pylist_get_literal(list->ob_item[index], type);
@@ -24,7 +24,7 @@ static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
     return elements;
 }
 
-static t_list* unwrap_list(PyObject *self, PyObject *list)
+t_list* unwrap_list(PyObject *self, PyObject *list)
 {
     if (!PyList_CheckExact(list))
         return (NULL);
