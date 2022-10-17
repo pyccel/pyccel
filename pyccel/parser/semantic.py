@@ -902,7 +902,7 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
-            if not all(isinstance(param, (LiteralInteger, PythonTuple, PyccelSymbol))\
+            if not all(isinstance(param, LiteralInteger)\
                     for param in [expr.numBlocks, expr.tpblock]):
                 errors.report("Invalid parameter for Kernel Block number or Thread per Block",
                         symbol = expr,
@@ -919,7 +919,6 @@ class SemanticParser(BasicParser):
                     errors.report("A variable allocated on the stack can't be passed to a Kernel function",
                         symbol = expr,
                         severity='error')
-
             if isinstance(func, FunctionDef):
                 self._check_argument_compatibility(new_expr.args, func.arguments,
                         expr, func.is_elemental)
