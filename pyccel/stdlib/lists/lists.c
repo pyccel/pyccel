@@ -1,7 +1,7 @@
 #include "lists.h"
 
-
 t_list   *allocate_list(size_t size, t_type type, void *elemnts)
+
 {
     t_list *list;
     size_t tsize = tSizes[type];
@@ -141,7 +141,7 @@ void     insert(t_list* list, long int index, void* item)
     list->size = totalSize; 
 }
 
-void    *pop(t_list* list, long int index)
+t_pop_ret   *pop(t_list* list, long int index)
 {
 
     size_t tsize = tSizes[list->type];
@@ -153,11 +153,11 @@ void    *pop(t_list* list, long int index)
     {
         ret_val->type = list->type;
         if (list->type == lst_list)
-            ret_val->raw = ((t_list**)elements)[index];
+            ret_val->raw = (char *)((t_list**)elements)[index];
         else
         {
             ret_val->raw = malloc(list->type);
-            memcpy(ret_val->raw, elements[index * tsize], tsize);
+            memcpy(ret_val->raw, &elements[index * tsize], tsize);
         }
         memmove(&elements[index * tsize], &elements[(index + 1) * tsize], list->size - index);
         list->size -= 1;
@@ -183,8 +183,10 @@ void     lst_remove(t_list* list, void* item)
     t_pop_ret *ret;
 
     if ((index = lst_index(list, item)) != -1)
+    {
         ret = pop(list, (size_t)index);
-    free_pop(ret);
+        free_pop(&ret);
+    }
 }
 
 void     reverse(t_list* list)
@@ -214,6 +216,255 @@ void*   array_subscripting(t_list *list, size_t index)
     return (NULL);
 }
 
+// Sorting ////////////////////////////
+
+/**
+ * @brief Set the length and type object for group allocation.
+ * 
+ * @param list 
+ * @param len 
+ * @param type 
+ */
+void set_length_and_type(t_list *list, size_t *len, int8_t *type)
+{
+    t_list *tmp;
+
+    tmp = list;
+    *len = tmp->size;
+    while (tmp->type == lst_list)
+    {
+        tmp = ((t_list **)(tmp->elements))[0];
+        *len *= tmp->size;
+    }
+    *type = tmp->type;
+}
+
+/**
+ * @brief Branch recursively through every element in the list and copy 
+ * it's value in the array pointed to by `int8_t *group`.
+ * Returns the number of elements copied on every recursion.
+ * 
+ * @param list 
+ * @param group 
+ * @param offset 
+ * @return size_t 
+ */
+size_t collect_data(t_list *list, int8_t *group, size_t offset)
+{
+    if (list->type == lst_list)
+    {
+        for (size_t i = 0; i < list->size; i++)
+            offset += collect_data(((t_list **)list->elements)[i], group, offset);
+    }
+    else
+    {
+        memcpy(group + offset*tSizes[list->type], list->elements, list->size);
+        offset += list->size;
+    }
+    return (offset);
+}
+
+/**
+ * @brief Allocate and collect the sub-elements of a list.
+ * 
+ * @param list 
+ * @param len 
+ * @param type 
+ * @return int8_t* 
+ */
+int8_t *group_node_items(t_list *list, size_t len, int8_t type)
+{
+    int8_t *group;
+
+    group = (int8_t *)malloc(len * tSizes[type]);
+    collect_data(list, group, 0);
+    return (group);
+}
+
+/**
+ * @brief If the list consists of pointers over other lists, it attempts
+ * to collect the sub-elements of the lists pointed to by the indexs `i1`
+ * and `i2`, putting them in two seperate allocated arrays, then compare 
+ * every value.
+ * Returns comparision value.
+ * 
+ * @param list 
+ * @param i1 
+ * @param i2 
+ * @return int 
+ */
+int compare(t_list *list, int i1, int i2)
+{
+    int8_t *group_1;
+    int8_t *group_2;
+    int8_t type;
+    size_t len;
+    int cmp;
+
+    cmp = 0;
+    len = 0;
+    type = 0;
+    if (list->type != lst_list)
+    {
+        switch (list->type)
+        {
+            case lst_int8:
+                return *((int8_t *)GET_INDEX(list, i1)) - *((int8_t *)GET_INDEX(list, i2));
+            case lst_int16:
+                return *((int16_t *)GET_INDEX(list, i1)) - *((int16_t *)GET_INDEX(list, i2));
+            case lst_int32:
+                return *((int32_t *)GET_INDEX(list, i1)) - *((int32_t *)GET_INDEX(list, i2));
+            case lst_int64:
+                return *((int64_t *)GET_INDEX(list, i1)) - *((int64_t *)GET_INDEX(list, i2));
+            case lst_float:
+                return *((float *)GET_INDEX(list, i1)) - *((float *)GET_INDEX(list, i2));
+            case lst_double:
+                return *((double *)GET_INDEX(list, i1)) - *((double *)GET_INDEX(list, i2));
+            case lst_complex:
+                fprintf(stderr, "Ordering of complex numbers is not supported.");
+                exit(-1);
+        }
+    }
+
+    set_length_and_type(((t_list **)list->elements)[0], &len, &type);
+    group_1 = group_node_items(((t_list **)list->elements)[i1], len, type);
+    group_2 = group_node_items(((t_list **)list->elements)[i2], len, type);
+
+    for (size_t i = 0; i < len && cmp == 0; i++)
+    {
+        switch (type)
+        {
+            case lst_int8:
+                cmp = ((int8_t *)group_1)[i] - ((int8_t *)group_2)[i];
+                break ;
+            case lst_int16:
+                cmp = ((int16_t *)group_1)[i] - ((int16_t *)group_2)[i];
+                break ;
+            case lst_int32:
+                cmp = ((int32_t *)group_1)[i] - ((int32_t *)group_2)[i];
+                break ;
+            case lst_int64:
+                cmp = ((int64_t *)group_1)[i] - ((int64_t *)group_2)[i];
+                break ;
+            case lst_float:
+                cmp = ((float *)group_1)[i] - ((float *)group_2)[i];
+                break ;
+            case lst_double:
+                cmp = ((double *)group_1)[i] - ((double *)group_2)[i];
+                break ;
+            case lst_complex:
+                fprintf(stderr, "Ordering of complex numbers is not supported.");
+                exit(-1);
+        }
+    }
+
+    free(group_1);
+    free(group_2);
+    return cmp;
+}
+
+/**
+ * @brief Always take the last element of the list and use it as an anchor
+ * for sorting the elements with values less than it's value, while updating 
+ * the index where the anchor should exist, then swap the value in the index 
+ * `r` (the current position of the anchor) with new found position, this 
+ * ensures that the anchor is always in the right position.
+ * Returns the index of the anchor.
+ * 
+ * @param list 
+ * @param p 
+ * @param r 
+ * @return int 
+ */
+int partition(t_list *list, int p, int r)
+{
+    int i;
+    void *elements;
+    int8_t tmp[64];
+    size_t size;
+
+    elements = list->elements;
+    size = tSizes[list->type];
+    i = p - 1;
+    for (int j = p; j < r; j++)
+    {
+        if (compare(list, j, r) <= 0)
+        {
+            i++;
+            memcpy(tmp, elements + i*size, size);
+            memcpy(elements + i*size, elements + j*size, size);
+            memcpy(elements + j*size, tmp, size);
+            memset(tmp, 0, sizeof(tmp));
+        }
+    }
+    memcpy(tmp, elements + (i+1)*size, size);
+    memcpy(elements + (i+1)*size, elements + r*size, size);
+    memcpy(elements + r*size, tmp, size);
+    memset(tmp, 0, sizeof(tmp));
+    return i+1;
+}
+
+/**
+ * @brief Implementation of quicksort algorithm.
+ * step 1: find the index of the pivot point `q` using `partition`
+ * step 2: run quicksort recursivly on the two sides
+ *         from list[p .. q-1] and list[q+1 .. r]
+ * 
+ * @param list 
+ * @param p 
+ * @param r 
+ */
+void quicksort(t_list *list, int p, int r)
+{
+    int q;
+
+    if (p < r)
+    {
+        q = partition(list, p, r);
+        quicksort(list, p, q - 1);
+        quicksort(list, q + 1, r);
+    }
+}
+
+/**
+ * @brief Sort the list pointed to by `t_list *list` in ascending order,
+ * or in descending order depending on the value of `size_t rev`.
+ * It runs the quicksort algorithm on lists with size greater than 2, or simply 
+ * swap the elements if they happen to be not sorted without going through 
+ * the recursion of quicksort function.
+ * 
+ * @param list 
+ * @param rev 
+ */
+void sort(t_list *list, size_t rev)
+{
+    int8_t tmp[64] = {0};
+    size_t tsize;
+    size_t len;
+
+    tsize = tSizes[list->type];
+    len = list->size;
+    if (len == 2 && compare(list, 0, 1) > 0)
+    {
+        memcpy(tmp, list->elements, tsize);
+        memcpy(list->elements, list->elements + tsize, tsize);
+        memcpy(list->elements + tsize, tmp, tsize);
+    }
+    else if (len > 2)
+        quicksort(list, 0, list->size - 1);
+
+    if (rev && len > 1)
+        reverse(list);
+}
+
+///////////////////////////////////////
+
+/**
+ * @brief Prints recursively the list.
+ * 
+ * @param list 
+ * @param newline 
+ */
 void print_list(t_list *list, int newline)
 {
     printf("[");

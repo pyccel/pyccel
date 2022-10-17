@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <complex.h>
 
-// typedef enum e_type t_type;
-
 #define GET_INDEX(list, i) (list->elements + (i * tSizes[list->type]))
+
+// typedef enum e_type t_type;
 
 typedef enum    e_type
 {
@@ -63,9 +63,10 @@ size_t  count(t_list* list, void *item);
 void    append(t_list* list, void* item);
 int     lst_index(t_list* list, void* item);
 void    insert(t_list* list, long int index, void* item);
-void    *pop(t_list* list, long int index);
+t_pop_ret *pop(t_list* list, long int index);
 void    lst_remove(t_list* list, void* value);
 void    reverse(t_list* list);
+void    sort(t_list *list, size_t rev);
 void*   array_subscripting(t_list *list, size_t index);
 void    print_list(t_list *list, int newline);
 
