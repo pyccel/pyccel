@@ -811,7 +811,8 @@ class SemanticParser(BasicParser):
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
-                if 'kernel' not in self.scope.decorators:
+                if 'kernel' not in self.scope.decorators\
+                    or 'device' not in self.scope.decorators:
                     errors.report("Cuda internal variables should only be used in Kernel or Device functions",
                         symbol = expr,
                         severity = 'fatal')
