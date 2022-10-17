@@ -910,12 +910,12 @@ class SemanticParser(BasicParser):
 
             new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
 
-            if len(new_expr.args) is not len(func.arguments):
-                errors.report("The number of passed arguments to the function call does not correspond to the function definition",
-                    symbol = expr,
-                    severity='error')
             for a in new_expr.args:
-                if isinstance(a.value, Variable) and a.value.on_stack:
+                if a is None:
+                    errors.report("Too few arguments passed in function call",
+                        symbol = expr,
+                        severity='error')
+                elif isinstance(a.value, Variable) and a.value.on_stack:
                     errors.report("A variable allocated on the stack can't be passed to a Kernel function",
                         symbol = expr,
                         severity='error')
