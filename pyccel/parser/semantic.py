@@ -902,9 +902,12 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
-            if not all(isinstance(param, LiteralInteger)\
-                    for param in [expr.numBlocks, expr.tpblock]):
-                errors.report("Invalid parameter for Kernel Block number or Thread per Block",
+            if not isinstance(expr.numBlocks, LiteralInteger):
+                errors.report("Invalid Block number parameter for Kernel call",
+                        symbol = expr,
+                        severity='error')
+            if not isinstance(expr.tpblock, LiteralInteger):
+                errors.report("Invalid Thread per Block parameter for Kernel call",
                         symbol = expr,
                         severity='error')
 
