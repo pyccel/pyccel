@@ -64,17 +64,17 @@ void cuda_array_fill_double(double c, t_ndarray arr)
 		arr.nd_double[i] = c;
 }
 
-void    device_location(void* devPtr, size_t size)
+void    device_memory(void* devPtr, size_t size)
 {
     cudaMalloc(&devPtr, size);
 }
 
-void    managed_location(void* devPtr, size_t size)
+void    managed_memory(void* devPtr, size_t size)
 {
     cudaMallocManaged(&devPtr, size);
 }
 
-void    host_location(void* devPtr, size_t size)
+void    host_memory(void* devPtr, size_t size)
 {
     cudaMallocHost(&devPtr, size);
 }
@@ -83,7 +83,7 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
         enum e_types type, bool is_view, enum e_memory_locations location)
 {
     t_ndarray arr;
-    void (*fun_ptr_arr[])(void*, size_t) = {managed_location, host_location, device_location};
+    void (*fun_ptr_arr[])(void*, size_t) = {managed_memory, host_memory, device_memory};
 
     arr.nd = nd;
     arr.type = type;
