@@ -915,12 +915,8 @@ class SemanticParser(BasicParser):
                     symbol = expr,
                     severity='error')
             for a in new_expr.args:
-                if a is None:
-                    errors.report("Too few arguments passed in function call",
-                        symbol = expr,
-                        severity='error')
-                elif isinstance(a.value, Variable) and a.value.on_stack:
-                    errors.report("Variable allocated on the stack passed to a Kernel",
+                if isinstance(a.value, Variable) and a.value.on_stack:
+                    errors.report("A variable allocated on the stack can't be passed to a Kernel function",
                         symbol = expr,
                         severity='error')
 
