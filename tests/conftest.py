@@ -12,8 +12,7 @@ from pyccel.commands.pyccel_clean import pyccel_clean
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("ccuda", marks = pytest.mark.ccuda)
+        pytest.param("python", marks = pytest.mark.python)
     ],
     scope = "session"
 )
