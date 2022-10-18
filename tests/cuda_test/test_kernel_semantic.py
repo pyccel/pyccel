@@ -13,10 +13,7 @@ from pyccel.errors.messages import (KERNEL_STACK_ARRAY_ARG,
                                     )
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.fortran),
-        pytest.param("ccuda", marks = pytest.mark.ccuda),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
     ]
 )
 def test_stack_array_kernel(language):
@@ -47,10 +44,7 @@ def test_stack_array_kernel(language):
     assert KERNEL_STACK_ARRAY_ARG == error_info.message
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.fortran),
-        pytest.param("ccuda", marks = pytest.mark.ccuda),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
     ]
 )
 def test_cuda_intern_var_non_kernel(language):
@@ -76,10 +70,7 @@ def test_cuda_intern_var_non_kernel(language):
     assert NON_KERNEL_FUNCTION_CUDA_VAR == error_info.message
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.fortran),
-        pytest.param("ccuda", marks = pytest.mark.ccuda),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
     ]
 )
 def test_unvalid_block_number(language):
@@ -106,10 +97,7 @@ def test_unvalid_block_number(language):
     assert UNVALID_KERNEL_CALL_BLOCK_NUM == error_info.message
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.fortran),
-        pytest.param("ccuda", marks = pytest.mark.ccuda),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
     ]
 )
 def test_unvalid_thread_per_block(language):
