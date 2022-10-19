@@ -94,7 +94,7 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.cudaext import CudaNewArray
+from pyccel.ast.cudaext import CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -810,6 +810,13 @@ class SemanticParser(BasicParser):
 
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
+            if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
+                if 'kernel' not in self.scope.decorators\
+                    or 'device' not in self.scope.decorators:
+                    errors.report("Cuda internal variables should only be used in Kernel or Device functions",
+                        symbol = expr,
+                        severity = 'fatal')
+
             args, kwargs = split_positional_keyword_arguments(*args)
             for a in args:
                 if getattr(a,'dtype',None) == 'tuple':
@@ -895,12 +902,27 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
-            new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
-            if None in new_expr.args:
-                errors.report("Too few arguments passed in function call",
+            if not isinstance(expr.numBlocks, LiteralInteger):
+                errors.report("Invalid Block number parameter for Kernel call",
                         symbol = expr,
                         severity='error')
-            elif isinstance(func, FunctionDef):
+            if not isinstance(expr.tpblock, LiteralInteger):
+                errors.report("Invalid Thread per Block parameter for Kernel call",
+                        symbol = expr,
+                        severity='error')
+
+            new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
+
+            for a in new_expr.args:
+                if a is None:
+                    errors.report("Too few arguments passed in function call",
+                        symbol = expr,
+                        severity='error')
+                elif isinstance(a.value, Variable) and a.value.on_stack:
+                    errors.report("A variable allocated on the stack can't be passed to a Kernel function",
+                        symbol = expr,
+                        severity='error')
+            if isinstance(func, FunctionDef):
                 self._check_argument_compatibility(new_expr.args, func.arguments,
                         expr, func.is_elemental)
             return new_expr
