@@ -67,9 +67,9 @@ enum e_types
 
 enum e_memory_locations
 {
-        managed,
-        host,
-        device
+        managedMemory,
+        allocateMemoryOnHost,
+        allocateMemoryOnDevice
 };
 
 typedef struct  s_ndarray

@@ -334,8 +334,13 @@ class CcudaCodePrinter(CCodePrinter):
         is_view = 'false' if expr.variable.on_heap else 'true'
         # if expr.variable.is_managed or expr.variable.on_device:
         self.add_import(c_imports['cuda_ndarrays'])
+        memory_location = expr.variable.memory_location
+        if memory_location in ('device', 'host'):
+            memory_location = 'allocateMemoryOn' + str(memory_location).capitalize()
+        else:
+            memory_location = 'managedMemory'
         alloc_code = "{} = cuda_array_create({}, {}, {}, {}, {});".format(
-        expr.variable, len(expr.shape), tmp_shape, dtype, is_view, expr.variable.memory_location)
+        expr.variable, len(expr.shape), tmp_shape, dtype, is_view, memory_location)
         # else:
         #     self.add_import(c_imports['ndarrays'])
         #     alloc_code = "{} = array_create({}, {}, {}, {});".format(
