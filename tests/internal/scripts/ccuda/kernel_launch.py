@@ -10,7 +10,7 @@ def func(a):
 if __name__ == '__main__':
     threads_per_block = 5
     n_blocks = 1
-    arr = cuda.array([0, 1, 2, 3, 4], memory_location='host')
+    arr = cuda.array([0, 1, 2, 3, 4])
     cuda.deviceSynchronize()
     func[n_blocks, threads_per_block](arr)
     cuda.deviceSynchronize()
