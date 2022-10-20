@@ -5272,8 +5272,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
     @types('float64[:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-
-        a = where(arr > 5, arr, arr * 2)
+        a = where(arr > 5, arr, arr*2)
         s = shape(a)
         return len(s), s[0], a[1], a[0]
 
@@ -5481,7 +5480,6 @@ def test_numpy_linspace_scalar(language):
     @types('float64', 'int', 'int')
     def get_linspace(start, steps, num):
         from numpy import linspace
-
         stop = start + steps
         b = linspace(start, stop, num)
         x = 0.0

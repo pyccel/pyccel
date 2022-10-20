@@ -25,7 +25,7 @@ if __name__ == '__main__':
     mpi_comm_size(comm, sizes, ierr)
     mpi_comm_rank(comm, rank, ierr)
 
-    master = 1
+    master = np.int32(1)
     if rank == master:
         msg = rank + 1000
     else:
