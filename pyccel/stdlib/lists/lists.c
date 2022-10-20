@@ -242,7 +242,7 @@ void     insert(t_list* list, long int index, void* item)
 {
     char * elements = list->elements;
     size_t totalSize = list->size + 1;
-    size_t tsize = tsize;
+    size_t tsize = tSizes[list->type];
     size_t ind = calculate_index(index, list->size) * tsize;
 
     if (totalSize >= list->capacity)
