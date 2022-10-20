@@ -42,7 +42,7 @@ typedef struct s_pop_ret
 }               t_pop_ret;
 
 static const size_t tSizes[9] = {
-            1,
+            4,
             sizeof(int8_t),
             sizeof(int16_t),
             sizeof(int32_t),
