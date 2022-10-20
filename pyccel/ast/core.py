@@ -2819,9 +2819,7 @@ class Interface(Basic):
             type_match = lambda dtype1, dtype2, call_arg, func_arg: \
                     (dtype1 in dtype2 or dtype2 in dtype1) \
                     and (call_arg.rank == func_arg.rank) \
-                    and (call_arg.precision == (func_arg.precision\
-                        if not func_arg.is_ndarray \
-                        else get_final_precision(func_arg)))
+                    and call_arg.precision == func_arg.precision
 
         j = -1
         for i in fs_args:

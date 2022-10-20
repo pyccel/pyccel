@@ -15,7 +15,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex)
+                        NativeComplex, default_precision)
 from .internals import PyccelArraySize, Slice, get_final_precision
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -211,6 +211,9 @@ class Variable(PyccelAstNode):
         self._precision = precision
         if self._rank < 2:
             self._order = None
+
+        if self.is_ndarray and self.precision == -1:
+            self._precision = default_precision[str(dtype)]
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
