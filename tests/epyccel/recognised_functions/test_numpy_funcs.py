@@ -5271,8 +5271,8 @@ def test_numpy_where_array_like_1d_with_condition(language):
     @types('float32[:]')
     @types('float64[:]')
     def get_chosen_elements(arr):
-        from numpy import where, shape
-        a = where(arr > 5, arr, arr*2)
+        from numpy import where, shape, float64
+        a = where(arr > 5, arr, arr * float64(2))
         s = shape(a)
         return len(s), s[0], a[1], a[0]
 
@@ -5364,9 +5364,9 @@ def test_numpy_where_array_like_2d_with_condition(language):
     @types('float32[:,:]')
     @types('float64[:,:]')
     def get_chosen_elements(arr):
-        from numpy import where, shape
-        import numpy as np
-        a = where(arr < 0, arr, arr + np.float64(1))
+        from numpy import where, shape, float64
+
+        a = where(arr < 0, arr, arr + float64(1))
         s = shape(a)
         return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
 
