@@ -14,3 +14,4 @@ if __name__ == '__main__':
     cuda.deviceSynchronize()
     square[n_blocks, threads_per_block](a)
     cuda.deviceSynchronize()
+    print(a)
