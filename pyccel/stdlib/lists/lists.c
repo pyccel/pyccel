@@ -1,7 +1,24 @@
 #include "lists.h"
 
 t_list   *allocate_list(size_t size, t_type type, void *elemnts)
+/*
+        Allocates a new t_list object
 
+        Parameters
+        ----------
+        size : size_t
+            the number of items in the list
+
+        type : t_type
+            The type of the new list's elements
+
+        elemnts : void*
+            A pointer on a table containing the list's elements
+
+        Returns
+        =======
+        list : t_list
+*/
 {
     t_list *list;
     size_t tsize = tSizes[type];
@@ -21,6 +38,14 @@ t_list   *allocate_list(size_t size, t_type type, void *elemnts)
 }
 
 void     free_list(t_list **list)
+/*
+        Deallocate a t_list object
+
+        Parameters
+        ----------
+        list : t_list**
+            a double pointer on the list to be freed
+*/
 {
     free((*list)->elements);
     free(*list);
@@ -45,16 +70,51 @@ void    extend(t_list* list1, t_list* list2)
 }
 
 void     clear(t_list* list)
+/*
+        Clears a t_list without deallocation
+
+        Parameters
+        ----------
+        list : t_list**
+            a pointer on the list to be freed
+*/
 {
     list->size = 0;
 }
 
 t_list*  copy(t_list* list)
+/*
+        Creates a copy t_list object from another
+
+        Parameters
+        ----------
+        list : t_list*
+            a pointer on the list to be copied
+        
+        Returns
+        =======
+        list : t_list
+*/
 {
     return (allocate_list(list->size, list->type, list->elements));
 }
 
 size_t   count(t_list* list, void *item)
+/*
+        Counts the number of occurrences of a specific element
+
+        Parameters
+        ----------
+        list : t_list*
+            the t_list where to look for occurrences
+
+        item : void*
+            The element to look for
+
+        Returns
+        =======
+        count : size_t
+*/
 {
     size_t index = 0;
     int count = 0;
@@ -75,6 +135,17 @@ size_t   count(t_list* list, void *item)
 }
 
 void     append(t_list* list, void* item)
+/*
+        Adds an element to the end of a t_list object
+
+        Parameters
+        ----------
+        list : t_list*
+            the t_list where to add the element
+
+        item : void*
+            the element to be added
+*/
 {
     t_list listTmp;
     listTmp.capacity = DEFAULT_CAP;
@@ -90,6 +161,21 @@ void     append(t_list* list, void* item)
 
 
 int   lst_index(t_list* list, void* item)
+/*
+        looks for the index of a specific element and returns it if it exists
+
+        Parameters
+        ----------
+        list : t_list*
+            the t_list where to search for the element
+
+        item : void*
+            the element to be indexed
+
+        Returns
+        =======
+        index : int
+*/
 {
     size_t index = 0;
     char *elements = (char*)(list->elements);
@@ -112,6 +198,21 @@ int   lst_index(t_list* list, void* item)
 }
 
 size_t calculate_index(long int index, size_t size)
+/*
+        calculates negative indexes
+
+        Parameters
+        ----------
+        index : long int
+            the index to be resolved
+
+        size : size_t
+            the element to be indexed
+
+        Returns
+        =======
+        index : size_t
+*/
 {
     if (index >= size)
         index = size;
@@ -124,6 +225,20 @@ size_t calculate_index(long int index, size_t size)
 }
 
 void     insert(t_list* list, long int index, void* item)
+/*
+        Insert an element in a specific index
+
+        Parameters
+        ----------
+        list : t_list*
+            t_list where to insert the element
+
+        index : long int
+            the index where to insert the element
+
+        item : void*
+            the element to be inserted
+*/
 {
     char * elements = list->elements;
     size_t totalSize = list->size + 1;
@@ -142,8 +257,22 @@ void     insert(t_list* list, long int index, void* item)
 }
 
 t_pop_ret   *pop(t_list* list, long int index)
-{
+/*
+        removes an element from a specific index and return it
 
+        Parameters
+        ----------
+        list : t_list*
+            the t_list from where to remove the element
+
+        index : long int
+            index of the element to be removed
+
+        Returns
+        =======
+        ret_val : t_pop_ret
+*/
+{
     size_t tsize = tSizes[list->type];
     char *elements = (char*)(list->elements);
     t_pop_ret *ret_val = malloc(sizeof(t_pop_ret));
@@ -168,6 +297,14 @@ t_pop_ret   *pop(t_list* list, long int index)
 }
 
 void    free_pop(t_pop_ret** pop_val)
+/*
+        Deallocate the t_pop_ret object resulting from a pop operation
+
+        Parameters
+        ----------
+        pop_val : t_pop_ret**
+            double pointer on the t_pop_ret object to be deallocated
+*/
 {
     if (pop_val && (*pop_val))
     {
@@ -178,6 +315,17 @@ void    free_pop(t_pop_ret** pop_val)
 }
 
 void     lst_remove(t_list* list, void* item)
+/*
+        removes an element by value
+
+        Parameters
+        ----------
+        list : t_list*
+            the t_list from where to remove the element
+
+        index : long int
+            the element to be removed
+*/
 {
     int index;
     t_pop_ret *ret;
@@ -190,6 +338,14 @@ void     lst_remove(t_list* list, void* item)
 }
 
 void     reverse(t_list* list)
+/*
+        reverse the order of elements in a t_list
+
+        Parameters
+        ----------
+        list : t_list*
+            the t_list to be reversed
+*/
 {
     size_t tsize = tSizes[list->type];
     size_t index = 0;
@@ -208,6 +364,17 @@ void     reverse(t_list* list)
 
 
 void*   array_subscripting(t_list *list, size_t index)
+/*
+        provides access to a specific element in a t_list
+
+        Parameters
+        ----------
+        list : t_list*
+            the t_list of the element to be accessed
+
+        index : long int
+            the element to be accessed
+*/
 {
     char *elements = (char*)(list->elements);
 
