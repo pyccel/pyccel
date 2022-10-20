@@ -23,7 +23,8 @@ typedef enum    e_type
     lst_float   ,
     lst_double  ,
     lst_complex ,
-    lst_list
+    lst_list    ,
+    lst_none
 }       t_type;
 
 typedef struct  s_list
