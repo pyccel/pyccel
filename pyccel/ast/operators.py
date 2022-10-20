@@ -384,7 +384,6 @@ class PyccelBinaryOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
         floats    = [a for a in args if a.dtype is NativeFloat()]
         complexes = [a for a in args if a.dtype is NativeComplex()]

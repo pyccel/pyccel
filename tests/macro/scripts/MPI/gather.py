@@ -16,17 +16,17 @@ if __name__ == '__main__':
     block_length = nb_values / size
 
     # ...
-    values = [0] * block_length
+    values = [0]*block_length
     for i in range(0, block_length):
-        values[i] = 1000 + rank * nb_values + i
+        values[i] = 1000 + rank*nb_values + i
 
     print('I, process ', rank, 'sent my values array : ', values)
     # ...
 
     # ...
-    data = [0] * nb_values
+    data = [0]*nb_values
 
-    data = comm.gather(values, master)
+    data =comm.gather(values, master)
     # ...
 
     if rank == master:

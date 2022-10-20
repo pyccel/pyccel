@@ -25,11 +25,11 @@ if __name__ == '__main__':
     mpi_comm_size(comm, sizes, ierr)
     mpi_comm_rank(comm, rank, ierr)
 
-    master = np.int32(1)
+    master = 1
     if rank == master:
-        msg = rank + np.int32(1000)
+        msg = rank + 1000
     else:
-        msg = np.int32(0)
+        msg = 0
 
     length = np.int32(1)
     mpi_bcast (msg, length, MPI_INTEGER8, master, comm, ierr)

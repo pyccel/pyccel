@@ -7,9 +7,6 @@ from numpy.random import randint
 from pyccel.epyccel import epyccel
 from modules        import arrays
 
-RTOL = 2e-14
-ATOL = 1e-15
-
 #==============================================================================
 # TEST: VERIFY ARRAY'S DTYPE CORRESPONDENCE TO THE PASSED ELEMENTS
 #==============================================================================
