@@ -34,6 +34,7 @@ OmpConstructOrDirective:
   | OmpDistributeConstruct
   | OmpSectionsConstruct
   | OmpSectionConstruct
+  | OmpNormalLoopConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -60,6 +61,7 @@ OmpBarrierConstruct:    name='barrier';
 OmpMasterConstruct:     name='master';
 OmpTaskWaitConstruct:   name='taskwait';
 OmpTaskyieldConstruct:  name='taskyield';
+OmpNormalLoopConstruct:  'loop'           clauses*=NormalLoopClauses;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -77,12 +79,28 @@ TargetCombined:   OmpTargetParallel | OmpTargetTeams;
 ////////////////////////////////////////////////////
 
 OmpForSimd: fname='for' sname='simd'?;
+OmpNormalLoopSimd: fname='loop' sname='simd'?;
 OmpMaskedTaskloop: mname='masked' (tname='taskloop' sname='simd'?)?;
 OmpPSections: sname='sections';
 OmpTaskloopSimd: tname='taskloop' sname='simd'?;
 OmpDistributeCombined: dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?;
 OmpTargetParallel: pname='parallel' (fname='for' sname='simd'?)?;
 OmpTargetTeams: tname='teams' (dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?)?;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//      Clauses for Normal Loop
+////////////////////////////////////////////////////
+
+NormalLoopClauses:
+    OmpCollapse
+  | OmpPrivate
+  | OmpLastPrivate
+  | OmpReduction
+  | OmpOrdered
+  | OmpBind
+;
+
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -121,6 +139,7 @@ AllOmpClauses:
   | OmpOrdered
   | OmpFinal
   | OmpNowait
+  | OmpBind
 ;
 
 ////////////////////////////////////////////////////
@@ -161,6 +180,7 @@ AtomicMemoryClause: name=AtomicMClause;
 FlushList: '(' args+=ID[','] ')';
 OmpCancelType: name=CancelType;
 OmpNowait: name='nowait';
+OmpBind: '(' ('teams' | 'parallel' | 'thread') ')';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -173,6 +193,7 @@ OmpDependenceType: ('in' | 'out' | 'inout' | 'mutexinoutset' | 'depobj');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
 OmpMapType: (('always' | 'close' | ('mapper' '(' ID ')') ',')? ('tofrom' | 'from' | 'to' | 'alloc' | 'release' | 'delete')) ':';
 OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target' | 'teams' | 'sections' | 'section');
+BindType: ('teams' | 'parallel' | 'thread');
 
 AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
 AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');

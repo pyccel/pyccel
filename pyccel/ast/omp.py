@@ -91,6 +91,17 @@ class OMP_For_Loop(OmpAnnotatedComment):
         """Name of the construct."""
         return 'for'
 
+class OMP_Normal_Loop(OmpAnnotatedComment):
+    """ Represents an OpenMP Normal Loop construct. """
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'loop'
+
 class OMP_Simd_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Simd construct"""
     __slots__ = ()

@@ -93,7 +93,7 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
+from pyccel.ast.omp import (OMP_For_Loop, OMP_Normal_Loop ,OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
@@ -1714,7 +1714,7 @@ class SemanticParser(BasicParser):
         code = expr._user_nodes
         code = code[-1]
         index = code.body.index(expr)
-        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
+        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined or 'loop' in expr.combined)
 
         if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
            and expr.has_nowait:
@@ -1723,7 +1723,7 @@ class SemanticParser(BasicParser):
                     if node.txt.startswith(expr.name, 4):
                         node.has_nowait = True
 
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
+        if isinstance(expr, (OMP_For_Loop, OMP_Normal_Loop ,OMP_Simd_Construct,
                     OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
             index += 1
             while index < len(code.body) and isinstance(code.body[index], (Comment, CommentBlock, Pass)):
@@ -1746,7 +1746,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Omp_End_Clause(self, expr, **settings):
-        end_loop = any(c in expr.txt for c in ['for', 'distribute', 'taskloop', 'simd'])
+        end_loop = any(c in expr.txt for c in ['for', 'loop', 'distribute', 'taskloop', 'simd'])
         if end_loop:
             errors.report("For loops do not require an end clause. This clause is ignored",
                     severity='warning', symbol=expr)

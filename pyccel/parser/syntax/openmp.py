@@ -12,7 +12,7 @@ from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
 
-from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct,
+from pyccel.ast.omp import (OmpAnnotatedComment, OMP_Normal_Loop, OMP_For_Loop, OMP_Parallel_Construct,
                             OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct,
                             OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
                             OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
@@ -33,6 +33,8 @@ class OmpConstruct(BasicStmt):
 
         com = None
         if combined:
+            if 'loop' in combined:
+                _valid_clauses += _valid_normal_loop_clauses
             if 'for' in combined.expr:
                 _valid_clauses += _valid_loop_clauses
             if 'simd' in combined.expr:
@@ -97,7 +99,7 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
         if isinstance(clause, valid_clauses) and \
            not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
             if isinstance(clause, OmpNowait):
-                if isinstance(name, (OmpLoopConstruct, OmpSectionsConstruct, OmpSingleConstruct)):
+                if isinstance(name, (OmpLoopConstruct, OmpSectionsConstruct, OmpSingleConstruct, OmpNormalLoopConstruct)):
                     has_nowait = True
                 else:
                     raise TypeError("Wrong clause nowait")
@@ -141,6 +143,11 @@ class OmpLoopConstruct(OmpConstruct):
     """Class representing the For loop construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_For_Loop, _valid_loop_clauses, **kwargs)
+
+class OmpNormalLoopConstruct(OmpConstruct):
+    """Class representing the normal loop construct."""
+    def __init__(self, **kwargs):
+        super().__init__(OMP_Normal_Loop, _valid_normal_loop_clauses, **kwargs)
 
 class OmpTaskLoopConstruct(OmpConstruct):
     """Class representing the Taskloop construct."""
@@ -320,6 +327,15 @@ class OmpProcBind(OmpClauses):
         status = kwargs.pop('status')
 
         self._expr = 'proc_bind({})'.format(status)
+
+        super().__init__(**kwargs)
+
+class OmpBind(OmpClauses):
+    """Class representing the bind clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
 
         super().__init__(**kwargs)
 
@@ -752,6 +768,12 @@ _valid_loop_clauses = (OmpPrivate,
                        OmpOrdered,
                        OmpNowait)
 
+_valid_normal_loop_clauses = (OmpPrivate,
+                              OmpReduction,
+                              OmpLastPrivate,
+                              OmpOrdered,
+                              OmpBind)
+
 _valid_parallel_clauses = (OmpNumThread,
                            OmpDefault,
                            OmpPrivate,
@@ -763,6 +785,7 @@ _valid_parallel_clauses = (OmpNumThread,
 
 omp_directives = (OmpParallelConstruct,
                   OmpLoopConstruct,
+                  OmpNormalLoopConstruct,
                   OmpSingleConstruct,
                   OmpEndClause,
                   OmpCriticalConstruct,
@@ -822,7 +845,8 @@ omp_clauses = (OmpCollapse,
                OmpDistributeCombined,
                OmpTargetParallel,
                OmpTargetTeams,
-               OmpNowait)
+               OmpNowait,
+               OmpBind)
 
 omp_classes = (Openmp, OpenmpStmt) + omp_directives + omp_clauses
 
