@@ -512,6 +512,10 @@ class SemanticParser(BasicParser):
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
+            if isinstance(expr, IndexedElement):
+                d_var['is_tuple'   ] = expr.base.is_tuple
+            else :
+                d_var['is_tuple'   ] = False
             return d_var
 
         elif isinstance(expr, IfTernaryOperator):

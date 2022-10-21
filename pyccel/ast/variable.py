@@ -103,7 +103,7 @@ class Variable(PyccelAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order','_is_private')
+            '_rank','_shape','_order','_is_private', '_is_tuple')
     _attribute_nodes = ()
 
     def __init__(
@@ -123,6 +123,7 @@ class Variable(PyccelAstNode):
         precision=0,
         is_argument=False,
         is_kwonly=False,
+        is_tuple=False,
         is_temp =False,
         allows_negative_indexes=False
         ):
@@ -168,6 +169,10 @@ class Variable(PyccelAstNode):
             raise TypeError('allows_negative_indexes must be a boolean.')
         self._allows_negative_indexes = allows_negative_indexes
 
+        if not isinstance(is_tuple, bool):
+            raise TypeError('is_tuple must be a boolean.')
+        self._is_tuple = is_tuple
+
         self._cls_base       = cls_base
         self._order          = order
         self._is_argument    = is_argument
@@ -212,7 +217,7 @@ class Variable(PyccelAstNode):
         if self._rank < 2:
             self._order = None
 
-        if self.is_ndarray and self.precision == -1:
+        if self.is_ndarray and not self.is_tuple and self._precision == -1:
             self._precision = default_precision[str(dtype)]
 
     def process_shape(self, shape):
@@ -403,6 +408,10 @@ class Variable(PyccelAstNode):
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
                           NativeFloat, NativeComplex))
+
+    @property
+    def is_tuple(self):
+        return self._is_tuple
 
     def __str__(self):
         return str(self.name)
@@ -597,6 +606,10 @@ class TupleVariable(Variable):
     @property
     def is_ndarray(self):
         return False
+
+    @property
+    def is_tuple(self):
+        return True
 
 class HomogeneousTupleVariable(TupleVariable):
 
