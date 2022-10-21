@@ -217,7 +217,8 @@ class Variable(PyccelAstNode):
         if self._rank < 2:
             self._order = None
 
-        if self.is_ndarray and not self.is_tuple and self._precision == -1:
+        if self.is_ndarray and not self.is_tuple\
+            and self.precision == -1:
             self._precision = default_precision[str(dtype)]
 
     def process_shape(self, shape):
@@ -411,6 +412,8 @@ class Variable(PyccelAstNode):
 
     @property
     def is_tuple(self):
+        """user friendly method to check if the variable is a tuple:
+        """
         return self._is_tuple
 
     def __str__(self):

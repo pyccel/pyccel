@@ -25,5 +25,5 @@ def test_default_precision_template(language):
         python_result = f1(arr)
         pyccel_result = f2(arr)
 
-        assert type(pyccel_result) == type(python_result)
+        assert isinstance(pyccel_result, type(python_result))
         assert isclose(pyccel_result, python_result)
