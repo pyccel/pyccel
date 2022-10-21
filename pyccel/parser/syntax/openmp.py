@@ -333,9 +333,9 @@ class OmpProcBind(OmpClauses):
 class OmpBind(OmpClauses):
     """Class representing the bind clause."""
     def __init__(self, **kwargs):
-        name = kwargs.pop('name')
+        binding = kwargs.pop('binding')
 
-        self._expr = name
+        self._expr = 'bind({})'.format(binding)
 
         super().__init__(**kwargs)
 

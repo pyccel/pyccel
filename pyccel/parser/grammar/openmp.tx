@@ -180,7 +180,7 @@ AtomicMemoryClause: name=AtomicMClause;
 FlushList: '(' args+=ID[','] ')';
 OmpCancelType: name=CancelType;
 OmpNowait: name='nowait';
-OmpBind: '(' ('teams' | 'parallel' | 'thread') ')';
+OmpBind: 'bind' '('binding=OmpBindType')';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -202,4 +202,5 @@ TaskIndex: (ID | INT);
 TeamIndex: (ID | INT);
 PriorityIndex: (ID | INT);
 NotaStmt: /.*$/;
+OmpBindType : ('teams' | 'parallel' | 'thread');
 ////////////////////////////////////////////////////
