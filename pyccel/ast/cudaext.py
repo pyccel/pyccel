@@ -172,7 +172,7 @@ class CudaThreadIdx(CudaInternalVar)        : pass
 class CudaBlockDim(CudaInternalVar)         : pass
 class CudaBlockIdx(CudaInternalVar)         : pass
 class CudaGridDim(CudaInternalVar)          : pass
-class CudaGrid(CudaInternalVar)             :
+class CudaGrid(PyccelAstNode)               :
     def __new__(cls, dim=0):
         if not isinstance(dim, LiteralInteger):
             raise TypeError("dimension need to be an integer")
@@ -180,6 +180,8 @@ class CudaGrid(CudaInternalVar)             :
             raise ValueError("dimension need to be 0, 1 or 2")
         expr = [PyccelAdd(PyccelMul(CudaBlockIdx(d), CudaBlockDim(d)), CudaThreadIdx(d))\
                 for d in range(dim.python_value + 1)]
+        if dim == 0:
+            return expr[0]
         return PythonTuple(*expr)
 
 
