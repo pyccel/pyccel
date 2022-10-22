@@ -27,7 +27,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, conver
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import PyccelAdd, PyccelLe, PyccelMul, broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 from .numpyext       import process_dtype, process_shape
@@ -42,7 +42,8 @@ __all__ = (
     'CudaThreadIdx',
     'CudaBlockDim',
     'CudaBlockIdx',
-    'CudaGridDim'
+    'CudaGridDim',
+    'CudaGrid'
 )
 
 #==============================================================================
@@ -147,6 +148,9 @@ class CudaInternalVar(PyccelAstNode):
     _attribute_nodes = ('_dim',)
 
     def __init__(self, dim=None):
+        
+        if isinstance(dim, int):
+            dim = LiteralInteger(dim)
         if not isinstance(dim, LiteralInteger):
             raise TypeError("dimension need to be an integer")
         if dim not in (0, 1, 2):
@@ -164,10 +168,19 @@ class CudaInternalVar(PyccelAstNode):
     def dim(self):
         return self._dim
 
-class CudaThreadIdx(CudaInternalVar) : pass
-class CudaBlockDim(CudaInternalVar)  : pass
-class CudaBlockIdx(CudaInternalVar)  : pass
-class CudaGridDim(CudaInternalVar)   : pass
+class CudaThreadIdx(CudaInternalVar)        : pass
+class CudaBlockDim(CudaInternalVar)         : pass
+class CudaBlockIdx(CudaInternalVar)         : pass
+class CudaGridDim(CudaInternalVar)          : pass
+class CudaGrid(CudaInternalVar)             :
+    def __new__(cls, dim=0):
+        if not isinstance(dim, LiteralInteger):
+            raise TypeError("dimension need to be an integer")
+        if dim not in (0, 1, 2):
+            raise ValueError("dimension need to be 0, 1 or 2")
+        expr = [PyccelAdd(PyccelMul(CudaBlockIdx(d), CudaBlockDim(d)), CudaThreadIdx(d))\
+                for d in range(dim.python_value + 1)]
+        return PythonTuple(*expr)
 
 
 cuda_funcs = {
@@ -177,7 +190,8 @@ cuda_funcs = {
     'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
     'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),
     'blockIdx'          : PyccelFunctionDef('blockIdx'          , CudaBlockIdx),
-    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim)
+    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim),
+    'grid'              : PyccelFunctionDef('grid'              , CudaGrid)
 }
 
 cuda_Internal_Var = {
