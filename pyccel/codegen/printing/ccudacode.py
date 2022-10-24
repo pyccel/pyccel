@@ -332,8 +332,8 @@ class CcudaCodePrinter(CCodePrinter):
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_Assign = "{} {}[] = {{{}}};".format(shape_dtype, tmp_shape, shape)
         is_view = 'false' if expr.variable.on_heap else 'true'
-        # if expr.variable.is_managed or expr.variable.on_device:
         self.add_import(c_imports['cuda_ndarrays'])
+        # define the memory location for the created cuda array
         memory_location = expr.variable.memory_location
         if memory_location in ('device', 'host'):
             memory_location = 'allocateMemoryOn' + str(memory_location).capitalize()
@@ -341,11 +341,6 @@ class CcudaCodePrinter(CCodePrinter):
             memory_location = 'managedMemory'
         alloc_code = "{} = cuda_array_create({}, {}, {}, {}, {});".format(
         expr.variable, len(expr.shape), tmp_shape, dtype, is_view, memory_location)
-        # else:
-        #     self.add_import(c_imports['ndarrays'])
-        #     alloc_code = "{} = array_create({}, {}, {}, {});".format(
-        #         expr.variable, len(expr.shape), tmp_shape, dtype,
-        #         is_view)
         return '{}\n{}\n{}\n'.format(free_code, shape_Assign, alloc_code)
 
     def _print_Deallocate(self, expr):

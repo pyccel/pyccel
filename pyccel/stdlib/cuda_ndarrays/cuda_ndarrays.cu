@@ -114,7 +114,6 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
     arr.is_view = is_view;
     arr.length = 1;
     (*fun_ptr_arr[location])(&(arr.shape), arr.nd * sizeof(int64_t));
-    //cudaMallocManaged(&(arr.shape), arr.nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.length *= shape[i];
@@ -122,7 +121,6 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
     }
     arr.buffer_size = arr.length * arr.type_size;
     (*fun_ptr_arr[location])(&(arr.strides), nd * sizeof(int64_t));
-    //cudaMallocManaged(&(arr.strides), nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.strides[i] = 1;
@@ -131,7 +129,6 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
     }
     if (!is_view)
         (*fun_ptr_arr[location])(&(arr.raw_data), arr.buffer_size);
-        //cudaMallocManaged(&(arr.raw_data), arr.buffer_size);
     return (arr);
 }
 
