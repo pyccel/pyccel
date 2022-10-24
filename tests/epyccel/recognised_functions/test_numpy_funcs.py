@@ -154,8 +154,8 @@ def test_absolute_call_r(language):
 
     f1 = epyccel(absolute_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), absolute_call_r(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x), absolute_call_r(-x), rtol=RTOL, atol=ATOL))
+    assert f1(x) == absolute_call_r(x)
+    assert f1(-x) == absolute_call_r(-x)
     assert matching_types(f1(x), absolute_call_r(x))
 
 def test_absolute_call_i(language):
@@ -166,8 +166,8 @@ def test_absolute_call_i(language):
 
     f1 = epyccel(absolute_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), absolute_call_i(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x), absolute_call_i(-x), rtol=RTOL, atol=ATOL))
+    assert f1(x) == absolute_call_i(x)
+    assert f1(-x) == absolute_call_i(-x)
     assert matching_types(f1(x), absolute_call_i(x))
 
 def test_absolute_call_c(language):
