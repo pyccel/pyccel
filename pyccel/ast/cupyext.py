@@ -438,7 +438,17 @@ class CupyArraySize(PyccelInternalFunction):
 #==============================================================================
 
 class CupyRavel(CupyArray):
+    """
+    Class representing a call to the cupy ravel function which
+    returns flattened version of the passed array
 
+    Parameters
+    ==========
+    arg : PyccelAstNode
+            A PyccelAstNode of unknown shape
+    memory_location : string
+            The location where the new array memory should be allocated
+    """
     name   = 'ravel'
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     _attribute_nodes = ('_arg',)
@@ -456,7 +466,6 @@ class CupyRavel(CupyArray):
         self._shape = [LiteralInteger(reduce((lambda x, y: x.python_value * y.python_value), self.shape))]
         self._rank = len(self._shape)
         self._order = None
-
 
     @property
     def arg(self):
