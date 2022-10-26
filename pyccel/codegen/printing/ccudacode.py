@@ -525,7 +525,7 @@ class CcudaCodePrinter(CCodePrinter):
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}.raw_data, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg)
             return '%s\n' % (cpy_data)
         else :
             if arg.rank > 1:

@@ -455,15 +455,12 @@ class CupyRavel(CupyArray):
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
-        elif arg.rank < 2:
-            return arg
-        else:
-            return super().__new__(cls)
+        return super().__new__(cls)
 
     def __init__(self, arg, memory_location='managed'):
-        self._arg = arg
         super().__init__(arg)
-        self._shape = [LiteralInteger(reduce((lambda x, y: x.python_value * y.python_value), self.shape))]
+        shape = reduce((lambda x, y: x.python_value * y.python_value), self.shape)
+        self._shape = [shape if isinstance(shape, LiteralInteger) else LiteralInteger(shape)]
         self._rank = len(self._shape)
         self._order = None
 
