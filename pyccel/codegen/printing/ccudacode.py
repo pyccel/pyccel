@@ -40,7 +40,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
-from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange
+from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange, CupyRavel
 
 from pyccel.ast.cudaext import cuda_Internal_Var, CudaArray
 
@@ -521,9 +521,6 @@ class CcudaCodePrinter(CCodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
-        if rhs.rank > 1:
-            # flattening the args to use them in C initialization.
-            arg = self._flatten_list(arg)
 
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
@@ -531,6 +528,9 @@ class CcudaCodePrinter(CCodePrinter):
             cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
             return '%s\n' % (cpy_data)
         else :
+            if arg.rank > 1:
+            # flattening the args to use them in C initialization.
+                arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
             cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)

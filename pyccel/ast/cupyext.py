@@ -55,6 +55,7 @@ __all__ = (
     'Shape',
     'CupyZeros',
     'CupyZerosLike',
+    'CupyRavel'
 )
 
 #==============================================================================
@@ -436,6 +437,32 @@ class CupyArraySize(PyccelInternalFunction):
 
 #==============================================================================
 
+class CupyRavel(CupyArray):
+
+    name   = 'ravel'
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
+    _attribute_nodes = ('_arg',)
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, PyccelAstNode)):
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        elif arg.rank < 2:
+            return arg
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, arg, memory_location='managed'):
+        self._arg = arg
+        super().__init__(arg)
+        self._shape = [LiteralInteger(reduce((lambda x, y: x.python_value * y.python_value), self.shape))]
+        self._rank = len(self._shape)
+        self._order = None
+
+
+    @property
+    def arg(self):
+        return self._arg
+
+#==============================================================================
 cupy_funcs = {
     # ... array creation routines
     'full'      : PyccelFunctionDef('full'      , CupyFull),
@@ -448,6 +475,7 @@ cupy_funcs = {
     'ones_like' : PyccelFunctionDef('ones_like' , CupyOnesLike),
     'array'     : PyccelFunctionDef('array'     , CupyArray),
     'arange'    : PyccelFunctionDef('arange'    , CupyArange),
+    'ravel'     : PyccelFunctionDef('ravel'     , CupyRavel),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , Shape),
     'size'      : PyccelFunctionDef('size'      , CupyArraySize),
