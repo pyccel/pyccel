@@ -77,7 +77,7 @@ from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import Nil, LiteralString
 from pyccel.ast.literals import Literal, convert_to_literal
 
@@ -664,12 +664,16 @@ class SemanticParser(BasicParser):
         inheriting from PyccelOperator
         """
         try:
+
             expr_new = type(expr)(*visited_args)
+            #this part is for experimenting
             if expr_new.precision != -1:
                 if not all(expr_new.precision == a.precision for a in visited_args):
                     for i, a in enumerate(visited_args):
-                        if isinstance(a, Literal):
+                        if isinstance(a, (LiteralInteger, LiteralFloat)):
                             visited_args[i] = type(a)(value = a.python_value, precision = expr_new.precision)
+                        if isninstance(a, LiteralComplex):
+                            visited_args[i] = type(a)(real = a.real, imag = a.imag precision = expr_new.precision)
                     expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
