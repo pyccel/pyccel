@@ -12,7 +12,6 @@ from numpy import matmul
 from pyccel.epyccel import epyccel
 #==============================================================================
 
-compiler = None
 compiler = {'c': None, 'fortran': None, 'python': None}
 compiler_filename_f = os.path.join(os.path.dirname(__file__), '..', 'compiler_fortran.json')
 compiler_filename_c = os.path.join(os.path.dirname(__file__), '..', 'compiler_c.json')
