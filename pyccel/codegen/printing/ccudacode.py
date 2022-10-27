@@ -524,7 +524,7 @@ class CcudaCodePrinter(CCodePrinter):
 
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}.raw_data, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg)
+            cpy_data = "cudaMemcpy({0}.{2}, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
             return '%s\n' % (cpy_data)
         else :
             if arg.rank > 1:
@@ -532,7 +532,7 @@ class CcudaCodePrinter(CCodePrinter):
                 arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+            cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def _print_CudaDeviceSynchronize(self, expr):
