@@ -118,7 +118,7 @@ def test_module_3(language):
 )
 @pytest.mark.external
 def test_modules_4(lang):
-    f1 = epyccel(openmp.test_omp_set_get_dynamic, fflags = '-Wall', accelerators=['openmp'], language=lang)
+    f1 = epyccel(openmp.test_omp_set_get_dynamic, fflags = '-Wall', accelerators=['openmp'], language=lang, compiler=compiler[lang])
 
     assert f1(True) == 1
     assert f1(False) == 0
@@ -133,7 +133,7 @@ def test_modules_4(lang):
 )
 @pytest.mark.external
 def test_modules_4_1(lang):
-    f1 = epyccel(openmp.test_omp_set_get_nested, fflags = '-Wall', accelerators=['openmp'], language=lang)
+    f1 = epyccel(openmp.test_omp_set_get_nested, fflags = '-Wall', accelerators=['openmp'], language=lang, compiler=compiler[lang])
 
     assert f1(True) == 1
     assert f1(False) == 0

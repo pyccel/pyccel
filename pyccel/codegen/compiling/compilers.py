@@ -62,9 +62,11 @@ class Compiler:
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
+        print("VENDOR : ", vendor)
         if vendor.endswith('.json') and os.path.exists(vendor):
             self._info = json.load(open(vendor))
             if language != self._info['language']:
+                print("language", language, self._info['language'])
                 warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
                 self._info = available_compilers[('GNU',language)]
         else:
