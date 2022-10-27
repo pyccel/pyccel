@@ -170,6 +170,44 @@ class CudaInternalVar(PyccelAstNode):
     def dim(self):
         return self._dim
 
+class CudaCopy(CudaNewArray):
+    """
+    Represents a call to  cuda.copy for code generation.
+
+    arg : list, tuple, PythonList
+
+    memory_location : str
+
+    """
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location')
+
+    def __init__(self, arg, memory_location):
+
+        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+            raise TypeError('unknown type of  %s.' % type(arg))
+        
+        # Verify the direction of the copy
+        if (arg._memory_location or arg._memory_location) not in ('device', 'host'):
+            raise ValueError("The direction of the copy should be between host and device")
+
+        self._arg             = arg
+        self._shape           = arg._shape
+        self._rank            = arg._rank
+        self._dtype           = arg._dtype
+        self._order           = arg._order
+        self._precision       = arg._precision
+        self._memory_location = memory_location
+        super().__init__()
+    
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def memory_location(self):
+        return self._memory_location
+
+
 class CudaThreadIdx(CudaInternalVar) : pass
 class CudaBlockDim(CudaInternalVar)  : pass
 class CudaBlockIdx(CudaInternalVar)  : pass
@@ -183,7 +221,8 @@ cuda_funcs = {
     'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
     'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),
     'blockIdx'          : PyccelFunctionDef('blockIdx'          , CudaBlockIdx),
-    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim)
+    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim),
+    'copy'              : PyccelFunctionDef('copy'              , CudaCopy)
 }
 
 cuda_Internal_Var = {
