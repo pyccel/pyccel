@@ -13,7 +13,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
-from .literals  import LiteralInteger
+from .literals  import LiteralInteger, Literal
 
 pyccel_stage = PyccelStage()
 
@@ -293,10 +293,11 @@ def max_precision(objs : list, dtype = None, allow_native = True):
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
-        if any(getattr(o, 'is_ndarray', False) for o in objs):
+        ndarray_list = [o for o in objs if (not isinstance(o, Literal))\
+                            and getattr(o, 'is_ndarray', True)]
+        if ndarray_list:
             return get_final_precision(max(objs, key=attrgetter('precision')))
-        else:
-            return max(get_final_precision(o) for o in objs)
+        return max(get_final_precision(o) for o in objs)
 
 def get_final_precision(obj):
     """
