@@ -21,11 +21,10 @@ runs:
         compiler['openmp']['includes'] = ['/usr/local/opt/libomp/include']
         compiler['openmp']['libdirs'] = ['/usr/local/opt/libomp/lib']
         json.dump(compiler, open('compiler_c.json', 'w'), indent=4)
-        print(json.dumps(compiler, indent=4))
-        compiler = json.load(open('compiler_fortran.json'))
-        compiler['openmp']['includes'] = ['/usr/local/opt/libomp/include']
-        compiler['openmp']['libdirs'] = ['/usr/local/opt/libomp/lib']
-        json.dump(compiler, open('compiler_fortran.json', 'w'), indent=4)
+        #compiler = json.load(open('compiler_fortran.json'))
+        #compiler['openmp']['includes'] = ['/usr/local/opt/libomp/include']
+        #compiler['openmp']['libdirs'] = ['/usr/local/opt/libomp/lib']
+        #json.dump(compiler, open('compiler_fortran.json', 'w'), indent=4)
       working-directory: ./tests
       shell: python
       if: runner.os == 'macOS'
