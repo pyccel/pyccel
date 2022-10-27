@@ -665,6 +665,14 @@ class SemanticParser(BasicParser):
         """
         try:
             expr_new = type(expr)(*visited_args)
+            if expr_new.precision != -1:
+                if not all(expr_new.precision == a.precision for a in visited_args):
+                    for i, a in enumerate(visited_args):
+                        if isinstance(a, Literal):
+                            visited_args[i] = type(a)(value = a.python_value, precision = expr_new.precision)
+                        else:
+                            visited_args[i]._precision = expr_new.precision
+                    expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
