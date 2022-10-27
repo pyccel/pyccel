@@ -90,6 +90,7 @@ jobs:
         uses: ./.github/actions/setup_pyccel_compiler_settings
       - name: OpenMP tests
         run: |
+          ls ..
           pytest test_epyccel_openmp.py -vxs
         working-directory: ./tests/epyccel
       - name: Fortran/C tests with pytest
