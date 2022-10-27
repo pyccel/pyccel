@@ -17,8 +17,8 @@ runs:
       run: |
         import json
         compiler = json.load(open('compiler.json'))
-        compiler['openmp']['includes'] = ['/opt/homebrew/opt/libomp/include']
-        compiler['openmp']['libdirs'] = ['/opt/homebrew/opt/libomp/lib']
+        compiler['openmp']['includes'] = ['/usr/local/opt/libomp/include']
+        compiler['openmp']['libdirs'] = ['/usr/local/opt/libomp/lib']
         json.dump(compiler, open('compiler.json', 'w'), indent=4)
       working-directory: ./tests
       shell: python
