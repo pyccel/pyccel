@@ -62,12 +62,9 @@ class Compiler:
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
-        print("VENDOR : ", vendor)
         if vendor.endswith('.json') and os.path.exists(vendor):
             self._info = json.load(open(vendor))
             if language != self._info['language']:
-                print("language", language, self._info['language'])
-                print(''.join(tb.format_stack(limit=5)))
                 warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
                 self._info = available_compilers[('GNU',language)]
         else:
@@ -148,11 +145,7 @@ class Compiler:
         prop.update(dict.fromkeys(self._info.get(key,())))
 
         for a in accelerators:
-            print (a)
-            print (self._info.get(a,{}))
             prop.update(dict.fromkeys(self._info.get(a,{}).get(key,())))
-
-        print(prop)
 
         return prop.keys()
 
@@ -196,7 +189,6 @@ class Compiler:
         accelerators : iterable or str
                        Accelerators used by the code
         """
-        print("_get_libdirs ", accelerators)
         return self._get_property('libdirs', libdirs, accelerators)
 
     def _get_dependencies(self, dependencies = (), accelerators = ()):
