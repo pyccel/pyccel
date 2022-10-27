@@ -87,6 +87,7 @@ class Compiler:
 
         # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)
+        print(exec_cmd, exec_loc, os.environ['PATH'], self._acceptable_bin_paths)
 
         # Reset PATH variable
         os.environ['PATH'] = current_path
