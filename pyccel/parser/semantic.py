@@ -670,16 +670,12 @@ class SemanticParser(BasicParser):
                     for i, a in enumerate(visited_args):
                         if isinstance(a, Literal):
                             visited_args[i] = type(a)(value = a.python_value, precision = expr_new.precision)
-                        else:
-                            visited_args[i]._precision = expr_new.precision
                     expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
     def _create_Duplicate(self, val, length):
