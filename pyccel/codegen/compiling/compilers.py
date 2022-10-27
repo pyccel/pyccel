@@ -67,6 +67,7 @@ class Compiler:
             self._info = json.load(open(vendor))
             if language != self._info['language']:
                 print("language", language, self._info['language'])
+                print(''.join(tb.format_stack(limit=5)))
                 warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
                 self._info = available_compilers[('GNU',language)]
         else:
