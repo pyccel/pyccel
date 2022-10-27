@@ -184,7 +184,7 @@ def test_absolute_call_c(language):
     assert matching_types(f1(x), absolute_call_c(x))
 
     x = np.complex64(uniform(high=1e6)-1j*uniform(high=1e6))
-    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL))
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL32, atol=ATOL32))
     assert matching_types(f1(x), absolute_call_c(x))
 
     x = np.complex128(uniform(high=1e6)-1j*uniform(high=1e6))
