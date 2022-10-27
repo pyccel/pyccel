@@ -11,7 +11,7 @@ runs:
     - name: Create compiler file
       run: |
         pyccel --export-compile-info compiler_fortran.json
-        pyccel --export-compile-info compiler_c.json
+        pyccel --language=c --export-compile-info compiler_c.json
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Correct compiler file
