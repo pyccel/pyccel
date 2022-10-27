@@ -28,9 +28,6 @@ gfort_info = {'exec' : 'gfortran',
                   },
               'family': 'GNU',
               }
-if sys.platform == "darwin":
-    gfort_info['openmp']['flags'] = ("-Xpreprocessor",'-fopenmp')
-    gfort_info['openmp']['libs'] = ('omp',)
 if sys.platform == "win32":
     gfort_info['mpi_exec'] = 'gfortran'
     gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
