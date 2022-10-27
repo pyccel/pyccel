@@ -672,8 +672,8 @@ class SemanticParser(BasicParser):
                     for i, a in enumerate(visited_args):
                         if isinstance(a, (LiteralInteger, LiteralFloat)):
                             visited_args[i] = type(a)(value = a.python_value, precision = expr_new.precision)
-                        if isninstance(a, LiteralComplex):
-                            visited_args[i] = type(a)(real = a.real, imag = a.imag precision = expr_new.precision)
+                        if isinstance(a, LiteralComplex):
+                            visited_args[i] = type(a)(real = a.real, imag = a.imag, precision = expr_new.precision)
                     expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
