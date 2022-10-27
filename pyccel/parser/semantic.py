@@ -840,10 +840,11 @@ class SemanticParser(BasicParser):
             for ka in func_args[nargs:]:
                 key = ka.name
                 relevant_args = [a for a in args[nargs:] if a.keyword == key]
-                assert len(relevant_args) <= 1
-                if len(relevant_args) == 0 and ka.has_default:
+                n_relevant_args = len(relevant_args)
+                assert n_relevant_args <= 1
+                if n_relevant_args == 0 and ka.has_default:
                     input_kwargs.append(ka.default_call_arg)
-                elif len(relevant_args) == 1:
+                elif n_relevant_args == 1:
                     input_kwargs.append(relevant_args[0])
 
             args = input_no_kwargs + input_kwargs
