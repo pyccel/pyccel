@@ -14,7 +14,7 @@ from pyccel.epyccel import epyccel
 
 compiler = None
 compiler_filename = os.path.join(os.path.dirname(__file__), '..', 'compiler.json')
-if os.path.exists():
+if os.path.exists(compiler_filename):
     compiler = compiler_filename
 
 #==============================================================================
