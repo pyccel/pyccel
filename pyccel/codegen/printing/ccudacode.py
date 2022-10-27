@@ -40,7 +40,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
-from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange
+from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange, CupyRavel
 
 from pyccel.ast.cudaext import cuda_Internal_Var, CudaArray
 
@@ -408,6 +408,8 @@ class CcudaCodePrinter(CCodePrinter):
 
         if isinstance(rhs, (CupyFull)):
             return prefix_code+self.cuda_arrayFill(expr)
+        if isinstance(rhs, CupyRavel):
+            return prefix_code+self.cupy_ravel(expr)
         if isinstance(rhs, CupyArange):
             return prefix_code+self.cuda_Arange(expr)
         if isinstance(rhs, (CudaArray, CupyArray)):
@@ -497,6 +499,40 @@ class CcudaCodePrinter(CCodePrinter):
                 code_init += 'cuda_array_fill_{0}<<<1,1>>>({1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
         return code_init
 
+    def cupy_ravel(self, expr):
+        """ print the assignment of a Cuda NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains the declaration of a dummy data_buffer
+                       and a call to an operator which copies it to a Cuda NdArray struct
+                if the ndarray is a stack_array the str will contain the initialization
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+
+        dummy_array_name = self.scope.get_new_name('cuda_array_dummy')
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
+
+        if isinstance(arg, Variable):
+            arg = self._print(arg)
+            cpy_data = "{0}.{2} = {1}.{2}".format(lhs, arg, dtype)
+            return '%s\n' % (cpy_data)
+        else :
+            if arg.rank > 1:
+                arg = self._flatten_list(arg)
+            arg = ', '.join(self._print(i) for i in arg)
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+            cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+            return  '%s%s\n' % (dummy_array, cpy_data)
+
     def copy_CudaArray_Data(self, expr):
         """ print the assignment of a Cuda NdArray
 
@@ -526,7 +562,6 @@ class CcudaCodePrinter(CCodePrinter):
             return '%s\n' % (cpy_data)
         else :
             if arg.rank > 1:
-            # flattening the args to use them in C initialization.
                 arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
