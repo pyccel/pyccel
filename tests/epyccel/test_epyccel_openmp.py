@@ -13,9 +13,13 @@ from pyccel.epyccel import epyccel
 #==============================================================================
 
 compiler = None
-compiler_filename = os.path.join(os.path.dirname(__file__), '..', 'compiler.json')
-if os.path.exists(compiler_filename):
-    compiler = compiler_filename
+compiler = {'c': None, 'fortran': None, 'python': None}
+compiler_filename_f = os.path.join(os.path.dirname(__file__), '..', 'compiler_fortran.json')
+compiler_filename_c = os.path.join(os.path.dirname(__file__), '..', 'compiler_c.json')
+if os.path.exists(compiler_filename_f):
+    compiler['fortran'] = compiler_filename_fortran
+if os.path.exists(compiler_filename_c):
+    compiler['c'] = compiler_filename_c
 
 #==============================================================================
 

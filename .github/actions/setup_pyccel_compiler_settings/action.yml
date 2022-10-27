@@ -10,16 +10,21 @@ runs:
   steps:
     - name: Create compiler file
       run: |
-        pyccel --export-compile-info compiler.json
+        pyccel --export-compile-info compiler_fortran.json
+        pyccel --export-compile-info compiler_c.json
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Correct compiler file
       run: |
         import json
-        compiler = json.load(open('compiler.json'))
+        compiler = json.load(open('compiler_c.json'))
         compiler['openmp']['includes'] = ['/usr/local/opt/libomp/include']
         compiler['openmp']['libdirs'] = ['/usr/local/opt/libomp/lib']
-        json.dump(compiler, open('compiler.json', 'w'), indent=4)
+        json.dump(compiler, open('compiler_c.json', 'w'), indent=4)
+        compiler = json.load(open('compiler_fortran.json'))
+        compiler['openmp']['includes'] = ['/usr/local/opt/libomp/include']
+        compiler['openmp']['libdirs'] = ['/usr/local/opt/libomp/lib']
+        json.dump(compiler, open('compiler_fortran.json', 'w'), indent=4)
       working-directory: ./tests
       shell: python
       if: runner.os == 'macOS'
