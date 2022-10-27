@@ -437,5 +437,20 @@ class Compiler:
         """ Print the information describing all compiler options
         to the specified file in json format
         """
+        for exec_cmd_name in ('mpi_exec', 'exec'):
+            # Get executable
+            exec_cmd = self._info[exec_cmd_name]
+
+            # Clean conda paths out of the PATH variable
+            current_path = os.environ['PATH']
+            os.environ['PATH'] = self._acceptable_bin_paths
+
+            # Find the exact path of the executable
+            exec_loc = shutil.which(exec_cmd)
+            print(exec_cmd, exec_loc, os.environ['PATH'], self._acceptable_bin_paths)
+            self._info[exec_cmd_name] = exec_loc
+
+        # Reset PATH variable
+        os.environ['PATH'] = current_path
         print(json.dumps(self._info, indent=4),
                 file=open(compiler_export_file,'w'))
