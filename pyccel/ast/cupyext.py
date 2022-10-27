@@ -66,11 +66,11 @@ class CupyArray(CudaNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='C', memory_location='managed'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -82,6 +82,8 @@ class CupyArray(CudaNewArray):
         if not (is_homogeneous_tuple or is_array):
             raise TypeError('we only accept homogeneous arguments')
 
+        if memory_location not in ('host', 'device', 'managed'):
+            raise ValueError("memory_location must be 'host', 'device' or 'managed'")
         # Verify dtype and get precision
         if dtype is None:
             dtype = arg.dtype
@@ -114,6 +116,7 @@ class CupyArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        self._memory_location = memory_location
         super().__init__()
 
     def __str__(self):
@@ -122,6 +125,10 @@ class CupyArray(CudaNewArray):
     @property
     def arg(self):
         return self._arg
+
+    @property
+    def memory_location(self):
+        return self._memory_location
 
 #==============================================================================
 class CupyArange(CudaNewArray):
@@ -452,13 +459,13 @@ class CupyRavel(CupyArray):
     name   = 'ravel'
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     _attribute_nodes = ('_arg',)
-    def __new__(cls, arg):
+    def __new__(cls, arg, memory_location='managed'):
         if not isinstance(arg, (list, tuple, PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
         return super().__new__(cls)
 
     def __init__(self, arg, memory_location='managed'):
-        super().__init__(arg)
+        super().__init__(arg = arg, memory_location = memory_location)
         shape = reduce((lambda x, y: x.python_value * y.python_value), self.shape)
         self._shape = [shape if isinstance(shape, LiteralInteger) else LiteralInteger(shape)]
         self._rank = len(self._shape)
