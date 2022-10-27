@@ -834,20 +834,19 @@ class SemanticParser(BasicParser):
 
             func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
             # Sort arguments to match the order in the function definition
-            input_no_kwargs = [a for a in args if a.keyword is None]
-            nargs = len(input_no_kwargs)
-            input_kwargs = []
+            input_args = [a for a in args if a.keyword is None]
+            nargs = len(input_args)
             for ka in func_args[nargs:]:
                 key = ka.name
                 relevant_args = [a for a in args[nargs:] if a.keyword == key]
                 n_relevant_args = len(relevant_args)
                 assert n_relevant_args <= 1
                 if n_relevant_args == 0 and ka.has_default:
-                    input_kwargs.append(ka.default_call_arg)
+                    input_args.append(ka.default_call_arg)
                 elif n_relevant_args == 1:
-                    input_kwargs.append(relevant_args[0])
+                    input_args.append(relevant_args[0])
 
-            args = input_no_kwargs + input_kwargs
+            args = input_args
 
             new_expr = FunctionCall(func, args, self._current_function)
             if None in new_expr.args:
