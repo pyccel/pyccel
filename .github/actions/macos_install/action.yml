@@ -7,6 +7,7 @@ runs:
       run: |
         brew install open-mpi
         brew install libomp
+        ls /usr/local/bin/
         if [[ ! -f "/usr/local/bin/gfortran" ]]; then
           ln -s /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
         fi
