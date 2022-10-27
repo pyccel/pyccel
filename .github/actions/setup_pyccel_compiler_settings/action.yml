@@ -12,6 +12,7 @@ runs:
       run: |
         pyccel --export-compile-info compiler_fortran.json
         pyccel --export-compile-info compiler_c.json
+        echo $PATH
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Correct compiler file
