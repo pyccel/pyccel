@@ -40,7 +40,7 @@ from pyccel.ast.mathext  import math_constants
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
-from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange, CupyRavel
+from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange
 
 from pyccel.ast.cudaext import cuda_Internal_Var, CudaArray
 
@@ -522,7 +522,6 @@ class CcudaCodePrinter(CCodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
 
-        self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
             cpy_data = "cudaMemcpy({0}.raw_data, {1}.raw_data, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg)
