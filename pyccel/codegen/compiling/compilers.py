@@ -72,6 +72,7 @@ class Compiler:
                 raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
             try:
                 self._info = available_compilers[(vendor,language)]
+                print(self._info)
             except KeyError as e:
                 raise NotImplementedError("Compiler not available") from e
 
@@ -436,5 +437,6 @@ class Compiler:
         """ Print the information describing all compiler options
         to the specified file in json format
         """
+        print(self._info)
         print(json.dumps(self._info, indent=4),
                 file=open(compiler_export_file,'w'))
