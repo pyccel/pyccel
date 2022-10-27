@@ -16,6 +16,7 @@ compiler = None
 compiler = {'c': None, 'fortran': None, 'python': None}
 compiler_filename_f = os.path.join(os.path.dirname(__file__), '..', 'compiler_fortran.json')
 compiler_filename_c = os.path.join(os.path.dirname(__file__), '..', 'compiler_c.json')
+print(compiler_filename_c, os.path.exists(compiler_filename_c), os.path.abspath(compiler_filename_c))
 if os.path.exists(compiler_filename_f):
     compiler['fortran'] = compiler_filename_f
 if os.path.exists(compiler_filename_c):
