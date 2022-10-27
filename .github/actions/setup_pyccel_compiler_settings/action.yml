@@ -1,0 +1,26 @@
+name: 'Setup compiler settings '
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: "bash"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create compiler file
+      run: |
+        pyccel --export-compile-info compiler.json
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./tests
+    - name: Correct compiler file
+      run: |
+        import json
+        compiler = json.load(open('compiler.json'))
+        compiler['openmp']['includes'] = ['/opt/homebrew/opt/libomp/include']
+        compiler['openmp']['libdirs'] = ['/opt/homebrew/opt/libomp/lib']
+        json.dump(compiler, open('compiler.json', 'w'), indent=4)
+      working-directory: ./tests
+      shell: python
+      if: runner.os == 'macOS'
+
