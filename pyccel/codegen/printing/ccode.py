@@ -324,9 +324,6 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        if rhs.rank > 1:
-            # flattening the args to use them in C initialization.
-            arg = self._flatten_list(arg)
 
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
@@ -334,6 +331,9 @@ class CCodePrinter(CodePrinter):
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
             return '%s' % (cpy_data)
         else :
+            if arg.rank > 1:
+                # flattening the args to use them in C initialization.
+                arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
