@@ -983,7 +983,7 @@ class PythonCodePrinter(CodePrinter):
     #------------------OmpAnnotatedComment Printer------------------
 
     def _print_OmpAnnotatedComment(self, expr):
-        return expr.pprint(printer=self, errors=errors)
+        return expr.pyprint(printer=self, errors=errors)
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)

@@ -1,3 +1,7 @@
+"""
+This module exports the different OpenMP versions supported by Pyccel.
+"""
+
 from .version_4_5 import Openmp as Openmp_v4_5
 from .version_5_0 import Openmp as Openmp_v5_0
 from .version_5_1 import Openmp as Openmp_v5_1

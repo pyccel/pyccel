@@ -2012,7 +2012,7 @@ class CCodePrinter(CodePrinter):
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
-        return expr._cprint(printer=self, errors=errors)
+        return expr.cprint(printer=self, errors=errors)
 
     #=====================================
 
