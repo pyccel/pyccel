@@ -25,6 +25,8 @@ if __name__ == '__main__':
     arr = cuda.array([0, 1, 2, 3, 4])
     cuda.deviceSynchronize()
     func_1d[n_blocks, threads_per_block](arr)
-    func_2d[n_blocks, threads_per_block](arr)
-    func_3d[n_blocks, threads_per_block](arr)
+    # Since we dont support multi-dim n_block / threads_per_block
+    # func_2d and func_3d won't compile
+    # func_2d[n_blocks, threads_per_block](arr)
+    # func_3d[n_blocks, threads_per_block](arr)
     cuda.deviceSynchronize()
