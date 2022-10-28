@@ -15,211 +15,221 @@ from .basic import Basic
 class OmpAnnotatedComment(Basic):
 
     """Represents an OpenMP Annotated Comment in the code.
-
-    Parameters
-    ----------
-
-    txt: str
-        statement to print
-
-    combined: List (Optional)
-        constructs to be combined with the current construct
-
-    Examples
-    --------
-    >>> from pyccel.ast.omp import OmpAnnotatedComment
-    >>> OmpAnnotatedComment('parallel')
-    OmpAnnotatedComment(parallel)
     """
-    __slots__ = ('_txt', '_combined', '_has_nowait')
+    __slots__ = ()
     _attribute_nodes = ()
-    _is_multiline = False
 
-    def __init__(self, txt, has_nowait=False, combined=None):
-        self._txt = txt
-        self._combined = combined
-        self._has_nowait = has_nowait
+    def __init__(self):
+        super().__init__()
+
+class OmpConstruct(OmpAnnotatedComment):
+    
+        """Represents an OpenMP Construct in the code.
+        """
+        __slots__ = ("_name", "_clauses", "_clause_count", "_parent")
+        _attribute_nodes = ("_clauses",)
+    
+        def __init__(self, **kwargs):
+            self._name = kwargs.pop("name")
+            self._clauses = kwargs.pop("clauses", [])
+            self._parent = kwargs.pop("parent", None)
+
+            # Count the occurrences of each clause
+            # This is used to check for duplicate clauses if not allowed
+            self._clause_count = {}
+            for clause in self.clauses:
+                if clause.name not in self._clause_count:
+                    self._clause_count[clause.name] = 0
+                self._clause_count[clause.name] += 1
+
+            super().__init__(**kwargs)
+
+        @property
+        def name(self):
+            """Returns the name of the OpenMP construct.
+            """
+            return self._name
+
+        @property
+        def clauses(self):
+            """Returns the clauses of the OpenMP construct.
+            """
+            return self._clauses
+        
+        @property
+        def clauses_count(self):
+            """Returns a dictionary containing the number of occurrences of each clause.
+            """
+            return self._clause_count
+
+        def __str__(self):
+            return f'{self.name} {" ".join(str(clause) for clause in self.clauses)}'
+
+        def __repr__(self):
+            return f'{self.name} {" ".join(repr(clause) for clause in self.clauses)}'
+
+class OmpClause(Basic):
+        """Represents an OpenMP Clause in the code.
+        """
+        __slots__ = ("_name", "_parent")
+        _attribute_nodes = ()
+
+        def __init__(self, **kwargs):
+            self._name = kwargs.pop("name")
+            self._parent = kwargs.pop("parent", None)
+            super().__init__(**kwargs)
+
+        @property
+        def name(self):
+            """Returns the name of the clause.
+            """
+            return self._name
+
+        def __repr__(self):
+            return f'{self.name}'
+
+class Omp(OmpAnnotatedComment):
+    """Represents a holder for all OpenMP statements.
+    """
+    __slots__ = ('_statements',)
+    _attribute_nodes = ('_statements',)
+
+    def __init__(self, **kwargs):
+        self._statements = kwargs.pop('statements', [])
+        super().__init__(**kwargs)
+    
+    @property
+    def statements(self):
+        """Returns the statements of the OpenMP holder.
+        """
+        return self._statements
+    
+    def __str__(self):
+        return f'{"\n".join(str(stmt) for stmt in self.statements)}'
+    
+    def __repr__(self):
+        return f'{"\n".join(repr(stmt) for stmt in self.statements)}'
+
+class OmpStatement(OmpAnnotatedComment):
+    """Represents an OpenMP statement.
+    """
+    __slots__ = ('_statment', '_parent')
+    _attribute_nodes = ('_statement',)
+
+    def __init__(self, **kwargs):
+        self._statement = kwargs.pop('statement')
+        self._parent = kwargs.pop('parent', None)
         super().__init__()
 
     @property
-    def is_multiline(self):
-        """Used to check if the construct needs brackets."""
-        return self._is_multiline
-
-    @property
-    def has_nowait(self):
-        """Used to check if the construct has a nowait clause."""
-        return self._has_nowait
-
-    @has_nowait.setter
-    def has_nowait(self, value):
-        """Used to set the _has_nowait var."""
-        self._has_nowait = value
-
-    @property
-    def name(self):
-        """Name of the construct."""
-        return ''
-
-    @property
-    def txt(self):
-        """Used to store clauses."""
-        return self._txt
-
-    @property
-    def combined(self):
-        """Used to store the combined construct of a directive."""
-        return self._combined
-
-    def __getnewargs__(self):
-        """Used for Pickling self."""
-        args = (self.txt, self.combined)
-        return args
-
+    def statement(self):
+        """Returns the statement of the OpenMP statement.
+        """
+        return self._statement
+    
     def __str__(self):
-        instructions = [self.name, self.combined, self.txt]
-        return '#$ omp '+' '.join(i for i in instructions if i)
+        return f'#$ omp {str(self.statement)}'
+    
+    def __repr__(self):
+        return f'#$ omp {repr(self.statement)}'
 
-class OMP_For_Loop(OmpAnnotatedComment):
-    """ Represents an OpenMP Loop construct. """
+
+class OmpParallelConstruct(OmpConstruct):
+    """Represents an OpenMP Parallel Construct.
+    """
     __slots__ = ()
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'for'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-class OMP_Simd_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Simd construct"""
+class OmpEndConstruct(OmpAnnotatedComment):
+    """Represents an OpenMP End Construct.
+    """
     __slots__ = ()
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'simd'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-class OMP_TaskLoop_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Taskloop construct"""
+class OmpIfClause(OmpClause):
+    """Represents an OpenMP If Clause.
+    """
     __slots__ = ()
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'taskloop'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-class OMP_Distribute_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Distribute construct"""
+class OmpNumThreadsClause(OmpClause):
+    """Represents an OpenMP NumThreads Clause.
+    """
     __slots__ = ()
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'distribute'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-class OMP_Parallel_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Parallel construct. """
+class OmpDefaultClause(OmpClause):
+    """Represents an OpenMP Default Clause.
+    """
     __slots__ = ()
-    _is_multiline = True
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'parallel'
+    _attribute_nodes = ()
 
-class OMP_Task_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Task construct. """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+class OmpPrivateClause(OmpClause):
+    """Represents an OpenMP Private Clause.
+    """
     __slots__ = ()
-    _is_multiline = True
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-class OMP_Single_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Single construct. """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+class OmpFirstPrivateClause(OmpClause):
+    """Represents an OpenMP FirstPrivate Clause.
+    """
     __slots__ = ()
-    _is_multiline = True
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'single'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-class OMP_Critical_Construct(OmpAnnotatedComment):
-    """ Represents an OpenMP Critical construct. """
+class OmpSharedClause(OmpClause):
+    """Represents an OpenMP Shared Clause.
+    """
     __slots__ = ()
-    _is_multiline = True
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-class OMP_Master_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Master construct. """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+class OmpCopyinClause(OmpClause):
+    """Represents an OpenMP Copyin Clause.
+    """
     __slots__ = ()
-    _is_multiline = True
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-class OMP_Masked_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Masked construct. """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class OmpReductionClause(OmpClause):
+    """Represents an OpenMP Reduction Clause.
+    """
     __slots__ = ()
-    _is_multiline = True
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'masked'
+    _attribute_nodes = ()
 
-class OMP_Cancel_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Cancel construct. """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+class OmpProcBindClause(OmpClause):
+    """Represents an OpenMP ProcBind Clause.
+    """
     __slots__ = ()
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    _attribute_nodes = ()
 
-class OMP_Target_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Target construct. """
-    __slots__ = ()
-    _is_multiline = True
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'target'
-
-class OMP_Teams_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Teams construct. """
-    __slots__ = ()
-    _is_multiline = True
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'teams'
-
-class OMP_Sections_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Sections construct. """
-    __slots__ = ()
-    _is_multiline = True
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
-
-    @property
-    def name(self):
-        """Name of the construct."""
-        return 'sections'
-
-class OMP_Section_Construct(OmpAnnotatedComment):
-    """ Represent OpenMP Section construct. """
-    __slots__ = ()
-    _is_multiline = True
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
-
-class Omp_End_Clause(OmpAnnotatedComment):
-    """ Represents the End of an OpenMP block. """
-    __slots__ = ()
-    def __init__(self, txt, has_nowait):
-        super().__init__(txt, has_nowait)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
