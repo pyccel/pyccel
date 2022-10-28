@@ -549,6 +549,16 @@ class CCodePrinter(CodePrinter):
             return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
                     severity='fatal')
 
+    def _print_SysExit(self, expr):
+        code = ""
+        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
+            print_arg = FunctionCallArgument(expr.status)
+            code = self._print(PythonPrint((print_arg, ), file="stderr"))
+            arg = "1"
+        else:
+            arg = self._print(expr.status)
+        return f"{code}exit({arg});\n"
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('float', expr.precision)
@@ -863,7 +873,9 @@ class CCodePrinter(CodePrinter):
             args_format += end
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
-            return "printf({});\n".format(args_code)
+            if expr.file == 'stderr':
+                return f"fprintf(stderr, {args_code});\n"
+            return f"printf({args_code});\n"
 
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
@@ -915,14 +927,16 @@ class CCodePrinter(CodePrinter):
                 if f.rank == 1:
                     print_body.append(space_end)
 
-                for_body  = [PythonPrint(print_body)]
+                for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
                 for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
-                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
+                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
+                                                file=expr.file),
                                   for_loop,
-                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end])],
+                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
+                                                file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
             else:
