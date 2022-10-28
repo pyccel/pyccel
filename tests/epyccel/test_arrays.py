@@ -1,10 +1,71 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 import numpy as np
+from numpy import iinfo
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
+
+#==============================================================================
+# TEST: VERIFY ARRAY'S DTYPE CORRESPONDENCE TO THE PASSED ELEMENTS
+#==============================================================================
+
+def test_array_assigned_dtype(language):
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max,   dtype=int)
+    integer8  = randint(low = iinfo('int8').min,  high = iinfo('int8').max,  dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64)
+
+    fl = float(integer)
+    fl32 = np.float32(fl)
+    fl64 = np.float64(fl)
+
+    cmplx64 = np.complex64(fl32)
+    cmplx128 = np.complex128(fl64)
+
+    epyccel_func = epyccel(arrays.array_return_first_element, language=language)
+
+    f_integer_output = epyccel_func(integer, integer)
+    test_int_output  = arrays.array_return_first_element(integer, integer)
+    assert isinstance(f_integer_output, type(test_int_output))
+
+    f_integer8_output = epyccel_func(integer8, integer8)
+    test_int8_output = arrays.array_return_first_element(integer8, integer8)
+    assert isinstance(f_integer8_output, type(test_int8_output))
+
+    f_integer16_output = epyccel_func(integer16, integer16)
+    test_int16_output = arrays.array_return_first_element(integer16, integer16)
+    assert isinstance(f_integer16_output, type(test_int16_output))
+
+    f_integer32_output = epyccel_func(integer32, integer32)
+    test_int32_output = arrays.array_return_first_element(integer32, integer32)
+    assert isinstance(f_integer32_output, type(test_int32_output))
+
+    f_integer64_output = epyccel_func(integer64, integer64)
+    test_int64_output = arrays.array_return_first_element(integer64, integer64)
+    assert isinstance(f_integer64_output, type(test_int64_output))
+
+    f_fl_output = epyccel_func(fl, fl)
+    test_float_output = arrays.array_return_first_element(fl, fl)
+    assert isinstance(f_fl_output, type(test_float_output))
+
+    f_fl32_output = epyccel_func(fl32, fl32)
+    test_float32_output = arrays.array_return_first_element(fl32, fl32)
+    assert isinstance(f_fl32_output, type(test_float32_output))
+
+    f_fl64_output = epyccel_func(fl64, fl64)
+    test_float64_output = arrays.array_return_first_element(fl64, fl64)
+    assert isinstance(f_fl64_output, type(test_float64_output))
+
+    f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
+    test_cmplx64_output = arrays.array_return_first_element(cmplx64, cmplx64)
+    assert isinstance(f_cmplx64_output, type(test_cmplx64_output))
+
+    f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
+    test_cmplx128_output = arrays.array_return_first_element(cmplx128, cmplx128)
+    assert isinstance(f_cmplx128_output, type(test_cmplx128_output))
 
 #==============================================================================
 # TEST: 1D ARRAYS OF INT-32
@@ -873,6 +934,19 @@ def test_array_real_1d_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_1d_scalar_mod(language):
+    f1 = arrays.array_real_1d_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_1d_scalar_idiv(language):
 
     f1 = arrays.array_real_1d_scalar_idiv
@@ -942,6 +1016,20 @@ def test_array_real_1d_div(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
+def test_array_real_1d_mod(language):
+
+    f1 = arrays.array_real_1d_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a  = np.array( [1.,2.,3.] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2)
 
 def test_array_real_1d_idiv(language):
 
@@ -1017,6 +1105,20 @@ def test_array_real_2d_C_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_C_scalar_mod(language):
+
+    f1 = arrays.array_real_2d_C_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_2d_C_add(language):
 
     f1 = arrays.array_real_2d_C_add
@@ -1062,6 +1164,20 @@ def test_array_real_2d_C_mul(language):
 def test_array_real_2d_C_div(language):
 
     f1 = arrays.array_real_2d_C_div
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
+    x2 = np.copy(x1)
+    a  = np.array( [[-1.,-2.,-3.], [-4.,-5.,-6.]] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_C_mod(language):
+
+    f1 = arrays.array_real_2d_C_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1203,6 +1319,20 @@ def test_array_real_2d_F_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_F_scalar_mod(language):
+
+    f1 = arrays.array_real_2d_F_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_2d_F_add(language):
 
     f1 = arrays.array_real_2d_F_add
@@ -1248,6 +1378,20 @@ def test_array_real_2d_F_mul(language):
 def test_array_real_2d_F_div(language):
 
     f1 = arrays.array_real_2d_F_div
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
+    x2 = np.copy(x1)
+    a  = np.array( [[-1.,-2.,-3.], [-4.,-5.,-6.]], order='F' )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_F_mod(language):
+
+    f1 = arrays.array_real_2d_F_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
