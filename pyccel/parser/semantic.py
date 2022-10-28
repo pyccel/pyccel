@@ -503,17 +503,6 @@ class SemanticParser(BasicParser):
             d_var['precision'     ] = var.precision
             return d_var
 
-        elif isinstance(expr, IndexedElement):
-            d_var['datatype'   ] = expr.dtype
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
-            d_var['cls_base'   ] = expr.base.cls_base
-            d_var['is_tuple'   ] = expr.base.is_tuple
-            return d_var
-
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
