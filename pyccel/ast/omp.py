@@ -12,15 +12,46 @@ https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md
 
 from .basic import Basic
 
+__all__ = (
+    'OmpAnnotatedComment',
+
+    # General
+    'OmpConstruct',
+    'OmpClause',
+    'Omp',
+    'OmpStatement',
+
+    # Constructs
+    'OmpParallelConstruct',
+    'OmpEndConstruct',
+
+    # Clauses
+    'OmpIfClause',
+    'OmpNumThreadsClause',
+    'OmpDefaultClause',
+    'OmpPrivateClause',
+    'OmpFirstPrivateClause',
+    'OmpSharedClause',
+    'OmpCopyinClause',
+    'OmpReductionClause',
+    'OmpProcBindClause',
+)
+
 class OmpAnnotatedComment(Basic):
 
     """Represents an OpenMP Annotated Comment in the code.
     """
-    __slots__ = ()
+    __slots__ = ('_version')
     _attribute_nodes = ()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        self._version = float(kwargs.pop('version', '0'))
+        super().__init__(*kwargs)
+    
+    @property
+    def version(self):
+        """Returns the version of OpenMP syntax used."""
+        return self._version
 
 class OmpConstruct(OmpAnnotatedComment):
     
@@ -105,10 +136,10 @@ class Omp(OmpAnnotatedComment):
         return self._statements
     
     def __str__(self):
-        return f'{"\n".join(str(stmt) for stmt in self.statements)}'
-    
+        return "\n".join(str(stmt) for stmt in self.statements)
+
     def __repr__(self):
-        return f'{"\n".join(repr(stmt) for stmt in self.statements)}'
+        return "\n".join(repr(stmt) for stmt in self.statements)
 
 class OmpStatement(OmpAnnotatedComment):
     """Represents an OpenMP statement.
