@@ -97,7 +97,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
@@ -666,15 +666,6 @@ class SemanticParser(BasicParser):
         try:
 
             expr_new = type(expr)(*visited_args)
-            #this part is for experimenting
-            if expr_new.precision != -1:
-                if not all(expr_new.precision == a.precision for a in visited_args):
-                    for i, a in enumerate(visited_args):
-                        if isinstance(a, (LiteralInteger, LiteralFloat)):
-                            visited_args[i] = type(a)(value = a.python_value, precision = expr_new.precision)
-                        if isinstance(a, LiteralComplex):
-                            visited_args[i] = type(a)(real = a.real, imag = a.imag, precision = expr_new.precision)
-                    expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
@@ -715,6 +706,13 @@ class SemanticParser(BasicParser):
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
+                if isinstance(a.value, PyccelArithmeticOperator):
+                    d_var = self._infere_type(a.value)
+                    d_var.pop('datatype')
+                    var = self.scope.get_temporary_variable(a.value.dtype, **d_var)
+                    assi = Assign(var, a.value)
+                    self._additional_exprs[-1].append(assi)
+                    a = self._visit(FunctionCallArgument(var), **settings)
                 args.append(a)
         return args
 
