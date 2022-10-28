@@ -470,7 +470,7 @@ class CupyRavel(CupyArray):
         super().__init__(arg = arg, memory_location = memory_location)
         shape = reduce((lambda x, y: x.python_value * y.python_value), self.shape)
         self._shape = [shape if isinstance(shape, LiteralInteger) else LiteralInteger(shape)]
-        self._rank = len(self._shape)
+        self._rank = 1
         self._order = None
 
     @property
