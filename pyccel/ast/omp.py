@@ -68,7 +68,7 @@ class OmpConstruct(OmpAnnotatedComment):
         def __repr__(self):
             return f'{self.name} {" ".join(repr(clause) for clause in self.clauses)}'
 
-class OmpClause(Basic):
+class OmpClause(OmpAnnotatedComment):
         """Represents an OpenMP Clause in the code.
         """
         __slots__ = ("_name", "_parent")
