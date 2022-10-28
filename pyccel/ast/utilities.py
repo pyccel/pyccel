@@ -24,6 +24,7 @@ from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
 from .mathext       import math_mod
+from .sysext        import sys_mod
 
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
@@ -86,7 +87,8 @@ builtin_import_registery = Module('__main__',
             Import('scipy', AsName(scipy_mod,'scipy')),
             Import('itertools', AsName(itertools_mod,'itertools')),
             Import('math', AsName(math_mod,'math')),
-            Import('pyccel', AsName(pyccel_mod,'pyccel'))
+            Import('pyccel', AsName(pyccel_mod,'pyccel')),
+            Import('sys', AsName(sys_mod,'sys')),
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
