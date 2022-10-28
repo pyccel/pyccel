@@ -287,6 +287,7 @@ class CCodePrinter(CodePrinter):
             return f_list
         else:
             return [irregular_list]
+
     #========================== Numpy Elements ===============================#
     def _largest_literal_subset(self, flattened_list):
         largest_subset = []
