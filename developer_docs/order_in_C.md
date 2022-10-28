@@ -57,7 +57,6 @@ if __name__ == "__main__":
 `arr.strides` is how the printing and indexing occures, the strides of an array tell us how many bytes we have to skip in memory to move to the next position along a certain axis (dimension). For example for `memory_layout_of_a = [1 4 7 2 5 8]` and `strides_of_a = (8, 24)`, we have to skip 8 bytes (1 value for `int64`) to move to the next row, but 24 bytes (3 values for `int64`) to get to the same position in the next column of `a`.  
 `a[2][1]` would give us `'8'`, using the `strides`: `2 * 8 + 1 * 24 = 40`, which means that in the flattened array, we would have to skip `40` bytes to get the value of `a[2][1]`, each element is 8 bytes, so we would have to skip `40 / 8 = 5` elements, from `1` to `5` to get to `'8'`
 
-
 ### Ordering in C
 For `C`, arrays are flattened into a one dimensional string, `strides` and `shape` are used to navigate the array.
 While the `order_c` `ndarrays` only require a simple copy to be created/populated, `order_f` arrays require an extra step, which is transposing the array.  
@@ -110,7 +109,7 @@ for (int i = 0; i < array.columns; ++i)
 
 To create an (`order_c`) `ndarray`, we simply copy the flattened data to our `ndarray`'s `raw_data`.  
 
-If the data is composed of literals only (ex: np.array([1, 2, 3])), a `array_dummy` is created, before copying it to our destination `ndarray`.  
+If the data is composed of literals only (ex: `np.array([1, 2, 3])`), an `array_dummy` is created, before copying it to our destination `ndarray`.  
 Example:  
 
 ```python
