@@ -2158,15 +2158,7 @@ class FCodePrinter(CodePrinter):
     # .....................................................
 
     def _print_OmpAnnotatedComment(self, expr):
-        clauses = ''
-        if expr.combined:
-            combined = expr.combined.replace("for", "do")
-            clauses = ' ' + combined
-
-        omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
-        clauses += str(expr.txt).replace("cancel for", "cancel do")
-        omp_expr = '{}{}\n'.format(omp_expr, clauses)
-        return omp_expr
+        return expr.fprint(printer=self, errors=errors)
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)

@@ -163,7 +163,7 @@ class SyntaxParser(BasicParser):
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
-                expr = omp_parse(stmts=line)
+                expr = omp_parse(stmt=line, parser=self, errors=errors)
             elif env.startswith('acc'):
                 expr = acc_parse(stmts=line)
             elif env.startswith('header'):

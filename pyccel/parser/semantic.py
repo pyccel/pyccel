@@ -94,9 +94,6 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
-                            OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
-                            OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
@@ -1712,37 +1709,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
-        code = expr._user_nodes
-        code = code[-1]
-        index = code.body.index(expr)
-        combined_loop = expr.combined and ('for' in expr.combined or 'distribute' in expr.combined or 'taskloop' in expr.combined)
-
-        if isinstance(expr, (OMP_Sections_Construct, OMP_Single_Construct)) \
-           and expr.has_nowait:
-            for node in code.body[index+1:]:
-                if isinstance(node, Omp_End_Clause):
-                    if node.txt.startswith(expr.name, 4):
-                        node.has_nowait = True
-
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct,
-                    OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
-            index += 1
-            while index < len(code.body) and isinstance(code.body[index], (Comment, CommentBlock, Pass)):
-                index += 1
-
-            if index < len(code.body) and isinstance(code.body[index], For):
-                end_expr = ['!$omp', 'end', expr.name]
-                if expr.combined:
-                    end_expr.append(expr.combined)
-                if expr.has_nowait:
-                    end_expr.append('nowait')
-                code.body[index].end_annotation = ' '.join(e for e in end_expr if e)+'\n'
-            else:
-                type_name = type(expr).__name__
-                msg = f"Statement after {type_name} must be a for loop."
-                errors.report(msg, symbol=expr,
-                    severity='fatal')
-
+        expr = expr._visit_semantics(self, errors)
         expr.clear_user_nodes()
         return expr
 

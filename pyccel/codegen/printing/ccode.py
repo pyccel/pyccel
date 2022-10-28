@@ -2012,25 +2012,8 @@ class CCodePrinter(CodePrinter):
     #=================== OMP ==================
 
     def _print_OmpAnnotatedComment(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined
-        clauses += str(expr.txt)
-        if expr.has_nowait:
-            clauses = clauses + ' nowait'
-        omp_expr = '#pragma omp {}{}\n'.format(expr.name, clauses)
+        return expr._cprint(printer=self, errors=errors)
 
-        if expr.is_multiline:
-            if expr.combined is None:
-                omp_expr += '{\n'
-            elif (expr.combined and "for" not in expr.combined):
-                if ("masked taskloop" not in expr.combined) and ("distribute" not in expr.combined):
-                    omp_expr += '{\n'
-
-        return omp_expr
-
-    def _print_Omp_End_Clause(self, expr):
-        return '}\n'
     #=====================================
 
     def _print_Program(self, expr):
