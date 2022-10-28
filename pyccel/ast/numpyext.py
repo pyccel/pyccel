@@ -321,8 +321,7 @@ DtypePrecisionToCastFunction = {
     'Complex' : {
        -1 : PythonComplex,
         4 : NumpyComplex64,
-        8 : NumpyComplex,
-        16 : NumpyComplex128,},
+        8 : NumpyComplex128,},
     'Bool':  {
        -1 : PythonBool,
         4 : NumpyBool}
@@ -1340,7 +1339,7 @@ class NumpyAbs(NumpyUfuncUnary):
     name = 'abs'
     def _set_dtype_precision(self, x):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(x)
 
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
