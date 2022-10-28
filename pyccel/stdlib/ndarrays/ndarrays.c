@@ -9,7 +9,6 @@
 # include <stdlib.h>
 # include <stdio.h>
 
-
 void print_ndarray_memory(t_ndarray nd)
 {
     int i = 0;
@@ -425,7 +424,6 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
     for (int i = 0; i < nd; i++)
         nd_shape[i] = np_shape[i];
     return nd_shape;
-
 }
 
 int get_shape_product(int64_t *shape, int nd, int max_nd) // TODO: ADD IT TO create_array

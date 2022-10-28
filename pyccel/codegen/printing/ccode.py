@@ -281,15 +281,13 @@ class CCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    #========================== Numpy Elements ===============================#
-
     def _flatten_list(self, irregular_list):
         if isinstance(irregular_list, (PythonList, PythonTuple)):
             f_list = [element for item in irregular_list for element in self._flatten_list(item)]
             return f_list
         else:
             return [irregular_list]
-
+    #========================== Numpy Elements ===============================#
     def _largest_literal_subset(self, flattened_list):
         largest_subset = []
         for i in flattened_list:

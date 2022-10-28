@@ -129,7 +129,6 @@ void        _array_fill_bool(bool c, t_ndarray arr);
 void        _array_fill_cfloat(float complex c, t_ndarray arr);
 void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
-
 /* slicing */
                 /* creating a Slice object */
 t_slice     new_slice(int32_t start, int32_t end, int32_t step);
@@ -151,7 +150,6 @@ int64_t         get_index(t_ndarray arr, ...);
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 void print_ndarray_memory(t_ndarray nd);
-
 /* copy data from ndarray */
 void array_copy_data(t_ndarray* dest, t_ndarray src);
 

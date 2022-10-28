@@ -684,7 +684,6 @@ def test_array_int_2d_C_initialization(language):
 
     assert np.array_equal(x1, x2)
 
-
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
