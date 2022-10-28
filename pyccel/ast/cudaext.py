@@ -186,9 +186,13 @@ class CudaCopy(CudaNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('unknown type of  %s.' % type(arg))
         
-        # Verify the direction of the copy
-        if (arg._memory_location or arg._memory_location) not in ('device', 'host'):
-            raise ValueError("The direction of the copy should be between host and device")
+        # Verify the memory_location of src
+        if arg._memory_location not in ('device', 'host'):
+            raise ValueError("The direction of the copy should be from 'host' or 'device'")
+
+        # Verify the memory_location of dst
+        if memory_location not in ('device', 'host'):
+            raise ValueError("The direction of the copy should be to 'host' or 'device'")
 
         self._arg             = arg
         self._shape           = arg._shape
