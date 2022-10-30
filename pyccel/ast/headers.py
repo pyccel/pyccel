@@ -285,10 +285,10 @@ class FunctionHeader(Header):
             order = None
             shape = None
 
-            if precision == -1:
-                precision = default_precision[dtype]
             if rank >1:
                 order = dc['order']
+                if precision == -1:
+                    precision = default_precision[dtype]
 
             if isinstance(dtype, str):
                 try:
