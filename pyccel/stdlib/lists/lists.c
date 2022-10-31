@@ -156,10 +156,7 @@ void     append(t_list* list, void* item)
         elements = realloc(list->elements, list->capacity * tsize);
         list->elements = elements;
     }
-    printf("-----\n");
     memcpy(&elements[list->size * tsize], item, tsize);
-    printf("-----\n");
-
     list->size += 1;
 }
 
