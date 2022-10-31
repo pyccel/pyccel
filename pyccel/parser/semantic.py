@@ -1709,7 +1709,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
-        expr = expr.visit_semantics(self, errors)
+        expr = expr.visit_semantic(self, errors)
         expr.clear_user_nodes()
         return expr
 

@@ -39,8 +39,7 @@ class OmpAnnotatedComment(Basic):
 
     """Represents an OpenMP Annotated Comment in the code."""
 
-    __slots__ = ("_version",)
-    _attribute_nodes = ()
+    __slots__ = ("VERSION", "DEPRECATED")
     _current_omp_version = None
 
     def __init__(self, **kwargs):
@@ -48,17 +47,27 @@ class OmpAnnotatedComment(Basic):
             raise NotImplementedError(
                 "OpenMP version not set (use OmpAnnotatedComment.set_current_version)"
             )
-        self._version = float(kwargs.pop("version", "0") or "0")
-        if self._version > self._current_omp_version:
+        self.VERSION = float(kwargs.pop("VERSION", "0") or "0")
+        self.DEPRECATED = float(kwargs.pop("DEPRECATED", "inf") or "inf")
+        if self.version > self._current_omp_version:
             raise NotImplementedError(
                 f"Syntax not supported in OpenMP version {self._current_omp_version}"
+            )
+        if self.deprecated <= self._current_omp_version:
+            raise NotImplementedError(
+                f"Syntax deprecated in OpenMP version {self.DEPRECATED}"
             )
         super().__init__(*kwargs)
 
     @property
     def version(self):
         """Returns the version of OpenMP syntax used."""
-        return self._version
+        return self.VERSION
+
+    @property
+    def deprecated(self):
+        """Returns the deprecated version of OpenMP syntax used."""
+        return self.DEPRECATED
 
     @classmethod
     def set_current_version(cls, version):
@@ -70,13 +79,16 @@ class OmpConstruct(OmpAnnotatedComment):
 
     """Represents an OpenMP Construct in the code."""
 
-    __slots__ = ("_name", "_clauses", "_clause_count", "_parent")
-    _attribute_nodes = ("_clauses",)
+    __slots__ = ("_name", "_clauses", "_clause_count", "_parent", "_has_closing")
+
+    _allowed_clauses = ()
+    _deprecated_clauses = ()
 
     def __init__(self, **kwargs):
         self._name = kwargs.pop("name")
         self._clauses = kwargs.pop("clauses", [])
         self._parent = kwargs.pop("parent", None)
+        self._has_closing = kwargs.pop("has_closing", False)
 
         # Count the occurrences of each clause
         # This is used to check for duplicate clauses if not allowed
@@ -87,6 +99,32 @@ class OmpConstruct(OmpAnnotatedComment):
             self._clause_count[clause.name] += 1
 
         super().__init__(**kwargs)
+
+    def visit_syntatic_clauses(self, parser, errors):
+        """Visit the clause in the syntatic phase."""
+        for clause in self._clauses:
+            if clause.name not in self._allowed_clauses:
+                errors.report(
+                    f"OMP PARALLEL CONSTRUCT: clause '{clause}' is not allowed",
+                    symbol=clause,
+                    severity="fatal",
+                )
+            if clause.name in self._deprecated_clauses:
+                errors.report(
+                    f"OMP PARALLEL CONSTRUCT: clause '{clause}' is deprecated",
+                    symbol=clause,
+                    severity="fatal",
+                )
+        return [clause.visit_syntatic(parser, errors) for clause in self._clauses]
+
+    def visit_semantic_clauses(self, parser, errors):
+        """Visit the clause in the semantic phase."""
+        return [clause.visit_semantic(parser, errors) for clause in self._clauses]
+
+    def cprint(self, printer, errors):
+        """Print the clause in the code."""
+        clauses = " ".join(clause.cprint(printer, errors) for clause in self.clauses)
+        return f"#pragma omp {self.name} {clauses}"
 
     @property
     def name(self):
@@ -104,21 +142,20 @@ class OmpConstruct(OmpAnnotatedComment):
         return self._clause_count
 
     def __str__(self):
-        return f'{self.name} {" ".join(str(clause) for clause in self.clauses)}'
+        return f'#$ omp {self.name} {" ".join(str(clause) for clause in self.clauses)}'
 
     def __repr__(self):
-        return f'{self.name} {" ".join(repr(clause) for clause in self.clauses)}'
+        return f'#$ omp {self.name} {" ".join(repr(clause) for clause in self.clauses)}'
 
 
 class OmpClause(OmpAnnotatedComment):
     """Represents an OpenMP Clause in the code."""
 
     __slots__ = ("_name", "_parent")
-    _attribute_nodes = ()
 
     def __init__(self, **kwargs):
         self._name = kwargs.pop("name")
-        self._parent = kwargs.pop("parent", None)
+        self._parent = kwargs.pop("parent")
         super().__init__(**kwargs)
 
     @property
@@ -134,7 +171,6 @@ class Omp(OmpAnnotatedComment):
     """Represents a holder for all OpenMP statements."""
 
     __slots__ = ("_statements",)
-    _attribute_nodes = ("_statements",)
 
     def __init__(self, **kwargs):
         self._statements = kwargs.pop("statements", [])
@@ -156,7 +192,6 @@ class OmpStatement(OmpAnnotatedComment):
     """Represents an OpenMP statement."""
 
     __slots__ = ("_statement", "_parent")
-    _attribute_nodes = ("_statement",)
 
     def __init__(self, **kwargs):
         self._statement = kwargs.pop("statement")
@@ -179,74 +214,63 @@ class OmpParallelConstruct(OmpConstruct):
     """Represents an OpenMP Parallel Construct."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
-class OmpEndConstruct(OmpAnnotatedComment):
+class OmpEndConstruct(OmpConstruct):
     """Represents an OpenMP End Construct."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpIfClause(OmpClause):
     """Represents an OpenMP If Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpNumThreadsClause(OmpClause):
     """Represents an OpenMP NumThreads Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpDefaultClause(OmpClause):
     """Represents an OpenMP Default Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpPrivateClause(OmpClause):
     """Represents an OpenMP Private Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpFirstPrivateClause(OmpClause):
     """Represents an OpenMP FirstPrivate Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpSharedClause(OmpClause):
     """Represents an OpenMP Shared Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpCopyinClause(OmpClause):
     """Represents an OpenMP Copyin Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpReductionClause(OmpClause):
     """Represents an OpenMP Reduction Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()
 
 
 class OmpProcBindClause(OmpClause):
     """Represents an OpenMP ProcBind Clause."""
 
     __slots__ = ()
-    _attribute_nodes = ()

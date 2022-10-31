@@ -35,7 +35,6 @@ AllOmpClauses:
     | OmpCopyinClause
     | OmpReductionClause
     | OmpProcBindClause
-    // TODO: | OmpAllocateClause
 ;
 ////////////////////////////////////////////////////
 
@@ -44,27 +43,60 @@ AllOmpClauses:
 ////////////////////////////////////////////////////
 //              Clauses definitions
 ////////////////////////////////////////////////////
-OmpIfClause: name='if' '(' (construct=ID)? arg=ParenthesizedExpression ')';
-OmpNumThreadsClause: name='num_threads' '(' arg=ParenthesizedExpression ')';
-OmpDefaultClause: name='default' '(' arg=DataSharingAttribute ')';
-OmpPrivateClause: name='private' '(' args+=ID[','] ')';
-OmpFirstPrivateClause: name='firstprivate' '(' args+=ID[','] ')';
-OmpSharedClause: name='shared' '(' args+=ID[','] ')';
-OmpCopyinClause: name='copyin' '(' args+=ID[','] ')';
-OmpReductionClause: name='reduction' '(' 
-                        (operator=ReductionOperator ':' args+=ID[','] version='4.5') // support for version 4.5 syntax
-                      | ((modifier=ReductionModifier ',')? operator=ReductionOperator ':' args+=ID[','] version='5.0') // support for version 5.0 syntax
-                    ')';
-OmpProcBindClause: name='proc_bind' '(' arg=AffinityPolicy ')';
+OmpIfClause: name='if' '('(
+                      VERSION=OMP_4_5 (directive_name_modifier=ID ':')? expr=ParenthesizedExpression 
+                )')';
+
+OmpNumThreadsClause: name='num_threads' '('(
+                      VERSION=OMP_4_5 num_threads=ParenthesizedExpression
+                )')';
+
+OmpDefaultClause: name='default' '('(
+                      VERSION=OMP_4_5 attribute=DataSharingAttribute 
+                )')';
+
+OmpPrivateClause: name='private' '('(
+                      VERSION=OMP_4_5 variables+=ID[',']
+                )')';
+
+OmpFirstPrivateClause: name='firstprivate' '('(
+                      VERSION=OMP_4_5 variables+=ID[',']
+                )')';
+
+OmpSharedClause: name='shared' '('(
+                      VERSION=OMP_4_5 variables+=ID[',']
+                )')';
+
+OmpCopyinClause: name='copyin' '('( 
+                      VERSION=OMP_4_5 variables+=ID[',']
+                )')';
+
+OmpReductionClause: name='reduction' '('(
+                        VERSION=OMP_4_5 operator=ReductionOperator ':' variables+=ID[',']
+                      | VERSION=OMP_5_0 (modifier=ReductionModifier ',')? operator=ReductionOperator ':' variables+=ID[','] 
+                )')';
+
+OmpProcBindClause: name='proc_bind' '('(
+                        VERSION=OMP_4_5                     affinity_policy=AffinityPolicy // supported for 4.5 and later
+                      | VERSION=OMP_4_5 DEPRECATED=OMP_5_1  affinity_policy='master' // deprecated in 5.1
+                      | VERSION=OMP_5_1                     affinity_policy='primary' // supported for 5.1 and later
+                )')';
 
 ////////////////////////////////////////////////////
 //              Clauses values
 ////////////////////////////////////////////////////
 OmpEndedConstruct: 'parallel';
-ParenthesizedExpression: (/.*(?=\))/); // match until the last closing parenthesis
+ParenthesizedExpression: (('(' ParenthesizedExpression ')') | /[^()]*/)*; // TODO: find a better way to do this as this will not escape the parenthesis inside of a string
 DataSharingAttribute: ('shared' | 'none' | 'private' | 'firstprivate');
 ReductionOperator: ('+' | '-' | '*' | '&' | '|' | '^' | '&&' | '||' | 'min' | 'max'); // TODO: those are only the implicitly declared ones for C and C++. Add the others for Fortran and support user-defined ones (see specs https://www.openmp.org/spec-html/5.0/openmpsu107.html#x140-581002)
-AffinityPolicy: ('master' | 'close' | 'spread' | 'primary');
+AffinityPolicy: ('close' | 'spread');
 ReductionModifier: ('inscan' | 'task' | 'default');
 
 ////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//              Omp Versions
+////////////////////////////////////////////////////
+OMP_4_5: '';
+OMP_5_0: '';
+OMP_5_1: '';

@@ -20,11 +20,19 @@ grammar = join(this_folder, "../grammar/openmp.tx")
 
 # TODO: get the version from the compiler
 used_version = openmp_versions["5.0"]
-OmpAnnotatedComment.set_current_version(4.5)
+OmpAnnotatedComment.set_current_version(5.0)
 omp_classes = used_version.inner_classes_list()
 
 meta = metamodel_from_file(grammar, classes=omp_classes)
 
+# object processors: are registered for particular classes (grammar rules)
+# and are called when the objects of the given class is instantiated.
+# The rules OMP_X_Y are used to insert the version of the syntax used
+meta.register_obj_processors({
+    'OMP_4_5': lambda _: 4.5,
+    'OMP_5_0': lambda _: 5.0,
+    'OMP_5_1': lambda _: 5.1,
+})
 
 def parse(stmt, parser, errors):
     """Parse OpenMP code and return a Pyccel AST node.
@@ -45,7 +53,8 @@ def parse(stmt, parser, errors):
     """
     try:
         meta_model = meta.model_from_str(stmt)
-        return meta_model.visit_syntatic(parser, errors)
+        assert len(meta_model.statements) == 1
+        return meta_model.statements[0].statement.visit_syntatic(parser, errors)
     except TextXError as e:
         errors.report(e.message, severity="fatal", symbol=stmt)
         return None
