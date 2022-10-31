@@ -77,7 +77,7 @@ from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
+from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString
 from pyccel.ast.literals import Literal, convert_to_literal
 
@@ -711,8 +711,8 @@ class SemanticParser(BasicParser):
                     d_var.pop('datatype')
                     var = self.scope.get_temporary_variable(a.value.dtype, **d_var)
                     assi = Assign(var, a.value)
-                    self._additional_exprs[-1].append(assi)
-                    a = self._visit(FunctionCallArgument(var), **settings)
+                    self._additional_exprs[-1].append((assi))
+                    a = FunctionCallArgument(var)
                 args.append(a)
         return args
 
@@ -1392,10 +1392,14 @@ class SemanticParser(BasicParser):
         # Iterate over the loops
         # This provides the definitions of iterators as well
         # as the central expression
-        loops  = [self._visit(expr.loops, **settings)]
 
         # If necessary add additional expressions corresponding
         # to nested GeneratorComprehensions
+        loops = [self._visit(expr.loops, **settings)]
+        add_exprs  = [*self._additional_exprs[-1]]
+        loops = add_exprs + loops
+        self._additional_exprs.pop()
+        self._additional_exprs.append([])
         if new_expr:
             loop = loops[0]
             for _ in range(nlevels-1):
