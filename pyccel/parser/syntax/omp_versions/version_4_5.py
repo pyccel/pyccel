@@ -253,7 +253,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("directive_name_modifier", "expr", "expr_ast")
+        __slots__ = ("expr_ast",)
 
         def __init__(self, **kwargs):
             self.directive_name_modifier = kwargs.pop("directive_name_modifier", None)
@@ -311,7 +311,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("num_threads", "num_threads_ast")
+        __slots__ = ("num_threads_ast",)
 
         def __init__(self, **kwargs):
             self.num_threads = kwargs.pop("num_threads")
@@ -358,7 +358,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("attribute",)
+        __slots__ = ()
 
         def __init__(self, **kwargs):
             self.attribute = kwargs.pop("attribute")
@@ -390,7 +390,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("variables", "variables_ast")
+        __slots__ = ("variables_ast",)
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
@@ -425,7 +425,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("variables", "variables_ast")
+        __slots__ = ("variables_ast",)
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
@@ -458,7 +458,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("variables", "variables_ast")
+        __slots__ = ("variables_ast",)
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
@@ -491,7 +491,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("variables", "variables_ast")
+        __slots__ = ("variables_ast")
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
@@ -525,15 +525,32 @@ class Openmp:
         """Represents an OpenMP Reduction Clause for both Pyccel AST
         and textx grammer rule
         """
+        #TODO: this clause still needs more work to support 
+        # both C and Fortran and also to support user defined
+        # reduction operations
+        __slots__ = ('variables_ast',)
+
+        def __init__(self, **kwargs):
+            self.operator = kwargs.pop("operator")
+            self.variables = kwargs.pop("variables")
+            self.variables_ast = None
+            super().__init__(**kwargs)
 
         def visit_syntatic(self, parser, errors):
-            raise NotImplementedError("TODO: implement me please!")
+            # TODO: check if a variable occured in other reduction clause
+            self.variables_ast = Openmp._visit_syntacic_variables(
+                self, parser, errors, self.variables
+            )
+            return self
 
         def visit_semantic(self, parser, errors):
-            raise NotImplementedError("TODO: implement me please!")
+            self.variables_ast = Openmp._visit_semantic_variables(
+                self, parser, errors, self.variables_ast
+            )
+            return self
 
         def cprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
+            return f"reduction({self.operator}: {', '.join(printer._print(i) for i in self.variables_ast)})"
 
         def fprint(self, printer, errors):
             raise NotImplementedError("TODO: implement me please!")
@@ -546,7 +563,7 @@ class Openmp:
         and textx grammer rule
         """
 
-        __slots__ = ("affinity_policy",)
+        __slots__ = ()
 
         def __init__(self, **kwargs):
             self.affinity_policy = kwargs.pop("affinity_policy")

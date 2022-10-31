@@ -40,6 +40,7 @@ class OmpAnnotatedComment(Basic):
     """Represents an OpenMP Annotated Comment in the code."""
 
     __slots__ = ("VERSION", "DEPRECATED")
+    _attribute_nodes = ()
     _current_omp_version = None
 
     def __init__(self, **kwargs):
@@ -57,7 +58,7 @@ class OmpAnnotatedComment(Basic):
             raise NotImplementedError(
                 f"Syntax deprecated in OpenMP version {self.DEPRECATED}"
             )
-        super().__init__(*kwargs)
+        super().__init__()
 
     @property
     def version(self):
@@ -225,52 +226,52 @@ class OmpEndConstruct(OmpConstruct):
 class OmpIfClause(OmpClause):
     """Represents an OpenMP If Clause."""
 
-    __slots__ = ()
+    __slots__ = ('directive_name_modifier', 'expr')
 
 
 class OmpNumThreadsClause(OmpClause):
     """Represents an OpenMP NumThreads Clause."""
 
-    __slots__ = ()
+    __slots__ = ('num_threads',)
 
 
 class OmpDefaultClause(OmpClause):
     """Represents an OpenMP Default Clause."""
 
-    __slots__ = ()
+    __slots__ = ('attribute',)
 
 
 class OmpPrivateClause(OmpClause):
     """Represents an OpenMP Private Clause."""
 
-    __slots__ = ()
+    __slots__ = ('variables',)
 
 
 class OmpFirstPrivateClause(OmpClause):
     """Represents an OpenMP FirstPrivate Clause."""
 
-    __slots__ = ()
+    __slots__ = ('variables',)
 
 
 class OmpSharedClause(OmpClause):
     """Represents an OpenMP Shared Clause."""
 
-    __slots__ = ()
+    __slots__ = ('variables',)
 
 
 class OmpCopyinClause(OmpClause):
     """Represents an OpenMP Copyin Clause."""
 
-    __slots__ = ()
+    __slots__ = ('variables',)
 
 
 class OmpReductionClause(OmpClause):
     """Represents an OpenMP Reduction Clause."""
 
-    __slots__ = ()
+    __slots__ = ('modifier', 'operator', 'variables')
 
 
 class OmpProcBindClause(OmpClause):
     """Represents an OpenMP ProcBind Clause."""
 
-    __slots__ = ()
+    __slots__ = ('affinity_policy', )
