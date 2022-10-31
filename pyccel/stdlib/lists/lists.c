@@ -355,8 +355,9 @@ void     reverse(t_list* list)
     size_t tsize = tSizes[list->type];
     size_t index = 0;
     char *elements = (char*)(list->elements);
-    void *buffer = malloc(tsize);
+    char buffer[tsize];
 
+    memset(buffer, 0, tsize);
     while (index + 1 <= list->size / 2)
     {
         memcpy(buffer, &elements[index * tsize], tsize);
@@ -364,7 +365,6 @@ void     reverse(t_list* list)
         memcpy(&elements[(list->size - index - 1) * tsize], buffer, tsize);
         index++;
     }
-    free(buffer);
 }
 
 
