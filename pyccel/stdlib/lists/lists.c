@@ -147,15 +147,20 @@ void     append(t_list* list, void* item)
             the element to be added
 */
 {
-    t_list listTmp;
-    listTmp.capacity = DEFAULT_CAP;
-    if (list->type == lst_list)
-        listTmp.elements = &item;
-    else
-        listTmp.elements = item;
-    listTmp.size = 1;
-    listTmp.type = list->type;
-    extend(list, &listTmp);
+    size_t tsize = tSizes[list->type];
+    char* elements = list->elements;
+
+    if ((list->size + 1) >= list->capacity)
+    {
+        list->capacity *= 2;
+        elements = realloc(list->elements, list->capacity * tsize);
+        list->elements = elements;
+    }
+    printf("-----\n");
+    memcpy(&elements[list->size * tsize], item, tsize);
+    printf("-----\n");
+
+    list->size += 1;
 }
 
 
