@@ -156,7 +156,10 @@ void     append(t_list* list, void* item)
         elements = realloc(list->elements, list->capacity * tsize);
         list->elements = elements;
     }
-    memcpy(&elements[list->size * tsize], item, tsize);
+    if (list->type == lst_list)
+        memcpy(&elements[list->size * tsize], &item, tsize);
+    else
+        memcpy(&elements[list->size * tsize], item, tsize);
     list->size += 1;
 }
 
