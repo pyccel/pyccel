@@ -174,14 +174,21 @@ class CudaCopy(CudaNewArray):
     """
     Represents a call to  cuda.copy for code generation.
 
+    Parameters
+    ----------
     arg : list, tuple, PythonList
 
     memory_location : str
+        'host'   the newly created array is allocated on host.
+        'device' the newly created array is allocated on device.
+    
+    is_async: bool
+        Indicates whether the copy is asynchronous or not [Default value: False]
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location', '_is_async')
 
-    def __init__(self, arg, memory_location):
+    def __init__(self, arg, memory_location, is_async=False):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('unknown type of  %s.' % type(arg))
@@ -193,7 +200,11 @@ class CudaCopy(CudaNewArray):
         # Verify the memory_location of dst
         if memory_location not in ('device', 'host'):
             raise ValueError("The direction of the copy should be to 'host' or 'device'")
-
+        
+        # verify the type of is_async
+        if not isinstance(is_async, (LiteralTrue, LiteralFalse, bool)):
+            raise TypeError('is_async must be boolean')
+        
         self._arg             = arg
         self._shape           = arg._shape
         self._rank            = arg._rank
@@ -201,6 +212,7 @@ class CudaCopy(CudaNewArray):
         self._order           = arg._order
         self._precision       = arg._precision
         self._memory_location = memory_location
+        self._is_async        = is_async
         super().__init__()
     
     @property

@@ -549,8 +549,11 @@ class CcudaCodePrinter(CCodePrinter):
         from_location = str(rhs._arg._memory_location).capitalize()
         to_location   = str(rhs._memory_location).capitalize()
         transfer_type = 'cudaMemcpy{0}To{1}'.format(from_location, to_location)
-        code = "cudaMemcpy({0}.raw_data, {1}.raw_data, {0}.buffer_size, {2});".format(lhs, rhs._arg, transfer_type)
-        return '%s\n' % (code)
+        if isinstance(rhs._is_async, LiteralTrue):
+            cpy_data = "cudaMemcpyAsync({0}.raw_data, {1}.raw_data, {0}.buffer_size, {2}, 0);".format(lhs, rhs._arg, transfer_type)
+        else:
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}.raw_data, {0}.buffer_size, {2});".format(lhs, rhs._arg, transfer_type)
+        return '%s\n' % (cpy_data)
 
 def ccudacode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of ccuda code
