@@ -367,6 +367,55 @@ void     reverse(t_list* list)
     }
 }
 
+t_list *lst_slice(t_list *list, size_t start, size_t end, int step, int order)
+/*
+        Returns a new t_list containing a slice of another t_list
+
+        Parameters
+        ----------
+        list : t_list*
+            t_list from where to get the slice 
+
+        start : size_t
+            the starting index for the slice
+
+        end : size_t
+            the ending index for the slice (excluded)
+
+        step : int
+            the pace at which to take the element
+
+        order : int
+            the order of the slice
+                1 : for reverse order
+                0 : for original t_list order
+        
+        Returns
+        =======
+        slice : t_list
+*/
+{
+    if (!step || start == end)
+        return (NULL);
+
+    size_t tsize = tSizes[list->type];
+    size_t size = end - start;
+    char *buff = calloc((size / step), tsize);
+    char *elements = list->elements;
+    size_t index = 0;
+
+    while (index < end)
+    {
+        if (order)
+            memcpy(&buff[(size - index - 1) * tsize], &elements[((index * step) + start) * tsize], tsize);
+        else
+            memcpy(&buff[index * tsize], &elements[(index + start) * step * tsize], tsize);
+        index++;
+    }
+    t_list *slice = allocate_list(size, list->type, buff);
+    free(buff);
+    return (slice);
+}
 
 void*   array_subscripting(t_list *list, size_t index)
 /*

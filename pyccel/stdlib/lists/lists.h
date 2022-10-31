@@ -70,5 +70,6 @@ void    reverse(t_list* list);
 void    sort(t_list *list, size_t rev);
 void*   array_subscripting(t_list *list, size_t index);
 void    print_list(t_list *list, int newline);
+t_list *lst_slice(t_list *list, size_t start, size_t end, int step, int order);
 
 #endif
