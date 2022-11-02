@@ -401,43 +401,6 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['ndarrays'])
         return buffer_array, array_init
 
-    def fill_NumpyArange(self, expr, lhs):
-        """ print the assignment of a NumpyArange
-        parameters
-        ----------
-            expr : NumpyArange
-                The node holding NumpyArange
-            lhs : Variable
-                 The left hand of Assign
-        Return
-        ------
-            String
-                Return string that contains the Assign code and the For loop
-                responsible for filling the array values
-        """
-        start  = self._print(expr.start)
-        stop   = self._print(expr.stop)
-        step   = self._print(expr.step)
-        dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
-
-        target = self.scope.get_temporary_variable(expr.dtype)
-        index  = self.scope.get_temporary_variable(NativeInteger())
-
-        self._additional_code += self._print(Assign(index, LiteralInteger(0)))
-
-        code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
-        code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
-        code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
-        code = code.format(target = self._print(target),
-                            start = start,
-                            stop  = stop,
-                            op    = '<' if not isinstance(expr.step, PyccelUnarySub) else '>',
-                            step  = step,
-                            index = self._print(index),
-                            lhs   = lhs,
-                            dtype = dtype)
-        return code
-
     def _handle_inline_func_call(self, expr):
         """ Print a function call to an inline function
         """
@@ -1761,8 +1724,6 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
-        if isinstance(rhs, NumpyArange):
-            return prefix_code+self.fill_NumpyArange(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
