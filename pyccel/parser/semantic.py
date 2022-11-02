@@ -707,14 +707,13 @@ class SemanticParser(BasicParser):
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
-                if isinstance(a.value, PyccelArithmeticOperator):
+                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
                     d_var = self._infere_type(a.value)
                     d_var.pop('datatype')
                     var = self.scope.get_temporary_variable(a.value.dtype, **d_var)
-                    if var.is_ndarray:
-                        alloc = Allocate(var, shape=a.value.shape,
-                                        order=a.value.order, status='unallocated')
-                        self._additional_exprs[-1].append(alloc)
+                    alloc = Allocate(var, shape=a.value.shape,
+                                    order=a.value.order, status='unallocated')
+                    self._additional_exprs[-1].append(alloc)
                     assi = Assign(var, a.value)
                     self._additional_exprs[-1].append(assi)
                     a = FunctionCallArgument(var)
