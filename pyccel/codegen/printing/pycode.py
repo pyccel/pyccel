@@ -128,7 +128,8 @@ class PythonCodePrinter(CodePrinter):
                         b.substitute(func_for.lhs, func_for)
                 if len(body) > 1:
                     # Ensure all assigns assign to the dummy we are searching for and do not introduce unexpected variables
-                    if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
+                    # if any(not(isinstance(b, Assign) and b.lhs is dummy_var) for b in body[1:]):
+                    if any(not(isinstance(b, Assign)) for b in body[1:]):
                         raise NotImplementedError("Pyccel has introduced unnecessary statements which it cannot yet disambiguate in the python printer")
                 body = body[0]
             elif isinstance(body, For):

@@ -710,8 +710,12 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(a.value)
                     d_var.pop('datatype')
                     var = self.scope.get_temporary_variable(a.value.dtype, **d_var)
+                    if var.is_ndarray:
+                        alloc = Allocate(var, shape=a.value.shape,
+                                        order=a.value.order, status='unallocated')
+                        self._additional_exprs[-1].append(alloc)
                     assi = Assign(var, a.value)
-                    self._additional_exprs[-1].append((assi))
+                    self._additional_exprs[-1].append(assi)
                     a = FunctionCallArgument(var)
                 args.append(a)
         return args
@@ -1394,12 +1398,14 @@ class SemanticParser(BasicParser):
         # as the central expression
 
         # If necessary add additional expressions corresponding
-        # to nested GeneratorComprehensions
+        # to nested GeneratorComprehension
         loops = [self._visit(expr.loops, **settings)]
-        add_exprs  = [*self._additional_exprs[-1]]
-        loops = add_exprs + loops
-        self._additional_exprs.pop()
-        self._additional_exprs.append([])
+
+        for e in self._additional_exprs[-1]:
+            if not isinstance(e, FunctionalFor):
+                loops[0].body.insert2body(e, back=False)
+                del self._additional_exprs[-1][-1]
+
         if new_expr:
             loop = loops[0]
             for _ in range(nlevels-1):
