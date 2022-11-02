@@ -4009,7 +4009,7 @@ def test_numpy_arange_into_slice(language):
     x_expected = x.copy()
     f1(x_expected)
     f2(x)
-    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(x, x_expected, rtol=RTOL, atol=ATOL)
 
 def test_iterate_slice(language):
     f1 = arrays.iterate_slice
