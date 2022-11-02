@@ -3967,6 +3967,8 @@ def test_arrs_2d_negative_index(language):
 #==============================================================================
 # TEST : NUMPY ARANGE
 #==============================================================================
+RTOL = 1e-12
+ATOL = 1e-16
 
 def test_numpy_arange_one_arg(language):
     f1 = arrays.arr_arange_1
@@ -3985,8 +3987,8 @@ def test_numpy_arange_full_arg(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
     assert (type(r_f1[1]) is type(r_f2[1]))
+    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_with_dtype(language):
     f1 = arrays.arr_arange_4
@@ -4000,8 +4002,8 @@ def test_numpy_arange_negative_step(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
     assert (type(r_f1[1]) is type(r_f2[1]))
+    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_negative_step_2(language):
     f1 = arrays.arr_arange_6
@@ -4010,13 +4012,24 @@ def test_numpy_arange_negative_step_2(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
     assert (type(r_f1[1]) is type(r_f2[1]))
+    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
+def test_numpy_arange_into_slice(language):
+    f1 = arrays.arr_arange_7
+    f2 = epyccel(f1, language = language)
+    n = randint(2, 10)
+    m = randint(2, 10)
+    x = np.array(100 * np.random.random((n, m)), dtype=int)
+    x_expected = x.copy()
+    f1(x_expected)
+    f2(x)
+    np.testing.assert_allclose(x, x_expected, rtol=RTOL, atol=ATOL)
 
 def test_iterate_slice(language):
     f1 = arrays.iterate_slice
     f2 = epyccel(f1, language = language)
-    i = randint(2,10)
+    i = randint(2, 10)
     assert f1(i) == f2(i)
 
 ##==============================================================================

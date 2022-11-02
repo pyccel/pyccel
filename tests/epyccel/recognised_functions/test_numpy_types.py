@@ -1344,3 +1344,31 @@ def test_numpy_complex_array_like_2d(language, get_complex):
         assert epyccel_func(fl) == get_complex(fl)
         assert epyccel_func(fl64) == get_complex(fl64)
     assert epyccel_func(fl32) == get_complex(fl32)
+
+def test_literal_complex64(language):
+    def get_complex64():
+        from numpy import complex64
+        compl = complex64(3+4j)
+        return compl, compl.real, compl.imag
+
+    epyccel_func = epyccel(get_complex64, language=language)
+
+    pyth_res = get_complex64()
+    pycc_res = epyccel_func()
+    for pyth, pycc in zip(pyth_res, pycc_res):
+        assert pyth == pycc
+        assert isinstance(pycc, type(pyth))
+
+def test_literal_complex128(language):
+    def get_complex128():
+        from numpy import complex128
+        compl = complex128(3+4j)
+        return compl, compl.real, compl.imag
+
+    epyccel_func = epyccel(get_complex128, language=language)
+
+    pyth_res = get_complex128()
+    pycc_res = epyccel_func()
+    for pyth, pycc in zip(pyth_res, pycc_res):
+        assert pyth == pycc
+        assert isinstance(pycc, type(pyth))
