@@ -532,21 +532,48 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonList(self, expr):
 
-        def elements_array(expr, compound_type=None):
+        def compound_stmt(expr, compound_type=None):
             if compound_type == None:
                 compound_type = self.find_in_dtype_registry(self._print(expr.dtype), expr.precision)
             args = ', \n'.join(self._print(arg) for arg in expr.args)
-            elements = f'({compound_type} []){{\n{args}\n}}'
+            elements = f'({compound_type}[]){{\n{args}\n}}'
             return elements
 
         if expr.rank == 1:
-
             lst_type = self.find_in_list_type_registry(self._print(expr.dtype), expr.precision)
-            elements = elements_array(expr)
+            elements = compound_stmt(expr)
         else:
             lst_type = "lst_list"
-            elements = elements_array(expr, 't_list*')
+            elements = compound_stmt(expr, 't_list*')
         return "allocate_list({}, {}, {})".format(expr.shape[0], lst_type, elements)
+
+    def _print_PythonListAppend(self, expr):
+        lst = expr.list
+        arg = expr.args[0]
+
+        # Check if dtypes are compatible regardless of the shapes of lst and arg.
+        if lst.dtype != arg.dtype:
+            return errors.report(f"cannot append an argument of type[{arg.dtype}] to a list of dtype [{lst.dtype}]", 
+                    symbol=expr,
+                    severity='fatal')
+
+        if arg.rank == 0 and lst.rank == 1 and not isinstance(arg, Variable):
+            compound_type = self.find_in_dtype_registry(self._print(arg.dtype), arg.precision)
+            arg = f"({compound_type}[]){{{self._print(arg)}}}"
+        elif isinstance(arg, Variable):
+            arg = ObjectAddress(arg)
+
+        return "append({}, {});\n".format(self._print(lst), self._print(arg))
+
+    def _print_PythonListSort(self, expr):
+        lst = expr.list
+        rev = expr.reverse
+        return "sort({}, {});\n".format(
+                    self._print(lst),
+                    self._print(rev))
+
+    def _print_PythonListClear(self, expr):
+        return "clear({});\n".format(self._print(expr.list))
 
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
