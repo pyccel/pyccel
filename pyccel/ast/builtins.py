@@ -643,6 +643,80 @@ class PythonList(PyccelAstNode):
         """
         return self._is_homogeneous
 
+class PythonListMethod(PyccelInternalFunction):
+    __slots__ = ('_list', '_args', '_kwargs')
+    _dtype = NativeInteger()
+    _precision = -1
+    _rank  = 0
+    _shape = None
+    _order = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args)
+        self._list = args[0]
+        self._args = args[1:]
+        self._kwargs = kwargs
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+
+    @property
+    def list(self):
+        return self._list
+
+    @list.setter
+    def list(self, other):
+        self._list = other
+
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def kwargs(self):
+        return self._kwargs
+
+    def __repr__(self):
+        args = [arg for arg in self.args]
+        args += [f'{k}={str(v)}' for k, v in self.kwargs.items()]
+        args = ', '.join(args)
+        return f"{self.list}.{self.name}({args})"
+
+class PythonListAppend(PythonListMethod):
+    name = 'append'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class PythonListSort(PythonListMethod):
+    name = 'sort'
+
+    def __init__(self, *args, **kwargs):
+        kwargs = {k.replace("'", ''): v for k, v in kwargs.items()}
+        if 'reverse' not in kwargs.keys():
+            kwargs['reverse'] = LiteralFalse()
+        super().__init__(*args, **kwargs)
+        self._reverse = super().kwargs['reverse']
+
+    @property
+    def reverse(self):
+        return self._reverse
+
+    @reverse.setter
+    def reverse(self, value):
+        self._reverse = value
+
+class PythonListClear(PythonListMethod):
+    name = 'clear'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class PythonListExtend(PythonListMethod):
+    name = 'extend'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 #==============================================================================
 class PythonMap(Basic):
     """ Represents the map stmt
