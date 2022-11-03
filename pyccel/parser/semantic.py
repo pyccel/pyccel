@@ -1911,6 +1911,12 @@ class SemanticParser(BasicParser):
         rhs_name = _get_name(rhs)
         attr_name = []
 
+        if isinstance(first, PythonList) or (isinstance(first, Variable) and first.cls_base == ListClass):
+            if isinstance(rhs, FunctionCall):
+                args   = [self._visit(arg.value) for arg in rhs.args if not arg.keyword]
+                kwargs = {self._visit(arg.keyword): self._visit(arg.value) for arg in rhs.args if arg.keyword}
+                return self._visit(list_methods_dict[rhs.func_name](visited_lhs, *args, **kwargs))
+
         # Handle case of imported module
         if isinstance(first, Module):
 
@@ -1994,8 +2000,6 @@ class SemanticParser(BasicParser):
                         self.insert_import('numpy', AsName(func, rhs_name))
                         return func(visited_lhs, *args)
                     else:
-                        if i in ListClass.methods:
-                            args = [lhs] + args
                         return DottedFunctionCall(i, args, prefix = visited_lhs,
                                     current_function = self._current_function)
 
