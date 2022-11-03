@@ -1645,6 +1645,15 @@ class CCodePrinter(CodePrinter):
             return self._handle_inline_func_call(expr)
          # Ensure the correct syntax is used for pointers
         args = []
+        if isinstance(expr, DottedFunctionCall):
+            obj = expr.prefix
+            if getattr(obj, 'cls_base', None) == ListClass:
+                args.append(obj)
+            elif isinstance(obj, PythonList):
+                var = self.scope.get_temporary_variable(obj.dtype, rank=obj.rank, memory_handling='heap', cls_base=ListClass)
+                self._additional_code += self._print(Assign(var, obj))
+                args.append(var)
+
         for a, f in zip(expr.args, func.arguments):
             a = a.value if a else Nil()
             f = f.var
