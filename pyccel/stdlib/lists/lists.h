@@ -9,7 +9,8 @@
 #include <stdlib.h>
 #include <complex.h>
 
-#define GET_INDEX(list, i) (list->elements + (i * tSizes[list->type]))
+#define MIN(a, b) (a > b ? b : a)
+#define GET_ELM(list, i) (list->elements + (i * tSizes[list->type]))
 
 // typedef enum e_type t_type;
 
