@@ -902,6 +902,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonPrint(self, expr):
         self.add_import(c_imports['stdio'])
         self.add_import(c_imports['inttypes'])
+        _deallocate = []
         end = '\n'
         sep = ' '
         code = ''
@@ -951,7 +952,20 @@ class CCodePrinter(CodePrinter):
             if isinstance(f, PythonType):
                 f = f.print_string
 
-            if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
+            if isinstance(f, PythonList) or (isinstance(f, Variable) and f.cls_base == ListClass):
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                if isinstance(f, PythonList):
+                    var = self.scope.get_temporary_variable(f.dtype, rank=f.rank, memory_handling='heap', cls_base=ListClass)
+                    self._additional_code += self._print(Assign(var, f))
+                    code += f"print_list({self._print(var)}, 0);\n"
+                    _deallocate.append(Deallocate(var))
+                else:
+                    code += f"print_list({self._print(f)}, 0);\n"
+                code += formatted_args_to_printf(args_format, args, sep if (i+1 < len(orig_args)) else end)
+            elif isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
                 tmp_arg_format_list = []
                 for a in tmp_list:
@@ -962,13 +976,6 @@ class CCodePrinter(CodePrinter):
                 args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
-            elif hasattr(f, 'cls_base') and f.cls_base == ListClass:
-                if args_format:
-                    code += formatted_args_to_printf(args_format, args, sep)
-                    args_format = []
-                    args = []
-                code += f"print_list({self._print(f)}, 0);\n"
-                code += formatted_args_to_printf(args_format, args, sep if (i+1 < len(orig_args)) else end)
             elif f.rank > 0:
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
@@ -997,6 +1004,8 @@ class CCodePrinter(CodePrinter):
                 args.append(arg)
         if args_format:
             code += formatted_args_to_printf(args_format, args, end)
+        for arg in _deallocate:
+            code += self._print(arg)
         return code
 
     def find_in_dtype_registry(self, dtype, prec):
