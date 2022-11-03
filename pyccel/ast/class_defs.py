@@ -5,7 +5,6 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
-from pyccel.ast.internals import PyccelSymbol
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
@@ -135,11 +134,6 @@ TupleClass = ClassDef('tuple',
 
 ListClass = ClassDef('list',
         methods=[
-            FunctionDef('append', [PyccelSymbol('arg1'), PyccelSymbol('arg2')], [], body=[]),
-            FunctionDef('pop', [PyccelSymbol('arg1'), PyccelSymbol('arg2')], [], body=[]),
-            #index
-            #count
-            #and many more
             ])
 
 #=======================================================================================
