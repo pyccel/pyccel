@@ -19,7 +19,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction, max_precision, Slice
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals  import LiteralFalse, LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
@@ -564,7 +564,7 @@ class PythonList(PyccelAstNode):
             self._rank = 0
             self._shape = None
             self._order = None
-            self._is_homogeneous = False
+            self._is_homogeneous = True
         else:
             a0_precision = args[0].precision
             a0_dtype     = args[0].dtype
@@ -590,7 +590,6 @@ class PythonList(PyccelAstNode):
                 if strts:
                     self._dtype = NativeString()
                     self._precision = 0
-                    self._rank = 0
                 elif integers:
                     self._dtype = NativeInteger()
                     self._precision = max_precision(integers)
@@ -613,14 +612,24 @@ class PythonList(PyccelAstNode):
             else:
                 raise TypeError('Inhomogeneous lists are not supported.')
 
+    def __getitem__(self, i):
+        #TODO: ensure i is integer
+        return self._args[i]
+
     def __iter__(self):
         return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
 
     def __str__(self):
         return '[{}]'.format(', '.join(str(a) for a in self._args))
 
     def __repr__(self):
         return 'PythonList({})'.format(', '.join(str(a) for a in self._args))
+
+    def __add__(self, other):
+        return PythonList(*(self.args + other.args))
 
     @property
     def args(self):
