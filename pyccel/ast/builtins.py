@@ -1101,3 +1101,12 @@ builtin_functions_dict = {
     'map'      : PythonMap,
     'type'     : PythonType,
 }
+
+list_methods_dict = {
+    'append': PythonListAppend,
+    'sort'  : PythonListSort,
+    'clear' : PythonListClear,
+#    'pop'   : PythonListPop,
+#    'insert': PythonListInsert,
+#    'extend': PythonListExtend,
+}
