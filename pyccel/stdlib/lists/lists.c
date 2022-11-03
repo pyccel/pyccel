@@ -574,16 +574,16 @@ void print_list(t_list *list, int newline)
         {
             switch (list->type)
             {
-                case lst_int8:   printf("%hhd", *(int8_t *)GET_INDEX(list, i));  break;
-                case lst_int16:  printf("%hd",  *(int16_t *)GET_INDEX(list, i)); break;
-                case lst_int32:  printf("%d",   *(int32_t *)GET_INDEX(list, i)); break;
-                case lst_int64:  printf("%ld",  *(int64_t *)GET_INDEX(list, i)); break;
-                case lst_float:  printf("%f",   *(float *)GET_INDEX(list, i));   break;
-                case lst_double: printf("%lf",  *(double *)GET_INDEX(list, i));  break;
+                case lst_int8:   printf("%hhd", *(int8_t  *)GET_ELM(list, i)); break;
+                case lst_int16:  printf("%hd",  *(int16_t *)GET_ELM(list, i)); break;
+                case lst_int32:  printf("%d",   *(int32_t *)GET_ELM(list, i)); break;
+                case lst_int64:  printf("%ld",  *(int64_t *)GET_ELM(list, i)); break;
+                case lst_float:  printf("%f",   *(float   *)GET_ELM(list, i)); break;
+                case lst_double: printf("%lf",  *(double  *)GET_ELM(list, i)); break;
                 case lst_complex: 
-                    // double real = creal(*(complex *)GET_INDEX(list, i));
-                    // double imag = cimag(*(complex *)GET_INDEX(list, i));
-                    // printf("%lf%s%lfj", creal, imag >= 0 ? "+" : "", imag);
+                    double real = creal(*(complex *)GET_ELM(list, i));
+                    double imag = cimag(*(complex *)GET_ELM(list, i));
+                    printf("%lf%s%lfj", real, imag >= 0 ? "+" : "", imag);
                     break;
             }
         }
