@@ -2408,6 +2408,9 @@ class SemanticParser(BasicParser):
         else:
             rhs = self._visit(rhs, **settings)
 
+        # Don't assign list methods to temporary variable
+        if isinstance(rhs, (PythonListAppend, PythonListSort, PythonListClear)):
+            return rhs
         if isinstance(rhs, FunctionDef):
 
             # case of lambdify
