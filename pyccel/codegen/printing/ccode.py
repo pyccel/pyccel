@@ -15,7 +15,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 from pyccel.ast.class_defs import ListClass
 
-from pyccel.ast.core      import Declare, For, CodeBlock
+from pyccel.ast.core      import Declare, DottedFunctionCall, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
@@ -1018,7 +1018,7 @@ class CCodePrinter(CodePrinter):
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
-    def find_in_list_type_registry(elf, dtype, prec):
+    def find_in_list_type_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
         try:
@@ -1046,7 +1046,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['stdint'])
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
-            if expr.cls_base.name == 'list':
+            if isinstance(expr, PythonList) or expr.cls_base == ListClass:
                 self.add_import(c_imports['lists'])
                 dtype = 't_list'
             elif expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
@@ -1057,7 +1057,7 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
-        if self.stored_in_c_pointer(expr) or dtype == 't_list':
+        if self.stored_in_c_pointer(expr) or isinstance(expr, PythonList) or expr.cls_base == ListClass:
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
