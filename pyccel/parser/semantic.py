@@ -23,7 +23,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonListAppend, PythonListClear, PythonListSort, PythonPrint, list_methods_dict
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -1662,6 +1662,59 @@ class SemanticParser(BasicParser):
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
+        return expr
+
+    def _visit_PythonListAppend(self, expr, **settings):
+        lst = expr.list
+        arg = expr.args[0]
+
+        if expr.kwargs:
+            return errors.report(f'append() takes no keyword aguments',
+                symbol=expr, severity='fatal')
+        if len(expr.args) != 1:
+            return errors.report(f'append() takes exactly one argument ({len(expr.args)} given)',
+                symbol=expr, severity='fatal')
+        if arg.rank == 0 and lst.rank != 1:
+            return errors.report(f"cannot append scalar in a list[rank={lst.rank}] of lists",
+                symbol=expr, severity='fatal')
+        if arg.rank != 0 and lst.rank == 1:
+            return errors.report(f"cannot append a list[rank={arg.rank}] in a list[rank={lst.rank}] of scalars, use extend instead.",
+                symbol=expr, severity='fatal')
+
+        # create new variable and assign the current lst
+        # to it if the type of lst is PythonList.
+        # ex: [1, 3, 3, 7].append(42)
+        # -> PythonListAppend(Dummy_0000 := PythonList([1, 3, 3, 7]), 42)
+        if isinstance(lst, PythonList):
+            d_var = self._infere_type(lst)
+            d_var.pop('datatype')
+            var   = self.scope.get_temporary_variable(lst.dtype, **d_var)
+            self._additional_exprs.append([Assign(var, lst)])
+            expr.list = var
+
+        return expr
+
+    def _visit_PythonListSort(self, expr, **settings):
+        rev = expr.reverse
+
+        if expr.args[0:]:
+            return errors.report(f"sort() takes no positional arguments", symbol=expr, severity='fatal')
+        for k in expr.kwargs.keys():
+            if k not in ['reverse']:
+                return errors.report(f"{k} is an invalid keyword argument for sort()", symbol=expr, severity='fatal')
+        if not isinstance(rev, (NativeBool, NativeInteger, LiteralInteger, LiteralFalse, LiteralTrue)):
+            return errors.report("reverse parameter must be of type bool or int", symbol=expr, severity='fatal')
+        if isinstance(rev,(NativeInteger, LiteralInteger)):
+            expr.reverse = LiteralTrue() if rev else LiteralFalse()
+
+        return expr
+
+    def _visit_PythonListClear(self, expr, **settings):
+        if expr.args[0:]:
+            return errors.report(f"sort() takes no positional arguments", symbol=expr, severity='fatal')
+        if expr.kwargs:
+            key = expr.kwargs.keys()[0]
+            return errors.report(f"{key} is an invalid keyword argument for sort()", symbol=expr, severity='fatal')
         return expr
 
     def _visit_FunctionCallArgument(self, expr, **settings):
