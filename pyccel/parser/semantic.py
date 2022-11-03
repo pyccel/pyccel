@@ -66,14 +66,15 @@ from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
-                                  NativeGeneric, NativeComplex)
+                                  NativeGeneric, NativeComplex,
+                                  NativeVoid)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -755,6 +756,7 @@ class SemanticParser(BasicParser):
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
+        # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
             f_arg = f_arg.var
@@ -830,14 +832,31 @@ class SemanticParser(BasicParser):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
+
+            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
+            # Sort arguments to match the order in the function definition
+            input_args = [a for a in args if a.keyword is None]
+            nargs = len(input_args)
+            for ka in func_args[nargs:]:
+                key = ka.name
+                relevant_args = [a for a in args[nargs:] if a.keyword == key]
+                n_relevant_args = len(relevant_args)
+                assert n_relevant_args <= 1
+                if n_relevant_args == 0 and ka.has_default:
+                    input_args.append(ka.default_call_arg)
+                elif n_relevant_args == 1:
+                    input_args.append(relevant_args[0])
+
+            args = input_args
+
             new_expr = FunctionCall(func, args, self._current_function)
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
             elif isinstance(func, FunctionDef):
-                self._check_argument_compatibility(new_expr.args, func.arguments,
-                        expr, func.is_elemental)
+                self._check_argument_compatibility(args, func_args,
+                            expr, func.is_elemental)
             return new_expr
 
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
@@ -2151,6 +2170,14 @@ class SemanticParser(BasicParser):
                 return getattr(self, annotation_method)(expr, **settings)
 
         args = self._handle_function_args(expr.args, **settings)
+        # Correct keyword names if scope is available
+        # The scope is only available if the function body has been parsed
+        # (i.e. not for headers or builtin functions)
+        if isinstance(func, FunctionDef) and func.scope:
+            args = [a if a.keyword is None else \
+                    FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
+                    for a in args]
+
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -2440,6 +2467,11 @@ class SemanticParser(BasicParser):
             d_var  = self._infere_type(rhs, **settings)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
+        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, NativeVoid):
+            if expr.lhs.is_temp:
+                return rhs
+            else:
+                raise NotImplementedError("Cannot assign result of a function without a return")
 
         else:
             d_var  = self._infere_type(rhs, **settings)
