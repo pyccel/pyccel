@@ -17,6 +17,8 @@ jobs:
         uses: ./.github/actions/linux_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: paths
+        uses: which python ; which pyccel
       # - name: Fortran/C tests with pytest
       #   uses: ./.github/actions/pytest_run
       - name: Ccuda tests with pytest
