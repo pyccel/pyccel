@@ -261,7 +261,7 @@ void     insert(t_list* list, long int index, void* item)
     list->size = totalSize; 
 }
 
-t_pop_ret   *pop(t_list* list, long int index)
+t_pop_ret   *pop(t_list* list, long int index, int allocate)
 /*
         removes an element from a specific index and return it
 
@@ -280,18 +280,22 @@ t_pop_ret   *pop(t_list* list, long int index)
 {
     size_t tsize = tSizes[list->type];
     char *elements = (char*)(list->elements);
-    t_pop_ret *ret_val = malloc(sizeof(t_pop_ret));
+    t_pop_ret *ret_val = NULL;
 
     index = (index < 0) ? list->size + index : index;
     if (index >= 0 && list->size > index)
     {
-        ret_val->type = list->type;
-        if (list->type == lst_list)
-            ret_val->raw = (char *)((t_list**)elements)[index];
-        else
+        if (allocate)
         {
-            ret_val->raw = malloc(list->type);
-            memcpy(ret_val->raw, &elements[index * tsize], tsize);
+            ret_val = malloc(sizeof(t_pop_ret));
+            ret_val->type = list->type;
+            if (list->type == lst_list)
+                ret_val->raw = (char *)((t_list**)elements)[index];
+            else
+            {
+                ret_val->raw = malloc(list->type);
+                memcpy(ret_val->raw, &elements[index * tsize], tsize);
+            }
         }
         memmove(&elements[index * tsize], &elements[(index + 1) * tsize], list->size - index);
         list->size -= 1;
