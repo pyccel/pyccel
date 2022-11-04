@@ -273,6 +273,10 @@ t_pop_ret   *pop(t_list* list, long int index, int allocate)
         index : long int
             index of the element to be removed
 
+        allocated :  int
+            indicates whether a t_pop_ret is needed, 1 for yes 
+            and 0 for no.
+
         Returns
         =======
         ret_val : t_pop_ret
