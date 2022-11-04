@@ -61,7 +61,6 @@ from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base, CudaArrayClass
-from pyccel.ast.cupyext import CupyRavel
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
@@ -489,17 +488,6 @@ class SemanticParser(BasicParser):
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = NumpyArrayClass
-            return d_var
-
-        elif isinstance(expr, CupyRavel):
-            d_var['datatype'   ] = expr.dtype
-            d_var['memory_handling'] = 'heap' if not isinstance(expr.arg, Variable) else 'stack'
-            d_var['memory_location'] = expr.memory_location
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
-            d_var['cls_base'   ] = CudaArrayClass
             return d_var
 
         elif isinstance(expr, CudaNewArray):
