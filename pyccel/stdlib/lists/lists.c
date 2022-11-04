@@ -336,14 +336,10 @@ void     lst_remove(t_list* list, void* item)
             the element to be removed
 */
 {
-    int index;
-    t_pop_ret *ret;
-
-    if ((index = lst_index(list, item)) != -1)
-    {
-        ret = pop(list, (size_t)index);
-        free_pop(&ret);
-    }
+    int index = lst_index(list, item);
+    
+    if (index!= -1)
+        pop(list, (size_t)index, 0);
 }
 
 void     reverse(t_list* list)
