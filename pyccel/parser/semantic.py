@@ -492,17 +492,14 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, CupyRavel):
-
-            var = expr.arg
-
-            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
+            d_var['memory_handling'] = 'alias' if isinstance(expr.arg, Variable) else 'heap'
             d_var['memory_location'] = expr.memory_location
-            d_var['datatype'      ] = var.dtype
-            d_var['shape'         ] = tuple(reversed(var.shape))
-            d_var['rank'          ] = var.rank
+            d_var['datatype'      ] = expr.dtype
+            d_var['shape'         ] = expr.shape
+            d_var['rank'          ] = expr.rank
+            d_var['precision'     ] = expr.precision
+            d_var['order'         ] = None
             d_var['cls_base'      ] = CudaNewArray
-            d_var['order'         ] = var.order
-            d_var['precision'     ] = var.precision
             return d_var
 
         elif isinstance(expr, CudaNewArray):
