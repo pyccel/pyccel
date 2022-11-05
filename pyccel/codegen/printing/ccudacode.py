@@ -408,10 +408,10 @@ class CcudaCodePrinter(CCodePrinter):
 
         if isinstance(rhs, (CupyFull)):
             return prefix_code+self.cuda_arrayFill(expr)
-        if isinstance(rhs, CupyRavel):
-            return prefix_code+self.cupy_ravel(expr)
         if isinstance(rhs, CupyArange):
             return prefix_code+self.cuda_Arange(expr)
+        if isinstance(rhs, CupyRavel):
+            return prefix_code+self.cupy_ravel(expr)
         if isinstance(rhs, (CudaArray, CupyArray)):
             return prefix_code+self.copy_CudaArray_Data(expr)
         if isinstance(rhs, (NumpyArray, PythonTuple)):
@@ -423,6 +423,41 @@ class CcudaCodePrinter(CCodePrinter):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
+
+    def _print_AliasAssign(self, expr):
+        lhs_var = expr.lhs
+        rhs_var = expr.rhs
+
+        lhs_address = ObjectAddress(lhs_var)
+        rhs_address = ObjectAddress(rhs_var)
+
+        # the below condition handles the case of reassinging a pointer to an array view.
+        # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
+
+        if not self.stored_in_c_pointer(lhs_var) and \
+                isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
+            # rhs = self._print(rhs_var)
+            if isinstance(rhs_var, CupyRavel):
+                memory_location = rhs_var.memory_location
+                if memory_location in ('device', 'host'):
+                    memory_location = 'allocateMemoryOn' + str(memory_location).capitalize()
+                else:
+                    memory_location = 'managedMemory'
+                return 'cupy_ravel({}, {}, {});\n'.format(lhs_var, rhs_var, memory_location)
+            elif isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
+                lhs = self._print(lhs_address)
+                if lhs_var.order == rhs_var.order:
+                    return 'alias_assign({}, {});\n'.format(lhs, rhs)
+                else:
+                    return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
+            else:
+                lhs = self._print(lhs_var)
+                return '{} = {};\n'.format(lhs, rhs)
+        else:
+            lhs = self._print(lhs_address)
+            rhs = self._print(rhs_address)
+
+            return '{} = {};\n'.format(lhs, rhs)
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -521,17 +556,12 @@ class CcudaCodePrinter(CCodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
 
-        if isinstance(arg, Variable):
-            arg = self._print(arg)
-            cpy_data = "{0}.{2} = {1}.{2}".format(lhs, arg, dtype)
-            return '%s\n' % (cpy_data)
-        else :
-            if arg.rank > 1:
-                arg = self._flatten_list(arg)
-            arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
-            return  '%s%s\n' % (dummy_array, cpy_data)
+        if arg.rank > 1:
+            arg = self._flatten_list(arg)
+        arg = ', '.join(self._print(i) for i in arg)
+        dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+        cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+        return  '%s%s\n' % (dummy_array, cpy_data)
 
     def copy_CudaArray_Data(self, expr):
         """ print the assignment of a Cuda NdArray
