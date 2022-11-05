@@ -435,14 +435,13 @@ class CcudaCodePrinter(CCodePrinter):
         if not self.stored_in_c_pointer(lhs_var) and \
                 isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
             if isinstance(rhs_var, CupyRavel):
-                rhs = self._print(rhs_var.arg)
                 memory_location = rhs_var.memory_location
                 if memory_location in ('device', 'host'):
                     memory_location = 'allocateMemoryOn' + str(memory_location).capitalize()
                 else:
                     memory_location = 'managedMemory'
                 lhs = self._print(lhs_address)
-                return 'cupy_ravel({}, {}, {});\n'.format(lhs, rhs, memory_location)
+                return 'cupy_ravel({}, {}, {});\n'.format(lhs, rhs_var, memory_location)
             rhs = self._print(rhs_var)
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
                 lhs = self._print(lhs_address)
