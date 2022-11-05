@@ -137,8 +137,9 @@ void cupy_ravel(t_ndarray *dest, t_ndarray2 src, enum e_memory_locations locatio
     *dest = src;
     void (*fun_ptr_arr[])(void*, size_t) = {managed_memory, host_memory, device_memory};
 
-    (*fun_ptr_arr[location])(&(dest.shape), sizeof(int64_t));
-    (*fun_ptr_arr[location])(&(dest.strides), sizeof(int64_t));
+    dest->nd = nd;
+    (*fun_ptr_arr[location])(&(dest->shape), sizeof(int64_t));
+    (*fun_ptr_arr[location])(&(dest->strides), sizeof(int64_t));
     *(dest->shape) = src.lenght;
     *(dest->strides) = 1;
     dest->is_view = true;
