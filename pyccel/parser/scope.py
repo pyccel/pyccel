@@ -477,7 +477,7 @@ class Scope(object):
         kwargs : dict
             See Variable keyword arguments
         """
-        name = self.get_new_name(name)
+        name = self.get_new_name(str(name))
         if isinstance(dtype_or_var, Variable):
             var = dtype_or_var.clone(name, **kwargs, is_temp = True)
         else:
