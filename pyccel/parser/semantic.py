@@ -708,15 +708,10 @@ class SemanticParser(BasicParser):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
                 if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
-                    d_var = self._infere_type(a.value)
-                    d_var.pop('datatype')
-                    var = self.scope.get_temporary_variable(a.value.dtype, **d_var)
-                    alloc = Allocate(var, shape=a.value.shape,
-                                    order=a.value.order, status='unallocated')
-                    self._additional_exprs[-1].append(alloc)
-                    assi = Assign(var, a.value)
-                    self._additional_exprs[-1].append(assi)
-                    a = FunctionCallArgument(var)
+                    tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
+                    assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
+                    self._additional_exprs[-1].append(assign)
+                    a = FunctionCallArgument(self._visit(tmp_var))
                 args.append(a)
         return args
 
@@ -1420,7 +1415,7 @@ class SemanticParser(BasicParser):
         loops = [self._visit(expr.loops, **settings)]
 
         for e in self._additional_exprs[-1]:
-            if not isinstance(e, FunctionalFor):
+            if not isinstance(e, Assign):
                 loops[0].body.insert2body(e, back=False)
                 del self._additional_exprs[-1][-1]
 
