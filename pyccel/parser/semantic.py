@@ -1411,7 +1411,7 @@ class SemanticParser(BasicParser):
         loops = [self._visit(expr.loops, **settings)]
 
         # If necessary add additional expressions corresponding
-        # to nested GeneratorComprehension
+        # to nested GeneratorComprehensions
         if new_expr:
             loop = loops[0]
             for _ in range(nlevels-1):
