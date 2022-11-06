@@ -13,7 +13,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
-from .literals  import LiteralInteger, Literal
+from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
 
