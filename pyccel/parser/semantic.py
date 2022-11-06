@@ -665,7 +665,6 @@ class SemanticParser(BasicParser):
         inheriting from PyccelOperator
         """
         try:
-
             expr_new = type(expr)(*visited_args)
         except PyccelSemanticError as err:
             msg = str(err)
@@ -1409,11 +1408,10 @@ class SemanticParser(BasicParser):
         # Iterate over the loops
         # This provides the definitions of iterators as well
         # as the central expression
+        loops = [self._visit(expr.loops, **settings)]
 
         # If necessary add additional expressions corresponding
         # to nested GeneratorComprehension
-        loops = [self._visit(expr.loops, **settings)]
-
         if new_expr:
             loop = loops[0]
             for _ in range(nlevels-1):
