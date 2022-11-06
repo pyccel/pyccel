@@ -1414,11 +1414,6 @@ class SemanticParser(BasicParser):
         # to nested GeneratorComprehension
         loops = [self._visit(expr.loops, **settings)]
 
-        for e in self._additional_exprs[-1]:
-            if not isinstance(e, Assign):
-                loops[0].body.insert2body(e, back=False)
-                del self._additional_exprs[-1][-1]
-
         if new_expr:
             loop = loops[0]
             for _ in range(nlevels-1):
