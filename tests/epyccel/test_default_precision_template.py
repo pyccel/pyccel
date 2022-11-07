@@ -7,6 +7,8 @@ import numpy as np
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
+RTOL = 1e-12
+ATOL = 1e-16
 
 def test_default_precision_template(language):
 
@@ -26,4 +28,4 @@ def test_default_precision_template(language):
         pyccel_result = f2(arr)
 
         assert isinstance(pyccel_result, type(python_result))
-        assert isclose(pyccel_result, python_result)
+        assert isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
