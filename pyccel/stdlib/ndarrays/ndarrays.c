@@ -9,6 +9,10 @@
 # include <stdlib.h>
 # include <stdio.h>
 
+/*
+ * Takes an array, and prints it's elements the layed out in memory (similar to ravel)
+*/
+
 void print_ndarray_memory(t_ndarray nd)
 {
     int i = 0;
@@ -37,8 +41,21 @@ void print_ndarray_memory(t_ndarray nd)
             case nd_bool:
                 printf("[%d]", nd.nd_bool[i]);
                 break;
+            case nd_cfloat:
+            {
+                double real = creal(nd.nd_cfloat[i]);
+                double imag = cimag(nd.nd_cfloat[i]);
+                printf("[%lf%s%lfj]", real, imag >= 0 ? "+" : "", imag);
+                break;
+            }
+            case nd_cdouble:
+            {
+                double real = creal(nd.nd_cdouble[i]);
+                double imag = cimag(nd.nd_cdouble[i]);
+                printf("[%lf%s%lfj]", real, imag >= 0 ? "+" : "", imag);
+                break;
             default:
-                printf("none\n");
+                return;
         }
         ++i;
     }
@@ -425,8 +442,11 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
         nd_shape[i] = np_shape[i];
     return nd_shape;
 }
+/*
+** returns the product of multiplying the elements of arr.shape
+*/
 
-int get_shape_product(int64_t *shape, int nd, int max_nd)
+int arr_element_number(int64_t *shape, int nd, int max_nd)
 {
     int product = 1;
 
@@ -443,11 +463,12 @@ int element_index(t_ndarray arr, uint32_t element_num, int nd)
         return (0);
     if (nd == arr.nd)
         return (element_num % arr.shape[nd - 1]) * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1);
-    int true_index = (element_num / (get_shape_product(arr.shape, nd, arr.nd)));
+    int true_index = (element_num / (arr_element_number(arr.shape, nd, arr.nd)));
     if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
     return (true_index * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1));
 }
+
 
 void array_copy_data(t_ndarray *dest, t_ndarray src)
 {
