@@ -433,43 +433,6 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['ndarrays'])
         return buffer_array, array_init
 
-    def fill_NumpyArange(self, expr, lhs):
-        """ print the assignment of a NumpyArange
-        parameters
-        ----------
-            expr : NumpyArange
-                The node holding NumpyArange
-            lhs : Variable
-                 The left hand of Assign
-        Return
-        ------
-            String
-                Return string that contains the Assign code and the For loop
-                responsible for filling the array values
-        """
-        start  = self._print(expr.start)
-        stop   = self._print(expr.stop)
-        step   = self._print(expr.step)
-        dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
-
-        target = self.scope.get_temporary_variable(expr.dtype)
-        index  = self.scope.get_temporary_variable(NativeInteger())
-
-        self._additional_code += self._print(Assign(index, LiteralInteger(0)))
-
-        code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
-        code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
-        code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
-        code = code.format(target = self._print(target),
-                            start = start,
-                            stop  = stop,
-                            op    = '<' if not isinstance(expr.step, PyccelUnarySub) else '>',
-                            step  = step,
-                            index = self._print(index),
-                            lhs   = lhs,
-                            dtype = dtype)
-        return code
-
     def _handle_inline_func_call(self, expr):
         """ Print a function call to an inline function
         """
@@ -580,6 +543,16 @@ class CCodePrinter(CodePrinter):
         else:
             return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
                     severity='fatal')
+
+    def _print_SysExit(self, expr):
+        code = ""
+        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
+            print_arg = FunctionCallArgument(expr.status)
+            code = self._print(PythonPrint((print_arg, ), file="stderr"))
+            arg = "1"
+        else:
+            arg = self._print(expr.status)
+        return f"{code}exit({arg});\n"
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
@@ -895,7 +868,9 @@ class CCodePrinter(CodePrinter):
             args_format += end
             args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
-            return "printf({});\n".format(args_code)
+            if expr.file == 'stderr':
+                return f"fprintf(stderr, {args_code});\n"
+            return f"printf({args_code});\n"
 
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
@@ -947,14 +922,16 @@ class CCodePrinter(CodePrinter):
                 if f.rank == 1:
                     print_body.append(space_end)
 
-                for_body  = [PythonPrint(print_body)]
+                for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
                 for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
-                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
+                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
+                                                file=expr.file),
                                   for_loop,
-                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end])],
+                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
+                                                file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
             else:
@@ -1778,8 +1755,6 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
-        if isinstance(rhs, NumpyArange):
-            return prefix_code+self.fill_NumpyArange(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
