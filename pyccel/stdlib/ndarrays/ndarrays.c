@@ -54,6 +54,7 @@ void print_ndarray_memory(t_ndarray nd)
                 double imag = cimag(nd.nd_cdouble[i]);
                 printf("[%lf%s%lfj]", real, imag >= 0 ? "+" : "", imag);
                 break;
+            }
             default:
                 return;
         }
@@ -468,7 +469,6 @@ int element_index(t_ndarray arr, uint32_t element_num, int nd)
         true_index = true_index % arr.shape[nd - 1];
     return (true_index * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1));
 }
-
 
 void array_copy_data(t_ndarray *dest, t_ndarray src)
 {
