@@ -494,6 +494,7 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['memory_location'] = expr.memory_location
+            d_var['current_location'] = 'device' if 'device' in self.scope.decorators else 'host'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
@@ -812,7 +813,7 @@ class SemanticParser(BasicParser):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
                 if 'kernel' not in self.scope.decorators\
-                    or 'device' not in self.scope.decorators:
+                    and 'device' not in self.scope.decorators:
                     errors.report("Cuda internal variables should only be used in Kernel or Device functions",
                         symbol = expr,
                         severity = 'fatal')
@@ -902,11 +903,11 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
-            if not isinstance(expr.numBlocks, LiteralInteger):
+            if not isinstance(expr.numBlocks, (LiteralInteger, PyccelSymbol)):
                 errors.report("Invalid Block number parameter for Kernel call",
                         symbol = expr,
                         severity='error')
-            if not isinstance(expr.tpblock, LiteralInteger):
+            if not isinstance(expr.tpblock, (LiteralInteger, PyccelSymbol)):
                 errors.report("Invalid Thread per Block parameter for Kernel call",
                         symbol = expr,
                         severity='error')
