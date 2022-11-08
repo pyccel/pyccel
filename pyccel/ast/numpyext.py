@@ -36,7 +36,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Litera
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 errors = Errors()
@@ -321,8 +321,7 @@ DtypePrecisionToCastFunction = {
     'Complex' : {
        -1 : PythonComplex,
         4 : NumpyComplex64,
-        8 : NumpyComplex,
-        16 : NumpyComplex128,},
+        8 : NumpyComplex128,},
     'Bool':  {
        -1 : PythonBool,
         4 : NumpyBool}
@@ -531,6 +530,9 @@ class NumpyArange(NumpyNewArray):
     def step(self):
         return self._step
 
+    def __getitem__(self, index):
+        step = PyccelMul(index, self.step, simplify=True)
+        return PyccelAdd(self.start, step, simplify=True)
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
@@ -1340,7 +1342,7 @@ class NumpyAbs(NumpyUfuncUnary):
     name = 'abs'
     def _set_dtype_precision(self, x):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(x)
 
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
