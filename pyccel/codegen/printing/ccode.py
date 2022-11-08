@@ -549,13 +549,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonListAppend(self, expr):
         lst = expr.list
-        arg = expr.args[0]
-
-        # Check if dtypes are compatible regardless of the shapes of lst and arg.
-        if lst.dtype != arg.dtype:
-            return errors.report(f"cannot append an argument of type[{arg.dtype}] to a list of dtype [{lst.dtype}]", 
-                    symbol=expr,
-                    severity='fatal')
+        arg = expr.args[0].value
 
         if arg.rank == 0 and lst.rank == 1 and not isinstance(arg, Variable):
             compound_type = self.find_in_dtype_registry(self._print(arg.dtype), arg.precision)
