@@ -1695,24 +1695,57 @@ class SemanticParser(BasicParser):
     def _visit_PythonListSort(self, expr, **settings):
         rev = expr.reverse
 
-        if expr.args[0:]:
-            return errors.report(f"sort() takes no positional arguments", symbol=expr, severity='fatal')
-        for k in expr.kwargs.keys():
-            if k not in ['reverse']:
-                return errors.report(f"{k} is an invalid keyword argument for sort()", symbol=expr, severity='fatal')
+        for arg in expr.args:
+            if arg.keyword == None:
+                return errors.report(f"sort() takes no positional arguments", 
+                    symbol=expr, severity='fatal')
+            if arg.keyword and arg.keyword != 'reverse':
+                return errors.report(f"{arg.keyword} is an invalid keyword argument for sort()", 
+                    symbol=expr, severity='fatal')
         if not isinstance(rev, (NativeBool, NativeInteger, LiteralInteger, LiteralFalse, LiteralTrue)):
-            return errors.report("reverse parameter must be of type bool or int", symbol=expr, severity='fatal')
+            return errors.report("reverse parameter must be of type bool or int", 
+                symbol=expr, severity='fatal')
         if isinstance(rev,(NativeInteger, LiteralInteger)):
             expr.reverse = LiteralTrue() if rev else LiteralFalse()
 
         return expr
 
     def _visit_PythonListClear(self, expr, **settings):
-        if expr.args[0:]:
-            return errors.report(f"sort() takes no positional arguments", symbol=expr, severity='fatal')
-        if expr.kwargs:
-            key = expr.kwargs.keys()[0]
-            return errors.report(f"{key} is an invalid keyword argument for sort()", symbol=expr, severity='fatal')
+        if expr.args:
+            return errors.report(f'clear() takes no arguments',
+                symbol=expr, severity='fatal')
+        return expr
+
+    def _visit_PythonListExtend(self, expr, **settings):
+        if len(expr.args) != 1:
+            return errors.report(f"extend() takes exactly one argument", symbol=expr, severity='fatal')
+        for arg in expr.args:
+            if arg.keyword:
+                return errors.report(f"{arg.keyword} is an invalid keyword argument for sort()", 
+                    symbol=expr, severity='fatal')
+
+        arg = expr.args[0].value
+
+        if not isinstance(arg, PythonList) and \
+            not (isinstance(arg, Variable) and arg.cls_base == ListClass):
+            return errors.report(f"argument must be a list", symbol=expr, severity='fatal')
+        return expr
+
+    def _visit_PythonListCount(self, expr, **settings):
+        for arg in expr.args:
+            if isinstance(arg, FunctionCallArgument) and arg.keyword:
+                return errors.report(f"count() takes no keyword arguments", symbol=expr, severity='fatal')
+        if len(expr.args) != 1:
+            return errors.report(f"count() takes exactly one argument", symbol=expr, severity='fatal')
+
+        arg = expr.args[0].value
+        if isinstance(arg, PythonList):
+            tmp_var = self.scope.get_temporary_variable(arg.dtype, rank=arg.rank, memory_handling='heap', cls_base=ListClass)
+            assign  = Assign(tmp_var, arg)
+            self._additional_exprs[-1].append(assign)
+            self._allocs[-1].append(tmp_var)
+            expr.args = (FunctionCallArgument(tmp_var),)
+
         return expr
 
     def _visit_FunctionCallArgument(self, expr, **settings):
