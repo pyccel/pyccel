@@ -10,8 +10,8 @@ runs:
   steps:
     - name: Test with pytest
       run: |
-        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
-        #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
+        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rXx
+        #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rXx
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
 
