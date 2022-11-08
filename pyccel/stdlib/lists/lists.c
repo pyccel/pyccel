@@ -257,7 +257,10 @@ void     insert(t_list* list, long int index, void* item)
         list->elements = elements;
     }
     memmove(&(elements[ind + tsize]), &(elements[ind]), (list->size * tsize) - ind);
-    memcpy(&(elements[ind]), item, tsize);
+    if (list->type == lst_list)
+        memcpy(&(elements[ind]), &item, tsize);
+    else
+        memcpy(&(elements[ind]), item, tsize);
     list->size = totalSize; 
 }
 
@@ -584,11 +587,11 @@ void print_list(t_list *list, int newline)
                 case lst_int64:  printf("%ld",  *(int64_t *)GET_ELM(list, i)); break;
                 case lst_float:  printf("%f",   *(float   *)GET_ELM(list, i)); break;
                 case lst_double: printf("%lf",  *(double  *)GET_ELM(list, i)); break;
-                case lst_complex: 
-                    double real = creal(*(complex *)GET_ELM(list, i));
-                    double imag = cimag(*(complex *)GET_ELM(list, i));
-                    printf("%lf%s%lfj", real, imag >= 0 ? "+" : "", imag);
-                    break;
+                // case lst_complex: 
+                //     double real = creal(*(complex *)GET_ELM(list, i));
+                //     double imag = cimag(*(complex *)GET_ELM(list, i));
+                //     printf("%lf%s%lfj", creal, imag >= 0 ? "+" : "", imag);
+                //     break;
             }
         }
         if (i+1 < list->size)
