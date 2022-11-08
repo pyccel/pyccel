@@ -23,7 +23,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
-from pyccel.ast.builtins import PythonListAppend, PythonListClear, PythonListSort, PythonPrint, list_methods_dict
+from pyccel.ast.builtins import PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListSort, PythonPrint, list_methods_dict
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -1665,15 +1665,17 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_PythonListAppend(self, expr, **settings):
-        lst = expr.list
-        arg = expr.args[0]
-
-        if expr.kwargs:
-            return errors.report(f'append() takes no keyword aguments',
-                symbol=expr, severity='fatal')
+        for arg in expr.args:
+            if arg.keyword:
+                return errors.report(f'append() takes no keyword aguments',
+                    symbol=expr, severity='fatal')
         if len(expr.args) != 1:
             return errors.report(f'append() takes exactly one argument ({len(expr.args)} given)',
                 symbol=expr, severity='fatal')
+
+        lst = expr.list
+        arg = expr.args[0].value
+
         if arg.rank == 0 and lst.rank != 1:
             return errors.report(f"cannot append scalar in a list[rank={lst.rank}] of lists",
                 symbol=expr, severity='fatal')
@@ -1681,10 +1683,6 @@ class SemanticParser(BasicParser):
             return errors.report(f"cannot append a list[rank={arg.rank}] in a list[rank={lst.rank}] of scalars, use extend instead.",
                 symbol=expr, severity='fatal')
 
-        # create new variable and assign the current lst
-        # to it if the type of lst is PythonList.
-        # ex: [1, 3, 3, 7].append(42)
-        # -> PythonListAppend(Dummy_0000 := PythonList([1, 3, 3, 7]), 42)
         if isinstance(lst, PythonList):
             d_var = self._infere_type(lst)
             d_var.pop('datatype')
@@ -2409,8 +2407,9 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs, **settings)
 
         # Don't assign list methods to temporary variable
-        if isinstance(rhs, (PythonListAppend, PythonListSort, PythonListClear)):
+        if isinstance(rhs, (PythonListAppend, PythonListSort, PythonListClear, PythonListExtend, PythonListInsert)):
             return rhs
+
         if isinstance(rhs, FunctionDef):
 
             # case of lambdify
