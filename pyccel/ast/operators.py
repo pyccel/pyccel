@@ -2,8 +2,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# TODO [EB 12.03.21]: Remove pylint command with PR #797
-# pylint: disable=W0201
 """
 Module handling all python builtin operators
 These operators all have a precision as detailed here:
@@ -62,18 +60,27 @@ def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
 
     from pyccel.ast.sympy_helper import pyccel_to_sympy
-
-    a = len(shape_1)
-    b = len(shape_2)
-    if a>b:
-        new_shape_2 = (LiteralInteger(1),)*(a-b) + tuple(shape_2)
-        new_shape_1 = shape_1
-    elif b>a:
-        new_shape_1 = (LiteralInteger(1),)*(b-a) + tuple(shape_1)
+    if shape_1 is None and shape_2 is None:
+        return None
+    elif shape_1 is None:
+        new_shape_1 = (LiteralInteger(1),)*len(shape_2)
         new_shape_2 = shape_2
+    elif shape_2 is None:
+        new_shape_1 = shape_1
+        new_shape_2 = (LiteralInteger(1),)*len(shape_1)
     else:
-        new_shape_2 = shape_2
-        new_shape_1 = shape_1
+        a = len(shape_1)
+        b = len(shape_2)
+
+        if a>b:
+            new_shape_2 = (LiteralInteger(1),)*(a-b) + tuple(shape_2)
+            new_shape_1 = shape_1
+        elif b>a:
+            new_shape_1 = (LiteralInteger(1),)*(b-a) + tuple(shape_1)
+            new_shape_2 = shape_2
+        else:
+            new_shape_2 = shape_2
+            new_shape_1 = shape_1
 
     new_shape = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
@@ -95,8 +102,14 @@ def broadcast(shape_1, shape_2):
                 and not (sy_e1 - sy_e2).is_constant():
             new_shape.append(e1)
         else:
-            shape1_code = '({})'.format(' '.join([str(s)+',' for s in shape_1]))
-            shape2_code = '({})'.format(' '.join([str(s)+',' for s in shape_2]))
+            shape1_code = '-'
+            shape2_code = '-'
+            if shape_1:
+                shape1_code = ' '.join(f'{s},' for s in shape_1)
+                shape1_code = f"({shape1_code})"
+            if shape_2:
+                shape2_code = ' '.join(f"{s}," for s in shape_2)
+                shape2_code = f"({shape2_code})"
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape1_code, shape2_code)
             raise PyccelSemanticError(msg)
@@ -217,9 +230,6 @@ class PyccelUnaryOperator(PyccelOperator):
     """
     __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
 
-    def __init__(self, arg):
-        super().__init__(arg)
-
     @staticmethod
     def _calculate_dtype(*args):
         """ Sets the dtype and precision
@@ -320,7 +330,7 @@ class PyccelNot(PyccelUnaryOperator):
         a _shape or _rank member
         """
         rank = 0
-        shape = ()
+        shape = None
         return shape, rank
 
     def __repr__(self):
@@ -439,23 +449,12 @@ class PyccelBinaryOperator(PyccelOperator):
             other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeFloat(), NativeComplex())]
             assert len(other) == 0
             rank  = 0
-            shape = ()
+            shape = None
         else:
-            ranks  = [a.rank for a in args]
-            shapes = [a.shape for a in args]
+            s = broadcast(args[0].shape, args[1].shape)
 
-            if None in ranks:
-                rank  = None
-                shape = None
-
-            elif all(sh is not None for tup in shapes for sh in tup):
-                s = broadcast(args[0].shape, args[1].shape)
-
-                shape = s
-                rank  = len(s)
-            else:
-                rank  = max(a.rank for a in args)
-                shape = [None]*rank
+            shape = s
+            rank  = 0 if s is None else len(s)
         return shape, rank
 
 #==============================================================================
@@ -781,6 +780,12 @@ class PyccelEq(PyccelComparisonOperator):
     """
     __slots__ = ()
 
+    def __new__(cls, arg1, arg2, simplify = False):
+        if isinstance(arg1, Nil) or isinstance(arg2, Nil):
+            return PyccelIs(arg1, arg2)
+        else:
+            return super().__new__(cls)
+
     def __repr__(self):
         return '{} == {}'.format(self.args[0], self.args[1])
 
@@ -790,7 +795,7 @@ class PyccelNe(PyccelComparisonOperator):
     I.e:
         a != b
     is equivalent to:
-        PyccelEq(a, b)
+        PyccelNe(a, b)
 
     Parameters
     ----------
@@ -800,6 +805,12 @@ class PyccelNe(PyccelComparisonOperator):
         The second argument passed to the operator
     """
     __slots__ = ()
+
+    def __new__(cls, arg1, arg2, simplify = False):
+        if isinstance(arg1, Nil) or isinstance(arg2, Nil):
+            return PyccelIsNot(arg1, arg2)
+        else:
+            return super().__new__(cls)
 
     def __repr__(self):
         return '{} != {}'.format(self.args[0], self.args[1])
@@ -900,7 +911,7 @@ class PyccelBooleanOperator(PyccelOperator):
     dtype = NativeBool()
     precision = -1
     rank = 0
-    shape = ()
+    shape = None
     order = None
 
     __slots__ = ()
@@ -985,9 +996,6 @@ class PyccelIs(PyccelBooleanOperator):
     """
     __slots__ = ()
     _precedence = 7
-
-    def __init__(self, arg1, arg2):
-        super().__init__(arg1, arg2)
 
     @property
     def lhs(self):

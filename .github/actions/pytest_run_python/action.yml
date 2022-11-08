@@ -1,12 +1,17 @@
 name: 'Pyccel pytest commands generating python'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: "bash"
 
 runs:
   using: "composite"
   steps:
     - name: Python tests with pytest
       run: |
-        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and python" --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and python" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -rXx -m "xdist_incompatible and not parallel and python" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
-      shell: bash
+      shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests

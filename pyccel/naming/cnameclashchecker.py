@@ -13,7 +13,7 @@ class CNameClashChecker(metaclass = Singleton):
     """ Class containing functions to help avoid problematic names in C
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
-    keywords = set(['auto', 'break', 'case', 'char', 'const',
+    keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',
         'continue', 'default', 'do', 'double', 'else', 'enum',
         'extern', 'float', 'for', 'goto', 'if', 'inline', 'int',
         'long', 'register', 'restrict', 'return', 'short', 'signed',
@@ -33,7 +33,7 @@ class CNameClashChecker(metaclass = Singleton):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape'])
+        'numpy_to_ndarray_shape', 'get_size'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes

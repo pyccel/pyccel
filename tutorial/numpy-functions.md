@@ -552,10 +552,12 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
     -   empty, full, ones, zeros, arange (`like` parameter is not supported).
     -   empty_like, full_like, and zeros_like, ones_like (`subok` parameter is not supported).
-    -   rand, randint.
+    -   rand, randint
+    -   where, count_nonzero (fortran only)
+    -   nonzero (fortran only, 1D only)
 
 -   others:
 
-    -   amax, amin, sum, shape, floor
+    -   amax, amin, sum, shape, size, floor, sign
 
 If discrepancies beyond round-off error are found between [Numpy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
