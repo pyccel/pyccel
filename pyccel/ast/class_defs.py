@@ -5,7 +5,7 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
-from .builtins  import PythonImag, PythonReal, PythonConjugate
+from .builtins  import PythonImag, PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListSort, PythonReal, PythonConjugate
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
@@ -134,6 +134,18 @@ TupleClass = ClassDef('tuple',
 
 ListClass = ClassDef('list',
         methods=[
+            FunctionDef('append',[],[],body=[],
+                decorators={'lists_wrapper':PythonListAppend}),
+            FunctionDef('extend',[],[],body=[],
+                decorators={'lists_wrapper':PythonListExtend}),
+            FunctionDef('insert',[],[],body=[],
+                decorators={'lists_wrapper':PythonListInsert}),
+            FunctionDef('count',[],[],body=[],
+                decorators={'lists_wrapper':PythonListCount}),
+            FunctionDef('clear',[],[],body=[],
+                decorators={'lists_wrapper':PythonListClear}),
+            FunctionDef('sort',[],[],body=[],
+                decorators={'lists_wrapper':PythonListSort}),
             ])
 
 #=======================================================================================
