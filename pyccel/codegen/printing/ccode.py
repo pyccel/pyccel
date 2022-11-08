@@ -569,6 +569,17 @@ class CCodePrinter(CodePrinter):
     def _print_PythonListClear(self, expr):
         return "clear({});\n".format(self._print(expr.list))
 
+    def _print_PythonListExtend(self, expr):
+        lst = expr.list
+        arg = expr.args[0].value
+        return "extend({}, {});\n".format(self._print(lst), self._print(arg))
+
+    def _print_PythonListCount(self, expr):
+        lst = expr.list
+        arg = expr.args[0]
+
+        return "count({}, {})".format(self._print(lst), self._print(arg))
+
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
             self.add_import(c_imports['math'])
