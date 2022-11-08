@@ -40,6 +40,12 @@ __all__ = (
     'PythonTuple',
     'PythonLen',
     'PythonList',
+    'PythonListAppend',
+    'PythonListInsert',
+    'PythonListExtend',
+    'PythonListClear',
+    'PythonListCount',
+    'PythonListSort',
     'PythonMap',
     'PythonPrint',
     'PythonRange',
@@ -644,20 +650,17 @@ class PythonList(PyccelAstNode):
         return self._is_homogeneous
 
 class PythonListMethod(PyccelInternalFunction):
-    __slots__ = ('_list', '_args', '_kwargs')
+    __slots__ = ('_list', '_args')
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args):
         super().__init__(*args)
         self._list = args[0]
         self._args = args[1:]
-        self._kwargs = kwargs
-        for attr, value in kwargs.items():
-            setattr(self, attr, value)
 
     @property
     def list(self):
@@ -671,31 +674,29 @@ class PythonListMethod(PyccelInternalFunction):
     def args(self):
         return self._args
 
-    @property
-    def kwargs(self):
-        return self._kwargs
+    @args.setter
+    def args(self, args):
+        self._args = args
 
     def __repr__(self):
-        args = [arg for arg in self.args]
-        args += [f'{k}={str(v)}' for k, v in self.kwargs.items()]
-        args = ', '.join(args)
+        args = ', '.join([str(arg) for arg in self.args])
         return f"{self.list}.{self.name}({args})"
 
 class PythonListAppend(PythonListMethod):
     name = 'append'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
 class PythonListSort(PythonListMethod):
     name = 'sort'
 
     def __init__(self, *args, **kwargs):
-        kwargs = {k.replace("'", ''): v for k, v in kwargs.items()}
-        if 'reverse' not in kwargs.keys():
-            kwargs['reverse'] = LiteralFalse()
-        super().__init__(*args, **kwargs)
-        self._reverse = super().kwargs['reverse']
+        super().__init__(*args)
+        self._reverse = LiteralFalse()
+        for arg in self.args:
+            if arg.keyword == 'reverse':
+                self._reverse = arg.value
 
     @property
     def reverse(self):
@@ -708,14 +709,26 @@ class PythonListSort(PythonListMethod):
 class PythonListClear(PythonListMethod):
     name = 'clear'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
 class PythonListExtend(PythonListMethod):
     name = 'extend'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
+
+class PythonListInsert(PythonListMethod):
+    name = 'insert'
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+class PythonListCount(PythonListMethod):
+    name = 'count'
+
+    def __init__(self, *args):
+        super().__init__(*args)
 
 #==============================================================================
 class PythonMap(Basic):
@@ -1106,7 +1119,8 @@ list_methods_dict = {
     'append': PythonListAppend,
     'sort'  : PythonListSort,
     'clear' : PythonListClear,
+    'extend': PythonListExtend,
+    'insert': PythonListInsert,
+    'count' : PythonListCount,
 #    'pop'   : PythonListPop,
-#    'insert': PythonListInsert,
-#    'extend': PythonListExtend,
 }
