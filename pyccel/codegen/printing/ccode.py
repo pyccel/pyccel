@@ -551,7 +551,6 @@ class CCodePrinter(CodePrinter):
         if obj.rank == 0 and not isinstance(obj, Variable):
             compound_type = self.find_in_dtype_registry(self._print(obj.dtype), obj.precision)
             obj = f"({compound_type}[]){{{self._print(obj)}}}"
-
         elif isinstance(obj, Variable):
             obj = ObjectAddress(obj)
 
@@ -567,7 +566,19 @@ class CCodePrinter(CodePrinter):
         return "pop({}, {})".format(self._print(lst), self._print(arg))
 
     def _print_PythonListReverse(self, expr):
-        return "reverse({})".format(expr.list)
+        return "reverse({});\n".format(self._print(expr.list))
+
+    def _print_PythonListRemove(self, expr):
+        lst = expr.list
+        arg = expr.args[0].value
+
+        if arg.rank == 0 and not isinstance(arg, Variable):
+            compound_type = self.find_in_dtype_registry(self._print(arg.dtype), arg.precision)
+            arg = f"({compound_type}[]){{{self._print(arg)}}}"
+        elif isinstance(arg, Variable):
+            arg = ObjectAddress(arg)
+
+        return "lst_remove({}, {});\n".format(self._print(lst), self._print(arg))
 
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
