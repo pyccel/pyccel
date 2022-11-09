@@ -5,7 +5,7 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
-from .builtins  import PythonImag, PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListPop, PythonListReverse, PythonListSort, PythonReal, PythonConjugate
+from .builtins  import PythonImag, PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListPop, PythonListRemove, PythonListReverse, PythonListSort, PythonReal, PythonConjugate
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
@@ -147,9 +147,11 @@ ListClass = ClassDef('list',
             FunctionDef('sort',[],[],body=[],
                 decorators={'lists_wrapper':PythonListSort}),
             FunctionDef('reverse',[],[],body=[],
-                decorators={'list_wrapper':PythonListReverse}),
+                decorators={'lists_wrapper':PythonListReverse}),
             FunctionDef('pop',[],[],body=[],
-                decorators={'list_wrapper':PythonListPop}),
+                decorators={'lists_wrapper':PythonListPop}),
+            FunctionDef('remove',[],[],body=[],
+                decorators={'lists_wrapper':PythonListRemove}),
             ])
 
 #=======================================================================================
