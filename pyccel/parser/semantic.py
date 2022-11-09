@@ -23,7 +23,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
-from pyccel.ast.builtins import PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListReverse, PythonListSort, PythonPrint, list_methods_dict
+from pyccel.ast.builtins import PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListRemove, PythonListReverse, PythonListSort, PythonPrint, list_methods_dict
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -1799,6 +1799,18 @@ class SemanticParser(BasicParser):
                 symbol=expr, severity='fatal')
         return expr
 
+    def _visit_PythonListRemove(self, expr, **settings):
+        for arg in expr.args:
+            if arg.keyword:
+                return errors.report(f"remove() takes no keyword arguments", 
+                    symbol=expr, severity='fatal')
+
+        if len(expr.args) != 1:
+            return errors.report(f"remove() expected 2 arguments, got {len(expr.args)}", 
+                symbol=expr, severity='fatal')
+
+        return expr
+
     def _visit_FunctionCallArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
         return FunctionCallArgument(value, expr.keyword)
@@ -2497,7 +2509,7 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs, **settings)
 
         # Don't assign list methods to temporary variable
-        if isinstance(rhs, (PythonListAppend, PythonListSort, PythonListClear, PythonListExtend, PythonListInsert, PythonListReverse)):
+        if isinstance(rhs, (PythonListAppend, PythonListSort, PythonListClear, PythonListExtend, PythonListInsert, PythonListReverse, PythonListRemove)):
             return rhs
 
         if isinstance(rhs, FunctionDef):
