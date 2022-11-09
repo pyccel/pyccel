@@ -736,6 +736,18 @@ class PythonListPop(PythonListMethod):
     def __init__(self, *args):
         super().__init__(*args)
 
+class PythonListReverse(PythonListMethod):
+    name = 'reverse'
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+class PythonListIndex(PythonListMethod):
+    name = 'index'
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
 #==============================================================================
 class PythonMap(Basic):
     """ Represents the map stmt
