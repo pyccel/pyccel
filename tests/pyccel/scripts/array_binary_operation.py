@@ -70,7 +70,6 @@ def array_arithmetic_op_func_call_8():
 
 
 if __name__ == "__main__":
-    
     a_0, a1_0, ls_0, s_0 = array_func_mult()
     print(a_0, a1_0, ls_0, s_0)
     a_1, a1_1, ls_1, s_1 = array_func_div()
