@@ -54,6 +54,21 @@ def array_arithmetic_op_func_call_6():
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
+def array_arithmetic_op_func_call_7():
+    arr = np.array([1,2,3,4])
+    arr1 = np.array([4,3,2,1])
+    arr2 = np.array(arr + arr1)
+    shape = np.shape(arr2)
+    return arr[0], arr2[0], len(shape), shape[0]
+
+def array_arithmetic_op_func_call_8():
+    arr = np.array([1,2,3,4])
+    arr1 = np.array([4,3,2,1])
+    arr2 = np.array(arr - arr1)
+    shape = np.shape(arr2)
+    return arr[0], arr2[0], len(shape), shape[0]
+
+
 if __name__ == "__main__":
     
     a_0, a1_0, ls_0, s_0 = array_func_mult()
@@ -72,3 +87,7 @@ if __name__ == "__main__":
     print(a_6, a1_6, ls_6, s_6)
     a_7, a1_7, ls_7, s_7 = array_arithmetic_op_func_call_6()
     print(a_7, a1_7, ls_7, s_7)
+    a_8, a1_8, ls_8, s_8 = array_arithmetic_op_func_call_7()
+    print(a_8, a1_8, ls_8, s_8)
+    a_9, a1_9, ls_9, s_9 = array_arithmetic_op_func_call_8()
+    print(a_9, a1_9, ls_9, s_9)
