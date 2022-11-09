@@ -1144,11 +1144,13 @@ builtin_functions_dict = {
 }
 
 list_methods_dict = {
-    'append': PythonListAppend,
-    'sort'  : PythonListSort,
-    'clear' : PythonListClear,
-    'extend': PythonListExtend,
-    'insert': PythonListInsert,
-    'count' : PythonListCount,
-    'pop'   : PythonListPop,
+    'append' : PythonListAppend,
+    'sort'   : PythonListSort,
+    'clear'  : PythonListClear,
+    'extend' : PythonListExtend,
+    'insert' : PythonListInsert,
+    'count'  : PythonListCount,
+    'pop'    : PythonListPop,
+    'reverse': PythonListReverse,
+    'index'  : PythonListIndex,
 }
