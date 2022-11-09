@@ -11,6 +11,7 @@
 
 t_list* unwrap_list(PyObject *list);
 PyObject * wrap_list(t_list *list);
+bool	pylist_check(PyListObject *o, int dtype);
 
 
 #endif

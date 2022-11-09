@@ -89,3 +89,19 @@ PyObject * wrap_list(t_list *list)
     }
     return (pylist);
 }
+
+
+bool	pylist_check(PyListObject *o, int dtype)
+{
+	if (!PyList_CheckExact(o))
+        return false;
+    Py_ssize_t list_size = PyList_Size(o);
+    Py_ssize_t  index = 0;
+    while (index < list_size)
+    {
+        if ()
+        index++;
+    }
+
+	return true;
+}
