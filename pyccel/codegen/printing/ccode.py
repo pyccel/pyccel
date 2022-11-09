@@ -525,7 +525,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonListSort(self, expr):
         lst = expr.list
         rev = expr.reverse
-        return "sort({}, {});\n".format(
+        return "lst_sort({}, {});\n".format(
                     self._print(lst),
                     self._print(rev))
 
