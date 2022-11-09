@@ -38,17 +38,18 @@ def array_arithmetic_op_func_call_3():
 
 def array_arithmetic_op_func_call_4():
     arr = np.array([1,2,3,4])
-    arr1 = np.array(arr / my_pow(2, 2))
-    shape = np.shape(arr1)
-    return arr[0], arr1[0], len(shape), shape[0]
-
-def array_arithmetic_op_func_call_4():
-    arr = np.array([1,2,3,4])
-    arr1 = np.where(arr > 5, arr, arr * 2)
+    
+    arr1 = np.array(arr / my_pow(2, 2) + arr * 2)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
 
 def array_arithmetic_op_func_call_5():
+    arr = np.array([1,2,3,4])
+    arr1 = np.where(arr > 5, arr, (arr * 2) + arr)
+    shape = np.shape(arr1)
+    return arr[0], arr1[0], len(shape), shape[0]
+
+def array_arithmetic_op_func_call_6():
     arr = np.array([1,2,3,4])
     arr1 = np.where(arr < 5, arr / 2, arr * 2)
     shape = np.shape(arr1)
@@ -70,3 +71,5 @@ if __name__ == "__main__":
     print(a_5, a1_5, ls_5, s_5)
     a_6, a1_6, ls_6, s_6 = array_arithmetic_op_func_call_5()
     print(a_6, a1_6, ls_6, s_6)
+    a_7, a1_7, ls_7, s_7 = array_arithmetic_op_func_call_6()
+    print(a_7, a1_7, ls_7, s_7)
