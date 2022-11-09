@@ -730,6 +730,12 @@ class PythonListCount(PythonListMethod):
     def __init__(self, *args):
         super().__init__(*args)
 
+class PythonListPop(PythonListMethod):
+    name = 'pop'
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
 #==============================================================================
 class PythonMap(Basic):
     """ Represents the map stmt
@@ -1132,5 +1138,5 @@ list_methods_dict = {
     'extend': PythonListExtend,
     'insert': PythonListInsert,
     'count' : PythonListCount,
-#    'pop'   : PythonListPop,
+    'pop'   : PythonListPop,
 }
