@@ -1,4 +1,4 @@
-
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
 from pyccel.decorators import types
 
