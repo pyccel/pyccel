@@ -1784,7 +1784,7 @@ class SemanticParser(BasicParser):
             return errors.report(f"invalid argument {arg_0}", 
                 symbol=expr, severity='fatal')
 
-        if (lst.rank >= 1 and arg_1.rank == 0) or (lst.rank == 1 and arg_1.rank > 1):
+        if (lst.rank > 1 and arg_1.rank == 0) or (lst.rank == 1 and arg_1.rank > 1):
             return errors.report(f"incompatible ranks {lst.rank} and {arg_1.rank}", 
                 symbol=expr, severity='fatal')
 
