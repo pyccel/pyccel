@@ -550,7 +550,7 @@ int compare(void *arg_1, void *arg_2, void *type)
  * @param list 
  * @param rev 
  */
-void sort(t_list *list, size_t rev)
+void lst_sort(t_list *list, size_t rev)
 {
     #if (defined __linux__ || defined __GNU__)
     qsort_r(list->elements, list->size, tSizes[list->type], compare, &list->type);

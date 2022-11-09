@@ -50,7 +50,7 @@ static const size_t tSizes[9] = {
             sizeof(int64_t),
             sizeof(float),
             sizeof(double),
-            sizeof(complex),
+            sizeof(complex double),
             sizeof(void *)
 };
 
@@ -68,7 +68,7 @@ void    insert(t_list* list, long int index, void* item);
 t_pop_ret *pop(t_list* list, long int index, int allocate);
 void    lst_remove(t_list* list, void* value);
 void    reverse(t_list* list);
-void    sort(t_list *list, size_t rev);
+void    lst_sort(t_list *list, size_t rev);
 void*   array_subscripting(t_list *list, size_t index);
 void    print_list(t_list *list, int newline);
 t_list *lst_slice(t_list *list, size_t start, size_t end, int step, int order);
