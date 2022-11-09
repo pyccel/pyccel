@@ -38,7 +38,6 @@ def array_arithmetic_op_func_call_3():
 
 def array_arithmetic_op_func_call_4():
     arr = np.array([1,2,3,4])
-    
     arr1 = np.array(arr / my_pow(2, 2) + arr * 2)
     shape = np.shape(arr1)
     return arr[0], arr1[0], len(shape), shape[0]
