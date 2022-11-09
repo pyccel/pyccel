@@ -1769,12 +1769,14 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonListInsert(self, expr, **settings):
         for arg in expr.args:
-            if isinstance(arg, FunctionCallArgument) and arg.keyword:
+            if arg.keyword:
                 return errors.report(f"insert() takes no keyword arguments", 
                     symbol=expr, severity='fatal')
         if len(expr.args) != 2:
             return errors.report(f"insert() expected 2 arguments, got {len(expr.args)}", 
                 symbol=expr, severity='fatal')
+
+        lst   = expr.list
         arg_0 = expr.args[0].value
         arg_1 = expr.args[1].value
 
@@ -1782,14 +1784,9 @@ class SemanticParser(BasicParser):
             return errors.report(f"invalid argument {arg_0}", 
                 symbol=expr, severity='fatal')
 
-        if isinstance(arg_1, PythonList):
-            d_var = self._infere_type(arg_1)
-            d_var.pop('datatype')
-            tmp_var = self.scope.get_temporary_variable(arg_1.dtype, **d_var)
-            assign  = Assign(tmp_var, arg_1)
-            self._additional_exprs[-1].append(assign)
-            self._allocs[-1].append(tmp_var)
-            expr.args = (expr.args[0], FunctionCallArgument(tmp_var))
+        if (lst.rank >= 1 and arg_1.rank == 0) or (lst.rank == 1 and arg_1.rank > 1):
+            return errors.report(f"incompatible ranks {lst.rank} and {arg_1.rank}", 
+                symbol=expr, severity='fatal')
 
         return expr
 
