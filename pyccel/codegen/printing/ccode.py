@@ -1905,11 +1905,17 @@ class CCodePrinter(CodePrinter):
         if expr == math_constants['inf']:
             self.add_import(c_imports['math'])
             return 'HUGE_VAL'
-        if expr == math_constants['nan']:
+        elif expr == math_constants['nan']:
             self.add_import(c_imports['math'])
             return 'NAN'
+        elif expr == math_constants['pi']:
+            self.add_import(c_imports['math'])
+            return 'M_PI'
+        elif expr == math_constants['e']:
+            self.add_import(c_imports['math'])
+            return 'M_E'
         else:
-            return expr.value
+            return self._print(expr.value)
 
 
     def _print_Variable(self, expr):
