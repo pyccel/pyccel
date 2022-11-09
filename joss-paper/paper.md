@@ -53,7 +53,26 @@ bibliography: paper.bib
 
 # Summary
 
+Python is a widely used language in the scientific community, due to its simplicity and ecosystem.
+However, the most famous and performant Python libraries are not written in Python themselves, but only...
+In fact, the dynamic typing feature of Python makes it significantly slower than a low-level compiled language like C.
+
+- pure Python code usually much slower than C
+- overhead for crossing boundaries between language (function calls, temporary memory allocations)
+- no shared-memory parallel multithreading possible in pure Python because of GIL
+
+Due to this limitation, one needs to rewrite the computational part of the code in a statically typed language, to take full advantage of optimization and acceleration techniques.
+
+This transition from a prototype code to a production code is the principal bottleneck in scientific computing.
+We believe that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype.
+Not only is the Pyccel-generated Fortran or C code very fast, but it is human-readable; hence the expert programmer can easily profile the code on the target machine and further optimize it.
+Moreover, Pyccel gives the possibility to link the user code to external libraries written in the target language.
+
 # Statement of need
+
+TODO:
+- copy Introduction from old draft
+- include benchmarks
 
 Pyccel is a static compiler for Python 3, using Fortran or C as a backend language, with a focus on high-performance computing (HPC) applications.
 
