@@ -539,9 +539,32 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonListCount(self, expr):
         lst = expr.list
-        arg = expr.args[0]
+        arg = expr.args[0].value
 
         return "count({}, {})".format(self._print(lst), self._print(arg))
+
+    def _print_PythonListInsert(self, expr):
+        lst = expr.list
+        idx = expr.args[0].value
+        obj = expr.args[1].value
+
+        if obj.rank == 0 and not isinstance(obj, Variable):
+            compound_type = self.find_in_dtype_registry(self._print(obj.dtype), obj.precision)
+            obj = f"({compound_type}[]){{{self._print(obj)}}}"
+
+        elif isinstance(obj, Variable):
+            obj = ObjectAddress(obj)
+
+        return "insert({}, {}, {});\n".format(
+            self._print(lst), 
+            self._print(idx), 
+            self._print(obj))
+
+    def _print_PythonListPop(self, expr):
+        lst = expr.list
+        arg = expr.args[0].value
+
+        return "pop({}, {})".format(self._print(lst), self._print(arg))
 
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
