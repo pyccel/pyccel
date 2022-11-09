@@ -1721,10 +1721,10 @@ class SemanticParser(BasicParser):
             if arg.keyword and arg.keyword != 'reverse':
                 return errors.report(f"{arg.keyword} is an invalid keyword argument for sort()", 
                     symbol=expr, severity='fatal')
-        if not isinstance(rev, (NativeBool, NativeInteger, LiteralInteger, LiteralFalse, LiteralTrue)):
+        if not isinstance(rev.dtype, (NativeBool, NativeInteger)):
             return errors.report("reverse parameter must be of type bool or int", 
                 symbol=expr, severity='fatal')
-        if isinstance(rev,(NativeInteger, LiteralInteger)):
+        if isinstance(rev.dtype, NativeInteger):
             expr.reverse = LiteralTrue() if rev else LiteralFalse()
 
         return expr
