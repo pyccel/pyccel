@@ -566,6 +566,9 @@ class CCodePrinter(CodePrinter):
 
         return "pop({}, {})".format(self._print(lst), self._print(arg))
 
+    def _print_PythonListReverse(self, expr):
+        return "reverse({})".format(expr.list)
+
     def _print_PythonAbs(self, expr):
         if expr.arg.dtype is NativeFloat():
             self.add_import(c_imports['math'])
