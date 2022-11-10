@@ -1,3 +1,5 @@
+""" Functions for comparing coverage output and git diff output
+"""
 import os
 import defusedxml.ElementTree as ET
 import sys
@@ -137,7 +139,8 @@ def print_markdown_summary(untested, content_lines, commit, output):
                     end_line = line_indices[j]
                 md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}"
 
-    print(md_string, file=open(output, "a"))
+    with open(output, "a", encoding="ascii") as out_file:
+        print(md_string, file=out_file)
 
 def show_results(untested):
     """

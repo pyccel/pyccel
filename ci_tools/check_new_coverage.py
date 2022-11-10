@@ -1,8 +1,9 @@
+""" Script to check that all new lines in the python files in the pyccel/ code folder are used in the tests
+"""
+import json
+import argparse
 from git_evaluation_tools import get_diff_as_json
 import compare_coverage_to_diff as cov
-import json
-import os
-import argparse
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
 parser.add_argument('diffFile', metavar='diffFile', type=str,
@@ -21,7 +22,8 @@ untested, file_contents = cov.get_untested_lines(args.coverageFile)
 
 new_untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untested, diff))
 
-pr_data = json.load(open(args.gitEvent))
+with open(args.gitEvent, encoding="ascii") as pr_data_file:
+    pr_data = json.load(pr_data_file)
 
 cov.print_markdown_summary(new_untested, file_contents, pr_data["after"], args.output)
 
