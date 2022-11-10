@@ -137,24 +137,31 @@ jobs:
           name: coverage-artifact
       - name: Collect diff information
         run: |
-          git branch
-          git status
-          cat $GITHUB_EVENT_PATH
+          git log -1
           BRANCH=$GITHUB_HEAD_REF
           BASE_BRANCH=$GITHUB_BASE_REF
-          echo ${BRANCH}
-          echo ${BASE_BRANCH}
+          git fetch ${BRANCH}
           git diff master..${BRANCH} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
         run: |
           from ci_tools.git_diff_to_dict import get_diff_as_json
           import ci_tools.compare_coverage_to_diff as cov
+          import json
+          import os
 
           diff = get_diff_as_json('pull_diff.txt')
-          untested = cov.get_untested_lines('cobertura.xml')
+          untested, file_contents = cov.get_untested_lines('cobertura.xml')
 
-          new_untested = cov.compare_coverage_to_diff(untested, diff)
+          new_untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untested, diff))
 
-          assert cov.allow_untested_error_calls(new_untested)
+          pr_data = json.load(open(os.environ("GITHUB_EVENT_PATH")))
+
+          cov.allow_untested_error_calls(new_untested, file_contents, pr_data["after"], "step_summary.txt")
+
+          cov.check_results(new_untested)
         shell: python
+      - name: Create summary
+        run:
+          cat "step_summary.txt" >> $GITHUB_STEP_SUMMARY
+        shell: bash

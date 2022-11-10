@@ -22,17 +22,20 @@ def get_untested_lines(coverage_filename):
     root = tree.getroot()
     directories = root.findall('packages')[0].findall('package')
 
-    changes ={}
+    content_lines = {}
+    changes = {}
     current_file_name = None
     current_file_lines = []
 
     for f in root.findall('.//class'):
         filename = f.attrib['filename']
         lines = f.findall('lines')[0].findall('line')
+        all_lines = [int(l.attrib['number']) for l in lines]
         untested_lines = [int(l.attrib['number']) for l in lines if l.attrib['hits'] == "0"]
         changes[os.path.join('pyccel',filename)] = untested_lines
+        content_lines[os.path.join('pyccel',filename)] = all_lines
 
-    return changes
+    return changes, content_lines
 
 def compare_coverage_to_diff(coverage, diff):
     """
@@ -94,3 +97,33 @@ def allow_untested_error_calls(untested):
             reduced_untested[f] = lines
 
     return reduced_untested
+
+def print_markdown_summary(untested, content_lines, commit, output):
+    if len(untested) == 0:
+        return "## All new python code in the pyccel package is fully tested! :tada:"
+    else:
+        md_string = "## The new code is not fully tested\n"
+        for f, lines in untested:
+            md_string += f"### {f}\n"
+            line_indices = content_lines[f]
+            n_code_lines = len(line_indices)
+            i = 0
+            while i<len(lines):
+                start_line = lines[i]
+                j = line_indices.find(start_line)
+                while lines[i] == line_indices[j]:
+                    i+=1
+                    j+=1
+                if j < n_code_lines-1:
+                    end_line = line_indices[j+1]-1
+                else:
+                    end_line = line_indices[j]
+                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+f+f"#L{start_line}-{end_line}"
+
+    print(md_string, file=open(output, "w"))
+
+def show_results(untested):
+    for f, lines in untested:
+        print(f"In file {f} the following lines are untested : {lines}")
+
+    assert len(untested) == 0
