@@ -119,7 +119,7 @@ def print_markdown_summary(untested, content_lines, commit, output):
         md_string = "## All new python code in the pyccel package is fully tested! :tada:"
     else:
         md_string = "## The new code is not fully tested\n"
-        for f, lines in untested:
+        for f, lines in untested.items():
             md_string += f"### {f}\n"
             line_indices = content_lines[f]
             n_code_lines = len(line_indices)
