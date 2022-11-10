@@ -25,5 +25,5 @@ pr_data = json.load(open(args.gitEvent))
 
 cov.print_markdown_summary(new_untested, file_contents, pr_data["after"], args.output)
 
-cov.check_results(new_untested)
+cov.show_results(new_untested)
 
