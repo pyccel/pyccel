@@ -1891,6 +1891,7 @@ class SemanticParser(BasicParser):
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args, **settings)
+                    print("hoo")
                     func  = first[rhs_name]
                     if new_name != rhs_name:
                         if hasattr(func, 'clone') and not isinstance(func, PyccelFunctionDef):
