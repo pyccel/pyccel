@@ -1,8 +1,8 @@
 """ Functions for comparing coverage output and git diff output
 """
 import os
-import defusedxml.ElementTree as ET
 import sys
+import defusedxml.ElementTree as ET
 
 def get_untested_lines(coverage_filename):
     """
