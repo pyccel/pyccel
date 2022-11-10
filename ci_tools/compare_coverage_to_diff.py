@@ -132,10 +132,10 @@ def print_markdown_summary(untested, content_lines, commit, output):
                     i+=1
                     j+=1
                 if j < n_code_lines-1:
-                    end_line = line_indices[j+1]-1
+                    end_line = line_indices[j]-1
                 else:
                     end_line = line_indices[j]
-                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-{end_line}"
+                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}"
 
     print(md_string, file=open(output, "a"))
 
