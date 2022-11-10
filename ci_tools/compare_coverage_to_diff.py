@@ -1,5 +1,6 @@
 import os
 import defusedxml.ElementTree as ET
+import sys
 
 def get_untested_lines(coverage_filename):
     """
@@ -88,8 +89,7 @@ def allow_untested_error_calls(untested):
     for f,line_nums in untested.items():
         with open(f, encoding="ascii") as filename:
             f_lines = filename.readlines()
-        lines = [f_lines[i-1].strip() for i in line_nums]
-        lines = [l for l in lines if not l.startswith('raise ')]
+        lines = [i for i in line_nums if not f_lines[i-1].strip().startswith('raise ')]
         if len(lines):
             reduced_untested[f] = lines
 
@@ -123,11 +123,12 @@ def print_markdown_summary(untested, content_lines, commit, output):
             md_string += f"### {f}\n"
             line_indices = content_lines[f]
             n_code_lines = len(line_indices)
+            n_untested = len(lines)
             i = 0
-            while i<len(lines):
+            while i < n_untested:
                 start_line = lines[i]
                 j = line_indices.index(start_line)
-                while lines[i] == line_indices[j]:
+                while j < n_code_lines and i < n_untested and lines[i] == line_indices[j]:
                     i+=1
                     j+=1
                 if j < n_code_lines-1:
@@ -150,7 +151,8 @@ def show_results(untested):
         are lists containing the line numbers where coverage is
         lacking in that file
     """
-    for f, lines in untested:
+    for f, lines in untested.items():
         print(f"In file {f} the following lines are untested : {lines}")
 
-    assert len(untested) == 0
+    if len(untested) != 0:
+        sys.exit(1)
