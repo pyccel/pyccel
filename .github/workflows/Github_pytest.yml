@@ -129,7 +129,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pycobertura
+          python -m pip install defusedxml
         shell: bash
       - name: Collect coverage information
         uses: actions/download-artifact@v3
@@ -137,11 +137,12 @@ jobs:
           name: coverage-artifact
       - name: Collect diff information
         run: |
-          git log -1
           BRANCH=$GITHUB_HEAD_REF
           BASE_BRANCH=$GITHUB_BASE_REF
-          git fetch ${BRANCH}
-          git diff master..${BRANCH} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git fetch
+          git branch
+          git branch -r
+          git diff ${BASE_BRANCH}..${BRANCH} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
         run: |
