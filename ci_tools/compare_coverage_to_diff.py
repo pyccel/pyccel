@@ -126,7 +126,7 @@ def print_markdown_summary(untested, content_lines, commit, output):
             i = 0
             while i<len(lines):
                 start_line = lines[i]
-                j = line_indices.find(start_line)
+                j = line_indices.index(start_line)
                 while lines[i] == line_indices[j]:
                     i+=1
                     j+=1
