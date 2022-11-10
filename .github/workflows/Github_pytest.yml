@@ -144,23 +144,8 @@ jobs:
         shell: bash
       - name: Check coverage
         run: |
-          from ci_tools.git_evaluation_tools import get_diff_as_json
-          import ci_tools.compare_coverage_to_diff as cov
-          import json
-          import os
-
-          diff = get_diff_as_json('pull_diff.txt')
-          untested, file_contents = cov.get_untested_lines('cobertura.xml')
-
-          new_untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untested, diff))
-
-          pr_data = json.load(open(os.environ("GITHUB_EVENT_PATH")))
-
-          cov.allow_untested_error_calls(new_untested, file_contents, pr_data["after"], "step_summary.txt")
-
-          cov.check_results(new_untested)
-        shell: python
-        working-directory: .
+          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_EVENT_PATH step_summary.txt
+        shell: bash
       - name: Create summary
         run:
           cat "step_summary.txt" >> $GITHUB_STEP_SUMMARY
