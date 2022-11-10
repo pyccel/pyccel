@@ -144,8 +144,10 @@ jobs:
       - name: Check coverage
         run: |
           import xml.etree.ElementTree as ET
+          from ci_tools.git_diff_to_dict import get_diff_as_json
           tree = ET.parse('cobertura.xml')
           root = tree.getroot()
           for child in root:
               print(child.tag)
+          print(get_diff_as_json('pull_diff.txt'))
         shell: python
