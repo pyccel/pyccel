@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
@@ -50,7 +50,7 @@ jobs:
   #  runs-on: windows-latest
 
   #  steps:
-  #    - uses: actions/checkout@v2
+  #    - uses: actions/checkout@v3
   #    - name: Setup Python 3.9
   #      uses: actions/setup-python@v4
   #      with:
@@ -79,7 +79,7 @@ jobs:
   #  runs-on: macos-latest
 
   #  steps:
-  #    - uses: actions/checkout@v2
+  #    - uses: actions/checkout@v3
   #    - name: Set up Python 3.10
   #      uses: actions/setup-python@v4
   #      with:
@@ -100,7 +100,7 @@ jobs:
   #  runs-on: ubuntu-latest
 
   #  steps:
-  #    - uses: actions/checkout@v2
+  #    - uses: actions/checkout@v3
   #    - name: Set up Python 3.7
   #      uses: actions/setup-python@v4
   #      with:
@@ -121,7 +121,7 @@ jobs:
     needs: Linux
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
@@ -140,6 +140,7 @@ jobs:
           BASE_BRANCH=$GITHUB_BASE_REF
           git fetch
           git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          ls
         shell: bash
       - name: Check coverage
         run: |
@@ -159,6 +160,7 @@ jobs:
 
           cov.check_results(new_untested)
         shell: python
+        working-directory: .
       - name: Create summary
         run:
           cat "step_summary.txt" >> $GITHUB_STEP_SUMMARY
