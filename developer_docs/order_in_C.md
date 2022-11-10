@@ -2,7 +2,7 @@
 
 ## Order  
 
-`order` is the parameter given the `numpy.array` in order to choose how the array is stored in memory, both  `Pyccel` supported orders are stored contiguously in memory, they differ in the order -the order by which the values are stored in memory.
+`order` is the parameter given to the `numpy.array` function in order to choose how the array is stored in memory, both  `Pyccel` supported orders are stored contiguously in memory, they differ in the order -the order by which the values are stored in memory.
 `order='F'` would tell `numpy` to store the array column by column (column-major), example:
 ```python
 import numpy as np
@@ -13,7 +13,7 @@ if __name__ == "__main__":
                 [7, 8, 9]], order='F')
   print(a.ravel('K'))
 ```
-`array.ravel('k')` shows us how the array is actually stored in memroy, this python program will output `[1 4 7 2 5 8 3 6 9]`, notice that the columns are stored one after the other.  
+`array.ravel('k')` shows us how the array is actually stored in memroy, this python script will output `[1 4 7 2 5 8 3 6 9]`, notice that the columns are stored one after the other.  
 
 `order='C'` on the other hand would tell `numpy` to store the array row by row, example:
 ```python
@@ -25,7 +25,7 @@ if __name__ == "__main__":
                 [7, 8, 9]], order='C') # order='C' is the default in numpy.array
   print(a.ravel('K'))
  ```
-This python program will output `[1 2 3 4 5 6 7 8 9]`, notice that the rows are stored one after the other.
+This python script will output `[1 2 3 4 5 6 7 8 9]`, notice that the rows are stored one after the other.
 
 ### Printing and indexing in `numpy`
 
