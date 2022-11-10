@@ -146,7 +146,7 @@ jobs:
         shell: bash
       - name: Check coverage
         run: |
-          from ci_tools.git_diff_to_dict import get_diff_as_json
+          from ci_tools.git_evaluation_tools import get_diff_as_json
           import ci_tools.compare_coverage_to_diff as cov
           import json
           import os

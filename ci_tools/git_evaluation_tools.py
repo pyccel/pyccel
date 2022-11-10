@@ -1,7 +1,18 @@
-
+""" Tools to help examine git information
+"""
 
 def get_diff_as_json(filename):
-    with open(filename) as f:
+    """
+    A function which converts the output of a reduced git diff call
+    to a dictionary that can be exported using json.
+    The diff call should use the argument `--unified=0`
+
+    Parameters
+    ----------
+    filename : str
+            The file where the diff was printed
+    """
+    with open(filename, encoding="ascii") as f:
         lines = f.readlines()
 
     lines = [l.strip() for l in lines]
