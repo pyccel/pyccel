@@ -1,5 +1,5 @@
 import os
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 def get_untested_lines(coverage_filename):
     """
@@ -20,12 +20,9 @@ def get_untested_lines(coverage_filename):
     """
     tree = ET.parse(coverage_filename)
     root = tree.getroot()
-    directories = root.findall('packages')[0].findall('package')
 
     content_lines = {}
     changes = {}
-    current_file_name = None
-    current_file_lines = []
 
     for f in root.findall('.//class'):
         filename = f.attrib['filename']
@@ -89,7 +86,7 @@ def allow_untested_error_calls(untested):
     """
     reduced_untested = {}
     for f,line_nums in untested.items():
-        with open(f) as filename:
+        with open(f, encoding="ascii") as filename:
             f_lines = filename.readlines()
         lines = [f_lines[i-1].strip() for i in line_nums]
         lines = [l for l in lines if not l.startswith('raise ')]
