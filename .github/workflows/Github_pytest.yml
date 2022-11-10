@@ -137,12 +137,9 @@ jobs:
           name: coverage-artifact
       - name: Collect diff information
         run: |
-          BRANCH=$GITHUB_HEAD_REF
           BASE_BRANCH=$GITHUB_BASE_REF
           git fetch
-          git branch
-          git branch -r
-          git diff ${BASE_BRANCH}..${BRANCH} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
         run: |
