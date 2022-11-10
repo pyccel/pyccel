@@ -137,7 +137,9 @@ jobs:
           name: coverage-artifact
       - name: Collect diff information
         run: |
-          BRANCH="##[set-output name=branch;]${GITHUB_REF#refs/heads/}"
+          git branch
+          git status
+          BRANCH=${github.event.pull_request.head.sha}
           echo ${BRANCH}
           git diff master..${BRANCH} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
