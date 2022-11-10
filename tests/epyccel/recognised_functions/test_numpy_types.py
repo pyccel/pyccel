@@ -53,31 +53,37 @@ def test_mult_numpy_python_type(language):
     epyccel_func = epyccel(mult_on_array_int8, language=language)
     python_result = mult_on_array_int8()
     pyccel_result = epyccel_func()
+    assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
     epyccel_func = epyccel(mult_on_array_int16, language=language)
     python_result = mult_on_array_int16()
     pyccel_result = epyccel_func()
+    assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
     epyccel_func = epyccel(mult_on_array_int32, language=language)
     python_result = mult_on_array_int32()
     pyccel_result = epyccel_func()
+    assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
     epyccel_func = epyccel(mult_on_array_int64, language=language)
     python_result = mult_on_array_int64()
     pyccel_result = epyccel_func()
+    assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
     epyccel_func = epyccel(mult_on_array_float32, language=language)
     python_result = mult_on_array_float32()
     pyccel_result = epyccel_func()
+    assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
     epyccel_func = epyccel(mult_on_array_float64, language=language)
     python_result = mult_on_array_float64()
     pyccel_result = epyccel_func()
+    assert python_result == pyccel_result
     assert matching_types(pyccel_result, python_result)
 
 def test_numpy_scalar_promotion(language):
