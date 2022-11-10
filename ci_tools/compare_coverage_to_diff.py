@@ -96,6 +96,25 @@ def allow_untested_error_calls(untested):
     return reduced_untested
 
 def print_markdown_summary(untested, content_lines, commit, output):
+    """
+    Print the results neatly in markdown
+
+    Parameters
+    ----------
+    untested : dict
+        Dictionary whose keys are the files in pyccel with untested
+        lines which have been added in this branch and whose values
+        are lists containing the line numbers where coverage is
+        lacking in that file
+    content_lines : dict
+        Dictionary whose keys are the files in pyccel and whose
+        values are lists containing the line numbers where python
+        commands begin
+    commit : str
+        The commit being tested
+    output : str
+        The file where the markdown summary should be printed
+    """
     if len(untested) == 0:
         return "## All new python code in the pyccel package is fully tested! :tada:"
     else:
@@ -120,6 +139,17 @@ def print_markdown_summary(untested, content_lines, commit, output):
     print(md_string, file=open(output, "w"))
 
 def show_results(untested):
+    """
+    Print the results and fail if coverage is lacking
+
+    Parameters
+    ----------
+    untested : dict
+        Dictionary whose keys are the files in pyccel with untested
+        lines which have been added in this branch and whose values
+        are lists containing the line numbers where coverage is
+        lacking in that file
+    """
     for f, lines in untested:
         print(f"In file {f} the following lines are untested : {lines}")
 
