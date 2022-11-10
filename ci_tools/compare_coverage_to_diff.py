@@ -116,7 +116,7 @@ def print_markdown_summary(untested, content_lines, commit, output):
         The file where the markdown summary should be printed
     """
     if len(untested) == 0:
-        return "## All new python code in the pyccel package is fully tested! :tada:"
+        md_string = "## All new python code in the pyccel package is fully tested! :tada:"
     else:
         md_string = "## The new code is not fully tested\n"
         for f, lines in untested:
