@@ -145,11 +145,13 @@ jobs:
         shell: bash
       - name: Check coverage
         run: |
-          import xml.etree.ElementTree as ET
           from ci_tools.git_diff_to_dict import get_diff_as_json
-          tree = ET.parse('cobertura.xml')
-          root = tree.getroot()
-          for child in root:
-              print(child.tag)
-          print(get_diff_as_json('pull_diff.txt'))
+          import ci_tools.compare_coverage_to_diff as cov
+
+          diff = get_diff_as_json('pull_diff.txt')
+          untested = cov.get_untested_lines('cobertura.xml')
+
+          new_untested = cov.compare_coverage_to_diff(untested, diff)
+
+          assert cov.allow_untested_error_calls(new_untested)
         shell: python
