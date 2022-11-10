@@ -139,8 +139,11 @@ jobs:
         run: |
           git branch
           git status
-          BRANCH=${github.event.pull_request.head.sha}
+          cat $GITHUB_EVENT_PATH
+          BRANCH=$GITHUB_HEAD_REF
+          BASE_BRANCH=$GITHUB_BASE_REF
           echo ${BRANCH}
+          echo ${BASE_BRANCH}
           git diff master..${BRANCH} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
