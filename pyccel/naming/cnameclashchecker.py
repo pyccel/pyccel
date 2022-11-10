@@ -33,7 +33,7 @@ class CNameClashChecker(metaclass = Singleton):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c'])
+        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
