@@ -29,7 +29,7 @@ This python script will output `[1 2 3 4 5 6 7 8 9]`, notice that the rows are s
 
 ### Printing and indexing in `numpy`
 
-`order` in `numpy` doesn't not affect the indexing or the printing, unlike `transposing`, the `shape` of the array remains the same, only the `strides` change, example:
+`order` in `numpy` does not affect the indexing or the printing, unlike `transposing`, the `shape` of the array remains the same, only the `strides` change, example:
 ```python
 import numpy as np
 
