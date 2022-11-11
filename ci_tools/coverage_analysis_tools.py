@@ -14,12 +14,18 @@ def get_untested_lines(coverage_filename):
     coverage_filename : str
         The name of the xml file containing the coverage information
 
-    Result
-    ------
+    Returns
+    -------
     coverage : dict
             A dictionary whose keys are the files in pyccel
             and whose values are lists containing the line numbers
             where coverage is lacking in that file
+    content_lines : dict
+            A dictionary whose keys are the files in pyccel
+            and whose values are lists containing the line numbers
+            where a python command starts (this excludes comments,
+            empty lines, and lines which are continuations of
+            previous lines)
     """
     tree = ET.parse(coverage_filename)
     root = tree.getroot()
@@ -56,8 +62,8 @@ def compare_coverage_to_diff(coverage, diff):
             is a list containing the line numbers of lines which have
             been changed/added
 
-    Result
-    ------
+    Returns
+    -------
     untested : dict
             A dictionary whose keys are the files in pyccel with
             untested lines which have been added in this branch
@@ -86,6 +92,12 @@ def allow_untested_error_calls(untested):
             untested lines which have been added in this branch
             and whose values are lists containing the line numbers
             where coverage is lacking in that file
+
+    Returns
+    -------
+    reduced_untested : dict
+            A dictionary which is a copy of the input dictionary
+            without the lines which express raise statements
     """
     reduced_untested = {}
     for f,line_nums in untested.items():
@@ -99,7 +111,7 @@ def allow_untested_error_calls(untested):
 
 def print_markdown_summary(untested, content_lines, commit, output):
     """
-    Print the results neatly in markdown
+    Print the results neatly in markdown in a provided file
 
     Parameters
     ----------

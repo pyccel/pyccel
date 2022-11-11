@@ -11,6 +11,16 @@ def get_diff_as_json(filename):
     ----------
     filename : str
             The file where the diff was printed
+
+    Returns
+    -------
+    changes : dict
+            A dictionary whose keys are files which have been
+            changed in this branch and whose values are a dictionary.
+            The dictionary is itself a dictionary with the keys 'addition'
+            and 'deletion' whose values are lists containing the line
+            numbers of lines which have been changed/added (addition) or
+            changed/deleted (deletion)
     """
     with open(filename, encoding="ascii") as f:
         lines = f.readlines()
