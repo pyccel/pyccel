@@ -494,7 +494,11 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['memory_location'] = expr.memory_location
-            d_var['current_location'] = 'device' if 'device' in self.scope.decorators else 'host'
+            if 'device' in self.scope.decorators or\
+                'kernel' in self.scope.decorators:
+                d_var['current_location'] = 'device'
+            else:
+                d_var['current_location'] = 'host'
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
