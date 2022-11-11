@@ -70,7 +70,7 @@ class CupyArray(CudaNewArray):
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C', memory_location='managed'):
+    def __init__(self, arg, dtype=None, order='C'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -82,8 +82,6 @@ class CupyArray(CudaNewArray):
         if not (is_homogeneous_tuple or is_array):
             raise TypeError('we only accept homogeneous arguments')
 
-        if memory_location not in ('host', 'device', 'managed'):
-            raise ValueError("memory_location must be 'host', 'device' or 'managed'")
         # Verify dtype and get precision
         if dtype is None:
             dtype = arg.dtype
@@ -116,7 +114,7 @@ class CupyArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
-        self._memory_location = memory_location
+        self._memory_location = 'device'
         super().__init__()
 
     def __str__(self):
@@ -457,21 +455,20 @@ class CupyRavel(CupyArray):
             The location where the new array memory should be allocated
     """
     name   = 'ravel'
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_is_view' '_memory_location')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     _attribute_nodes = ('_arg',)
-    def __new__(cls, arg, memory_location='managed'):
+    def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
         if arg.rank == 0:
             raise TypeError('Unknown type of  %s.' % type(arg))
         return super().__new__(cls)
 
-    def __init__(self, arg, memory_location='managed'):
-        super().__init__(arg = arg, memory_location = memory_location)
+    def __init__(self, arg):
+        super().__init__(arg = arg)
         shape = reduce((lambda x, y: x.python_value * y.python_value), self.shape)
         self._shape = [shape if isinstance(shape, LiteralInteger) else LiteralInteger(shape)]
         self._rank = 1
-        self._order = None
 
     @property
     def arg(self):
