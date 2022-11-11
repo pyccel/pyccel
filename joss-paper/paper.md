@@ -80,6 +80,47 @@ Pyccel's main goal is to resolve the principal bottleneck in scientific computin
 
 We believe that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype. Not only is the Pyccel-generated Fortran or C code very fast, but it is human-readable; hence the expert programmer can easily profile the code on the target machine and further optimize it.
 
+
+
+
+
+
+
+The Python language has gained significant popularity as a language for scientific computing and data science, mainly because it is easy to learn and provides many scientific libraries, including parallel ones.
+While these scientific libraries are very fast, they are usually written in compiled languages such as Fortran and C/C++.
+User code written in pure Python is usually much slower; because Python is a dynamically typed language which introduces overhead in many basic operations.
+
+Different approaches have been proposed to accelerate computation-intensive parts of Python code.
+Cython [@Cython2011], one of the first tools of this kind, allows the user to call the Python C API by introducing a static typing approach.
+However, the user must re-write their code into a hybrid Python-C language in order to remove expensive Python callbacks from the generated C code.
+As a result, the code can no longer be executed using the Python interpreter alone.
+A more recent tool is Pythran [@Pythran2015], which allows dynamic Python code to be converted into static C++ code by providing types as comments.
+The HOPE [@HOPE2015] library provides a just-in-time (JIT) compiler to convert Python code to C++, where the arguments' types are only known at execution time.
+Numba [@NUMBA] follows the same idea of bringing  JIT compiling to Python by generating machine code based on LLVM, which can run on either CPUs or GPUs.
+Both Numba and HOPE rely heavily on the use of simple decorators to instruct the Python package to compile a given function. They also use the type information available at runtime to generate byte code.
+A different approach is given by PyPy [@PyPy2009], a Python interpreter written in an internal language called RPython (which is a restricted subset of the Python language itself).
+The aim of PyPy is to provide speed and efficiency at runtime using a JIT compiler.
+
+To the authors' knowledge, of all the different methods used to accelerate Python codes, nothing has been based on the Fortran language so far.
+Fortran is a language designed for scientific programming that is tailored for efficient runtime execution on a wide variety of processors.
+The compiler is therefore highly effective, especially for array handling in the context of scientific programming.
+In this work, we present a new Python static compiler named Pyccel, which leverages Fortran compilers to accelerate Python code.
+In order for this to be effective, the code must be as similar as possible to the code for which the compiler is optimized.
+As a result Pyccel strives to generate human-readable code.
+
+Pyccel is designed for two different use cases:
+(1) accelerate Python code by converting it to Fortran and providing a CPython wrapper to interface between the low-level and high level languages,
+(2) generate low-level Fortran code from Python code.
+The latter case follows from the fact that the code is human-readable.
+This means that Pyccel can also be used to simplify the process of going from a prototype (which is often written in inefficient languages which are quick to write) to production code (written in a low-level language).
+To this end, Pyccel is designed to allow the use of low-level legacy codes and some Python scientific libraries such as numpy, scipy, etc.
+
+C code generation is currently being added to Pyccel.
+This will allow us to more easily support GPU tools such as CUDA, and OpenACC.
+The C printer is not yet as mature as the Fortran printer.
+As such, the generated C code is usually a little slower and is still missing some of the library functions that are already available in Fortran.
+
+
 # Acknowledgments
 
 # References
