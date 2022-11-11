@@ -3,7 +3,7 @@
 import json
 import argparse
 from git_evaluation_tools import get_diff_as_json
-import compare_coverage_to_diff as cov
+import coverage_analysis_tools as cov
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
 parser.add_argument('diffFile', metavar='diffFile', type=str,
