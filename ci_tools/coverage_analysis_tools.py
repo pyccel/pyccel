@@ -72,7 +72,8 @@ def compare_coverage_to_diff(coverage, diff):
     """
     untested = {}
     for f,line_info in diff.items():
-        if not f.startswith('pyccel/'):
+        if f not in coverage:
+            # Ignore non-python files or files in other directories
             continue
         new_lines = line_info['addition']
         untested_lines = coverage[f]
