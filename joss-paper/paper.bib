@@ -1,0 +1,145 @@
+% Encoding: UTF-8
+
+@Article{Cython2011,
+  author   = {S. {Behnel} and R. {Bradshaw} and C. {Citro} and L. {Dalcin} and D. S. {Seljebotn} and K. {Smith}},
+  title    = {Cython: The Best of Both Worlds},
+  journal  = {Comput Sci Eng},
+  year     = {2011},
+  volume   = {13},
+  number   = {2},
+  pages    = {31-39},
+  issn     = {1558-366X},
+  doi      = {10.1109/MCSE.2010.118},
+  abstract = {Cython is a Python language extension that allows explicit type declarations and is compiled directly to C. As such, it addresses Python's large overhead for numerical loops and the difficulty of efficiently using existing C and Fortran code, which Cython can interact with natively.},
+  keywords = {C language;numerical analysis;Python language extension;Fortran code;numerical loops;Cython language;programming language;Sparse matrices;Runtime;Syntactics;Computer programs;Programming;Python;Cython;numerics;scientific computing},
+}
+
+@Article{Pythran2015,
+  author    = {Serge Guelton and Pierrick Brunet and Mehdi Amini and Adrien Merlini and Xavier Corbillon and Alan Raynaud},
+  title     = {{Pythran: enabling static optimization of scientific Python programs}},
+  journal   = {Comput. Sci. Discov.},
+  year      = {2015},
+  volume    = {8},
+  number    = {1},
+  pages     = {014001},
+  doi       = {10.1088/1749-4680/8/1/014001},
+  url       = {https://doi.org/10.1088/1749-4680/8/1/014001},
+  abstract  = {Pythran is an open source static compiler that turns modules written in a subset of Python language into native ones. Assuming that scientific modules do not rely much on the dynamic features of the language, it trades them for powerful, possibly inter-procedural, optimizations. These optimizations include detection of pure functions, temporary allocation removal, constant folding, Numpy ufunc fusion and parallelization, explicit thread-level parallelism through OpenMP annotations, false variable polymorphism pruning, and automatic vector instruction generation such as AVX or SSE. In addition to these compilation steps, Pythran provides a C++ runtime library that leverages the C++ STL to provide generic containers, and the Numeric Template Toolbox for Numpy support. It takes advantage of modern C++11 features such as variadic templates, type inference, move semantics and perfect forwarding, as well as classical idioms such as expression templates. Unlike the Cython approach, Pythran input code remains compatible with the Python interpreter. Output code is generally as efficient as the annotated Cython equivalent, if not more, but without the backward compatibility loss.},
+  publisher = {{IOP} Publishing},
+}
+
+@Article{HOPE2015,
+  author   = {J. Akeret and L. Gamper and A. Amara and A. Refregier},
+  title    = {{HOPE: A Python just-in-time compiler for astrophysical computations}},
+  journal  = {Astron. Comput.},
+  year     = {2015},
+  volume   = {10},
+  pages    = {1-8},
+  issn     = {2213-1337},
+  doi      = {https://doi.org/10.1016/j.ascom.2014.12.001},
+  url      = {http://www.sciencedirect.com/science/article/pii/S2213133714000687},
+  abstract = {The Python programming language is becoming increasingly popular for scientific applications due to its simplicity, versatility, and the broad range of its libraries. A drawback of this dynamic language, however, is its low runtime performance which limits its applicability for large simulations and for the analysis of large data sets, as is common in astrophysics and cosmology. While various frameworks have been developed to address this limitation, most focus on covering the complete language set, and either force the user to alter the code or are not able to reach the full speed of an optimised native compiled language. In order to combine the ease of Python and the speed of C++, we developed HOPE, a specialised Python just-in-time (JIT) compiler designed for numerical astrophysical applications. HOPE focuses on a subset of the language and is able to translate Python code into C++ while performing numerical optimisation on mathematical expressions at runtime. To enable the JIT compilation, the user only needs to add a decorator to the function definition. We assess the performance of HOPE by performing a series of benchmarks and compare its execution speed with that of plain Python, C++ and the other existing frameworks. We find that HOPE improves the performance compared to plain Python by a factor of 2 to 120, achieves speeds comparable to that of C++, and often exceeds the speed of the existing solutions. We discuss the differences between HOPE and the other frameworks, as well as future extensions of its capabilities. The fully documented HOPE package is available at http://hope.phys.ethz.ch and is published under the GPLv3 license on PyPI and GitHub.},
+  keywords = {Python, Just-in-time compiler, Benchmark},
+}
+
+@misc{NUMBA,
+  author = {{T. Olifant et al.}},
+  title  = {Numba},
+  howpublished    = {\url{http://numba.pydata.org}},
+}
+
+@InProceedings{PyPy2009,
+  author    = {Bolz, Carl Friedrich and Cuni, Antonio and Fijalkowski, Maciej and Rigo, Armin},
+  title     = {{Tracing the meta-level: PyPy’s tracing JIT compiler}},
+  booktitle = {Proceedings of the 4th Workshop on the Implementation, Compilation, Optimization of Object-Oriented Languages and Programming Systems},
+  year      = {2009},
+  series    = {ICOOOLPS ’09},
+  publisher = {ACM},
+  location  = {Genova, Italy},
+  isbn      = {9781605585413},
+  pages     = {18–25},
+  doi       = {10.1145/1565824.1565827},
+  url       = {https://doi.org/10.1145/1565824.1565827},
+  numpages  = {8},
+}
+
+@InProceedings{Haskell2007,
+  author    = {Hudak, Paul and Hughes, John and Peyton Jones, Simon and Wadler, Philip},
+  title     = {A History of Haskell: Being Lazy with Class},
+  booktitle = {Proceedings of the Third ACM SIGPLAN Conference on History of Programming Languages},
+  year      = {2007},
+  series    = {HOPL III},
+  publisher = {Association for Computing Machinery},
+  location  = {San Diego, California},
+  isbn      = {9781595937667},
+  pages     = {12–1–12–55},
+  doi       = {10.1145/1238844.1238856},
+  url       = {https://doi.org/10.1145/1238844.1238856},
+  address   = {New York, NY, USA},
+  numpages  = {55},
+}
+
+@Article{Sundblad1971,
+  author  = {Sundblad, Y.},
+  title   = {{The Ackermann function. A theoretical, computational, and formula manipulative study.}},
+  journal = {BIT},
+  year    = {1971},
+  volume  = {11},
+  pages   = {107-119},
+  doi     = {10.1007/BF01935330},
+}
+
+@Article{Ackermann1928,
+  author  = {Ackermann, W.},
+  title   = {{Zum Hilbertschen Aufbau der reellen Zahlen}},
+  journal = {Math. Ann.},
+  year    = {1928},
+  volume  = {99},
+  pages   = {118-133},
+  doi     = {10.1007/BF01459088},
+}
+
+@misc{python_operators,
+  author = {{Python Operators}},
+  howpublished = {\url{https://docs.python.org/3/library/operator.html}},
+  }
+
+@misc{python_builtins,
+  author = {{Python Built-in Functions}},
+  howpublished = {\url{https://docs.python.org/3/library/functions.html}},
+  }
+
+@misc{python_standard_library,
+  author = {{Python Standard Library}},
+  howpublished = {\url{https://docs.python.org/3/library/}},
+  }
+  
+@misc{python_math_library,
+  author = {{Python Math Library}},
+  howpublished = {\url{https://docs.python.org/3/library/math.html}},
+  }
+
+@misc{molecular_dynamics,
+  author = {John Burkardt},
+  howpublished = {\url{https://people.sc.fsu.edu/~jburkardt/py_src/md/md.html}},
+  }
+
+@misc{J_Burkhardt,
+  author = {John Burkardt},
+  howpublished = {\url{https://people.sc.fsu.edu/~jburkardt/py_src/py_src.html}},
+  }
+
+@misc{OpenMP_Spec5.1,
+ author = {{OpenMP API 5.1}},
+ howpublished = {\url{https://www.openmp.org/spec-html/5.1/openmp.html}},
+ }
+
+@misc{CFD,
+  author = {Lorena A. Barba},
+  howpublished = {\url{https://lorenabarba.com/blog/cfd-python-12-steps-to-navier-stokes/}},
+}
+ 
+@misc{Pyccel,
+ author = {{Pyccel Github Repository}},
+  howpublished = {\url{https://github.com/pyccel/pyccel}}
+}
