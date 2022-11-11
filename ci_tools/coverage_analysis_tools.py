@@ -16,7 +16,7 @@ def get_untested_lines(coverage_filename):
 
     Returns
     -------
-    coverage : dict
+    no_coverage : dict
             A dictionary whose keys are the files in pyccel
             and whose values are lists containing the line numbers
             where coverage is lacking in that file
@@ -31,17 +31,17 @@ def get_untested_lines(coverage_filename):
     root = tree.getroot()
 
     content_lines = {}
-    changes = {}
+    no_coverage = {}
 
     for f in root.findall('.//class'):
         filename = f.attrib['filename']
         lines = f.findall('lines')[0].findall('line')
         all_lines = [int(l.attrib['number']) for l in lines]
         untested_lines = [int(l.attrib['number']) for l in lines if l.attrib['hits'] == "0"]
-        changes[os.path.join('pyccel',filename)] = untested_lines
+        no_coverage[os.path.join('pyccel',filename)] = untested_lines
         content_lines[os.path.join('pyccel',filename)] = all_lines
 
-    return changes, content_lines
+    return no_coverage, content_lines
 
 def compare_coverage_to_diff(coverage, diff):
     """
@@ -131,9 +131,9 @@ def print_markdown_summary(untested, content_lines, commit, output):
         The file where the markdown summary should be printed
     """
     if len(untested) == 0:
-        md_string = "## All new python code in the pyccel package is fully tested! :tada:"
+        md_string = "## Congratulations! All new python code in the pyccel package is fully tested! :tada:"
     else:
-        md_string = "## The new code is not fully tested\n"
+        md_string = "## Warning! The new code is not run\n"
         for f, lines in untested.items():
             md_string += f"### {f}\n"
             line_indices = content_lines[f]
