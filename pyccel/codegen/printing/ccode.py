@@ -367,7 +367,7 @@ class CCodePrinter(CodePrinter):
             copy_to = lhs_name
         while i < len(flattened_list):
             if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
-                elem_name = self._print(self._print(flattened_list[i]))
+                elem_name = self._print(flattened_list[i])
                 creations += f"array_copy_data(&{copy_to}, {elem_name});\n"
                 i += 1
             else:
