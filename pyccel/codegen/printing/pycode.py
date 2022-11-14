@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
 from pyccel.decorators import __all__ as pyccel_decorators
@@ -711,7 +710,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             args = ""
         args += "{}".format(self._print(expr.high))
-        if expr.shape != ():
+        if expr.rank != 0:
             size = self._print(expr.shape)
             args += ", size = {}".format(size)
         return "{}({})".format(name, args)

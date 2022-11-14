@@ -8,6 +8,7 @@ File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
 
+from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
@@ -71,7 +72,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg, index):
@@ -296,8 +297,10 @@ def max_precision(objs : list, dtype = None, allow_native = True):
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
-        return max(default_precision[str(o.dtype)] if o.precision == -1 \
-                else o.precision for o in objs)
+        ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
+        if ndarray_list:
+            return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
+        return max(get_final_precision(o) for o in objs)
 
 def get_final_precision(obj):
     """

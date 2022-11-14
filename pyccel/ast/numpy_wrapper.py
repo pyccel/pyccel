@@ -104,7 +104,7 @@ array_get_data  = FunctionDef(name   = 'nd_data',
 # Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_stride  = FunctionDef(name    = 'nd_stride',
                            body      = [],
-                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True),
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias'),
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
