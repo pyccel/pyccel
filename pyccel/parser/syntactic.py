@@ -796,7 +796,7 @@ class SyntaxParser(BasicParser):
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
             else:
-                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
+                result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter, False)
 
             results.append(result_name)
 

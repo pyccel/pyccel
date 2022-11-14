@@ -30,7 +30,7 @@ from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
-from pyccel.ast.core import Comment, CommentBlock, Pass
+from pyccel.ast.core import Comment, CommentBlock, Declare, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -3063,21 +3063,18 @@ class SemanticParser(BasicParser):
             f_name = f_name.name[-1]
 
         return_vars = self.scope.find(f_name, 'functions').results
-        assigns     = []
         for v,r in zip(return_vars, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
-                a = Assign(v, r)
-                a.set_fst(expr.fst)
-                a = self._visit_Assign(a)
-                assigns.append(a)
+                a = self._visit(Assign(v, r, fst=expr.fst))
+                self._additional_exprs[-1].append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
-        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
-        if code:
-            expr  = Return(results, CodeBlock(code))
+        dealloc_block = [Deallocate(i) for i in self._allocs[-1] if i not in results]
+        if dealloc_block:
+            expr  = Return(results, CodeBlock(dealloc_block))
         else:
             expr  = Return(results)
         return expr
@@ -3198,7 +3195,6 @@ class SemanticParser(BasicParser):
                 cls_base  = self.scope.find(cls_name, 'classes')
                 var       = Variable(dt, 'self', cls_base=cls_base)
                 self.scope.insert_variable(var)
-
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
                     ah = ah.var
