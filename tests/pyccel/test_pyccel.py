@@ -675,6 +675,19 @@ def test_return_numpy_arrays(language):
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+def test_array_binary_op(language):
+    types = [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 8
+    pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
+
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
