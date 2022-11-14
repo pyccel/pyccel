@@ -420,7 +420,7 @@ class Scope(object):
 
         new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
 
-        new_symbol = PyccelSymbol(new_name, is_temp = True)
+        new_symbol = PyccelSymbol(new_name, is_temp=True)
 
         self.insert_symbol(new_symbol)
 

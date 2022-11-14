@@ -3076,9 +3076,10 @@ class SemanticParser(BasicParser):
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
-        dealloc_block = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
-        if dealloc_block:
-            expr  = Return(results, CodeBlock(dealloc_block))
+        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
+
+        if code:
+            expr  = Return(results, CodeBlock(code))
         else:
             expr  = Return(results)
         return expr
@@ -3199,6 +3200,7 @@ class SemanticParser(BasicParser):
                 cls_base  = self.scope.find(cls_name, 'classes')
                 var       = Variable(dt, 'self', cls_base=cls_base)
                 self.scope.insert_variable(var)
+
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
                     ah = ah.var
