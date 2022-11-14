@@ -304,6 +304,19 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
     def _largest_literal_subset(self, flattened_list):
+        """
+        Returns the longest subset of back to back literals in the given list starting from the first element
+
+        parameters
+        ----------
+
+        flattened_list: list to search in
+
+        Return
+        ------
+            largest_subset: the longest back to back literals
+        """
+
         largest_subset = []
         for i in flattened_list:
             if not isinstance(i, Variable) or ((isinstance(i, Variable)) and i.rank == 0):
