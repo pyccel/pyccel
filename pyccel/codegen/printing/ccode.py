@@ -14,7 +14,7 @@ from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
-from pyccel.ast.core      import For, CodeBlock
+from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
