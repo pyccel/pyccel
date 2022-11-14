@@ -405,7 +405,7 @@ class Scope(object):
         """
         return self._used_symbols
 
-    def get_new_incremented_symbol(self, prefix, counter, is_temp = True):
+    def get_new_incremented_symbol(self, prefix, counter):
         """
         Creates a new name by adding a numbered suffix to the provided prefix.
 
@@ -420,7 +420,7 @@ class Scope(object):
 
         new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
 
-        new_symbol = PyccelSymbol(new_name, is_temp = is_temp)
+        new_symbol = PyccelSymbol(new_name, is_temp = True)
 
         self.insert_symbol(new_symbol)
 

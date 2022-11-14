@@ -3063,16 +3063,20 @@ class SemanticParser(BasicParser):
             f_name = f_name.name[-1]
 
         return_vars = self.scope.find(f_name, 'functions').results
+        assigns     = []
         for v,r in zip(return_vars, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, fst=expr.fst))
-                self._additional_exprs[-1].append(a)
+                if a.lhs.is_ndarray:
+                    self._additional_exprs[-1].append(a)
+                else:
+                    assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
-        dealloc_block = [Deallocate(i) for i in self._allocs[-1] if i not in results]
+        dealloc_block = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
         if dealloc_block:
             expr  = Return(results, CodeBlock(dealloc_block))
         else:

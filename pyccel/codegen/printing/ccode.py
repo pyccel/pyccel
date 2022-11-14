@@ -1466,7 +1466,7 @@ class CCodePrinter(CodePrinter):
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             for i in expr.results:
-                if isinstance(i, Variable) and not i.is_temp:
+                if isinstance(i, Variable) and (not i.is_temp or i.is_ndarray):
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
