@@ -354,7 +354,7 @@ class CCodePrinter(CodePrinter):
         creations = ""
         lhs_name = self._print(lhs)
         if order == "F":
-            nd = len(lhs.shape)
+            nd = arg.rank
             temp_array_name = self.scope.get_new_name('temp_array')
             shape_dtype = self.find_in_dtype_registry('int', 8)
             shape = ', '.join(self._print(elem) for elem in lhs.shape)
