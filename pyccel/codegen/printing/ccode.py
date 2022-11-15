@@ -1466,7 +1466,7 @@ class CCodePrinter(CodePrinter):
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             for i in expr.results:
-                if isinstance(i, Variable) and (not i.is_temp or i.is_ndarray):
+                if isinstance(i, Variable) and not i.is_temp:
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
@@ -1605,8 +1605,8 @@ class CCodePrinter(CodePrinter):
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
-                    code = ''+self._print(expr.stmt)
                     last_assign.lhs.is_temp = False
+                    code = ''+self._print(expr.stmt)
 
         return code + 'return {0};\n'.format(self._print(args[0]))
 
