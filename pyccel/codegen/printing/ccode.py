@@ -1600,7 +1600,7 @@ class CCodePrinter(CodePrinter):
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
-                unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
