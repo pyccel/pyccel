@@ -435,7 +435,7 @@ def test_return_array_scalar_op(language):
     @types('complex64')
     @types('complex128')
     def return_array_scalar_op(a):
-        from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128
+        from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128 # pylint: disable=unused-import
         x = ones(5, dtype=type(a))
         return x * a
 
@@ -531,7 +531,7 @@ def test_multi_return_array_scalar_op(language):
     @types('complex64')
     @types('complex128')
     def return_multi_array_scalar_op(a):
-        from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128
+        from numpy import ones, int8, int16, int32, int64, float32, float64, complex64, complex128 #pylint: disable=unused-import
         x = ones(5, dtype=type(a))
         y = ones(5, dtype=type(a))
         return x * a, y * a
