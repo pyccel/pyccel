@@ -1606,7 +1606,7 @@ class CCodePrinter(CodePrinter):
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
                     last_assign.lhs.is_temp = False
-                    code = ''+self._print(expr.stmt)
+                    code = self._print(expr.stmt)
 
         return code + 'return {0};\n'.format(self._print(args[0]))
 
