@@ -615,6 +615,100 @@ def test_multi_return_array_scalar_op(language):
     assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
     assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
 
+def test_multi_return_array_array_op(language):
+
+    @types('int8[:]')
+    @types('int16[:]')
+    @types('int32[:]')
+    @types('int64[:]')
+    @types('int[:]')
+    @types('float32[:]')
+    @types('float64[:]')
+    @types('float[:]')
+    @types('complex64[:]')
+    @types('complex128[:]')
+    def return_array_arg_array_op(a):
+        from numpy import ones
+        x = ones(7)
+        return x * a
+
+    arr_integer8 = np.ones(7, dtype=np.int8)
+    arr_integer16 = np.ones(7, dtype=np.int16)
+    arr_integer = np.ones(7, dtype=int)
+    arr_integer32 = np.ones(7, dtype=np.int32)
+    arr_integer64 = np.ones(7, dtype=np.int64)
+
+    arr_fl = np.ones(7, dtype=float)
+    arr_fl32 = np.ones(7, dtype=np.float32)
+    arr_fl64 = np.ones(7, dtype=np.float64)
+
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.ones(7, dtype=np.float32) + np.ones(7, dtype=np.float32) * 1j
+    cmplx128 = np.ones(7, dtype=np.float64) + np.ones(7, dtype=np.float64) * 1j
+
+    epyccel_func = epyccel(return_array_arg_array_op, language=language)
+
+    f_integer_output = epyccel_func(arr_integer)
+    test_int_output  = return_array_arg_array_op(arr_integer)
+
+    assert np.array_equal(f_integer_output, test_int_output)
+    assert f_integer_output[0].dtype == test_int_output[0].dtype
+
+    f_integer8_output = epyccel_func(arr_integer8)
+    test_int8_output = return_array_arg_array_op(arr_integer8)
+
+    assert np.array_equal(f_integer8_output, test_int8_output)
+    assert f_integer8_output[0].dtype == test_int8_output[0].dtype
+
+    f_integer16_output = epyccel_func(arr_integer16)
+    test_int16_output = return_array_arg_array_op(arr_integer16)
+
+    assert np.array_equal(f_integer16_output, test_int16_output)
+    assert f_integer16_output[0].dtype == test_int16_output[0].dtype
+
+    f_integer32_output = epyccel_func(arr_integer32)
+    test_int32_output = return_array_arg_array_op(arr_integer32)
+
+    assert np.array_equal(f_integer32_output, test_int32_output)
+    assert f_integer32_output[0].dtype == test_int32_output[0].dtype
+
+    f_integer64_output = epyccel_func(arr_integer64)
+    test_int64_output = return_array_arg_array_op(arr_integer64)
+
+    assert np.array_equal(f_integer64_output, test_int64_output)
+    assert f_integer64_output[0].dtype == test_int64_output[0].dtype
+
+    f_fl_output = epyccel_func(arr_fl)
+    test_float_output = return_array_arg_array_op(arr_fl)
+
+    assert np.array_equal(f_fl_output, test_float_output)
+    assert f_fl_output[0].dtype == test_float_output[0].dtype
+
+    f_fl32_output = epyccel_func(arr_fl32)
+    test_float32_output = return_array_arg_array_op(arr_fl32)
+
+    assert np.array_equal(f_fl32_output, test_float32_output)
+    assert f_fl32_output[0].dtype == test_float32_output[0].dtype
+
+    f_fl64_output = epyccel_func(arr_fl64)
+    test_float64_output = return_array_arg_array_op(arr_fl64)
+
+    assert np.array_equal(f_fl64_output, test_float64_output)
+    assert f_fl64_output[0].dtype == test_float64_output[0].dtype
+
+    f_cmplx64_output = epyccel_func(cmplx64)
+    test_cmplx64_output = return_array_arg_array_op(cmplx64)
+
+    assert np.array_equal(f_cmplx64_output, test_cmplx64_output)
+    assert f_cmplx64_output[0].dtype == test_cmplx64_output[0].dtype
+
+    f_cmplx128_output = epyccel_func(cmplx128)
+    test_cmplx128_output = return_array_arg_array_op(cmplx128)
+
+    assert np.array_equal(f_cmplx128_output, test_cmplx128_output)
+    assert f_cmplx128_output[0].dtype == test_cmplx128_output[0].dtype
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
