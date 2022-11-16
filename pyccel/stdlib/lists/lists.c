@@ -402,21 +402,18 @@ t_list *lst_slice(t_list *list, size_t start, size_t end, int step, int order)
         slice : t_list
 */
 {
-    if (!step || start == end)
-        return (NULL);
-
     size_t tsize = tSizes[list->type];
-    size_t size = end - start;
-    char *buff = calloc((size / step), tsize);
+    size_t size = ((end - start) % step == 0) ? (end - start)/step : (end - start)/step + 1;
+    char *buff = calloc(size, tsize);
     char *elements = list->elements;
     size_t index = 0;
 
-    while (index < end)
+    while (index < size)
     {
         if (order)
-            memcpy(&buff[(size - index - 1) * tsize], &elements[((index * step) + start) * tsize], tsize);
+            memcpy(&buff[index * tsize], &elements[(end - (index * step)) * tsize], tsize);
         else
-            memcpy(&buff[index * tsize], &elements[(index + start) * step * tsize], tsize);
+            memcpy(&buff[index * tsize], &elements[((index * step) + start) * tsize], tsize);
         index++;
     }
     t_list *slice = allocate_list(size, list->type, buff);

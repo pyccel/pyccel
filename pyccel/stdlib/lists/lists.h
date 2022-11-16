@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <complex.h>
-
+#include <stdint.h>
 #define MIN(a, b) (a > b ? b : a)
 #define GET_ELM(list, i) (list->elements + (i * tSizes[list->type]))
 
