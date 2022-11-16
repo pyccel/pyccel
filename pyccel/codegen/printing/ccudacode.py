@@ -522,8 +522,9 @@ class CcudaCodePrinter(CCodePrinter):
         if rhs.current_location == 'device' and rhs.memory_location == 'host':
             errors.report("You can't create a host array from a device function",
                         symbol=expr, severity='error')
-        end_memory_location = 'Host' if rhs.memory_location == 'host' else 'Device'
-        memcpy_kind = "{}To{}".format(str(rhs.current_location).capitalize(), end_memory_location)
+        memcpy_kind_src = str(rhs.current_location).capitalize()
+        memcpy_kind_dest = 'Host' if rhs.memory_location == 'host' else 'Device'
+        memcpy_kind = "{}To{}".format(memcpy_kind_src, memcpy_kind_dest)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
