@@ -520,9 +520,10 @@ class CcudaCodePrinter(CCodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
         if rhs.current_location == 'device' and rhs.memory_location == 'host':
-            errors.report("Cannot copy data from device to host", symbol=expr, severity='error')
-        memory_location = 'Host' if rhs.memory_location == 'host' else 'Device'
-        memcpy_kind = "{}To{}".format(str(rhs.current_location).capitalize(), memory_location)
+            errors.report("You can't create a host array from a device function",
+                        symbol=expr, severity='error')
+        end_memory_location = 'Host' if rhs.memory_location == 'host' else 'Device'
+        memcpy_kind = "{}To{}".format(str(rhs.current_location).capitalize(), end_memory_location)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
