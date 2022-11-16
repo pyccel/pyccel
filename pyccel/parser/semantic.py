@@ -3066,9 +3066,7 @@ class SemanticParser(BasicParser):
         assigns     = []
         for v,r in zip(return_vars, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
-                a = Assign(v, r)
-                a.set_fst(expr.fst)
-                a = self._visit_Assign(a)
+                a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]
