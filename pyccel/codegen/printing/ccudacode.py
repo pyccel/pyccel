@@ -521,6 +521,12 @@ class CcudaCodePrinter(CCodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
+        if rhs.current_location == 'device' and rhs.memory_location == 'host':
+            errors.report("You can't create a host array from a device function",
+                        symbol=expr, severity='error')
+        memcpy_kind_src = str(rhs.current_location).capitalize()
+        memcpy_kind_dest = 'Host' if rhs.memory_location == 'host' else 'Device'
+        memcpy_kind = "{}To{}".format(memcpy_kind_src, memcpy_kind_dest)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
@@ -528,12 +534,12 @@ class CcudaCodePrinter(CCodePrinter):
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, {3});".format(lhs, arg, dtype, memcpy_kind)
             return '%s\n' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, {3});".format(self._print(lhs), dummy_array_name, dtype, memcpy_kind)
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def _print_CudaDeviceSynchronize(self, expr):
