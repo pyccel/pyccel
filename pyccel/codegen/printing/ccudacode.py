@@ -440,12 +440,14 @@ class CcudaCodePrinter(CCodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         dtype = dtype[3:]
-
+        #TODO: approximate good threads/block, block size
+        tpb = 1
+        b_size = 1
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                code_init += 'cuda_array_fill_{0}(({1}){2}, {3});\n'.format(dtype, declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'cuda_array_fill_{0}<<<{1},{2}>>>(({3}){4}, {5});\n'.format(dtype, tpb, b_size, declare_dtype, self._print(rhs.fill_value), self._print(lhs))
             else:
-                code_init += 'cuda_array_fill_{0}({1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += 'cuda_array_fill_{0}<<<{1},{2}>>>({3}, {4});\n'.format(dtype, tpb, b_size, self._print(rhs.fill_value), self._print(lhs))
         return code_init
 
     def cuda_Arange(self, expr):
