@@ -6,8 +6,9 @@ char *typeStr[5] = {"p", "i", "f", "d"};//TODO: double check these.
 
 static  void* pylist_get_literal(PyObject * item, size_t type)  // check if there is a better way than allocating a buffer
 {
-    size_t tsize = tSizes[type];
+    Py_ssize_t tsize = tSizes[type];
     char * cItem = malloc(tsize);
+
     memset(cItem, 0, tsize);
     if (type == lst_bool)
         *cItem = (PyObject_IsTrue(item)) ? 1 : 0;
@@ -26,9 +27,9 @@ static  void* pylist_get_literal(PyObject * item, size_t type)  // check if ther
 
 static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
 {
-    size_t  tsize = tSizes[type];
+    Py_ssize_t  tsize = tSizes[type];
     char *elements = malloc(size * tsize);
-    size_t index = 0;
+    Py_ssize_t index = 0;
 
     while (index < size)
     {
@@ -45,9 +46,9 @@ static void *pylist_get_elements(PyObject* list, t_type type, size_t size)
     return elements;
 }
 
-static t_type pylist_get_type(PyObject *list)
+static t_type pylist_get_type(PyObject *list, Py_ssize_t index)
 {
-    PyObject *element = PyList_GetItem(list, 0);
+    PyObject *element = PyList_GetItem(list, index);
     if (PyList_CheckExact(element))
         return lst_list;
     else if (PyLong_CheckExact(element))
@@ -63,18 +64,18 @@ t_list* unwrap_list(PyObject *list)
 {
     if (!PyList_CheckExact(list))
         return (NULL);
-    size_t size = PyList_Size(list);
+    Py_ssize_t size = PyList_Size(list);
     t_type type = lst_none;
     if (size)
-        type = pylist_get_type(list);
+        type = pylist_get_type(list, 0);
     char *elements = pylist_get_elements(list, type, size);
     return allocate_list(size, type, elements);
 }
 
 PyObject * wrap_list(t_list *list)
 {
-    size_t size = list->size;
-    size_t index = 0;
+    Py_ssize_t size = list->size;
+    Py_ssize_t index = 0;
     PyObject * pylist = PyList_New(size);
     PyObject * obj = NULL;
 
@@ -90,18 +91,25 @@ PyObject * wrap_list(t_list *list)
     return (pylist);
 }
 
-
-bool	pylist_check(PyListObject *o, int dtype)
+bool    pylist_check_elements_type(PyListObject *list, t_type dtype)
 {
-	if (!PyList_CheckExact(o))
-        return false;
-    Py_ssize_t list_size = PyList_Size(o);
-    Py_ssize_t  index = 0;
-    while (index < list_size)
+    Py_ssize_t index = 0;
+    while (index < list->size)
     {
-        if ()
+        if (pylist_get_type(list, dtype) != dtype)
+        return false;
         index++;
     }
+    return true;
+}
 
-	return true;
+bool	pylist_check(PyListObject *list, t_type dtype)
+{
+	if (!PyList_CheckExact(list))
+        return false;
+    Py_ssize_t list_size = PyList_Size(list);
+    Py_ssize_t  index = 0;
+    if (list_size == 0)
+        return true;
+    return pylist_check_elements_type(list);
 }
