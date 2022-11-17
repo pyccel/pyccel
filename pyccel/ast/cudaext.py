@@ -74,11 +74,11 @@ class CudaArray(CudaNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location', '_current_location')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C', memory_location='managed', current_location='host'):
+    def __init__(self, arg, dtype=None, order='C', memory_location='managed'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -125,7 +125,6 @@ class CudaArray(CudaNewArray):
         self._order = order
         self._precision = prec
         self._memory_location = memory_location
-        self._current_location = current_location
         super().__init__()
 
     def __str__(self):
@@ -137,10 +136,6 @@ class CudaArray(CudaNewArray):
     @property
     def memory_location(self):
         return self._memory_location
-
-    @property
-    def current_location(self):
-        return self._current_location
 
 class CudaDeviceSynchronize(PyccelInternalFunction):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
