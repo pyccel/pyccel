@@ -545,6 +545,11 @@ class CcudaCodePrinter(CCodePrinter):
         dim_c = ('x', 'y', 'z')[expr.dim]
         return '{}.{}'.format(var_name, dim_c)
 
+    def _print_CudaSeed(self, expr):
+        return 'srand(%s)' % (self._print(expr.seed))
+    
+    def _print_CudaUniform(self, expr):
+        return 'randfloat(%s, %s)' % (self._print(expr.low), self._print(expr.high))
 
 def ccudacode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of ccuda code

@@ -156,3 +156,14 @@ int32_t cuda_free_pointer(t_ndarray arr)
     arr.strides = NULL;
     return (1);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Helper function, returning uniformly distributed
+// random float in [low, high] range
+////////////////////////////////////////////////////////////////////////////////
+float randfloat(float low, float high)
+{
+  float t = (float)rand() / (float)RAND_MAX;
+  return (1.0f - t) * low + t * high;
+}

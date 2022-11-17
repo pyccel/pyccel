@@ -190,6 +190,78 @@ class CudaGrid(PyccelAstNode)               :
             return expr[0]
         return PythonTuple(*expr)
 
+class CudaUniform(PyccelInternalFunction):
+    """
+    Represents a call to  cuda.uniform for code generation.
+
+    low : float
+    high : float
+
+    """
+    _attribute_nodes = ('_low','_high',)
+    name = 'uniform'
+
+    def __init__(self, low=0.0, high=1.0):
+        if isinstance(low, float):
+            low = LiteralFloat(low)
+        if isinstance(high, float):
+            high = LiteralFloat(high)
+        if not isinstance(low, LiteralFloat):
+            raise TypeError("low argument need to be an integer")
+        if not isinstance(high, LiteralFloat):
+            raise TypeError("high argument need to be an integer")
+
+        self._low = low
+        self._high = high
+        self._shape     = None
+        self._rank      = 0
+        self._dtype     = low.dtype
+        self._precision = low.precision
+        self._order     = None
+        super().__init__()
+
+    def __str__(self):
+        return 'random(%s, %s)' % (str(self.low), str(self.high))
+
+    @property
+    def low(self):
+        return self._low
+    @property
+    def high(self):
+        return self._high
+
+class CudaSeed(PyccelInternalFunction):
+    """
+    Represents a call to  cuda.random.seed for code generation.
+
+    seed : float
+
+    """
+    _attribute_nodes = ('_seed',)
+    name = 'seed'
+
+    def __init__(self, seed):
+        if isinstance(seed, int):
+            seed = LiteralInteger(seed)
+        if not isinstance(seed, LiteralInteger):
+            raise TypeError("seed argument need to be an integer")
+
+        self._seed = seed
+        self._shape     = None
+        self._rank      = 0
+        self._dtype     = None
+        self._precision = None
+        self._order     = None
+        super().__init__()
+
+    def __str__(self):
+        return str(self.seed)
+
+    @property
+    def seed(self):
+        return self._seed
+
+
 
 cuda_funcs = {
     # 'deviceSynchronize' : CudaDeviceSynchronize,
@@ -202,6 +274,12 @@ cuda_funcs = {
     'grid'              : PyccelFunctionDef('grid'              , CudaGrid)
 }
 
+cuda_random_mod = Module('random', (),
+    [
+        PyccelFunctionDef('uniform'   , CudaUniform),
+        PyccelFunctionDef('seed'   , CudaSeed)
+    ])
+
 cuda_Internal_Var = {
     'CudaThreadIdx' : 'threadIdx',
     'CudaBlockDim'  : 'blockDim',
@@ -212,6 +290,10 @@ cuda_Internal_Var = {
 cuda_constants = {
 
 }
+
 cuda_mod = Module('cuda',
     variables = cuda_constants.values(),
-    funcs = cuda_funcs.values())
+    funcs = cuda_funcs.values(),
+    imports = [
+        Import('random', cuda_random_mod),
+        ])
