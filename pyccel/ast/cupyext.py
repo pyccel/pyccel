@@ -219,7 +219,7 @@ class CupyFull(CudaNewArray):
         (row- or column-wise) order in memory.
 
     """
-    __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order','_memory_location')
     name = 'full'
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
@@ -243,6 +243,7 @@ class CupyFull(CudaNewArray):
         self._rank  = len(self._shape)
         self._dtype = dtype
         self._order = CudaNewArray._process_order(self._rank, order)
+        self._memory_location = 'device'
         self._precision = precision
 
         super().__init__(fill_value)
@@ -251,6 +252,9 @@ class CupyFull(CudaNewArray):
     @property
     def fill_value(self):
         return self._args[0]
+    @property
+    def memory_location(self):
+        return self._memory_location
 
 #==============================================================================
 class CupyAutoFill(CupyFull):
