@@ -402,6 +402,8 @@ t_list *lst_slice(t_list *list, size_t start, size_t end, int step, int order)
         slice : t_list
 */
 {
+    if (start >= end)
+        return (allocate_list(0, list->type, NULL));
     size_t tsize = tSizes[list->type];
     size_t size = ((end - start) % step == 0) ? (end - start)/step : (end - start)/step + 1;
     char *buff = calloc(size, tsize);
