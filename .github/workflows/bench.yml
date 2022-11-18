@@ -20,7 +20,7 @@ jobs:
           echo "Host gitserv
                 Hostname remote.server.com
                 IdentityFile ~/.ssh/id_ed25519.github
-                IdentitiesOnly yes # see NOTES below"
+                IdentitiesOnly yes # see NOTES below" > .ssh/config
           echo "$SSH_DEPLOY_KEY" > .ssh/id_ed25519.github
       - name: Clone pyccel-benchmarks repository
         working-directory: ../
