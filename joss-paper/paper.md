@@ -23,7 +23,7 @@ authors:
     affiliation: 2
 
   - name: Said Hadjout
-    orcid:
+    orcid: 0000-0003-3878-3146
     equal-contrib: true
     affiliation: "2, 3"
 
@@ -46,7 +46,7 @@ affiliations:
   - name: Lab. MSDA, Mohammed VI Polytechnic University, Benguerir, Morocco
     index: 4
 
-date: 10 October 2022
+date: 18 November 2022
 bibliography: paper.bib
 
 ---
