@@ -17,10 +17,10 @@ jobs:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         run: |
           mkdir .ssh
-          echo "Host gitserv
-                Hostname remote.server.com
-                IdentityFile ~/.ssh/id_ed25519.github
-                IdentitiesOnly yes # see NOTES below" > .ssh/config
+          echo "Host gitserv" > .ssh/config
+          echo "Hostname remote.server.com" >> .ssh/config
+          echo "IdentityFile ~/.ssh/id_ed25519.github" >> .ssh/config
+          echo "IdentitiesOnly yes # see NOTES below" >> .ssh/config
           echo "$SSH_DEPLOY_KEY" > .ssh/id_ed25519.github
       - name: Clone pyccel-benchmarks repository
         working-directory: ../
