@@ -69,7 +69,7 @@ class CupyArray(CudaNewArray):
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C', memory_location='managed', current_location='host'):
+    def __init__(self, arg, dtype=None, order='C'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -113,8 +113,6 @@ class CupyArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
-        self._memory_location = memory_location
-        self._current_location = current_location
         super().__init__()
 
     def __str__(self):
@@ -123,14 +121,6 @@ class CupyArray(CudaNewArray):
     @property
     def arg(self):
         return self._arg
-
-    @property
-    def memory_location(self):
-        return self._memory_location
-
-    @property
-    def current_location(self):
-        return self._current_location
 
 #==============================================================================
 class CupyArange(CudaNewArray):
