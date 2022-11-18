@@ -22,6 +22,7 @@ __all__ = (
     'template',
     'types',
     'kernel',
+    'device',
 )
 
 def lambdify(f):
@@ -101,4 +102,7 @@ def allow_negative_index(f,*args):
     return identity
 
 def kernel(f):
+    return f
+
+def device(f):
     return f
