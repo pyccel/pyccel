@@ -11,17 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clone pyccel-benchmarks repository
+      - name: Set up ssh
         working-directory: ../
         env:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        run: |
+          mkdir .ssh
+          echo "Host gitserv
+                Hostname remote.server.com
+                IdentityFile ~/.ssh/id_ed25519.github
+                IdentitiesOnly yes # see NOTES below"
+          echo "$SSH_DEPLOY_KEY" > .ssh/id_ed25519.github
+      - name: Clone pyccel-benchmarks repository
+        working-directory: ../
         run: |
           git clone git@github.com:pyccel/pyccel-benchmarks.git
 
       - name: Push results to pyccel-benchmarks
         working-directory: ../pyccel-benchmarks
-        env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         run: |
           git commit --allow-empty -m "Benchmark of pyccel@${GITHUB_SHA}" --author="Yaman Güçlü <yaman.guclu@gmail.com>"
           git push
