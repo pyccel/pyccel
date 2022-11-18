@@ -101,7 +101,10 @@ The latter case follows from the fact that the code is human-readable.
 This means that Pyccel can also be used to simplify the process of going from a prototype (which is often written in inefficient languages which are quick to write) to production code (written in a low-level language).
 To this end, Pyccel is designed to allow the use of low-level legacy codes and some Python scientific libraries such as numpy, scipy, etc.
 
+# Benchmarks
 
 # Acknowledgments
+
+The authors would like to thank all the people who have contributed to Pyccel so far.
 
 # References
