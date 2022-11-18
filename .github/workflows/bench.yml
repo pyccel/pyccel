@@ -21,5 +21,5 @@ jobs:
         env:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
         run: |
-          git commit --allow-empty -m "Benchmark of pyccel@${GITHUB_SHA}" --author="Pyccel Branch"
+          git commit --allow-empty -m "Benchmark of pyccel@${GITHUB_SHA}" --author="Pyccel Branch <pyccel@googlegroups.com>"
           git push
