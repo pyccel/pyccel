@@ -95,7 +95,7 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.cudaext import CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
+from pyccel.ast.cudaext import CudaArray, CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim, CudaToDevice
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -836,6 +836,14 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity = 'fatal')
 
+            if func in (CupyArray, CudaArray):
+                if not 'current_context' in args:
+                    if 'device' in self.scope.decorators or\
+                        'kernel' in self.scope.decorators:
+                        new_arg = FunctionCallArgument('device', 'current_context',)
+                    else:
+                        new_arg = FunctionCallArgument('host', 'current_context',)
+                    args.append(new_arg)
             args, kwargs = split_positional_keyword_arguments(*args)
             for a in args:
                 if getattr(a,'dtype',None) == 'tuple':
