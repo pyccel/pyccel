@@ -68,7 +68,7 @@ def BlackScholesBodyCPU(S, X, T, R, V):
     putResult = (X * expRT * (1.0 - CNDD2) - S * (1.0 - CNDD1))
     return callResult, putResult
 
-def blackscholesCPU(h_CallResult, h_PutResult, h_StockPrice, h_OptionStrike, h_OptionYears, Riskfree, Volatility, optn):
+def blackscholesCPU(h_CallResult, h_PutResult, h_StockPrice, h_OptionStrike, h_OptionYears, Riskfree, Volatility, opt_n):
     for opt in range(opt_n):
         h_CallResult[opt], h_PutResult[opt] = BlackScholesBodyCPU(h_StockPrice[opt],
                         h_OptionStrike[opt], h_OptionYears[opt], Riskfree,
