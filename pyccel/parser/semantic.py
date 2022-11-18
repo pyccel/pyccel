@@ -812,7 +812,7 @@ class SemanticParser(BasicParser):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
                 if 'kernel' not in self.scope.decorators\
-                    or 'device' not in self.scope.decorators:
+                    and 'device' not in self.scope.decorators:
                     errors.report("Cuda internal variables should only be used in Kernel or Device functions",
                         symbol = expr,
                         severity = 'fatal')
@@ -902,14 +902,14 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
-            if not isinstance(expr.numBlocks, LiteralInteger):
-                errors.report("Invalid Block number parameter for Kernel call",
-                        symbol = expr,
-                        severity='error')
-            if not isinstance(expr.tpblock, LiteralInteger):
-                errors.report("Invalid Thread per Block parameter for Kernel call",
-                        symbol = expr,
-                        severity='error')
+            # if not isinstance(expr.numBlocks, LiteralInteger, PyccelS):
+            #     errors.report("Invalid Block number parameter for Kernel call",
+            #             symbol = expr,
+            #             severity='error')
+            # if not isinstance(expr.tpblock, LiteralInteger):
+            #     errors.report("Invalid Thread per Block parameter for Kernel call",
+            #             symbol = expr,
+            #             severity='error')
 
             new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
 
@@ -918,7 +918,7 @@ class SemanticParser(BasicParser):
                     errors.report("Too few arguments passed in function call",
                         symbol = expr,
                         severity='error')
-                elif isinstance(a.value, Variable) and a.value.on_stack:
+                elif isinstance(a.value, Variable) and a.value.is_ndarray and a.value.on_stack:
                     errors.report("A variable allocated on the stack can't be passed to a Kernel function",
                         symbol = expr,
                         severity='error')
