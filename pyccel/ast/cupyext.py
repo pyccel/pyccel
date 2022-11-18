@@ -65,11 +65,11 @@ class CupyArray(CudaNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_arg', '_dtype','_precision','_shape','_rank','_order', '_memory_location', '_current_context')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='C', current_context='host'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -92,7 +92,8 @@ class CupyArray(CudaNewArray):
 
         shape = process_shape(False, arg.shape)
         rank  = len(shape)
-
+        if current_context not in ('host', 'device'):
+            raise ValueError("The current context can only be 'host' or 'device'")
         if rank < 2:
             order = None
         else:
@@ -113,6 +114,8 @@ class CupyArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        self._current_context = current_context
+        self._memory_location = 'device'
         super().__init__()
 
     def __str__(self):
@@ -121,6 +124,14 @@ class CupyArray(CudaNewArray):
     @property
     def arg(self):
         return self._arg
+
+    @property
+    def current_context(self):
+        return self._current_context
+
+    @property
+    def memory_location(self):
+        return self._memory_location
 
 #==============================================================================
 class CupyArange(CudaNewArray):

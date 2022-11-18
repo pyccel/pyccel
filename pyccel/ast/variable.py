@@ -106,8 +106,8 @@ class Variable(PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_memory_location', '_is_const',
-            '_is_target', '_is_optional', '_allows_negative_indexes',
+    __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_memory_location', '_current_context',
+            '_is_const', '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
             '_rank','_shape','_order','_is_private')
     _attribute_nodes = ()
@@ -120,6 +120,7 @@ class Variable(PyccelAstNode):
         rank=0,
         memory_handling='stack',
         memory_location='host',
+        current_context = 'host',
         is_const=False,
         is_target=False,
         is_optional=False,
@@ -158,6 +159,10 @@ class Variable(PyccelAstNode):
         if memory_location not in ('host', 'device', 'managed'):
             raise ValueError("memory_location must be 'host', 'device' or 'managed'")
         self._memory_location = memory_location
+
+        if current_context not in ('host', 'device'):
+            raise ValueError("The current context can only be 'host' or 'device'")
+        self._current_context = current_context
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
@@ -319,6 +324,12 @@ class Variable(PyccelAstNode):
         """ Indicates whether a Variable has a dynamic size
         """
         return self._memory_location
+
+    @property
+    def current_context(self):
+        """ Indicates if the variable is currently in the host or device context
+        """
+        return self._current_context
 
     @memory_location.setter
     def memory_location(self, memory_location):

@@ -74,11 +74,11 @@ class CudaArray(CudaNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location', '_current_context')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C', memory_location='managed'):
+    def __init__(self, arg, dtype=None, order='C', current_context='host', memory_location='managed'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -118,6 +118,9 @@ class CudaArray(CudaNewArray):
         #Verify memory location
         if memory_location not in ('host', 'device', 'managed'):
             raise ValueError("memory_location must be 'host', 'device' or 'managed'")
+        if current_context not in ('host', 'device'):
+            raise ValueError("The current context can only be 'host' or 'device'")
+
         self._arg   = arg
         self._shape = shape
         self._rank  = rank
@@ -125,6 +128,7 @@ class CudaArray(CudaNewArray):
         self._order = order
         self._precision = prec
         self._memory_location = memory_location
+        self._current_context = current_context
         super().__init__()
 
     def __str__(self):
@@ -136,6 +140,9 @@ class CudaArray(CudaNewArray):
     @property
     def memory_location(self):
         return self._memory_location
+    @property
+    def current_context(self):
+        return self._current_context
 
 class CudaDeviceSynchronize(PyccelInternalFunction):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
