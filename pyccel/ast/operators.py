@@ -390,14 +390,14 @@ class PyccelBinaryOperator(PyccelOperator):
         strs      = [a for a in args if a.dtype is NativeString()]
 
         if strs:
-            return cls._handle_str_type(strs)
             assert len(integers + floats + complexes) == 0
+            return cls._handle_str_type(strs)
         elif complexes:
-            return cls._handle_complex_type(complexes)
+            return cls._handle_complex_type(args)
         elif floats:
-            return cls._handle_float_type(floats)
+            return cls._handle_float_type(args)
         elif integers:
-            return cls._handle_integer_type(integers)
+            return cls._handle_integer_type(args)
         else:
             raise TypeError('cannot determine the type of {}'.format(args))
 

@@ -36,13 +36,14 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Litera
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'NumpySign',
     'process_shape',
     # ---
     'NumpyAbs',
@@ -320,8 +321,7 @@ DtypePrecisionToCastFunction = {
     'Complex' : {
        -1 : PythonComplex,
         4 : NumpyComplex64,
-        8 : NumpyComplex,
-        16 : NumpyComplex128,},
+        8 : NumpyComplex128,},
     'Bool':  {
        -1 : PythonBool,
         4 : NumpyBool}
@@ -530,6 +530,9 @@ class NumpyArange(NumpyNewArray):
     def step(self):
         return self._step
 
+    def __getitem__(self, index):
+        step = PyccelMul(index, self.step, simplify=True)
+        return PyccelAdd(self.start, step, simplify=True)
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
@@ -1322,13 +1325,24 @@ class NumpyArctanh(NumpyUfuncUnary):
 
 #=======================================================================================
 
+
+class NumpySign(NumpyUfuncUnary):
+    """Represent a call to the sign function in the Numpy library"""
+    __slots__ = ()
+    name = 'sign'
+    def _set_dtype_precision(self, x):
+        if not isinstance(x.dtype, (NativeInteger, NativeFloat, NativeComplex)):
+            raise TypeError(f'{x.dtype} not supported')
+        self._dtype     = x.dtype
+        self._precision = get_final_precision(x)
+
 class NumpyAbs(NumpyUfuncUnary):
     """Represent a call to the abs function in the Numpy library"""
     __slots__ = ()
     name = 'abs'
     def _set_dtype_precision(self, x):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = get_final_precision(x)
 
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
@@ -1752,6 +1766,7 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
+    'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
     'absolute'  : PyccelFunctionDef('absolute'  , NumpyAbs),
