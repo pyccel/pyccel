@@ -524,7 +524,7 @@ class CcudaCodePrinter(CCodePrinter):
                         symbol=expr, severity='error')
         memcpy_kind_src = str(rhs.current_location).capitalize()
         memcpy_kind_dest = 'Host' if rhs.memory_location == 'host' else 'Device'
-        memcpy_kind = "{}To{}".format(memcpy_kind_src, memcpy_kind_dest)
+        memcpy_kind = "cudaMemcpy{}To{}".format(memcpy_kind_src, memcpy_kind_dest)
         if rhs.rank > 1:
             # flattening the args to use them in C initialization.
             arg = self._flatten_list(arg)
