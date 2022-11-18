@@ -535,7 +535,7 @@ class CcudaCodePrinter(CCodePrinter):
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def _print_CudaDeviceSynchronize(self, expr):
-        return 'cudaDeviceSynchronize()'
+        return 'cudaDeviceSynchronize();\n'
 
     def _print_CudaInternalVar(self, expr):
         var_name = type(expr).__name__

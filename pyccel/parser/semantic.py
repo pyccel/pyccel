@@ -67,7 +67,7 @@ from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
-                                  NativeGeneric, NativeComplex)
+                                  NativeGeneric, NativeComplex, NativeVoid)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -812,7 +812,7 @@ class SemanticParser(BasicParser):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
                 if 'kernel' not in self.scope.decorators\
-                    or 'device' not in self.scope.decorators:
+                    and 'device' not in self.scope.decorators:
                     errors.report("Cuda internal variables should only be used in Kernel or Device functions",
                         symbol = expr,
                         severity = 'fatal')
@@ -2574,6 +2574,8 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error')
                     return None
+            if lhs.is_temp and rhs.dtype is NativeVoid():
+                return rhs
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)

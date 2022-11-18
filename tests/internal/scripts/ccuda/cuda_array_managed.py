@@ -12,6 +12,6 @@ if __name__ == '__main__':
     n_blocks = 1
     a = cuda.array([0,1,2,3,4], memory_location = 'managed')
     cuda.deviceSynchronize()
-    square[n_blocks, threads_per_block](a)
+    square[5, 1](a)
     cuda.deviceSynchronize()
     print(a)

@@ -209,7 +209,8 @@ dtype_registry = {('float',8)   : 'double',
                   ('int',8)     : 'int64_t',
                   ('int',2)     : 'int16_t',
                   ('int',1)     : 'int8_t',
-                  ('bool',4)    : 'bool'}
+                  ('bool',4)    : 'bool',
+                  ('void',0)    : 'void',}
 
 ndarray_type_registry = {
                   ('float',8)   : 'nd_double',

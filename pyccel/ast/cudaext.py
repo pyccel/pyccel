@@ -17,7 +17,7 @@ from .core           import Module, Import, PyccelFunctionDef
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeFloat, NativeComplex, NativeBool, str_dtype,
+                             NativeFloat, NativeComplex, NativeBool, NativeVoid, str_dtype,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
@@ -145,8 +145,8 @@ class CudaDeviceSynchronize(PyccelInternalFunction):
         #...
         self._shape     = None
         self._rank      = 0
-        self._dtype     = NativeInteger()
-        self._precision = None
+        self._dtype     = NativeVoid()
+        self._precision = 0
         self._order     = None
         super().__init__()
 
