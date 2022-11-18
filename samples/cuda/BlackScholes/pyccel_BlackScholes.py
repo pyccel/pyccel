@@ -65,6 +65,9 @@ def wrap_blackscholes(h_StockPrice: 'double[:]', h_OptionStrike: 'double[:]', h_
         blackscholesGPU[int(div_up(opt_n / 2, 128)), 128](d_CallResult,
                 d_PutResult, d_StockPrice, d_OptionStrike,
                 d_OptionYears, riskfree, volatility, opt_n)
-    cuda.deviceSynchronize()../../../pyccel/parser/semantic.py
+    cuda.deviceSynchronize()
+    print("...copying output data to CPU mem.\n")
+    h_CallResultGPU = cuda.copy(d_CallResult, 'host')
+    cuda.deviceSynchronize()
     return h_CallResultGPU
 
