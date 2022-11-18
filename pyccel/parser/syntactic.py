@@ -54,7 +54,7 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
-from pyccel.ast.builtins import PythonPrint, Lambda
+from pyccel.ast.builtins import PythonPrint, Lambda, PythonRound
 from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -1126,6 +1126,9 @@ class SyntaxParser(BasicParser):
 
     def _visit_Starred(self, stmt):
         return StarredArguments(self._visit(stmt.value))
+
+    def _visit_PythonRound(self, stmt):
+        return PythonRound(self._visit(stmt.args))
 
 #==============================================================================
 

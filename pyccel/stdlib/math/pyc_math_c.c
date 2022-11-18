@@ -7,6 +7,11 @@
 #include <math.h>
 
 /*---------------------------------------------------------------------------*/
+double  double_round(double x, int64_t ndigits)
+{
+    return lrint(x * pow(10, ndigits)) / pow(10, ndigits);
+}
+/*---------------------------------------------------------------------------*/
 int64_t                     pyc_factorial(int64_t n)
 {
     int64_t    res = 1;
