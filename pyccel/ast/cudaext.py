@@ -187,6 +187,11 @@ class CudaBlockDim(CudaInternalVar)         : pass
 class CudaBlockIdx(CudaInternalVar)         : pass
 class CudaGridDim(CudaInternalVar)          : pass
 class CudaGrid(PyccelAstNode)               :
+    """Represents a call to cuda.grid for code generation.
+        dim  : int
+        The number of dimensions of requested, it should correspond
+        to the number of dimensions declared when instantiating the kernel
+    """
     def __new__(cls, dim=0):
         if not isinstance(dim, LiteralInteger):
             raise TypeError("dimension need to be an integer")
@@ -199,6 +204,9 @@ class CudaGrid(PyccelAstNode)               :
         return PythonTuple(*expr)
 
 class CudaToDevice(CudaArray):
+    """Represents a call to cuda.to_device for code generation.
+        arg : Variable
+    """
     def __init__(self, arg):
         if not isinstance(arg, Variable) or not arg.is_ndarray:
             raise TypeError("Argument must be an ndarray variable")
@@ -208,6 +216,9 @@ class CudaToDevice(CudaArray):
 
 class CudaToHost(CudaArray):
     def __init__(self, arg):
+        """Represents a call to cuda.to_host for code generation.
+            arg : Variable
+        """
         if not isinstance(arg, Variable) or not arg.is_ndarray:
             raise TypeError("Argument must be an ndarray variable")
         order = arg.order
