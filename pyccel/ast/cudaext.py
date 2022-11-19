@@ -118,6 +118,7 @@ class CudaArray(CudaNewArray):
         #Verify memory location
         if memory_location not in ('host', 'device', 'managed'):
             raise ValueError("memory_location must be 'host', 'device' or 'managed'")
+        # ...
         if current_context not in ('host', 'device'):
             raise ValueError("The current context can only be 'host' or 'device'")
 
@@ -197,10 +198,27 @@ class CudaGrid(PyccelAstNode)               :
             return expr[0]
         return PythonTuple(*expr)
 
+class CudaToDevice(CudaArray):
+    def __init__(self, arg):
+        if not isinstance(arg, Variable) or not arg.is_ndarray:
+            raise TypeError("Argument must be an ndarray variable")
+        order = arg.order
+        current_context =  'device' if not arg.memory_location == 'host' else arg.memory_location
+        super().__init__(arg, order=order, current_context=current_context, memory_location='device')
+
+class CudaToHost(CudaArray):
+    def __init__(self, arg):
+        if not isinstance(arg, Variable) or not arg.is_ndarray:
+            raise TypeError("Argument must be an ndarray variable")
+        order = arg.order
+        current_context = 'device' if not arg.memory_location == 'host' else arg.memory_location
+        super().__init__(arg, order=order, current_context=current_context, memory_location='host')
 
 cuda_funcs = {
     # 'deviceSynchronize' : CudaDeviceSynchronize,
     'array'             : PyccelFunctionDef('array'             , CudaArray),
+    'to_device'         : PyccelFunctionDef('to_device'         , CudaToDevice),
+    'to_host'           : PyccelFunctionDef('to_host'           , CudaToHost),
     'deviceSynchronize' : PyccelFunctionDef('deviceSynchronize' , CudaDeviceSynchronize),
     'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
     'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),

@@ -520,9 +520,6 @@ class CcudaCodePrinter(CCodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, (CudaArray, CupyArray)) else rhs
 
-        if rhs.current_context == 'device' and rhs.memory_location == 'host':
-            errors.report("You can't create a host array from a device function",
-                        symbol=expr, severity='error')
         memcpy_kind_src = str(rhs.current_context).capitalize()
         memcpy_kind_dest = 'Host' if rhs.memory_location == 'host' else 'Device'
         memcpy_kind = "cudaMemcpy{}To{}".format(memcpy_kind_src, memcpy_kind_dest)
