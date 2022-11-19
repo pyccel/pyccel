@@ -819,15 +819,20 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity = 'fatal')
 
-            if func in (CupyArray, CudaArray):
-                if not 'current_context' in args:
-                    if 'device' in self.scope.decorators or\
-                        'kernel' in self.scope.decorators:
-                        new_arg = FunctionCallArgument('device', 'current_context')
-                    else:
-                        new_arg = FunctionCallArgument('host', 'current_context')
-                    args.append(new_arg)
             args, kwargs = split_positional_keyword_arguments(*args)
+            if func in (CupyArray, CudaArray, NumpyArray):
+                if 'device' in self.scope.decorators or 'kernel' in self.scope.decorators:
+                    current_context = 'device'
+                    if ('memory_location' in kwargs.keys() and kwargs['memory_location'] == 'host')\
+                        or func is NumpyArray:
+                        errors.report("Host arrays cannot be allocated on the Device",
+                            symbol = expr,
+                            severity = 'fatal')
+                else:
+                    current_context = 'host'
+                if func in (CudaArray, CupyArray):
+                    kwargs['current_context'] = current_context
+
             for a in args:
                 if getattr(a,'dtype',None) == 'tuple':
                     self._infere_type(a, **settings)
