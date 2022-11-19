@@ -95,13 +95,13 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.cudaext import CudaArray, CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim, CudaToDevice
+from pyccel.ast.cudaext import CudaArray, CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
@@ -721,6 +721,12 @@ class SemanticParser(BasicParser):
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
+                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank\
+                    or isinstance(a.value, (NumpyNewArray, CudaNewArray)):
+                    tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
+                    assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
+                    self._additional_exprs[-1].append(assign)
+                    a = FunctionCallArgument(self._visit(tmp_var))
                 args.append(a)
         return args
 
