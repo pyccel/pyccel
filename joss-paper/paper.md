@@ -89,15 +89,27 @@ In contrast, the C compiler is more adapted to support GPU tools such as CUDA, a
 
 Pyccel is designed for two different use cases:
 (1) accelerate Python code by converting it to Fortran and providing a CPython wrapper to interface between the low-level and high level languages,
-(2) generate low-level Fortran code from Python code.
+(2) generate low-level C or Fortran code from Python code.
 The latter case follows from the fact that the code is human-readable.
 This means that Pyccel can also be used to simplify the process of going from a prototype (which is often written in inefficient languages which are quick to write) to production code (written in a low-level language).
 To this end, Pyccel is designed to allow the use of low-level legacy codes and some Python scientific libraries such as numpy, scipy, etc.
 
 # Benchmarks
 
+A few example codes are used to provide an indication of the performance of Pyccel as compared to alternative accelerators.
+The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
+These examples, which illustrate several common scientific computing problems, are based on open-source example codes [@JBurkhardt; @CFD].
+
+Figure \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
+The tests were run with python 3.10.
+We see that Pyccel is highly competitive when compared to the existing accelerators Numba [@NUMBA] and Pythran [@Pythran2015].
+
+![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./version_specific_results/devel_performance_310_execution.png)
+
+Another important consideration is the time spent waiting for the accelerated version to be generated.
+Here too Pyccel is shown to be very competitive, outperforming pythran significantly for large files.
+
 ![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./version_specific_results/devel_performance_310_compilation.png)
-![Comparison of times required to execute accelerated code for various test cases with Python 3.10 \label{fig:execution}](./version_specific_results/devel_performance_310_execution.png)
 
 # Acknowledgments
 
