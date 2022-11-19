@@ -96,7 +96,12 @@ To this end, Pyccel is designed to allow the use of low-level legacy codes and s
 
 # Benchmarks
 
+![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./version_specific_results/devel_performance_310_compilation.png)
+![Comparison of times required to execute accelerated code for various test cases with Python 3.10 \label{fig:execution}](./version_specific_results/devel_performance_310_execution.png)
+
 # Acknowledgments
+
+TODO: Funding sources
 
 The authors would like to thank all the people who have contributed to Pyccel so far.
 
