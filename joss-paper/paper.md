@@ -103,6 +103,7 @@ These examples, which illustrate several common scientific computing problems, a
 Figure \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
 The tests were run with python 3.10.
 We see that Pyccel is highly competitive when compared to the existing accelerators Numba [@NUMBA] and Pythran [@Pythran2015].
+The advantages of Fortran are mostly clearly exhibited in the examples describing time stepping schemes (Euler, Midpoint, Runge-Kutta).
 
 ![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./devel_performance_310_execution.png)
 
