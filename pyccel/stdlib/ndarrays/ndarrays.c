@@ -10,7 +10,7 @@
 # include <stdio.h>
 
 /*
- * Takes an array, and prints it's elements the layed out in memory (similar to ravel)
+ * Takes an array, and prints its elements the laied out in memory (similar to ravel)
 */
 
 void print_ndarray_memory(t_ndarray nd)
