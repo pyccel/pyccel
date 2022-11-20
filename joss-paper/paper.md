@@ -104,12 +104,12 @@ Figure \autoref{fig:execution} shows the time required to execute the accelerate
 The tests were run with python 3.10.
 We see that Pyccel is highly competitive when compared to the existing accelerators Numba [@NUMBA] and Pythran [@Pythran2015].
 
-![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./version_specific_results/devel_performance_310_execution.png)
+![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./devel_performance_310_execution.png)
 
 Another important consideration is the time spent waiting for the accelerated version to be generated.
 Here too Pyccel is shown to be very competitive, outperforming pythran significantly for large files.
 
-![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./version_specific_results/devel_performance_310_compilation.png)
+![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./devel_performance_310_compilation.png)
 
 # Acknowledgments
 
