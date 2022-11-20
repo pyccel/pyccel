@@ -181,7 +181,7 @@ class CudaCopy(CudaNewArray):
 
     Parameters
     ----------
-    arg : list, tuple, PythonList
+    arg : Variable
 
     memory_location : str
         'host'   the newly created array is allocated on host.
@@ -194,8 +194,8 @@ class CudaCopy(CudaNewArray):
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location', '_is_async')
 
     def __init__(self, arg, memory_location, is_async=False):
-
-        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+        
+        if not isinstance(arg, Variable):
             raise TypeError('unknown type of  %s.' % type(arg))
         
         # Verify the memory_location of src
