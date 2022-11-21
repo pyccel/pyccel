@@ -96,8 +96,8 @@ bool    pylist_check_elements_type(PyListObject *list, t_type dtype)
     Py_ssize_t index = 0;
     while (index < list->size)
     {
-        if (pylist_get_type(list, dtype) != dtype)
-        return false;
+        if (pylist_get_type(list, index) != dtype)
+            return false;
         index++;
     }
     return true;
@@ -105,11 +105,20 @@ bool    pylist_check_elements_type(PyListObject *list, t_type dtype)
 
 bool	pylist_check(PyListObject *list, t_type dtype)
 {
+    Py_ssize_t list_size = PyList_Size(list);
+    t_type type = pylist_get_type(list, 0);
+    Py_ssize_t  index = 0;
+    if (list->type == lst_list)
+    {
+        while (index < list->size)
+        {
+            pylist_check(list->ob_item[index]);
+            index++;
+        }
+    }
 	if (!PyList_CheckExact(list))
         return false;
-    Py_ssize_t list_size = PyList_Size(list);
-    Py_ssize_t  index = 0;
     if (list_size == 0)
         return true;
-    return pylist_check_elements_type(list);
+    return pylist_check_elements_type(list, dtype);
 }
