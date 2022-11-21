@@ -444,7 +444,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['datatype'       ] = expr.dtype
             d_var['precision'      ] = expr.precision
-            d_var['memory_handling'] = 'stack' if all(isinstance(s, Literal) for s in expr.shape) else 'heap'
+            d_var['memory_handling'] = 'heap'
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
             d_var['order'          ] = expr.order
@@ -1086,7 +1086,7 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
-                if lhs.is_stack_array and self.scope.is_loop and not all(isinstance(s, Literal) for s in lhs.shape):
+                if lhs.is_stack_array and self.scope.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
                         severity='error',
                         bounding_box=(self._current_fst_node.lineno,
