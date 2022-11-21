@@ -22,7 +22,7 @@ jobs:
       - name: Push results to pyccel-benchmarks
         working-directory: ../pyccel-benchmarks
         run: |
-          #git config --global user.email "yaman.guclu@gmail.com"
-          #git config --global user.name "Yaman Güçlü"
+          git config user.email "yaman.guclu@gmail.com"
+          git config user.name "Yaman Güçlü"
           git commit --allow-empty -m "Benchmark of pyccel@${GITHUB_SHA}"
           git push
