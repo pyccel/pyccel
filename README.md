@@ -21,7 +21,9 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 -   mpi4py (not available yet)
 -   h5py (not available yet)
 
-Pyccel's acceleration capabilities lead to much faster code. A small speed comparison of Python vs Pyccel or other tools can be found in the [performance](./performance.md) file.
+Pyccel's acceleration capabilities lead to much faster code. Comparisons of Python vs Pyccel or other tools can be found in the [benchmarks](https://github.com/pyccel/pyccel-benchmarks) repository.
+The results for the master branch currently show the following performance on python 3.10:
+![Pyccel execution times for master branch](https://github.com/pyccel/pyccel-benchmarks/blob/main/version_specific_results/devel_performance_310_execution.png)
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
 
