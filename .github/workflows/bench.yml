@@ -11,30 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Set up ssh
         uses: webfactory/ssh-agent@v0.7.0
         with:
             ssh-private-key: ${{ secrets.SSH_DEPLOY_KEY }}
-      #- name: Set up ssh
-      #  working-directory: ../
-      #  env:
-      #    SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-      #  run: |
-      #    mkdir ~/.ssh
-      #    echo "Host github.com" > ~/.ssh/config
-      #    echo " Hostname github.com" >> ~/.ssh/config
-      #    echo " User git" >> ~/.ssh/config
-      #    echo " IdentityFile ~/.ssh/id_ed25519_github" >> ~/.ssh/config
-      #    echo " PreferredAuthentications publickey" >> ~/.ssh/config
-      #    echo " AddKeysToAgent yes" >> ~/.ssh/config
-      #    printf %s "$SSH_DEPLOY_KEY" > ~/.ssh/id_ed25519_github
-      #    chmod 600 ~/.ssh/id_ed25519_github # Lock file to user
       - name: Clone pyccel-benchmarks repository
         working-directory: ../
         run: |
-          ssh -vT git@github.com
           git clone git@github.com:pyccel/pyccel-benchmarks.git
       - name: Push results to pyccel-benchmarks
         working-directory: ../pyccel-benchmarks
