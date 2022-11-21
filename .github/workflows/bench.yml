@@ -18,11 +18,12 @@ jobs:
         run: |
           mkdir ~/.ssh
           echo "Host github.com" > ~/.ssh/config
-          echo "  Hostname github.com" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/id_ed25519.github" >> ~/.ssh/config
-          echo "  IdentitiesOnly yes" >> ~/.ssh/config
-          printf %s "$SSH_DEPLOY_KEY" > ~/.ssh/id_ed25519.github
-          chmod 600 ~/.ssh/id_ed25519.github # Lock file to user
+          echo " Hostname github.com" >> ~/.ssh/config
+          echo " User git" >> ~/.ssh/config
+          echo " IdentityFile ~/.ssh/id_ed25519_github" >> ~/.ssh/config
+          echo " AddKeysToAgent yes" >> ~/.ssh/config
+          printf %s "$SSH_DEPLOY_KEY" > ~/.ssh/id_ed25519_github
+          chmod 600 ~/.ssh/id_ed25519_github # Lock file to user
       - name: Clone pyccel-benchmarks repository
         working-directory: ../
         run: |
