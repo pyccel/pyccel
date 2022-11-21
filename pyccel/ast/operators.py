@@ -1121,11 +1121,13 @@ class IfTernaryOperator(PyccelOperator):
         """
         Sets the shape and rank and the order for IfTernaryOperator
         """
-        shape = value_true.shape
-        rank  = value_true.rank
-        if rank is not None and rank > 1:
-            if value_false.order != value_true.order :
-                errors.report('Ternary Operator results should have the same order', severity='fatal')
+        shape_true  = value_true.shape
+        shape_false = value_false.shape
+        rank_true   = value_true.rank
+        rank_false  = value_false.rank
+        if (rank_true is not None and rank_true > 1) or (rank_false is not None and rank_false > 1):
+            errors.report('Ternary Operator results should have the same order', severity='fatal')
+        shape = shape_true if shape_true == shape_false else None
         return shape, rank
 
     @property
