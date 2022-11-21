@@ -199,7 +199,7 @@ class CudaCopy(CudaNewArray):
             raise TypeError('unknown type of  %s.' % type(arg))
         
         # Verify the memory_location of src
-        if arg._memory_location not in ('device', 'host'):
+        if arg.memory_location not in ('device', 'host'):
             raise ValueError("The direction of the copy should be from 'host' or 'device'")
 
         # Verify the memory_location of dst
@@ -211,11 +211,11 @@ class CudaCopy(CudaNewArray):
             raise TypeError('is_async must be boolean')
         
         self._arg             = arg
-        self._shape           = arg._shape
-        self._rank            = arg._rank
-        self._dtype           = arg._dtype
-        self._order           = arg._order
-        self._precision       = arg._precision
+        self._shape           = arg.shape
+        self._rank            = arg.rank
+        self._dtype           = arg.dtype
+        self._order           = arg.order
+        self._precision       = arg.precision
         self._memory_location = memory_location
         self._is_async        = is_async
         super().__init__()
@@ -228,7 +228,9 @@ class CudaCopy(CudaNewArray):
     def memory_location(self):
         return self._memory_location
 
-
+    @property
+    def is_async(self):
+        return self._is_async
 
 class CudaThreadIdx(CudaInternalVar)        : pass
 class CudaBlockDim(CudaInternalVar)         : pass
