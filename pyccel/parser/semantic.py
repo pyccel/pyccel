@@ -515,9 +515,6 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
             return d_var
 
-        elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1].body[0])
-
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
