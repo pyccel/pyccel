@@ -28,7 +28,7 @@ jobs:
       - name: Clone pyccel-benchmarks repository
         working-directory: ../
         run: |
-          ssh -T git@github.com
+          ssh -vT git@github.com
           git clone git@github.com:pyccel/pyccel-benchmarks.git
       - name: Push results to pyccel-benchmarks
         working-directory: ../pyccel-benchmarks
