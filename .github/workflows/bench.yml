@@ -2,7 +2,7 @@ name: Benchmarks
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, bench ]
 
 jobs:
 
@@ -22,7 +22,9 @@ jobs:
       - name: Push results to pyccel-benchmarks
         working-directory: ../pyccel-benchmarks
         run: |
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "Pyccel/pyccel"
+          export GIT_AUTHOR_NAME="Pyccel/pyccel"
+          export GIT_AUTHOR_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email ${GIT_AUTHOR_EMAIL}
+          git config user.name ${GIT_AUTHOR_NAME}
           git commit --allow-empty -m "Benchmark of pyccel/pyccel@${GITHUB_SHA}"
           git push
