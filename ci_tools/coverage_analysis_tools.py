@@ -104,7 +104,8 @@ def allow_untested_error_calls(untested):
     for f,line_nums in untested.items():
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
-        lines = [i for i in line_nums if not f_lines[i-1].strip().startswith('raise ')]
+        stripped_lines = [l.strip() for l in f_lines]
+        lines = [i for i in line_nums if not f_lines[i-1].startswith('raise ') or f_lines[i-1].startswith('errors.report')]
         if len(lines):
             reduced_untested[f] = lines
 
