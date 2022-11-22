@@ -6,6 +6,7 @@
 # pylint: disable=no-self-use
 
 from collections import OrderedDict
+from pyccel.ast.class_defs import ListClass
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -35,6 +36,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
+from pyccel.ast.list_wrapper   import list_checker, unwrap_list
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
@@ -580,10 +582,14 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelNot(ObjectAddress(collect_var))
             body += [IfSection(check, [AliasAssign(variable, Nil())])]
 
-        check = array_checker(collect_var, variable, check_type, self._target_language)
+        if variable.cls_base == ListClass:
+            check = list_checker(collect_var, variable, self._target_language)
+            collect_func = FunctionCall(unwrap_list, [collect_var])
+        else:
+            check = array_checker(collect_var, variable, check_type, self._target_language)
+            collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
         body += [IfSection(check, [Return([Nil()])])]
 
-        collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
         body += [IfSection(LiteralTrue(), [Assign(variable,
                             collect_func)])]
         body = [If(*body)]
@@ -616,7 +622,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         tmp_variable = None
         body         = []
-
         if variable.rank > 0:
             body = self._body_array(variable, collect_var, check_type)
 
