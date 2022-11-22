@@ -4,6 +4,7 @@ import numpy as np
 from pyccel.decorators import types, template, stack_array, allow_negative_index
 
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
+a_1d_f = np.array([1 << i for i in range(21)], dtype=int, order="F")
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
 
@@ -445,6 +446,92 @@ def array_real_nested_F_array_initialization_3(a, e, x):
                        [[[1., 2., 3.], [1., 2., 3.]],
                         [[1., 2., 3.], [1., 2., 3.]]]], dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER C 1D
+##==============================================================================
+
+@types('int[:]')
+def test_array_view_steps_C_1D_1(a):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp)
+    return b
+
+@types('int[:]')
+def test_array_view_steps_C_1D_2(a):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp)
+    return b
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER C 2D
+##==============================================================================
+
+@types('int[:,:]')
+def test_array_view_steps_C_2D_1(a):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp)
+    return b
+
+@types('int[:,:]')
+def test_array_view_steps_C_2D_2(a):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp)
+    return b
+
+@types('int[:,:]')
+def test_array_view_steps_C_2D_3(a):
+    from numpy import array
+    tmp = a[1:10:2, 1::2]
+    b = array(tmp)
+    return b
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 1D
+##==============================================================================
+
+@types('int[:](order=F)')
+def test_array_view_steps_F_1D_1(a):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp, order="F")
+    return b
+
+@types('int[:](order=F)')
+def test_array_view_steps_F_1D_2(a):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp, order="F")
+    return b
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 2D
+##==============================================================================
+
+@types('int[:,:](order=F)')
+def test_array_view_steps_F_2D_1(a):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp, order="F")
+    return b
+
+@types('int[:,:](order=F)')
+def test_array_view_steps_F_2D_2(a):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp, order="F")
+    return b
+
+@types('int[:,:](order=F)')
+def test_array_view_steps_F_2D_3(a):
+    from numpy import array
+    tmp = a[1:10:2, 1::2]
+    b = array(tmp, order="F")
+    return b
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH F ORDERING
