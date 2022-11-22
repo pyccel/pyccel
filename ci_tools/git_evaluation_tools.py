@@ -22,7 +22,7 @@ def get_diff_as_json(filename):
             numbers of lines which have been changed/added (addition) or
             changed/deleted (deletion)
     """
-    with open(filename, encoding="ascii") as f:
+    with open(filename, encoding="utf-8") as f:
         lines = f.readlines()
 
     lines = [l.strip() for l in lines]
