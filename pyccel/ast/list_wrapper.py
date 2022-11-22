@@ -61,18 +61,17 @@ pylist_check = FunctionDef(
                 body      = [],
                 results   = [Variable(name = 'b', dtype = NativeBool())])
 
-lst_dtype_registry = {('bool',4)        : 1,
-                        ('int',1)       : 2,
-                        ('int',2)       : 3,
-                        ('int',4)       : 4,
-                        ('int',8)       : 5,
-                        ('int',16)      : 6,
-                        ('float',4)     : 7,
-                        ('float',8)     : 8,
-                        ('float',16)    : 9,
-                        ('complex',4)   : 10,
-                        ('complex',8)   : 11,
-                        ('list', 4)     : 12}
+lst_dtype_registry = {('bool',4)        : Variable(dtype=NativeInteger(),  name = 'lst_bool', precision = 4),
+                        ('int',1)       : Variable(dtype=NativeInteger(),  name = 'lst_int8', precision = 1),
+                        ('int',2)       : Variable(dtype=NativeInteger(),  name = 'lst_int16', precision = 2),
+                        ('int',4)       : Variable(dtype=NativeInteger(),  name = 'lst_int32', precision = 4),
+                        ('int',8)       : Variable(dtype=NativeInteger(),  name = 'lst_int64', precision = 8),
+                        ('int',16)      : Variable(dtype=NativeInteger(),  name = 'lst_long', precision = 16),
+                        ('float',4)     : Variable(dtype=NativeInteger(),  name = 'lst_float', precision = 4),
+                        ('float',8)     : Variable(dtype=NativeInteger(),  name = 'lst_double', precision = 8),
+                        ('complex',4)   : Variable(dtype=NativeInteger(),  name = 'lst_complex', precision = 4),
+                        ('complex',8)   : Variable(dtype=NativeInteger(),  name = 'lst_dcomplex0', precision = 8),
+                        ('list', 4)     : Variable(dtype=NativeInteger(),  name = 'lst_list', precision = 4)}
 
 def find_in_lst_dtype_registry(var):
 
