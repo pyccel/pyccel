@@ -4202,7 +4202,7 @@ def test_array_view_steps_F_1D_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug"),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1241"),
                                         pytest.mark.fortran])
     ]
 )
@@ -4216,7 +4216,7 @@ def test_array_view_steps_F_2D_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug"),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1241"),
                                         pytest.mark.fortran])
     ]
 )
@@ -4230,7 +4230,7 @@ def test_array_view_steps_F_2D_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug"),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1241"),
                                         pytest.mark.fortran])
     ]
 )
