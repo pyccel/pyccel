@@ -46,33 +46,26 @@ affiliations:
   - name: Lab. MSDA, Mohammed VI Polytechnic University, Benguerir, Morocco
     index: 4
 
-date: 18 November 2022
+date: 21 November 2022
 bibliography: paper.bib
 
 ---
 
 # Summary
 
-Python is a widely used language in the scientific community, due to its simplicity and ecosystem.
-However, the most famous and performant Python libraries are not written in Python themselves, but only...
-In fact, the dynamic typing feature of Python makes it significantly slower than a low-level compiled language like C.
+The Python programming language has gained significant popularity in scientific computing and data science, mainly because it is easy to learn and provides many scientific libraries, including parallel ones.
+While these libraries are very fast, they are usually written in compiled languages such as Fortran and C/C++.
+User code written in pure Python is usually much slower; because Python is a dynamically typed language which introduces overhead in many basic operations.
+Due to this limitation, one often needs to rewrite the computational parts of their Python code in a statically typed language, to take full advantage of optimization and acceleration techniques.
+This expensive process happens naturally during the transition from a prototype to a production code, which is the principal bottleneck in scientific computing.
+We believe that such a bottleneck can be resolved, or at least drastically reduced, through the use of automatic code generation tools.
 
-- pure Python code usually much slower than C
-- overhead for crossing boundaries between language (function calls, temporary memory allocations)
-- no shared-memory parallel multithreading possible in pure Python because of GIL
-
-Due to this limitation, one needs to rewrite the computational part of the code in a statically typed language, to take full advantage of optimization and acceleration techniques.
-
-This transition from a prototype code to a production code is the principal bottleneck in scientific computing.
-We believe that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype.
+In this work we present Pyccel, a Python library which acts as a transpiler by translating Python code to either Fortran or C code, and as an accelerator by making the generated code callable from Python once again.
 Not only is the Pyccel-generated Fortran or C code very fast, but it is human-readable; hence the expert programmer can easily profile the code on the target machine and further optimize it.
-Moreover, Pyccel gives the possibility to link the user code to external libraries written in the target language.
+Pyccel provides a variety of methods for the efficient usage of the available hardware resources, such as type annotations, function decorators, and OpenMP pragmas.
+Moreover, Pyccel allows the user to link their code to external libraries written in the target language.
 
 # Statement of need
-
-The Python language has gained significant popularity as a language for scientific computing and data science, mainly because it is easy to learn and provides many scientific libraries, including parallel ones.
-While these scientific libraries are very fast, they are usually written in compiled languages such as Fortran and C/C++.
-User code written in pure Python is usually much slower; because Python is a dynamically typed language which introduces overhead in many basic operations.
 
 Different approaches have been proposed to accelerate computation-intensive parts of Python code.
 Cython [@Cython2011], one of the first tools of this kind, allows the user to call the Python C API by introducing a static typing approach.
