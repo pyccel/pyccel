@@ -63,7 +63,7 @@ We believe that such a bottleneck can be resolved, or at least drastically reduc
 In this work we present Pyccel, a Python library which acts as a transpiler by translating Python code to either Fortran or C code, and as an accelerator by making the generated code callable from Python once again.
 Not only is the Pyccel-generated Fortran or C code very fast, but it is human-readable; hence the expert programmer can easily profile the code on the target machine and further optimize it.
 Pyccel provides a variety of methods for the efficient usage of the available hardware resources, such as type annotations, function decorators, and OpenMP pragmas.
-Moreover, Pyccel gives the possibility to link the user code to external libraries written in the target language.
+Moreover, Pyccel allows the user to link their code to external libraries written in the target language.
 
 # Statement of need
 
