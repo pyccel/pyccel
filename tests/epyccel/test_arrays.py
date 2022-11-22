@@ -4158,21 +4158,21 @@ def test_array_view_steps_C_1D_2(language):
 ##==============================================================================
 
 def test_array_view_steps_C_2D_1(language):
-    a = arrays.a_2d
+    a = arrays.a_2d_c
 
     f1 = arrays.test_array_view_steps_C_2D_1
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_view_steps_C_2D_2(language):
-    a = arrays.a_2d
+    a = arrays.a_2d_c
 
     f1 = arrays.test_array_view_steps_C_2D_2
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_view_steps_C_2D_3(language):
-    a = arrays.a_2d
+    a = arrays.a_2d_c
 
     f1 = arrays.test_array_view_steps_C_2D_3
     f2 = epyccel(f1, language = language)
