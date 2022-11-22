@@ -4200,6 +4200,13 @@ def test_array_view_steps_F_1D_2(language):
 ## TEST SIMPLE ARRAY SLICING WITH ORDER F 2D
 ##==============================================================================
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug"),
+                                        pytest.mark.fortran])
+    ]
+)
+
 def test_array_view_steps_F_2D_1(language):
     a = arrays.a_2d_f
 
@@ -4207,12 +4214,26 @@ def test_array_view_steps_F_2D_1(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug"),
+                                        pytest.mark.fortran])
+    ]
+)
+
 def test_array_view_steps_F_2D_2(language):
     a = arrays.a_2d_f
 
     f1 = arrays.test_array_view_steps_F_2D_2
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug"),
+                                        pytest.mark.fortran])
+    ]
+)
 
 def test_array_view_steps_F_2D_3(language):
     a = arrays.a_2d_f
