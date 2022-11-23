@@ -101,21 +101,22 @@ The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
 These examples, which illustrate several common scientific computing problems, are based on open-source example codes [@JBurkhardt; @CFD].
 
 Figure \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
-The tests were run with python 3.10.
+The tests were run with Python 3.10 and Pyccel 1.7.0.
 We see that Pyccel is highly competitive when compared to the existing accelerators Numba [@NUMBA] and Pythran [@Pythran2015].
-The advantages of Fortran are mostly clearly exhibited in the examples describing time stepping schemes (Euler, Midpoint, Runge-Kutta).
+Unfortunately Pyccel's C printing is slightly less developed than the Fortran printer.
+This explains the missing result for the Finite Difference Laplace test case.
+Similarly pythran is unable to handle one of the statements used in the Molecular Dynamics test case so there are no results to report in this case.
 
-![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./devel_performance_310_execution.png)
+![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./pypi_performance_310_1.7.0_execution.png)
 
 Another important consideration is the time spent waiting for the accelerated version to be generated.
 Here too Pyccel is shown to be very competitive, outperforming pythran significantly for large files.
 
-![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./devel_performance_310_compilation.png)
+![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./pypi_performance_310_1.7.0_compilation.png)
 
 # Acknowledgments
 
-TODO: Funding sources
-
 The authors would like to thank all the people who have contributed to Pyccel so far.
+The project has received funding from the European Union’s Horizon 2020 research and innovation program under Grant Agreement No. 800945 (Numerics PhD Program).
 
 # References
