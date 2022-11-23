@@ -443,11 +443,13 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
         nd_shape[i] = np_shape[i];
     return nd_shape;
 }
+
 /*
-** returns the product of multiplying the elements of arr.shape
+** takes an array containing the shape of an array 'shape', number of a certain dimension 'nd', and the number of the array's dimensions
+** returns the stride (number of elements to jump in a dimension) of the 'nd`th dimension
 */
 
-int arr_element_number(int64_t *shape, int nd, int max_nd)
+int get_dimension_stride(int64_t *shape, int nd, int max_nd)
 {
     int product = 1;
 
@@ -464,7 +466,7 @@ int element_index(t_ndarray arr, uint32_t element_num, int nd)
         return (0);
     if (nd == arr.nd)
         return (element_num % arr.shape[nd - 1]) * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1);
-    int true_index = (element_num / (arr_element_number(arr.shape, nd, arr.nd)));
+    int true_index = (element_num / (get_dimension_stride(arr.shape, nd, arr.nd)));
     if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
     return (true_index * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1));
@@ -475,7 +477,7 @@ void array_copy_data(t_ndarray *dest, t_ndarray src)
     unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
 
-    if (dest->order == src.order && dest->order == order_c)
+    if (dest->order == order_c && src.order == order_c)
         memcpy(d + dest->current_length * dest->type_size, s, src.buffer_size);
     else
     {
