@@ -117,6 +117,6 @@ This is shown in \autoref{fig:compilation}, where Pyccel proves to be competitiv
 # Acknowledgments
 
 The authors would like to thank all the people who have contributed to Pyccel so far.
-The project has received funding from the European Union’s Horizon 2020 research and innovation program under Grant Agreement No. 800945 (Numerics PhD Program).
+The project has received funding from the European Union’s Horizon 2020 Research and Innovation Program under Grant Agreement No. 800945 (Numerics PhD Program), and under Grant Agreement No. 676629 (Energy oriented Centre of Excellence for computing applications - EoCoE).
 
 # References
