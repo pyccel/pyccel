@@ -635,6 +635,16 @@ def test_print_strings(language):
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
+def test_print_integers(language):
+    types = str
+    pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
+def test_print_tuples(language):
+    types = str
+    pyccel_test("scripts/print_tuples.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
 def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
@@ -663,6 +673,19 @@ def test_return_numpy_arrays(language):
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
+def test_array_binary_op(language):
+    types = [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 8
+    pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
@@ -897,6 +920,35 @@ def test_assert(language, test_file):
     lang_out = get_lang_exit_value(output_test_file, language)
     pyth_out = get_lang_exit_value(test_file, "python")
     assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/exits/empty_exit.py",
+                                        "scripts/exits/negative_exit1.py",
+                                        "scripts/exits/negative_exit2.py",
+                                        "scripts/exits/positive_exit1.py",
+                                        "scripts/exits/positive_exit2.py",
+                                        "scripts/exits/positive_exit3.py",
+                                        "scripts/exits/zero_exit.py",
+                                        ] )
+
+def test_exit(language, test_file):
+    test_dir = os.path.dirname(test_file)
+    test_file = get_abs_path(os.path.normpath(test_file))
+
+    output_dir   = os.path.join(get_abs_path(test_dir),'__pyccel__')
+    output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+
+    cwd = get_abs_path(test_dir)
+
+    if not language:
+        language = "fortran"
+    pyccel_commands = " --language="+language
+    pyccel_commands += " --output="+ output_dir
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+    lang_out = get_lang_exit_value(output_test_file, language)
+    pyth_out = get_lang_exit_value(test_file, "python")
+    assert lang_out == pyth_out
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (

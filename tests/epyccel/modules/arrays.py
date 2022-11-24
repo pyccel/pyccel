@@ -1,11 +1,20 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
 
-from pyccel.decorators import types, stack_array, allow_negative_index
+from pyccel.decorators import types, template, stack_array, allow_negative_index
 
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
+
+
+@types('T', 'T')
+@template(name='T' , types=['int', 'int8', 'int16', 'int32', 'int64', 'float',
+                            'float32', 'float64', 'complex64', 'complex128'])
+def array_return_first_element(a, b):
+    from numpy import array
+    x = array([a,b])
+    return x[0]
 
 #==============================================================================
 # 1D ARRAYS OF INT-32
@@ -287,6 +296,10 @@ def array_real_1d_scalar_mul( x, a ):
 def array_real_1d_scalar_div( x, a ):
     x[:] /= a
 
+@types( 'real[:]', 'real')
+def array_real_1d_scalar_mod( x, a ):
+    x[:] %= a
+
 @types( 'real[:]', 'real' )
 def array_real_1d_scalar_idiv( x, a ):
     x[:] = x // a
@@ -306,6 +319,10 @@ def array_real_1d_mul( x, y ):
 @types( 'real[:]', 'real[:]' )
 def array_real_1d_div( x, y ):
     x[:] /= y
+
+@types( 'real[:]', 'real[:]')
+def array_real_1d_mod( x, y ):
+    x[:] %= y
 
 @types( 'real[:]', 'real[:]' )
 def array_real_1d_idiv( x, y ):
@@ -331,6 +348,10 @@ def array_real_2d_C_scalar_mul( x, a ):
 def array_real_2d_C_scalar_div( x, a ):
     x[:,:] /= a
 
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_mod( x, a ):
+    x[:,:] %= a
+
 @types( 'real[:,:]', 'real[:,:]' )
 def array_real_2d_C_add( x, y ):
     x[:,:] += y
@@ -346,6 +367,10 @@ def array_real_2d_C_mul( x, y ):
 @types( 'real[:,:]', 'real[:,:]' )
 def array_real_2d_C_div( x, y ):
     x[:,:] /= y
+
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_mod( x, y ):
+    x[:,:] %= y
 
 @types('real[:,:]')
 def array_real_2d_C_array_initialization(a):
@@ -393,6 +418,10 @@ def array_real_2d_F_scalar_mul( x, a ):
 def array_real_2d_F_scalar_div( x, a ):
     x[:,:] /= a
 
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_mod( x, a ):
+    x[:,:] %= a
+
 @types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
 def array_real_2d_F_add( x, y ):
     x[:,:] += y
@@ -408,6 +437,10 @@ def array_real_2d_F_mul( x, y ):
 @types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
 def array_real_2d_F_div( x, y ):
     x[:,:] /= y
+
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_mod( x, y ):
+    x[:,:] %= y
 
 @types('real[:,:](order=F)')
 def array_real_2d_F_array_initialization(a):
@@ -1779,6 +1812,12 @@ def arr_arange_6():
     import numpy as np
     a = np.arange(20, 1, -1.1)
     return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_7(arr : 'int[:,:]'):
+    import numpy as np
+    n, m = arr.shape
+    for i in range(n):
+        arr[i] = np.arange(i, i+m)
 
 def iterate_slice(i : int):
     import numpy as np

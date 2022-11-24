@@ -47,7 +47,7 @@ from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
-from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -66,7 +66,7 @@ __all__ = ["CCodePrinter", "ccode"]
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
-    'NumpyFabs'  : 'fabs',
+    'NumpyFabs' : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
@@ -199,6 +199,7 @@ c_library_headers = (
     "stdlib",
     "string",
     "tgmath",
+    "inttypes",
 )
 
 dtype_registry = {('float',8)   : 'double',
@@ -222,6 +223,17 @@ ndarray_type_registry = {
                   ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
+type_to_format = {('float',8)   : '%.12lf',
+                  ('float',4)   : '%.12f',
+                  ('complex',8) : '(%.12lf + %.12lfj)',
+                  ('complex',4) : '(%.12f + %.12fj)',
+                  ('int',4)     : '%d',
+                  ('int',8)     : LiteralString("%") + CMacro('PRId64'),
+                  ('int',2)     : LiteralString("%") + CMacro('PRId16'),
+                  ('int',1)     : LiteralString("%") + CMacro('PRId8'),
+                  ('bool',4)    : '%s',
+                  ('string', 0) : '%s'}
+
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
@@ -234,8 +246,10 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'stdint',
                  'pyc_math_c',
                  'stdio',
+                 "inttypes",
                  'stdbool',
-                 'assert']}
+                 'assert',
+                 'numpy_c']}
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -310,9 +324,6 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        if rhs.rank > 1:
-            # flattening the args to use them in C initialization.
-            arg = self._flatten_list(arg)
 
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
@@ -320,6 +331,9 @@ class CCodePrinter(CodePrinter):
             cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
             return '%s' % (cpy_data)
         else :
+            if arg.rank > 1:
+                # flattening the args to use them in C initialization.
+                arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
@@ -386,43 +400,6 @@ class CCodePrinter(CodePrinter):
         array_init += 'stack_array_init(&{})'.format(self._print(var))
         self.add_import(c_imports['ndarrays'])
         return buffer_array, array_init
-
-    def fill_NumpyArange(self, expr, lhs):
-        """ print the assignment of a NumpyArange
-        parameters
-        ----------
-            expr : NumpyArange
-                The node holding NumpyArange
-            lhs : Variable
-                 The left hand of Assign
-        Return
-        ------
-            String
-                Return string that contains the Assign code and the For loop
-                responsible for filling the array values
-        """
-        start  = self._print(expr.start)
-        stop   = self._print(expr.stop)
-        step   = self._print(expr.step)
-        dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
-
-        target = self.scope.get_temporary_variable(expr.dtype)
-        index  = self.scope.get_temporary_variable(NativeInteger())
-
-        self._additional_code += self._print(Assign(index, LiteralInteger(0)))
-
-        code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
-        code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
-        code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
-        code = code.format(target = self._print(target),
-                            start = start,
-                            stop  = stop,
-                            op    = '<' if not isinstance(expr.step, PyccelUnarySub) else '>',
-                            step  = step,
-                            index = self._print(index),
-                            lhs   = lhs,
-                            dtype = dtype)
-        return code
 
     def _handle_inline_func_call(self, expr):
         """ Print a function call to an inline function
@@ -521,8 +498,16 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
+        elif arg.dtype is NativeInteger() and len(arg) == 2:
+            arg1 = self.scope.get_temporary_variable(NativeInteger())
+            arg2 = self.scope.get_temporary_variable(NativeInteger())
+            assign1 = Assign(arg1, arg[0])
+            assign2 = Assign(arg2, arg[1])
+            self._additional_code += self._print(assign1)
+            self._additional_code += self._print(assign2)
+            return f"({arg1} < {arg2} ? {arg1} : {arg2})"
         else:
-            return errors.report("min in C is only supported for 2 float arguments", symbol=expr,
+            return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
 
     def _print_PythonMax(self, expr):
@@ -531,9 +516,27 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
+        elif arg.dtype is NativeInteger() and len(arg) == 2:
+            arg1 = self.scope.get_temporary_variable(NativeInteger())
+            arg2 = self.scope.get_temporary_variable(NativeInteger())
+            assign1 = Assign(arg1, arg[0])
+            assign2 = Assign(arg2, arg[1])
+            self._additional_code += self._print(assign1)
+            self._additional_code += self._print(assign2)
+            return f"({arg1} > {arg2} ? {arg1} : {arg2})"
         else:
-            return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
+            return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
+
+    def _print_SysExit(self, expr):
+        code = ""
+        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
+            print_arg = FunctionCallArgument(expr.status)
+            code = self._print(PythonPrint((print_arg, ), file="stderr"))
+            arg = "1"
+        else:
+            arg = self._print(expr.status)
+        return f"{code}exit({arg});\n"
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
@@ -551,6 +554,17 @@ class CCodePrinter(CodePrinter):
         return '({} != 0)'.format(value)
 
     def _print_Literal(self, expr):
+        return repr(expr.python_value)
+
+    def _print_LiteralInteger(self, expr):
+        if isinstance(expr, LiteralInteger) and get_final_precision(expr) == 8:
+            self.add_import(c_imports['stdint'])
+            return f"INT64_C({repr(expr.python_value)})"
+        return repr(expr.python_value)
+
+    def _print_LiteralFloat(self, expr):
+        if isinstance(expr, LiteralFloat) and get_final_precision(expr) == 4:
+            return f"{repr(expr.python_value)}f"
         return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
@@ -793,16 +807,6 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
-        type_to_format = {('float',8)   : '%.12lf',
-                          ('float',4)   : '%.12f',
-                          ('complex',8) : '(%.12lf + %.12lfj)',
-                          ('complex',4) : '(%.12f + %.12fj)',
-                          ('int',4)     : '%d',
-                          ('int',8)     : '%ld',
-                          ('int',2)     : '%hd',
-                          ('int',1)     : '%c',
-                          ('bool',4)    : '%s',
-                          ('string', 0) : '%s'}
         try:
             arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
         except KeyError:
@@ -815,17 +819,25 @@ class CCodePrinter(CodePrinter):
             arg = self._print(var)
         return arg_format, arg
 
+    def _print_CStringExpression(self, expr):
+        return "".join(self._print(e) for e in expr.get_flat_expression_list())
+
+    def _print_CMacro(self, expr):
+        return str(expr.macro)
+
     def extract_function_call_results(self, expr):
         tmp_list = [self.scope.get_temporary_variable(a.dtype) for a in expr.funcdef.results]
         return tmp_list
 
     def _print_PythonPrint(self, expr):
         self.add_import(c_imports['stdio'])
+        self.add_import(c_imports['inttypes'])
         end = '\n'
         sep = ' '
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
         kwargs = [f for f in expr.expr if f.has_keyword]
         for f in kwargs:
             if f.keyword == 'sep'      :   sep = str(f.value)
@@ -836,17 +848,38 @@ class CCodePrinter(CodePrinter):
         orig_args = [f for f in expr.expr if not f.has_keyword]
 
         def formatted_args_to_printf(args_format, args, end):
-            args_format = sep.join(args_format)
+            args_format = CStringExpression(sep).join(args_format)
             args_format += end
-            args_format = self._print(LiteralString(args_format))
+            args_format = self._print(args_format)
             args_code = ', '.join([args_format, *args])
-            return "printf({});\n".format(args_code)
+            if expr.file == 'stderr':
+                return f"fprintf(stderr, {args_code});\n"
+            return f"printf({args_code});\n"
 
         if len(orig_args) == 0:
             return formatted_args_to_printf(args_format, args, end)
 
+        tuple_start = FunctionCallArgument(LiteralString('('))
+        tuple_sep   = LiteralString(', ')
+        tuple_end   = FunctionCallArgument(LiteralString(')'))
+
         for i, f in enumerate(orig_args):
             f = f.value
+            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+                if args_format:
+                    code += formatted_args_to_printf(args_format, args, sep)
+                    args_format = []
+                    args = []
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                if i + 1 == len(orig_args):
+                    end_of_tuple = FunctionCallArgument(LiteralString(end), 'end')
+                else:
+                    end_of_tuple = FunctionCallArgument(LiteralString(sep), 'end')
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple]))
+                args = []
+                continue
             if isinstance(f, PythonType):
                 f = f.print_string
 
@@ -857,7 +890,8 @@ class CCodePrinter(CodePrinter):
                     arg_format, arg = self.get_print_format_and_arg(a)
                     tmp_arg_format_list.append(arg_format)
                     args.append(arg)
-                args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
+                tmp_arg_format_list = CStringExpression(', ').join(tmp_arg_format_list)
+                args_format.append(CStringExpression('(', tmp_arg_format_list, ')'))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign)
             elif f.rank > 0:
@@ -872,14 +906,16 @@ class CCodePrinter(CodePrinter):
                 if f.rank == 1:
                     print_body.append(space_end)
 
-                for_body  = [PythonPrint(print_body)]
+                for_body  = [PythonPrint(print_body, file=expr.file)]
                 for_scope = self.scope.create_new_loop_scope()
                 for_loop  = For(for_index, for_range, for_body, scope=for_scope)
                 for_end   = FunctionCallArgument(LiteralString(']'+end if i == len(orig_args)-1 else ']'), keyword='end')
 
-                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end]),
+                body = CodeBlock([PythonPrint([ FunctionCallArgument(LiteralString('[')), empty_end],
+                                                file=expr.file),
                                   for_loop,
-                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end])],
+                                  PythonPrint([ FunctionCallArgument(f[max_index]), for_end],
+                                                file=expr.file)],
                                  unravelled = True)
                 code += self._print(body)
             else:
@@ -1254,6 +1290,40 @@ class CCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
+    def _print_NumpySign(self, expr):
+        """ Print the corresponding C function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in C
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => isign(x)   (x is integer)
+            numpy.sign(x) => fsign(x)   (x if float)
+            numpy.sign(x) => csign(x)   (x is complex)
+
+        """
+        self.add_import(c_imports['numpy_c'])
+        dtype = expr.dtype
+        func = ''
+        if isinstance(dtype, NativeInteger):
+            func = 'isign'
+        elif isinstance(dtype, NativeFloat):
+            func = 'fsign'
+        elif isinstance(dtype, NativeComplex):
+            func = 'csign'
+
+        return f'{func}({self._print(expr.args[0])})'
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call
@@ -1546,13 +1616,13 @@ class CCodePrinter(CodePrinter):
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
-                unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
-                    code = ''+self._print(expr.stmt)
                     last_assign.lhs.is_temp = False
+                    code = self._print(expr.stmt)
 
         return code + 'return {0};\n'.format(self._print(args[0]))
 
@@ -1632,10 +1702,17 @@ class CCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
-        lhs_code = self._print(expr.lhs)
         op = expr.op
-        rhs_code = self._print(expr.rhs)
-        return "{0} {1}= {2};\n".format(lhs_code, op, rhs_code)
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        if op == '%' and isinstance(lhs.dtype, NativeFloat):
+            _expr = expr.to_basic_assign()
+            return self._print(_expr)
+
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
+        return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
         prefix_code = ''
@@ -1663,8 +1740,6 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
-        if isinstance(rhs, NumpyArange):
-            return prefix_code+self.fill_NumpyArange(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
