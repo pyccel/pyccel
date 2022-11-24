@@ -101,8 +101,8 @@ The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
 These examples, which illustrate several common scientific computing problems, are based on open-source example codes [@JBurkhardt; @CFD].
 
 \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
-The tests were run with Python 3.10 and Pyccel 1.7.0.
-We see that Pyccel is highly competitive when compared to the existing accelerators Numba [@NUMBA] and Pythran [@Pythran2015].
+The tests were run on Ubuntu 20.04.5 with Python 3.10.8 and Pyccel 1.7.0.
+We see that Pyccel is highly competitive when compared to the existing accelerators Numba 0.56.4 [@NUMBA] and Pythran 0.12.0 [@Pythran2015].
 Unfortunately Pyccel's C printing is slightly less developed than the Fortran printer.
 This explains the missing result for the finite difference Laplace test case (FD-Laplace).
 Similarly Pythran is unable to handle one of the statements used in the molecular dynamics test case (M-D) so there are no results to report in this case.
