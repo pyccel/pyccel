@@ -96,7 +96,7 @@ To this end, Pyccel is designed to allow the use of low-level legacy codes and s
 
 # Benchmarks
 
-A few example codes are used to provide an indication of the performance of Pyccel as compared to the popular accelerators Numba [@NUMBA] and Pythran [@Pythran2015].
+A few example codes are used to provide an indication of the performance of Pyccel as compared to the popular accelerators Numba and Pythran.
 The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
 These examples, which illustrate several common scientific computing problems, are based on open-source example codes [@JBurkhardt; @CFD].
 All tests were run with Python 3.10.8 on Ubuntu 20.04.5, using Pyccel 1.7.0, Numba 0.56.4, and Pythran 0.12.0.
