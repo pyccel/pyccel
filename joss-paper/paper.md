@@ -100,6 +100,7 @@ A few example codes are used to provide an indication of the performance of Pycc
 The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
 These examples, which illustrate several common scientific computing problems, are based on open-source example codes [@JBurkhardt; @CFD].
 All tests were run with Python 3.10.8 on Ubuntu 20.04.5, using Pyccel 1.7.0, Numba 0.56.4, and Pythran 0.12.0.
+The following flags were passed to gcc via the different accelerators : `-O3 -march=native -mtune=native -mavx -ffast-math`.
 
 \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
 We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer: this explains the missing result for the finite difference Laplace test case (FD-Laplace).
