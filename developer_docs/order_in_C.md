@@ -1,6 +1,6 @@
 # Multidimensional ndarrays memory layout (order)
 
-## Order  
+## Order in numpy
 
 `order` is the parameter given to the `numpy.array` function in order to choose how the array is stored in memory, both  `Pyccel` supported orders are stored contiguously in memory, they differ in the order -the order by which the values are stored in memory.
 `order='F'` would tell `numpy` to store the array column by column (column-major), example:
@@ -57,22 +57,27 @@ if __name__ == "__main__":
 `arr.strides` is how the printing and indexing occures, the strides of an array tell us how many bytes we have to skip in memory to move to the next position along a certain axis (dimension). For example for `memory_layout_of_a = [1 4 7 2 5 8]` and `strides_of_a = (8, 24)`, we have to skip 8 bytes (1 value for `int64`) to move to the next row, but 24 bytes (3 values for `int64`) to get to the same position in the next column of `a`.  
 `a[2][1]` would give us `'8'`, using the `strides`: `2 * 8 + 1 * 24 = 40`, which means that in the flattened array, we would have to skip `40` bytes to get the value of `a[2][1]`, each element is 8 bytes, so we would have to skip `40 / 8 = 5` elements, from `1` to `5` to get to `'8'`
 
+In `Pyccel`, we try to clone `Numpy`'s indexing and memory layout conventions.
+
 ### Ordering in C code
-For `C`, arrays are flattened into a one dimensional string, `strides` and `shape` are used to navigate the array.
-While the `order_c` `ndarrays` only require a simple copy to be created/populated, `order_f` arrays require an extra step, which is transposing the array.  
+
+Much like `Numpy`,  the arrays in `C` code, are flattened into a one dimensional string, `strides` and `shape` are used to navigate the array.
+While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
 Example:  
-  `order_c`  
-    1.  allocate `order_c` `ndarray`  
-    2.  copy values to `ndarray`  
-  `order_f`  
-    1. allocate temporary `order_c` `ndarray`  
+  `order_c` creation
+    1.  allocate/create `order_c ndarray`
+    2.  copy values to `ndarray`
+
+  `order_f` creation
+    1. allocate/create temporary `order_c ndarray`
     2. copy values to temporary `ndarray`  
-    3. allocate `order_f` `ndarray`  
-    4. copy temporary `ndarray` to final `ndarray` using `strides` and `shape`, this will create a transposed version of the temporary `ndarray`
+    3. allocate/create `order_f ndarray`
+    4. copy temporary `ndarray` to final `ndarray` using `strides` and `shape`, this will create a column-major version of the temporary `order_c ndarray`
 
 ### Indexing in C code
 
-For indexing, the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order`.  
+For indexing, the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order` so that we can  mirror `Numpy`'s conventions.
+
 If we take the following 2D array as an example:
 |   |   |   |
 |---|---|---|
@@ -109,7 +114,7 @@ for (int i = 0; i < array.columns; ++i)
 
 To create an (`order_c`) `ndarray`, we simply copy the flattened data to our `ndarray`'s `raw_data`.  
 
-If the data is composed of literals only (ex: `np.array([1, 2, 3])`), an `array_dummy` is created, before copying it to our destination `ndarray`.  
+If the data is composed of literals only (ex: `np.array([1, 2, 3])`), an `array_dummy` is created, before copying it to our destination `ndarray`.
 Example:  
 
 ```python
@@ -118,7 +123,7 @@ if __name__ == "__main__":
   a = np.array([[1, 2, 3], [4, 5, 6]])
 ```  
 
-Would translate to:  
+Would translate to:
 
 ```c
 int main()
@@ -133,7 +138,7 @@ int main()
 }
 ```  
   
-If the data is composed of at least one variable array, we would use a series of copy operations to our `ndarray`.  
+If the data is composed of at least one variable array (like `c` in the example below), we would use a series of copy operations to our `ndarray`.
 
 Example:  
 
@@ -145,7 +150,7 @@ if __name__ == "__main__":
   c = np.array([a, [7, 8, 9], b])
 ```  
 
-Would translate to this (focus on `c` creation):  
+Would translate to this:  
 
 ```c
 int main()
@@ -179,7 +184,9 @@ int main()
 
 ## `order_f` array creation example
 
-For (`order_f`), the process is similar to (`order_c`), but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, then after finishing the copy operations, we copy a transposed version of `temp_ndarray` to our destination `ndarray`.  
+If the data is one dimensional, all we would need is one copy operation, same as an `order_c ndarray`. // TODO: change to this
+
+For (`order_f`), the process is similar to (`order_c`), but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an (`order_f`) `ndarray`, and copy from the `temp_ndarray` to the destination (`order_f`) `ndarray` _ using `strides` and `shape` _ to get the correct column-major memory layout.
 
 Example:
 
@@ -202,7 +209,7 @@ int main()
     int64_t array_dummy[] = {1, 2, 3, 4, 5, 6}; // array_dummy with our flattened data
     memcpy(temp_array.nd_int64 + (temp_array.current_length) , array_dummy, 6 * temp_array.type_size); // Copying our array_dummy to our temp ndarray
     temp_array.current_length += 6; // Usless in this situation
-    array_copy_data(&a, temp_array); // Copying/Transposing temp_array to the required ndarray
+    array_copy_data(&a, temp_array); // Copying into a column-major memory layout
     free_array(temp_array); // Freeing the temp_array right after we were done with it
     printf("%ld\n", GET_ELEMENT(a, nd_int64, (int64_t)0, (int64_t)0)); // output ==> 1
     free_array(a);
@@ -210,7 +217,7 @@ int main()
 }
 ```
 
-If the data is composed of at least one variable array, the process would still be somewhat the same as an (`order_c`) ndarray creation, with the only changes being: the creation of a `temp_array` and the transpose/copy like operation at the end.  
+If the data is composed of at least one variable array, the process would still be somewhat the same as an `order_c ndarray` creation, with the only changes being: the creation of a `order_c temp_array` containing all the data and the 'copy into a column-major memory layout' operation at the end.
 
 Example:  
 
@@ -219,10 +226,10 @@ if __name__ == "__main__":
   import numpy as np
   a = np.array([1, 2, 3])
   b = np.array([4, 5, 6])
-  c = np.array([a, [7, 8, 9], b], order="F")
+  f = np.array([a, [7, 8, 9], b], order="F")
 ``` 
 
-Would be translated to (focus on `c` `ndarray` creation):
+Would be translated to (focus on `f` `ndarray` creation):
 
 ```c
 int main()
@@ -241,7 +248,7 @@ int main()
     
     // 'c' ndarray creation
     
-    c = array_create(2, (int64_t[]){3, 3}, nd_int64, false, order_f); // Allocating the required ndarray (order_f)
+    f = array_create(2, (int64_t[]){3, 3}, nd_int64, false, order_f); // Allocating the required ndarray (order_f)
     t_ndarray temp_array = {.shape = NULL};
     temp_array = array_create(2, (int64_t[]){3, 3}, nd_int64, false, order_c); // Allocating a temp_array (order_c)
     array_copy_data(&temp_array, a); // Copying the first element to temp_array
@@ -249,7 +256,7 @@ int main()
     memcpy(temp_array.nd_int64 + (temp_array.current_length) , array_dummy_0002, 3 * temp_array.type_size); // Copying the second element to temp_array
     temp_array.current_length += 3;
     array_copy_data(&temp_array, b); // Copying the third element to temp_array
-    array_copy_data(&c, temp_array); // Copying and transposing our temp_array to the requied ndarray 'c'
+    array_copy_data(&f, temp_array); // Copying our temp_array into a column-major memory layout
     free_array(temp_array); // freeing the temp_array
     free_array(a);
     free_array(b);
