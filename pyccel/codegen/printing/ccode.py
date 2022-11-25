@@ -303,9 +303,9 @@ class CCodePrinter(CodePrinter):
             return [irregular_list]
 
     #========================== Numpy Elements ===============================#
-    def _largest_literal_subset(self, flattened_list):
+    def _get_starting_consecutive_scalars(self, flattened_list):
         """
-        Returns the longest subset of back to back literals in the given list starting from the first element
+        Returns all consecutive scalars at the start of the list
 
         parameters
         ----------
@@ -314,16 +314,16 @@ class CCodePrinter(CodePrinter):
 
         Return
         ------
-            largest_subset: the longest back to back literals
+            starting_consecutive_scalars: starting consecutive scalars
         """
 
-        largest_subset = []
+        starting_consecutive_scalars = []
         for i in flattened_list:
             if not isinstance(i, Variable) or ((isinstance(i, Variable)) and i.rank == 0):
-                largest_subset.append(i)
+                starting_consecutive_scalars.append(i)
             else:
-                return largest_subset
-        return largest_subset
+                return starting_consecutive_scalars
+        return starting_consecutive_scalars
 
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
@@ -372,7 +372,7 @@ class CCodePrinter(CodePrinter):
                 creations += f"array_copy_data(&{copy_to}, {elem_name});\n"
                 i += 1
             else:
-                subset = self._largest_literal_subset(flattened_list[i:])
+                subset = self._starting_consecutive_scalars(flattened_list[i:])
                 lenSubset = len(subset)
                 subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
                 dummy_array_name = self.scope.get_new_name('array_dummy')
