@@ -446,7 +446,7 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 /*
 ** takes an array containing the shape of an array 'shape', number of a certain dimension 'nd', and the number of the array's dimensions
-** returns the stride (number of elements to jump in a dimension) of the 'nd`th dimension
+** returns the stride (number of single elements to jump in a dimension to get to this dimension's next element) of the 'nd`th dimension
 */
 
 int get_dimension_stride(int64_t *shape, int nd, int max_nd)
@@ -457,6 +457,13 @@ int get_dimension_stride(int64_t *shape, int nd, int max_nd)
         product *= shape[i];
     return (product);
 }
+
+/*
+**  Takes an array needed to do the caculations
+**  An element number, representing an element's index if it were in a flattened (order_c/row major) array
+**  nd, representing the number of dimensions
+**  returns the element's index depending on its required memory layout (order_f/column major or order_c/row major)
+*/
 
 int element_index(t_ndarray arr, uint32_t element_num, int nd)
 {
