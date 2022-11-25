@@ -136,7 +136,6 @@ t_ndarray   array_create(int32_t nd, int64_t *shape,
     }
     if (!is_view)
         arr.raw_data = malloc(arr.buffer_size);
-    arr.current_length = 0;
     return (arr);
 }
 
@@ -491,22 +490,21 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
     return (true);
 }
 
-void array_copy_data(t_ndarray *dest, t_ndarray src)
+void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
 {
     unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
 
-    if (dest->order == src.order
+    if (!src.is_view && dest->order == src.order
         && (src.order == order_c
-        || (src.order == order_f && is_same_shape(*dest, src))))
-        memcpy(d + dest->current_length * dest->type_size, s, src.buffer_size);
+            || (src.order == order_f && is_same_shape(*dest, src))))
+        memcpy(d + offset * dest->type_size, s, src.buffer_size);
     else
     {
         for (int32_t element_num = 0; element_num < src.length; ++element_num)
         {
-            memcpy(d + ((element_index(*dest, element_num, dest->nd) + dest->current_length) * dest->type_size),
+            memcpy(d + ((element_index(*dest, element_num, dest->nd) + offset) * dest->type_size),
                 s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size);
         }
     }
-    dest->current_length += src.length;
 }

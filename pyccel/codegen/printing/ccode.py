@@ -346,14 +346,14 @@ class CCodePrinter(CodePrinter):
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_name = self._print(lhs)
         if isinstance(arg, Variable):
-            return f"array_copy_data(&{lhs_name}, {self._print(arg)});\n" # doesn't need current_length
+            return f"array_copy_data(&{lhs_name}, {self._print(arg)}, 0);\n"
         order = lhs.order
         rhs_dtype = self._print(rhs.dtype)
         declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
         dtype = self.find_in_ndarray_type_registry(rhs_dtype, rhs.precision)
         flattened_list = self._flatten_list(arg)
         i = 0
-        creations = ""
+        operations = ""
         if order == "F":
             nd = arg.rank
             temp_array_name = self.scope.get_new_name('temp_array')
@@ -362,14 +362,24 @@ class CCodePrinter(CodePrinter):
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             temp_array_declaration = f"t_ndarray {temp_array_name} = " "{.shape = NULL};\n"
             array_creation = f"{temp_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {'false'}, {'order_c'});\n"
-            creations += temp_array_declaration + array_creation
+            operations += temp_array_declaration + array_creation
             copy_to = temp_array_name
         else:
             copy_to = lhs_name
-        while i < len(flattened_list):
+        num_elements = len(flattened_list)
+        if num_elements != len(self._get_starting_consecutive_scalars(flattened_list))\
+        and num_elements != 1:
+            offset_name = self.scope.get_new_name('offset')
+            operations += f"uint32_t {offset_name} = 0;\n"
+        else:
+            offset_name = ""
+        while i < num_elements:
             if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
                 elem_name = self._print(flattened_list[i])
-                creations += f"array_copy_data(&{copy_to}, {elem_name});\n"
+                offset = offset_name if offset_name else "0"
+                operations += f"array_copy_data(&{copy_to}, {elem_name}, {offset});\n"
+                if i < num_elements - 1:
+                    operations += f"{offset_name} += {elem_name}.length;\n"
                 i += 1
             else:
                 subset = self._get_starting_consecutive_scalars(flattened_list[i:])
@@ -377,13 +387,15 @@ class CCodePrinter(CodePrinter):
                 subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
                 dummy_array_name = self.scope.get_new_name('array_dummy')
                 dummy_array = f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
-                cpy_data = f"memcpy({copy_to}.{dtype} + ({copy_to}.current_length) , {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
-                current_length_increment = f"{copy_to}.current_length += {lenSubset};\n"
-                creations += dummy_array + cpy_data + current_length_increment
+                offset = f" + {offset_name}" if offset_name else ""
+                cpy_data = f"memcpy({copy_to}.{dtype}{offset}, {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
+                operations += dummy_array + cpy_data
+                if i + lenSubset < num_elements - 1:
+                    operations += f"{offset_name} += {lenSubset};\n"
                 i += lenSubset
         if order == "F":
-            creations += f"array_copy_data(&{lhs_name}, {copy_to});\n" + f"free_array({copy_to});\n"
-        return creations
+            operations += f"array_copy_data(&{lhs_name}, {copy_to}, 0);\n" + f"free_array({copy_to});\n"
+        return operations
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray

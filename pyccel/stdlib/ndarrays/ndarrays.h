@@ -95,16 +95,14 @@ typedef struct  s_ndarray
     int32_t                 nd;
     /* shape 'size of each dimension' */
     int64_t                 *shape;
-    /* strides 'number of bytes to skip to get the next element' */
+    /* strides 'number of elements to skip to get the next element' */
     int64_t                 *strides;
     /* type of the array elements */
     enum e_types            type;
     /* type size of the array elements */
     int32_t                 type_size;
-    /* max number of element in the array */
+    /* number of element in the array */
     int32_t                 length;
-    /* number of element currently in the array (for the copy operations)*/
-    int32_t                 current_length;
     /* size of the array */
     int32_t                 buffer_size;
     /* True if the array does not own the data */
@@ -151,6 +149,6 @@ int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 void print_ndarray_memory(t_ndarray nd);
 /* copy data from ndarray */
-void array_copy_data(t_ndarray* dest, t_ndarray src);
+void array_copy_data(t_ndarray* dest, t_ndarray src, uint32_t offset);
 
 #endif
