@@ -4156,7 +4156,7 @@ def test_array_view_steps_C_2D_3(language):
     assert np.array_equal(f1(a), f2(a))
 
 ##==============================================================================
-## TEST SIMPLE ARRAY SLICING WITH ORDER F 1D
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 1D
 ##==============================================================================
 
 def test_array_view_steps_F_1D_1(language):
@@ -4174,7 +4174,7 @@ def test_array_view_steps_F_1D_2(language):
     assert np.array_equal(f1(a), f2(a))
 
 ##==============================================================================
-## TEST SIMPLE ARRAY SLICING WITH ORDER F 2D
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 2D
 ##==============================================================================
 
 @pytest.mark.parametrize( 'language', [
