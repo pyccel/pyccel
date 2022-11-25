@@ -372,7 +372,7 @@ class CCodePrinter(CodePrinter):
                 creations += f"array_copy_data(&{copy_to}, {elem_name});\n"
                 i += 1
             else:
-                subset = self._starting_consecutive_scalars(flattened_list[i:])
+                subset = self._get_starting_consecutive_scalars(flattened_list[i:])
                 lenSubset = len(subset)
                 subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
                 dummy_array_name = self.scope.get_new_name('array_dummy')
