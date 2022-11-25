@@ -8,6 +8,7 @@
 # include <stdarg.h>
 # include <stdlib.h>
 # include <stdio.h>
+# include <stdbool.h>
 
 /*
  * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
@@ -478,12 +479,26 @@ int element_index(t_ndarray arr, uint32_t element_num, int nd)
     return (true_index * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1));
 }
 
+bool is_same_shape(t_ndarray a, t_ndarray b)
+{
+    if (a.nd != b.nd)
+        return (false);
+    for (int i = 0; i < a.nd; ++i)
+    {
+        if (a.shape[i] != b.shape[i])
+            return (false);
+    }
+    return (true);
+}
+
 void array_copy_data(t_ndarray *dest, t_ndarray src)
 {
     unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
 
-    if (dest->order == order_c && src.order == order_c)
+    if (dest->order == src.order
+        && (src.order == order_c
+        || (src.order == order_f && is_same_shape(*dest, src))))
         memcpy(d + dest->current_length * dest->type_size, s, src.buffer_size);
     else
     {
