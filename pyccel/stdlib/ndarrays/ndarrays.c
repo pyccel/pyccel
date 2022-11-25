@@ -15,8 +15,9 @@
 
 void print_ndarray_memory(t_ndarray nd)
 {
-    int i = 0;
-    while (i < nd.length)
+    int i;
+
+    for (i = 0; i < nd.length; ++i)
     {
         switch (nd.type)
         {
@@ -55,13 +56,11 @@ void print_ndarray_memory(t_ndarray nd)
                 printf("[%lf%s%lfj]", real, imag >= 0 ? "+" : "", imag);
                 break;
             }
-            default:
-                return;
         }
         ++i;
     }
-    printf("\n");
-    return;
+    if (i)
+        printf("\n");
 }
 
 /*
@@ -488,7 +487,7 @@ void array_copy_data(t_ndarray *dest, t_ndarray src)
         memcpy(d + dest->current_length * dest->type_size, s, src.buffer_size);
     else
     {
-        for (uint32_t element_num = 0; element_num < src.length; ++element_num)
+        for (int32_t element_num = 0; element_num < src.length; ++element_num)
         {
             memcpy(d + ((element_index(*dest, element_num, dest->nd) + dest->current_length) * dest->type_size),
                 s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size);
