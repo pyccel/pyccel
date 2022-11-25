@@ -1202,11 +1202,6 @@ def test_array_real_2d_C_array_initialization(language):
 
     assert np.array_equal(x1, x2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_real_3d_C_array_initialization_1(language):
 
     f1 = arrays.array_real_3d_C_array_initialization_1
@@ -1236,12 +1231,6 @@ def test_array_real_3d_C_array_initialization_2(language):
     f2(x2)
 
     assert np.array_equal(x1, x2)
-
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 
 def test_array_real_4d_C_array_initialization(language):
 
@@ -1416,12 +1405,6 @@ def test_array_real_2d_F_array_initialization(language):
 
     assert np.array_equal(x1, x2)
 
-
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_real_3d_F_array_initialization_1(language):
 
     f1 = arrays.array_real_3d_F_array_initialization_1
@@ -1452,12 +1435,6 @@ def test_array_real_3d_F_array_initialization_2(language):
 
     assert np.array_equal(x1, x2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_array_real_4d_F_array_initialization(language):
 
     f1 = arrays.array_real_4d_F_array_initialization
