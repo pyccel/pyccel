@@ -344,15 +344,16 @@ class CCodePrinter(CodePrinter):
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        lhs_name = self._print(lhs)
         if isinstance(arg, Variable):
-            return f"array_copy_data(&{self._print(lhs)}, {self._print(arg)});\n"
+            return f"array_copy_data(&{lhs_name}, {self._print(arg)});\n"
         order = lhs.order
-        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        rhs_dtype = self._print(rhs.dtype)
+        declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(rhs_dtype, rhs.precision)
         flattened_list = self._flatten_list(arg)
         i = 0
         creations = ""
-        lhs_name = self._print(lhs)
         if order == "F":
             nd = arg.rank
             temp_array_name = self.scope.get_new_name('temp_array')
