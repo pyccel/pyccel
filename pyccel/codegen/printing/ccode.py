@@ -390,7 +390,8 @@ class CCodePrinter(CodePrinter):
                 offset = f" + {offset_name}" if offset_name else ""
                 cpy_data = f"memcpy({copy_to}.{dtype}{offset}, {dummy_array_name}, {lenSubset} * {copy_to}.type_size);\n"
                 operations += dummy_array + cpy_data
-                if i + lenSubset < num_elements - 1:
+                print(lenSubset, num_elements, "these are the values")
+                if i + lenSubset < num_elements:
                     operations += f"{offset_name} += {lenSubset};\n"
                 i += lenSubset
         if order == "F":
