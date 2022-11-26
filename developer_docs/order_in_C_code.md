@@ -102,7 +102,7 @@ If we take the following 2D array as an example:
 
 with `array.rows = 2` and `array.columns = 3`, `GET_ELEMENT(arr, int32, 0, 1)` which is equivelant to `arr[0][1]` would return `2` no matter the `order`.  
 
-To loop efficiently in an (`order_c`) array, we would do this:  
+To loop efficiently in an `order_c ndarray`, we would do this:  
 ```c
 for (int i = 0; i < array.rows; ++i)
 {
@@ -113,7 +113,7 @@ for (int i = 0; i < array.rows; ++i)
 }
 ```
 
-For (`order_f`) we would do this:
+For an `order_f ndarray` we would do this:
 
 ```c
 for (int i = 0; i < array.columns; ++i)
@@ -202,7 +202,7 @@ int main()
 
 If the data is one dimensional, all we would need is one copy operation, same as an `order_c ndarray`. // TODO: change to this
 
-For (`order_f`), the process is similar to (`order_c`), but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an (`order_f`) `ndarray`, and copy from the `temp_ndarray` to the destination (`order_f`) `ndarray` _ using `strides` and `shape` _ to get the correct column-major memory layout.  
+For `order_f`, the process is similar to `order_c`, but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an `order_f ndarray`, and copy from the `temp_ndarray` to the destination `order_f ndarray` _ using `strides` and `shape` _ to get the correct column-major memory layout.  
 
 Example:  
 
