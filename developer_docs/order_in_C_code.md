@@ -125,7 +125,7 @@ for (int i = 0; i < array.columns; ++i)
 }
 ```
 
-## `order_c` array creation example
+### `order_c` array creation example
 
 To create an `order_c ndarray`, we simply copy the flattened data to our `ndarray`'s data placeholder that changes depending on the type.  
 
@@ -198,7 +198,7 @@ int main()
 }
 ```  
 
-## `order_f` array creation example
+### `order_f` array creation example
 
 If the data is one dimensional, all we would need is one copy operation, same as an `order_c ndarray`. // TODO: change to this
 
@@ -279,4 +279,147 @@ int main()
     free_array(c);
     return 0;
 }
+```
+
+## Pyccel's Fortran code
+
+### Ordering in Fortran code
+
+As Fortran has arrays in the language there is no need to add special handling for arrays. Fortran ordered arrays (`order_f`) are already compatible with the Fortran language. They can therefore be passed to the function as they are.
+C ordered arrays (`order_c`) need transposing to interact with them in a standard way in Fortran, however this step is unnecessary. Instead we pass the contiguous block of memory to Fortran and change how we index the array to ensure that we access the expected element.
+
+### Indexing in Fortran  
+
+Fortran indexing does not occur in the same order as in C.
+If we take the following 2D array as an example:
+|   |   |  |
+|---|---|---|
+| 1 | 2 | 3 |
+| 4 | 5 | 6 |
+where the numbers show the position of the element in the contiguous array stored in memory.
+
+In C the element `A[1,0]` is in position `4` in memory, however in Fortran the element `A(1,0)` is in position `2` in memory.
+Thus to iterate over this array in the most efficient way in C we would do:
+```C
+# A.shape = (2,3)
+for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 3; ++j) {
+        A[i,j] = ....
+    }
+}
+```  
+
+while in Fortran we would do:  
+
+```Fortran
+# A.shape = (3,2)
+do i = 0, 2
+    do j = 0, 3
+        A(j,i) = ....
+    end do
+end do
+```
+
+As you can see in the Fortran-ordered array the indices are inverted compared to how they would be printed in C.
+Pyccel therefore handles the printing of Fortran-ordered arrays by inverting the index order so as to preserve the most efficient indexing.  
+
+Example:  
+
+```python
+import numpy as np
+
+if __name__ == '__main__':
+    A = np.array([[1,2],[3,4],[5,6]], order='C')
+    B = np.array([[1,2],[3,4],[5,6]], order='F')
+    print(A.shape)  # (3,2)
+    print(B.shape)   # (3,2)
+    # print(A.ravel('K')) # array([1, 2, 3, 4, 5, 6])
+    # print(B.ravel('K')) # array([1, 3, 5, 2, 4, 6])
+
+    # Index optimally for A:
+    for i in range(3):
+        for j in range(2):
+            A[i,j] = ...
+
+    # Index optimally for B:
+    for j in range(2):
+        for i in range(3):
+            B[i,j] = ...
+```  
+
+Will be translated to:  
+
+```Fortran
+program prog_prog_tmp
+
+  use tmp
+
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
+  implicit none
+
+  integer(i64), allocatable :: A(:,:)
+  integer(i64), allocatable :: B(:,:)
+  integer(i64) :: i
+  integer(i64) :: j
+
+  allocate(A(0:1_i64, 0:2_i64))
+  A = reshape([[1_i64, 2_i64], [3_i64, 4_i64], [5_i64, 6_i64]], [2_i64, &
+        3_i64])
+  allocate(B(0:2_i64, 0:1_i64))
+  B = transpose(reshape([[1_i64, 2_i64], [3_i64, 4_i64], [5_i64, 6_i64 &
+        ]], [2_i64, 3_i64]))
+  write(*, '(A A I0 A A A I0 A A)', advance="yes") '(' , ' ' , 3_i64 , '&
+  & ' , ', ' , ' ' , 2_i64 , ' ' , ')'
+  write(*, '()', advance="yes")
+  write(*, '(A A I0 A A A I0 A A)', advance="yes") '(' , ' ' , 3_i64 , '&
+  & ' , ', ' , ' ' , 2_i64 , ' ' , ')'
+  write(*, '()', advance="yes")
+  !print(A.ravel('K')) # array([1, 2, 3, 4, 5, 6])
+  !print(B.ravel('K')) # array([1, 3, 5, 2, 4, 6])
+  !Index optimally for A:
+  do i = 0_i64, 2_i64, 1_i64
+    do j = 0_i64, 1_i64, 1_i64
+      A(j, i) = ...
+    end do
+  end do
+  !Index optimally for B:
+  do j = 0_i64, 1_i64, 1_i64
+    do i = 0_i64, 2_i64, 1_i64
+      B(i, j) = ...
+    end do
+  end do
+  if (allocated(A)) then
+    deallocate(A)
+  end if
+  if (allocated(B)) then
+    deallocate(B)
+  end if
+
+end program prog_prog_tmp
+```  
+
+Note the changes to the shape and the indexing, which make this code closer to the following intermediate representation:  
+
+```python
+import numpy as np
+
+if __name__ == '__main__':
+    A_mem = np.array([1,2,3,4,5,6])
+    A = np.array(A_mem.reshape(2,3), order='C')
+    B_mem = np.array([1,2,3,4,5,6])
+    B = np.array(B_mem.reshape(3,2), order='C')
+    print(A.shape[::-1])  # (3,2)
+    print(B.shape)   # (3,2)
+    # print(A.ravel('K')) # array([1,2,3,4,5,6])
+    # print(B.ravel('K')) # array([1,2,3,4,5,6])
+
+    # Index optimally for A in F layout:
+    for i in range(3):
+        for j in range(2):
+            A[j,i] = ...
+
+    # Index optimally for B in F layout:
+    for j in range(2):
+        for i in range(3):
+            B[i,j] = ...
 ```
