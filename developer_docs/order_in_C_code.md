@@ -291,11 +291,13 @@ C ordered arrays (`order_c`) need transposing to interact with them in a standar
 ### Indexing in Fortran  
 
 Fortran indexing does not occur in the same order as in C.
-If we take the following 2D array as an example:
-|   |   |  |
+If we take the following 2D array as an example:  
+
+|   |   |   |
 |---|---|---|
 | 1 | 2 | 3 |
-| 4 | 5 | 6 |
+| 4 | 5 | 6 |  
+
 where the numbers show the position of the element in the contiguous array stored in memory.
 
 In C the element `A[1,0]` is in position `4` in memory, however in Fortran the element `A(1,0)` is in position `2` in memory.
