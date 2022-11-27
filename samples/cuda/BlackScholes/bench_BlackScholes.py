@@ -1,13 +1,13 @@
 import numpy as np
-from pyccel_BlackScholes import wrap_blackscholes
+from mod_pyccel_BlackScholes import wrap_blackscholes
 from BlackScholes import blackscholesCPU
-from timeit import default_timer
+from time import perf_counter
 import math
 
 
 if __name__ == "__main__":
-    opt_n = 100
-    num_iter = 512
+    opt_n = 4000000
+    num_iter = 1024
     opt_sz = opt_n * 4
     riskfree = 0.02
     volatility = 0.30
@@ -16,22 +16,20 @@ if __name__ == "__main__":
     print("...allocating CPU memory for options.\n")
     h_CallResultCPU =  np.zeros(opt_n, dtype=np.float64)
     h_PutResultCPU = np.full(opt_n, -1.0, dtype=np.float64)
-    # h_CallResultGPU = np.empty(opt_n, dtype=np.float64)
-    # h_PutResultGPU = np.empty(opt_n, dtype=np.float64)
     h_StockPrice = np.empty(opt_n, dtype=np.float64)
     h_OptionStrike = np.empty(opt_n, dtype=np.float64)
     h_OptionYears = np.empty(opt_n, dtype=np.float64)
 
-    np.random.seed(1)
+    # np.random.seed(1)
     for i in range(opt_n):
         h_StockPrice[i] = np.random.uniform(5.0, 30.0)
         h_OptionStrike[i] = np.random.uniform(1.0, 100.0)
         h_OptionYears[i] = np.random.uniform(0.25, 10.0)
 
-    hTimerS = default_timer()
-    h_CallResultGPU = wrap_blackscholes(h_StockPrice, h_OptionStrike, h_OptionYears, opt_n)
-    hTimerE = default_timer()
-    gpuTime = (hTimerE - hTimerS) / 1000
+    hTimerS = perf_counter()
+    h_CallResultGPU = wrap_blackscholes(h_StockPrice, h_OptionStrike, h_OptionYears, opt_n, num_iter)
+    hTimerE = perf_counter()
+    gpuTime = ((hTimerE - hTimerS) * 1000) / num_iter
 
 
     print("Options count             : %i     \n" % (2 * opt_n))

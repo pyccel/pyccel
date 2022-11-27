@@ -43,8 +43,7 @@ def blackscholesGPU(d_CallResult: 'double[:]', d_PutResult: 'double[:]', d_Stock
         for i in range(opt, optn, optn/2):
             d_CallResult[i], d_PutResult[i] = BlackScholesBodyGPU(d_StockPrice[i], d_OptionStrike[i], d_OptionYears[i], Riskfree, Volatility)
 
-def wrap_blackscholes(h_StockPrice: 'double[:]', h_OptionStrike: 'double[:]', h_OptionYears: 'double[:]', opt_n: 'int'):
-    num_iter = 512
+def wrap_blackscholes(h_StockPrice: 'double[:]', h_OptionStrike: 'double[:]', h_OptionYears: 'double[:]', opt_n: 'int', num_iter: 'int'):
     opt_sz = opt_n * 4
     riskfree = 0.02
     volatility = 0.30
@@ -60,7 +59,7 @@ def wrap_blackscholes(h_StockPrice: 'double[:]', h_OptionStrike: 'double[:]', h_
     print("Data init done.\n\n")
 
     cuda.deviceSynchronize()
-    print("Executing Black-Scholes GPU kernel (", num_iter, " iterations)...\n")
+    print("Executing Black-Scholes GPU kernel iterations : ", num_iter)
     for i in range(num_iter):
         blackscholesGPU[int(div_up(opt_n / 2, 128)), 128](d_CallResult,
                 d_PutResult, d_StockPrice, d_OptionStrike,

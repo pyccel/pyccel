@@ -1,6 +1,6 @@
 from numba import cuda
 import numpy as np
-from timeit import default_timer
+from time import perf_counter
 import math
 
 def div_up(a, b):
@@ -78,7 +78,7 @@ def blackscholesCPU(h_CallResult, h_PutResult, h_StockPrice, h_OptionStrike, h_O
 
 if __name__ == "__main__":
     opt_n = 4000000
-    num_iter = 512
+    num_iter = 1024
     opt_sz = opt_n * 4
     riskfree = 0.02
     volatility = 0.30
@@ -93,13 +93,9 @@ if __name__ == "__main__":
     h_OptionStrike = np.empty(opt_n, dtype=np.float64)
     h_OptionYears = np.empty(opt_n, dtype=np.float64)
 
-    print("...allocating GPU memory for options.\n")
-    d_CallResult = cuda.device_array(opt_n, dtype=np.float64)
-    d_PutResult = cuda.device_array(opt_n, dtype=np.float64)
     # d_StockPrice = cuda.device_array(opt_n, dtype=np.float64) 
     # d_OptionStrike = cuda.device_array(opt_n, dtype=np.float64)
     # d_OptionYears = cuda.device_array(opt_n, dtype=np.float64)
-    cuda.synchronize()
 
     print("...generating input data in CPU mem.\n")
     np.random.seed(1)
@@ -108,6 +104,10 @@ if __name__ == "__main__":
         h_OptionStrike[i] = np.random.uniform(1.0, 100.0)
         h_OptionYears[i] = np.random.uniform(0.25, 10.0)
     
+    hTimerS = perf_counter()
+    print("...allocating GPU memory for options.\n")
+    d_CallResult = cuda.device_array(opt_n, dtype=np.float64)
+    d_PutResult = cuda.device_array(opt_n, dtype=np.float64)
     print("...copying input data to GPU mem.\n")
     d_StockPrice = cuda.to_device(h_StockPrice)
     d_OptionStrike = cuda.to_device(h_OptionStrike)
@@ -117,16 +117,20 @@ if __name__ == "__main__":
     print("Executing Black-Scholes GPU kernel (%d iterations)...\n" % num_iter)
     cuda.synchronize()
 
-
-    hTimerS = default_timer()
     for i in range(num_iter):
         blackscholesGPU[int(div_up(opt_n / 2, 128)), 128](d_CallResult,
                 d_PutResult, d_StockPrice, d_OptionStrike,
                 d_OptionYears, riskfree, volatility, opt_n)
     
+    print("\nReading back GPU results...\n")
+
     cuda.synchronize()
-    hTimerE = default_timer()
-    gpuTime = (hTimerE - hTimerS) / 1000
+    h_CallResultGPU = d_CallResult.copy_to_host()
+    h_PutResultGPU = d_PutResult.copy_to_host()
+    cuda.synchronize()
+
+    hTimerE = perf_counter()
+    gpuTime = ((hTimerE - hTimerS) * 1000) / num_iter
 
 
     print("Options count             : %i     \n" % (2 * opt_n))
@@ -141,10 +145,6 @@ if __name__ == "__main__":
       ((((2.0 * opt_n) * 1.0E-9) / (gpuTime * 1.0E-3)), gpuTime * 1e-3,
       (2 * opt_n), 1, 128))
 
-    print("\nReading back GPU results...\n")
-
-    h_CallResultGPU = d_CallResult.copy_to_host()
-    h_PutResultGPU = d_PutResult.copy_to_host()
     print("Checking the results...\n")
     print("...running CPU calculations.\n\n")
     # Calculate options values on CPU
