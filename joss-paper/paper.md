@@ -89,15 +89,34 @@ In contrast, the C compiler is more adapted to support GPU tools such as CUDA, a
 
 Pyccel is designed for two different use cases:
 (1) accelerate Python code by converting it to Fortran and providing a CPython wrapper to interface between the low-level and high level languages,
-(2) generate low-level Fortran code from Python code.
+(2) generate low-level C or Fortran code from Python code.
 The latter case follows from the fact that the code is human-readable.
 This means that Pyccel can also be used to simplify the process of going from a prototype (which is often written in inefficient languages which are quick to write) to production code (written in a low-level language).
 To this end, Pyccel is designed to allow the use of low-level legacy codes and some Python scientific libraries such as numpy, scipy, etc.
 
 # Benchmarks
 
+A few example codes are used to provide an indication of the performance of Pyccel as compared to the popular accelerators Numba and Pythran.
+The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
+These examples, which illustrate several common scientific computing problems, are based on open-source code samples [@JBurkhardt; @CFD].
+All tests were run with Python 3.10.8 on Ubuntu 20.04.5, using Pyccel 1.7.0, Numba 0.56.4, and Pythran 0.12.0.
+The following flags were passed to GCC 9.4.0 via Pyccel and Pythran : `-O3 -march=native -mtune=native -mavx -ffast-math`.
+The Numba test cases were compiled using the `@njit` decorator with the `fastmath` option passed to Clang 11.0.0.
+
+\autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
+We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer: this explains the missing result for the finite difference Laplace test case (FD-Laplace).
+Similarly Pythran is unable to handle one of the statements used in the molecular dynamics test case (M-D) so there are no results to report in this case.
+
+![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./pypi_performance_310_1.7.0_execution.pdf)
+
+Another important consideration is the time spent waiting for the accelerated version to be generated.
+This is shown in \autoref{fig:compilation}, where Pyccel proves to be competitive with Numba while it outperforms Pythran significantly for large files.
+
+![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./pypi_performance_310_1.7.0_compilation.pdf)
+
 # Acknowledgments
 
 The authors would like to thank all the people who have contributed to Pyccel so far.
+The project has received funding from the European Union’s Horizon 2020 Research and Innovation Program under Grant Agreement No. 800945 (Numerics PhD Program), and under Grant Agreement No. 676629 (Energy oriented Centre of Excellence for computing applications - EoCoE).
 
 # References
