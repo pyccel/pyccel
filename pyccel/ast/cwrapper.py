@@ -66,6 +66,10 @@ class PyccelPyArrayObject(DataType):
     __slots__ = ()
     _name = 'pyarrayobject'
 
+class PyccelPyListObject(DataType):
+    __slots__ = ()
+    _name = 'pylistobject'
+
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
