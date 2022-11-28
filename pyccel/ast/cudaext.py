@@ -199,11 +199,11 @@ class CudaCopy(CudaNewArray):
             raise TypeError('unknown type of  %s.' % type(arg))
         
         # Verify the memory_location of src
-        if arg.memory_location not in ('device', 'host'):
+        if arg.memory_location not in ('device', 'host', 'managed'):
             raise ValueError("The direction of the copy should be from 'host' or 'device'")
 
         # Verify the memory_location of dst
-        if memory_location not in ('device', 'host'):
+        if memory_location not in ('device', 'host', 'managed'):
             raise ValueError("The direction of the copy should be to 'host' or 'device'")
         
         # verify the type of is_async

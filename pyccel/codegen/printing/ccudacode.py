@@ -546,8 +546,12 @@ class CcudaCodePrinter(CCodePrinter):
         return '{}.{}'.format(var_name, dim_c)
     
     def cudaCopy(self, lhs, rhs):
-        from_location = str(rhs.arg.memory_location).capitalize()
-        to_location   = str(rhs.memory_location).capitalize()
+        from_location = 'Host'
+        to_location = 'Host'
+        if rhs.arg.memory_location in ('device', 'managed'):
+            from_location = 'Device'
+        if rhs.memory_location in ('device', 'managed'):
+            to_location = 'Device'
         transfer_type = 'cudaMemcpy{0}To{1}'.format(from_location, to_location)
         if isinstance(rhs.is_async, LiteralTrue):
             cpy_data = "cudaMemcpyAsync({0}.raw_data, {1}.raw_data, {0}.buffer_size, {2}, 0);".format(lhs, rhs.arg, transfer_type)
