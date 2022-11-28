@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
 ## Pyccel's C code
 
-In `Pyccel`'s C code, we try to clone `Numpy`'s indexing/priting and memory layout conventions.
+In `Pyccel`'s C code, we try to clone `Numpy`'s indexing/printing and memory layout conventions.
 
 ### Ordering in C code
 
