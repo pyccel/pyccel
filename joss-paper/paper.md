@@ -107,12 +107,12 @@ The Numba test cases were compiled using the `@njit` decorator with the `fastmat
 We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer: this explains the missing result for the finite difference Laplace test case (FD-Laplace).
 Similarly Pythran is unable to handle one of the statements used in the molecular dynamics test case (M-D) so there are no results to report in this case.
 
-![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./pypi_performance_310_1.7.0_execution.png)
+![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.10 \label{fig:execution}](./pypi_performance_310_1.7.0_execution.pdf)
 
 Another important consideration is the time spent waiting for the accelerated version to be generated.
 This is shown in \autoref{fig:compilation}, where Pyccel proves to be competitive with Numba while it outperforms Pythran significantly for large files.
 
-![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./pypi_performance_310_1.7.0_compilation.png)
+![Comparison of times required to generate accelerated code for various test cases with Python 3.10 \label{fig:compilation}](./pypi_performance_310_1.7.0_compilation.pdf)
 
 # Acknowledgments
 
