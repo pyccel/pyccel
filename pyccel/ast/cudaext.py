@@ -174,6 +174,64 @@ class CudaInternalVar(PyccelAstNode):
     def dim(self):
         return self._dim
 
+
+class CudaCopy(CudaNewArray):
+    """
+    Represents a call to  cuda.copy for code generation.
+
+    Parameters
+    ----------
+    arg : Variable
+
+    memory_location : str
+        'host'   the newly created array is allocated on host.
+        'device' the newly created array is allocated on device.
+    
+    is_async: bool
+        Indicates whether the copy is asynchronous or not [Default value: False]
+
+    """
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location', '_is_async')
+
+    def __init__(self, arg, memory_location, is_async=False):
+        
+        if not isinstance(arg, Variable):
+            raise TypeError('unknown type of  %s.' % type(arg))
+        
+        # Verify the memory_location of src
+        if arg.memory_location not in ('device', 'host', 'managed'):
+            raise ValueError("The direction of the copy should be from 'host' or 'device'")
+
+        # Verify the memory_location of dst
+        if memory_location not in ('device', 'host', 'managed'):
+            raise ValueError("The direction of the copy should be to 'host' or 'device'")
+        
+        # verify the type of is_async
+        if not isinstance(is_async, (LiteralTrue, LiteralFalse, bool)):
+            raise TypeError('is_async must be boolean')
+        
+        self._arg             = arg
+        self._shape           = arg.shape
+        self._rank            = arg.rank
+        self._dtype           = arg.dtype
+        self._order           = arg.order
+        self._precision       = arg.precision
+        self._memory_location = memory_location
+        self._is_async        = is_async
+        super().__init__()
+    
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def memory_location(self):
+        return self._memory_location
+
+    @property
+    def is_async(self):
+        return self._is_async
+
 class CudaThreadIdx(CudaInternalVar)        : pass
 class CudaBlockDim(CudaInternalVar)         : pass
 class CudaBlockIdx(CudaInternalVar)         : pass
@@ -191,15 +249,18 @@ class CudaGrid(PyccelAstNode)               :
         return PythonTuple(*expr)
 
 
+
 cuda_funcs = {
     # 'deviceSynchronize' : CudaDeviceSynchronize,
     'array'             : PyccelFunctionDef('array'             , CudaArray),
+    'copy'              : PyccelFunctionDef('copy'              , CudaCopy),
     'deviceSynchronize' : PyccelFunctionDef('deviceSynchronize' , CudaDeviceSynchronize),
     'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
     'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),
     'blockIdx'          : PyccelFunctionDef('blockIdx'          , CudaBlockIdx),
     'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim),
     'grid'              : PyccelFunctionDef('grid'              , CudaGrid)
+
 }
 
 cuda_Internal_Var = {
