@@ -27,6 +27,7 @@ from .mathext       import math_mod
 
 from .cudaext       import cuda_mod
 from .cupyext       import cupy_mod
+from .numbaext      import numba_mod
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
@@ -87,6 +88,7 @@ builtin_import_registery = Module('__main__',
         (),(),
         imports = [
             Import('cupy', AsName(cupy_mod,'cupy')),
+            Import('numba', AsName(numba_mod,'numba')),
             Import('numpy', AsName(numpy_mod,'numpy')),
             Import('scipy', AsName(scipy_mod,'scipy')),
             Import('itertools', AsName(itertools_mod,'itertools')),
