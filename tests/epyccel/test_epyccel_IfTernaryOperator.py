@@ -131,12 +131,14 @@ def test_f6(language):
 def test_f7(language):
     @types('int')
     def f7(x):
-        a = [1.,2.,3.] if x < 5 else [1.5,6.5,7.5]
+        import numpy as np
+        a = np.array([1.,2.,3.]) if x < 5 else np.array([1.5,6.5,7.5])
         return a[0]
 
     @types('int')
     def f7wp(x):
-        a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8])
+        import numpy as np
+        a = np.array([1.,2.,3.]) if x < 5 else (np.array([1.5,6.5,7.5]) if x > 5 else np.array([3.1,9.5,2.8]))
         return a[0]
 
     f = epyccel(f7, language = language)
@@ -252,12 +254,14 @@ def test_f11(language):
 def test_f12(language):
     @types('int')
     def f12(x):
-        a = [1.,2.,3.,4.] if x < 5 else [1.5,6.5,7.5]
+        import numpy as np
+        a = np.array([1.,2.,3.,4.]) if x < 5 else np.array([1.5,6.5,7.5])
         return a[0]
 
     @types('int')
     def f12wp(x):
-        a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8,2.9])
+        import numpy as np
+        a = np.array([1.,2.,3.]) if x < 5 else (np.array([1.5,6.5,7.5]) if x > 5 else np.array([3.1,9.5,2.8,2.9]))
         return a[0]
 
     f = epyccel(f12, language = language)
