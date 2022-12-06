@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+**Describe the feature**
 A clear and concise description of what you would like to be implemented.
 
 **Test Code**
