@@ -34,7 +34,7 @@ authors:
 
 affiliations:
 
-  - name: IRFM, Centre d’Energie Atomique, Cadarache, France
+  - name: CEA, IRFM, F-13108 Saint-Paul-lez-Durance, France
     index: 1
 
   - name: NMPP division, Max-Planck-Institut für Plasmaphysik, Garching bei München, Germany
