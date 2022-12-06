@@ -29,7 +29,7 @@ with open(args.gitEvent, encoding="utf-8") as pr_data_file:
 
 print(pr_data)
 
-cov.print_markdown_summary(new_untested, file_contents, pr_data["after"], args.output)
+cov.print_markdown_summary(new_untested, file_contents, pr_data["pull_request"]["base"]["sha"], args.output)
 
 cov.show_results(new_untested)
 
