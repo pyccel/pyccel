@@ -7,15 +7,15 @@ assignees: ''
 
 ---
 
-**Relevant Discussion**
+### Relevant Discussion
 
 Most installation problems are not directly caused by pyccel, but are due to dependencies. Please link to the discussion in the [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a) where the problem was investigated.
 
-**Description**
+### Description
 
 A clear and concise description of the problem encountered.
 
-**Environment information**
+### Environment information
 
 Python version :
 
