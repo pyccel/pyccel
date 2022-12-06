@@ -25,6 +25,8 @@ new_untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untes
 with open(args.gitEvent, encoding="utf-8") as pr_data_file:
     pr_data = json.load(pr_data_file)
 
+print(pr_data)
+
 cov.print_markdown_summary(new_untested, file_contents, pr_data["after"], args.output)
 
 cov.show_results(new_untested)
