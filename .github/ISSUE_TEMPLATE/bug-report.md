@@ -16,6 +16,7 @@ Provide code to reproduce the behavior:
 Code here
 ```
 
+### Error details
 Provide the generated code, or the error message:
 ```bash/fortran/c
 Translated code here
