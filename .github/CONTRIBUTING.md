@@ -11,8 +11,6 @@ The following is a summary of how you can do this.
 
 For simple questions (e.g. installation problems), we encourage you to use the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
 
-For more involved questions we also have a [slack channel](pyccel.slack.com).
-
 ## Requesting features
 
 To request a new feature, please use the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/ideas).
@@ -51,4 +49,3 @@ The review process is described in the [developer docs](https://github.com/pycce
 Before contributing we strongly recommend you check out the [developer docs](https://github.com/pyccel/pyccel/tree/master/developer_docs).
 We try to flag `good-first-issue`s.
 These are either issues which can be fixed by following the example provided by a similar solution which is already implemented, or issues which only concern one of the pyccel [stages](https://github.com/pyccel/pyccel/blob/master/developer_docs/overview.md).
-If you are not sure about your solution, please get in touch with the development team on slack or describe your proposed solution on the issue.
