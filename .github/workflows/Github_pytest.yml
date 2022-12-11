@@ -59,7 +59,7 @@ jobs:
             # which leads to linking problems as there are
             # 2 versions of python3X.a and the wrong one
             # is chosen
-            python-version: 3.9
+            python-version: 3.7
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
       #- name: Install mingw tools
       #  uses: msys2/setup-msys2@v2
@@ -83,7 +83,7 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.7'
       - name: Install dependencies
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
