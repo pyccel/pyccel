@@ -9,9 +9,9 @@ assignees: ''
 
 ### Relevant Discussion
 
-Non-trivial features require a lot of discussion to find the best implementation in the target languages.
-This discussion should take place in [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
-Please link to the discussion where the proposed feature was discussed.
+Non-trivial features require consideration to find the best implementation in the target languages.
+This conversation should take place in the [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
+Please link to the discussion where the proposed feature was investigated.
 
 ### Describe the feature
 A clear and concise description of what you would like to be implemented.
