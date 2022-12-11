@@ -11,10 +11,10 @@ The following is a summary of how you can do this.
 
 For simple questions (e.g. installation problems), we encourage you to use the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
 
-## Requesting features
+## Answering questions
 
-To request a new feature, please use the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/ideas).
-This allows us to discuss the best implementation in the target languages before creating an issue to work on.
+Questions are sometimes asked in the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/q-a) or in issues.
+Any help answering these questions is appreciated as it helps our users find solutions as fast as possible.
 
 ## Reporting issues
 
@@ -22,10 +22,10 @@ When reporting issues please include as much detail as possible about your
 operating system, and python version. Whenever possible, please
 also include a brief, self-contained code example that demonstrates the problem.
 
-## Answering questions
+## Requesting features
 
-Questions are sometimes asked in the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/q-a) or in issues.
-Any help answering these questions is appreciated as it helps our users find solutions as fast as possible.
+To request a new feature, please use the [discussions tab](https://github.com/pyccel/pyccel/discussions/categories/ideas).
+This allows us to discuss the best implementation in the target languages before creating an issue to work on.
 
 ## Documentation
 
