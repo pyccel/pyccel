@@ -12,6 +12,9 @@ from test_numpy_funcs import matching_types
 from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
 
+RTOL = 2e-14
+ATOL = 1e-15
+
 def test_mult_numpy_python_type(language):
 
     def mult_on_array_int8():
@@ -112,22 +115,22 @@ def test_numpy_scalar_promotion(language):
 
     pyccel_result = epyccel_func(integer64, fl32)
     python_result = add_numpy_to_numpy_type(integer64, fl32)
-    assert pyccel_result == python_result
+    assert np.isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
     assert isinstance(pyccel_result, type(python_result))
 
     pyccel_result = epyccel_func(integer64, fl64)
     python_result = add_numpy_to_numpy_type(integer64, fl64)
-    assert pyccel_result == python_result
+    assert np.isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
     assert isinstance(pyccel_result, type(python_result))
 
     pyccel_result = epyccel_func(fl64, complex64)
     python_result = add_numpy_to_numpy_type(fl64, complex64)
-    assert pyccel_result == python_result
+    assert np.isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
     assert isinstance(pyccel_result, type(python_result))
 
     pyccel_result = epyccel_func(complex128, fl64)
     python_result = add_numpy_to_numpy_type(complex128, fl64)
-    assert pyccel_result == python_result
+    assert np.isclose(pyccel_result, python_result, rtol=RTOL, atol=ATOL)
     assert isinstance(pyccel_result, type(python_result))
 
 def test_numpy_bool_scalar(language):
