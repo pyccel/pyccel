@@ -7,14 +7,20 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+### Relevant Discussion
+
+Non-trivial features require consideration to find the best implementation in the target languages.
+This conversation should take place in the [discussion tab](https://github.com/pyccel/pyccel/discussions/categories/q-a).
+Please link to the discussion where the proposed feature was investigated.
+
+### Describe the feature
 A clear and concise description of what you would like to be implemented.
 
-**Test Code**
+### Test Code
 Provide code which does not currently work but which should do when this issue is fixed:
 ```python
 Code here
 ```
 
-**Language**
-If appropriate, please specify which language the python code is translated to (Fortran by default)
+### Proposed Solution
+Briefly summarise how you expect this feature to be implemented
