@@ -1082,7 +1082,8 @@ class FCodePrinter(CodePrinter):
         if expr.order == 'F':
             if expr.rank == 2:
                 rhs_code = self._print(expr.arg)
-                rhs_code = 'transpose({})'.format(rhs_code)
+                if expr.arg.order != expr.order:
+                    rhs_code = 'transpose({})'.format(rhs_code)
             elif expr.rank > 2:
                 args     = [self._print(a) for a in expr.arg]
                 new_args = []
