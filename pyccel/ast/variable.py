@@ -103,7 +103,7 @@ class Variable(PyccelAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order','_is_private')
+            '_rank','_shape','_order','_is_private', '_is_list')
     _attribute_nodes = ()
 
     def __init__(
@@ -124,6 +124,7 @@ class Variable(PyccelAstNode):
         is_argument=False,
         is_kwonly=False,
         is_temp =False,
+        is_list=False,
         allows_negative_indexes=False
         ):
         super().__init__()
@@ -163,6 +164,10 @@ class Variable(PyccelAstNode):
         if not isinstance(is_private, bool):
             raise TypeError('is_private must be a boolean.')
         self._is_private = is_private
+
+        if not isinstance(is_list, bool):
+            raise TypeError('is_list must be a boolean')
+        self._is_list = is_list
 
         if not isinstance(allows_negative_indexes, bool):
             raise TypeError('allows_negative_indexes must be a boolean.')
@@ -316,6 +321,12 @@ class Variable(PyccelAstNode):
         return self.on_stack and self.rank == 0
 
     @property
+    def is_list(self):
+        """ Indicated if the variable is a list
+        """
+        return self._is_list or (self.cls_base and self.cls_base.name == 'list')
+
+    @property
     def cls_base(self):
         """ Class from which the Variable inherits
         """
@@ -396,6 +407,8 @@ class Variable(PyccelAstNode):
             2. dtype is one among {int, bool, float, complex}
         """
 
+        if self.is_list:
+            return False
         if self.rank == 0:
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
