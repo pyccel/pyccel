@@ -838,13 +838,16 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _visit_Subscript(self, stmt):
-
+        """ Example:
+        [0:2][0:1]    <=> tuple(Slice(0, 2), Slice(0, 2))
+        [0:2, 0][0:2] <=> tuple(tuple(Slice(0, 2), Literal(0)), Slice(0, 2))
+        """
         ch = stmt
         args = []
         while isinstance(ch, ast.Subscript):
             val = self._visit(ch.slice)
             if isinstance(val, (PythonTuple, list)):
-                args += val
+                args.append(val)
             else:
                 args.insert(0, val)
             ch = ch.value

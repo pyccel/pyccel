@@ -1942,7 +1942,20 @@ class SemanticParser(BasicParser):
     def _visit_IndexedElement(self, expr, **settings):
         var = self._visit(expr.base)
         # TODO check consistency of indices with shape/rank
-        args = [self._visit(idx, **settings) for idx in expr.indices]
+
+        if isinstance(var, Variable) and var.is_list:
+            if any(isinstance(idx, PythonTuple) for idx in expr.indices):
+                return errors.report("list indices must be integers or slices, not tuple", 
+                    bounding_box=(self._current_fst_node.lineno, 
+                    self._current_fst_node.col_offset), 
+                    severity='fatal')
+
+        args = []
+        for idx in expr.indices:
+            if isinstance(idx, PythonTuple):
+                args += [self._visit(idx, **settings) for i in idx]
+            else:
+                args.append(self._visit(idx, **settings))
 
         if (len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple))):
             args = args[0]
