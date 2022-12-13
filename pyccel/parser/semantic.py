@@ -1953,7 +1953,7 @@ class SemanticParser(BasicParser):
         args = []
         for idx in expr.indices:
             if isinstance(idx, PythonTuple):
-                args += [self._visit(idx, **settings) for i in idx]
+                args += [self._visit(i, **settings) for i in idx]
             else:
                 args.append(self._visit(idx, **settings))
 
