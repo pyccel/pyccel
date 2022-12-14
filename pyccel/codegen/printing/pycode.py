@@ -618,6 +618,11 @@ class PythonCodePrinter(CodePrinter):
             dtype += str(expr.precision*factor)
 
         name  = self._aliases.get(type(expr), expr.name)
+        if name == 'array':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyArray, 'array'))
+
         arg   = self._print(expr.arg)
         dtype = "dtype={}".format(dtype)
         order = "order='{}'".format(expr.order) if expr.order else ''
@@ -693,15 +698,6 @@ class PythonCodePrinter(CodePrinter):
         name = self._aliases.get(type(expr),expr.name)
         args = ', '.join(self._print(a) for a in expr.args)
         return "{}({})".format(name, args)
-
-    def _print_NumpyArray(self, expr):
-        name = self._aliases.get(type(expr),'array')
-        if name == 'array':
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(NumpyArray, 'array'))
-        arg = self._print(expr.arg)
-        return "{}({})".format(name, arg)
 
     def _print_NumpyRandint(self, expr):
         name = self._aliases.get(type(expr), expr.name)
