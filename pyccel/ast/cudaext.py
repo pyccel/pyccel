@@ -317,6 +317,43 @@ class CudaSeed(PyccelInternalFunction):
     def seed(self):
         return self._seed
 
+class CudaRandInt(PyccelInternalFunction):
+    """
+    Represents a call to  cuda.random.randint for code generation.
+
+    low     : int
+    high    : int
+
+    """
+    _attribute_nodes = ('_low','_high',)
+    name = 'randint'
+
+    def __init__(self, low, high):
+        if isinstance(low, int):
+            low = LiteralInteger(low)
+        if isinstance(high, int):
+            high = LiteralInteger(high)
+        if not isinstance(low, LiteralInteger):
+            raise TypeError("low argument should be an integer")
+        if not isinstance(high, LiteralInteger):
+            raise TypeError("high argument should be an integer")
+
+        self._low       = low
+        self._high      = high
+        self._shape     = None
+        self._rank      = 0
+        self._dtype     = low.dtype
+        self._precision = low.precision
+        self._order     = None
+        super().__init__()
+
+
+    @property
+    def low(self):
+        return self._low
+    @property
+    def high(self):
+        return self._high
 
 
 
@@ -335,8 +372,9 @@ cuda_funcs = {
 
 cuda_random_mod = Module('random', (),
     [
-        PyccelFunctionDef('uniform'   , CudaUniform),
-        PyccelFunctionDef('seed'   , CudaSeed)
+        PyccelFunctionDef('uniform'     , CudaUniform),
+        PyccelFunctionDef('seed'        , CudaSeed),
+        PyccelFunctionDef('randint'     , CudaRandInt)
     ])
 
 cuda_Internal_Var = {

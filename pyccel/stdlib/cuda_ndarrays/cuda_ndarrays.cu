@@ -167,3 +167,10 @@ float randfloat(float low, float high)
   float t = (float)rand() / (float)RAND_MAX;
   return (1.0f - t) * low + t * high;
 }
+
+// return random int in [low, high[
+int randint(int low, int high)
+{
+    int a = (int)(low + rand() / (RAND_MAX / (high - low + 1) + 1));
+    return a;
+}

@@ -559,6 +559,9 @@ class CcudaCodePrinter(CCodePrinter):
     def _print_CudaUniform(self, expr):
         return 'randfloat(%s, %s)' % (self._print(expr.low), self._print(expr.high))
     
+    def _print_CudaRandInt(self, expr):
+        return 'randint(%s, %s)' % (expr.low, expr.high)
+    
     def cudaCopy(self, lhs, rhs):
         from_location = str(rhs._arg._memory_location).capitalize()
         to_location   = str(rhs._memory_location).capitalize()

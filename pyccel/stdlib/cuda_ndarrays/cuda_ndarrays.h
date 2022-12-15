@@ -26,4 +26,5 @@ int32_t         cuda_free_array(t_ndarray dump);
 int32_t         cuda_free_pointer(t_ndarray dump);
 
 float randfloat(float low, float high);
+int   randint(int low, int high);
 #endif
