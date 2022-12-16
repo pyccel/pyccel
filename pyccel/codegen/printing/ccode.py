@@ -1085,7 +1085,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['stdint'])
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
-            if isinstance(expr, PythonList) or expr.cls_base == ListClass:
+            if isinstance(expr, PythonList) or (isinstance(expr, Variable) and expr.is_list):
                 self.add_import(c_imports['lists'])
                 dtype = 't_list'
             elif expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
@@ -1096,7 +1096,8 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
-        if self.stored_in_c_pointer(expr) or isinstance(expr, PythonList) or expr.cls_base == ListClass:
+        if (self.stored_in_c_pointer(expr) or 
+            isinstance(expr, PythonList) or (isinstance(expr, Variable) and expr.is_list)):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
