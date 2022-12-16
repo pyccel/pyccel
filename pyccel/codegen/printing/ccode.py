@@ -576,7 +576,12 @@ class CCodePrinter(CodePrinter):
         lst = expr.list
         arg = expr.args[0].value
 
-        return "pop({}, {})".format(self._print(lst), self._print(arg))
+        if lst.rank == 1:
+            dtype = self.find_in_dtype_registry(self._print(lst.dtype), lst.precision)
+            prefix = "*({} *)".format(dtype)
+        else:
+            prefix = "(t_list *)".format()
+        return "{}pop({}, {})".format(prefix, self._print(lst), self._print(arg))
 
     def _print_PythonListReverse(self, expr):
         return "reverse({});\n".format(self._print(expr.list))
