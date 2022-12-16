@@ -548,6 +548,12 @@ class CCodePrinter(CodePrinter):
         lst = expr.list
         arg = expr.args[0].value
 
+        if arg.rank == 0 and not isinstance(arg, Variable):
+            compound_type = self.find_in_dtype_registry(self._print(arg.dtype), arg.precision)
+            arg = f"({compound_type}[]){{{self._print(arg)}}}"
+        elif isinstance(arg, Variable):
+            arg = ObjectAddress(arg)
+
         return "count({}, {})".format(self._print(lst), self._print(arg))
 
     def _print_PythonListInsert(self, expr):
