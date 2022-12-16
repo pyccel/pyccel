@@ -1911,6 +1911,8 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
+        if isinstance(rhs, PythonList):
+            return prefix_code+self.fill_list(expr)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
