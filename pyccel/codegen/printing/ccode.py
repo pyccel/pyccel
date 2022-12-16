@@ -492,22 +492,29 @@ class CCodePrinter(CodePrinter):
         return code
 
     # ============ Elements ============ #
+    
+    def compound_stmt(self, expr, compound_type=None):
+        if compound_type == None:
+            compound_type = self.find_in_dtype_registry(self._print(expr.dtype), expr.precision)
+        args = ', \n'.join(self._print(arg) for arg in expr.args)
+        stmt = f'({compound_type}[]){{\n{args}\n}}'
+        return stmt
+
+    def fill_list(self, expr):
+        lhs = expr.lhs
+        rhs = expr.rhs
+
+        lhs  = self._print(lhs)
+        stmt = self.compound_stmt(rhs, None if rhs.rank == 1 else 't_list *')
+        return "memcpy({}->elements, {}, {}->size * tSizes[{}->type]);\n".format(lhs, stmt, lhs, lhs)
 
     def _print_PythonList(self, expr):
-
-        def compound_stmt(expr, compound_type=None):
-            if compound_type == None:
-                compound_type = self.find_in_dtype_registry(self._print(expr.dtype), expr.precision)
-            args = ', \n'.join(self._print(arg) for arg in expr.args)
-            elements = f'({compound_type}[]){{\n{args}\n}}'
-            return elements
-
         if expr.rank == 1:
             lst_type = self.find_in_list_type_registry(self._print(expr.dtype), expr.precision)
-            elements = compound_stmt(expr)
+            elements = self.compound_stmt(expr)
         else:
             lst_type = "lst_list"
-            elements = compound_stmt(expr, 't_list*')
+            elements = self.compound_stmt(expr, 't_list*')
         return "allocate_list({}, {}, {})".format(expr.shape[0], lst_type, elements)
 
     def _print_PythonListAppend(self, expr):
