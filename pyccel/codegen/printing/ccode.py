@@ -1361,10 +1361,19 @@ class CCodePrinter(CodePrinter):
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
 
     def _print_Allocate(self, expr):
+        var = expr.variable
 
-        # Skip allocation
-        if expr.variable.cls_base == ListClass or isinstance(expr.variable, PythonList):
-            return ""
+        if isinstance(var, Variable) and var.cls_base == ListClass:
+            self.add_import(c_imports['lists'])
+            if var.rank == 1:
+                dtype = self.find_in_list_type_registry(self._print(var.dtype), var.precision)
+            else:
+                dtype = "lst_list"
+            return "{} = allocate_list({}, {}, {});\n".format(
+                self._print(var),
+                self._print(expr.shape[0]),
+                dtype,
+                "NULL")
 
         # Code related to allocation of ndarrays
         free_code = ''
