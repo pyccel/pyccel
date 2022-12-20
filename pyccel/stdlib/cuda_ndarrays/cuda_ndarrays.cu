@@ -113,14 +113,14 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
     }
     arr.is_view = is_view;
     arr.length = 1;
-    (*fun_ptr_arr[location])(&(arr.shape), arr.nd * sizeof(int64_t));
+    (*fun_ptr_arr[managedMemory])(&(arr.shape), arr.nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.length *= shape[i];
         arr.shape[i] = shape[i];
     }
     arr.buffer_size = arr.length * arr.type_size;
-    (*fun_ptr_arr[location])(&(arr.strides), nd * sizeof(int64_t));
+    (*fun_ptr_arr[managedMemory])(&(arr.strides), nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.strides[i] = 1;
@@ -145,14 +145,43 @@ int32_t cuda_free_array(t_ndarray arr)
     return (1);
 }
 
+__host__ __device__
+int32_t cuda_free_host(t_ndarray arr)
+{
+    if (arr.shape == NULL)
+        return (0);
+    cudaFreeHost(arr.raw_data);
+    arr.raw_data = NULL;
+    cudaFree(arr.shape);
+    arr.shape = NULL;
+    cudaFree(arr.strides);
+    arr.strides = NULL;
+    return (1);
+}
 
+__host__ __device__
+int32_t cuda_free(t_ndarray arr)
+{
+    if (arr.shape == NULL)
+        return (0);
+    cudaFree(arr.raw_data);
+    arr.raw_data = NULL;
+    cudaFree(arr.shape);
+    arr.shape = NULL;
+    cudaFree(arr.strides);
+    arr.strides = NULL;
+    return (1);
+}
+
+__host__ __device__
 int32_t cuda_free_pointer(t_ndarray arr)
 {
     if (arr.is_view == false || arr.shape == NULL)
         return (0);
-    free(arr.shape);
+    cudaFree(arr.shape);
     arr.shape = NULL;
-    free(arr.strides);
+    cudaFree(arr.strides);
     arr.strides = NULL;
     return (1);
 }
+
