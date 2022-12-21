@@ -37,7 +37,7 @@ __all__ = (
     'CudaMemCopy',
     'CudaNewArray',
     'CudaArray',
-    'CudaDeviceSynchronize',
+    'CudaSynchronize',
     'CudaInternalVar',
     'CudaThreadIdx',
     'CudaBlockDim',
@@ -137,7 +137,7 @@ class CudaArray(CudaNewArray):
     def memory_location(self):
         return self._memory_location
 
-class CudaDeviceSynchronize(PyccelInternalFunction):
+class CudaSynchronize(PyccelInternalFunction):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
     # pass
     _attribute_nodes = ()
@@ -251,16 +251,14 @@ class CudaGrid(PyccelAstNode)               :
 
 
 cuda_funcs = {
-    # 'deviceSynchronize' : CudaDeviceSynchronize,
     'array'             : PyccelFunctionDef('array'             , CudaArray),
     'copy'              : PyccelFunctionDef('copy'              , CudaCopy),
-    'deviceSynchronize' : PyccelFunctionDef('deviceSynchronize' , CudaDeviceSynchronize),
+    'synchronize'       : PyccelFunctionDef('synchronize'       , CudaSynchronize),
     'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
     'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),
     'blockIdx'          : PyccelFunctionDef('blockIdx'          , CudaBlockIdx),
     'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim),
     'grid'              : PyccelFunctionDef('grid'              , CudaGrid)
-
 }
 
 cuda_Internal_Var = {

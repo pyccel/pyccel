@@ -812,7 +812,7 @@ class SemanticParser(BasicParser):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
                 if 'kernel' not in self.scope.decorators\
-                    or 'device' not in self.scope.decorators:
+                    and 'device' not in self.scope.decorators:
                     errors.report("Cuda internal variables should only be used in Kernel or Device functions",
                         symbol = expr,
                         severity = 'fatal')
