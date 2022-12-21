@@ -5,6 +5,9 @@ from numpy.random import randint
 from pyccel.epyccel import epyccel
 from modules import python_annotations
 
+RTOL = 2e-14
+ATOL = 1e-15
+
 def test_array_int32_1d_scalar_add(language):
 
     f1 = python_annotations.array_int32_1d_scalar_add
@@ -73,7 +76,7 @@ def test_array_real_1d_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 
 def test_array_real_2d_F_scalar_add(language):
@@ -88,7 +91,7 @@ def test_array_real_2d_F_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_real_2d_F_add(language):
 
@@ -102,7 +105,7 @@ def test_array_real_2d_F_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_int32_2d_F_complex_3d_expr(language):
 
@@ -130,7 +133,7 @@ def test_array_real_1d_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_fib(language):
     f1 = python_annotations.fib
