@@ -98,7 +98,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
                             OMP_Single_Construct)
 
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
+from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
 from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
@@ -671,8 +671,6 @@ class SemanticParser(BasicParser):
             errors.report(msg, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
     def _create_Duplicate(self, val, length):
@@ -708,6 +706,11 @@ class SemanticParser(BasicParser):
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
+                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+                    tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
+                    assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
+                    self._additional_exprs[-1].append(assign)
+                    a = FunctionCallArgument(self._visit(tmp_var))
                 args.append(a)
         return args
 
@@ -1405,7 +1408,7 @@ class SemanticParser(BasicParser):
         # Iterate over the loops
         # This provides the definitions of iterators as well
         # as the central expression
-        loops  = [self._visit(expr.loops, **settings)]
+        loops = [self._visit(expr.loops, **settings)]
 
         # If necessary add additional expressions corresponding
         # to nested GeneratorComprehensions
@@ -3063,9 +3066,7 @@ class SemanticParser(BasicParser):
         assigns     = []
         for v,r in zip(return_vars, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
-                a = Assign(v, r)
-                a.set_fst(expr.fst)
-                a = self._visit_Assign(a)
+                a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]
