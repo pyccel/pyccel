@@ -41,7 +41,7 @@ class CCudaNameClashChecker(metaclass = Singleton):
         'cuda_array_fill_int32', 'cuda_array_fill_int8',
         'cuda_array_arange_double', 'cuda_array_arange_int64', 
         'cuda_array_arange_int32', 'cuda_array_arange_int8',
-        'cudaMallocManaged', 'cudaDeviceSynchronize'])
+        'cudaMallocManaged', 'cudaSynchronize'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes

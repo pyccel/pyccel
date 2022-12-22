@@ -12,6 +12,6 @@ if __name__ == '__main__':
     threads_per_block = 5
     n_blocks = 1
     arr = cp.array([0, 1, 2, 3, 4])
-    cuda.deviceSynchronize()
+    cuda.synchronize()
     func[n_blocks, threads_per_block](arr)
-    cuda.deviceSynchronize()
+    cuda.synchronize()
