@@ -437,14 +437,14 @@ Consider the following 2D C-ordered array:
 | 1 | 2 | 3 |
 | 4 | 5 | 6 |
 
-where the numbers indicate the position of the elements in memory. If this data block ([1, 2, 3, 4, 5, 6]) were passed to Fortran indicating a size (2,3), we would obtain the following array:
+where the numbers indicate the position of the elements in memory. If this data block (`[1, 2, 3, 4, 5, 6]`) were passed to Fortran indicating a size (2,3), we would obtain the following array:
 
 |   |   |   |
 |---|---|---|
 | 1 | 3 | 5 |
 | 2 | 4 | 6 |
 
-As a result we cannot pass the data block without either rearranging the elements (transpose), or changing the index. In pyccel we prefer avoiding unnecessary copies. As a result we pass a data block ([1, 2, 3, 4, 5, 6]), but we indicate a size (3,2). This gives us the following array:
+As a result we cannot pass the data block without either rearranging the elements (transpose), or changing the index. In pyccel we prefer avoiding unnecessary copies. As a result we pass a data block (`[1, 2, 3, 4, 5, 6]`), but we indicate a size (3,2). This gives us the following array:
 
 |   |   |
 |---|---|
