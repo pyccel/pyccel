@@ -12,6 +12,8 @@ from test_numpy_funcs import matching_types
 from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
 
+numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split('.'))>=(1,24,0)
+
 def test_mult_numpy_python_type(language):
 
     def mult_on_array_int8():
@@ -130,6 +132,7 @@ def test_numpy_scalar_promotion(language):
     assert pyccel_result == python_result
     assert isinstance(pyccel_result, type(python_result))
 
+@pytest.mark.skipif(numpy_basic_types_deprecated, reason="Can't import bool from numpy")
 def test_numpy_bool_scalar(language):
 
     @types('bool')
@@ -292,8 +295,14 @@ def get_int8(a):
     b = int8(a)
     return b
 
-@pytest.mark.parametrize( 'function_boundaries', [(get_int, min_int, max_int), (get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),\
-                                                 (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)])
+if numpy_basic_types_deprecated:
+    int_functions_and_boundaries = [(get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),\
+                                                 (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)]
+else:
+    int_functions_and_boundaries = [(get_int, min_int, max_int), (get_int64, min_int64, max_int64), (get_int32, min_int32, max_int32),\
+                                                 (get_int16, min_int16, max_int16), (get_int8, min_int8, max_int8)]
+
+@pytest.mark.parametrize( 'function_boundaries', int_functions_and_boundaries)
 def test_numpy_int_scalar(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
@@ -643,7 +652,12 @@ def get_float32(a):
     b = float32(a)
     return b
 
-@pytest.mark.parametrize( 'get_float', [get_float64, get_float32, get_float])
+if numpy_basic_types_deprecated:
+    float_functions = [get_float64, get_float32]
+else:
+    float_functions = [get_float64, get_float32, get_float]
+
+@pytest.mark.parametrize( 'get_float', float_functions)
 def test_numpy_float_scalar(language, get_float):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
