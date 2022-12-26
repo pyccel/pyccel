@@ -1,4 +1,4 @@
-# Multidimensional ndarrays memory layout (order)
+# ndarrays memory layout (order)
 
 ## Order in numpy
 
@@ -77,7 +77,7 @@ In `Pyccel`'s C code, we aim to replicate `Numpy`'s indexing/printing and memory
 
 ### Ordering in C code
 
-The arrays in `C` code, flattened into a one dimensional array, `strides` and `shape` are used to navigate the array (unlike `Numpy`. `Pyccel`'s strides use 'number of elements' instead of 'number of bytes' as a unit)
+Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike `Numpy`. `Pyccel`'s strides use 'number of elements' instead of 'number of bytes' as a unit)
 While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
 
 Example:
@@ -91,6 +91,8 @@ Example:
    &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to temporary `ndarray`
    &nbsp;&nbsp;&nbsp;&nbsp;3. allocate/create `order_f ndarray`
    &nbsp;&nbsp;&nbsp;&nbsp;4. copy temporary `ndarray` elements to final `order_f ndarray` using `strides` and `shape`, this will create a column-major version of the temporary `order_c ndarray`
+
+One dimensional arrays require no order, since order would not change how they behave.
 
 ### Indexing in C code
 
@@ -201,8 +203,6 @@ int main()
 ```
 
 ### `order_f` array creation example
-
-If the data is one dimensional, all we would need is one copy operation, same as an `order_c ndarray`.
 
 For `order_f`, the process is similar to `order_c`, but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an `order_f ndarray`, and copy from the `temp_ndarray` to the destination `order_f ndarray` _ using `strides` and `shape` _ to get the correct column-major memory layout.
 
