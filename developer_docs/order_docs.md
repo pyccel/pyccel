@@ -307,14 +307,12 @@ int main()
 
 ## Pyccel's Fortran code
 
-### Ordering in Fortran code
-
 As Fortran has arrays in the language there is no need to add special handling for arrays. Fortran ordered arrays (`order_f`) are already compatible with the Fortran language. They can therefore be passed to the function as they are.
 
 In order to pass C ordered arrays (`order_c`) and retain the shape and correct element placing to be compatible with Fortran, a transpose would be needed.
 In pyccel, we prefer to avoid unnecessary copies, so instead we pass the contiguous block of memory to Fortran and change how we index the array to ensure that we access the expected element.
 
-### Indexing arrays in Fortran
+### Ordering in Fortran code
 
 Fortran indexing does not occur in the same order as in C.
 If we take the following 2D array as an example:
@@ -336,122 +334,29 @@ for (int row = 0; row < 2; ++row) {
 ```
 
 while in Fortran we would do:
-
 ```Fortran
-# A.shape = (3,2)
-do column = 0, 2
-    do row = 0, 3
+# A.shape = (2,3)
+do column = 0, 3
+    do row = 0, 2
         A(row,column) = ....
     end do
 end do
 ```
 
-As you can see in the Fortran-ordered array the indices are inverted compared to how they would be printed in C.
-Pyccel therefore handles the printing of Fortran-ordered arrays by inverting the index order so as to preserve the most efficient indexing.
+As you can see in the Fortran-ordered array the indices are passed to the array in the same order, however the index does not point to the same location in memory.
+In C code the index `i_1, i_2, i_3` points to the element `i_1 * (n_2 * n_3) + i_2 * n_2 + i_3` in memory.
+In Fortran code the index `i_1, i_2, i_3` points to the element `i_1 + i_2 * n_1 + i_3 * (n_2 * n_3)` in memory.
 
-Example:
+### Order F
+Pyccel's translation of code with `order='F'` should look very similar to the original python code.
 
-```python
-import numpy as np
+Numpy's storage of the strides ensures that the first dimension is the contiguous dimension as in Fortran, so the code is equivalent for all element-wise operations.
 
-if __name__ == '__main__':
-    A = np.array([[1,2],[3,4],[5,6]], order='C')
-    B = np.array([[1,2],[3,4],[5,6]], order='F')
-    print(A.shape)  # (3,2)
-    print(B.shape)   # (3,2)
-    # print(A.ravel('K')) # array([1, 2, 3, 4, 5, 6])
-    # print(B.ravel('K')) # array([1, 3, 5, 2, 4, 6])
-
-    # Index optimally for A:
-    for row in range(3):
-        for column in range(2):
-            A[row,column] = ...
-
-    # Index optimally for B:
-    for column in range(2):
-        for row in range(3):
-            B[row,column] = ...
-```
-
-Will be translated to:
-
-```Fortran
-program prog_prog_tmp
-
-  use tmp
-
-  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T
-  implicit none
-
-  integer(i64), allocatable :: A(:,:)
-  integer(i64), allocatable :: B(:,:)
-  integer(i64) :: row
-  integer(i64) :: column
-
-  allocate(A(0:1_i64, 0:2_i64))
-  A = reshape([[1_i64, 2_i64], [3_i64, 4_i64], [5_i64, 6_i64]], [2_i64, &
-        3_i64])
-  allocate(B(0:2_i64, 0:1_i64))
-  B = transpose(reshape([[1_i64, 2_i64], [3_i64, 4_i64], [5_i64, 6_i64 &
-        ]], [2_i64, 3_i64]))
-  write(*, '(A A I0 A A A I0 A A)', advance="yes") '(' , ' ' , 3_i64 , '&
-  & ' , ', ' , ' ' , 2_i64 , ' ' , ')'
-  write(*, '()', advance="yes")
-  write(*, '(A A I0 A A A I0 A A)', advance="yes") '(' , ' ' , 3_i64 , '&
-  & ' , ', ' , ' ' , 2_i64 , ' ' , ')'
-  write(*, '()', advance="yes")
-  !print(A.ravel('K')) # array([1, 2, 3, 4, 5, 6])
-  !print(B.ravel('K')) # array([1, 3, 5, 2, 4, 6])
-  !Index optimally for A:
-  do row = 0_i64, 2_i64, 1_i64
-    do column = 0_i64, 1_i64, 1_i64
-      A(column, row) = ...
-    end do
-  end do
-  !Index optimally for B:
-  do column = 0_i64, 1_i64, 1_i64
-    do row = 0_i64, 2_i64, 1_i64
-      B(row, column) = ...
-    end do
-  end do
-  if (allocated(A)) then
-    deallocate(A)
-  end if
-  if (allocated(B)) then
-    deallocate(B)
-  end if
-
-end program prog_prog_tmp
-```
-
-Note the changes to the shape and the indexing, which make this code closer to the following intermediate representation:
-
-```python
-import numpy as np
-
-if __name__ == '__main__':
-    A_mem = np.array([1,2,3,4,5,6])
-    A = np.array(A_mem.reshape(2,3), order='C')
-    B_mem = np.array([1,2,3,4,5,6])
-    B = np.array(B_mem.reshape(3,2), order='C')
-    print(A.shape[::-1])  # (3,2)
-    print(B.shape)   # (3,2)
-    # print(A.ravel('K')) # array([1,2,3,4,5,6])
-    # print(B.ravel('K')) # array([1,2,3,4,5,6])
-
-    # Index optimally for A in F layout:
-    for i in range(3):
-        for j in range(2):
-            A[j,i] = ...
-
-    # Index optimally for B in F layout:
-    for j in range(2):
-        for i in range(3):
-            B[i,j] = ...
-```
+There are some exceptions to this rule, for example printing. Python always prints arrays in a row-major format so pyccel must take care to respect this rule in the output.
 
 ### Order C
 
+As mentioned above, printing a C-ordered array in Fortran is more complicated.
 Consider the following 2D C-ordered array:
 
 |   |   |   |
@@ -491,3 +396,70 @@ do i = 0_i64, 1_i64, 1_i64
   end do
 end do
 ```
+
+As we are effectively operating on the transpose of the array, this must be taken into account when printing anything related to arrays with `order='C'`.
+
+For example, consider the code:
+```python
+def f(c_array : 'float[:,:](order=C)', f_array : 'float[:,:](order=F)'):
+    print(c_array.shape)
+    print(f_array.shape)
+
+    for row in range(c_array.shape[0]):
+        for col in range(c_array.shape[1]):
+            c_array[row, col] = ...
+
+    for col in range(f_array.shape[1]):
+        for row in range(f_array.shape[0]):
+            f_array[row, col] = ...
+```
+
+This will be translated to:
+
+```Fortran
+  subroutine f(c_array, f_array)
+
+    implicit none
+
+    real(f64), intent(inout) :: c_array(0:,0:)
+    real(f64), intent(inout) :: f_array(0:,0:)
+    integer(i64) :: row
+    integer(i64) :: col
+
+    write(stdout, '(A I0 A I0 A)', advance="no") '(' , size(c_array, &
+          2_i64, i64) , ', ' , size(c_array, 1_i64, i64) , ')'
+    write(stdout, '()', advance="yes")
+    write(stdout, '(A I0 A I0 A)', advance="no") '(' , size(f_array, &
+          1_i64, i64) , ', ' , size(f_array, 2_i64, i64) , ')'
+    write(stdout, '()', advance="yes")
+    do row = 0_i64, size(c_array, 2_i64, i64) - 1_i64, 1_i64
+      do col = 0_i64, size(c_array, 1_i64, i64) - 1_i64, 1_i64
+        c_array(col, row) = ...
+      end do
+    end do
+    do col = 0_i64, size(f_array, 2_i64, i64) - 1_i64, 1_i64
+      do row = 0_i64, size(f_array, 1_i64, i64) - 1_i64, 1_i64
+        f_array(row, col) = ...
+      end do
+    end do
+
+  end subroutine f
+```
+
+Note the changes to the shape and the indexing, which make this code closer to the following intermediate representation:
+
+```python
+def f_intermediate(c_array_T : 'float[:,:](order=F)', f_array : 'float[:,:](order=F)'):
+    print(c_array_T.shape[::-1])
+    print(f_array.shape)
+
+    for row in range(c_array_T.shape[1]):
+        for col in range(c_array_T.shape[0]):
+            c_array_T[col, row] = ...
+
+    for col in range(f_array.shape[1]):
+        for row in range(f_array.shape[0]):
+            f_array[row, col] = ...
+```
+
+Note that `f(c_array, f_array) == f_intermediate(c_array.T, f_array)`.
