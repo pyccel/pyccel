@@ -4523,11 +4523,13 @@ def test_numpy_prod_array_like_1d(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+    max_ok_int = int(max_int64 ** (1/5))
+
+    integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
+    integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
+    integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
 
     fl = uniform(-((-min_float) ** (1/5)), max_float ** (1/5), size = size)
 
@@ -4614,25 +4616,33 @@ def test_numpy_prod_array_like_2d(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+    max_ok_int = int(max_int64 ** (1/10))
 
-    fl = uniform(min_float / 10, max_float / 10, size = size)
-    fl32 = uniform(min_float32 / 10, max_float32 / 10, size = size)
+    integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
+    integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
+    integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
+
+    fl = uniform(-((-min_float) ** (1/10)), max_float ** (1/10), size = size)
+
+    min_ok_float32 = -((-min_float32) ** (1/10))
+    min_ok_float64 = -((-min_float64) ** (1/10))
+    max_ok_float32 = max_float32 ** (1/10)
+    max_ok_float64 = max_float64 ** (1/10)
+
+    fl32 = uniform(min_ok_float32, max_ok_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 10, max_float64 / 10, size=size)
+    fl64 = uniform(min_ok_float64, max_ok_float64, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/10)),
-                                    high=(max_float32 ** (1/10)), size = size) + \
-                            uniform(low=-((-min_float32) ** (1/10)),
-                                    high=(max_float32 ** (1/10)), size = size) * 1j
-    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/10)),
-                                    high=(max_float64 ** (1/10)), size = size) + \
-                            uniform(low=-((-min_float64) ** (1/10)),
-                                    high=(max_float64 ** (1/10)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) + \
+                            uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) * 1j
+    cmplx128_from_float64 = uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) + \
+                            uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
