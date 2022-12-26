@@ -1461,6 +1461,7 @@ def test_full_dtype_auto(language):
     fl32 = np.float32(fl)
     fl64 = np.float64(fl)
 
+    cmplx = complex(integer)
     cmplx64 = np.complex64(fl32)
     cmplx128 = np.complex128(fl64)
 
@@ -1473,8 +1474,8 @@ def test_full_dtype_auto(language):
     assert matching_types(f_float(fl), create_full_val_auto(fl))
 
     f_complex = epyccel(create_full_val_auto, language = language)
-    assert(isclose(f_complex(np.complex(integer)), create_full_val_auto(np.complex(integer)), rtol=RTOL, atol=ATOL))
-    assert matching_types(f_complex(np.complex(integer)), create_full_val_auto(np.complex(integer)))
+    assert(isclose(f_complex(cmplx), create_full_val_auto(cmplx), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_complex(cmplx), create_full_val_auto(cmplx))
 
     f_int32 = epyccel(create_full_val_auto, language = language)
     assert(f_int32(integer32) == create_full_val_auto(integer32))
