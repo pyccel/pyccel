@@ -306,10 +306,10 @@ else:
 def test_numpy_int_scalar(language, function_boundaries):
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+    integer16 = randint(min_int8, max_int8, dtype=np.int16)
+    integer = randint(min_int8, max_int8, dtype=int)
+    integer32 = randint(min_int8, max_int8, dtype=np.int32)
+    integer64 = randint(min_int8, max_int8, dtype=np.int64)
 
     get_int = function_boundaries[0]
     # Modifying a global variable in a scop will change it to a local variable, so it needs to be initialized.
@@ -666,10 +666,10 @@ def test_numpy_float_scalar(language, get_float):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
+    fl = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = uniform(min_float32 / 2, max_float32 / 2)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2)
 
 
     epyccel_func = epyccel(get_float, language=language)
@@ -792,10 +792,10 @@ def test_numpy_float_array_like_1d(language, get_float):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
 
     epyccel_func = epyccel(get_float, language=language)
 
@@ -866,10 +866,10 @@ def test_numpy_float_array_like_2d(language, get_float):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
+    fl64 = uniform(min_float32 / 2, max_float32 / 2, size = size)
 
     epyccel_func = epyccel(get_float, language=language)
 
