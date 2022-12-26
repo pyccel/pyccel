@@ -71,6 +71,28 @@ if __name__ == "__main__":
 `arr.strides` is the variable that helps us navigate the array (indexing/printing), it tells us how many bytes we have to skip in memory to move to the next position along a certain axis (dimension). For example for `memory_layout_of_a = [1 4 7 2 5 8]` and `strides_of_a = (8, 24)`, we have to skip 8 bytes (1 element for `int64`) to move to the next row, but 24 bytes (3 elements for `int64`) to get to the same position in the next column of `a`.
 `a[2][1]` would give us `'8'`, using the `strides`: `2 * 8 + 1 * 24 = 40`, which means that in the flattened array, we would have to skip `40` bytes to get the value of `a[2][1]`, each element is 8 bytes, so we would have to skip `40 / 8 = 5` elements to get to `'8'`
 
+The order does however change how the user writes code.
+With `order='C'` (as in C), the last dimension contains contiguous elements, whereas with `order='F'` (as in Fortran) the first dimension contains contiguous elements.
+Fast code should index efficiently.
+By this, we mean that the elements should be visited in the order in which they appear in memory.
+For example here is the efficient indexing for 2D arrays:
+```python
+import numpy as np
+if __name__ == "__main__":
+   a = np.array([[1, 2],
+                [4, 5],
+                [7, 8]], order='F')
+   b = np.array([[1, 2],
+                [4, 5],
+                [7, 8]], order='C')
+   for row in range(3):
+       for col in range(2):
+           b[row, col] = ...
+   for col in range(2):
+       for row in range(3):
+           b[row, col] = ...
+```
+
 ## Pyccel's C code
 
 In `Pyccel`'s C code, we aim to replicate `Numpy`'s indexing/printing and memory layout conventions.
