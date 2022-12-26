@@ -77,7 +77,7 @@ In `Pyccel`'s C code, we aim to replicate `Numpy`'s indexing/printing and memory
 
 ### Ordering in C code
 
-The arrays in `C` code, are flattened into a one dimensional string, `strides` and `shape` are used to navigate the array (unlike `Numpy`. `Pyccel`'s strides use 'number of elements' instead of 'number of bytes' as a unit)
+The arrays in `C` code, flattened into a one dimensional array, `strides` and `shape` are used to navigate the array (unlike `Numpy`. `Pyccel`'s strides use 'number of elements' instead of 'number of bytes' as a unit)
 While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
 
 Example:
@@ -106,11 +106,11 @@ with `array.rows = 2` and `array.columns = 3`, `GET_ELEMENT(arr, int32, 0, 1)` w
 
 To loop efficiently in an `order_c ndarray`, we would do this:
 ```c
-for (int i = 0; i < array.rows; ++i)
+for (int row = 0; row < array.rows; ++i)
 {
-  for (int j = 0; j < array.columns; ++j)
+  for (int column = 0; column < array.columns; ++j)
   {
-    GET_ELEMENT(array, int32, i, j) = ...;
+    GET_ELEMENT(array, int32, row, column) = ...;
   }
 }
 ```
@@ -118,11 +118,11 @@ for (int i = 0; i < array.rows; ++i)
 For an `order_f ndarray` we would do this:
 
 ```c
-for (int i = 0; i < array.columns; ++i)
+for (int column = 0; column < array.columns; ++i)
 {
-  for (int j = 0; j < array.rows; ++j)
+  for (int row = 0; row < array.rows; ++j)
   {
-    GET_ELEMENT(array, int32, j, i) = ...;
+    GET_ELEMENT(array, int32, row, column) = ...;
   }
 }
 ```
@@ -306,9 +306,9 @@ In C the element `A[1,0]=4` is the fourth element in memory, however in Fortran 
 Thus to iterate over this array in the most efficient way in C we would do:
 ```C
 # A.shape = (2,3)
-for (int i = 0; i < 2; ++i) {
-    for (int j = 0; j < 3; ++j) {
-        A[i,j] = ....
+for (int row = 0; row < 2; ++row) {
+    for (int column = 0; column < 3; ++column) {
+        A[row,column] = ....
     }
 }
 ```
@@ -317,9 +317,9 @@ while in Fortran we would do:
 
 ```Fortran
 # A.shape = (3,2)
-do i = 0, 2
-    do j = 0, 3
-        A(j,i) = ....
+do column = 0, 2
+    do row = 0, 3
+        A(row,column) = ....
     end do
 end do
 ```
@@ -341,14 +341,14 @@ if __name__ == '__main__':
     # print(B.ravel('K')) # array([1, 3, 5, 2, 4, 6])
 
     # Index optimally for A:
-    for i in range(3):
-        for j in range(2):
-            A[i,j] = ...
+    for row in range(3):
+        for column in range(2):
+            A[row,column] = ...
 
     # Index optimally for B:
-    for j in range(2):
-        for i in range(3):
-            B[i,j] = ...
+    for column in range(2):
+        for row in range(3):
+            B[row,column] = ...
 ```
 
 Will be translated to:
@@ -363,8 +363,8 @@ program prog_prog_tmp
 
   integer(i64), allocatable :: A(:,:)
   integer(i64), allocatable :: B(:,:)
-  integer(i64) :: i
-  integer(i64) :: j
+  integer(i64) :: row
+  integer(i64) :: column
 
   allocate(A(0:1_i64, 0:2_i64))
   A = reshape([[1_i64, 2_i64], [3_i64, 4_i64], [5_i64, 6_i64]], [2_i64, &
@@ -381,15 +381,15 @@ program prog_prog_tmp
   !print(A.ravel('K')) # array([1, 2, 3, 4, 5, 6])
   !print(B.ravel('K')) # array([1, 3, 5, 2, 4, 6])
   !Index optimally for A:
-  do i = 0_i64, 2_i64, 1_i64
-    do j = 0_i64, 1_i64, 1_i64
-      A(j, i) = ...
+  do row = 0_i64, 2_i64, 1_i64
+    do column = 0_i64, 1_i64, 1_i64
+      A(column, row) = ...
     end do
   end do
   !Index optimally for B:
-  do j = 0_i64, 1_i64, 1_i64
-    do i = 0_i64, 2_i64, 1_i64
-      B(i, j) = ...
+  do column = 0_i64, 1_i64, 1_i64
+    do row = 0_i64, 2_i64, 1_i64
+      B(row, column) = ...
     end do
   end do
   if (allocated(A)) then
