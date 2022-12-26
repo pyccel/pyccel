@@ -288,9 +288,11 @@ int main()
 ### Ordering in Fortran code
 
 As Fortran has arrays in the language there is no need to add special handling for arrays. Fortran ordered arrays (`order_f`) are already compatible with the Fortran language. They can therefore be passed to the function as they are.
-C ordered arrays (`order_c`) need transposing to interact with them in a standard way in Fortran, however this step is unnecessary. Instead we pass the contiguous block of memory to Fortran and change how we index the array to ensure that we access the expected element.
 
-### Indexing in Fortran
+In order to pass C ordered arrays (`order_c`) and retain the shape and correct element placing to be compatible with Fortran, a transpose would be needed.
+In pyccel, we prefer to avoid unnecessary copies, so instead we pass the contiguous block of memory to Fortran and change how we index the array to ensure that we access the expected element.
+
+### Indexing arrays in Fortran
 
 Fortran indexing does not occur in the same order as in C.
 If we take the following 2D array as an example:
@@ -300,9 +302,7 @@ If we take the following 2D array as an example:
 | 1 | 2 | 3 |
 | 4 | 5 | 6 |
 
-where the numbers show the position of the element in the contiguous array stored in memory.
-
-In C the element `A[1,0]` is in position `4` in memory, however in Fortran the element `A(1,0)` is in position `2` in memory.
+In C the element `A[1,0]=4` is the fourth element in memory, however in Fortran the element `A(1,0)=4` is the second element in memory.
 Thus to iterate over this array in the most efficient way in C we would do:
 ```C
 # A.shape = (2,3)
@@ -426,4 +426,46 @@ if __name__ == '__main__':
     for j in range(2):
         for i in range(3):
             B[i,j] = ...
+```
+
+### Order C
+
+Consider the following 2D C-ordered array:
+
+|   |   |   |
+|---|---|---|
+| 1 | 2 | 3 |
+| 4 | 5 | 6 |
+
+where the numbers indicate the position of the elements in memory. If this data block ([1, 2, 3, 4, 5, 6]) were passed to Fortran indicating a size (2,3), we would obtain the following array:
+
+|   |   |   |
+|---|---|---|
+| 1 | 3 | 5 |
+| 2 | 4 | 6 |
+
+As a result we cannot pass the data block without either rearranging the elements (transpose), or changing the index. In pyccel we prefer avoiding unnecessary copies. As a result we pass a data block ([1, 2, 3, 4, 5, 6]), but we indicate a size (3,2). This gives us the following array:
+
+|   |   |
+|---|---|
+| 1 | 4 |
+| 2 | 5 |
+| 3 | 6 |
+
+This is equivalent to the transpose of the original array. As a result we can obtain expected results by simply inverting the index order.
+
+Therefore the following python code:
+```python
+for i in range(2):
+    for j in range(3):
+        a[i,j] = i*3+j
+```
+
+is translated to the following efficient indexing:
+```fortran
+do i = 0_i64, 1_i64, 1_i64
+  do j = 0_i64, 2_i64, 1_i64
+    a(j, i) = i * 3_i64 + j
+  end do
+end do
 ```
