@@ -132,7 +132,7 @@ def test_decorator_f4(language):
 
     f = epyccel(f4, language=language)
     x = np.array([[3, 4, 5, 6],[3, 4, 5, 6]], dtype=float)
-    assert np.allclose(f(x), f4(x), rtol=RTOL, atol=ATOL)
+    assert np.array_equal(f(x), f4(x))
 
 #------------------------------------------------------------------------------
 def test_decorator_f5(language):
@@ -358,7 +358,7 @@ def test_decorator_f20(language):
         b = a
         return b
     f = epyccel(f20, language=language)
-    assert np.allclose(f(complex(1, 2.2)), f20(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
+    assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
 def test_decorator_f21(language):
     @types('complex64')
@@ -366,7 +366,7 @@ def test_decorator_f21(language):
         b = a
         return b
     f = epyccel(f21, language=language)
-    assert np.allclose(f(np.complex64(1+ 2.2j)), f21(np.complex64(1+ 2.2j)), rtol=RTOL, atol=ATOL)
+    assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
 def test_decorator_f22(language):
     @types('complex128')
@@ -374,7 +374,7 @@ def test_decorator_f22(language):
         b = a
         return b
     f = epyccel(f22, language=language)
-    assert np.allclose(f(np.complex128(1+ 2.2j)), f22(np.complex128(1+ 2.2j)), rtol=RTOL, atol=ATOL)
+    assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

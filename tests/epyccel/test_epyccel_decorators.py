@@ -6,9 +6,6 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import private, inline
 
-ATOL = 1e-15
-RTOL = 2e-14
-
 @pytest.mark.parametrize( 'lang', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
@@ -127,7 +124,7 @@ def test_inline_array(language):
 
     g = epyccel(f, language=language)
 
-    assert np.allclose(f(), g(), rtol=RTOL, atol=ATOL)
+    assert f() == g()
 
 def test_nested_inline_call(language):
     def f():

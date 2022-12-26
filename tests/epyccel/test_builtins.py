@@ -41,7 +41,7 @@ def test_abs_r(language):
     negative_test = uniform(min_float, 0.0)
     positive_test = uniform(0.0, max_float)
 
-    assert f1(np.isclose(0.00000), f2(0.00000), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f1(0.00000), f2(0.00000), rtol=RTOL, atol=ATOL)
     assert np.isclose(f1(negative_test), f2(negative_test), rtol=RTOL, atol=ATOL)
     assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
 

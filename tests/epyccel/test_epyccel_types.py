@@ -6,9 +6,6 @@ from numpy.random import randint, uniform
 from modules import types
 from pyccel.epyccel import epyccel
 
-RTOL = 2e-14
-ATOL = 1e-15
-
 def test_int_default(language):
     f1 = types.test_int_default
     f2 = epyccel(f1, language = language)
@@ -67,8 +64,8 @@ def test_real_defaultl(language):
     a = uniform() * 1e9 # negative
     b = uniform() * -1e9 # positive
 
-    assert np.isclose(f1(a), f2(a), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(b), f2(b), rtol=RTOL, atol=ATOL)
+    assert f1(a) == f2(a)
+    assert f1(b) == f2(b)
 
 def test_float32(language):
     f1 = types.test_float32
@@ -77,8 +74,8 @@ def test_float32(language):
     a = np.float32(uniform() * 1e9) # negative
     b = np.float32(uniform() * -1e9) # positive
 
-    assert np.isclose(f1(a), f2(a), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(b), f2(b), rtol=RTOL, atol=ATOL)
+    assert f1(a) == f2(a)
+    assert f1(b) == f2(b)
 
 def test_float64(language):
     f1 = types.test_float64
@@ -87,8 +84,8 @@ def test_float64(language):
     a = np.float64(uniform() * 1e9) # negative
     b = np.float64(uniform() * -1e9) # positive
 
-    assert np.isclose(f1(a), f2(a), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(b), f2(b), rtol=RTOL, atol=ATOL)
+    assert f1(a) == f2(a)
+    assert f1(b) == f2(b)
 
 def test_complex_default(language):
     f1 = types.test_complex_default
@@ -97,8 +94,8 @@ def test_complex_default(language):
     a = complex(uniform() * -1e9, uniform() * 1e9)
     b = complex(uniform() * 1e9, uniform() * -1e9)
 
-    assert np.isclose(f1(a), f2(a), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(b), f2(b), rtol=RTOL, atol=ATOL)
+    assert f1(a) == f2(a)
+    assert f1(b) == f2(b)
 
 def test_complex64(language):
     f1 = types.test_complex64
@@ -110,8 +107,8 @@ def test_complex64(language):
     a = np.complex64(a)
     b = np.complex64(b)
 
-    assert np.isclose(f1(a), f2(a), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(b), f2(b), rtol=RTOL, atol=ATOL)
+    assert f1(a) == f2(a)
+    assert f1(b) == f2(b)
 
 def test_complex128(language):
     f1 = types.test_complex128
@@ -123,8 +120,8 @@ def test_complex128(language):
     a = np.complex128(a)
     b = np.complex128(b)
 
-    assert np.isclose(f1(a), f2(a), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(b), f2(b), rtol=RTOL, atol=ATOL)
+    assert f1(a) == f2(a)
+    assert f1(b) == f2(b)
 
 def test_bool(language):
     f1 = types.test_bool

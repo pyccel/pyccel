@@ -5,9 +5,6 @@ from numpy.random import randint, rand
 
 from pyccel.epyccel import epyccel
 
-RTOL = 2e-14
-ATOL = 1e-15
-
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
         return sum(a0[i] for i in range(len(a0)))
@@ -112,7 +109,7 @@ def test_expression1(language):
 
     f_epyc = epyccel(f, language = language)
 
-    assert np.isclose(f(x), f_epyc(x), rtol=RTOL, atol=ATOL)
+    assert f(x) == f_epyc(x)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -156,7 +153,7 @@ def test_nested_generators2(language):
 
     f_epyc = epyccel(f, language = language)
 
-    assert np.isclose(f(x), f_epyc(x), rtol=RTOL, atol=ATOL)
+    assert f(x) == f_epyc(x)
 
 def test_nested_generators3(language):
     def f(a : 'float[:,:,:,:]'):
@@ -176,4 +173,4 @@ def test_nested_generators4(language):
 
     f_epyc = epyccel(f, language = language)
 
-    assert np.isclose(f(x), f_epyc(x), rtol=RTOL, atol=ATOL)
+    assert f(x) == f_epyc(x)
