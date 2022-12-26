@@ -220,6 +220,7 @@ class CompileObj:
         """
         if self.has_target_file:
             self._lock.acquire()
+            print("Acquired ", self._lock)
 
     def release_lock(self):
         """
@@ -235,6 +236,7 @@ class CompileObj:
         """
         if self.has_target_file:
             self._lock.release()
+            print("Released", self._lock)
 
     @property
     def accelerators(self):
