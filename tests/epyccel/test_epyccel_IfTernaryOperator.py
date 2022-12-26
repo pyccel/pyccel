@@ -1,13 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
 import pytest
-import numpy as np
+
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-
-RTOL = 2e-14
-ATOL = 1e-15
-
 # wp suffix means With Parentheses
 #------------------------------------------------------------------------------
 def test_f1(language):
@@ -33,8 +29,8 @@ def test_f2(language):
     f = epyccel(f2, language = language)
 
     # ...
-    assert np.isclose(f(6), f2(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(4), f2(4), rtol=RTOL, atol=ATOL)
+    assert f(6) == f2(6)
+    assert f(4) == f2(4)
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
@@ -97,13 +93,13 @@ def test_f5(language):
     fwp = epyccel(f5wp, language = language)
 
     # ...
-    assert np.isclose(f(6), f5(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(4), f5(4), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(5), f5(5), rtol=RTOL, atol=ATOL)
+    assert f(6) == f5(6)
+    assert f(4) == f5(4)
+    assert f(5) == f5(5)
 
-    assert np.isclose(fwp(6), f5wp(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(fwp(4), f5wp(4), rtol=RTOL, atol=ATOL)
-    assert np.isclose(fwp(5), f5wp(5), rtol=RTOL, atol=ATOL)
+    assert fwp(6) == f5wp(6)
+    assert fwp(4) == f5wp(4)
+    assert fwp(5) == f5wp(5)
     # ...
 #------------------------------------------------------------------------------
 def test_f6(language):
@@ -122,13 +118,13 @@ def test_f6(language):
     fwp = epyccel(f6wp, language = language)
 
     # ...
-    assert np.isclose(f(6), f6(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(4), f6(4), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(5), f6(5), rtol=RTOL, atol=ATOL)
+    assert f(6) == f6(6)
+    assert f(4) == f6(4)
+    assert f(5) == f6(5)
 
-    assert np.isclose(fwp(6), f6wp(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(fwp(4), f6wp(4), rtol=RTOL, atol=ATOL)
-    assert np.isclose(fwp(5), f6wp(5), rtol=RTOL, atol=ATOL)
+    assert fwp(6) == f6wp(6)
+    assert fwp(4) == f6wp(4)
+    assert fwp(5) == f6wp(5)
     # ...
 #------------------------------------------------------------------------------
 
@@ -147,11 +143,11 @@ def test_f7(language):
     fwp = epyccel(f7wp, language = language)
 
     # ...
-    assert np.isclose(f(6), f7(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(4), f7(4), rtol=RTOL, atol=ATOL)
+    assert f(6) == f7(6)
+    assert f(4) == f7(4)
 
-    assert np.isclose(fwp(6), f7wp(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(fwp(4), f7wp(4), rtol=RTOL, atol=ATOL)
+    assert fwp(6) == f7wp(6)
+    assert fwp(4) == f7wp(4)
     # ...
 #------------------------------------------------------------------------------
 
@@ -268,11 +264,11 @@ def test_f12(language):
     fwp = epyccel(f12wp, language = language)
 
     # ...
-    assert np.isclose(f(6), f12(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f(4), f12(4), rtol=RTOL, atol=ATOL)
+    assert f(6) == f12(6)
+    assert f(4) == f12(4)
 
-    assert np.isclose(fwp(6), f12wp(6), rtol=RTOL, atol=ATOL)
-    assert np.isclose(fwp(4), f12wp(4), rtol=RTOL, atol=ATOL)
+    assert fwp(6) == f12wp(6)
+    assert fwp(4) == f12wp(4)
     # ...
 #------------------------------------------------------------------------------
 
