@@ -184,5 +184,5 @@ def zeros_type(a : 'T'):
 
 @types('int')
 @types('int[:]')
-def scalar_or_array_(a):
+def scalar_or_array(a):
     return a+2

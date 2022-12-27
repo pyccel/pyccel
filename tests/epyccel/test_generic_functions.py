@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
+from pyccel.epyccel import epyccel
 
 @pytest.fixture(scope="module")
 def modnew(language):
@@ -428,8 +428,8 @@ def test_zeros_types(language):
     )
 )
 def test_scalar_or_array(language):
-    f1 = epyccel(mod2.scalar_or_array_, language = language)
-    f2 = mod2.scalar_or_array_
+    f1 = epyccel(mod2.scalar_or_array, language = language)
+    f2 = mod2.scalar_or_array
 
     i_1 = f1(0)
     i_2 = f2(0)
