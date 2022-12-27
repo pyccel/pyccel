@@ -24,7 +24,7 @@ from pyccel.ast.cwrapper    import PyArgKeywords
 from pyccel.ast.cwrapper    import Py_None, Py_DECREF
 from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
 from pyccel.ast.cwrapper    import scalar_object_check, flags_registry
-from pyccel.ast.cwrapper    import PyccelPyArrayObject, PyccelPyObject
+from pyccel.ast.cwrapper    import PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.cwrapper    import PyModule_AddObject
 
@@ -89,7 +89,7 @@ class CWrapperCodePrinter(CCodePrinter):
         ----------
         a : PyccelAstNode
         """
-        if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
+        if isinstance(a.dtype, PyccelPyObject):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
@@ -1075,10 +1075,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
-
-    def _print_PyccelPyArrayObject(self, expr):
-        self.add_import(cwrapper_ndarray_import)
-        return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'

@@ -12,7 +12,7 @@ import numpy as np
 from .datatypes         import (NativeInteger, NativeFloat, NativeComplex,
                                 NativeBool, NativeGeneric, NativeVoid)
 
-from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
+from .cwrapper          import PyccelPyObject
 
 from .core              import FunctionDef, FunctionCall
 
@@ -68,16 +68,10 @@ PyArray_Check = FunctionDef(name      = 'PyArray_Check',
                             arguments = [Variable(dtype=PyccelPyObject(), name = 'o')],
                             results   = [Variable(dtype=NativeBool(), name='b')])
 
-# https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE
-numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
-                             body      = [],
-                             arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', memory_handling='alias')],
-                             results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
-
 # numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
-                arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), memory_handling = 'alias')],
+                arguments = [Variable(name = 'a', dtype = PyccelPyObject(), memory_handling = 'alias')],
                 body      = [],
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
@@ -85,7 +79,7 @@ pyarray_to_ndarray = FunctionDef(
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
-                        Variable(name = 'a', dtype = PyccelPyArrayObject(), memory_handling='alias'),
+                        Variable(name = 'a', dtype = PyccelPyObject(), memory_handling='alias'),
                         Variable(name = 'dtype', dtype = NativeInteger()),
                         Variable(name = 'rank', dtype = NativeInteger()),
                         Variable(name = 'flag', dtype = NativeInteger())

@@ -34,7 +34,6 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
-    'PyccelPyArrayObject',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
@@ -59,14 +58,6 @@ class PyccelPyObject(DataType):
     class used to hold python objects"""
     __slots__ = ()
     _name = 'pyobject'
-
-class PyccelPyArrayObject(DataType):
-    """ Datatype representing a PyArrayObject which is the
-    class used to hold numpy objects"""
-    __slots__ = ()
-    _name = 'pyarrayobject'
-
-PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -119,7 +110,6 @@ pytype_parse_registry = {
     (NativeBool(), 4)          : 'p',
     (NativeString(), 0)        : 's',
     (PyccelPyObject(), 0)      : 'O',
-    (PyccelPyArrayObject(), 0) : 'O!',
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -288,7 +278,7 @@ class PyModule_AddObject(PyccelAstNode):
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
         if not isinstance(variable, Variable) or \
-                variable.dtype not in (PyccelPyObject(), PyccelPyArrayObject()):
+                variable.dtype is not PyccelPyObject():
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
