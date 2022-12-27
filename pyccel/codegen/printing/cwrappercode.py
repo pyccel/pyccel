@@ -414,7 +414,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         if variable.rank > 0 :
-            check = array_type_check(collect_var, variable)
+            check = array_type_check(collect_var, variable, False)
 
         else :
             check = scalar_object_check(collect_var, variable)
@@ -582,7 +582,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body += [IfSection(check, [AliasAssign(variable, Nil())])]
 
         if check_type:
-            check = array_type_check(collect_var, variable)
+            check = array_type_check(collect_var, variable, True)
             body += [IfSection(PyccelNot(check), [Return([Nil()])])]
 
         collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])

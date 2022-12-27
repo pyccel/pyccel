@@ -87,6 +87,17 @@ pyarray_check = FunctionDef(
                 body      = [],
                 results   = [Variable(name = 'b', dtype = NativeBool())])
 
+is_numpy_array = FunctionDef(
+                name      = 'is_numpy_array',
+                arguments = [
+                        Variable(name = 'a', dtype = PyccelPyObject(), memory_handling='alias'),
+                        Variable(name = 'dtype', dtype = NativeInteger()),
+                        Variable(name = 'rank', dtype = NativeInteger()),
+                        Variable(name = 'flag', dtype = NativeInteger())
+                    ],
+                body      = [],
+                results   = [Variable(name = 'b', dtype = NativeBool())])
+
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
@@ -205,7 +216,7 @@ def find_in_numpy_dtype_registry(var):
                 symbol = "{}[kind = {}]".format(dtype, prec),
                 severity='fatal')
 
-def array_type_check(py_variable, c_variable):
+def array_type_check(py_variable, c_variable, raise_error):
     """
     Return the code which checks if the array has the expected type
     """
@@ -220,7 +231,10 @@ def array_type_check(py_variable, c_variable):
         else:
             flag = numpy_flag_c_contig
 
-    return FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag])
+    if raise_error:
+        return FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag])
+    else:
+        return FunctionCall(is_numpy_array, [py_variable, type_ref, LiteralInteger(rank), flag])
 
 
 def scalar_type_check(py_variable, c_variable):
