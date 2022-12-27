@@ -28,7 +28,7 @@ from pyccel.ast.cwrapper    import PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.cwrapper    import PyModule_AddObject
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat
 from pyccel.ast.datatypes import datatype, NativeVoid
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
