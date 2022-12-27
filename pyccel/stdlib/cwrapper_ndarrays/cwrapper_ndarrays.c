@@ -282,8 +282,9 @@ enum e_types get_ndarray_type(PyArrayObject *a)
 }
 
 /* converting numpy array to c nd array*/
-t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
+t_ndarray	pyarray_to_ndarray(PyObject *o)
 {
+    PyArrayObject* a = (PyArrayObject*) o;
 	t_ndarray		array;
 
 	array.nd          = PyArray_NDIM(a);
@@ -352,16 +353,18 @@ PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
+bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
 {
-	if (!_check_pyarray_type((PyObject *)o)) return false;
+	if (!_check_pyarray_type(o)) return false;
+
+    PyArrayObject* a = (PyArrayObject*)o;
 
 	// check array element type / rank / order
-	if(!check_pyarray_dtype(o, dtype)) return false;
+	if(!check_pyarray_dtype(a, dtype)) return false;
 
-	if(!_check_pyarray_rank(o, rank)) return false;
+	if(!_check_pyarray_rank(a, rank)) return false;
 
-	if(rank > 1 && !_check_pyarray_order(o, flag)) return false;
+	if(rank > 1 && !_check_pyarray_order(a, flag)) return false;
 
 	return true;
 }

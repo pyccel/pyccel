@@ -37,14 +37,14 @@
  */
 enum NPY_TYPES get_numpy_type(t_ndarray *o);
 enum e_types get_ndarray_type(PyArrayObject *a);
-t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
+t_ndarray	pyarray_to_ndarray(PyObject *o);
 PyObject* ndarray_to_pyarray(t_ndarray *o);
 PyObject* c_ndarray_to_pyarray(t_ndarray *o);
 PyObject* fortran_ndarray_to_pyarray(t_ndarray *o);
 
 
 /* arrays checkers and helpers */
-bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
+bool	pyarray_check(PyObject *o, int dtype, int rank, int flag);
 
 void    *nd_data(t_ndarray *a);
 int     nd_ndim(t_ndarray *a, int n);
