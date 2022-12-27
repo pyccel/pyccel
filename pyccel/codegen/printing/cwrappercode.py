@@ -34,7 +34,7 @@ from pyccel.ast.datatypes import datatype, NativeVoid
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
+from pyccel.ast.numpy_wrapper   import array_type_check, PyArray_Check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
@@ -580,11 +580,12 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelNot(ObjectAddress(collect_var))
             body += [IfSection(check, [AliasAssign(variable, Nil())])]
 
-        check = array_checker(collect_var, variable, check_type, self._target_language)
-        body += [IfSection(check, [Return([Nil()])])]
+        if check_type:
+            check = array_type_check(collect_var, variable)
+            body += [IfSection(PyccelNot(check), [Return([Nil()])])]
 
         collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
-        body += [IfSection(LiteralTrue(), [Assign(variable,
+        body += [IfSection(FunctionCall(PyArray_Check, [collect_var]), [Assign(variable,
                             collect_func)])]
         body = [If(*body)]
 
@@ -693,18 +694,10 @@ class CWrapperCodePrinter(CCodePrinter):
             The variable which will be used to collect the argument
         """
 
-        if variable.rank > 0:
-            collect_type = PyccelPyArrayObject()
-            collect_var  = Variable(dtype = collect_type,
-                                memory_handling='alias', rank = variable.rank,
-                                order= variable.order,
-                                name=self.scope.get_new_name(variable.name+"_tmp"))
-
-        else:
-            collect_type = PyccelPyObject()
-            collect_var  = Variable(dtype = collect_type,
-                                memory_handling='alias',
-                                name=self.scope.get_new_name(variable.name+"_tmp"))
+        collect_type = PyccelPyObject()
+        collect_var  = Variable(dtype = collect_type,
+                            memory_handling='alias',
+                            name=self.scope.get_new_name(variable.name+"_tmp"))
         self.scope.insert_variable(collect_var)
 
         return collect_var
@@ -1064,8 +1057,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(elem[0])
             flags -= 4
-            error = ' or '.join(['{} {}'.format(str(v.precision * 8)+' bit' if v.precision != -1 else 'native',
-                                                    str_dtype(v.dtype))
+            error = ' or '.join(['{} {}{}'.format(str(v.precision * 8)+' bit' if v.precision != -1 else 'native',
+                                                    str_dtype(v.dtype),
+                                                  ' array' if v.rank > 0 else '')
                             if not isinstance(v.dtype, NativeBool)
                             else  str_dtype(v.dtype) for v in types])
             body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))

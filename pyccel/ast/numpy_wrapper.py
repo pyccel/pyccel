@@ -63,6 +63,11 @@ def get_numpy_max_acceptable_version_file():
             numpy_api_macro+\
            '#endif'
 
+PyArray_Check = FunctionDef(name      = 'PyArray_Check',
+                            body      = [],
+                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o')],
+                            results   = [Variable(dtype=NativeBool(), name='b')])
+
 # https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_TYPE
 numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                              body      = [],
@@ -206,52 +211,22 @@ def find_in_numpy_dtype_registry(var):
                 symbol = "{}[kind = {}]".format(dtype, prec),
                 severity='fatal')
 
-
-def array_checker(py_variable, c_variable, type_check_needed, language):
+def array_type_check(py_variable, c_variable):
     """
-    Create FunctionCall responsible of checking numpy array and collecting its value
-    Parameters:
-    ----------
-    py_variable : Variable
-        The python argument of the check function
-    c_variable  : Variable
-        The variable needed for the generation of the type check
-    type_check_needed : boolean
-        True if data type check is needed, used to avoid multiple type check
-        in interface
-    language    : string
-        Needed to collect the flag for order check
-    Returns
-    -------
-    FunctionCall : Check type FunctionCall
+    Return the code which checks if the array has the expected type
     """
     rank     = c_variable.rank
-    type_ref = no_type_check
+    type_ref = find_in_numpy_dtype_registry(c_variable)
     flag     = no_order_check
 
-    # extract numpy type ref
-    if type_check_needed:
-        type_ref = find_in_numpy_dtype_registry(c_variable)
-
     # order flag
-    if rank > 1 and language == 'fortran':
+    if rank > 1:
         if c_variable.order == 'F':
             flag = numpy_flag_f_contig
         else:
             flag = numpy_flag_c_contig
 
-    check = PyccelNot(FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag]))
-
-    return check
-
-def array_type_check(py_variable, c_variable):
-    """
-    Return the code which checks if the array has the expected type
-    """
-    type_ref = find_in_numpy_dtype_registry(c_variable)
-
-    return PyccelEq(FunctionCall(numpy_get_type, [py_variable]), type_ref)
-
+    return FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag])
 
 
 def scalar_type_check(py_variable, c_variable):
