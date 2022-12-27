@@ -572,19 +572,29 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         self.add_import(cwrapper_ndarray_import)
         body = []
+
+        in_if = False
+
         #check optional :
         if variable.is_optional :
             check = PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
             body += [IfSection(check, [AliasAssign(variable, Nil())])]
+            in_if = True
 
         if check_type:
             check = array_type_check(collect_var, variable, True)
             body += [IfSection(PyccelNot(check), [Return([Nil()])])]
+            in_if = True
 
         collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
-        body += [IfSection(FunctionCall(PyArray_Check, [collect_var]), [Assign(variable,
-                            collect_func)])]
-        body = [If(*body)]
+        if in_if:
+            # Use this if other array storage (e.g. cuda arrays) is available
+            #body += [IfSection(FunctionCall(PyArray_Check, [collect_var]), [Assign(variable,
+            #                    collect_func)])]
+            body += [IfSection(LiteralTrue(), [Assign(variable, collect_func)])]
+            body = [If(*body)]
+        else:
+            body = [Assign(variable, collect_func)]
 
         return body
 
