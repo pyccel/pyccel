@@ -175,9 +175,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_default_assign(self, arg, func_arg, value):
-        if arg.rank > 0 :
-            return AliasAssign(arg, Nil())
-        elif func_arg.is_optional:
+        if func_arg.is_optional:
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeFloat, NativeInteger, NativeBool)):
             return Assign(arg, value)
@@ -420,9 +418,7 @@ class CWrapperCodePrinter(CCodePrinter):
             check = scalar_object_check(collect_var, variable)
 
         if not compulsory:
-            default = PyccelNot(ObjectAddress(collect_var)) \
-                            if variable.rank > 0 else \
-                      PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
+            default = PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
         return check
@@ -578,7 +574,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         #check optional :
         if variable.is_optional :
-            check = PyccelNot(ObjectAddress(collect_var))
+            check = PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
             body += [IfSection(check, [AliasAssign(variable, Nil())])]
 
         if check_type:
