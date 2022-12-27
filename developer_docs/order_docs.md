@@ -183,8 +183,7 @@ int main()
 }
 ```
 
-If the data is composed of at least one variable array (like `c` in the example below), we would use a series of copy operations to our `
-ndarray`.
+If the data is composed of at least one variable array (like `c` in the example below), we would use a series of copy operations to our `ndarray`.
 
 Example:
 
