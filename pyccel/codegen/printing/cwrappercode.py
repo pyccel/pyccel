@@ -574,6 +574,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body : list
             A list of statements
         """
+        self.add_import(cwrapper_ndarray_import)
         body = []
         #check optional :
         if variable.is_optional :
