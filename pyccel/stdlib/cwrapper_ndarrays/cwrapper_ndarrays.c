@@ -390,7 +390,7 @@ bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
         }
     }
 
-    if (strlen(error) > 0) {
+    if (error[0] != '\0') {
 		PyErr_Format(PyExc_TypeError, error);
         return false;
     }
