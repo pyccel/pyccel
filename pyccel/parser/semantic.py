@@ -807,8 +807,9 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
-        if 'kernel' in func.decorators:
-            errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
+        if isinstance(func, FunctionDef):
+            if 'kernel' in func.decorators:
+                errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
@@ -907,11 +908,11 @@ class SemanticParser(BasicParser):
                 try:
                     numBlocks = self.scope.variables[expr.numBlocks]
                     if not isinstance(numBlocks.dtype, NativeInteger):
-                        errors.report("Invalid Block number parameter for Kernel call",
+                        errors.report("Invalid Block per grid parameter for Kernel call",
                         symbol = expr,
                         severity='error')
                 except KeyError:
-                    errors.report("Invalid Block number parameter for Kernel call",
+                    errors.report("Invalid Block per grid parameter for Kernel call",
                         symbol = expr,
                         severity='error')
             if not isinstance(expr.tpblock, LiteralInteger):
