@@ -102,17 +102,21 @@ In `Pyccel`'s C code, we aim to replicate `Numpy`'s indexing/printing and memory
 Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike `Numpy`. `Pyccel`'s strides use 'number of elements' instead of 'number of bytes' as a unit)
 While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
 
-Example:
+Example:  
+  To translate the following:
+  
+  ```python
+    a = np.array([[1, 2, 3], [4, 5, 6]], order=?)
+  ```  
+  `order_c` creation  
+   &nbsp;&nbsp;&nbsp;&nbsp;1. allocate/create `order_c ndarray`  
+   &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to `ndarray`  
 
-  `order_c` creation
-   &nbsp;&nbsp;&nbsp;&nbsp;1. allocate/create `order_c ndarray`
-   &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to `ndarray`
-
-  `order_f` creation
-   &nbsp;&nbsp;&nbsp;&nbsp;1. allocate/create temporary `order_c ndarray`
-   &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to temporary `ndarray`
-   &nbsp;&nbsp;&nbsp;&nbsp;3. allocate/create `order_f ndarray`
-   &nbsp;&nbsp;&nbsp;&nbsp;4. copy temporary `ndarray` elements to final `order_f ndarray` using `strides` and `shape`, this will create a column-major version of the temporary `order_c ndarray`
+  `order_f` creation  
+   &nbsp;&nbsp;&nbsp;&nbsp;1. allocate/create temporary `order_c ndarray`  
+   &nbsp;&nbsp;&nbsp;&nbsp;2. copy values to temporary `ndarray`  
+   &nbsp;&nbsp;&nbsp;&nbsp;3. allocate/create `order_f ndarray`  
+   &nbsp;&nbsp;&nbsp;&nbsp;4. copy temporary `ndarray` elements to final `order_f ndarray` using `strides` and `shape`, this will create a column-major version of the temporary `order_c ndarray`  
 
 One dimensional arrays require no order, since order would not change how they behave.
 
