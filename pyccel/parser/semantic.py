@@ -910,8 +910,8 @@ class SemanticParser(BasicParser):
                         errors.report("Invalid Block number parameter for Kernel call",
                         symbol = expr,
                         severity='error')
-                except:
-                        errors.report("Invalid Block number parameter for Kernel call",
+                except KeyError:
+                    errors.report("Invalid Block number parameter for Kernel call",
                         symbol = expr,
                         severity='error')
             if not isinstance(expr.tpblock, LiteralInteger):
@@ -921,7 +921,7 @@ class SemanticParser(BasicParser):
                         errors.report("Invalid Thread per Block parameter for Kernel call",
                         symbol = expr,
                         severity='error')
-                except:
+                except KeyError:
                     errors.report("Invalid Thread per Block parameter for Kernel call",
                         symbol = expr,
                         severity='error')

@@ -165,3 +165,4 @@ NON_KERNEL_FUNCTION_CUDA_VAR = 'Cuda internal variables should only be used in K
 UNVALID_KERNEL_CALL_BLOCK_NUM = 'Invalid Block number parameter for Kernel call'
 UNVALID_KERNEL_CALL_TP_BLOCK = 'Invalid Thread per Block parameter for Kernel call'
 MISSING_KERNEL_CONFIGURATION = 'Kernel launch configuration not specified'
+
