@@ -33,7 +33,8 @@ __all__ = (
     #------- CAST FUNCTIONS ------
     'pyarray_to_ndarray',
     #-------CHECK FUNCTIONS ------
-    'array_checker',
+    'array_type_check',
+    'scalar_type_check',
     #-------HELPERS ------
     'array_get_dim',
     'array_get_data',
