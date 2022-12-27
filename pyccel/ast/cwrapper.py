@@ -177,10 +177,6 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=c_func_args, severity='warning')
 
-        parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
-                else [a] for a in parse_args]
-        parse_args = [a for arg in parse_args for a in arg]
-
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
