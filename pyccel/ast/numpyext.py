@@ -12,7 +12,7 @@ import operator
 
 import numpy
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelError
 from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS, NON_LITERAL_AXIS
 
 from pyccel.utilities.stage import PyccelStage
@@ -357,6 +357,9 @@ def process_dtype(dtype):
     """
 
     if isinstance(dtype, PythonType):
+        if dtype.arg.rank > 0:
+            errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
+                    symbol=dtype, severity="fatal")
         return dtype.dtype, get_final_precision(dtype)
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
