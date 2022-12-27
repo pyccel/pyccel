@@ -20,7 +20,7 @@ from .internals         import get_final_precision
 
 from .literals          import LiteralInteger
 
-from .operators         import PyccelNot, PyccelEq
+from .operators         import PyccelEq
 
 from .variable          import Variable
 
