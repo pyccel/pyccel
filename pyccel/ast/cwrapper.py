@@ -15,7 +15,7 @@ from .basic     import Basic, PyccelAstNode
 
 from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric
+from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument
 from .core      import FunctionCall, FunctionDef, FunctionAddress
