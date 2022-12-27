@@ -181,3 +181,8 @@ def zeros_type(a : 'T'):
     from numpy import zeros
     x = zeros(10,dtype= type(a))
     return x[0]
+
+@types('int')
+@types('int[:]')
+def scalar_or_array(a):
+    return a+2
