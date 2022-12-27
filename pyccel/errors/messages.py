@@ -164,3 +164,4 @@ KERNEL_STACK_ARRAY_ARG = "A variable allocated on the stack can't be passed to a
 NON_KERNEL_FUNCTION_CUDA_VAR = 'Cuda internal variables should only be used in Kernel or Device functions'
 UNVALID_KERNEL_CALL_BLOCK_NUM = 'Invalid Block number parameter for Kernel call'
 UNVALID_KERNEL_CALL_TP_BLOCK = 'Invalid Thread per Block parameter for Kernel call'
+MISSING_KERNEL_CONFIGURATION = 'Kernel launch configuration not specified'
