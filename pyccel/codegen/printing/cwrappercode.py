@@ -11,7 +11,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
 
-from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.builtins import PythonTuple, PythonType
 
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
@@ -1057,11 +1057,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(elem[0])
             flags -= 4
-            error = ' or '.join(['{} {}{}'.format(str(v.precision * 8)+' bit' if v.precision != -1 else 'native',
-                                                    str_dtype(v.dtype),
-                                                  ' array' if v.rank > 0 else '')
-                            if not isinstance(v.dtype, NativeBool)
-                            else  str_dtype(v.dtype) for v in types])
+            description = [PythonType(v).print_string for v in types]
+            error = ' or '.join([d.python_value for d in description])
             body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
 

@@ -868,8 +868,6 @@ class PythonType(Basic):
         self._precision = obj.precision
         self._obj = obj
 
-        if obj.rank > 0:
-            raise PyccelError("Python's type function doesn't return enough information about this object for pyccel to fully define a type")
         super().__init__()
 
     @property
@@ -895,10 +893,13 @@ class PythonType(Basic):
         """ Return a literal string representing the type that
         can be used in a print  statement
         """
+        dtype = str(self.dtype)
         prec = self.precision
-        return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))))
+        precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))
+        if self._obj.rank > 0:
+            return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
+        else:
+            return LiteralString(f"<class '{dtype}{precision}'>")
 
 #==============================================================================
 python_builtin_datatypes_dict = {
