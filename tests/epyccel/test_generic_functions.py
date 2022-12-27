@@ -423,7 +423,7 @@ def test_zeros_types(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="In generic interface 'scalar_or_array' at (1) procedures must be either all SUBROUTINEs or all FUNCTIONs. Using subroutines first requires issue #297"),
             pytest.mark.python]
-        )),
+        ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
@@ -438,7 +438,7 @@ def test_scalar_or_array(language):
     assert i_1 == i_2
     assert isinstance(i_1, type(i_2))
 
-    a = np.zeros(3)
+    a = np.zeros(3, dtype=int)
 
     a_1 = f1(a)
     a_2 = f2(a)
