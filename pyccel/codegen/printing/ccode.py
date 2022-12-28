@@ -319,7 +319,7 @@ class CCodePrinter(CodePrinter):
 
         starting_consecutive_scalars = []
         for i in flattened_list:
-            if i.rank > 0:
+            if i.rank == 0:
                 starting_consecutive_scalars.append(i)
             else:
                 return starting_consecutive_scalars
@@ -360,7 +360,7 @@ class CCodePrinter(CodePrinter):
             shape_dtype = self.find_in_dtype_registry('int', 8)
             shape = ', '.join(self._print(elem) for elem in lhs.shape)
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-            temp_array_declaration = f"t_ndarray {temp_array_name} = " "{.shape = NULL};\n"
+            temp_array_declaration = f"t_ndarray {temp_array_name} = {{.shape = NULL}};\n"
             array_creation = f"{temp_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {'false'}, {'order_c'});\n"
             operations += temp_array_declaration + array_creation
             copy_to = temp_array_name
