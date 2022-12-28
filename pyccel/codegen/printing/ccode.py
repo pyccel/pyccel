@@ -344,9 +344,9 @@ class CCodePrinter(CodePrinter):
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        lhs_name = self._print(lhs)
+        lhs_address = self._print(ObjectAddress(lhs))
         if isinstance(arg, Variable):
-            return f"array_copy_data({self._print(ObjectAddress(lhs))}, {self._print(arg)}, 0);\n"
+            return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
         order = lhs.order
         rhs_dtype = self._print(rhs.dtype)
         declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
@@ -394,7 +394,7 @@ class CCodePrinter(CodePrinter):
                     operations += f"{offset_name} += {lenSubset};\n"
                 i += lenSubset
         if order == "F":
-            operations += f"array_copy_data(&{lhs_name}, {copy_to}, 0);\n" + f"free_array({copy_to});\n"
+            operations += f"array_copy_data({lhs_address}, {copy_to}, 0);\n" + f"free_array({copy_to});\n"
         return operations
 
     def arrayFill(self, expr):
