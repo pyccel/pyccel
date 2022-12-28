@@ -346,7 +346,7 @@ class CCodePrinter(CodePrinter):
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_name = self._print(lhs)
         if isinstance(arg, Variable):
-            return f"array_copy_data({self._print(ObjectAddress(lhs)}, {self._print(arg)}, 0);\n"
+            return f"array_copy_data({self._print(ObjectAddress(lhs))}, {self._print(arg)}, 0);\n"
         order = lhs.order
         rhs_dtype = self._print(rhs.dtype)
         declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
@@ -377,7 +377,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
                 elem_name = self._print(flattened_list[i])
                 offset = offset_name if offset_name else "0"
-                operations += f"array_copy_data(&{copy_to}, {elem_name}, {offset});\n"
+                operations += f"array_copy_data({self._print(ObjectAddress(copy_to))}, {elem_name}, {offset});\n"
                 if i < num_elements - 1:
                     operations += f"{offset_name} += {elem_name}.length;\n"
                 i += 1
