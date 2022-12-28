@@ -319,7 +319,7 @@ class CCodePrinter(CodePrinter):
 
         starting_consecutive_scalars = []
         for i in flattened_list:
-            if not isinstance(i, Variable) or ((isinstance(i, Variable)) and i.rank == 0):
+            if i.rank > 0:
                 starting_consecutive_scalars.append(i)
             else:
                 return starting_consecutive_scalars
