@@ -346,7 +346,7 @@ class CCodePrinter(CodePrinter):
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_name = self._print(lhs)
         if isinstance(arg, Variable):
-            return f"array_copy_data(&{lhs_name}, {self._print(arg)}, 0);\n"
+            return f"array_copy_data({self._print(ObjectAddress(lhs)}, {self._print(arg)}, 0);\n"
         order = lhs.order
         rhs_dtype = self._print(rhs.dtype)
         declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
