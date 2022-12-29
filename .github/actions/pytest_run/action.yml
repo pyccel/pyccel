@@ -13,6 +13,9 @@ runs:
       run: |
         which python
         python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
+        if [ -n "${SITE_DIR}" ]; then
+             touch ${SITE_DIR}/pyccel/stdlib/ndarrays/ndarrays.h
+        fi
         python -m pytest -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
         python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays
