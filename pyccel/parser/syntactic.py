@@ -176,10 +176,9 @@ class SyntaxParser(BasicParser):
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
             else:
-
-                raise errors.report(PYCCEL_INVALID_HEADER,
+                errors.report(PYCCEL_INVALID_HEADER,
                               symbol = stmt,
-                              severity='error')
+                              severity='fatal')
 
         else:
             txt = line[1:].lstrip()
@@ -211,7 +210,8 @@ class SyntaxParser(BasicParser):
 
         # Unknown object, we raise an error.
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
-                      severity='fatal')
+                      severity='error')
+        return EmptyNode()
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
@@ -259,7 +259,8 @@ class SyntaxParser(BasicParser):
 
     def _visit_Dict(self, stmt):
         errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol=stmt, severity='fatal')
+                symbol=stmt, severity='error')
+        return EmptyNode()
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -320,7 +321,8 @@ class SyntaxParser(BasicParser):
             expr = AugAssign(lhs, '%', rhs)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
-                      severity='fatal')
+                      severity='error')
+            expr = EmptyNode()
 
         # we set the fst to keep track of needed information for errors
 
@@ -330,7 +332,8 @@ class SyntaxParser(BasicParser):
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
-                    severity='fatal')
+                    severity='error')
+            return []
 
         arguments       = []
         if stmt.args:
@@ -473,7 +476,8 @@ class SyntaxParser(BasicParser):
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
-                          severity='fatal')
+                          severity='error')
+            return EmptyNode()
 
         return Func(target)
 
@@ -524,7 +528,8 @@ class SyntaxParser(BasicParser):
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
-                          severity='fatal')
+                          severity='error')
+            return EmptyNode()
 
     def _visit_BoolOp(self, stmt):
 
@@ -538,13 +543,15 @@ class SyntaxParser(BasicParser):
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt.op,
-                      severity='fatal')
+                      severity='error')
+        return EmptyNode()
 
     def _visit_Compare(self, stmt):
         if len(stmt.ops)>1:
             errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
                       symbol = stmt,
-                      severity='fatal')
+                      severity='error')
+            return EmptyNode()
 
         first = self._visit(stmt.left)
         second = self._visit(stmt.comparators[0])
@@ -569,7 +576,8 @@ class SyntaxParser(BasicParser):
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
-                      severity='fatal')
+                      severity='error')
+        return EmptyNode()
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
@@ -1025,7 +1033,8 @@ class SyntaxParser(BasicParser):
             errors.report(PYCCEL_RESTRICTION_TODO,
                           symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
-                          severity='fatal')
+                          severity='error')
+            expr = EmptyNode()
 
         expr.set_fst(parent)
 
