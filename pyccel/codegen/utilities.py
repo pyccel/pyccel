@@ -51,7 +51,12 @@ def not_a_copy(src_folder, dst_folder, filename):
     abs_dst_file = os.path.join(dst_folder, filename)
     src_mod_time = os.path.getatime(abs_src_file)
     dst_mod_time = os.path.getatime(abs_dst_file)
-    return src_mod_time > dst_mod_time
+
+    is_not_copy = src_mod_time > dst_mod_time
+    if is_not_copy:
+        print(src_mod_time, dst_mod_time, os.path.getmtime(abs_src_file), os.path.getmtime(abs_dst_file), os.path.getctime(abs_src_file), os.path.getctime(abs_dst_file))
+
+    return is_not_copy
 
 #==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
