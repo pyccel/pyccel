@@ -11,7 +11,7 @@ They are:
 """
 import ast
 
-__all__ = ('Basic', 'PyccelAstNode')
+__all__ = ('Basic', 'PyccelAstNode', 'ScopedNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
