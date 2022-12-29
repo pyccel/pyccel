@@ -16,3 +16,4 @@ if __name__ == '__main__':
     opp(a, b)
     cuda.synchronize()
     h_a = cuda.copy(a, memory_location='host')
+
