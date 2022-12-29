@@ -46,7 +46,7 @@ The most important arguments are:
 ## Headers
 
 The headers (type declarations/openmp pragmas/etc) also have their own syntax which cannot be parsed by Python's ast module.
-The module [textx](http://textx.github.io/textX/stable/) is used to parse these statemnts.
+The module [textx](http://textx.github.io/textX/stable/) is used to parse these statements.
 The files describing the _textx_ grammar are found in the folder [pyccel.parser.grammar](../pyccel/parser/grammar).
 From these files _textx_ generates instances of the classes found in the folder [pyccel.parser.syntax](../pyccel/parser/syntax).
 These instances can then be inserted into the annotated syntax tree.
