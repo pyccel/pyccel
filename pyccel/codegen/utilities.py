@@ -83,7 +83,6 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     # new one from pyccel stdlib
     lib_dest_path = os.path.join(pyccel_dirpath, lib_folder)
     with FileLock(lib_dest_path + '.lock'):
-        print("Acquiring : ", lib_dest_path + '.lock')
         # Check if folder exists
         if not os.path.exists(lib_dest_path):
             to_create = True
@@ -132,7 +131,6 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # Release the locks
             for l in locks:
                 l.release()
-        print("Releasing : ", lib_dest_path + '.lock')
     return lib_dest_path
 
 #==============================================================================
