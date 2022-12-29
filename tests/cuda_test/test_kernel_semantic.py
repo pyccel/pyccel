@@ -8,8 +8,8 @@ from pyccel.decorators import stack_array, types, kernel
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (KERNEL_STACK_ARRAY_ARG,
                                     NON_KERNEL_FUNCTION_CUDA_VAR,
-                                    UNVALID_KERNEL_CALL_BLOCK_NUM,
-                                    UNVALID_KERNEL_CALL_TP_BLOCK,
+                                    INVALID_KERNEL_CALL_BP_GRID,
+                                    INVALID_KERNEL_CALL_TP_BLOCK
                                     )
 
 @pytest.mark.parametrize( 'language', [
@@ -94,7 +94,7 @@ def test_unvalid_block_number(language):
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol.func  == 'kernel_call'
-    assert UNVALID_KERNEL_CALL_BLOCK_NUM == error_info.message
+    assert INVALID_KERNEL_CALL_BP_GRID == error_info.message
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("ccuda", marks = pytest.mark.ccuda)
@@ -121,4 +121,4 @@ def test_unvalid_thread_per_block(language):
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol.func  == 'kernel_call'
-    assert UNVALID_KERNEL_CALL_TP_BLOCK == error_info.message
+    assert INVALID_KERNEL_CALL_TP_BLOCK == error_info.message
