@@ -118,7 +118,9 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                 l.acquire()
             # Remove all files in destination directory
             for d in dst_files:
-                os.remove(os.path.join(lib_dest_path, d))
+                d_file = os.path.join(lib_dest_path, d)
+                with FileLock(d_file+'.lock'):
+                    os.remove(d_file)
             # Copy all files from the source to the destination
             for s in src_files:
                 shutil.copyfile(os.path.join(lib_path, s),
@@ -126,8 +128,10 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # Create any requested extra files
             if extra_files:
                 for filename, contents in extra_files.items():
-                    with open(os.path.join(lib_dest_path, filename), 'w') as f:
-                        f.writelines(contents)
+                    extra_file = os.path.join(lib_dest_path, filename)
+                    with FileLock(extra_file+'.lock'):
+                        with open(extra_file, 'w') as f:
+                            f.writelines(contents)
             # Release the locks
             for l in locks:
                 l.release()
