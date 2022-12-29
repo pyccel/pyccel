@@ -3,10 +3,10 @@
 The syntactic stage is described by the file [pyccel.parser.syntactic](../pyccel/parser/syntactic.py)
 
 The syntactic stage serves 4 main purposes:
-1. Convert Python's [AST](https://docs.python.org/3/library/ast.html) (abstract syntax tree) representation of the python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
-2. Raise an error for any syntax used that is not yet supported by pyccel
-3. Convert header comments from strings to Pyccel's AST representation
-4. Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if pyccel generates Variable names
+1.  Convert Python's [AST](https://docs.python.org/3/library/ast.html) (abstract syntax tree) representation of the python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
+2.  Raise an error for any syntax used that is not yet supported by pyccel
+3.  Convert header comments from strings to Pyccel's AST representation
+4.  Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if pyccel generates Variable names
 
 ## Navigation and AST Creation
 
@@ -32,12 +32,16 @@ Errors in the syntactic stage should raise a `PyccelSyntaxError`.
 Where possible this should be done by accessing the `Errors()` singleton and calling the `report` function.
 This function takes several arguments (see docstring for more details).
 The most important arguments are:
-- _message_ : Describe the issue that lead to the error
-- _symbol_ : The Python ast object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
-- _severity_ : The severity level must be one of the following:
-    - _warning_ : An error will be printed but Pyccel will continue executing
-    - _error_ : An error will be printed but Pyccel will continue executing the syntactic stage
-    - _fatal_ : An error will be printed and Pyccel will stop executing. This level should rarely be needed in the syntactic stage as a failure in one function should not affect the execution of another. It is preferable to show the users all errors at once
+-   _message_ : Describe the issue that lead to the error
+
+-   _symbol_ : The Python ast object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
+
+-   _severity_ : The severity level must be one of the following:
+    -   _warning_ : An error will be printed but Pyccel will continue executing
+
+    -   _error_ : An error will be printed but Pyccel will continue executing the syntactic stage
+
+    -   _fatal_ : An error will be printed and Pyccel will stop executing. This level should rarely be needed in the syntactic stage as a failure in one function should not affect the execution of another. It is preferable to show the users all errors at once
 
 ## Headers
 
@@ -60,9 +64,9 @@ Care should be taken here as this keyword is not compulsory[^1].
 [^1]: The keyword cannot currently be compulsory due to some old code and the special case of `FunctionDef`. A `FunctionDef` which represents a function defined in a header file has no body, and therefore no scope.
 
 A child scope can be created using one of the following functions (for more details see the docstrings in [pyccel.parser.scope](../pyccel/parser/scope.py):
-- `Scope.new_child_scope`
-- `Scope.create_new_loop_scope`
-- `Scope.create_product_loop_scope`
+-   `Scope.new_child_scope`
+-   `Scope.create_new_loop_scope`
+-   `Scope.create_product_loop_scope`
 
 Occasionally it is necessary to create objects in the syntactic stage.
 The `Scope` functions should be used for this purpose to avoid name collisions.
