@@ -362,7 +362,7 @@ class CCodePrinter(CodePrinter):
             operations += self._print(temp_var_declare) + self._print(temp_var_allocate)
             copy_to = temp_array_name
         else:
-            copy_to = lhs_address
+            copy_to = self._print(lhs)
         num_elements = len(flattened_list)
         if num_elements != len(self._get_starting_consecutive_scalars(flattened_list))\
         and num_elements != 1:
