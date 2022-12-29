@@ -130,7 +130,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                 for filename, contents in extra_files.items():
                     extra_file = os.path.join(lib_dest_path, filename)
                     with FileLock(extra_file+'.lock'):
-                        with open(extra_file, 'w') as f:
+                        with open(extra_file, 'w', encoding="utf-8") as f:
                             f.writelines(contents)
             # Release the locks
             for l in locks:
