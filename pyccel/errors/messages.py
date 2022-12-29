@@ -162,7 +162,7 @@ NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is
 NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'
 KERNEL_STACK_ARRAY_ARG = "A variable allocated on the stack can't be passed to a Kernel function"
 NON_KERNEL_FUNCTION_CUDA_VAR = 'Cuda internal variables should only be used in Kernel or Device functions'
-UNVALID_KERNEL_CALL_BLOCK_NUM = 'Invalid Block number parameter for Kernel call'
-UNVALID_KERNEL_CALL_TP_BLOCK = 'Invalid Thread per Block parameter for Kernel call'
+INVALID_KERNEL_CALL_BP_GRID = 'Invalid Block per grid parameter for Kernel call'
+INVALID_KERNEL_CALL_TP_BLOCK = 'Invalid Thread per Block parameter for Kernel call'
 MISSING_KERNEL_CONFIGURATION = 'Kernel launch configuration not specified'
 
