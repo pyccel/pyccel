@@ -16,7 +16,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
-from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
@@ -355,17 +355,14 @@ class CCodePrinter(CodePrinter):
         i = 0
         operations = ""
         if order == "F":
-            nd = arg.rank
             temp_array_name = self.scope.get_new_name('temp_array')
-            shape_dtype = self.find_in_dtype_registry('int', 8)
-            shape = ', '.join(self._print(elem) for elem in lhs.shape)
-            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-            temp_array_declaration = f"t_ndarray {temp_array_name} = {{.shape = NULL}};\n"
-            array_creation = f"{temp_array_name} = array_create({nd}, {shape_Assign}, {dtype}, {'false'}, {'order_c'});\n"
-            operations += temp_array_declaration + array_creation
+            temp_var = lhs.clone(name=temp_array_name, order="C")
+            temp_var_declare = Declare(temp_var.dtype, temp_var)
+            temp_var_allocate = Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated")
+            operations += self._print(temp_var_declare) + self._print(temp_var_allocate)
             copy_to = temp_array_name
         else:
-            copy_to = lhs_name
+            copy_to = lhs_address
         num_elements = len(flattened_list)
         if num_elements != len(self._get_starting_consecutive_scalars(flattened_list))\
         and num_elements != 1:
