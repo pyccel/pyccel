@@ -1565,28 +1565,6 @@ class CCodePrinter(CodePrinter):
         else:
             return call_code
 
-    def _print_Constant(self, expr):
-        """ Convert a Python expression with a math constant call to C
-        function call
-
-        Parameters
-        ----------
-            expr : Pyccel ast node
-                Python expression with a Math constant
-
-        Returns
-        -------
-            string
-                String represent the value of the constant
-
-        Example
-        -------
-            math.pi ==> 3.14159265358979
-
-        """
-        val = LiteralFloat(expr.value)
-        return self._print(val)
-
     def _print_Return(self, expr):
         code = ''
         args = [ObjectAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
