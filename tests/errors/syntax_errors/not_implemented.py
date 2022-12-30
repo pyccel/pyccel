@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
-b = 1
+b = 3
+a = 2
 
 a @= b
 
