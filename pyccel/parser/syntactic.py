@@ -209,7 +209,7 @@ class SyntaxParser(BasicParser):
             return result
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
                       severity='error')
 
     def _visit_Module(self, stmt):
@@ -318,8 +318,8 @@ class SyntaxParser(BasicParser):
         elif isinstance(stmt.op, ast.Mod):
             return AugAssign(lhs, '%', rhs)
         else:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
-                      severity='error')
+            return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
+                    severity='error')
 
     def _visit_arguments(self, stmt):
 
@@ -518,7 +518,7 @@ class SyntaxParser(BasicParser):
             return NumpyMatmul(first, second)
 
         else:
-            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+            return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
                           severity='error')
 
@@ -532,13 +532,13 @@ class SyntaxParser(BasicParser):
         if isinstance(stmt.op, ast.Or):
             return PyccelOr(*args)
 
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt.op,
                       severity='error')
 
     def _visit_Compare(self, stmt):
         if len(stmt.ops)>1:
-            errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
+            return errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
                       symbol = stmt,
                       severity='error')
 
@@ -563,7 +563,7 @@ class SyntaxParser(BasicParser):
         if isinstance(op, ast.IsNot):
             return PyccelIsNot(first, second)
 
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
                       severity='error')
 
@@ -737,11 +737,11 @@ class SyntaxParser(BasicParser):
 
         body = stmt.body
 
-        if 'sympy' in decorators.keys():
+        if 'sympy' in decorators:
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
             func = SympyFunction(name, arguments, [],
-                    [stmt.__str__()])
+                    [str(stmt)])
             func.set_fst(stmt)
             self.insert_function(func)
             return EmptyNode()
@@ -753,10 +753,10 @@ class SyntaxParser(BasicParser):
             doc_string.header = ''
             body = body[1:]
 
-        if 'pure' in decorators.keys():
+        if 'pure' in decorators:
             is_pure = True
 
-        if 'elemental' in decorators.keys():
+        if 'elemental' in decorators:
             is_elemental = True
             if len(arguments) > 1:
                 errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
@@ -764,10 +764,10 @@ class SyntaxParser(BasicParser):
                               bounding_box=(stmt.lineno, stmt.col_offset),
                               severity='error')
 
-        if 'private' in decorators.keys():
+        if 'private' in decorators:
             is_private = True
 
-        if 'inline' in decorators.keys():
+        if 'inline' in decorators:
             is_inline = True
 
         body = CodeBlock(body)
