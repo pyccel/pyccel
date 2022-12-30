@@ -122,6 +122,33 @@ def test_unvalid_thread_per_block(language):
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol.func  == 'kernel_call'
     assert INVALID_KERNEL_CALL_TP_BLOCK == error_info.message
+@pytest.mark.parametrize( 'language', [
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
+    ]
+)
+def test_invalid_kernel_config(language):
+    def invalid_kernel_config():
+        @kernel
+        def kernel_call():
+            pass
+        kernel_call[1.0, 2.0]()
+    # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(invalid_kernel_config, language=language)
+    
+    # Check that we got exactly 2 Pyccel error
+    assert errors.has_errors()
+    assert errors.num_messages() == 2
+
+    # Check that the error is correct
+    error_info = [*errors.error_info_map.values()][0]
+    assert error_info[0].symbol.func == 'kernel_call'
+    assert error_info[1].symbol.func == 'kernel_call'
+    assert INVALID_KERNEL_CALL_BP_GRID == error_info[0].message
+    assert INVALID_KERNEL_CALL_TP_BLOCK == error_info[1].message
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("ccuda", marks = pytest.mark.ccuda)
