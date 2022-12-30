@@ -308,23 +308,18 @@ class SyntaxParser(BasicParser):
         lhs = self._visit(stmt.target)
         rhs = self._visit(stmt.value)
         if isinstance(stmt.op, ast.Add):
-            expr = AugAssign(lhs, '+', rhs)
+            return AugAssign(lhs, '+', rhs)
         elif isinstance(stmt.op, ast.Sub):
-            expr = AugAssign(lhs, '-', rhs)
+            return AugAssign(lhs, '-', rhs)
         elif isinstance(stmt.op, ast.Mult):
-            expr = AugAssign(lhs, '*', rhs)
+            return AugAssign(lhs, '*', rhs)
         elif isinstance(stmt.op, ast.Div):
-            expr = AugAssign(lhs, '/', rhs)
+            return AugAssign(lhs, '/', rhs)
         elif isinstance(stmt.op, ast.Mod):
-            expr = AugAssign(lhs, '%', rhs)
+            return AugAssign(lhs, '%', rhs)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                       severity='error')
-            expr = None
-
-        # we set the fst to keep track of needed information for errors
-
-        return expr
 
     def _visit_arguments(self, stmt):
 
