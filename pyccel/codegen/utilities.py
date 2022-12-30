@@ -91,7 +91,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             to_create = False
             # If folder exists check if it needs updating
             src_files = os.listdir(lib_path)
-            dst_files = os.listdir(lib_dest_path)
+            dst_files = [f for f in os.listdir(lib_dest_path) if not f.endswith('.lock')]
             # Check if all files are present in destination
             to_update = any(s not in dst_files for s in src_files)
 
@@ -119,8 +119,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # Remove all files in destination directory
             for d in dst_files:
                 d_file = os.path.join(lib_dest_path, d)
-                with FileLock(d_file+'.lock'):
-                    os.remove(d_file)
+                os.remove(d_file)
             # Copy all files from the source to the destination
             for s in src_files:
                 shutil.copyfile(os.path.join(lib_path, s),
@@ -129,9 +128,8 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             if extra_files:
                 for filename, contents in extra_files.items():
                     extra_file = os.path.join(lib_dest_path, filename)
-                    with FileLock(extra_file+'.lock'):
-                        with open(extra_file, 'w', encoding="utf-8") as f:
-                            f.writelines(contents)
+                    with open(extra_file, 'w', encoding="utf-8") as f:
+                        f.writelines(contents)
             # Release the locks
             for l in locks:
                 l.release()
