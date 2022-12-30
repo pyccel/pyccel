@@ -2574,7 +2574,7 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error')
                     return None
-            if lhs.is_temp and rhs.dtype is NativeVoid():
+            if lhs is PyccelSymbol and lhs.is_temp and rhs.dtype is NativeVoid():
                 return rhs
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
