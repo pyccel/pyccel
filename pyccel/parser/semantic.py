@@ -2632,7 +2632,10 @@ class SemanticParser(BasicParser):
             new_expr = Assign(l, r)
 
             if is_pointer_i:
-                new_expr = AliasAssign(l, r)
+                if isinstance(expr, AugAssign):
+                    new_expr = AugAssign(l, expr.op, r)
+                else:
+                    new_expr = AliasAssign(l, r)
 
             elif isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
