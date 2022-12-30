@@ -3,10 +3,10 @@
 The syntactic stage is described by the file [pyccel.parser.syntactic](../pyccel/parser/syntactic.py)
 
 The syntactic stage serves 4 main purposes:
-1.  Convert Python's [AST](https://docs.python.org/3/library/ast.html) (abstract syntax tree) representation of the python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
-2.  Raise an error for any syntax used that is not yet supported by pyccel
-3.  Convert header comments from strings to Pyccel's AST representation
-4.  Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if pyccel generates Variable names
+1.  [**Navigation and AST Creation**](#Navigation-and-ast-creation) : Convert Python's [AST](https://docs.python.org/3/library/ast.html) (abstract syntax tree) representation of the python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
+2.  [**Errors**](#Errors) : Raise an error for any syntax used that is not yet supported by pyccel
+3.  [**Headers**](#Headers) : Convert header comments from strings to Pyccel's AST representation
+4.  [**Scoping**](#Scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if pyccel generates Variable names
 
 ## Navigation and AST Creation
 
