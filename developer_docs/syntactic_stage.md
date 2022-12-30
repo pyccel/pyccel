@@ -39,6 +39,7 @@ and we want to save this information into Pyccel's [`pyccel.ast.core.AugAssign`]
 We therefore need to visit the 2 members of `ast.AugAssign`:
 -   target
 -   value
+
 and use the third (`op`) to correctly construct the `pyccel.ast.core.AugAssign`.
 
 The final code therefore ressembles the following:
