@@ -6,7 +6,7 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types, kernel
 from pyccel.errors.errors import Errors, PyccelSemanticError
-from pyccel.errors.messages import (KERNEL_STACK_ARRAY_ARG,
+from pyccel.errors.messages import (KERNEL_STACK_ARRAY_ARG, MISSING_KERNEL_CONFIGURATION,
                                     NON_KERNEL_FUNCTION_CUDA_VAR,
                                     INVALID_KERNEL_CALL_BP_GRID,
                                     INVALID_KERNEL_CALL_TP_BLOCK
@@ -122,3 +122,26 @@ def test_unvalid_thread_per_block(language):
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol.func  == 'kernel_call'
     assert INVALID_KERNEL_CALL_TP_BLOCK == error_info.message
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("ccuda", marks = pytest.mark.ccuda)
+    ]
+)
+def test_missing_kernel_config(language):
+    def missing_kernel_config():
+        @kernel
+        def kernel_call():
+            pass
+        kernel_call()
+    
+    errors = Errors()
+
+    with pytest.raises(PyccelSemanticError):
+        epyccel(missing_kernel_config, language=language)
+    
+    assert errors.has_errors()
+    assert errors.num_messages() == 1
+
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol.func_name == 'kernel_call'
+    assert MISSING_KERNEL_CONFIGURATION == error_info.message
