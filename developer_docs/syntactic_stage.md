@@ -69,7 +69,7 @@ A child scope can be created using one of the following functions (for more deta
 Occasionally it is necessary to create objects in the syntactic stage.
 The `Scope` functions should be used for this purpose to avoid name collisions.
 See the [scope](scope.md) docs for more details.
-In all cases it is preferable to delay this stage as much as possible to ensure that as much information is known about the scope as possible.
+In all cases it is preferable to delay this stage as long as possible to ensure that as much information is known about the scope as possible.
 This is important as at this stage there may still be conflicting names which appear later in the file.
 The `Scope` should prevent name collisions with these objects, but that will lead to them being renamed which makes the translated code harder to recognise when compared with the original.
 
