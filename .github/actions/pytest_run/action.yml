@@ -16,7 +16,7 @@ runs:
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
-            touch ${SITE_DIR}/pyccel/stdlib/ndarrays/ndarrays.h
+            touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
             python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py
         fi
         python -m pytest -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
