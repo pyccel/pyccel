@@ -70,7 +70,7 @@ The most important arguments are:
 -   _severity_ : The severity level must be one of the following:
     -   _warning_ : An error will be printed but Pyccel will continue executing
     -   _error_ : An error will be printed but Pyccel will continue executing the syntactic stage
-    -   _fatal_ : An error will be printed and Pyccel will stop executing. This level should rarely be needed in the syntactic stage as a failure in one function should not affect the execution of another. It is preferable to show the users all errors at once
+    -   _fatal_ : An error will be printed and Pyccel will stop executing. This level should rarely be needed in the syntactic stage as a failure in one visitation function (`_visit_X`) should not affect the execution of another. It is preferable to show the users all errors at once
 
 ## Headers
 
