@@ -14,7 +14,10 @@ runs:
         which python
         python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
         if [ -n "${SITE_DIR}" ]; then
-             touch ${SITE_DIR}/pyccel/stdlib/ndarrays/ndarrays.h
+            echo "Touching"
+            # Test ndarray folder update (requires parallel tests to avoid clean)
+            touch ${SITE_DIR}/pyccel/stdlib/ndarrays/ndarrays.h
+            python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py
         fi
         python -m pytest -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
