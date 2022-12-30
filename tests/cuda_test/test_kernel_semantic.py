@@ -133,7 +133,7 @@ def test_missing_kernel_config(language):
         def kernel_call():
             pass
         kernel_call()
-    
+
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
