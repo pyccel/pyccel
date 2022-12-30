@@ -12,6 +12,7 @@ runs:
     - name: Test with pytest
       run: |
         which python
+        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays epyccel/test_arrays.py
         python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
