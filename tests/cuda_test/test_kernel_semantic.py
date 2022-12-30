@@ -166,7 +166,7 @@ def test_missing_kernel_config(language):
 
     with pytest.raises(PyccelSemanticError):
         epyccel(missing_kernel_config, language=language)
-    
+
     assert errors.has_errors()
     assert errors.num_messages() == 1
 
