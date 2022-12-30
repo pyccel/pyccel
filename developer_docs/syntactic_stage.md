@@ -3,7 +3,7 @@
 The syntactic stage is described by the file [pyccel.parser.syntactic](../pyccel/parser/syntactic.py)
 
 The syntactic stage serves 4 main purposes:
-1.  [**Navigation and AST Creation**](#Navigation-and-ast-creation) : Convert Python's [AST](https://docs.python.org/3/library/ast.html) (abstract syntax tree) representation of the python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
+1.  [**Navigation and AST Creation**](#Navigation-and-ast-creation) : Convert Python's [AST](https://docs.Python.org/3/library/ast.html) (abstract syntax tree) representation of the Python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
 2.  [**Errors**](#Errors) : Raise an error for any syntax used that is not yet supported by pyccel
 3.  [**Headers**](#Headers) : Convert header comments from strings to Pyccel's AST representation
 4.  [**Scoping**](#Scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if pyccel generates Variable names
@@ -24,6 +24,36 @@ def _visit_ClassName(self, stmt):
     ...
 ```
 Each of these functions should internally call the `_visit` function on each of the elements of the object to obtain Pyccel AST nodes which can be combined to create a Pyccel AST node representing the current object.
+
+### Example
+
+Consider for example the Python expression:
+```python
+a += b
+```
+The Python ast module parses this as:
+```python
+AugAssign(target=Name(id='a', ctx=Store()), op=Add(), value=Name(id='b', ctx=Load()))
+```
+and we want to save this information into Pyccel's [`pyccel.ast.core.AugAssign`](../pyccel/ast/core.py).
+We therefore need to visit the 2 members of `ast.AugAssign`:
+- target
+- value
+and use the third (`op`) to correctly construct the `pyccel.ast.core.AugAssign`.
+
+The final code therefore ressembles the following:
+```python
+def _visit_AugAssign(self, stmt):
+    lhs = self._visit(stmt.target)
+    rhs = self._visit(stmt.value)
+    if isinstance(stmt.op, ast.Add):
+        return AugAssign(lhs, '+', rhs)
+    elif ...:
+        ...
+    else:
+        return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
+                severity='error')
+```
 
 ## Errors
 
@@ -51,10 +81,35 @@ These instances can then be inserted into the abstract syntax tree.
 
 ## Scoping
 
-The final purpose of the syntactic stage is to collect all names used in the code.
+The final purpose of the syntactic stage is to collect all names declared in the code.
 This is important to avoid name collisions if pyccel creates temporaries or requires additional names.
 The names are saved in the scope (for more details see [scope](scope.md)).
-Whenever a symbol is encountered it should be saved to the scope using the function `self.scope.insert_symbol`.
+Whenever a symbol is encountered in a declaration context, it should be saved to the scope using the function `self.scope.insert_symbol`.
+This is usually done in the `_visit_Name` function, however this function is not aware of the context so it cannot determine whether it is a declaration.
+To get round this the class has the property `SyntaxParser._in_lhs_assign`, which should be `True` in a declaration context, and false elsewhere.
+
+Consider for example a for loop. Such a loop has 3 main parts (which are each members of `ast.For`):
+-  target  (`ast.For.target`)
+-  iterable  (`ast.For.iter`)
+-  body (`ast.For.body`)
+
+such that a for loop is defined as:
+```python
+for target in iterable:
+   body
+```
+
+Each of these 3 members must be visited individually, but the target additionally is in a declaration context.
+The visitation section of `_visit_For` is therefore:
+```python
+self._in_lhs_assign = True
+iterator = self._visit(stmt.target)
+self._in_lhs_assign = False
+iterable = self._visit(stmt.iter)
+body = self._visit(stmt.body)
+```
+
+### Scoped Node
 Any functions visiting a class which inherits from `ScopedNode` must create a new scope before visiting objects and exit it after everything inside the scope has been visited.
 The scope must then be passed to the class using the keyword argument `scope`.
 Care should be taken here as this keyword is not compulsory[^1].
@@ -66,6 +121,7 @@ A child scope can be created using one of the following functions (for more deta
 -   `Scope.create_new_loop_scope`
 -   `Scope.create_product_loop_scope`
 
+### Temporary Creation
 Occasionally it is necessary to create objects in the syntactic stage.
 The `Scope` functions should be used for this purpose to avoid name collisions.
 See the [scope](scope.md) docs for more details.
@@ -76,7 +132,7 @@ The `Scope` should prevent name collisions with these objects, but that will lea
 ## History
 
 Originally the syntactic stage translated from [RedBaron](https://github.com/PyCQA/redbaron)'s AST representation to Pyccel's AST representation.
-RedBaron parses python, but makes no attempt to validate the code.
+RedBaron parses Python, but makes no attempt to validate the code.
 This made pyccel's job harder as there was no guarantee that the syntax was correct.
 Since moving to Python's ast module the syntactic stage has been massively simplified.
 This is because Python's ast module checks the validity of the syntax.
