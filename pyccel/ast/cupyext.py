@@ -455,7 +455,7 @@ class CupyRavel(CupyArray):
             The location where the new array memory should be allocated
     """
     name   = 'ravel'
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
+    __slots__ = ()
     _attribute_nodes = ('_arg',)
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PyccelAstNode)):
