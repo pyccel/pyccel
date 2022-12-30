@@ -37,8 +37,8 @@ AugAssign(target=Name(id='a', ctx=Store()), op=Add(), value=Name(id='b', ctx=Loa
 ```
 and we want to save this information into Pyccel's [`pyccel.ast.core.AugAssign`](../pyccel/ast/core.py).
 We therefore need to visit the 2 members of `ast.AugAssign`:
-- target
-- value
+-   target
+-   value
 and use the third (`op`) to correctly construct the `pyccel.ast.core.AugAssign`.
 
 The final code therefore ressembles the following:
@@ -89,9 +89,9 @@ This is usually done in the `_visit_Name` function, however this function is not
 To get round this the class has the property `SyntaxParser._in_lhs_assign`, which should be `True` in a declaration context, and false elsewhere.
 
 Consider for example a for loop. Such a loop has 3 main parts (which are each members of `ast.For`):
--  target  (`ast.For.target`)
--  iterable  (`ast.For.iter`)
--  body (`ast.For.body`)
+-   target  (`ast.For.target`)
+-   iterable  (`ast.For.iter`)
+-   body (`ast.For.body`)
 
 such that a for loop is defined as:
 ```python
