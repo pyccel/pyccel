@@ -1,6 +1,8 @@
+# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
+
+import cupy as cp
 from pyccel.decorators import kernel, types
 from pyccel import cuda
-import cupy as cp
 
 @kernel
 @types('int[:]')

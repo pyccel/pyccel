@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
+
 from pyccel.decorators import kernel, types
 from pyccel import cuda
 

@@ -1,6 +1,8 @@
+# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
+
+import numpy as np
 from pyccel.decorators import kernel, types
 from pyccel import cuda
-import numpy as np
 
 @kernel
 @types('int[:]', 'int[:]')
@@ -16,4 +18,3 @@ if __name__ == '__main__':
     cuda.deviceSynchronize()
     mult[n_blocks, threads_per_block](a, b)
     cuda.deviceSynchronize()
-    
