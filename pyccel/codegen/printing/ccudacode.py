@@ -533,12 +533,13 @@ class CcudaCodePrinter(CCodePrinter):
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}.{2}, {0}.buffer_size, {3});".format(lhs, arg, dtype, memcpy_kind)
+            cpy_data = f"cudaMemcpy({lhs}.raw_data, {arg}.{dtype}, {lhs}.buffer_size, {memcpy_kind});"
             return '%s\n' % (cpy_data)
         else :
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "cudaMemcpy({0}.raw_data, {1}, {0}.buffer_size, {3});".format(self._print(lhs), dummy_array_name, dtype, memcpy_kind)
+            target_array_name = self._print(lhs)
+            cpy_data = f"cudaMemcpy({target_array_name}.raw_data, {dummy_array_name}, {target_array_name}.buffer_size, {memcpy_kind});"
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def _print_CudaDeviceSynchronize(self, expr):
