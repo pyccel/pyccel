@@ -14,6 +14,6 @@ if __name__ == '__main__':
     n_blocks = 1
     arr_var = [0,1,2,3,4]
     arr = cuda.array(arr_var)
-    cuda.deviceSynchronize()
+    cuda.synchronize()
     square[n_blocks, threads_per_block](arr)
-    cuda.deviceSynchronize()
+    cuda.synchronize()

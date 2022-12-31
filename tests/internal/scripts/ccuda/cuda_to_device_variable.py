@@ -16,6 +16,6 @@ if __name__ == '__main__':
     a = np.array([0,1,2,3,4])
     b = cuda.to_device(a)
     c = cuda.to_device(a)
-    cuda.deviceSynchronize()
+    cuda.synchronize()
     mult[n_blocks, threads_per_block](b, c)
-    cuda.deviceSynchronize()
+    cuda.synchronize()
