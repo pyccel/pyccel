@@ -24,5 +24,5 @@ if __name__ == "__main__":
     # b = narray([1, 2, 3], dtype='int', order='C')
     a = cuda.array([1, 2, 3], dtype='int', order='C')
     func[1, 3](a)
-    cuda.deviceSynchronize()
+    cuda.synchronize()
     print(a)

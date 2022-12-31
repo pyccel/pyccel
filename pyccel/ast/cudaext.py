@@ -27,7 +27,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, conver
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .operators      import PyccelAdd, PyccelLe, PyccelMul, broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
 from .numpyext       import process_dtype, process_shape
@@ -37,12 +37,13 @@ __all__ = (
     'CudaMemCopy',
     'CudaNewArray',
     'CudaArray',
-    'CudaDeviceSynchronize',
+    'CudaSynchronize',
     'CudaInternalVar',
     'CudaThreadIdx',
     'CudaBlockDim',
     'CudaBlockIdx',
-    'CudaGridDim'
+    'CudaGridDim',
+    'CudaGrid'
 )
 
 #==============================================================================
@@ -136,7 +137,7 @@ class CudaArray(CudaNewArray):
     def memory_location(self):
         return self._memory_location
 
-class CudaDeviceSynchronize(PyccelInternalFunction):
+class CudaSynchronize(PyccelInternalFunction):
     "Represents a call to  Cuda.deviceSynchronize for code generation."
     # pass
     _attribute_nodes = ()
@@ -153,6 +154,9 @@ class CudaInternalVar(PyccelAstNode):
     _attribute_nodes = ('_dim',)
 
     def __init__(self, dim=None):
+        
+        if isinstance(dim, int):
+            dim = LiteralInteger(dim)
         if not isinstance(dim, LiteralInteger):
             raise TypeError("dimension need to be an integer")
         if dim not in (0, 1, 2):
@@ -170,20 +174,91 @@ class CudaInternalVar(PyccelAstNode):
     def dim(self):
         return self._dim
 
-class CudaThreadIdx(CudaInternalVar) : pass
-class CudaBlockDim(CudaInternalVar)  : pass
-class CudaBlockIdx(CudaInternalVar)  : pass
-class CudaGridDim(CudaInternalVar)   : pass
+
+class CudaCopy(CudaNewArray):
+    """
+    Represents a call to  cuda.copy for code generation.
+
+    Parameters
+    ----------
+    arg : Variable
+
+    memory_location : str
+        'host'   the newly created array is allocated on host.
+        'device' the newly created array is allocated on device.
+    
+    is_async: bool
+        Indicates whether the copy is asynchronous or not [Default value: False]
+
+    """
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order','_memory_location', '_is_async')
+
+    def __init__(self, arg, memory_location, is_async=False):
+        
+        if not isinstance(arg, Variable):
+            raise TypeError('unknown type of  %s.' % type(arg))
+        
+        # Verify the memory_location of src
+        if arg.memory_location not in ('device', 'host', 'managed'):
+            raise ValueError("The direction of the copy should be from 'host' or 'device'")
+
+        # Verify the memory_location of dst
+        if memory_location not in ('device', 'host', 'managed'):
+            raise ValueError("The direction of the copy should be to 'host' or 'device'")
+        
+        # verify the type of is_async
+        if not isinstance(is_async, (LiteralTrue, LiteralFalse, bool)):
+            raise TypeError('is_async must be boolean')
+        
+        self._arg             = arg
+        self._shape           = arg.shape
+        self._rank            = arg.rank
+        self._dtype           = arg.dtype
+        self._order           = arg.order
+        self._precision       = arg.precision
+        self._memory_location = memory_location
+        self._is_async        = is_async
+        super().__init__()
+    
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def memory_location(self):
+        return self._memory_location
+
+    @property
+    def is_async(self):
+        return self._is_async
+
+class CudaThreadIdx(CudaInternalVar)        : pass
+class CudaBlockDim(CudaInternalVar)         : pass
+class CudaBlockIdx(CudaInternalVar)         : pass
+class CudaGridDim(CudaInternalVar)          : pass
+class CudaGrid(PyccelAstNode)               :
+    def __new__(cls, dim=0):
+        if not isinstance(dim, LiteralInteger):
+            raise TypeError("dimension need to be an integer")
+        if dim not in (0, 1, 2):
+            raise ValueError("dimension need to be 0, 1 or 2")
+        expr = [PyccelAdd(PyccelMul(CudaBlockIdx(d), CudaBlockDim(d)), CudaThreadIdx(d))\
+                for d in range(dim.python_value + 1)]
+        if dim == 0:
+            return expr[0]
+        return PythonTuple(*expr)
+
 
 
 cuda_funcs = {
-    # 'deviceSynchronize' : CudaDeviceSynchronize,
     'array'             : PyccelFunctionDef('array'             , CudaArray),
-    'deviceSynchronize' : PyccelFunctionDef('deviceSynchronize' , CudaDeviceSynchronize),
+    'copy'              : PyccelFunctionDef('copy'              , CudaCopy),
+    'synchronize'       : PyccelFunctionDef('synchronize'       , CudaSynchronize),
     'threadIdx'         : PyccelFunctionDef('threadIdx'         , CudaThreadIdx),
     'blockDim'          : PyccelFunctionDef('blockDim'          , CudaBlockDim),
     'blockIdx'          : PyccelFunctionDef('blockIdx'          , CudaBlockIdx),
-    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim)
+    'gridDim'           : PyccelFunctionDef('gridDim'           , CudaGridDim),
+    'grid'              : PyccelFunctionDef('grid'              , CudaGrid)
 }
 
 cuda_Internal_Var = {

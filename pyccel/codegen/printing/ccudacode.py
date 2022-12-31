@@ -42,7 +42,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.cupyext import CupyFull, CupyArray, CupyArange, CupyRavel
 
-from pyccel.ast.cudaext import cuda_Internal_Var, CudaArray
+from pyccel.ast.cudaext import CudaCopy, cuda_Internal_Var, CudaArray
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -418,6 +418,8 @@ class CcudaCodePrinter(CCodePrinter):
             return prefix_code+self.arrayFill(expr)
         if isinstance(rhs, NumpyArange):
             return prefix_code+self.fill_NumpyArange(rhs, lhs)
+        if isinstance(rhs, CudaCopy):
+            return prefix_code+self.cudaCopy(lhs, rhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)
@@ -564,7 +566,7 @@ class CcudaCodePrinter(CCodePrinter):
             cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s\n' % (dummy_array, cpy_data)
 
-    def _print_CudaDeviceSynchronize(self, expr):
+    def _print_CudaSynchronize(self, expr):
         return 'cudaDeviceSynchronize()'
 
     def _print_CudaInternalVar(self, expr):
@@ -572,7 +574,20 @@ class CcudaCodePrinter(CCodePrinter):
         var_name = cuda_Internal_Var[var_name]
         dim_c = ('x', 'y', 'z')[expr.dim]
         return '{}.{}'.format(var_name, dim_c)
-
+    
+    def cudaCopy(self, lhs, rhs):
+        from_location = 'Host'
+        to_location = 'Host'
+        if rhs.arg.memory_location in ('device', 'managed'):
+            from_location = 'Device'
+        if rhs.memory_location in ('device', 'managed'):
+            to_location = 'Device'
+        transfer_type = 'cudaMemcpy{0}To{1}'.format(from_location, to_location)
+        if isinstance(rhs.is_async, LiteralTrue):
+            cpy_data = "cudaMemcpyAsync({0}.raw_data, {1}.raw_data, {0}.buffer_size, {2}, 0);".format(lhs, rhs.arg, transfer_type)
+        else:
+            cpy_data = "cudaMemcpy({0}.raw_data, {1}.raw_data, {0}.buffer_size, {2});".format(lhs, rhs.arg, transfer_type)
+        return '%s\n' % (cpy_data)
 
 def ccudacode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of ccuda code
