@@ -140,9 +140,14 @@ class CudaArray(CudaNewArray):
         return self._arg
     @property
     def memory_location(self):
+        """ Indicate if the array is in the host or device memory
+        """
         return self._memory_location
+
     @property
     def current_context(self):
+        """ Indicates if the array created is in a host or device context
+        """
         return self._current_context
 
 class CudaDeviceSynchronize(PyccelInternalFunction):

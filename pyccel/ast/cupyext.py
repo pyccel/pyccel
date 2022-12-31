@@ -127,10 +127,14 @@ class CupyArray(CudaNewArray):
 
     @property
     def current_context(self):
+        """ Indicates if the array created is in a host or device context
+        """
         return self._current_context
 
     @property
     def memory_location(self):
+        """ Indicate if the array is in the host or device memory
+        """
         return self._memory_location
 
 #==============================================================================
