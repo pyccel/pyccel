@@ -9,42 +9,42 @@ def augassign_add_1d_int(a):
     import numpy as np
     b = a
     b += 42
-    return b
+    return b[0]
 
 @types('float[:]')
 def augassign_add_1d_float(a):
     import numpy as np
     b = a
     b += 4.2
-    return b
+    return b[0]
 
 @types('complex[:]')
 def augassign_add_1d_complex(a):
     import numpy as np
     b = a
     b += (4.0 + 2.0j)
-    return b
+    return b[0]
 
 @types('int[:,:]')
 def augassign_add_2d_int(a):
     import numpy as np
     b = a
     b += 42
-    return b
+    return b[0][0]
 
 @types('float[:,:]')
 def augassign_add_2d_float(a):
     import numpy as np
     b = a
     b += 4.2
-    return b
+    return b[0][0]
 
 @types('complex[:,:]')
 def augassign_add_2d_complex(a):
     import numpy as np
     b = a
     b += (4.0 + 2.0j)
-    return b
+    return b[0][0]
 
 # -=
 
@@ -53,42 +53,42 @@ def augassign_sub_1d_int(a):
     import numpy as np
     b = a
     b -= 42
-    return b
+    return b[0]
 
 @types('float[:]')
 def augassign_sub_1d_float(a):
     import numpy as np
     b = a
     b -= 4.2
-    return b
+    return b[0]
 
 @types('complex[:]')
 def augassign_sub_1d_complex(a):
     import numpy as np
     b = a
     b -= (4.0 + 2.0j)
-    return b
+    return b[0]
 
 @types('int[:,:]')
 def augassign_sub_2d_int(a):
     import numpy as np
     b = a
     b -= 42
-    return b
+    return b[0][0]
 
 @types('float[:,:]')
 def augassign_sub_2d_float(a):
     import numpy as np
     b = a
     b -= 4.2
-    return b
+    return b[0][0]
 
 @types('complex[:,:]')
 def augassign_sub_2d_complex(a):
     import numpy as np
     b = a
     b -= (4.0 + 2.0j)
-    return b
+    return b[0][0]
 
 # *=
 
@@ -97,42 +97,42 @@ def augassign_mul_1d_int(a):
     import numpy as np
     b = a
     b *= 42
-    return b
+    return b[0]
 
 @types('float[:]')
 def augassign_mul_1d_float(a):
     import numpy as np
     b = a
     b *= 4.2
-    return b
+    return b[0]
 
 @types('complex[:]')
 def augassign_mul_1d_complex(a):
     import numpy as np
     b = a
     b *= (4.0 + 2.0j)
-    return b
+    return b[0]
 
 @types('int[:,:]')
 def augassign_mul_2d_int(a):
     import numpy as np
     b = a
     b *= 42
-    return b
+    return b[0][0]
 
 @types('float[:,:]')
 def augassign_mul_2d_float(a):
     import numpy as np
     b = a
     b *= 4.2
-    return b
+    return b[0][0]
 
 @types('complex[:,:]')
 def augassign_mul_2d_complex(a):
     import numpy as np
     b = a
     b *= (4.0 + 2.0j)
-    return b
+    return b[0][0]
 
 # /=
 
@@ -141,39 +141,39 @@ def augassign_div_1d_int(a):
     import numpy as np
     b = a
     b /= 42
-    return b
+    return b[0]
 
 @types('float[:]')
 def augassign_div_1d_float(a):
     import numpy as np
     b = a
     b /= 4.2
-    return b
+    return b[0]
 
 @types('complex[:]')
 def augassign_div_1d_complex(a):
     import numpy as np
     b = a
     b /= (4.0 + 2.0j)
-    return b
+    return b[0]
 
 @types('int[:,:]')
 def augassign_div_2d_int(a):
     import numpy as np
     b = a
     b /= 42
-    return b
+    return b[0][0]
 
 @types('float[:,:]')
 def augassign_div_2d_float(a):
     import numpy as np
     b = a
     b /= 4.2
-    return b
+    return b[0][0]
 
 @types('complex[:,:]')
 def augassign_div_2d_complex(a):
     import numpy as np
     b = a
     b /= (4.0 + 2.0j)
-    return b
+    return b[0][0]
