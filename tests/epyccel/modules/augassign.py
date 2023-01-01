@@ -2,7 +2,7 @@
 
 from pyccel.decorators import types
 
-# += 
+# +=
 
 @types('int[:]')
 def augassign_add_1d_int(a):
