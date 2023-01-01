@@ -1,4 +1,5 @@
-# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
+# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring
+# pylint: disable=django-not-configure
 
 from pyccel.decorators import kernel, types
 from pyccel import cuda
