@@ -126,6 +126,8 @@ class CupyArray(CudaNewArray):
 
     @property
     def memory_location(self):
+        """ Indicate if the array is in the host or device memory
+        """
         return self._memory_location
 
 #==============================================================================

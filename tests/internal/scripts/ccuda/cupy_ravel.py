@@ -1,6 +1,8 @@
+# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring
+
+import cupy as cp
 from pyccel.decorators import kernel, types
 from pyccel import cuda
-import cupy as cp
 
 @kernel
 @types('int[:]', 'int[:]')
@@ -13,6 +15,6 @@ if __name__ == '__main__':
     n_blocks = 1
     arr1 = cp.ravel([[1,2],[1,3]])
     arr2 = cp.ravel([1,2,3,4])
-    cuda.deviceSynchronize()
+    cuda.synchronize()
     func[n_blocks, threads_per_block](arr1, arr2)
-    cuda.deviceSynchronize()
+    cuda.synchronize()

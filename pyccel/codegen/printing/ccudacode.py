@@ -439,22 +439,22 @@ class CcudaCodePrinter(CCodePrinter):
             if isinstance(rhs_var, CupyRavel):
                 memory_location = 'allocateMemoryOnDevice'
                 lhs = self._print(lhs_address)
-                return 'cupy_ravel({}, {}, {});\n'.format(lhs, rhs_var, memory_location)
+                return f'cupy_ravel({lhs}, {rhs_var}, {memory_location});\n'
             rhs = self._print(rhs_var)
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
                 lhs = self._print(lhs_address)
                 if lhs_var.order == rhs_var.order:
-                    return 'alias_assign({}, {});\n'.format(lhs, rhs)
+                    return f'alias_assign({lhs}, {rhs});\n'
                 else:
-                    return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
+                    return f'transpose_alias_assign({lhs}, {rhs});\n'
             else:
                 lhs = self._print(lhs_var)
-                return '{} = {};\n'.format(lhs, rhs)
+                return f'{lhs} = {rhs};\n'
         else:
             lhs = self._print(lhs_address)
             rhs = self._print(rhs_address)
 
-            return '{} = {};\n'.format(lhs, rhs)
+            return f'{lhs} = {rhs};\n'
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -556,14 +556,15 @@ class CcudaCodePrinter(CCodePrinter):
 
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "cudaMemcpy({0}.{2}, {1}.{2}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(lhs, arg, dtype)
+            cpy_data = f"cudaMemcpy({lhs}.{dtype}, {arg}.{dtype}, {lhs}.buffer_size, cudaMemcpyHostToDevice);"
             return '%s\n' % (cpy_data)
         else :
             if arg.rank > 1:
                 arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "cudaMemcpy({0}.{2}, {1}, {0}.buffer_size, cudaMemcpyHostToDevice);".format(self._print(lhs), dummy_array_name, dtype)
+            target_array_name = self._print(lhs)
+            cpy_data = f"cudaMemcpy({target_array_name}.{dtype}, {dummy_array_name}, {target_array_name}.buffer_size, cudaMemcpyHostToDevice);"
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def _print_CudaSynchronize(self, expr):
