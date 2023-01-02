@@ -18,12 +18,12 @@ Python's ast module discards all comments, so the function [`pyccel.parser.exten
 The key line of the function `parse` is the call to `self._visit(self.fst)`.
 All elements of the tree must be visited.
 The `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
-This function must have the form:
+These functions must have the form:
 ```python
 def _visit_ClassName(self, stmt):
     ...
 ```
-Each of these functions should internally call the `_visit` function on each of the elements of the object to obtain Pyccel AST nodes which can be combined to create a Pyccel AST node representing the current object.
+Each of these `_visit_X` functions should internally call the `_visit` function on each of the elements of the object to obtain Pyccel AST nodes which can be combined to create a Pyccel AST node representing the current object.
 
 ### Example
 
