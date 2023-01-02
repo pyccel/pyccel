@@ -132,14 +132,12 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
     return (arr);
 }
 
-void cupy_ravel(t_ndarray *dest, t_ndarray src, enum e_memory_locations location)
+void cupy_ravel(t_ndarray *dest, t_ndarray src)
 {
     *dest = src;
-    void (*fun_ptr_arr[])(void*, size_t) = {managed_memory, host_memory, device_memory};
-
     dest->nd = 1;
-    (*fun_ptr_arr[location])(&(dest->shape), sizeof(int64_t));
-    (*fun_ptr_arr[location])(&(dest->strides), sizeof(int64_t));
+    managed_memory(&(dest->shape), sizeof(int64_t));
+    managed_memory(&(dest->strides), sizeof(int64_t));
     *(dest->shape) = src.length;
     *(dest->strides) = 1;
     dest->is_view = true;
