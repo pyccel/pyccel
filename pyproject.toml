@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "setuptools >= 37, < 61",
-    "numpy",
+    "numpy >= 1.16, < 1.24"
     "sympy>=1.2",
     "termcolor",
     "textx>=2.2",
