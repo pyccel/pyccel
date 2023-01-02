@@ -23,16 +23,16 @@ def test_augassign_add_1d(language):
     x2_float   = np.zeros(5, dtype=float)
     x2_complex = np.zeros(5, dtype=complex)
 
-    f_int(x1_int)
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_int_epyc(x2_int)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_int = f_int(x1_int)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_int = f_int_epyc(x2_int)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_int, x2_int)
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_int == y2_int and np.array_equal(x1_int, x2_int)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 def test_augassign_add_2d(language):
     f_int     = mod.augassign_add_2d_int
@@ -49,16 +49,16 @@ def test_augassign_add_2d(language):
     x2_float   = np.zeros((5, 5), dtype=float)
     x2_complex = np.zeros((5, 5), dtype=complex)
 
-    f_int(x1_int)
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_int_epyc(x2_int)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_int = f_int(x1_int)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_int = f_int_epyc(x2_int)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_int, x2_int)
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_int == y2_int and np.array_equal(x1_int, x2_int)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
 # -= tests
@@ -78,16 +78,16 @@ def test_augassign_sub_1d(language):
     x2_float   = np.zeros(5, dtype=float)
     x2_complex = np.zeros(5, dtype=complex)
 
-    f_int(x1_int)
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_int_epyc(x2_int)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_int = f_int(x1_int)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_int = f_int_epyc(x2_int)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_int, x2_int)
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_int == y2_int and np.array_equal(x1_int, x2_int)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 def test_augassign_sub_2d(language):
     f_int     = mod.augassign_sub_2d_int
@@ -104,16 +104,16 @@ def test_augassign_sub_2d(language):
     x2_float   = np.zeros((5, 5), dtype=float)
     x2_complex = np.zeros((5, 5), dtype=complex)
 
-    f_int(x1_int)
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_int_epyc(x2_int)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_int = f_int(x1_int)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_int = f_int_epyc(x2_int)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_int, x2_int)
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_int == y2_int and np.array_equal(x1_int, x2_int)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
 # *= tests
@@ -133,16 +133,16 @@ def test_augassign_mul_1d(language):
     x2_float   = np.zeros(5, dtype=float)
     x2_complex = np.zeros(5, dtype=complex)
 
-    f_int(x1_int)
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_int_epyc(x2_int)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_int = f_int(x1_int)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_int = f_int_epyc(x2_int)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_int, x2_int)
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_int == y2_int and np.array_equal(x1_int, x2_int)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 def test_augassign_mul_2d(language):
     f_int     = mod.augassign_mul_2d_int
@@ -159,16 +159,16 @@ def test_augassign_mul_2d(language):
     x2_float   = np.zeros((5, 5), dtype=float)
     x2_complex = np.zeros((5, 5), dtype=complex)
 
-    f_int(x1_int)
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_int_epyc(x2_int)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_int = f_int(x1_int)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_int = f_int_epyc(x2_int)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_int, x2_int)
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_int == y2_int and np.array_equal(x1_int, x2_int)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 
 # /= tests
@@ -184,13 +184,13 @@ def test_augassign_div_1d(language):
     x2_float   = np.zeros(5, dtype=float)
     x2_complex = np.zeros(5, dtype=complex)
 
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
 
 def test_augassign_div_2d(language):
     f_float   = mod.augassign_div_2d_float
@@ -203,10 +203,10 @@ def test_augassign_div_2d(language):
     x2_float   = np.zeros((5, 5), dtype=float)
     x2_complex = np.zeros((5, 5), dtype=complex)
 
-    f_float(x1_float)
-    f_complex(x1_complex)
-    f_float_epyc(x2_float)
-    f_complex_epyc(x2_complex)
+    y1_float = f_float(x1_float)
+    y1_complex = f_complex(x1_complex)
+    y2_float = f_float_epyc(x2_float)
+    y2_complex = f_complex_epyc(x2_complex)
 
-    assert np.array_equal(x1_float, x2_float)
-    assert np.array_equal(x1_complex, x2_complex)
+    assert y1_float == y2_float and np.array_equal(x1_float, x2_float)
+    assert y1_complex == y2_complex and np.array_equal(x1_complex, x2_complex)
