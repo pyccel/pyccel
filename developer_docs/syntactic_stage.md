@@ -12,8 +12,8 @@ The syntactic stage serves 4 main purposes:
 
 The entry point for the class `SyntaxParser` is the function `parse`.
 This function is called from the constructor to examine a FST (Full Syntax Tree) object.
-The FST is the output of Python's `ast.parse` function with comments inserted using the [`pyccel.parser.extend_tree.extend_tree`](../pyccel/parser/extend_tree.py).
-Python's ast module discards all comments, so the function [`pyccel.parser.extend_tree.extend_tree`](../pyccel/parser/extend_tree.py) is needed to read the file and reinsert these comments at the correct location.
+The FST is the output of Python's `ast.parse` function with comments reinserted using the [`pyccel.parser.extend_tree.extend_tree`](../pyccel/parser/extend_tree.py) function.
+This is necessary as python's ast module discards all comments.
 
 The key line of the function `parse` is the call to `self._visit(self.fst)`.
 All elements of the tree must be visited.
