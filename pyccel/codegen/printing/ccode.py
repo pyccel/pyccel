@@ -360,9 +360,9 @@ class CCodePrinter(CodePrinter):
             temp_var_declare = Declare(temp_var.dtype, temp_var)
             temp_var_allocate = Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated")
             operations += self._print(temp_var_declare) + self._print(temp_var_allocate)
-            copy_to = temp_array_name
+            copy_to = temp_var
         else:
-            copy_to = self._print(lhs)
+            copy_to = lhs
         num_elements = len(flattened_list)
         if num_elements != len(self._get_starting_consecutive_scalars(flattened_list))\
         and num_elements != 1:
