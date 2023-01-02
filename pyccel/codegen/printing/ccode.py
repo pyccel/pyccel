@@ -1272,7 +1272,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         free_code = ''
-         #free the array if it's already allocated and check if it's not null if the status is unknown
+        #free the array if it's already allocated and check if it's not null if the status is unknown
         if (expr.status == 'unknown'):
             free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
