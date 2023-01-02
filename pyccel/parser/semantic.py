@@ -827,13 +827,13 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            if isinstance(func, FunctionDef):
-                if 'device' in func.decorators\
-                and ('device' not in self.scope.decorators and 'kernel' not in self.scope.decorators):
-                    raise NotImplementedError("Cannot call GPU function from Host space")
-                if ('device' not in func.decorators and 'kernel' not in func.decorators)\
-                and ('device' in self.scope.decorators or 'kernel' in self.scope.decorators):
-                    raise NotImplementedError("Cannot call Host function from GPU space")
+            # if isinstance(func, FunctionDef):
+            #     if 'device' in func.decorators\
+            #     and ('device' not in self.scope.decorators and 'kernel' not in self.scope.decorators):
+            #         raise NotImplementedError("Cannot call GPU function from Host space")
+            #     if ('device' not in func.decorators and 'kernel' not in func.decorators)\
+            #     and ('device' in self.scope.decorators or 'kernel' in self.scope.decorators):
+            #         raise NotImplementedError("Cannot call Host function from GPU space")
             if self._current_function == func.name:
                 if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
