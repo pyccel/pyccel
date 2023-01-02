@@ -165,7 +165,7 @@ int32_t test_indexing_int64(void)
 
     x = array_create(2, m_1_shape, nd_int64, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
@@ -194,7 +194,7 @@ int32_t test_indexing_int64_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int64, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 13;
     my_assert(index , c_index, "testing the strides");
@@ -223,7 +223,7 @@ int32_t test_indexing_int32(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
@@ -252,7 +252,7 @@ int32_t test_indexing_int32_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 13;
     my_assert(index , c_index, "testing the strides");
@@ -282,7 +282,7 @@ int32_t test_indexing_int16(void)
 
     x = array_create(2, m_1_shape, nd_int16, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
@@ -311,7 +311,7 @@ int32_t test_indexing_int16_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int16, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 13;
     my_assert(index , c_index, "testing the strides");
@@ -340,7 +340,7 @@ int32_t test_indexing_int8(void)
 
     x = array_create(2, m_1_shape, nd_int8, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
@@ -369,7 +369,7 @@ int32_t test_indexing_int8_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int8, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 13;
     my_assert(index , c_index, "testing the strides");
@@ -398,7 +398,7 @@ int32_t test_indexing_double(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
@@ -432,7 +432,7 @@ int32_t test_indexing_double_order_f(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 2]
+    // testing the strides for index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 13;
     my_assert(index , c_index, "testing the strides");
@@ -461,7 +461,7 @@ int32_t test_indexing_cdouble(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -490,7 +490,7 @@ int32_t test_indexing_cdouble_order_f(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -519,7 +519,7 @@ int32_t test_indexing_cfloat(void)
 
     x = array_create(2, m_1_shape, nd_cfloat, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -548,7 +548,7 @@ int32_t test_indexing_cfloat_order_f(void)
 
     x = array_create(2, m_1_shape, nd_cfloat, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1049,7 +1049,7 @@ int32_t test_array_fill_int64(void)
 
     x = array_create(2, m_1_shape, nd_int64, false, order_c);
     array_fill((int64_t)32, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1073,7 +1073,7 @@ int32_t test_array_fill_int64_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int64, false, order_f);
     array_fill((int64_t)64, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1098,7 +1098,7 @@ int32_t test_array_fill_int32(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_c);
     array_fill((int32_t)32, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1122,7 +1122,7 @@ int32_t test_array_fill_int32_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_f);
     array_fill((int32_t)32, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1147,7 +1147,7 @@ int32_t test_array_fill_int16(void)
 
     x = array_create(2, m_1_shape, nd_int16, false, order_c);
     array_fill((int16_t)32, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1171,7 +1171,7 @@ int32_t test_array_fill_int16_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int16, false, order_f);
     array_fill((int16_t)16, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1195,7 +1195,7 @@ int32_t test_array_fill_int8(void)
 
     x = array_create(2, m_1_shape, nd_int8, false, order_c);
     array_fill((int8_t)32, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1219,7 +1219,7 @@ int32_t test_array_fill_int8_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int8, false, order_f);
     array_fill((int8_t)8, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1243,7 +1243,7 @@ int32_t test_array_fill_double(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_c);
     array_fill(2., x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1267,7 +1267,7 @@ int32_t test_array_fill_double_order_f(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_f);
     array_fill(2., x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1291,7 +1291,7 @@ int32_t test_array_fill_cdouble(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_c);
     array_fill(0.3+0.54*I, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1315,7 +1315,7 @@ int32_t test_array_fill_cdouble_order_f(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_f);
     array_fill(0.3+0.54*I, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
     my_assert(index , c_index, "testing the strides");
@@ -1341,7 +1341,7 @@ int32_t test_array_zeros_double(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_c);
     array_fill(0, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1365,7 +1365,7 @@ int32_t test_array_zeros_int32(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_c);
     array_fill(0, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
@@ -1389,7 +1389,7 @@ int32_t test_array_zeros_cdouble(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_c);
     array_fill(0, x);
-    // testing the index [3, 1]
+    // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
