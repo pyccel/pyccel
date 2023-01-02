@@ -2636,9 +2636,6 @@ class SemanticParser(BasicParser):
             elif is_pointer_i:
                 new_expr = AliasAssign(l, r)
 
-            elif isinstance(expr, AugAssign):
-                new_expr = AugAssign(l, expr.op, r)
-
 
             elif new_expr.is_symbolic_alias:
                 new_expr = SymbolicAssign(l, r)
