@@ -81,6 +81,8 @@ def get_diff_as_json(filename):
                 j+=1
                 i+=1
             assert n_delete == j
+            while i<n and lines[i].startswith('\\'):
+                i+=1
             j=0
             while j<n_append and lines[i].startswith('+'):
                 current_file_additions.append(insert_index+j)
