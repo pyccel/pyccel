@@ -346,12 +346,12 @@ class CcudaCodePrinter(CCodePrinter):
     def _print_Deallocate(self, expr):
         dealloc_code = ''
         if expr.variable.is_alias:
-            dealloc_code =  'cuda_free_pointer({});'.format(expr.variable)
+            dealloc_code =  f"cuda_free_pointer({expr.variable});"
         else:
             if expr.variable.memory_location == 'host':
-                dealloc_code = 'cuda_free_host({});'.format(expr.variable)
+                dealloc_code = f"cuda_free_host({expr.variable});"
             else:
-                dealloc_code = 'cuda_free({});'.format(expr.variable)
+                dealloc_code = f"cuda_free({expr.variable});"
         return '%s\n' % (dealloc_code)
 
     def _print_KernelCall(self, expr):

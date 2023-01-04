@@ -6,9 +6,6 @@ from pyccel import cuda
 
 @kernel
 def func(arr:'int[:]'):
-    """
-    Takes an array 'arr' as input and raise each element to the power 2.
-    """
     i = cuda.grid(0)
     arr[i] = math.pow(arr[i], 2)
 
