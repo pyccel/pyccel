@@ -145,7 +145,6 @@ int32_t cuda_free_array(t_ndarray arr)
     return (1);
 }
 
-__host__ __device__
 int32_t cuda_free_host(t_ndarray arr)
 {
     if (arr.shape == NULL)

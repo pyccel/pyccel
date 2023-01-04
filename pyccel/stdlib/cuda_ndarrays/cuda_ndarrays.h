@@ -25,7 +25,6 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type, boo
 int32_t         cuda_free_array(t_ndarray dump);
 int32_t         cuda_free_pointer(t_ndarray dump);
 
-__host__ __device__
 int32_t cuda_free_host(t_ndarray arr);
 
 __host__ __device__
