@@ -458,7 +458,7 @@ int get_dimension_stride(int64_t *shape, int nd, int max_nd)
 }
 
 /*
-**  Takes an array needed to do the caculations
+**  Takes an array needed to do the calculations
 **  An element number, representing an element's index if it were in a flattened (order_c/row major) array
 **  nd, representing the number of dimensions
 **  returns the element's index depending on its required memory layout (order_f/column major or order_c/row major)
