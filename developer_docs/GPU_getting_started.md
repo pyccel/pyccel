@@ -6,7 +6,7 @@
 
     In Pyccel, the `@kernel` decorator is used to indicate that a function should be treated as a CUDA kernel. A CUDA kernel is a function that is executed on a GPU and is typically used to perform a parallel computation over a large dataset.
 
-    The `@kernel` decorator is used to indicate to Pyccel that the function should be compiled as a CUDA kernel, and that it can be launched on a GPU using the appropriate syntax. For example, if we have a function decorated with `@kernel` like this:
+By applying the @kernel decorator to a function, Pyccel recognizes it as a CUDA kernel that can be launched on a GPU using the appropriate syntax.
 
     > kernels can not return a variable that is why we pass the returned variable in the kernel arguments.
 
