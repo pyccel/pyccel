@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen.printing.luacode &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.codegen.printing.luacode</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.codegen.printing.luacode</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># pylint: disable=missing-function-docstring</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Lua code printer</span>
+
+<span class="sd">The `LuaCodePrinter` converts SymPy expressions into Lua expressions.</span>
+
+<span class="sd">A complete code generator, which uses `lua_code` extensively, can be found</span>
+<span class="sd">in `sympy.utilities.codegen`. The `codegen` module can be used to generate</span>
+<span class="sd">complete source code files.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># TODO: add examples</span>
+
+<span class="c1"># TODO: find a solution when using math functions. For example, for the moment, we are using</span>
+<span class="c1">#       math.pow rather than first declaring pow as local and then calling</span>
+<span class="c1">#       immediatly pow.</span>
+
+<span class="c1"># Possible Improvement</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+
+
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.precedence</span> <span class="kn">import</span> <span class="n">precedence</span>
+<span class="kn">from</span> <span class="nn">sympy.sets.fancysets</span> <span class="kn">import</span> <span class="n">Range</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.codegen.printing.codeprinter</span> <span class="kn">import</span> <span class="n">CodePrinter</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.messages</span> <span class="kn">import</span> <span class="n">PYCCEL_RESTRICTION_TODO</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;LuaCodePrinter&quot;</span><span class="p">,</span> <span class="s2">&quot;lua_code&quot;</span><span class="p">]</span>
+
+
+<span class="c1"># f64 method in Lua</span>
+<span class="n">known_functions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;is_nan&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;is_infinite&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;is_finite&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;is_normal&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;classify&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;floor&quot;</span><span class="p">:</span> <span class="s2">&quot;floor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ceiling&quot;</span><span class="p">:</span> <span class="s2">&quot;ceil&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;round&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;trunc&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;fract&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Abs&quot;</span><span class="p">:</span> <span class="s2">&quot;abs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sign&quot;</span><span class="p">:</span> <span class="s2">&quot;signum&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;is_sign_positive&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;is_sign_negative&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;mul_add&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;exp&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="k">lambda</span> <span class="n">exp</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;exp&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span>   <span class="c1"># e ** x</span>
+    <span class="s2">&quot;log&quot;</span><span class="p">:</span> <span class="s2">&quot;ln&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span>          <span class="c1"># number.log(base)</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;log2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;log10&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;to_degrees&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;to_radians&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Max&quot;</span><span class="p">:</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Min&quot;</span><span class="p">:</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;hypot&quot;</span><span class="p">,</span>        <span class="c1"># (x**2 + y**2) ** 0.5</span>
+    <span class="s2">&quot;sin&quot;</span><span class="p">:</span> <span class="s2">&quot;sin&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cos&quot;</span><span class="p">:</span> <span class="s2">&quot;cos&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tan&quot;</span><span class="p">:</span> <span class="s2">&quot;tan&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;asin&quot;</span><span class="p">:</span> <span class="s2">&quot;asin&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;acos&quot;</span><span class="p">:</span> <span class="s2">&quot;acos&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;atan&quot;</span><span class="p">:</span> <span class="s2">&quot;atan&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;atan2&quot;</span><span class="p">:</span> <span class="s2">&quot;atan2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;sin_cos&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;exp_m1&quot;</span><span class="p">,</span>       <span class="c1"># e ** x - 1</span>
+    <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="s2">&quot;ln_1p&quot;</span><span class="p">,</span>        <span class="c1"># ln(1 + x)</span>
+    <span class="s2">&quot;sinh&quot;</span><span class="p">:</span> <span class="s2">&quot;sinh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cosh&quot;</span><span class="p">:</span> <span class="s2">&quot;cosh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tanh&quot;</span><span class="p">:</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;asinh&quot;</span><span class="p">:</span> <span class="s2">&quot;asinh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;acosh&quot;</span><span class="p">:</span> <span class="s2">&quot;acosh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;atanh&quot;</span><span class="p">:</span> <span class="s2">&quot;atanh&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># i64 method in Lua</span>
+<span class="c1"># known_functions_i64 = {</span>
+<span class="c1">#     &quot;&quot;: &quot;min_value&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;max_value&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;from_str_radix&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;count_ones&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;count_zeros&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;leading_zeros&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;trainling_zeros&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;rotate_left&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;rotate_right&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;swap_bytes&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;from_be&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;from_le&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;to_be&quot;,    # to big endian</span>
+<span class="c1">#     &quot;&quot;: &quot;to_le&quot;,    # to little endian</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_add&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_sub&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_mul&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_div&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_rem&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_neg&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_shl&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_shr&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;checked_abs&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;saturating_add&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;saturating_sub&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;saturating_mul&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_add&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_sub&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_mul&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_div&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_rem&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_neg&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_shl&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_shr&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;wrapping_abs&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_add&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_sub&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_mul&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_div&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_rem&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_neg&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_shl&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_shr&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;overflowing_abs&quot;,</span>
+<span class="c1">#     &quot;Pow&quot;: &quot;pow&quot;,</span>
+<span class="c1">#     &quot;Abs&quot;: &quot;abs&quot;,</span>
+<span class="c1">#     &quot;sign&quot;: &quot;signum&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;is_positive&quot;,</span>
+<span class="c1">#     &quot;&quot;: &quot;is_negnative&quot;,</span>
+<span class="c1"># }</span>
+
+<span class="c1"># These are the core reserved words in the Lua language. Taken from:</span>
+<span class="c1"># http://doc.lua-lang.org/grammar.html#keywords</span>
+
+<span class="n">reserved_words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                  <span class="c1">### the remaining are copy/paste from Rust.</span>
+                  <span class="c1"># TODO must be removed</span>
+                  <span class="s1">&#39;abstract&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;alignof&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;as&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;become&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;box&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;break&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;const&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;continue&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;crate&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;do&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;else&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;enum&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;extern&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;false&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;final&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;fn&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;if&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;impl&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;in&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;let&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;loop&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;macro&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;match&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;mod&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;move&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;mut&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;offsetof&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;override&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;priv&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;proc&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;pub&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;pure&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;ref&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;return&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Self&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;self&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;sizeof&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;static&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;struct&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;super&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;trait&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;true&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;type&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;typeof&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;unsafe&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;unsized&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;use&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;virtual&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;where&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;while&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;yield&#39;</span><span class="p">]</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LuaCodePrinter"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter">[docs]</a><span class="k">class</span> <span class="nc">LuaCodePrinter</span><span class="p">(</span><span class="n">CodePrinter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A printer to convert python expressions to strings of Lua code&quot;&quot;&quot;</span>
+    <span class="n">printmethod</span> <span class="o">=</span> <span class="s2">&quot;_lua_code&quot;</span>
+    <span class="n">language</span> <span class="o">=</span> <span class="s2">&quot;Lua&quot;</span>
+
+    <span class="n">_default_settings</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;order&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;full_prec&#39;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="s1">&#39;user_functions&#39;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s1">&#39;local_vars&#39;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s1">&#39;human&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;contract&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;dereference&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
+        <span class="s1">&#39;error_on_reserved&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s1">&#39;reserved_word_suffix&#39;</span><span class="p">:</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;inline&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="n">CodePrinter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">known_functions</span><span class="p">)</span>
+        <span class="n">userfuncs</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;user_functions&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">userfuncs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dereference</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dereference&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reserved_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">reserved_words</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_vars</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;local_vars&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+<div class="viewcode-block" id="LuaCodePrinter._rate_index_position"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._rate_index_position">[docs]</a>    <span class="k">def</span> <span class="nf">_rate_index_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">*</span><span class="mi">5</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._get_statement"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._get_statement">[docs]</a>    <span class="k">def</span> <span class="nf">_get_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codestring</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">codestring</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._get_comment"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._get_comment">[docs]</a>    <span class="k">def</span> <span class="nf">_get_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;-- </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">text</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._declare_number_const"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._declare_number_const">[docs]</a>    <span class="k">def</span> <span class="nf">_declare_number_const</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;const </span><span class="si">%s</span><span class="s2">: f64 = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._format_code"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._format_code">[docs]</a>    <span class="k">def</span> <span class="nf">_format_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_code</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._traverse_matrix_indices"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._traverse_matrix_indices">[docs]</a>    <span class="k">def</span> <span class="nf">_traverse_matrix_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mat</span><span class="p">):</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._get_loop_opening_ending"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._get_loop_opening_ending">[docs]</a>    <span class="k">def</span> <span class="nf">_get_loop_opening_ending</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="n">open_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">close_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">loopstart</span> <span class="o">=</span> <span class="s2">&quot;for </span><span class="si">%(var)s</span><span class="s2"> in </span><span class="si">%(start)s</span><span class="s2">..</span><span class="si">%(end)s</span><span class="s2"> {&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="c1"># Lua arrays start at 0 and end at dimension-1</span>
+            <span class="n">open_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loopstart</span> <span class="o">%</span> <span class="p">{</span>
+                <span class="s1">&#39;var&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">lower</span><span class="p">),</span>
+                <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">upper</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)})</span>
+            <span class="n">close_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">open_lines</span><span class="p">,</span> <span class="n">close_lines</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_caller_var"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_caller_var">[docs]</a>    <span class="k">def</span> <span class="nf">_print_caller_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># for something like `sin(x + y + z)`,</span>
+            <span class="c1"># make sure we can get &#39;(x + y + z).sin()&#39;</span>
+            <span class="c1"># instead of &#39;x + y + z.sin()&#39;</span>
+            <span class="k">return</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Function"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Function">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO improve. for the moment, in ValeCodeGen we subs the expression to</span>
+        <span class="c1"># add the call to the function</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Pow"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Pow">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Pow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;Pow&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">known_functions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_Function</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="n">PREC</span> <span class="o">=</span> <span class="n">precedence</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;1.0/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parenthesize</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">PREC</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;math.sqrt(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;math.pow(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parenthesize</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">PREC</span><span class="p">),</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">parenthesize</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">PREC</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Float"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Float">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Float</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">LuaCodePrinter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_print_Float</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ret</span> <span class="o">+</span> <span class="s1">&#39;_f64&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Integer"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Integer">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Integer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># TODO use ceiling since Lua does not have an Integer type.</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">LuaCodePrinter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_print_Integer</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ret</span> <span class="o">+</span> <span class="s1">&#39;_i32&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Rational"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Rational">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Rational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">p</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">_f64/</span><span class="si">%d</span><span class="s1">.0&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Indexed"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Indexed">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Indexed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c1"># calculate index for 1d array</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">elem</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="p">))):</span>
+            <span class="n">elem</span> <span class="o">+=</span> <span class="n">expr</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">offset</span>
+            <span class="n">offset</span> <span class="o">*=</span> <span class="n">dims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">label</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">elem</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Idx"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Idx">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Dummy"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Dummy">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Dummy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Exp1"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Exp1">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Exp1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;E&quot;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Pi"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Pi">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Pi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;PI&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Infinity"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Infinity">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Infinity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;INFINITY&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NegativeInfinity"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NegativeInfinity">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NegativeInfinity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;NEG_INFINITY&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_BooleanTrue"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_BooleanTrue">[docs]</a>    <span class="k">def</span> <span class="nf">_print_BooleanTrue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;true&quot;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_BooleanFalse"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_BooleanFalse">[docs]</a>    <span class="k">def</span> <span class="nf">_print_BooleanFalse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;false&quot;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_bool"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_bool">[docs]</a>    <span class="k">def</span> <span class="nf">_print_bool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NaN"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NaN">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NaN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_type</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;NAN&quot;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Piecewise"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Piecewise">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Piecewise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cond</span><span class="p">:</span>
+            <span class="c1"># We need the last conditional to be a True, otherwise the resulting</span>
+            <span class="c1"># function may not return a result.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All Piecewise expressions must contain an &quot;</span>
+                             <span class="s2">&quot;(expr, True) statement to be used as a default &quot;</span>
+                             <span class="s2">&quot;condition. Without one, the generated &quot;</span>
+                             <span class="s2">&quot;expression may not evaluate to anything under &quot;</span>
+                             <span class="s2">&quot;some condition.&quot;</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;if (</span><span class="si">%s</span><span class="s2">) {&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">cond</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">cond</span><span class="p">:</span>
+                <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot; else {&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="s2">&quot; else if (</span><span class="si">%s</span><span class="s2">) {&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
+            <span class="n">code0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">code0</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s1">&#39;inline&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_ITE"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_ITE">[docs]</a>    <span class="k">def</span> <span class="nf">_print_ITE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">Piecewise</span>
+        <span class="n">_piecewise</span> <span class="o">=</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">_piecewise</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_MatrixBase"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_MatrixBase">[docs]</a>    <span class="k">def</span> <span class="nf">_print_MatrixBase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">cols</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix).&quot;</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">A</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+    <span class="c1"># FIXME: Str/CodePrinter could define each of these to call the _print</span>
+    <span class="c1"># method from higher up the class hierarchy (see _print_NumberSymbol).</span>
+    <span class="c1"># Then subclasses like us would not need to repeat all this.</span>
+    <span class="n">_print_Matrix</span> <span class="o">=</span> \
+        <span class="n">_print_MatrixElement</span> <span class="o">=</span> \
+        <span class="n">_print_DenseMatrix</span> <span class="o">=</span> \
+        <span class="n">_print_MutableDenseMatrix</span> <span class="o">=</span> \
+        <span class="n">_print_ImmutableMatrix</span> <span class="o">=</span> \
+        <span class="n">_print_ImmutableDenseMatrix</span> <span class="o">=</span> \
+        <span class="n">_print_MatrixBase</span>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Symbol"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Symbol">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">LuaCodePrinter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_print_Symbol</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">name</span></div>
+
+    <span class="c1"># ============ Elements ============ #</span>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Module"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Module">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Import"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Import">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;#include &quot;</span><span class="si">{0}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">fil</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Declare"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Declare">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Declare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NativeBool"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NativeBool">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NativeBool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;bool&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NativeInteger"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NativeInteger">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NativeInteger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;int&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NativeFloat"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NativeFloat">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NativeFloat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;float&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NativeDouble"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NativeDouble">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NativeDouble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;double&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_NativeVoid"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_NativeVoid">[docs]</a>    <span class="k">def</span> <span class="nf">_print_NativeVoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;void&#39;</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_FunctionDef"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_FunctionDef">[docs]</a>    <span class="k">def</span> <span class="nf">_print_FunctionDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ret_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># TODO: Use fortran example to add pointer arguments for multiple output</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Multiple output arguments is not yet supported in c&#39;</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">expr</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">datatype</span><span class="p">(</span><span class="s1">&#39;void&#39;</span><span class="p">))</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">arg_code</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">(</span><span class="si">{2}</span><span class="s1">) {{</span><span class="se">\n</span><span class="si">{3}</span><span class="se">\n</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ret_type</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arg_code</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Return"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Return">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;return </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_Assign"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">_print_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">lhs_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span>
+        <span class="n">rhs_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
+
+        <span class="n">local_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_vars</span><span class="p">)</span>
+        <span class="n">local_vars</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">local_vars</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">lhs_code</span> <span class="ow">in</span> <span class="n">local_vars</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;local </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs_code</span><span class="p">,</span> <span class="n">rhs_code</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_statement</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs_code</span><span class="p">,</span> <span class="n">rhs_code</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_AugAssign"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_AugAssign">[docs]</a>    <span class="k">def</span> <span class="nf">_print_AugAssign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">lhs_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">op</span>
+        <span class="n">rhs_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">= </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lhs_code</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">rhs_code</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter._print_For"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter._print_For">[docs]</a>    <span class="k">def</span> <span class="nf">_print_For</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c1"># TODO add step</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">iterable</span><span class="p">,</span> <span class="n">Range</span><span class="p">):</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">iterable</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Only iterable currently supported is Range&quot;</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;for </span><span class="si">{target}</span><span class="s1"> = </span><span class="si">{start}</span><span class="s1">, </span><span class="si">{stop}</span><span class="s1"> do&#39;</span>
+                <span class="s1">&#39;</span><span class="se">\n</span><span class="si">{body}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;end&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">stop</span><span class="o">=</span><span class="n">stop</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LuaCodePrinter.indent_code"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.LuaCodePrinter.indent_code">[docs]</a>    <span class="k">def</span> <span class="nf">indent_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Accepts a string of code or a list of code lines&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">code_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_code</span><span class="p">(</span><span class="n">code</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">code_lines</span><span class="p">)</span>
+
+        <span class="n">code</span> <span class="o">=</span> <span class="p">[</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39; </span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+
+        <span class="n">tab</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
+        <span class="n">inc_token</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">)</span>
+        <span class="n">dec_token</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">)</span>
+
+        <span class="n">increase</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">,</span> <span class="n">inc_token</span><span class="p">)))</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+        <span class="n">decrease</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">,</span> <span class="n">dec_token</span><span class="p">)))</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+
+        <span class="n">pretty</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">pretty</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">level</span> <span class="o">-=</span> <span class="n">decrease</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="n">pretty</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tab</span><span class="o">*</span><span class="n">level</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span>
+            <span class="n">level</span> <span class="o">+=</span> <span class="n">increase</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pretty</span></div></div>
+
+
+<div class="viewcode-block" id="lua_code"><a class="viewcode-back" href="../../../../pyccel.codegen.printing.html#pyccel.codegen.printing.luacode.lua_code">[docs]</a><span class="k">def</span> <span class="nf">lua_code</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assign_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts an expr to a string of Lua code</span>
+
+<span class="sd">    expr : Expr</span>
+<span class="sd">        A sympy expression to be converted.</span>
+<span class="sd">    assign_to : optional</span>
+<span class="sd">        When given, the argument is used as the name of the variable to which</span>
+<span class="sd">        the expression is assigned. Can be a string, ``Symbol``,</span>
+<span class="sd">        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of</span>
+<span class="sd">        line-wrapping, or for expressions that generate multi-line statements.</span>
+<span class="sd">    precision : integer, optional</span>
+<span class="sd">        The precision for numbers such as pi [default=15].</span>
+<span class="sd">    user_functions : dict, optional</span>
+<span class="sd">        A dictionary where the keys are string representations of either</span>
+<span class="sd">        ``FunctionClass`` or ``UndefinedFunction`` instances and the values</span>
+<span class="sd">        are their desired C string representations. Alternatively, the</span>
+<span class="sd">        dictionary value can be a list of tuples i.e. [(argument_test,</span>
+<span class="sd">        cfunction_string)].  See below for examples.</span>
+<span class="sd">    dereference : iterable, optional</span>
+<span class="sd">        An iterable of symbols that should be dereferenced in the printed code</span>
+<span class="sd">        expression. These would be values passed by address to the function.</span>
+<span class="sd">        For example, if ``dereference=[a]``, the resulting code would print</span>
+<span class="sd">        ``(*a)`` instead of ``a``.</span>
+<span class="sd">    human : bool, optional</span>
+<span class="sd">        If True, the result is a single string that may contain some constant</span>
+<span class="sd">        declarations for the number symbols. If False, the same information is</span>
+<span class="sd">        returned in a tuple of (symbols_to_declare, not_supported_functions,</span>
+<span class="sd">        code_text). [default=True].</span>
+<span class="sd">    contract: bool, optional</span>
+<span class="sd">        If True, ``Indexed`` instances are assumed to obey tensor contraction</span>
+<span class="sd">        rules and the corresponding nested loops over indices are generated.</span>
+<span class="sd">        Setting contract=False will not generate loops, instead the user is</span>
+<span class="sd">        responsible to provide values for the indices in the code.</span>
+<span class="sd">        [default=True].</span>
+<span class="sd">    locals: dict</span>
+<span class="sd">        A dictionary that contains the list of local symbols. these symbols will</span>
+<span class="sd">        be preceeded by local for their first assignment.</span>
+
+<span class="sd">    Examples</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import lua_code, symbols, Rational, sin, ceiling, Abs, Function</span>
+<span class="sd">    &gt;&gt;&gt; x, tau = symbols(&quot;x, tau&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; lua_code((2*tau)**Rational(7, 2))</span>
+<span class="sd">    &#39;8*1.4142135623731*tau.powf(7_f64/2.0)&#39;</span>
+<span class="sd">    &gt;&gt;&gt; lua_code(sin(x), assign_to=&quot;s&quot;)</span>
+<span class="sd">    &#39;s = x.sin();&#39;</span>
+
+<span class="sd">    Simple custom printing can be defined for certain types by passing a</span>
+<span class="sd">    dictionary of {&quot;type&quot; : &quot;function&quot;} to the ``user_functions`` kwarg.</span>
+<span class="sd">    Alternatively, the dictionary value can be a list of tuples i.e.</span>
+<span class="sd">    [(argument_test, cfunction_string)].</span>
+
+<span class="sd">    &gt;&gt;&gt; custom_functions = {</span>
+<span class="sd">    ...   &quot;ceiling&quot;: &quot;CEIL&quot;,</span>
+<span class="sd">    ...   &quot;Abs&quot;: [(lambda x: not x.is_integer, &quot;fabs&quot;, 4),</span>
+<span class="sd">    ...           (lambda x: x.is_integer, &quot;ABS&quot;, 4)],</span>
+<span class="sd">    ...   &quot;func&quot;: &quot;f&quot;</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &gt;&gt;&gt; func = Function(&#39;func&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; lua_code(func(Abs(x) + ceiling(x)), user_functions=custom_functions)</span>
+<span class="sd">    &#39;(fabs(x) + x.CEIL()).f()&#39;</span>
+
+<span class="sd">    ``Piecewise`` expressions are converted into conditionals. If an</span>
+<span class="sd">    ``assign_to`` variable is provided an if statement is created, otherwise</span>
+<span class="sd">    the ternary operator is used. Note that if the ``Piecewise`` lacks a</span>
+<span class="sd">    default term, represented by ``(expr, True)`` then an error will be thrown.</span>
+<span class="sd">    This is to prevent generating an expression that may not evaluate to</span>
+<span class="sd">    anything.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Piecewise</span>
+<span class="sd">    &gt;&gt;&gt; expr = Piecewise((x + 1, x &gt; 0), (x, True))</span>
+<span class="sd">    &gt;&gt;&gt; print(lua_code(expr, tau))</span>
+<span class="sd">    tau = if (x &gt; 0) {</span>
+<span class="sd">        x + 1</span>
+<span class="sd">    } else {</span>
+<span class="sd">        x</span>
+<span class="sd">    };</span>
+
+<span class="sd">    Support for loops is provided through ``Indexed`` types. With</span>
+<span class="sd">    ``contract=True`` these expressions will be turned into loops, whereas</span>
+<span class="sd">    ``contract=False`` will just print the assignment expression that should be</span>
+<span class="sd">    looped over:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Eq, IndexedBase, Idx</span>
+<span class="sd">    &gt;&gt;&gt; len_y = 5</span>
+<span class="sd">    &gt;&gt;&gt; y = IndexedBase(&#39;y&#39;, shape=(len_y,))</span>
+<span class="sd">    &gt;&gt;&gt; t = IndexedBase(&#39;t&#39;, shape=(len_y,))</span>
+<span class="sd">    &gt;&gt;&gt; Dy = IndexedBase(&#39;Dy&#39;, shape=(len_y-1,))</span>
+<span class="sd">    &gt;&gt;&gt; i = Idx(&#39;i&#39;, len_y-1)</span>
+<span class="sd">    &gt;&gt;&gt; e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))</span>
+<span class="sd">    &gt;&gt;&gt; lua_code(e.rhs, assign_to=e.lhs, contract=False)</span>
+<span class="sd">    &#39;Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);&#39;</span>
+
+<span class="sd">    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions</span>
+<span class="sd">    must be provided to ``assign_to``. Note that any expression that can be</span>
+<span class="sd">    generated normally can also exist inside a Matrix:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Matrix, MatrixSymbol</span>
+<span class="sd">    &gt;&gt;&gt; mat = Matrix([x**2, Piecewise((x + 1, x &gt; 0), (x, True)), sin(x)])</span>
+<span class="sd">    &gt;&gt;&gt; A = MatrixSymbol(&#39;A&#39;, 3, 1)</span>
+<span class="sd">    &gt;&gt;&gt; print(lua_code(mat, A))</span>
+<span class="sd">    A = [x.powi(2), if (x &gt; 0) {</span>
+<span class="sd">        x + 1</span>
+<span class="sd">    } else {</span>
+<span class="sd">        x</span>
+<span class="sd">    }, x.sin()];</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">LuaCodePrinter</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assign_to</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">print_lua_code</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints Lua representation of the given expression.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">((</span><span class="n">lua_code</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">)))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

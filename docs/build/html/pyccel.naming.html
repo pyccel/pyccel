@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.naming package &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyccel.parser package" href="pyccel.parser.html" />
+    <link rel="prev" title="pyccel.errors package" href="pyccel.errors.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">docBranck</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyccel.html">pyccel package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pyccel.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyccel.ast.html">pyccel.ast package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.codegen.html">pyccel.codegen package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.commands.html">pyccel.commands package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.compilers.html">pyccel.compilers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.complexity.html">pyccel.complexity package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.errors.html">pyccel.errors package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyccel.naming package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.parser.html">pyccel.parser package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.stdlib.html">pyccel.stdlib package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.symbolic.html">pyccel.symbolic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.utilities.html">pyccel.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.decorators">pyccel.decorators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.epyccel">pyccel.epyccel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.version">pyccel.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">docBranck</a> &raquo;</li>
+        
+          <li><a href="pyccel.html">pyccel package</a> &raquo;</li>
+        
+      <li>pyccel.naming package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pyccel.naming.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pyccel-naming-package">
+<h1>pyccel.naming package<a class="headerlink" href="#pyccel-naming-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyccel.naming.cnameclashchecker">
+<span id="pyccel-naming-cnameclashchecker-module"></span><h2>pyccel.naming.cnameclashchecker module<a class="headerlink" href="#module-pyccel.naming.cnameclashchecker" title="Permalink to this headline">¶</a></h2>
+<p>Handles name clash problems in C</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.naming.cnameclashchecker.CNameClashChecker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.naming.cnameclashchecker.</span></span><span class="sig-name descname"><span class="pre">CNameClashChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/cnameclashchecker.html#CNameClashChecker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.cnameclashchecker.CNameClashChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing functions to help avoid problematic names in C</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.naming.cnameclashchecker.CNameClashChecker.get_collisionless_name">
+<span class="sig-name descname"><span class="pre">get_collisionless_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/cnameclashchecker.html#CNameClashChecker.get_collisionless_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.cnameclashchecker.CNameClashChecker.get_collisionless_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name that will be used in the fortran code</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.naming.cnameclashchecker.CNameClashChecker.has_clash">
+<span class="sig-name descname"><span class="pre">has_clash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/cnameclashchecker.html#CNameClashChecker.has_clash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.cnameclashchecker.CNameClashChecker.has_clash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the proposed name causes any clashes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyccel.naming.cnameclashchecker.CNameClashChecker.keywords">
+<span class="sig-name descname"><span class="pre">keywords</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Decimal128',</span> <span class="pre">'GET_ELEMENT',</span> <span class="pre">'GET_INDEX',</span> <span class="pre">'GET_INDEX_EXP1',</span> <span class="pre">'GET_INDEX_EXP10',</span> <span class="pre">'GET_INDEX_EXP11',</span> <span class="pre">'GET_INDEX_EXP12',</span> <span class="pre">'GET_INDEX_EXP13',</span> <span class="pre">'GET_INDEX_EXP14',</span> <span class="pre">'GET_INDEX_EXP15',</span> <span class="pre">'GET_INDEX_EXP2',</span> <span class="pre">'GET_INDEX_EXP3',</span> <span class="pre">'GET_INDEX_EXP4',</span> <span class="pre">'GET_INDEX_EXP5',</span> <span class="pre">'GET_INDEX_EXP6',</span> <span class="pre">'GET_INDEX_EXP7',</span> <span class="pre">'GET_INDEX_EXP8',</span> <span class="pre">'GET_INDEX_EXP9',</span> <span class="pre">'GET_INDEX_FUNC',</span> <span class="pre">'GET_INDEX_FUNC_H2',</span> <span class="pre">'INDEX',</span> <span class="pre">'NUM_ARGS',</span> <span class="pre">'NUM_ARGS_H1',</span> <span class="pre">'_Alignas',</span> <span class="pre">'_Alignof',</span> <span class="pre">'_Atomic',</span> <span class="pre">'_Bool',</span> <span class="pre">'_Complex',</span> <span class="pre">'_Decimal32',</span> <span class="pre">'_Decimal64',</span> <span class="pre">'_Generic',</span> <span class="pre">'_Imaginary',</span> <span class="pre">'_Noreturn',</span> <span class="pre">'_Static_assert',</span> <span class="pre">'_Thread_local',</span> <span class="pre">'alias_assign',</span> <span class="pre">'array_create',</span> <span class="pre">'array_fill',</span> <span class="pre">'array_slicing',</span> <span class="pre">'auto',</span> <span class="pre">'break',</span> <span class="pre">'case',</span> <span class="pre">'char',</span> <span class="pre">'const',</span> <span class="pre">'continue',</span> <span class="pre">'csign',</span> <span class="pre">'default',</span> <span class="pre">'do',</span> <span class="pre">'double',</span> <span class="pre">'else',</span> <span class="pre">'enum',</span> <span class="pre">'extern',</span> <span class="pre">'float',</span> <span class="pre">'for',</span> <span class="pre">'free_array',</span> <span class="pre">'free_pointer',</span> <span class="pre">'fsign',</span> <span class="pre">'get_index',</span> <span class="pre">'get_size',</span> <span class="pre">'goto',</span> <span class="pre">'if',</span> <span class="pre">'inline',</span> <span class="pre">'int',</span> <span class="pre">'isign',</span> <span class="pre">'long',</span> <span class="pre">'new_slice',</span> <span class="pre">'numpy_to_ndarray_shape',</span> <span class="pre">'numpy_to_ndarray_strides',</span> <span class="pre">'register',</span> <span class="pre">'restrict',</span> <span class="pre">'return',</span> <span class="pre">'short',</span> <span class="pre">'signed',</span> <span class="pre">'sizeof',</span> <span class="pre">'static',</span> <span class="pre">'struct',</span> <span class="pre">'switch',</span> <span class="pre">'t_ndarray',</span> <span class="pre">'t_slice',</span> <span class="pre">'transpose_alias_assign',</span> <span class="pre">'typedef',</span> <span class="pre">'union',</span> <span class="pre">'unsigned',</span> <span class="pre">'void',</span> <span class="pre">'volatile',</span> <span class="pre">'whie'}</span></em><a class="headerlink" href="#pyccel.naming.cnameclashchecker.CNameClashChecker.keywords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.naming.fortrannameclashchecker">
+<span id="pyccel-naming-fortrannameclashchecker-module"></span><h2>pyccel.naming.fortrannameclashchecker module<a class="headerlink" href="#module-pyccel.naming.fortrannameclashchecker" title="Permalink to this headline">¶</a></h2>
+<p>Handles name clash problems in Fortran</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.naming.fortrannameclashchecker.FortranNameClashChecker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.naming.fortrannameclashchecker.</span></span><span class="sig-name descname"><span class="pre">FortranNameClashChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/fortrannameclashchecker.html#FortranNameClashChecker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing functions to help avoid problematic names in C</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.get_collisionless_name">
+<span class="sig-name descname"><span class="pre">get_collisionless_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/fortrannameclashchecker.html#FortranNameClashChecker.get_collisionless_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.get_collisionless_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name that will be used in the fortran code</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.has_clash">
+<span class="sig-name descname"><span class="pre">has_clash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/fortrannameclashchecker.html#FortranNameClashChecker.has_clash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.has_clash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the proposed name causes any clashes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.keywords">
+<span class="sig-name descname"><span class="pre">keywords</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'abs',</span> <span class="pre">'abstract',</span> <span class="pre">'acos',</span> <span class="pre">'allocatable',</span> <span class="pre">'allocate',</span> <span class="pre">'asin',</span> <span class="pre">'assign',</span> <span class="pre">'associate',</span> <span class="pre">'asynchronous',</span> <span class="pre">'atan',</span> <span class="pre">'backspace',</span> <span class="pre">'bind',</span> <span class="pre">'block',</span> <span class="pre">'blockdata',</span> <span class="pre">'call',</span> <span class="pre">'case',</span> <span class="pre">'class',</span> <span class="pre">'close',</span> <span class="pre">'codimension',</span> <span class="pre">'common',</span> <span class="pre">'concurrent',</span> <span class="pre">'contains',</span> <span class="pre">'contiguous',</span> <span class="pre">'continue',</span> <span class="pre">'cos',</span> <span class="pre">'count',</span> <span class="pre">'critical',</span> <span class="pre">'cycle',</span> <span class="pre">'data',</span> <span class="pre">'deallocate',</span> <span class="pre">'deferred',</span> <span class="pre">'dimension',</span> <span class="pre">'do',</span> <span class="pre">'elemental',</span> <span class="pre">'else',</span> <span class="pre">'elseif',</span> <span class="pre">'elsewhere',</span> <span class="pre">'end',</span> <span class="pre">'endfile',</span> <span class="pre">'endfunction',</span> <span class="pre">'endif',</span> <span class="pre">'endmodule',</span> <span class="pre">'endprogram',</span> <span class="pre">'endsubroutine',</span> <span class="pre">'entry',</span> <span class="pre">'enum',</span> <span class="pre">'enumerator',</span> <span class="pre">'equivalence',</span> <span class="pre">'error',</span> <span class="pre">'exit',</span> <span class="pre">'exp',</span> <span class="pre">'extends',</span> <span class="pre">'external',</span> <span class="pre">'final',</span> <span class="pre">'floor',</span> <span class="pre">'flush',</span> <span class="pre">'forall',</span> <span class="pre">'format',</span> <span class="pre">'fraction',</span> <span class="pre">'function',</span> <span class="pre">'generic',</span> <span class="pre">'goto',</span> <span class="pre">'if',</span> <span class="pre">'implicit',</span> <span class="pre">'import',</span> <span class="pre">'include',</span> <span class="pre">'int',</span> <span class="pre">'intent',</span> <span class="pre">'interface',</span> <span class="pre">'intrinsic',</span> <span class="pre">'lock',</span> <span class="pre">'log',</span> <span class="pre">'max',</span> <span class="pre">'mod',</span> <span class="pre">'module',</span> <span class="pre">'namelist',</span> <span class="pre">'nint',</span> <span class="pre">'non_overrideable',</span> <span class="pre">'nopass',</span> <span class="pre">'nullify',</span> <span class="pre">'numpy_sign',</span> <span class="pre">'only',</span> <span class="pre">'open',</span> <span class="pre">'operator',</span> <span class="pre">'optional',</span> <span class="pre">'pack',</span> <span class="pre">'parameter',</span> <span class="pre">'pass',</span> <span class="pre">'pause',</span> <span class="pre">'pointer',</span> <span class="pre">'print',</span> <span class="pre">'private',</span> <span class="pre">'procedure',</span> <span class="pre">'program',</span> <span class="pre">'protected',</span> <span class="pre">'public',</span> <span class="pre">'pure',</span> <span class="pre">'read',</span> <span class="pre">'real',</span> <span class="pre">'recursive',</span> <span class="pre">'result',</span> <span class="pre">'return',</span> <span class="pre">'rewind',</span> <span class="pre">'rewrite',</span> <span class="pre">'save',</span> <span class="pre">'select',</span> <span class="pre">'sequence',</span> <span class="pre">'sin',</span> <span class="pre">'sqrt',</span> <span class="pre">'stop',</span> <span class="pre">'submodule',</span> <span class="pre">'subroutine',</span> <span class="pre">'sync',</span> <span class="pre">'tan',</span> <span class="pre">'target',</span> <span class="pre">'test',</span> <span class="pre">'then',</span> <span class="pre">'unlock',</span> <span class="pre">'use',</span> <span class="pre">'value',</span> <span class="pre">'volatile',</span> <span class="pre">'wait',</span> <span class="pre">'where',</span> <span class="pre">'while',</span> <span class="pre">'write'}</span></em><a class="headerlink" href="#pyccel.naming.fortrannameclashchecker.FortranNameClashChecker.keywords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.naming.pythonnameclashchecker">
+<span id="pyccel-naming-pythonnameclashchecker-module"></span><h2>pyccel.naming.pythonnameclashchecker module<a class="headerlink" href="#module-pyccel.naming.pythonnameclashchecker" title="Permalink to this headline">¶</a></h2>
+<p>Handles name clash problems in Python</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.naming.pythonnameclashchecker.PythonNameClashChecker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.naming.pythonnameclashchecker.</span></span><span class="sig-name descname"><span class="pre">PythonNameClashChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/pythonnameclashchecker.html#PythonNameClashChecker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.pythonnameclashchecker.PythonNameClashChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing functions to help avoid problematic names in Python</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.naming.pythonnameclashchecker.PythonNameClashChecker.get_collisionless_name">
+<span class="sig-name descname"><span class="pre">get_collisionless_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/pythonnameclashchecker.html#PythonNameClashChecker.get_collisionless_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.pythonnameclashchecker.PythonNameClashChecker.get_collisionless_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name that will be used in the fortran code</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.naming.pythonnameclashchecker.PythonNameClashChecker.has_clash">
+<span class="sig-name descname"><span class="pre">has_clash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/naming/pythonnameclashchecker.html#PythonNameClashChecker.has_clash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.naming.pythonnameclashchecker.PythonNameClashChecker.has_clash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the proposed name causes any clashes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyccel.naming.pythonnameclashchecker.PythonNameClashChecker.keywords">
+<span class="sig-name descname"><span class="pre">keywords</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#pyccel.naming.pythonnameclashchecker.PythonNameClashChecker.keywords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.naming">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyccel.naming" title="Permalink to this headline">¶</a></h2>
+<p>Module containing all classes which handle name collision rules
+for different languages.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pyccel.parser.html" class="btn btn-neutral float-right" title="pyccel.parser package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pyccel.errors.html" class="btn btn-neutral float-left" title="pyccel.errors package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

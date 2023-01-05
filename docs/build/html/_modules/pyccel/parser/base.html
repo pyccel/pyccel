@@ -1,0 +1,738 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.parser.base &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.parser.base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.parser.base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module containing aspects of a parser which are in common over all stages.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">filelock</span> <span class="kn">import</span> <span class="n">FileLock</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="kn">from</span> <span class="nn">pyccel.version</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.builtins</span> <span class="kn">import</span> <span class="n">Lambda</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">SymbolicAssign</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">FunctionDef</span><span class="p">,</span> <span class="n">Interface</span><span class="p">,</span> <span class="n">FunctionAddress</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">SympyFunction</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Import</span><span class="p">,</span> <span class="n">AsName</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">create_variable</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.utilities</span> <span class="kn">import</span> <span class="n">recognised_source</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.variable</span> <span class="kn">import</span> <span class="n">DottedName</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.parser.scope</span>     <span class="kn">import</span> <span class="n">Scope</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.utilities</span> <span class="kn">import</span> <span class="n">is_valid_filename_pyh</span><span class="p">,</span> <span class="n">is_valid_filename_py</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span>   <span class="kn">import</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">ErrorsMode</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.messages</span> <span class="kn">import</span> <span class="n">PYCCEL_UNFOUND_IMPORTED_MODULE</span>
+
+<span class="c1">#==============================================================================</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+<span class="n">error_mode</span> <span class="o">=</span> <span class="n">ErrorsMode</span><span class="p">()</span>
+<span class="c1">#==============================================================================</span>
+
+<span class="n">strip_ansi_escape</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]&#39;</span><span class="p">)</span>
+
+<span class="c1"># use this to delete ansi_escape characters from a string</span>
+<span class="c1"># Useful for very coarse version differentiation.</span>
+
+<span class="c1">#==============================================================================</span>
+
+
+<div class="viewcode-block" id="get_filename_from_import"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.get_filename_from_import">[docs]</a><span class="k">def</span> <span class="nf">get_filename_from_import</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="n">input_folder</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a valid filename with absolute path, that corresponds to the</span>
+<span class="sd">    definition of module.</span>
+<span class="sd">    The priority order is:</span>
+<span class="sd">        - header files (extension == pyh)</span>
+<span class="sd">        - python files (extension == py)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">AsName</span><span class="p">)):</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># Remove first &#39;.&#39; as it doesn&#39;t represent a folder change</span>
+    <span class="k">if</span> <span class="n">module</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span><span class="p">:</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+
+    <span class="c1"># relative imports</span>
+    <span class="n">folder_above</span> <span class="o">=</span> <span class="s1">&#39;../&#39;</span>
+    <span class="k">while</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">folder_above</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">filename_pyh</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.pyh&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">filename_py</span>  <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.py&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">folders</span> <span class="o">=</span> <span class="n">input_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">folders</span><span class="p">)):</span>
+        <span class="n">poss_dirname</span>      <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="o">*</span><span class="n">folders</span><span class="p">[:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">poss_filename_pyh</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">poss_dirname</span><span class="p">,</span> <span class="n">filename_pyh</span> <span class="p">)</span>
+        <span class="n">poss_filename_py</span>  <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">poss_dirname</span><span class="p">,</span> <span class="n">filename_py</span>  <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_valid_filename_pyh</span><span class="p">(</span><span class="n">poss_filename_pyh</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">poss_filename_pyh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_valid_filename_py</span><span class="p">(</span><span class="n">poss_filename_py</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">poss_filename_py</span><span class="p">)</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">module</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+
+        <span class="c1"># we remove the last entry, since it can be a pyh file</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">_module</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">filename_pyh</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.pyh&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_module</span><span class="p">)</span>
+        <span class="n">filename_py</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.py&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_module</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">package</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">package_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">package</span><span class="o">.</span><span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_UNFOUND_IMPORTED_MODULE</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+    <span class="n">filename_pyh</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">package_dir</span><span class="p">,</span> <span class="n">filename_pyh</span><span class="p">)</span>
+    <span class="n">filename_py</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">package_dir</span><span class="p">,</span> <span class="n">filename_py</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename_pyh</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">filename_pyh</span>
+    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename_py</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">filename_py</span>
+
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+    <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_UNFOUND_IMPORTED_MODULE</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
+                  <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+
+
+<span class="c1">#==============================================================================</span>
+
+<div class="viewcode-block" id="BasicParser"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser">[docs]</a><span class="k">class</span> <span class="nc">BasicParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Class for a base Parser.</span>
+<span class="sd">    This class contains functions and properties which are common to SyntacticParser and SemanticParser</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">        debug: bool</span>
+<span class="sd">            True if in debug mode.</span>
+
+<span class="sd">        headers: list, tuple</span>
+<span class="sd">            list of headers to append to the scope</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span>  <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span>  <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metavars</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># represent the scope of a function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span>    <span class="o">=</span> <span class="n">Scope</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_class</span>    <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># the following flags give us a status on the parsing stage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_syntax_done</span>   <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_semantic_done</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># current position for errors</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_fst_node</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># flag for blocking errors. if True, an error with this flag will cause</span>
+        <span class="c1"># Pyccel to stop</span>
+        <span class="c1"># TODO ERROR must be passed to the Parser __init__ as argument</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blocking</span> <span class="o">=</span> <span class="n">error_mode</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;developer&#39;</span>
+
+        <span class="k">if</span> <span class="n">headers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting a dict of headers&#39;</span><span class="p">)</span>
+
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_created_from_pickle</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">copy_slots</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_code&#39;</span><span class="p">,</span> <span class="s1">&#39;_fst&#39;</span><span class="p">,</span> <span class="s1">&#39;_ast&#39;</span><span class="p">,</span> <span class="s1">&#39;_metavars&#39;</span><span class="p">,</span> <span class="s1">&#39;_scope&#39;</span><span class="p">,</span> <span class="s1">&#39;_filename&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;_metavars&#39;</span><span class="p">,</span> <span class="s1">&#39;_scope&#39;</span><span class="p">,</span> <span class="s1">&#39;_current_class&#39;</span><span class="p">,</span> <span class="s1">&#39;_current_function&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;_syntax_done&#39;</span><span class="p">,</span> <span class="s1">&#39;_semantic_done&#39;</span><span class="p">,</span> <span class="s1">&#39;_current_fst_node&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">s</span> <span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">copy_slots</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="p">,</span> <span class="n">Scope</span><span class="p">):</span>
+            <span class="c1"># self.scope as set, deprecated in PR 1089</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Scope should be a Scope (Type was previously set in syntactic parser)&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Error related flags. Should not be influenced by pickled file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blocking</span> <span class="o">=</span> <span class="n">ErrorsMode</span><span class="p">()</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;developer&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_created_from_pickle</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The Scope object containing all objects defined within the current scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span>
+
+    <span class="nd">@scope</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">Scope</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">scope</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">code</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fst</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span>
+
+    <span class="nd">@ast</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">ast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ast</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span> <span class="o">=</span> <span class="n">ast</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metavars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metavars</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_class</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of current function, if any.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">syntax_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syntax_done</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">semantic_done</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_semantic_done</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_header_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if we are treating a header file.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;pyh&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_fst_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_fst_node</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blocking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocking</span>
+
+
+<div class="viewcode-block" id="BasicParser.insert_function"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.insert_function">[docs]</a>    <span class="k">def</span> <span class="nf">insert_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">SympyFunction</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert_symbolic_function</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="p">(</span><span class="n">FunctionDef</span><span class="p">,</span> <span class="n">Interface</span><span class="p">,</span> <span class="n">FunctionAddress</span><span class="p">)):</span>
+            <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">functions</span>
+            <span class="n">container</span><span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expected a Function definition&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicParser.insert_symbolic_function"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.insert_symbolic_function">[docs]</a>    <span class="k">def</span> <span class="nf">insert_symbolic_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;.&quot;&quot;&quot;</span>
+
+        <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">symbolic_functions</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">SympyFunction</span><span class="p">):</span>
+            <span class="n">container</span><span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">SymbolicAssign</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span>
+                <span class="n">Lambda</span><span class="p">):</span>
+            <span class="n">container</span><span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">lhs</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">rhs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expected a symbolic_function&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicParser.insert_import"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.insert_import">[docs]</a>    <span class="k">def</span> <span class="nf">insert_import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;.&quot;&quot;&quot;</span>
+
+        <span class="c1"># this method is only used in the syntatic stage</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Import</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting Import expression&#39;</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">imports</span><span class="p">[</span><span class="s1">&#39;imports&#39;</span><span class="p">]</span>
+
+        <span class="c1"># if source is not specified, imported things are treated as sources</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">AsName</span><span class="p">):</span>
+                <span class="n">name</span>   <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">source</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span>   <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">name</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">recognised_source</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+                <span class="n">container</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">recognised_source</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">container</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">container</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">container</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">+=</span> <span class="n">expr</span><span class="o">.</span><span class="n">target</span></div>
+
+<div class="viewcode-block" id="BasicParser.create_new_function_scope"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.create_new_function_scope">[docs]</a>    <span class="k">def</span> <span class="nf">create_new_function_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new Scope object for a Python function with the given name,</span>
+<span class="sd">        and attach any decorators&#39; information to the scope. The new scope is</span>
+<span class="sd">        a child of the current one, and can be accessed from the dictionary of</span>
+<span class="sd">        its children using the function name as key.</span>
+
+<span class="sd">        Before returning control to the caller, the current scope (stored in</span>
+<span class="sd">        self._scope) is changed to the one just created, and the function&#39;s</span>
+<span class="sd">        name is stored in self._current_function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Function&#39;s name, used as a key to retrieve the new scope.</span>
+
+<span class="sd">        decorators : dict</span>
+<span class="sd">            Decorators attached to FunctionDef object at syntactic stage.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">child</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">new_child_scope</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">child</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">DottedName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="k">return</span> <span class="n">child</span></div>
+
+<div class="viewcode-block" id="BasicParser.exit_function_scope"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.exit_function_scope">[docs]</a>    <span class="k">def</span> <span class="nf">exit_function_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Exit the function scope and return to the encasing scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="o">.</span><span class="n">parent_scope</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span><span class="p">,</span> <span class="n">DottedName</span><span class="p">):</span>
+
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">DottedName</span><span class="p">(</span><span class="o">*</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_function</span> <span class="o">=</span> <span class="n">name</span></div>
+
+<div class="viewcode-block" id="BasicParser.create_new_loop_scope"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.create_new_loop_scope">[docs]</a>    <span class="k">def</span> <span class="nf">create_new_loop_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a new scope describing a loop</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="o">.</span><span class="n">create_new_loop_scope</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span></div>
+
+<div class="viewcode-block" id="BasicParser.exit_loop_scope"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.exit_loop_scope">[docs]</a>    <span class="k">def</span> <span class="nf">exit_loop_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Exit the loop scope and return to the encasing scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="o">.</span><span class="n">parent_scope</span></div>
+
+<div class="viewcode-block" id="BasicParser.create_new_class_scope"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.create_new_class_scope">[docs]</a>    <span class="k">def</span> <span class="nf">create_new_class_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new Scope object for a Python class with the given name,</span>
+<span class="sd">        and attach any decorators&#39; information to the scope. The new scope is</span>
+<span class="sd">        a child of the current one, and can be accessed from the dictionary of</span>
+<span class="sd">        its children using the function name as key.</span>
+
+<span class="sd">        Before returning control to the caller, the current scope (stored in</span>
+<span class="sd">        self._scope) is changed to the one just created, and the function&#39;s</span>
+<span class="sd">        name is stored in self._current_function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Function&#39;s name, used as a key to retrieve the new scope.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">child</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">new_child_scope</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="n">child</span>
+
+        <span class="k">return</span> <span class="n">child</span></div>
+
+<div class="viewcode-block" id="BasicParser.exit_class_scope"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.exit_class_scope">[docs]</a>    <span class="k">def</span> <span class="nf">exit_class_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Exit the class scope and return to the encasing scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span><span class="o">.</span><span class="n">parent_scope</span></div>
+
+<div class="viewcode-block" id="BasicParser.dump"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dump the current ast using Pickle.</span>
+
+<span class="sd">          Parameters</span>
+<span class="sd">          ----------</span>
+<span class="sd">          filename: str</span>
+<span class="sd">            output file name. if not given `name.pyccel` will be used and placed</span>
+<span class="sd">            in the Pyccel directory ($HOME/.pyccel)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_created_from_pickle</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting a filename to load the ast&#39;</span><span class="p">)</span>
+
+            <span class="n">path</span> <span class="p">,</span> <span class="n">name</span>  <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+            <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s1">&#39;.pyh&#39;</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">name</span>     <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.pyccel&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="c1"># check extension</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;.pyccel&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting a .pyccel extension&#39;</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">pickle</span>
+        <span class="kn">import</span> <span class="nn">hashlib</span>
+
+<span class="c1">#        print(&#39;&gt;&gt;&gt; home = &#39;, os.environ[&#39;HOME&#39;])</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># we are only exporting the AST.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;.lock&#39;</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                    <span class="n">hs</span>   <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">((</span><span class="n">hs</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span> <span class="n">__version__</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Created pickle file : &quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">PickleError</span><span class="p">):</span>
+                    <span class="k">pass</span>
+        <span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Can&#39;t pickle files on a read-only system. Please run `sudo pyccel-init`&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicParser.load"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Load the current ast using Pickle.</span>
+
+<span class="sd">          Parameters</span>
+<span class="sd">          ----------</span>
+<span class="sd">          filename: str</span>
+<span class="sd">            output file name. if not given `name.pyccel` will be used and placed</span>
+<span class="sd">            in the Pyccel directory ($HOME/.pyccel)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># ...</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting a filename to load the ast&#39;</span><span class="p">)</span>
+
+            <span class="n">path</span> <span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+            <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s1">&#39;.pyh&#39;</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">name</span>     <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.pyccel&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;pyccel&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting a .pyccel extension&#39;</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">pickle</span>
+
+        <span class="n">possible_pickle_errors</span> <span class="o">=</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">,</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">PickleError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;.lock&#39;</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">hs</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">parser</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_created_from_pickle</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">except</span> <span class="n">possible_pickle_errors</span><span class="p">:</span>
+                    <span class="k">return</span>
+        <span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
+            <span class="c1"># read/write problems don&#39;t need to be avoided on a read-only system</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">hs</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">parser</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_created_from_pickle</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="n">possible_pickle_errors</span><span class="p">:</span>
+                <span class="k">return</span>
+
+        <span class="kn">import</span> <span class="nn">hashlib</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span> <span class="o">==</span> <span class="n">hs</span> <span class="ow">and</span> <span class="n">__version__</span> <span class="o">==</span> <span class="n">version</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BasicParser.copy"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.base.BasicParser.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy the parser attributes in self</span>
+
+<span class="sd">          Parameters</span>
+<span class="sd">          ----------</span>
+<span class="sd">          parser : BasicParser</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">fst</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">ast</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metavars</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope</span>    <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">scope</span>
+
+        <span class="c1"># the following flags give us a status on the parsing stage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_syntax_done</span>   <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">syntax_done</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_semantic_done</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">semantic_done</span></div></div>
+
+<span class="c1">#==============================================================================</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting an argument for filename&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">BasicParser</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

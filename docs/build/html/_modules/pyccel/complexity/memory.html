@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.complexity.memory &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.complexity.memory</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.complexity.memory</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides us with functions and objects that allow us to compute</span>
+<span class="sd">the memory complexity a of a program.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+
+<span class="sd">&gt;&gt;&gt; code = &#39;&#39;&#39;</span>
+<span class="sd">... n = 10</span>
+<span class="sd">... for i in range(0,n):</span>
+<span class="sd">...     for j in range(0,n):</span>
+<span class="sd">...         x = pow(i,2) + pow(i,3) + 3*i</span>
+<span class="sd">...         y = x / 3 + 2* x</span>
+<span class="sd">... &#39;&#39;&#39;</span>
+
+<span class="sd">&gt;&gt;&gt; from pyccel.complexity.memory import MemComplexity</span>
+<span class="sd">&gt;&gt;&gt; M = MemComplexity(code)</span>
+<span class="sd">&gt;&gt;&gt; d = M.cost()</span>
+<span class="sd">&gt;&gt;&gt; print &quot;f = &quot;, d[&#39;f&#39;]</span>
+<span class="sd">f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)</span>
+<span class="sd">&gt;&gt;&gt; print &quot;m = &quot;, d[&#39;m&#39;]</span>
+<span class="sd">m =  WRITE + 2*n**2*(READ + WRITE)</span>
+<span class="sd">&gt;&gt;&gt; q = M.intensity()</span>
+<span class="sd">&gt;&gt;&gt; print &quot;+++ computational intensity ~&quot;, q</span>
+<span class="sd">+++ computational intensity ~ (2*ADD + DIV + 2*MUL + 2*POW)/(2*READ + 2*WRITE)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">LT</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.basic</span>        <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.builtins</span>     <span class="kn">import</span> <span class="n">PythonTuple</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span>         <span class="kn">import</span> <span class="n">For</span><span class="p">,</span> <span class="n">Assign</span><span class="p">,</span> <span class="n">CodeBlock</span><span class="p">,</span> <span class="n">FunctionDef</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span>         <span class="kn">import</span> <span class="n">Module</span><span class="p">,</span> <span class="n">Program</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.internals</span>    <span class="kn">import</span> <span class="n">PyccelSymbol</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.numpyext</span>     <span class="kn">import</span> <span class="n">NumpyZeros</span><span class="p">,</span> <span class="n">NumpyOnes</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.sympy_helper</span> <span class="kn">import</span> <span class="n">pyccel_to_sympy</span>
+<span class="kn">from</span> <span class="nn">pyccel.complexity.basic</span> <span class="kn">import</span> <span class="n">Complexity</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;count_access&quot;</span><span class="p">,</span> <span class="s2">&quot;MemComplexity&quot;</span><span class="p">]</span>
+
+<span class="c1"># ...</span>
+<div class="viewcode-block" id="count_access"><a class="viewcode-back" href="../../../pyccel.complexity.html#pyccel.complexity.memory.count_access">[docs]</a><span class="k">def</span> <span class="nf">count_access</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the number of access to memory in terms of WRITE and READ.</span>
+
+<span class="sd">    expr: sympy.Expr</span>
+<span class="sd">        any sympy expression or pyccel.ast.core object</span>
+<span class="sd">    visual: bool</span>
+<span class="sd">        If ``visual`` is ``True`` then the number of each type of operation is shown</span>
+<span class="sd">        with the core class types (or their virtual equivalent) multiplied by the</span>
+<span class="sd">        number of times they occur.</span>
+<span class="sd">    local_vars: list</span>
+<span class="sd">        list of variables that are supposed to be in the fast memory. We will</span>
+<span class="sd">        ignore their corresponding memory accesses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">WRITE</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;WRITE&#39;</span><span class="p">)</span>
+    <span class="n">READ</span>  <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;READ&#39;</span><span class="p">)</span>
+
+    <span class="n">symbol_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">used_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Assign</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">count_access</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span> <span class="o">+</span> <span class="n">WRITE</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">count_access</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">CodeBlock</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">count_access</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">count_access</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">program</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Program</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">count_access</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">For</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pyccel_to_sympy</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">iterable</span><span class="p">,</span> <span class="n">symbol_map</span><span class="p">,</span> <span class="n">used_names</span><span class="p">)</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">ops</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">count_access</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ops</span><span class="o">*</span><span class="n">s</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">NumpyZeros</span><span class="p">,</span> <span class="n">NumpyOnes</span><span class="p">)):</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="k">return</span> <span class="n">WRITE</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span><span class="n">PyccelSymbol</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">READ</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;TODO count_access for </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)))</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">leading_term</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the leading term in a sympy Polynomial.</span>
+
+<span class="sd">    expr: sympy.Expr</span>
+<span class="sd">        any sympy expression</span>
+
+<span class="sd">    args: list</span>
+<span class="sd">        list of input symbols for univariate/multivariate polynomials</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">LT</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+<span class="c1"># ...</span>
+
+<span class="c1"># ...</span>
+<div class="viewcode-block" id="MemComplexity"><a class="viewcode-back" href="../../../pyccel.complexity.html#pyccel.complexity.memory.MemComplexity">[docs]</a><span class="k">class</span> <span class="nc">MemComplexity</span><span class="p">(</span><span class="n">Complexity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for memory complexity computation.</span>
+<span class="sd">    This class implements a simple two level memory model</span>
+
+<span class="sd">    Example</span>
+
+<span class="sd">    &gt;&gt;&gt; code = &#39;&#39;&#39;</span>
+<span class="sd">    ... n = 10</span>
+<span class="sd">    ... for i in range(0,n):</span>
+<span class="sd">    ...     for j in range(0,n):</span>
+<span class="sd">    ...         x = pow(i,2) + pow(i,3) + 3*i</span>
+<span class="sd">    ...         y = x / 3 + 2* x</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; from pyccel.complexity.memory import MemComplexity</span>
+<span class="sd">    &gt;&gt;&gt; M = MemComplexity(code)</span>
+<span class="sd">    &gt;&gt;&gt; d = M.cost()</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;f = &quot;, d[&#39;f&#39;]</span>
+<span class="sd">    f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;m = &quot;, d[&#39;m&#39;]</span>
+<span class="sd">    m =  WRITE + 2*n**2*(READ + WRITE)</span>
+<span class="sd">    &gt;&gt;&gt; q = M.intensity()</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;+++ computational intensity ~&quot;, q</span>
+<span class="sd">    +++ computational intensity ~ (2*ADD + DIV + 2*MUL + 2*POW)/(2*READ + 2*WRITE)</span>
+
+<span class="sd">    Now let us consider a case where some variables are supposed to be in the</span>
+<span class="sd">    fast memory, (*r* in this test)</span>
+
+<span class="sd">    &gt;&gt;&gt; code = &#39;&#39;&#39;</span>
+<span class="sd">    ... n = 10</span>
+<span class="sd">    ... x = zeros(shape=(n,n), dtype=float)</span>
+<span class="sd">    ... r = float()</span>
+<span class="sd">    ... r = 0</span>
+<span class="sd">    ... for i in range(0, n):</span>
+<span class="sd">    ...     r = x[n,i] + 1</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; M = MemComplexity(code)</span>
+<span class="sd">    &gt;&gt;&gt; d = M.cost()</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;f = &quot;, d[&#39;f&#39;]</span>
+<span class="sd">    f =  ADD*n</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;m = &quot;, d[&#39;m&#39;]</span>
+<span class="sd">    m =  2*WRITE + n*(READ + WRITE)</span>
+<span class="sd">    &gt;&gt;&gt; q = M.intensity()</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;+++ computational intensity ~&quot;, q</span>
+<span class="sd">    +++ computational intensity ~ ADD/(READ + WRITE)</span>
+
+<span class="sd">    Notice, that this is not what we expect! the cost of writing into *r* is</span>
+<span class="sd">    &#39;zero&#39;, and therefor, there should be no :math:`n*WRITE` in our memory cost.</span>
+<span class="sd">    In order to achieve this, you must tell pyccel that you have the variable</span>
+<span class="sd">    *r* is already in the fast memory. This can be done by adding the argument</span>
+<span class="sd">    *local_vars=[&#39;r&#39;]* when calling the cost method.</span>
+
+<span class="sd">    &gt;&gt;&gt; d = M.cost(local_vars=[&#39;r&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;f = &quot;, d[&#39;f&#39;]</span>
+<span class="sd">    f =  ADD*n</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;m = &quot;, d[&#39;m&#39;]</span>
+<span class="sd">    m =  READ*n + WRITE</span>
+<span class="sd">    &gt;&gt;&gt; q = M.intensity(local_vars=[&#39;r&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; print &quot;+++ computational intensity ~&quot;, q</span>
+<span class="sd">    +++ computational intensity ~ ADD/READ</span>
+
+<span class="sd">    and this is exactly what we were expecting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MemComplexity.cost"><a class="viewcode-back" href="../../../pyccel.complexity.html#pyccel.complexity.memory.MemComplexity.cost">[docs]</a>    <span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the complexity of the given code.</span>
+
+<span class="sd">        local_vars: list</span>
+<span class="sd">            list of variables that are supposed to be in the fast memory. We will</span>
+<span class="sd">            ignore their corresponding memory accesses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">count_access</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ast</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MemComplexity.intensity"><a class="viewcode-back" href="../../../pyccel.complexity.html#pyccel.complexity.memory.MemComplexity.intensity">[docs]</a>    <span class="k">def</span> <span class="nf">intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">local_vars</span><span class="o">=</span><span class="p">[],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the computational intensity for the two level memory model.</span>
+
+<span class="sd">        d: dict</span>
+<span class="sd">            dictionary containing the floating and memory costs. if not given,</span>
+<span class="sd">            we will compute them.</span>
+<span class="sd">        args: list</span>
+<span class="sd">            list of free parameters, i.e. degrees of freedom.</span>
+<span class="sd">        local_vars: list</span>
+<span class="sd">            list of variables that are supposed to be in the fast memory. We will</span>
+<span class="sd">            ignore their corresponding memory accesses.</span>
+<span class="sd">        verbose: bool</span>
+<span class="sd">            talk more</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># ...</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">local_vars</span><span class="o">=</span><span class="n">local_vars</span><span class="p">)</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># ...</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_parameters</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># ...</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># ...</span>
+        <span class="n">lt_f</span> <span class="o">=</span> <span class="n">leading_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">lt_m</span> <span class="o">=</span> <span class="n">leading_term</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">lt_f</span><span class="o">/</span><span class="n">lt_m</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># ...</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; arithmetic cost         ~ &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; memory cost             ~ &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; computational intensity ~ &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">q</span><span class="p">)))</span>
+        <span class="c1"># ...</span>
+
+        <span class="k">return</span> <span class="n">q</span></div></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

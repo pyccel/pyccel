@@ -1,0 +1,1155 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.variable &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.variable</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.variable</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot; This module contains all classes which are used to handle memory block labels at</span>
+<span class="sd">different stages of pyccel. Memory block labels are usually either Variables or Indexed</span>
+<span class="sd">variables</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span>   <span class="kn">import</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">pyccel.utilities.stage</span> <span class="kn">import</span> <span class="n">PyccelStage</span>
+
+<span class="kn">from</span> <span class="nn">.basic</span>     <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">PyccelAstNode</span>
+<span class="kn">from</span> <span class="nn">.datatypes</span> <span class="kn">import</span> <span class="p">(</span><span class="n">datatype</span><span class="p">,</span> <span class="n">DataType</span><span class="p">,</span>
+                        <span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">,</span>
+                        <span class="n">NativeComplex</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.internals</span> <span class="kn">import</span> <span class="n">PyccelArraySize</span><span class="p">,</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">get_final_precision</span>
+<span class="kn">from</span> <span class="nn">.literals</span>  <span class="kn">import</span> <span class="n">LiteralInteger</span><span class="p">,</span> <span class="n">Nil</span>
+<span class="kn">from</span> <span class="nn">.operators</span> <span class="kn">import</span> <span class="p">(</span><span class="n">PyccelMinus</span><span class="p">,</span> <span class="n">PyccelDiv</span><span class="p">,</span> <span class="n">PyccelMul</span><span class="p">,</span>
+                        <span class="n">PyccelUnarySub</span><span class="p">,</span> <span class="n">PyccelAdd</span><span class="p">)</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+<span class="n">pyccel_stage</span> <span class="o">=</span> <span class="n">PyccelStage</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;DottedName&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DottedVariable&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;IndexedElement&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;TupleVariable&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Variable&#39;</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="Variable"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable">[docs]</a><span class="k">class</span> <span class="nc">Variable</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Represents a typed variable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dtype : str, DataType</span>
+<span class="sd">        The type of the variable. Can be either a DataType,</span>
+<span class="sd">        or a str (bool, int, float).</span>
+
+<span class="sd">    name : str, list, DottedName</span>
+<span class="sd">        The name of the variable represented. This can be either a string</span>
+<span class="sd">        or a dotted name, when using a Class attribute.</span>
+
+<span class="sd">    rank : int</span>
+<span class="sd">        used for arrays. [Default value: 0]</span>
+
+<span class="sd">    memory_handling: str</span>
+<span class="sd">        &#39;heap&#39; is used for arrays, if we need to allocate memory on the heap</span>
+<span class="sd">        &#39;stack&#39; if memory should be allocated on the stack, represents stack arrays and scalars</span>
+<span class="sd">        &#39;alias&#39; if object allows access to memory stored in another variable</span>
+<span class="sd">        [Default value: &#39;stack&#39;]</span>
+
+<span class="sd">    is_target: bool</span>
+<span class="sd">        if object is pointed to by another variable [Default value: False]</span>
+
+<span class="sd">    is_optional: bool</span>
+<span class="sd">        if object is an optional argument of a function [Default value: False]</span>
+
+<span class="sd">    shape: int or list</span>
+<span class="sd">        shape of the array. [Default value: None]</span>
+
+<span class="sd">    cls_base: class</span>
+<span class="sd">        class base if variable is an object or an object member [Default value: None]</span>
+
+<span class="sd">    order : str</span>
+<span class="sd">        used for arrays. Indicates whether the data is stored in C or Fortran format in memory [Default value: &#39;C&#39;]</span>
+
+<span class="sd">    precision : str</span>
+<span class="sd">        Precision of the data type [Default value: depends on the datatype]</span>
+
+<span class="sd">    is_argument: bool</span>
+<span class="sd">        if object is the argument of a function [Default value: False]</span>
+
+<span class="sd">    is_kwonly: bool</span>
+<span class="sd">        if object is an argument which can only be specified using its keyword</span>
+
+<span class="sd">    is_const: bool</span>
+<span class="sd">        if object is a const argument of a function [Default value: False]</span>
+
+<span class="sd">    is_private: bool</span>
+<span class="sd">        if object is private within a Module [Default value: False]</span>
+
+<span class="sd">    is_temp: bool</span>
+<span class="sd">        Indicates if this symbol represents a temporary variable created by Pyccel,</span>
+<span class="sd">        and was not present in the original Python code [default value : False].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import Variable</span>
+<span class="sd">    &gt;&gt;&gt; Variable(&#39;int&#39;, &#39;n&#39;)</span>
+<span class="sd">    n</span>
+<span class="sd">    &gt;&gt;&gt; n = 4</span>
+<span class="sd">    &gt;&gt;&gt; Variable(&#39;float&#39;, &#39;x&#39;, rank=2, shape=(n,2), memory_handling=&#39;heap&#39;)</span>
+<span class="sd">    x</span>
+<span class="sd">    &gt;&gt;&gt; Variable(&#39;int&#39;, DottedName(&#39;matrix&#39;, &#39;n_rows&#39;))</span>
+<span class="sd">    matrix.n_rows</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_alloc_shape&#39;</span><span class="p">,</span> <span class="s1">&#39;_memory_handling&#39;</span><span class="p">,</span> <span class="s1">&#39;_is_const&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;_is_target&#39;</span><span class="p">,</span> <span class="s1">&#39;_is_optional&#39;</span><span class="p">,</span> <span class="s1">&#39;_allows_negative_indexes&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;_cls_base&#39;</span><span class="p">,</span> <span class="s1">&#39;_is_argument&#39;</span><span class="p">,</span> <span class="s1">&#39;_is_kwonly&#39;</span><span class="p">,</span> <span class="s1">&#39;_is_temp&#39;</span><span class="p">,</span><span class="s1">&#39;_dtype&#39;</span><span class="p">,</span><span class="s1">&#39;_precision&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;_rank&#39;</span><span class="p">,</span><span class="s1">&#39;_shape&#39;</span><span class="p">,</span><span class="s1">&#39;_order&#39;</span><span class="p">,</span><span class="s1">&#39;_is_private&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">memory_handling</span><span class="o">=</span><span class="s1">&#39;stack&#39;</span><span class="p">,</span>
+        <span class="n">is_const</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_target</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_optional</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_private</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cls_base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">is_argument</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_kwonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">is_temp</span> <span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">allows_negative_indexes</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># ------------ Variable Properties ---------------</span>
+        <span class="c1"># if class attribute</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">DottedName</span><span class="p">(</span><span class="o">*</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable name can&#39;t be empty&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">DottedName</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting a string or DottedName, given </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">name</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">memory_handling</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;heap&#39;</span><span class="p">,</span> <span class="s1">&#39;stack&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;memory_handling must be &#39;heap&#39;, &#39;stack&#39; or &#39;alias&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handling</span> <span class="o">=</span> <span class="n">memory_handling</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_const</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;is_const must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_const</span> <span class="o">=</span> <span class="n">is_const</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_target</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;is_target must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_target</span> <span class="o">=</span> <span class="n">is_target</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_optional</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;is_optional must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_optional</span> <span class="o">=</span> <span class="n">is_optional</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_private</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;is_private must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_private</span> <span class="o">=</span> <span class="n">is_private</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">allows_negative_indexes</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;allows_negative_indexes must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allows_negative_indexes</span> <span class="o">=</span> <span class="n">allows_negative_indexes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cls_base</span>       <span class="o">=</span> <span class="n">cls_base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order</span>          <span class="o">=</span> <span class="n">order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_argument</span>    <span class="o">=</span> <span class="n">is_argument</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_kwonly</span>      <span class="o">=</span> <span class="n">is_kwonly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_temp</span>        <span class="o">=</span> <span class="n">is_temp</span>
+
+        <span class="c1"># ------------ PyccelAstNode Properties ---------------</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">datatype</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">DataType</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;datatype must be an instance of DataType.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;rank must be an instance of int.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span>
+
+        <span class="k">elif</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="n">rank</span>
+
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">order</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">precision</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="p">(</span><span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">)):</span>
+                <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span><span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;precision must be an integer or None.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alloc_shape</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span>  <span class="o">=</span> <span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_order</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Variable.process_shape"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.process_shape">[docs]</a>    <span class="k">def</span> <span class="nf">process_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Simplify the provided shape and ensure it</span>
+<span class="sd">        has the expected format</span>
+
+<span class="sd">        The provided shape is the shape used to create</span>
+<span class="sd">        the object. In most cases where the shape is</span>
+<span class="sd">        required we do not require this expression</span>
+<span class="sd">        (which can be quite long). This function therefore</span>
+<span class="sd">        replaces those expressions with calls to</span>
+<span class="sd">        PyccelArraySize</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span><span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">shape</span><span class="p">]</span>
+
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_can_change</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="c1"># Shape of a pointer can change</span>
+                <span class="n">new_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PyccelArraySize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">):</span>
+                <span class="n">new_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">new_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">PyccelAstNode</span><span class="p">):</span>
+                <span class="n">new_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PyccelArraySize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;shape elements cannot be &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39;. They must be one of the following types: LiteralInteger,&#39;</span>
+                                <span class="s1">&#39;Variable, Slice, PyccelAstNode, int, Function&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Variable.shape_can_change"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.shape_can_change">[docs]</a>    <span class="k">def</span> <span class="nf">shape_can_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicates if the shape can change in the i-th dimension</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_alias</span></div>
+
+<div class="viewcode-block" id="Variable.set_changeable_shape"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.set_changeable_shape">[docs]</a>    <span class="k">def</span> <span class="nf">set_changeable_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicate that the exact shape is unknown, e.g. if the allocate is done in</span>
+<span class="sd">        an If block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">PyccelArraySize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Name of the variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">alloc_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Shape of the variable at allocation</span>
+
+<span class="sd">        The shape used in pyccel is usually simplified to contain</span>
+<span class="sd">        only Literals and PyccelArraySizes but the shape for</span>
+<span class="sd">        the allocation of x cannot be `Shape(x)`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alloc_shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">memory_handling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether a Variable has a dynamic size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handling</span>
+
+    <span class="nd">@memory_handling</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">memory_handling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory_handling</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">memory_handling</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;heap&#39;</span><span class="p">,</span> <span class="s1">&#39;stack&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;memory_handling must be &#39;heap&#39;, &#39;stack&#39; or &#39;alias&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handling</span> <span class="o">=</span> <span class="n">memory_handling</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if variable is an alias</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_handling</span> <span class="o">==</span> <span class="s1">&#39;alias&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">on_heap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if memory is allocated on the heap</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_handling</span> <span class="o">==</span> <span class="s1">&#39;heap&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">on_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if memory is allocated on the stack</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_handling</span> <span class="o">==</span> <span class="s1">&#39;stack&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_stack_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if the variable is located on stack and is an array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_stack</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_stack_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if the variable is located on stack and is a scalar</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_stack</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cls_base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Class from which the Variable inherits</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cls_base</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_const</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if the Variable is constant</span>
+<span class="sd">        within its context</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_const</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicates if this symbol represents a temporary variable created by Pyccel,</span>
+<span class="sd">		and was not present in the original Python code [default value : False].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_temp</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if the data in this Variable is</span>
+<span class="sd">        shared with (pointed at by) another Variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_target</span>
+
+    <span class="nd">@is_target</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_target</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_target</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;is_target must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_target</span> <span class="o">=</span> <span class="n">is_target</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_optional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if the Variable is optional</span>
+<span class="sd">        in this context</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_optional</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_private</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates if the Variable is private</span>
+<span class="sd">        within the Module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_private</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">allows_negative_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether variables used to</span>
+<span class="sd">        index this Variable can be negative</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allows_negative_indexes</span>
+
+    <span class="nd">@allows_negative_indexes</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">allows_negative_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allows_negative_indexes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allows_negative_indexes</span> <span class="o">=</span> <span class="n">allows_negative_indexes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the Variable is</span>
+<span class="sd">        a function argument in this context</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_argument</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_kwonly</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; If the Variable is an argument then this</span>
+<span class="sd">        indicates whether the argument is a keyword</span>
+<span class="sd">        only argument</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_kwonly</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_ndarray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;user friendly method to check if the variable is an ndarray:</span>
+<span class="sd">            1. have a rank &gt; 0</span>
+<span class="sd">            2. dtype is one among {int, bool, float, complex}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="p">(</span><span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">,</span>
+                          <span class="n">NativeFloat</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">, dtype=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Variable.inspect"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.inspect">[docs]</a>    <span class="k">def</span> <span class="nf">inspect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;inspects the variable.&quot;&quot;&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&gt;&gt;&gt; Variable&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  name               = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  dtype              = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  precision          = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">get_final_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  rank               = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  order              = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  memory_handling    = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_handling</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  shape              = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  cls_base           = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_base</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  is_target          = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_target</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;  is_optional        = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_optional</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;&lt;&lt;&lt;&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Variable.use_exact_precision"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.use_exact_precision">[docs]</a>    <span class="k">def</span> <span class="nf">use_exact_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change precision from default python precision to</span>
+<span class="sd">        equivalent numpy precision</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_argument</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">get_final_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Variable.clone"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">new_class</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new Variable object of the chosen class</span>
+<span class="sd">        with the provided name and options</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        name      : str</span>
+<span class="sd">                    The name of the new Variable</span>
+<span class="sd">        new_class : type</span>
+<span class="sd">                    The class of the new Variable</span>
+<span class="sd">                    The default is the same class</span>
+<span class="sd">        kwargs    : dict</span>
+<span class="sd">                    Dictionary containing any keyword-value</span>
+<span class="sd">                    pairs which are valid constructor keywords</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">new_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">cls</span> <span class="o">=</span> <span class="n">new_class</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">Variable</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+        <span class="n">new_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">k</span><span class="p">)</span> \
+                            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> \
+                            <span class="k">if</span> <span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">k</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)}</span>
+        <span class="n">new_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">new_kwargs</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">new_kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Variable.rename"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.rename">[docs]</a>    <span class="k">def</span> <span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Forbidden method for renaming the variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The name is part of the hash so it must never change</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Cannot modify hash definition&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Used by pickle to create an object of this class.</span>
+
+<span class="sd">          Parameters</span>
+<span class="sd">          ----------</span>
+
+<span class="sd">          i : int</span>
+<span class="sd">           protocol</span>
+
+<span class="sd">          Results</span>
+<span class="sd">          -------</span>
+
+<span class="sd">          out : tuple</span>
+<span class="sd">           A tuple of two elements</span>
+<span class="sd">           a callable function that can be called</span>
+<span class="sd">           to create the initial version of the object</span>
+<span class="sd">           and its arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;rank&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span>
+            <span class="s1">&#39;memory_handling&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_handling</span><span class="p">,</span>
+            <span class="s1">&#39;is_optional&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">is_optional</span><span class="p">,</span>
+            <span class="s1">&#39;shape&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="s1">&#39;cls_base&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_base</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="n">apply</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span>  <span class="p">(</span><span class="n">apply</span><span class="p">,</span> <span class="p">(</span><span class="n">Variable</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Rank mismatch.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">IndexedElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Variable.invalidate_node"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.Variable.invalidate_node">[docs]</a>    <span class="k">def</span> <span class="nf">invalidate_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Don&#39;t invalidate Variables</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@is_temp</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_temp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_temp</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;is_temp must be a boolean&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_temp</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variables cannot become temporary&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_temp</span> <span class="o">=</span> <span class="n">is_temp</span></div>
+
+<div class="viewcode-block" id="DottedName"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.DottedName">[docs]</a><span class="k">class</span> <span class="nc">DottedName</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a dotted object.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import DottedName</span>
+<span class="sd">    &gt;&gt;&gt; DottedName(&#39;matrix&#39;, &#39;n_rows&#39;)</span>
+<span class="sd">    matrix.n_rows</span>
+<span class="sd">    &gt;&gt;&gt; DottedName(&#39;pyccel&#39;, &#39;stdlib&#39;, &#39;parallel&#39;)</span>
+<span class="sd">    pyccel.stdlib.parallel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_name&#39;</span><span class="p">,)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The different components of the name</span>
+<span class="sd">        (these were separated by dots)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;.&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TupleVariable"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.TupleVariable">[docs]</a><span class="k">class</span> <span class="nc">TupleVariable</span><span class="p">(</span><span class="n">Variable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Represents a tuple variable in the code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arg_vars: Iterable</span>
+<span class="sd">        Multiple variables contained within the tuple</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import TupleVariable, Variable</span>
+<span class="sd">    &gt;&gt;&gt; v1 = Variable(&#39;int&#39;,&#39;v1&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; v2 = Variable(&#39;bool&#39;,&#39;v2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n  = TupleVariable([v1, v2],&#39;n&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n</span>
+<span class="sd">    n</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_ndarray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<span class="k">class</span> <span class="nc">HomogeneousTupleVariable</span><span class="p">(</span><span class="n">TupleVariable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Represents a tuple variable in the code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arg_vars: Iterable</span>
+<span class="sd">        Multiple variables contained within the tuple</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import TupleVariable, Variable</span>
+<span class="sd">    &gt;&gt;&gt; v1 = Variable(&#39;int&#39;,&#39;v1&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; v2 = Variable(&#39;bool&#39;,&#39;v2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n  = TupleVariable([v1, v2],&#39;n&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n</span>
+<span class="sd">    n</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">is_homogeneous</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">shape_can_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicates if the shape can change in the i-th dimension</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_alias</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">LiteralInteger</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+<span class="k">class</span> <span class="nc">InhomogeneousTupleVariable</span><span class="p">(</span><span class="n">TupleVariable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Represents a tuple variable in the code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arg_vars: Iterable</span>
+<span class="sd">        Multiple variables contained within the tuple</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import TupleVariable, Variable</span>
+<span class="sd">    &gt;&gt;&gt; v1 = Variable(&#39;int&#39;,&#39;v1&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; v2 = Variable(&#39;bool&#39;,&#39;v2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n  = TupleVariable([v1, v2],&#39;n&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n</span>
+<span class="sd">    n</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_vars&#39;</span><span class="p">,)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_vars&#39;</span><span class="p">,)</span>
+    <span class="n">is_homogeneous</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg_vars</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">arg_vars</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the variables saved internally in the tuple</span>
+<span class="sd">        (used for inhomogeneous variables)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span>
+
+    <span class="k">def</span> <span class="nf">get_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the n-th variable saved internally in the</span>
+<span class="sd">        tuple (used for inhomogeneous variables)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        variable_idx : int/LiteralInteger</span>
+<span class="sd">                       The index of the variable which we</span>
+<span class="sd">                       wish to collect</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">[</span><span class="n">variable_idx</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">rename_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable_idx</span><span class="p">,</span> <span class="n">new_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Rename the n-th variable saved internally in the</span>
+<span class="sd">        tuple (used for inhomogeneous variables)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        variable_idx : int/LiteralInteger</span>
+<span class="sd">                       The index of the variable which we</span>
+<span class="sd">                       wish to collect</span>
+<span class="sd">        new_name     : str</span>
+<span class="sd">                       The new name of the variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">[</span><span class="n">variable_idx</span><span class="p">]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">sub_idx</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sub_idx</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_var</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_idx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">var</span><span class="p">[</span><span class="n">sub_idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">var</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">)</span>
+
+    <span class="nd">@Variable</span><span class="o">.</span><span class="n">memory_handling</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">memory_handling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memory_handling</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">memory_handling</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;heap&#39;</span><span class="p">,</span> <span class="s1">&#39;stack&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;memory_handling must be &#39;heap&#39;, &#39;stack&#39; or &#39;alias&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handling</span> <span class="o">=</span> <span class="n">memory_handling</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">var</span><span class="o">.</span><span class="n">memory_handling</span> <span class="o">=</span> <span class="n">memory_handling</span>
+
+    <span class="nd">@Variable</span><span class="o">.</span><span class="n">is_target</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_target</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_target</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;is_target must be a boolean.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_target</span> <span class="o">=</span> <span class="n">is_target</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">var</span><span class="o">.</span><span class="n">is_target</span> <span class="o">=</span> <span class="n">is_target</span>
+
+<span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">Variable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for expressing constant values (e.g. pi)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args, **kwargs : See pyccel.ast.variable.Variable</span>
+
+<span class="sd">    value : Type matching dtype</span>
+<span class="sd">            The value that the constant represents</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.variable import Constant</span>
+<span class="sd">    &gt;&gt;&gt; import math</span>
+<span class="sd">    &gt;&gt;&gt; Constant(&#39;float&#39;, &#39;pi&#39; , value=math.pi )</span>
+<span class="sd">    Constant(&#39;pi&#39;, dtype=NativeFloat())</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_value&#39;</span><span class="p">,)</span>
+    <span class="c1"># The value of a constant is not a translated object</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">Nil</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Immutable value of the constant</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">=</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+
+
+<div class="viewcode-block" id="IndexedElement"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.IndexedElement">[docs]</a><span class="k">class</span> <span class="nc">IndexedElement</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a mathematical object with indices.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import Variable, IndexedElement</span>
+<span class="sd">    &gt;&gt;&gt; A = Variable(&#39;A&#39;, dtype=&#39;int&#39;, shape=(2,3), rank=2)</span>
+<span class="sd">    &gt;&gt;&gt; i = Variable(&#39;i&#39;, dtype=&#39;int&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; j = Variable(&#39;j&#39;, dtype=&#39;int&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; IndexedElement(A, i, j)</span>
+<span class="sd">    IndexedElement(A, i, j)</span>
+<span class="sd">    &gt;&gt;&gt; IndexedElement(A, i, j) == A[i, j]</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_label&#39;</span><span class="p">,</span> <span class="s1">&#39;_indices&#39;</span><span class="p">,</span><span class="s1">&#39;_dtype&#39;</span><span class="p">,</span><span class="s1">&#39;_precision&#39;</span><span class="p">,</span><span class="s1">&#39;_shape&#39;</span><span class="p">,</span><span class="s1">&#39;_rank&#39;</span><span class="p">,</span><span class="s1">&#39;_order&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_label&#39;</span><span class="p">,</span> <span class="s1">&#39;_indices&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">base</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw_args</span>
+        <span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Indexed needs at least one index.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">base</span>
+
+        <span class="k">if</span> <span class="n">pyccel_stage</span> <span class="o">==</span> <span class="s1">&#39;syntactic&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">precision</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">rank</span>  <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">rank</span>
+
+        <span class="c1"># Add empty slices to fully index the object</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">rank</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">args</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">Slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span><span class="o">*</span><span class="p">(</span><span class="n">rank</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">PyccelAstNode</span><span class="p">,</span> <span class="n">Slice</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Index is not of valid type&quot;</span><span class="p">,</span>
+                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">args</span><span class="p">,</span> <span class="n">severity</span> <span class="o">=</span> <span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Calculate new shape</span>
+
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_shape</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="kn">from</span> <span class="nn">.mathext</span> <span class="kn">import</span> <span class="n">MathCeil</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Slice</span><span class="p">):</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">start</span>
+                    <span class="n">stop</span>  <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">stop</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">s</span>
+                    <span class="n">step</span>  <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">step</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">PyccelUnarySub</span><span class="p">):</span>
+                        <span class="n">start</span> <span class="o">=</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stop</span><span class="p">,</span> <span class="n">PyccelUnarySub</span><span class="p">):</span>
+                        <span class="n">stop</span> <span class="o">=</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                    <span class="n">_shape</span> <span class="o">=</span> <span class="n">stop</span> <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">PyccelMinus</span><span class="p">(</span><span class="n">stop</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">PyccelUnarySub</span><span class="p">):</span>
+                            <span class="n">start</span> <span class="o">=</span> <span class="n">s</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">start</span>
+                            <span class="n">_shape</span> <span class="o">=</span> <span class="n">start</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">PyccelMinus</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                            <span class="n">step</span> <span class="o">=</span> <span class="n">PyccelUnarySub</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+                        <span class="n">_shape</span> <span class="o">=</span> <span class="n">MathCeil</span><span class="p">(</span><span class="n">PyccelDiv</span><span class="p">(</span><span class="n">_shape</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                    <span class="n">new_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_shape</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_shape</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_rank</span> <span class="o">=</span> <span class="n">rank</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Slice</span><span class="p">):</span>
+                    <span class="n">new_rank</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">=</span> <span class="n">new_rank</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">base</span><span class="o">.</span><span class="n">order</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The object which is indexed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A tuple of indices used to index the variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">[</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">[</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Rank mismatch.&#39;</span><span class="p">)</span>
+
+        <span class="n">new_indexes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Slice</span><span class="p">)</span> <span class="ow">and</span> <span class="n">j</span><span class="o">&lt;</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">i</span><span class="o">.</span><span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">incr</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">incr</span> <span class="o">=</span> <span class="n">PyccelMul</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">simplify</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">start</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">incr</span> <span class="o">=</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">incr</span><span class="p">,</span> <span class="n">simplify</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">incr</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">new_indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">IndexedElement</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">new_indexes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DottedVariable"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.variable.DottedVariable">[docs]</a><span class="k">class</span> <span class="nc">DottedVariable</span><span class="p">(</span><span class="n">Variable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a dotted variable. This is usually</span>
+<span class="sd">    a variable which is a member of a class</span>
+
+<span class="sd">    E.g.</span>
+<span class="sd">    a = AClass()</span>
+<span class="sd">    a.b = 3</span>
+
+<span class="sd">    In this case b is a DottedVariable where the lhs</span>
+<span class="sd">    is a</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_lhs&#39;</span><span class="p">,)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_lhs&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lhs</span> <span class="o">=</span> <span class="n">lhs</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lhs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The object before the final dot in the</span>
+<span class="sd">        dotted variable</span>
+
+<span class="sd">        e.g. for the DottedVariable:</span>
+<span class="sd">        a.b</span>
+<span class="sd">        The lhs is a</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lhs</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lhs</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lhs</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">classname</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">classname</span><span class="si">}</span><span class="s1">(</span><span class="si">{</span><span class="n">lhs</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">, dtype=</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s1">&#39;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

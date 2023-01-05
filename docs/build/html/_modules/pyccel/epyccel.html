@@ -1,0 +1,544 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.epyccel &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.epyccel</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.epyccel</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">filelock</span> <span class="kn">import</span> <span class="n">FileLock</span><span class="p">,</span> <span class="n">Timeout</span>
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">ModuleType</span><span class="p">,</span> <span class="n">FunctionType</span>
+<span class="kn">from</span> <span class="nn">importlib.machinery</span> <span class="kn">import</span> <span class="n">ExtensionFileLoader</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.codegen.pipeline</span> <span class="kn">import</span> <span class="n">execute_pyccel</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">ErrorsMode</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;random_string&#39;</span><span class="p">,</span> <span class="s1">&#39;get_source_function&#39;</span><span class="p">,</span> <span class="s1">&#39;epyccel_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;epyccel&#39;</span><span class="p">]</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="n">random_selector</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">SystemRandom</span><span class="p">()</span>
+
+<div class="viewcode-block" id="random_string"><a class="viewcode-back" href="../../pyccel.html#pyccel.epyccel.random_string">[docs]</a><span class="k">def</span> <span class="nf">random_string</span><span class="p">(</span> <span class="n">n</span> <span class="p">):</span>
+    <span class="n">chars</span>    <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">random_selector</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span> <span class="n">chars</span> <span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">)</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="get_source_function"><a class="viewcode-back" href="../../pyccel.html#pyccel.epyccel.get_source_function">[docs]</a><span class="k">def</span> <span class="nf">get_source_function</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting a callable function&#39;</span><span class="p">)</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsourcelines</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># remove indentation if the first line is indented</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">leading_spaces</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lstrip</span><span class="p">())</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">leading_spaces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">leading_spaces</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{code}{line}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">code</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="k">def</span> <span class="nf">get_unique_name</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a unique name based on the prefix</span>
+<span class="sd">    which does not coincide with a module which</span>
+<span class="sd">    already exists and is not being created by</span>
+<span class="sd">    another thread</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefix : str</span>
+<span class="sd">             The starting string of the random name</span>
+<span class="sd">    path   : str</span>
+<span class="sd">             The folder where the lock file should be saved</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    module_name : str</span>
+<span class="sd">                  A unique name for the new module</span>
+<span class="sd">    module_lock : FileLock</span>
+<span class="sd">                  A file lock preventing other threads</span>
+<span class="sd">                  from creating a module with the same name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_import_prefix</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
+
+    <span class="c1"># Find an unused name</span>
+    <span class="n">tag</span> <span class="o">=</span> <span class="n">random_string</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="n">module_import_prefix</span> <span class="o">+</span> <span class="n">tag</span>
+
+    <span class="k">while</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="n">random_string</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">module_name</span> <span class="o">=</span> <span class="n">module_import_prefix</span> <span class="o">+</span> <span class="n">tag</span>
+
+    <span class="n">module_name</span> <span class="o">=</span> <span class="n">module_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">tag</span>
+
+    <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;__epyccel__&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create new directories if not existing</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Ensure that the name is not in use by another thread</span>
+    <span class="n">lock</span> <span class="o">=</span> <span class="n">FileLock</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.lock&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">Timeout</span><span class="p">(</span><span class="s2">&quot;Newly created collision&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">Timeout</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_unique_name</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">module_name</span><span class="p">,</span> <span class="n">lock</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="epyccel_seq"><a class="viewcode-back" href="../../pyccel.html#pyccel.epyccel.epyccel_seq">[docs]</a><span class="k">def</span> <span class="nf">epyccel_seq</span><span class="p">(</span><span class="n">function_or_module</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+                <span class="n">language</span>      <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">compiler</span>      <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">fflags</span>        <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">wrapper_flags</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">accelerators</span>  <span class="o">=</span> <span class="p">(),</span>
+                <span class="n">verbose</span>       <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">debug</span>         <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">includes</span>      <span class="o">=</span> <span class="p">(),</span>
+                <span class="n">libdirs</span>       <span class="o">=</span> <span class="p">(),</span>
+                <span class="n">modules</span>       <span class="o">=</span> <span class="p">(),</span>
+                <span class="n">libs</span>          <span class="o">=</span> <span class="p">(),</span>
+                <span class="n">folder</span>        <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+    <span class="c1"># ... get the module source code</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_or_module</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">):</span>
+        <span class="n">pyfunc</span> <span class="o">=</span> <span class="n">function_or_module</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">get_source_function</span><span class="p">(</span><span class="n">pyfunc</span><span class="p">)</span>
+
+        <span class="n">dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+        <span class="n">module_name</span><span class="p">,</span> <span class="n">module_lock</span> <span class="o">=</span> <span class="n">get_unique_name</span><span class="p">(</span><span class="s1">&#39;mod&#39;</span><span class="p">,</span> <span class="n">dirpath</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_or_module</span><span class="p">,</span> <span class="n">ModuleType</span><span class="p">):</span>
+        <span class="n">pymod</span> <span class="o">=</span> <span class="n">function_or_module</span>
+        <span class="n">dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">pymod</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsourcelines</span><span class="p">(</span><span class="n">pymod</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+        <span class="n">module_name</span><span class="p">,</span> <span class="n">module_lock</span> <span class="o">=</span> <span class="n">get_unique_name</span><span class="p">(</span><span class="n">pymod</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">dirpath</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&gt; Expecting a FunctionType or a ModuleType&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Try is necessary to ensure lock is released</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pymod_filename</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.py&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="n">pymod_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">pymod_filename</span><span class="p">)</span>
+        <span class="c1"># ...</span>
+
+        <span class="c1"># Store current directory</span>
+        <span class="n">base_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+        <span class="c1"># Define working directory &#39;folder&#39;</span>
+        <span class="k">if</span> <span class="n">folder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">pymod_filepath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+        <span class="c1"># Define directory name and path for epyccel files</span>
+        <span class="n">epyccel_dirname</span> <span class="o">=</span> <span class="s1">&#39;__epyccel__&#39;</span>
+        <span class="n">epyccel_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">epyccel_dirname</span><span class="p">)</span>
+
+        <span class="c1"># Create new directories if not existing</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">epyccel_dirpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Change working directory to &#39;__epyccel__&#39;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">epyccel_dirpath</span><span class="p">)</span>
+
+        <span class="c1"># Store python file in &#39;__epyccel__&#39; folder, so that execute_pyccel can run</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pymod_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Generate shared library</span>
+            <span class="n">execute_pyccel</span><span class="p">(</span><span class="n">pymod_filename</span><span class="p">,</span>
+                           <span class="n">verbose</span>       <span class="o">=</span> <span class="n">verbose</span><span class="p">,</span>
+                           <span class="n">language</span>      <span class="o">=</span> <span class="n">language</span><span class="p">,</span>
+                           <span class="n">compiler</span>      <span class="o">=</span> <span class="n">compiler</span><span class="p">,</span>
+                           <span class="n">fflags</span>        <span class="o">=</span> <span class="n">fflags</span><span class="p">,</span>
+                           <span class="n">wrapper_flags</span> <span class="o">=</span> <span class="n">wrapper_flags</span><span class="p">,</span>
+                           <span class="n">includes</span>      <span class="o">=</span> <span class="n">includes</span><span class="p">,</span>
+                           <span class="n">libdirs</span>       <span class="o">=</span> <span class="n">libdirs</span><span class="p">,</span>
+                           <span class="n">modules</span>       <span class="o">=</span> <span class="n">modules</span><span class="p">,</span>
+                           <span class="n">libs</span>          <span class="o">=</span> <span class="n">libs</span><span class="p">,</span>
+                           <span class="n">debug</span>         <span class="o">=</span> <span class="n">debug</span><span class="p">,</span>
+                           <span class="n">accelerators</span>  <span class="o">=</span> <span class="n">accelerators</span><span class="p">,</span>
+                           <span class="n">output_name</span>   <span class="o">=</span> <span class="n">module_name</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Change working directory back to starting point</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span>
+
+
+        <span class="c1"># Import shared library</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">epyccel_dirpath</span><span class="p">)</span>
+
+        <span class="c1"># http://ballingt.com/import-invalidate-caches</span>
+        <span class="c1"># https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches</span>
+        <span class="n">importlib</span><span class="o">.</span><span class="n">invalidate_caches</span><span class="p">()</span>
+
+        <span class="n">package</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">epyccel_dirpath</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">language</span> <span class="o">!=</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="c1"># Verify that we have imported the shared library, not the Python one</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s1">&#39;__loader__&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">ExtensionFileLoader</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Could not load shared library&#39;</span><span class="p">)</span>
+
+        <span class="c1"># If Python object was function, extract it from module</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_or_module</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">):</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">pyfunc</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">module_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="c1"># Return accelerated Python module and function</span>
+    <span class="k">return</span> <span class="n">package</span><span class="p">,</span> <span class="n">func</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="epyccel"><a class="viewcode-back" href="../../pyccel.html#pyccel.epyccel.epyccel">[docs]</a><span class="k">def</span> <span class="nf">epyccel</span><span class="p">(</span> <span class="n">python_function_or_module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Accelerate Python function or module using Pyccel in &quot;embedded&quot; mode.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    python_function_or_module : function | module</span>
+<span class="sd">        Python function or module to be accelerated.</span>
+
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Print additional information (default: False).</span>
+
+<span class="sd">    language : {&#39;fortran&#39;, &#39;c&#39;, &#39;python&#39;}</span>
+<span class="sd">        Language of generated code (default: &#39;fortran&#39;).</span>
+
+<span class="sd">    accelerators : iterable of str, optional</span>
+<span class="sd">        Parallel multi-threading acceleration strategy</span>
+<span class="sd">        (currently supported: &#39;mpi&#39;, &#39;openmp&#39;, &#39;openacc&#39;).</span>
+
+<span class="sd">    Options for parallel mode</span>
+<span class="sd">    -------------------------</span>
+<span class="sd">    comm : mpi4py.MPI.Comm, optional</span>
+<span class="sd">        MPI communicator for calling Pyccel in parallel mode (default: None).</span>
+
+<span class="sd">    root : int, optional</span>
+<span class="sd">        MPI rank of process in charge of accelerating code (default: 0).</span>
+
+<span class="sd">    bcast : {True, False}</span>
+<span class="sd">        If False, only root process loads accelerated function/module (default: True).</span>
+
+<span class="sd">    Other options</span>
+<span class="sd">    -------------</span>
+<span class="sd">    compiler : str, optional</span>
+<span class="sd">        User-defined command for compiling generated source code.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    res : object</span>
+<span class="sd">        Accelerated function or module.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; def one(): return 1</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.epyccel import epyccel</span>
+<span class="sd">    &gt;&gt;&gt; one_f = epyccel(one, language=&#39;fortran&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; one_c = epyccel(one, language=&#39;c&#39;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span> <span class="n">python_function_or_module</span><span class="p">,</span> <span class="p">(</span><span class="n">FunctionType</span><span class="p">,</span> <span class="n">ModuleType</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">comm</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;comm&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">root</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">bcast</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;bcast&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;developer_mode&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># This will initialize the singleton ErrorsMode</span>
+        <span class="c1"># making this setting available everywhere</span>
+        <span class="n">err_mode</span> <span class="o">=</span> <span class="n">ErrorsMode</span><span class="p">()</span>
+        <span class="n">err_mode</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="s1">&#39;developer&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Parallel version</span>
+    <span class="k">if</span> <span class="n">comm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+        <span class="kn">from</span> <span class="nn">tblib</span>  <span class="kn">import</span> <span class="n">pickling_support</span>   <span class="c1"># [YG, 27.10.2020] We use tblib to</span>
+        <span class="n">pickling_support</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>            <span class="c1"># pickle tracebacks, which allows</span>
+                                              <span class="c1"># mpi4py to broadcast exceptions</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span> <span class="n">comm</span><span class="p">,</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span> <span class="n">root</span><span class="p">,</span> <span class="nb">int</span>      <span class="p">)</span>
+
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;accelerators&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="s1">&#39;mpi&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;accelerators&#39;</span><span class="p">]:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;accelerators&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;accelerators&#39;</span><span class="p">],</span> <span class="s1">&#39;mpi&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Master process calls epyccel</span>
+        <span class="k">if</span> <span class="n">comm</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">root</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mod</span><span class="p">,</span> <span class="n">fun</span> <span class="o">=</span> <span class="n">epyccel_seq</span><span class="p">(</span> <span class="n">python_function_or_module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">)</span>
+                <span class="n">mod_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span>
+                <span class="n">mod_name</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="n">fun_name</span> <span class="o">=</span> <span class="n">python_function_or_module</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">fun</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="n">success</span>  <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># error handling carried out after broadcast to prevent deadlocks</span>
+            <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1"># pylint: disable=broad-except</span>
+                <span class="n">exc_info</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="n">success</span>  <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Non-master processes initialize empty variables</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mod</span><span class="p">,</span> <span class="n">fun</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">mod_path</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">mod_name</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">fun_name</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">exc_info</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">success</span>  <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Broadcast success state, and raise exception if neeeded</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">success</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">exc_info</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">bcast</span><span class="p">:</span>
+            <span class="c1"># Broadcast Fortran module path/name and function name to all processes</span>
+            <span class="n">mod_path</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span> <span class="n">mod_path</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span> <span class="p">)</span>
+            <span class="n">mod_name</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span> <span class="n">mod_name</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span> <span class="p">)</span>
+            <span class="n">fun_name</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span> <span class="n">fun_name</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span> <span class="p">)</span>
+
+            <span class="c1"># Non-master processes import Fortran module directly from its path</span>
+            <span class="c1"># and extract function if its name is given</span>
+            <span class="k">if</span> <span class="n">comm</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="n">root</span><span class="p">:</span>
+                <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">mod_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+                <span class="c1"># http://ballingt.com/import-invalidate-caches</span>
+                <span class="c1"># https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches</span>
+                <span class="n">importlib</span><span class="o">.</span><span class="n">invalidate_caches</span><span class="p">()</span>
+                <span class="n">mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">mod_name</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+                <span class="n">fun</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">fun_name</span><span class="p">)</span> <span class="k">if</span> <span class="n">fun_name</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="c1"># Serial version</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mod</span><span class="p">,</span> <span class="n">fun</span> <span class="o">=</span> <span class="n">epyccel_seq</span><span class="p">(</span> <span class="n">python_function_or_module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">)</span>
+
+    <span class="c1"># Return Fortran function (if any), otherwise module</span>
+    <span class="k">return</span> <span class="n">fun</span> <span class="ow">or</span> <span class="n">mod</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

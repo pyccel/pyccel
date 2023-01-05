@@ -1,0 +1,1087 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.parser.syntax.openmp &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.parser.syntax.openmp</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.parser.syntax.openmp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">dirname</span>
+
+<span class="kn">from</span> <span class="nn">textx.metamodel</span> <span class="kn">import</span> <span class="n">metamodel_from_file</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.parser.syntax.basic</span> <span class="kn">import</span> <span class="n">BasicStmt</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.omp</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">,</span> <span class="n">OMP_For_Loop</span><span class="p">,</span> <span class="n">OMP_Parallel_Construct</span><span class="p">,</span>
+                            <span class="n">OMP_Single_Construct</span><span class="p">,</span> <span class="n">Omp_End_Clause</span><span class="p">,</span> <span class="n">OMP_Critical_Construct</span><span class="p">,</span>
+                            <span class="n">OMP_Master_Construct</span><span class="p">,</span> <span class="n">OMP_Masked_Construct</span><span class="p">,</span> <span class="n">OMP_Task_Construct</span><span class="p">,</span>
+                            <span class="n">OMP_Cancel_Construct</span><span class="p">,</span> <span class="n">OMP_Target_Construct</span><span class="p">,</span> <span class="n">OMP_Teams_Construct</span><span class="p">,</span>
+                            <span class="n">OMP_Sections_Construct</span><span class="p">,</span> <span class="n">OMP_Section_Construct</span><span class="p">,</span> <span class="n">OMP_Simd_Construct</span><span class="p">,</span>
+                            <span class="n">OMP_Distribute_Construct</span><span class="p">,</span> <span class="n">OMP_TaskLoop_Construct</span><span class="p">)</span>
+
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="OmpConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpConstruct</span><span class="p">(</span><span class="n">BasicStmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing all OpenMP constructs.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omp_type</span><span class="p">,</span> <span class="n">vclauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span>     <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">clauses</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;combined&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">simd</span>     <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;combinedsimd&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="n">vclauses</span>
+
+        <span class="n">com</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">combined</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;for&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_loop_clauses</span>
+            <span class="k">if</span> <span class="s1">&#39;simd&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_simd_clauses</span>
+            <span class="k">if</span> <span class="s1">&#39;taskloop&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_taskloop_clauses</span>
+            <span class="k">if</span> <span class="s1">&#39;masked&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="p">(</span><span class="n">OmpFilter</span><span class="p">,)</span>
+            <span class="k">if</span> <span class="s1">&#39;sections&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_sections_clauses</span>
+            <span class="k">if</span> <span class="s1">&#39;distribute&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_Distribute_clauses</span>
+            <span class="k">if</span> <span class="s1">&#39;parallel&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_parallel_clauses</span>
+            <span class="k">if</span> <span class="s1">&#39;teams&#39;</span> <span class="ow">in</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_teams_clauses</span>
+            <span class="n">com</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">expr</span>
+
+        <span class="n">has_nowait</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">simd</span><span class="p">:</span>
+            <span class="n">_valid_clauses</span> <span class="o">+=</span> <span class="n">_valid_simd_clauses</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">simd</span>
+        <span class="k">if</span> <span class="n">clauses</span><span class="p">:</span>
+            <span class="n">clause_expr</span><span class="p">,</span> <span class="n">has_nowait</span> <span class="o">=</span> <span class="n">check_get_clauses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">,</span> <span class="n">clauses</span><span class="p">,</span> <span class="n">combined</span><span class="p">)</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="n">clause_expr</span>
+
+        <span class="k">if</span> <span class="n">combined</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">omp_type</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">,</span> <span class="n">com</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">omp_type</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; </span><span class="si">{}</span><span class="s2">: expr&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span></div>
+
+<div class="viewcode-block" id="OmpClauses"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpClauses">[docs]</a><span class="k">class</span> <span class="nc">OmpClauses</span><span class="p">(</span><span class="n">BasicStmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the clause expr.&quot;&quot;&quot;</span>
+    <span class="n">_expr</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; </span><span class="si">{}</span><span class="s2">: expr&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span></div>
+
+<div class="viewcode-block" id="check_get_clauses"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.check_get_clauses">[docs]</a><span class="k">def</span> <span class="nf">check_get_clauses</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">valid_clauses</span><span class="p">,</span> <span class="n">clauses</span><span class="p">,</span> <span class="n">combined</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to check if the clauses are correct for a given construct.</span>
+<span class="sd">    And set the has_nowait variable to True if there is a nowait clause, to finally add the nowait clause at the end of the construct.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">has_nowait</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="n">clauses</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">valid_clauses</span><span class="p">)</span> <span class="ow">and</span> \
+           <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">OmpCopyin</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">OmpTargetParallel</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">OmpNowait</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">OmpLoopConstruct</span><span class="p">,</span> <span class="n">OmpSectionsConstruct</span><span class="p">,</span> <span class="n">OmpSingleConstruct</span><span class="p">)):</span>
+                    <span class="n">has_nowait</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Wrong clause nowait&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Wrong clause &quot;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span></div>
+
+
+<div class="viewcode-block" id="Openmp"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.Openmp">[docs]</a><span class="k">class</span> <span class="nc">Openmp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for Openmp syntax.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;statements&#39;</span><span class="p">,</span> <span class="p">[])</span></div>
+
+<div class="viewcode-block" id="OpenmpStmt"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OpenmpStmt">[docs]</a><span class="k">class</span> <span class="nc">OpenmpStmt</span><span class="p">(</span><span class="n">BasicStmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing an OpenMP statement.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stmt</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; </span><span class="si">{}</span><span class="s2">: expr&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stmt</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">omp_directives</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">stmt</span><span class="o">.</span><span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Wrong stmt for OpenmpStmt&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpParallelConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpParallelConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpParallelConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Parallel construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Parallel_Construct</span><span class="p">,</span> <span class="n">_valid_parallel_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpLoopConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpLoopConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpLoopConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the For loop construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_For_Loop</span><span class="p">,</span> <span class="n">_valid_loop_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTaskLoopConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTaskLoopConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpTaskLoopConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Taskloop construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_TaskLoop_Construct</span><span class="p">,</span> <span class="p">(</span><span class="n">_valid_taskloop_clauses</span> <span class="o">+</span> <span class="p">(</span><span class="n">OmpinReduction</span><span class="p">,)),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTaskConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTaskConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpTaskConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Task construct &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Task_Construct</span><span class="p">,</span> <span class="n">_valid_task_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpSingleConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpSingleConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpSingleConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Single construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Single_Construct</span><span class="p">,</span> <span class="n">_valid_single_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpCriticalConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpCriticalConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpCriticalConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Critical construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Critical_Construct</span><span class="p">,</span> <span class="p">(</span><span class="n">OmpCriticalName</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpSimdConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpSimdConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpSimdConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Simd construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Simd_Construct</span><span class="p">,</span> <span class="n">_valid_simd_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpMasterConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpMasterConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpMasterConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the master construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Master_Construct</span><span class="p">,</span> <span class="n">_valid_simd_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpMaskedConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpMaskedConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpMaskedConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Masked construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Masked_Construct</span><span class="p">,</span> <span class="p">(</span><span class="n">OmpFilter</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpSectionsConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpSectionsConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpSectionsConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Sections construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Sections_Construct</span><span class="p">,</span> <span class="n">_valid_sections_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpSectionConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpSectionConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpSectionConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Section construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Section_Construct</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpDistributeConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpDistributeConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpDistributeConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Distribute construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Distribute_Construct</span><span class="p">,</span> <span class="n">_valid_Distribute_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpBarrierConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpBarrierConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpBarrierConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Barrier construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTaskWaitConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTaskWaitConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpTaskWaitConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the TaskWait construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTaskyieldConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTaskyieldConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpTaskyieldConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Taskyield construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpFlushConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpFlushConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpFlushConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Flush construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">,</span> <span class="p">(</span><span class="n">FlushList</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpCancelConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpCancelConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpCancelConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Cancel construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Cancel_Construct</span><span class="p">,</span> <span class="p">(</span><span class="n">OmpCancelType</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTargetConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTargetConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpTargetConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Target construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Target_Construct</span><span class="p">,</span> <span class="n">_valid_target_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTeamsConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTeamsConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpTeamsConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Teams construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OMP_Teams_Construct</span><span class="p">,</span> <span class="n">_valid_teams_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpAtomicConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpAtomicConstruct">[docs]</a><span class="k">class</span> <span class="nc">OmpAtomicConstruct</span><span class="p">(</span><span class="n">OmpConstruct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the Atomic construct .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">,</span> <span class="n">_valid_atomic_clauses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpEndClause"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpEndClause">[docs]</a><span class="k">class</span> <span class="nc">OmpEndClause</span><span class="p">(</span><span class="n">BasicStmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the End construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">lst_construct</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;construct&#39;</span><span class="p">)</span>
+
+        <span class="n">construct</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lst_construct</span><span class="p">)</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;end </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">construct</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">Omp_End_Clause</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; OmpEndClause: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span></div>
+
+<div class="viewcode-block" id="OmpFinal"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpFinal">[docs]</a><span class="k">class</span> <span class="nc">OmpFinal</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the final clause&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;final&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;final(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">final</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpNumThread"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpNumThread">[docs]</a><span class="k">class</span> <span class="nc">OmpNumThread</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the num_thread clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;thread&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;num_threads(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">thread</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpNumTeams"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpNumTeams">[docs]</a><span class="k">class</span> <span class="nc">OmpNumTeams</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the num_teams clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">teams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;teams&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;num_teams(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">teams</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpThreadLimit"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpThreadLimit">[docs]</a><span class="k">class</span> <span class="nc">OmpThreadLimit</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the thread_limit clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;limit&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;thread_limit(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpNumTasks"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpNumTasks">[docs]</a><span class="k">class</span> <span class="nc">OmpNumTasks</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the num_tasks clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tasks&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;num_tasks(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpGrainSize"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpGrainSize">[docs]</a><span class="k">class</span> <span class="nc">OmpGrainSize</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the grainsize clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tasks&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;grainsize(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpDefault"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpDefault">[docs]</a><span class="k">class</span> <span class="nc">OmpDefault</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the default clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;default(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpProcBind"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpProcBind">[docs]</a><span class="k">class</span> <span class="nc">OmpProcBind</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the proc_bind clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;proc_bind(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpPrivate"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpPrivate">[docs]</a><span class="k">class</span> <span class="nc">OmpPrivate</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the private clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="c1">#TODO check for variables in scope</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;private(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FlushList"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.FlushList">[docs]</a><span class="k">class</span> <span class="nc">FlushList</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a list of variables for the flush construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpCriticalName"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpCriticalName">[docs]</a><span class="k">class</span> <span class="nc">OmpCriticalName</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the name of a critical construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpShared"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpShared">[docs]</a><span class="k">class</span> <span class="nc">OmpShared</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the shared clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;shared(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpFirstPrivate"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpFirstPrivate">[docs]</a><span class="k">class</span> <span class="nc">OmpFirstPrivate</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the firstprivate clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;firstprivate(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpLastPrivate"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpLastPrivate">[docs]</a><span class="k">class</span> <span class="nc">OmpLastPrivate</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the lastprivate clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;lastprivate(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpCopyin"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpCopyin">[docs]</a><span class="k">class</span> <span class="nc">OmpCopyin</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the copyin clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;copyin(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpReduction"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpReduction">[docs]</a><span class="k">class</span> <span class="nc">OmpReduction</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the reduction clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">op</span>   <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;op&#39;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;reduction(</span><span class="si">{0}</span><span class="s1">: </span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpDepend"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpDepend">[docs]</a><span class="k">class</span> <span class="nc">OmpDepend</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the depend clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">dtype</span>   <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;depend(</span><span class="si">{0}</span><span class="s1">: </span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpMap"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpMap">[docs]</a><span class="k">class</span> <span class="nc">OmpMap</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the map clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">mtype</span>   <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;mtype&#39;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;map(</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mtype</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpinReduction"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpinReduction">[docs]</a><span class="k">class</span> <span class="nc">OmpinReduction</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the in_reduction clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ctype</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ctype&#39;</span><span class="p">)</span>
+        <span class="n">op</span>     <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;op&#39;</span><span class="p">)</span>
+        <span class="n">args</span>   <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">(</span><span class="si">{1}</span><span class="s1">: </span><span class="si">{2}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ctype</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpCollapse"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpCollapse">[docs]</a><span class="k">class</span> <span class="nc">OmpCollapse</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the collapse clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;collapse(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpOrdered"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpOrdered">[docs]</a><span class="k">class</span> <span class="nc">OmpOrdered</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the ordered clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;ordered(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;ordered&#39;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpLinear"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpLinear">[docs]</a><span class="k">class</span> <span class="nc">OmpLinear</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the linear clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">val</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;val&#39;</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;linear(</span><span class="si">{0}</span><span class="s1">:</span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpSchedule"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpSchedule">[docs]</a><span class="k">class</span> <span class="nc">OmpSchedule</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the schedule clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kind</span>       <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;kind&#39;</span><span class="p">)</span>
+        <span class="n">chunk_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;chunk_size&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">chunk_size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;schedule(</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;schedule(</span><span class="si">{0}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpFilter"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpFilter">[docs]</a><span class="k">class</span> <span class="nc">OmpFilter</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the filter clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpUntied"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpUntied">[docs]</a><span class="k">class</span> <span class="nc">OmpUntied</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the untied clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpMergeable"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpMergeable">[docs]</a><span class="k">class</span> <span class="nc">OmpMergeable</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the mergeable clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpNogroup"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpNogroup">[docs]</a><span class="k">class</span> <span class="nc">OmpNogroup</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the nogroup clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpPriority"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpPriority">[docs]</a><span class="k">class</span> <span class="nc">OmpPriority</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the priority clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpAtomicClause"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpAtomicClause">[docs]</a><span class="k">class</span> <span class="nc">OmpAtomicClause</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the atomic clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpCancelType"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpCancelType">[docs]</a><span class="k">class</span> <span class="nc">OmpCancelType</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the type of the cancel construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AtomicMemoryClause"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.AtomicMemoryClause">[docs]</a><span class="k">class</span> <span class="nc">AtomicMemoryClause</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the atomic memory clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpNowait"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpNowait">[docs]</a><span class="k">class</span> <span class="nc">OmpNowait</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the nowait clause.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpForSimd"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpForSimd">[docs]</a><span class="k">class</span> <span class="nc">OmpForSimd</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined For Simd construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fname&#39;</span><span class="p">)</span>
+        <span class="n">sname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">fname</span>
+        <span class="k">if</span> <span class="n">sname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">sname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpMaskedTaskloop"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpMaskedTaskloop">[docs]</a><span class="k">class</span> <span class="nc">OmpMaskedTaskloop</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined Masked Taskloop construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">mname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;mname&#39;</span><span class="p">)</span>
+        <span class="n">tname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">sname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">mname</span>
+        <span class="k">if</span> <span class="n">tname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">tname</span>
+            <span class="k">if</span> <span class="n">sname</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">sname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpPSections"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpPSections">[docs]</a><span class="k">class</span> <span class="nc">OmpPSections</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined Parallel Sections construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">sname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">sname</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTaskloopSimd"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTaskloopSimd">[docs]</a><span class="k">class</span> <span class="nc">OmpTaskloopSimd</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined Taskloop Simd comstruct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">tname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tname&#39;</span><span class="p">)</span>
+        <span class="n">sname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">tname</span>
+        <span class="k">if</span> <span class="n">sname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">sname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">txt</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpDistributeCombined"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpDistributeCombined">[docs]</a><span class="k">class</span> <span class="nc">OmpDistributeCombined</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined Distribute construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">dname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;dname&#39;</span><span class="p">)</span>
+        <span class="n">sname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">pname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;pname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">fname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">ssname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ssname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">dname</span>
+        <span class="k">if</span> <span class="n">sname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">sname</span>
+        <span class="k">elif</span> <span class="n">pname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">pname</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">fname</span>
+            <span class="k">if</span> <span class="n">ssname</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">ssname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">txt</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTargetParallel"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTargetParallel">[docs]</a><span class="k">class</span> <span class="nc">OmpTargetParallel</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined Target Parallel construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">pname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;pname&#39;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">sname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">pname</span>
+        <span class="k">if</span> <span class="n">fname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">fname</span>
+            <span class="k">if</span> <span class="n">sname</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">sname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">txt</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OmpTargetTeams"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.OmpTargetTeams">[docs]</a><span class="k">class</span> <span class="nc">OmpTargetTeams</span><span class="p">(</span><span class="n">OmpClauses</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing the combined Target Teams construct.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">tname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tname&#39;</span><span class="p">)</span>
+        <span class="n">dname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;dname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">sname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">pname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;pname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">fname</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;fname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">ssname</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ssname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">tname</span>
+        <span class="k">if</span> <span class="n">dname</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">dname</span>
+            <span class="k">if</span> <span class="n">sname</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">sname</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">pname</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">fname</span>
+                <span class="k">if</span> <span class="n">ssname</span><span class="p">:</span>
+                    <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">ssname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">txt</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<span class="c1">#################################################</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># whenever a new rule (construct/clause) is added in the grammar, we must update the following tuples.</span>
+
+<span class="n">_valid_single_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPrivate</span><span class="p">,</span>
+                         <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                         <span class="n">OmpNowait</span><span class="p">)</span>
+
+<span class="n">_valid_atomic_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpAtomicClause</span><span class="p">,</span>
+                         <span class="n">AtomicMemoryClause</span><span class="p">)</span>
+
+<span class="n">_valid_task_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPriority</span><span class="p">,</span>
+                       <span class="n">OmpFinal</span><span class="p">,</span>
+                       <span class="n">OmpDefault</span><span class="p">,</span>
+                       <span class="n">OmpPrivate</span><span class="p">,</span>
+                       <span class="n">OmpShared</span><span class="p">,</span>
+                       <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                       <span class="n">OmpUntied</span><span class="p">,</span>
+                       <span class="n">OmpMergeable</span><span class="p">,</span>
+                       <span class="n">OmpinReduction</span><span class="p">,</span>
+                       <span class="n">OmpDepend</span><span class="p">)</span>
+
+<span class="n">_valid_target_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPrivate</span><span class="p">,</span>
+                         <span class="n">OmpLastPrivate</span><span class="p">,</span>
+                         <span class="n">OmpinReduction</span><span class="p">,</span>
+                         <span class="n">OmpDepend</span><span class="p">,</span>
+                         <span class="n">OmpMap</span><span class="p">)</span>
+
+<span class="n">_valid_teams_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPrivate</span><span class="p">,</span>
+                        <span class="n">OmpLastPrivate</span><span class="p">,</span>
+                        <span class="n">OmpShared</span><span class="p">,</span>
+                        <span class="n">OmpReduction</span><span class="p">,</span>
+                        <span class="n">OmpNumTeams</span><span class="p">,</span>
+                        <span class="n">OmpThreadLimit</span><span class="p">)</span>
+
+<span class="n">_valid_sections_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPrivate</span><span class="p">,</span>
+                           <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                           <span class="n">OmpLastPrivate</span><span class="p">,</span>
+                           <span class="n">OmpReduction</span><span class="p">,</span>
+                           <span class="n">OmpNowait</span><span class="p">)</span>
+
+<span class="n">_valid_Distribute_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPrivate</span><span class="p">,</span>
+                             <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                             <span class="n">OmpLastPrivate</span><span class="p">,</span>
+                             <span class="n">OmpCollapse</span><span class="p">)</span>
+
+<span class="n">_valid_simd_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpLinear</span><span class="p">,</span>
+                       <span class="n">OmpReduction</span><span class="p">,</span>
+                       <span class="n">OmpCollapse</span><span class="p">,</span>
+                       <span class="n">OmpLastPrivate</span><span class="p">)</span>
+
+<span class="n">_valid_taskloop_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpShared</span><span class="p">,</span>
+                           <span class="n">OmpPrivate</span><span class="p">,</span>
+                           <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                           <span class="n">OmpLastPrivate</span><span class="p">,</span>
+                           <span class="n">OmpReduction</span><span class="p">,</span>
+                           <span class="n">OmpinReduction</span><span class="p">,</span>
+                           <span class="n">OmpNumTasks</span><span class="p">,</span>
+                           <span class="n">OmpGrainSize</span><span class="p">,</span>
+                           <span class="n">OmpCollapse</span><span class="p">,</span>
+                           <span class="n">OmpUntied</span><span class="p">,</span>
+                           <span class="n">OmpMergeable</span><span class="p">,</span>
+                           <span class="n">OmpNogroup</span><span class="p">,</span>
+                           <span class="n">OmpPriority</span><span class="p">)</span>
+
+<span class="n">_valid_loop_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpPrivate</span><span class="p">,</span>
+                       <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                       <span class="n">OmpLastPrivate</span><span class="p">,</span>
+                       <span class="n">OmpReduction</span><span class="p">,</span>
+                       <span class="n">OmpSchedule</span><span class="p">,</span>
+                       <span class="n">OmpCollapse</span><span class="p">,</span>
+                       <span class="n">OmpLinear</span><span class="p">,</span>
+                       <span class="n">OmpOrdered</span><span class="p">,</span>
+                       <span class="n">OmpNowait</span><span class="p">)</span>
+
+<span class="n">_valid_parallel_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpNumThread</span><span class="p">,</span>
+                           <span class="n">OmpDefault</span><span class="p">,</span>
+                           <span class="n">OmpPrivate</span><span class="p">,</span>
+                           <span class="n">OmpShared</span><span class="p">,</span>
+                           <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+                           <span class="n">OmpCopyin</span><span class="p">,</span>
+                           <span class="n">OmpReduction</span><span class="p">,</span>
+                           <span class="n">OmpProcBind</span><span class="p">)</span>
+
+<span class="n">omp_directives</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpParallelConstruct</span><span class="p">,</span>
+                  <span class="n">OmpLoopConstruct</span><span class="p">,</span>
+                  <span class="n">OmpSingleConstruct</span><span class="p">,</span>
+                  <span class="n">OmpEndClause</span><span class="p">,</span>
+                  <span class="n">OmpCriticalConstruct</span><span class="p">,</span>
+                  <span class="n">OmpBarrierConstruct</span><span class="p">,</span>
+                  <span class="n">OmpMasterConstruct</span><span class="p">,</span>
+                  <span class="n">OmpMaskedConstruct</span><span class="p">,</span>
+                  <span class="n">OmpTaskLoopConstruct</span><span class="p">,</span>
+                  <span class="n">OmpSimdConstruct</span><span class="p">,</span>
+                  <span class="n">OmpAtomicConstruct</span><span class="p">,</span>
+                  <span class="n">OmpTaskWaitConstruct</span><span class="p">,</span>
+                  <span class="n">OmpTaskyieldConstruct</span><span class="p">,</span>
+                  <span class="n">OmpTaskConstruct</span><span class="p">,</span>
+                  <span class="n">OmpFlushConstruct</span><span class="p">,</span>
+                  <span class="n">OmpCancelConstruct</span><span class="p">,</span>
+                  <span class="n">OmpTargetConstruct</span><span class="p">,</span>
+                  <span class="n">OmpTeamsConstruct</span><span class="p">,</span>
+                  <span class="n">OmpDistributeConstruct</span><span class="p">,</span>
+                  <span class="n">OmpSectionsConstruct</span><span class="p">,</span>
+                  <span class="n">OmpSectionConstruct</span><span class="p">)</span>
+
+<span class="n">omp_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">OmpCollapse</span><span class="p">,</span>
+               <span class="n">OmpCopyin</span><span class="p">,</span>
+               <span class="n">OmpFirstPrivate</span><span class="p">,</span>
+               <span class="n">OmpLastPrivate</span><span class="p">,</span>
+               <span class="n">OmpLinear</span><span class="p">,</span>
+               <span class="n">OmpOrdered</span><span class="p">,</span>
+               <span class="n">OmpNumThread</span><span class="p">,</span>
+               <span class="n">OmpDefault</span><span class="p">,</span>
+               <span class="n">OmpPrivate</span><span class="p">,</span>
+               <span class="n">OmpProcBind</span><span class="p">,</span>
+               <span class="n">OmpPrivate</span><span class="p">,</span>
+               <span class="n">OmpReduction</span><span class="p">,</span>
+               <span class="n">OmpSchedule</span><span class="p">,</span>
+               <span class="n">OmpShared</span><span class="p">,</span>
+               <span class="n">OmpCriticalName</span><span class="p">,</span>
+               <span class="n">OmpFilter</span><span class="p">,</span>
+               <span class="n">OmpinReduction</span><span class="p">,</span>
+               <span class="n">OmpNumTasks</span><span class="p">,</span>
+               <span class="n">OmpGrainSize</span><span class="p">,</span>
+               <span class="n">OmpUntied</span><span class="p">,</span>
+               <span class="n">OmpMergeable</span><span class="p">,</span>
+               <span class="n">OmpNogroup</span><span class="p">,</span>
+               <span class="n">OmpPriority</span><span class="p">,</span>
+               <span class="n">OmpAtomicClause</span><span class="p">,</span>
+               <span class="n">AtomicMemoryClause</span><span class="p">,</span>
+               <span class="n">OmpDepend</span><span class="p">,</span>
+               <span class="n">FlushList</span><span class="p">,</span>
+               <span class="n">OmpFinal</span><span class="p">,</span>
+               <span class="n">OmpCancelType</span><span class="p">,</span>
+               <span class="n">OmpMap</span><span class="p">,</span>
+               <span class="n">OmpNumTeams</span><span class="p">,</span>
+               <span class="n">OmpThreadLimit</span><span class="p">,</span>
+               <span class="n">OmpForSimd</span><span class="p">,</span>
+               <span class="n">OmpMaskedTaskloop</span><span class="p">,</span>
+               <span class="n">OmpPSections</span><span class="p">,</span>
+               <span class="n">OmpTaskloopSimd</span><span class="p">,</span>
+               <span class="n">OmpDistributeCombined</span><span class="p">,</span>
+               <span class="n">OmpTargetParallel</span><span class="p">,</span>
+               <span class="n">OmpTargetTeams</span><span class="p">,</span>
+               <span class="n">OmpNowait</span><span class="p">)</span>
+
+<span class="n">omp_classes</span> <span class="o">=</span> <span class="p">(</span><span class="n">Openmp</span><span class="p">,</span> <span class="n">OpenmpStmt</span><span class="p">)</span> <span class="o">+</span> <span class="n">omp_directives</span> <span class="o">+</span> <span class="n">omp_clauses</span>
+
+<span class="n">this_folder</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+
+<span class="c1"># Get meta-model from language description</span>
+<span class="n">grammar</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">this_folder</span><span class="p">,</span> <span class="s1">&#39;../grammar/openmp.tx&#39;</span><span class="p">)</span>
+
+<span class="n">meta</span> <span class="o">=</span> <span class="n">metamodel_from_file</span><span class="p">(</span><span class="n">grammar</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">omp_classes</span><span class="p">)</span>
+
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openmp.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stmts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parse openmp pragmas</span>
+
+<span class="sd">      Parameters</span>
+<span class="sd">      ----------</span>
+
+<span class="sd">      filename : str</span>
+
+<span class="sd">      stmts : list</span>
+
+<span class="sd">      Results</span>
+<span class="sd">      -------</span>
+
+<span class="sd">      stmts : list</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Instantiate model</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">model_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">stmts</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">model_from_str</span><span class="p">(</span><span class="n">stmts</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting a filename or a string&#39;</span><span class="p">)</span>
+
+    <span class="n">stmts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">stmt</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">OpenmpStmt</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">stmt</span><span class="o">.</span><span class="n">expr</span>
+            <span class="n">stmts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stmts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stmts</span></div>
+
+<span class="c1">#=========================================================================================================</span>
+<span class="c1">#=========================================================================================================</span>
+<span class="c1">#=========================================================================================================</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="s1">&#39;#$omp parallel&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="s1">&#39;#$omp do private ( ipart, pos, spana, lefta, righta, valuesa, spanb, leftb, rightb, valuesb, E)&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="s1">&#39;#$omp do private(ipart, pos, spana, lefta, righta, valuesa, spanb, leftb, rightb, valuesb,E, B)&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="s1">&#39;#$omp end do&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="s1">&#39;#$omp end parallel&#39;</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

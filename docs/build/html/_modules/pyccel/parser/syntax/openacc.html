@@ -1,0 +1,1560 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.parser.syntax.openacc &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.parser.syntax.openacc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.parser.syntax.openacc</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">dirname</span>
+
+<span class="kn">from</span> <span class="nn">textx.metamodel</span> <span class="kn">import</span> <span class="n">metamodel_from_file</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.parser.syntax.basic</span> <span class="kn">import</span> <span class="n">BasicStmt</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">AnnotatedComment</span>
+
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Openacc"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.Openacc">[docs]</a><span class="k">class</span> <span class="nc">Openacc</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for Openacc syntax.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for Openacc.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;statements&#39;</span><span class="p">,</span> <span class="p">[])</span></div>
+
+<div class="viewcode-block" id="AccBasic"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccBasic">[docs]</a><span class="k">class</span> <span class="nc">AccBasic</span><span class="p">(</span><span class="n">BasicStmt</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="OpenaccStmt"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.OpenaccStmt">[docs]</a><span class="k">class</span> <span class="nc">OpenaccStmt</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stmt</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">OpenaccStmt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; OpenaccStmt: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">stmt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stmt</span>
+        <span class="n">_valid_const</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccParallelConstruct</span><span class="p">,</span>
+                        <span class="n">AccKernelsConstruct</span><span class="p">,</span>
+                        <span class="n">AccDataConstruct</span><span class="p">,</span>
+                        <span class="n">AccEnterDataDirective</span><span class="p">,</span>
+                        <span class="n">AccExitDataDirective</span><span class="p">,</span>
+                        <span class="n">AccHostDataDirective</span><span class="p">,</span>
+                        <span class="n">AccLoopConstruct</span><span class="p">,</span>
+                        <span class="n">AccAtomicConstruct</span><span class="p">,</span>
+                        <span class="n">AccDeclareDirective</span><span class="p">,</span>
+                        <span class="n">AccInitDirective</span><span class="p">,</span>
+                        <span class="n">AccShutDownDirective</span><span class="p">,</span>
+                        <span class="n">AccSetDirective</span><span class="p">,</span>
+                        <span class="n">AccUpdateDirective</span><span class="p">,</span>
+                        <span class="n">AccRoutineDirective</span><span class="p">,</span>
+                        <span class="n">AccWaitDirective</span><span class="p">,</span>
+                        <span class="n">AccEndClause</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">_valid_const</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">stmt</span><span class="o">.</span><span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected construct or directive of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">stmt</span><span class="p">)))</span></div>
+
+<span class="c1">#################################################</span>
+<span class="c1">#           Constructs and Directives</span>
+<span class="c1">#################################################</span>
+<div class="viewcode-block" id="AccParallelConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccParallelConstruct">[docs]</a><span class="k">class</span> <span class="nc">AccParallelConstruct</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccParallelConstruct</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccParallelConstruct: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccAsync</span><span class="p">,</span>
+                          <span class="n">AccWait</span><span class="p">,</span>
+                          <span class="n">AccNumGangs</span><span class="p">,</span>
+                          <span class="n">AccNumWorkers</span><span class="p">,</span>
+                          <span class="n">AccVectorLength</span><span class="p">,</span>
+                          <span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccIf</span><span class="p">,</span>
+                          <span class="n">AccReduction</span><span class="p">,</span>
+                          <span class="n">AccCopy</span><span class="p">,</span>
+                          <span class="n">AccCopyin</span><span class="p">,</span>
+                          <span class="n">AccCopyout</span><span class="p">,</span>
+                          <span class="n">AccCreate</span><span class="p">,</span>
+                          <span class="n">AccPresent</span><span class="p">,</span>
+                          <span class="n">AccDevicePtr</span><span class="p">,</span>
+                          <span class="n">AccPrivate</span><span class="p">,</span>
+                          <span class="n">AccFirstPrivate</span><span class="p">,</span>
+                          <span class="n">AccDefault</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;parallel&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccKernelsConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccKernelsConstruct">[docs]</a><span class="k">class</span> <span class="nc">AccKernelsConstruct</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccKernelsConstruct</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccKernelsConstruct: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccAsync</span><span class="p">,</span>
+                          <span class="n">AccWait</span><span class="p">,</span>
+                          <span class="n">AccNumGangs</span><span class="p">,</span>
+                          <span class="n">AccNumWorkers</span><span class="p">,</span>
+                          <span class="n">AccVectorLength</span><span class="p">,</span>
+                          <span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccIf</span><span class="p">,</span>
+                          <span class="n">AccCopy</span><span class="p">,</span>
+                          <span class="n">AccCopyin</span><span class="p">,</span>
+                          <span class="n">AccCopyout</span><span class="p">,</span>
+                          <span class="n">AccCreate</span><span class="p">,</span>
+                          <span class="n">AccPresent</span><span class="p">,</span>
+                          <span class="n">AccDevicePtr</span><span class="p">,</span>
+                          <span class="n">AccDefault</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;kernels&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccDataConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDataConstruct">[docs]</a><span class="k">class</span> <span class="nc">AccDataConstruct</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDataConstruct</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDataConstruct: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccIf</span><span class="p">,</span>
+                          <span class="n">AccCopy</span><span class="p">,</span>
+                          <span class="n">AccCopyin</span><span class="p">,</span>
+                          <span class="n">AccCopyout</span><span class="p">,</span>
+                          <span class="n">AccCreate</span><span class="p">,</span>
+                          <span class="n">AccPresent</span><span class="p">,</span>
+                          <span class="n">AccDevicePtr</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;data&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccEnterDataDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccEnterDataDirective">[docs]</a><span class="k">class</span> <span class="nc">AccEnterDataDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccEnterDataDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccEnterDataDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccIf</span><span class="p">,</span>
+                          <span class="n">AccAsync</span><span class="p">,</span>
+                          <span class="n">AccWait</span><span class="p">,</span>
+                          <span class="n">AccCopyin</span><span class="p">,</span>
+                          <span class="n">AccCreate</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;enter data&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccExitDataDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccExitDataDirective">[docs]</a><span class="k">class</span> <span class="nc">AccExitDataDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccExitDataDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccExitDataDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccIf</span><span class="p">,</span>
+                          <span class="n">AccAsync</span><span class="p">,</span>
+                          <span class="n">AccWait</span><span class="p">,</span>
+                          <span class="n">AccCopyout</span><span class="p">,</span>
+                          <span class="n">AccDelete</span><span class="p">,</span>
+                          <span class="n">AccFinalize</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;exit data&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccHostDataDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccHostDataDirective">[docs]</a><span class="k">class</span> <span class="nc">AccHostDataDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccHostDataDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccHostDataDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccUseDevice</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;host_data&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccLoopConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccLoopConstruct">[docs]</a><span class="k">class</span> <span class="nc">AccLoopConstruct</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccLoopConstruct</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccLoopConstruct: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccCollapse</span><span class="p">,</span>
+                          <span class="n">AccGang</span><span class="p">,</span>
+                          <span class="n">AccWorker</span><span class="p">,</span>
+                          <span class="n">AccVector</span><span class="p">,</span>
+                          <span class="n">AccSeq</span><span class="p">,</span>
+                          <span class="n">AccAuto</span><span class="p">,</span>
+                          <span class="n">AccTile</span><span class="p">,</span>
+                          <span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccIndependent</span><span class="p">,</span>
+                          <span class="n">AccPrivate</span><span class="p">,</span>
+                          <span class="n">AccReduction</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;loop&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccAtomicConstruct"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccAtomicConstruct">[docs]</a><span class="k">class</span> <span class="nc">AccAtomicConstruct</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccAtomicConstruct</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccAtomicConstruct: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;atomic&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">AccAtomicClause</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccDeclareDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDeclareDirective">[docs]</a><span class="k">class</span> <span class="nc">AccDeclareDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDeclareDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDeclareDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccCopy</span><span class="p">,</span>
+                          <span class="n">AccCopyin</span><span class="p">,</span>
+                          <span class="n">AccCopyout</span><span class="p">,</span>
+                          <span class="n">AccCreate</span><span class="p">,</span>
+                          <span class="n">AccPresent</span><span class="p">,</span>
+                          <span class="n">AccDevicePtr</span><span class="p">,</span>
+                          <span class="n">AccDeviceResident</span><span class="p">,</span>
+                          <span class="n">AccLink</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;declare&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccInitDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccInitDirective">[docs]</a><span class="k">class</span> <span class="nc">AccInitDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccInitDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccInitDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccDeviceNum</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;init&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccShutDownDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccShutDownDirective">[docs]</a><span class="k">class</span> <span class="nc">AccShutDownDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccShutDownDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccShutDownDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccDeviceNum</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;shutdown&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccSetDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccSetDirective">[docs]</a><span class="k">class</span> <span class="nc">AccSetDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccSetDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccSetDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccDefaultAsync</span><span class="p">,</span>
+                          <span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccDeviceNum</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;set&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccUpdateDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccUpdateDirective">[docs]</a><span class="k">class</span> <span class="nc">AccUpdateDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccUpdateDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccUpdateDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccAsync</span><span class="p">,</span>
+                          <span class="n">AccWait</span><span class="p">,</span>
+                          <span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccIf</span><span class="p">,</span>
+                          <span class="n">AccIfPresent</span><span class="p">,</span>
+                          <span class="n">AccSelf</span><span class="p">,</span>
+                          <span class="n">AccHost</span><span class="p">,</span>
+                          <span class="n">AccDevice</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;update&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccRoutineDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccRoutineDirective">[docs]</a><span class="k">class</span> <span class="nc">AccRoutineDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccRoutineDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccRoutineDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">_valid_clauses</span> <span class="o">=</span> <span class="p">(</span><span class="n">AccGang</span><span class="p">,</span>
+                          <span class="n">AccWorker</span><span class="p">,</span>
+                          <span class="n">AccVector</span><span class="p">,</span>
+                          <span class="n">AccSeq</span><span class="p">,</span>
+                          <span class="n">AccBind</span><span class="p">,</span>
+                          <span class="n">AccDeviceType</span><span class="p">,</span>
+                          <span class="n">AccNoHost</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;routine&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">_valid_clauses</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccWaitDirective"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccWaitDirective">[docs]</a><span class="k">class</span> <span class="nc">AccWaitDirective</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;clauses&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccWaitDirective</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccWaitDirective: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;wait&#39;</span>
+        <span class="k">for</span> <span class="n">clause</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clauses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clause</span><span class="p">,</span> <span class="n">AccAsync</span><span class="p">):</span>
+                <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">clause</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected clause of type </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">clause</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccEndClause"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccEndClause">[docs]</a><span class="k">class</span> <span class="nc">AccEndClause</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">construct</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;construct&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccEndClause</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccEndClause: expr&quot;</span><span class="p">)</span>
+
+        <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;end </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">construct</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AnnotatedComment</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span></div>
+<span class="c1">#################################################</span>
+
+<span class="c1">#################################################</span>
+<span class="c1">#                 Clauses</span>
+<span class="c1">#################################################</span>
+<span class="c1">#AccAsync: &#39;async&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccAsync"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccAsync">[docs]</a><span class="k">class</span> <span class="nc">AccAsync</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccAsync</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccAsync: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;async(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccAuto: &#39;auto&#39;;</span>
+<div class="viewcode-block" id="AccAuto"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccAuto">[docs]</a><span class="k">class</span> <span class="nc">AccAuto</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccAuto</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccAuto: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;auto&#39;</span></div>
+
+<span class="c1">#AccBind: &#39;bind&#39; &#39;(&#39; arg=STRING &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccBind"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccBind">[docs]</a><span class="k">class</span> <span class="nc">AccBind</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arg</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;arg&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccBind</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccBind: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg</span>
+        <span class="k">return</span> <span class="s1">&#39;bind(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span></div>
+
+<span class="c1">#AccCache: &#39;cache&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccCache"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccCache">[docs]</a><span class="k">class</span> <span class="nc">AccCache</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccCache</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccCache: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;cache(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccCollapse: &#39;collapse&#39; &#39;(&#39; n=INT &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccCollapse"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccCollapse">[docs]</a><span class="k">class</span> <span class="nc">AccCollapse</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccCollapse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccCollapse: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;collapse(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
+
+<span class="c1">#AccCopy: &#39;copy&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccCopy"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccCopy">[docs]</a><span class="k">class</span> <span class="nc">AccCopy</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccCopy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccCopy: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;copy(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccCopyin: &#39;copyin&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccCopyin"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccCopyin">[docs]</a><span class="k">class</span> <span class="nc">AccCopyin</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccCopyin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccCopyin: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;copyin(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccCopyout: &#39;copyout&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccCopyout"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccCopyout">[docs]</a><span class="k">class</span> <span class="nc">AccCopyout</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccCopyout</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccCopyout: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;copyout(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccCreate: &#39;create&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccCreate"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccCreate">[docs]</a><span class="k">class</span> <span class="nc">AccCreate</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccCreate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccCreate: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;create(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccDefault: &#39;default&#39; &#39;(&#39; status=DefaultStatus &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDefault"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDefault">[docs]</a><span class="k">class</span> <span class="nc">AccDefault</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDefault</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDefault: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;default(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span></div>
+
+<span class="c1">#AccDefaultAsync: &#39;default_async&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDefaultAsync"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDefaultAsync">[docs]</a><span class="k">class</span> <span class="nc">AccDefaultAsync</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDefaultAsync</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDefaultAsync: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;default_async(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccDelete: &#39;delete&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDelete"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDelete">[docs]</a><span class="k">class</span> <span class="nc">AccDelete</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDelete</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDelete: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;delete(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccDevice: &#39;device&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDevice"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDevice">[docs]</a><span class="k">class</span> <span class="nc">AccDevice</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDevice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDevice: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;device(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccDeviceNum: &#39;device_num&#39; &#39;(&#39; n=INT &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDeviceNum"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDeviceNum">[docs]</a><span class="k">class</span> <span class="nc">AccDeviceNum</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDeviceNum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDeviceNum: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;device_num(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
+
+<span class="c1">#AccDevicePtr: &#39;deviceptr&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDevicePtr"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDevicePtr">[docs]</a><span class="k">class</span> <span class="nc">AccDevicePtr</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDevicePtr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDevicePtr: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;deviceptr(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccDeviceResident: &#39;device_resident&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDeviceResident"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDeviceResident">[docs]</a><span class="k">class</span> <span class="nc">AccDeviceResident</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDeviceResident</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDeviceResident: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;device_resident(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccDeviceType: &#39;device_type&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccDeviceType"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccDeviceType">[docs]</a><span class="k">class</span> <span class="nc">AccDeviceType</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccDeviceType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccDeviceType: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;device_type(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccFinalize: &#39;finalize&#39;;</span>
+<div class="viewcode-block" id="AccFinalize"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccFinalize">[docs]</a><span class="k">class</span> <span class="nc">AccFinalize</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccFinalize</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccFinalize: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;finalize&#39;</span></div>
+
+<span class="c1">#AccFirstPrivate: &#39;firstprivate&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccFirstPrivate"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccFirstPrivate">[docs]</a><span class="k">class</span> <span class="nc">AccFirstPrivate</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccFirstPrivate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccFirstPrivate: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;firstprivate(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccGang: &#39;gang&#39; &#39;(&#39; args+=GangArg[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccGang"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccGang">[docs]</a><span class="k">class</span> <span class="nc">AccGang</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccGang</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccGang: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;gang(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccHost: &#39;host&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccHost"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccHost">[docs]</a><span class="k">class</span> <span class="nc">AccHost</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccHost</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccHost: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;host(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccIf: &#39;if&#39; cond=ID;</span>
+<div class="viewcode-block" id="AccIf"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccIf">[docs]</a><span class="k">class</span> <span class="nc">AccIf</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cond</span> <span class="o">=</span> <span class="n">kwconds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;cond&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccIf</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccIf: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond</span>
+        <span class="k">return</span> <span class="s1">&#39;if(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cond</span><span class="p">))</span></div>
+
+<span class="c1">#AccIfPresent: &#39;if_present&#39;;</span>
+<div class="viewcode-block" id="AccIfPresent"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccIfPresent">[docs]</a><span class="k">class</span> <span class="nc">AccIfPresent</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccIfPresent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccIfPresent: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;if_present&#39;</span></div>
+
+<span class="c1">#AccIndependent: &#39;independent&#39;;</span>
+<div class="viewcode-block" id="AccIndependent"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccIndependent">[docs]</a><span class="k">class</span> <span class="nc">AccIndependent</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccIndependent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccIndependent: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;independent&#39;</span></div>
+
+<span class="c1">#AccLink: &#39;link&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccLink"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccLink">[docs]</a><span class="k">class</span> <span class="nc">AccLink</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccLink</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccLink: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;link(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccNoHost: &#39;nohost&#39;;</span>
+<div class="viewcode-block" id="AccNoHost"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccNoHost">[docs]</a><span class="k">class</span> <span class="nc">AccNoHost</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccNoHost</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccNoHost: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;nohost&#39;</span></div>
+
+<span class="c1">#AccNumGangs: &#39;num_gangs&#39; &#39;(&#39; n=INT &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccNumGangs"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccNumGangs">[docs]</a><span class="k">class</span> <span class="nc">AccNumGangs</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccNumGangs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccNumGangs: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;num_gangs(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
+
+<span class="c1">#AccNumWorkers: &#39;num_workers&#39; &#39;(&#39; n=INT &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccNumWorkers"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccNumWorkers">[docs]</a><span class="k">class</span> <span class="nc">AccNumWorkers</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccNumWorkers</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccNumWorkers: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;num_workers(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
+
+<span class="c1">#AccPresent: &#39;present&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccPresent"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccPresent">[docs]</a><span class="k">class</span> <span class="nc">AccPresent</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccPresent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccPresent: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;present(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccPrivate: &#39;private&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccPrivate"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccPrivate">[docs]</a><span class="k">class</span> <span class="nc">AccPrivate</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccPrivate</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccPrivate: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;private(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccReduction: &#39;reduction&#39; &#39;(&#39;op=ReductionOperator &#39;:&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccReduction"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccReduction">[docs]</a><span class="k">class</span> <span class="nc">AccReduction</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op</span>   <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;op&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccReduction</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccReduction: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">op</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;reduction(</span><span class="si">{0}</span><span class="s1">: </span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccSelf: &#39;self&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccSelf"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccSelf">[docs]</a><span class="k">class</span> <span class="nc">AccSelf</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccSelf</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccSelf: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;self(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccSeq: &#39;seq&#39;;</span>
+<div class="viewcode-block" id="AccSeq"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccSeq">[docs]</a><span class="k">class</span> <span class="nc">AccSeq</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccSeq</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccSeq: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;seq&#39;</span></div>
+
+<span class="c1">#AccTile: &#39;tile&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccTile"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccTile">[docs]</a><span class="k">class</span> <span class="nc">AccTile</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccTile</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccTile: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;tile(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccUseDevice: &#39;use_device&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccUseDevice"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccUseDevice">[docs]</a><span class="k">class</span> <span class="nc">AccUseDevice</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccUseDevice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccUseDevice: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;use_device(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccVector: &#39;vector&#39; (&#39;(&#39; args+=VectorArg &#39;)&#39;)?;</span>
+<div class="viewcode-block" id="AccVector"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccVector">[docs]</a><span class="k">class</span> <span class="nc">AccVector</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccVector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccVector: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;vector(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccVectorLength: &#39;vector_length&#39; &#39;(&#39; n=INT &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccVectorLength"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccVectorLength">[docs]</a><span class="k">class</span> <span class="nc">AccVectorLength</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccVectorLength</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccVectorLength: expr&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;vector_length(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
+
+<span class="c1">#AccWait: &#39;wait&#39; &#39;(&#39; args+=ID[&#39;,&#39;] &#39;)&#39;;</span>
+<div class="viewcode-block" id="AccWait"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccWait">[docs]</a><span class="k">class</span> <span class="nc">AccWait</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccWait</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccWait: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;wait(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#AccWorker: &#39;worker&#39; (&#39;(&#39; args+=WorkerArg &#39;)&#39;)?;</span>
+<div class="viewcode-block" id="AccWorker"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.AccWorker">[docs]</a><span class="k">class</span> <span class="nc">AccWorker</span><span class="p">(</span><span class="n">AccBasic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a .&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">AccWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; AccWorker: expr&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO check if variable exist in scope</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;worker(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+<span class="c1">#################################################</span>
+
+<span class="c1">#################################################</span>
+<span class="c1"># whenever a new rule is added in the grammar, we must update the following</span>
+<span class="c1"># lists.</span>
+<span class="n">acc_directives</span> <span class="o">=</span> <span class="p">[</span><span class="n">AccParallelConstruct</span><span class="p">,</span>
+                  <span class="n">AccKernelsConstruct</span><span class="p">,</span>
+                  <span class="n">AccDataConstruct</span><span class="p">,</span>
+                  <span class="n">AccEnterDataDirective</span><span class="p">,</span>
+                  <span class="n">AccExitDataDirective</span><span class="p">,</span>
+                  <span class="n">AccHostDataDirective</span><span class="p">,</span>
+                  <span class="n">AccLoopConstruct</span><span class="p">,</span>
+                  <span class="n">AccAtomicConstruct</span><span class="p">,</span>
+                  <span class="n">AccDeclareDirective</span><span class="p">,</span>
+                  <span class="n">AccInitDirective</span><span class="p">,</span>
+                  <span class="n">AccShutDownDirective</span><span class="p">,</span>
+                  <span class="n">AccSetDirective</span><span class="p">,</span>
+                  <span class="n">AccUpdateDirective</span><span class="p">,</span>
+                  <span class="n">AccRoutineDirective</span><span class="p">,</span>
+                  <span class="n">AccWaitDirective</span><span class="p">,</span>
+                  <span class="n">AccEndClause</span><span class="p">]</span>
+
+<span class="n">acc_clauses</span> <span class="o">=</span> <span class="p">[</span><span class="n">AccAsync</span><span class="p">,</span>
+               <span class="n">AccAuto</span><span class="p">,</span>
+               <span class="n">AccBind</span><span class="p">,</span>
+               <span class="n">AccCollapse</span><span class="p">,</span>
+               <span class="n">AccCopy</span><span class="p">,</span>
+               <span class="n">AccCopyin</span><span class="p">,</span>
+               <span class="n">AccCopyout</span><span class="p">,</span>
+               <span class="n">AccCreate</span><span class="p">,</span>
+               <span class="n">AccDefault</span><span class="p">,</span>
+               <span class="n">AccDefaultAsync</span><span class="p">,</span>
+               <span class="n">AccDelete</span><span class="p">,</span>
+               <span class="n">AccDevice</span><span class="p">,</span>
+               <span class="n">AccDeviceNum</span><span class="p">,</span>
+               <span class="n">AccDevicePtr</span><span class="p">,</span>
+               <span class="n">AccDeviceResident</span><span class="p">,</span>
+               <span class="n">AccDeviceType</span><span class="p">,</span>
+               <span class="n">AccFinalize</span><span class="p">,</span>
+               <span class="n">AccFirstPrivate</span><span class="p">,</span>
+               <span class="n">AccGang</span><span class="p">,</span>
+               <span class="n">AccHost</span><span class="p">,</span>
+               <span class="n">AccIf</span><span class="p">,</span>
+               <span class="n">AccIfPresent</span><span class="p">,</span>
+               <span class="n">AccIndependent</span><span class="p">,</span>
+               <span class="n">AccLink</span><span class="p">,</span>
+               <span class="n">AccNoHost</span><span class="p">,</span>
+               <span class="n">AccNumGangs</span><span class="p">,</span>
+               <span class="n">AccNumWorkers</span><span class="p">,</span>
+               <span class="n">AccPresent</span><span class="p">,</span>
+               <span class="n">AccPrivate</span><span class="p">,</span>
+               <span class="n">AccReduction</span><span class="p">,</span>
+               <span class="n">AccSelf</span><span class="p">,</span>
+               <span class="n">AccSeq</span><span class="p">,</span>
+               <span class="n">AccTile</span><span class="p">,</span>
+               <span class="n">AccUseDevice</span><span class="p">,</span>
+               <span class="n">AccVector</span><span class="p">,</span>
+               <span class="n">AccVectorLength</span><span class="p">,</span>
+               <span class="n">AccWait</span><span class="p">,</span>
+               <span class="n">AccWorker</span><span class="p">]</span>
+
+<span class="n">acc_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">Openacc</span><span class="p">,</span> <span class="n">OpenaccStmt</span><span class="p">]</span> <span class="o">+</span> <span class="n">acc_directives</span> <span class="o">+</span> <span class="n">acc_clauses</span>
+
+
+<span class="n">this_folder</span> <span class="o">=</span> <span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+
+<span class="c1"># Get meta-model from language description</span>
+<span class="n">grammar</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">this_folder</span><span class="p">,</span> <span class="s1">&#39;../grammar/openacc.tx&#39;</span><span class="p">)</span>
+
+<span class="n">meta</span> <span class="o">=</span> <span class="n">metamodel_from_file</span><span class="p">(</span><span class="n">grammar</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">acc_classes</span><span class="p">)</span>
+
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../../pyccel.parser.syntax.html#pyccel.parser.syntax.openacc.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stmts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parse openacc pragmas</span>
+
+<span class="sd">      Parameters</span>
+<span class="sd">      ----------</span>
+
+<span class="sd">      filename: str</span>
+
+<span class="sd">      stmts   : list</span>
+
+<span class="sd">      Results</span>
+<span class="sd">      -------</span>
+
+<span class="sd">      stmts  : list</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Instantiate model</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">model_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">stmts</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">model_from_str</span><span class="p">(</span><span class="n">stmts</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting a filename or a string&#39;</span><span class="p">)</span>
+
+    <span class="n">stmts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">stmt</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">OpenaccStmt</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">stmt</span><span class="o">.</span><span class="n">expr</span>
+            <span class="n">stmts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stmts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stmts</span></div>
+<span class="c1">#################################################</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

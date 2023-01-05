@@ -1,0 +1,904 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.utilities &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.utilities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.utilities</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+<span class="kn">import</span> <span class="nn">pyccel.decorators</span> <span class="k">as</span> <span class="nn">pyccel_decorators</span>
+<span class="kn">from</span> <span class="nn">pyccel.symbolic</span> <span class="kn">import</span> <span class="n">lambdify</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">PyccelError</span>
+
+<span class="kn">from</span> <span class="nn">.core</span>          <span class="kn">import</span> <span class="p">(</span><span class="n">AsName</span><span class="p">,</span> <span class="n">Import</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">,</span>
+                            <span class="n">Allocate</span><span class="p">,</span> <span class="n">Duplicate</span><span class="p">,</span> <span class="n">Assign</span><span class="p">,</span> <span class="n">For</span><span class="p">,</span> <span class="n">CodeBlock</span><span class="p">,</span>
+                            <span class="n">Concatenate</span><span class="p">,</span> <span class="n">Decorator</span><span class="p">,</span> <span class="n">Module</span><span class="p">,</span> <span class="n">PyccelFunctionDef</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.builtins</span>      <span class="kn">import</span> <span class="p">(</span><span class="n">builtin_functions_dict</span><span class="p">,</span>
+                            <span class="n">PythonRange</span><span class="p">,</span> <span class="n">PythonList</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.internals</span>     <span class="kn">import</span> <span class="n">PyccelInternalFunction</span><span class="p">,</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">.itertoolsext</span>  <span class="kn">import</span> <span class="n">itertools_mod</span>
+<span class="kn">from</span> <span class="nn">.literals</span>      <span class="kn">import</span> <span class="n">LiteralInteger</span><span class="p">,</span> <span class="n">Nil</span>
+<span class="kn">from</span> <span class="nn">.mathext</span>       <span class="kn">import</span> <span class="n">math_mod</span>
+<span class="kn">from</span> <span class="nn">.sysext</span>        <span class="kn">import</span> <span class="n">sys_mod</span>
+
+<span class="kn">from</span> <span class="nn">.numpyext</span>      <span class="kn">import</span> <span class="p">(</span><span class="n">NumpyEmpty</span><span class="p">,</span> <span class="n">NumpyArray</span><span class="p">,</span> <span class="n">numpy_mod</span><span class="p">,</span>
+                            <span class="n">NumpyTranspose</span><span class="p">,</span> <span class="n">NumpyLinspace</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.operators</span>     <span class="kn">import</span> <span class="n">PyccelAdd</span><span class="p">,</span> <span class="n">PyccelMul</span><span class="p">,</span> <span class="n">PyccelIs</span><span class="p">,</span> <span class="n">PyccelArithmeticOperator</span>
+<span class="kn">from</span> <span class="nn">.scipyext</span>      <span class="kn">import</span> <span class="n">scipy_mod</span>
+<span class="kn">from</span> <span class="nn">.variable</span>      <span class="kn">import</span> <span class="p">(</span><span class="n">Variable</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">,</span> <span class="n">InhomogeneousTupleVariable</span><span class="p">,</span>
+                            <span class="n">HomogeneousTupleVariable</span> <span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.c_concepts</span> <span class="kn">import</span> <span class="n">ObjectAddress</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;builtin_function&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;builtin_import&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;builtin_import_registery&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;split_positional_keyword_arguments&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="builtin_function"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.builtin_function">[docs]</a><span class="k">def</span> <span class="nf">builtin_function</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a builtin-function call applied to given arguments.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">funcdef</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">expr</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;expr must be of type str or FunctionCall&#39;</span><span class="p">)</span>
+
+    <span class="n">dic</span> <span class="o">=</span> <span class="n">builtin_functions_dict</span>
+
+    <span class="c1"># Unpack FunctionCallArguments</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">dic</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dic</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">PyccelError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">e</span><span class="p">,</span>
+                    <span class="n">symbol</span><span class="o">=</span><span class="n">expr</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;lambdify&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="n">decorators_mod</span> <span class="o">=</span> <span class="n">Module</span><span class="p">(</span><span class="s1">&#39;decorators&#39;</span><span class="p">,(),</span>
+        <span class="n">funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">PyccelFunctionDef</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">pyccel_decorators</span><span class="o">.</span><span class="n">__all__</span><span class="p">])</span>
+<span class="n">pyccel_mod</span> <span class="o">=</span> <span class="n">Module</span><span class="p">(</span><span class="s1">&#39;pyccel&#39;</span><span class="p">,(),(),</span>
+        <span class="n">imports</span> <span class="o">=</span> <span class="p">[</span><span class="n">Import</span><span class="p">(</span><span class="s1">&#39;decorators&#39;</span><span class="p">,</span> <span class="n">decorators_mod</span><span class="p">)])</span>
+
+<span class="c1"># TODO add documentation</span>
+<span class="n">builtin_import_registery</span> <span class="o">=</span> <span class="n">Module</span><span class="p">(</span><span class="s1">&#39;__main__&#39;</span><span class="p">,</span>
+        <span class="p">(),(),</span>
+        <span class="n">imports</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Import</span><span class="p">(</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span> <span class="n">AsName</span><span class="p">(</span><span class="n">numpy_mod</span><span class="p">,</span><span class="s1">&#39;numpy&#39;</span><span class="p">)),</span>
+            <span class="n">Import</span><span class="p">(</span><span class="s1">&#39;scipy&#39;</span><span class="p">,</span> <span class="n">AsName</span><span class="p">(</span><span class="n">scipy_mod</span><span class="p">,</span><span class="s1">&#39;scipy&#39;</span><span class="p">)),</span>
+            <span class="n">Import</span><span class="p">(</span><span class="s1">&#39;itertools&#39;</span><span class="p">,</span> <span class="n">AsName</span><span class="p">(</span><span class="n">itertools_mod</span><span class="p">,</span><span class="s1">&#39;itertools&#39;</span><span class="p">)),</span>
+            <span class="n">Import</span><span class="p">(</span><span class="s1">&#39;math&#39;</span><span class="p">,</span> <span class="n">AsName</span><span class="p">(</span><span class="n">math_mod</span><span class="p">,</span><span class="s1">&#39;math&#39;</span><span class="p">)),</span>
+            <span class="n">Import</span><span class="p">(</span><span class="s1">&#39;pyccel&#39;</span><span class="p">,</span> <span class="n">AsName</span><span class="p">(</span><span class="n">pyccel_mod</span><span class="p">,</span><span class="s1">&#39;pyccel&#39;</span><span class="p">)),</span>
+            <span class="n">Import</span><span class="p">(</span><span class="s1">&#39;sys&#39;</span><span class="p">,</span> <span class="n">AsName</span><span class="p">(</span><span class="n">sys_mod</span><span class="p">,</span><span class="s1">&#39;sys&#39;</span><span class="p">)),</span>
+            <span class="p">])</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.builtin_imports</span> <span class="kn">import</span> <span class="n">python_builtin_libs</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">python_builtin_libs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdlib_module_names</span><span class="p">)</span> <span class="c1"># pylint: disable=no-member</span>
+
+<span class="n">recognised_libs</span> <span class="o">=</span> <span class="n">python_builtin_libs</span> <span class="o">|</span> <span class="n">builtin_import_registery</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">recognised_source</span><span class="p">(</span><span class="n">source_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Determine whether the imported source is recognised by pyccel.</span>
+<span class="sd">    If it is not recognised then it should be imported and translated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">python_builtin_libs</span> <span class="ow">and</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">builtin_import_registery</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">source_name</span> <span class="ow">in</span> <span class="n">builtin_import_registery</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="collect_relevant_imports"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.collect_relevant_imports">[docs]</a><span class="k">def</span> <span class="nf">collect_relevant_imports</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract all objects necessary to create imports from a module given a list of targets</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    module  : Module</span>
+<span class="sd">              The module from which we want to collect the targets</span>
+<span class="sd">    targets : list of str/AsName</span>
+<span class="sd">              The names of the objects which we would like to import from the module</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    imports : list of tuples</span>
+<span class="sd">              A list where each element is a tuple containing the name which</span>
+<span class="sd">              will be used to refer to the object in the code, and the object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">imports</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">AsName</span><span class="p">):</span>
+            <span class="n">import_name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">code_name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">target</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">import_name</span> <span class="o">=</span> <span class="n">target</span>
+            <span class="n">code_name</span> <span class="o">=</span> <span class="n">import_name</span>
+
+        <span class="k">if</span> <span class="n">import_name</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">imports</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">code_name</span><span class="p">,</span> <span class="n">module</span><span class="p">[</span><span class="n">import_name</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">imports</span></div>
+
+<div class="viewcode-block" id="builtin_import"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.builtin_import">[docs]</a><span class="k">def</span> <span class="nf">builtin_import</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a builtin pyccel-extension function/object from an import.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Import</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting an Import expression&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">AsName</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">builtin_import_registery</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">collect_relevant_imports</span><span class="p">(</span><span class="n">builtin_import_registery</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">AsName</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">builtin_import_registery</span><span class="p">[</span><span class="n">source</span><span class="p">])]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[(</span><span class="n">expr</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">builtin_import_registery</span><span class="p">[</span><span class="n">source</span><span class="p">])]</span>
+
+    <span class="k">return</span> <span class="p">[]</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="get_function_from_ast"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.get_function_from_ast">[docs]</a><span class="k">def</span> <span class="nf">get_function_from_ast</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span> <span class="n">func_name</span><span class="p">):</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">stmt</span> <span class="ow">in</span> <span class="n">ast</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">func_name</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">stmt</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&gt; could not find </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func_name</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">node</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="split_positional_keyword_arguments"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.split_positional_keyword_arguments">[docs]</a><span class="k">def</span> <span class="nf">split_positional_keyword_arguments</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Create a list of positional arguments and a dictionary of keyword arguments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Distinguish between positional and keyword arguments</span>
+    <span class="n">val_args</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">has_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="p">,</span> <span class="n">val_args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
+            <span class="k">break</span>
+
+    <span class="c1"># Collect values from args</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+    <span class="c1"># Convert list of keyword arguments into dictionary</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="o">.</span><span class="n">keyword</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">val_args</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="compatible_operation"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.compatible_operation">[docs]</a><span class="k">def</span> <span class="nf">compatible_operation</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">language_has_vectors</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a builtin pyccel-extension function/object from an import.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">language_has_vectors</span><span class="p">:</span>
+        <span class="c1"># If the shapes don&#39;t match then an index must be required</span>
+        <span class="n">shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="s1">&#39;F&#39;</span> <span class="k">else</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">shapes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">d</span> <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">)</span>
+        <span class="n">order</span>  <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">order</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="k">def</span> <span class="nf">insert_index</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">index_var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to insert an index into an expression at a given position</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr        : Ast Node</span>
+<span class="sd">                The expression to be modified</span>
+<span class="sd">    pos         : int</span>
+<span class="sd">                The index at which the expression is modified</span>
+<span class="sd">                (If negative then there is no index to insert)</span>
+<span class="sd">    index_var   : Variable</span>
+<span class="sd">                The variable which will be used for indexing</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    expr        : Ast Node</span>
+<span class="sd">                Either a modified version of expr or expr itself</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import Variable, Assign</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.operators import PyccelAdd</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.utilities import insert_index</span>
+<span class="sd">    &gt;&gt;&gt; a = Variable(&#39;int&#39;, &#39;a&#39;, shape=(4,), rank=1)</span>
+<span class="sd">    &gt;&gt;&gt; b = Variable(&#39;int&#39;, &#39;b&#39;, shape=(4,), rank=1)</span>
+<span class="sd">    &gt;&gt;&gt; c = Variable(&#39;int&#39;, &#39;c&#39;, shape=(4,), rank=1)</span>
+<span class="sd">    &gt;&gt;&gt; i = Variable(&#39;int&#39;, &#39;i&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; d = PyccelAdd(a,b)</span>
+<span class="sd">    &gt;&gt;&gt; expr = Assign(c,d)</span>
+<span class="sd">    &gt;&gt;&gt; insert_index(expr, 0, i, language_has_vectors = False)</span>
+<span class="sd">    IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)</span>
+<span class="sd">    &gt;&gt;&gt; insert_index(expr, 0, i, language_has_vectors = True)</span>
+<span class="sd">    c := a + b</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Variable</span><span class="p">,</span> <span class="n">ObjectAddress</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">==</span><span class="mi">0</span> <span class="ow">or</span> <span class="o">-</span><span class="n">pos</span><span class="o">&gt;</span><span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If there is no dimension in this axis, reduce the rank</span>
+            <span class="n">index_var</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Add index at the required position</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">Slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">)]</span><span class="o">*</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">+</span><span class="n">pos</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">index_var</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="n">Slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">)]</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">IndexedElement</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">indexes</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">NumpyTranspose</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">==</span><span class="mi">0</span> <span class="ow">or</span> <span class="o">-</span><span class="n">pos</span><span class="o">&gt;</span><span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If there is no dimension in this axis, reduce the rank</span>
+            <span class="n">index_var</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Add index at the required position</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">insert_index</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">internal_var</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="n">pos</span><span class="p">,</span> <span class="n">index_var</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NumpyTranspose</span><span class="p">(</span><span class="n">insert_index</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">internal_var</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">rank</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="n">pos</span><span class="p">,</span> <span class="n">index_var</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">):</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="n">i</span><span class="o">&gt;=</span><span class="n">pos</span> <span class="ow">and</span> <span class="o">-</span><span class="n">i</span><span class="o">&lt;=</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Slice</span><span class="p">):</span>
+                <span class="n">pos</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="o">-</span><span class="n">pos</span><span class="o">&gt;</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+
+        <span class="c1"># Add index at the required position</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If there is no dimension in this axis, reduce the rank</span>
+            <span class="k">assert</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">index_var</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Calculate new index to preserve slice behaviour</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">index_var</span> <span class="o">=</span> <span class="n">PyccelMul</span><span class="p">(</span><span class="n">index_var</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">indices</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">index_var</span> <span class="o">=</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">index_var</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">indices</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">index_var</span>
+        <span class="k">return</span> <span class="n">IndexedElement</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">indices</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">PyccelArithmeticOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)(</span><span class="n">insert_index</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">,</span> <span class="n">index_var</span><span class="p">),</span>
+                          <span class="n">insert_index</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pos</span><span class="p">,</span> <span class="n">index_var</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s1">&#39;__getitem__&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="p">[</span><span class="n">index_var</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Expansion not implemented for type : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)))</span>
+
+<span class="c1">#==============================================================================</span>
+
+<span class="n">LoopCollection</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;LoopCollection&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;length&#39;</span><span class="p">,</span> <span class="s1">&#39;modified_vars&#39;</span><span class="p">])</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="collect_loops"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.collect_loops">[docs]</a><span class="k">def</span> <span class="nf">collect_loops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">language_has_vectors</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run through a code block and split it into lists of tuples of lists where</span>
+<span class="sd">    each inner list represents a code block and the tuples contain the lists</span>
+<span class="sd">    and the size of the code block.</span>
+<span class="sd">    So the following:</span>
+<span class="sd">    a = a+b</span>
+<span class="sd">    for a: int[:,:] and b: int[:]</span>
+<span class="sd">    Would be returned as:</span>
+<span class="sd">    [</span>
+<span class="sd">      ([</span>
+<span class="sd">        ([a[i,j]=a[i,j]+b[j]],a.shape[1])</span>
+<span class="sd">       ]</span>
+<span class="sd">       , a.shape[0]</span>
+<span class="sd">      )</span>
+<span class="sd">    ]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    block                 : list of Ast Nodes</span>
+<span class="sd">                            The expressions to be modified</span>
+<span class="sd">    indices               : list</span>
+<span class="sd">                            An empty list to be filled with the temporary variables created</span>
+<span class="sd">    new_index             : function (class method of a Scope)</span>
+<span class="sd">                            A function which provides a new variable from a base name,</span>
+<span class="sd">                            avoiding name collisions.</span>
+<span class="sd">    language_has_vectors  : bool</span>
+<span class="sd">                            Indicates if the language has support for vector</span>
+<span class="sd">                            operations of the same shape</span>
+<span class="sd">                    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    block : list of tuples of lists</span>
+<span class="sd">            The modified expression</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_level</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">array_creator_types</span> <span class="o">=</span> <span class="p">(</span><span class="n">Allocate</span><span class="p">,</span> <span class="n">PythonList</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">,</span> <span class="n">Duplicate</span><span class="p">)</span>
+    <span class="n">is_function_call</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">funcdef</span><span class="o">.</span><span class="n">is_elemental</span><span class="p">)</span>
+                                <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_elemental</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;__getitem__&#39;</span><span class="p">)</span>
+                                    <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">NumpyTranspose</span><span class="p">))))</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">block</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">Assign</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="p">(</span><span class="n">array_creator_types</span><span class="p">,</span> <span class="n">Nil</span><span class="p">))</span> <span class="ow">and</span> <span class="c1"># not creating array</span>
+                <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span><span class="n">array_creator_types</span><span class="p">)</span> <span class="ow">and</span> <span class="c1"># not creating array</span>
+                <span class="ow">not</span> <span class="n">is_function_call</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="p">)):</span> <span class="c1"># not a basic function call</span>
+
+            <span class="c1"># Collect lhs variable</span>
+            <span class="c1"># This is needed to know what has already been modified in the loop</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">Variable</span><span class="p">):</span>
+                <span class="n">lhs_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">):</span>
+                <span class="n">lhs_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">base</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lhs_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">((</span><span class="n">Variable</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">)))</span>
+                <span class="n">lhs_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">base</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">lhs_vars</span><span class="p">]</span>
+
+            <span class="c1"># Get all objects which affect where indices are inserted</span>
+            <span class="n">notable_nodes</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">((</span><span class="n">Variable</span><span class="p">,</span>
+                                                       <span class="n">IndexedElement</span><span class="p">,</span>
+                                                       <span class="n">ObjectAddress</span><span class="p">,</span>
+                                                       <span class="n">NumpyTranspose</span><span class="p">,</span>
+                                                       <span class="n">FunctionCall</span><span class="p">,</span>
+                                                       <span class="n">PyccelInternalFunction</span><span class="p">,</span>
+                                                       <span class="n">PyccelIs</span><span class="p">))</span>
+
+            <span class="c1"># Find all elemental function calls. Normally function call arguments are not indexed</span>
+            <span class="c1"># However elemental functions are an exception</span>
+            <span class="n">elemental_func_calls</span>  <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">notable_nodes</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">)</span> \
+                                                                <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">funcdef</span><span class="o">.</span><span class="n">is_elemental</span><span class="p">)]</span>
+            <span class="n">elemental_func_calls</span> <span class="o">+=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">notable_nodes</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">)</span> \
+                                                                <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">is_elemental</span><span class="p">)]</span>
+
+            <span class="c1"># Collect all objects into which indices may be inserted</span>
+            <span class="n">variables</span>       <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">notable_nodes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">Variable</span><span class="p">,</span>
+                                                                          <span class="n">IndexedElement</span><span class="p">,</span>
+                                                                          <span class="n">ObjectAddress</span><span class="p">))]</span>
+            <span class="n">variables</span>      <span class="o">+=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">elemental_func_calls</span> \
+                                 <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">((</span><span class="n">Variable</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">,</span> <span class="n">ObjectAddress</span><span class="p">))]</span>
+            <span class="n">transposed_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">notable_nodes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">NumpyTranspose</span><span class="p">)]</span> \
+                                <span class="o">+</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">elemental_func_calls</span> \
+                                     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span><span class="n">NumpyTranspose</span><span class="p">)]</span>
+            <span class="n">indexed_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">notable_nodes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;__getitem__&#39;</span><span class="p">)]</span>
+
+            <span class="n">is_checks</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">notable_nodes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">PyccelIs</span><span class="p">)]</span>
+
+            <span class="n">variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">variables</span><span class="p">))</span>
+
+            <span class="c1"># Check if the expression is already satisfactory</span>
+            <span class="k">if</span> <span class="n">compatible_operation</span><span class="p">(</span><span class="o">*</span><span class="n">variables</span><span class="p">,</span> <span class="o">*</span><span class="n">transposed_vars</span><span class="p">,</span> <span class="o">*</span><span class="n">is_checks</span><span class="p">,</span>
+                                    <span class="n">language_has_vectors</span> <span class="o">=</span> <span class="n">language_has_vectors</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="n">current_level</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Find function calls in this line</span>
+            <span class="n">funcs</span>           <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">notable_nodes</span><span class="o">+</span><span class="n">transposed_vars</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">)</span> \
+                                                            <span class="ow">and</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">funcdef</span><span class="o">.</span><span class="n">is_elemental</span><span class="p">)]</span>
+            <span class="n">internal_funcs</span>  <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">notable_nodes</span><span class="o">+</span><span class="n">transposed_vars</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">)</span> \
+                                                            <span class="ow">and</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_elemental</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;__getitem__&#39;</span><span class="p">))</span> \
+                                                            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">NumpyTranspose</span><span class="p">)]</span>
+
+            <span class="c1"># Collect all variables for which values other than the value indexed in the loop are important</span>
+            <span class="c1"># E.g. x = np.sum(a) has a dependence on a</span>
+            <span class="n">dependencies</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">internal_funcs</span><span class="p">)</span> \
+                                 <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">((</span><span class="n">Variable</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">,</span> <span class="n">ObjectAddress</span><span class="p">)))</span>
+
+            <span class="c1"># Replace function calls with temporary variables</span>
+            <span class="c1"># This ensures that the function is only called once and stops problems</span>
+            <span class="c1"># for expressions such as:</span>
+            <span class="c1"># c += b*np.sum(c)</span>
+            <span class="n">func_vars1</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_index</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s1">&#39;tmp&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">internal_funcs</span><span class="p">]</span>
+            <span class="n">_</span>          <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">copy_attributes</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">func_vars1</span><span class="p">,</span> <span class="n">internal_funcs</span><span class="p">)]</span>
+            <span class="n">assigns</span>    <span class="o">=</span> <span class="p">[</span><span class="n">Assign</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">func_vars1</span><span class="p">,</span> <span class="n">internal_funcs</span><span class="p">)]</span>
+
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">funcdef</span><span class="o">.</span><span class="n">results</span><span class="p">)</span><span class="o">!=</span><span class="mi">1</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">):</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Loop unravelling cannot handle function calls &quot;</span>\
+                        <span class="s2">&quot;which return tuples or None&quot;</span><span class="p">,</span>
+                        <span class="n">symbol</span><span class="o">=</span><span class="n">line</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+            <span class="n">func_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">funcdef</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">]</span>
+            <span class="n">func_vars2</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_index</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">func_results</span><span class="p">]</span>
+            <span class="n">assigns</span>   <span class="o">+=</span> <span class="p">[</span><span class="n">Assign</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">func_vars2</span><span class="p">,</span> <span class="n">funcs</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="n">assigns</span><span class="p">:</span>
+                <span class="c1"># For now we do not handle memory allocation in loop unravelling</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">func_vars1</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">func_results</span><span class="p">):</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Loop unravelling cannot handle extraction of function calls &quot;</span>\
+                            <span class="s2">&quot;which return arrays as this requires allocation. Please place the function &quot;</span>\
+                            <span class="s2">&quot;call on its own line&quot;</span><span class="p">,</span>
+                            <span class="n">symbol</span><span class="o">=</span><span class="n">line</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">internal_funcs</span><span class="p">,</span> <span class="n">func_vars1</span><span class="p">,</span> <span class="n">excluded_nodes</span><span class="o">=</span><span class="p">(</span><span class="n">FunctionCall</span><span class="p">))</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">func_vars2</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">assigns</span><span class="p">)</span>
+                <span class="n">current_level</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">rank</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">rank</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">new_vars</span> <span class="o">=</span> <span class="n">variables</span>
+            <span class="n">handled_funcs</span> <span class="o">=</span> <span class="n">transposed_vars</span> <span class="o">+</span> <span class="n">indexed_funcs</span>
+            <span class="c1"># Loop over indexes, inserting until the expression can be evaluated</span>
+            <span class="c1"># in the desired language</span>
+            <span class="n">new_level</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">rank</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+                <span class="n">new_level</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># If an index exists at the same depth, reuse it if not create one</span>
+                <span class="k">if</span> <span class="n">rank</span><span class="o">+</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_index</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="s1">&#39;i&#39;</span><span class="p">))</span>
+                <span class="n">index_var</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">rank</span><span class="o">+</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">new_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">insert_index</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_var</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_vars</span><span class="p">]</span>
+                <span class="n">handled_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">insert_index</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_var</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">handled_funcs</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">compatible_operation</span><span class="p">(</span><span class="o">*</span><span class="n">new_vars</span><span class="p">,</span> <span class="o">*</span><span class="n">handled_funcs</span><span class="p">,</span> <span class="n">language_has_vectors</span> <span class="o">=</span> <span class="n">language_has_vectors</span><span class="p">):</span>
+                    <span class="k">break</span>
+
+            <span class="c1"># TODO [NH]: get all indices when adding axis argument to linspace function</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">NumpyLinspace</span><span class="p">):</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">ind</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Replace variable expressions with Indexed versions</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">new_vars</span><span class="p">,</span>
+                    <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="n">FunctionCall</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">))</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">transposed_vars</span> <span class="o">+</span> <span class="n">indexed_funcs</span><span class="p">,</span> <span class="n">handled_funcs</span><span class="p">,</span>
+                    <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="n">FunctionCall</span><span class="p">))</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">new_vars</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">elemental_func_calls</span><span class="p">]</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">transposed_vars</span> <span class="o">+</span> <span class="n">indexed_funcs</span><span class="p">,</span> <span class="n">handled_funcs</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">elemental_func_calls</span><span class="p">]</span>
+
+            <span class="c1"># Recurse through result tree to save line with lines which need</span>
+            <span class="c1"># the same set of for loops</span>
+            <span class="n">save_spot</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">new_level</span><span class="p">,</span><span class="n">current_level</span><span class="p">)):</span>
+                <span class="c1"># Select the existing loop if the shape matches the shape of the expression</span>
+                <span class="c1"># and the loop is not used to modify one of the variable dependencies</span>
+                <span class="k">if</span> <span class="n">save_spot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="n">shape</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">u</span> <span class="ow">in</span> <span class="n">save_spot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">modified_vars</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">dependencies</span><span class="p">):</span>
+                    <span class="n">save_spot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">modified_vars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">lhs_vars</span><span class="p">)</span>
+                    <span class="n">save_spot</span> <span class="o">=</span> <span class="n">save_spot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span>
+                    <span class="n">j</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">new_level</span><span class="p">):</span>
+                <span class="c1"># Create new loops until we have the neccesary depth</span>
+                <span class="n">save_spot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LoopCollection</span><span class="p">([],</span> <span class="n">shape</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">set</span><span class="p">(</span><span class="n">lhs_vars</span><span class="p">)))</span>
+                <span class="n">save_spot</span> <span class="o">=</span> <span class="n">save_spot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span>
+
+            <span class="c1"># Save results</span>
+            <span class="n">save_spot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">current_level</span> <span class="o">=</span> <span class="n">new_level</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">Assign</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">IndexedElement</span><span class="p">)</span> \
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="p">(</span><span class="n">PythonTuple</span><span class="p">,</span> <span class="n">NumpyArray</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">language_has_vectors</span><span class="p">:</span>
+
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lhs</span>
+            <span class="n">rhs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rhs</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">NumpyArray</span><span class="p">):</span>
+                <span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">arg</span>
+
+            <span class="n">lhs_rank</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">rank</span>
+
+            <span class="n">new_assigns</span> <span class="o">=</span> <span class="p">[</span><span class="n">Assign</span><span class="p">(</span>
+                            <span class="n">insert_index</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">lhs</span><span class="p">,</span>
+                                <span class="n">pos</span>       <span class="o">=</span> <span class="o">-</span><span class="n">lhs_rank</span><span class="p">,</span>
+                                <span class="n">index_var</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">j</span><span class="p">)),</span>
+                            <span class="n">rj</span><span class="p">)</span> <span class="c1"># lhs[j] = rhs[j]</span>
+                          <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">rj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rhs</span><span class="p">)]</span>
+            <span class="n">collect_loops</span><span class="p">(</span><span class="n">new_assigns</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">language_has_vectors</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">Assign</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">):</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lhs</span>
+            <span class="n">rhs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rhs</span>
+            <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">assign1</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">[</span><span class="n">Slice</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">arg1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])],</span> <span class="n">arg1</span><span class="p">)</span>
+            <span class="n">assign2</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">[</span><span class="n">Slice</span><span class="p">(</span><span class="n">arg1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">arg1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arg2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">))],</span> <span class="n">arg2</span><span class="p">)</span>
+            <span class="n">collect_loops</span><span class="p">([</span><span class="n">assign1</span><span class="p">,</span> <span class="n">assign2</span><span class="p">],</span> <span class="n">indices</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">language_has_vectors</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">Assign</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Duplicate</span><span class="p">):</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lhs</span>
+            <span class="n">rhs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rhs</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_index</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">))</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">assign</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">[</span><span class="n">Slice</span><span class="p">(</span><span class="n">PyccelMul</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">idx</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                                          <span class="n">PyccelMul</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                    <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                                                    <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">))],</span>
+                                <span class="n">rhs</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+                <span class="n">tmp_indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+                <span class="n">block</span> <span class="o">=</span> <span class="n">collect_loops</span><span class="p">([</span><span class="n">assign</span><span class="p">],</span> <span class="n">tmp_indices</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">language_has_vectors</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp_indices</span><span class="p">)</span><span class="o">&gt;</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tmp_indices</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:])</span>
+
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LoopCollection</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="n">lhs</span><span class="p">])))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">assigns</span> <span class="o">=</span> <span class="p">[</span><span class="n">Assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">[</span><span class="n">Slice</span><span class="p">(</span><span class="n">PyccelMul</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                                          <span class="n">PyccelMul</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                              <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                                              <span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">))],</span>
+                                <span class="n">rhs</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">length</span><span class="p">)]</span>
+                <span class="n">collect_loops</span><span class="p">(</span><span class="n">assigns</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">language_has_vectors</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Save line in top level (no for loop)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">current_level</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+<span class="c1">#==============================================================================</span>
+
+<div class="viewcode-block" id="insert_fors"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.insert_fors">[docs]</a><span class="k">def</span> <span class="nf">insert_fors</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run through the output of collect_loops and create For loops of the</span>
+<span class="sd">    requested sizes</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    block   : list of LoopCollection</span>
+<span class="sd">            The result of a call to collect_loops</span>
+<span class="sd">    indices : list</span>
+<span class="sd">            The index variables</span>
+<span class="sd">    level   : int</span>
+<span class="sd">            The index of the index variable used in the outermost loop</span>
+<span class="sd">    Results</span>
+<span class="sd">    =======</span>
+<span class="sd">    block : list of PyccelAstNodes</span>
+<span class="sd">            The modified expression</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">LoopCollection</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">body</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">blocks</span><span class="o">.</span><span class="n">body</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">loop_scope</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">create_new_loop_scope</span><span class="p">()</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">insert_fors</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">loop_scope</span><span class="p">,</span> <span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">LoopCollection</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">b</span><span class="p">]</span> \
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">body</span><span class="p">]</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">bi</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">body</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">blocks</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">body</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">CodeBlock</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">unravelled</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">loop_scope</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">create_new_loop_scope</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">For</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">level</span><span class="p">],</span>
+                    <span class="n">PythonRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">blocks</span><span class="o">.</span><span class="n">length</span><span class="p">),</span>
+                    <span class="n">body</span><span class="p">,</span>
+                    <span class="n">scope</span> <span class="o">=</span> <span class="n">loop_scope</span><span class="p">)]</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="expand_inhomog_tuple_assignments"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.expand_inhomog_tuple_assignments">[docs]</a><span class="k">def</span> <span class="nf">expand_inhomog_tuple_assignments</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">language_has_vectors</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    block      : CodeBlock</span>
+<span class="sd">                The expression to be modified</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.builtins  import PythonTuple</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core      import Assign, CodeBlock</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.literals  import LiteralInteger</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.utilities import expand_to_loops</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.variable  import Variable</span>
+<span class="sd">    &gt;&gt;&gt; a = Variable(&#39;int&#39;, &#39;a&#39;, shape=(,), rank=0)</span>
+<span class="sd">    &gt;&gt;&gt; b = Variable(&#39;int&#39;, &#39;b&#39;, shape=(,), rank=0)</span>
+<span class="sd">    &gt;&gt;&gt; c = Variable(&#39;int&#39;, &#39;c&#39;, shape=(,), rank=0)</span>
+<span class="sd">    &gt;&gt;&gt; expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]</span>
+<span class="sd">    &gt;&gt;&gt; expand_inhomog_tuple_assignments(CodeBlock(expr))</span>
+<span class="sd">    [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">language_has_vectors</span><span class="p">:</span>
+        <span class="n">allocs_to_unravel</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span><span class="n">Assign</span><span class="p">)</span> \
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">HomogeneousTupleVariable</span><span class="p">)</span> \
+                    <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="p">(</span><span class="n">HomogeneousTupleVariable</span><span class="p">,</span> <span class="n">Duplicate</span><span class="p">,</span> <span class="n">Concatenate</span><span class="p">))]</span>
+        <span class="n">new_allocs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">Assign</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">NumpyEmpty</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                     <span class="n">dtype</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                                     <span class="n">order</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+                    <span class="p">),</span> <span class="n">a</span><span class="p">)</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">on_stack</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">on_heap</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="n">Allocate</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span>
+                            <span class="n">shape</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                            <span class="n">order</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                            <span class="n">status</span><span class="o">=</span><span class="s2">&quot;unknown&quot;</span><span class="p">),</span> <span class="n">a</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">allocs_to_unravel</span><span class="p">]</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">allocs_to_unravel</span><span class="p">,</span> <span class="n">new_allocs</span><span class="p">)</span>
+
+    <span class="n">assigns</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span><span class="n">Assign</span><span class="p">)</span> \
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">InhomogeneousTupleVariable</span><span class="p">)</span> \
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="p">(</span><span class="n">PythonTuple</span><span class="p">,</span> <span class="n">InhomogeneousTupleVariable</span><span class="p">))]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">assigns</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">new_assigns</span> <span class="o">=</span> <span class="p">[[</span><span class="n">Assign</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">rhs</span><span class="p">)]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assigns</span><span class="p">]</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">assigns</span><span class="p">,</span> <span class="n">new_assigns</span><span class="p">)</span>
+        <span class="n">expand_inhomog_tuple_assignments</span><span class="p">(</span><span class="n">block</span><span class="p">)</span></div>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="expand_to_loops"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.utilities.expand_to_loops">[docs]</a><span class="k">def</span> <span class="nf">expand_to_loops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">language_has_vectors</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Re-write a list of expressions to include explicit loops where necessary</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    block          : CodeBlock</span>
+<span class="sd">                     The expressions to be modified</span>
+<span class="sd">    new_index      : function</span>
+<span class="sd">                     A function which provides a new variable from a base name,</span>
+<span class="sd">                     avoiding name collisions</span>
+<span class="sd">    language_has_vectors : bool</span>
+<span class="sd">                     Indicates if the language has support for vector</span>
+<span class="sd">                     operations of the same shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+<span class="sd">    expr        : list of Ast Nodes</span>
+<span class="sd">                The expressions with For loops inserted where necessary</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.core import Variable, Assign</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.operators import PyccelAdd</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.utilities import expand_to_loops</span>
+<span class="sd">    &gt;&gt;&gt; a = Variable(&#39;int&#39;, &#39;a&#39;, shape=(4,), rank=1)</span>
+<span class="sd">    &gt;&gt;&gt; b = Variable(&#39;int&#39;, &#39;b&#39;, shape=(4,), rank=1)</span>
+<span class="sd">    &gt;&gt;&gt; c = Variable(&#39;int&#39;, &#39;c&#39;, shape=(4,), rank=1)</span>
+<span class="sd">    &gt;&gt;&gt; i = Variable(&#39;int&#39;, &#39;i&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; d = PyccelAdd(a,b)</span>
+<span class="sd">    &gt;&gt;&gt; expr = [Assign(c,d)]</span>
+<span class="sd">    &gt;&gt;&gt; expand_to_loops(expr, language_has_vectors = False)</span>
+<span class="sd">    [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expand_inhomog_tuple_assignments</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">collect_loops</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">new_index</span><span class="p">,</span> <span class="n">language_has_vectors</span><span class="p">)</span>
+
+    <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">insert_fors</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">bi</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">body</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">body</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

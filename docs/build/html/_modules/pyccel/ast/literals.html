@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.literals &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.literals</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.literals</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot; This module contains all literal types</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">pyccel.utilities.metaclasses</span> <span class="kn">import</span> <span class="n">Singleton</span>
+
+<span class="kn">from</span> <span class="nn">.basic</span>              <span class="kn">import</span> <span class="n">PyccelAstNode</span><span class="p">,</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">.datatypes</span>          <span class="kn">import</span> <span class="p">(</span><span class="n">NativeGeneric</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">,</span>
+                                  <span class="n">NativeComplex</span><span class="p">,</span> <span class="n">NativeString</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;LiteralTrue&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LiteralFalse&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LiteralInteger&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LiteralFloat&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LiteralComplex&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LiteralImaginaryUnit&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LiteralString&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Nil&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NilArgument&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;get_default_literal_value&#39;</span>
+<span class="p">)</span>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a python literal</span>
+<span class="sd">    This class is abstract and should be implemented for each dtype</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_precision&#39;</span><span class="p">,)</span>
+    <span class="n">_attribute_nodes</span>  <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_rank</span>      <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_shape</span>     <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_order</span>     <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">precision</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;precision must be an integer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@PyccelAstNode</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">precision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set precision for a literal class&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="n">precision</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get python literal represented by this instance &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Literal(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PyccelAstNode</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">python_value</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">python_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">python_value</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_value</span><span class="p">)</span>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralTrue"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralTrue">[docs]</a><span class="k">class</span> <span class="nc">LiteralTrue</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the python value True&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_dtype</span>     <span class="o">=</span> <span class="n">NativeBool</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralFalse"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralFalse">[docs]</a><span class="k">class</span> <span class="nc">LiteralFalse</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the python value False&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_dtype</span>     <span class="o">=</span> <span class="n">NativeBool</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralInteger"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralInteger">[docs]</a><span class="k">class</span> <span class="nc">LiteralInteger</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an integer literal in python&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_value&#39;</span><span class="p">,)</span>
+    <span class="n">_dtype</span>     <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;A LiteralInteger can only be created with an integer&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+    <span class="k">def</span> <span class="fm">__index__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">python_value</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralFloat"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralFloat">[docs]</a><span class="k">class</span> <span class="nc">LiteralFloat</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a float literal in python&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_value&#39;</span><span class="p">,)</span>
+    <span class="n">_dtype</span>     <span class="o">=</span> <span class="n">NativeFloat</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">LiteralFloat</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;A LiteralFloat can only be created with an integer or a float&quot;</span><span class="p">)</span>
+        <span class="n">Literal</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">LiteralFloat</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">python_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span></div>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralComplex"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralComplex">[docs]</a><span class="k">class</span> <span class="nc">LiteralComplex</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a complex literal in python&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_real_part&#39;</span><span class="p">,</span><span class="s1">&#39;_imag_part&#39;</span><span class="p">)</span>
+    <span class="n">_dtype</span>     <span class="o">=</span> <span class="n">NativeComplex</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">LiteralImaginaryUnit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">real_part</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_collect_python_val</span><span class="p">(</span><span class="n">real</span><span class="p">)</span>
+        <span class="n">imag_part</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_collect_python_val</span><span class="p">(</span><span class="n">imag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">real_part</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">imag_part</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LiteralImaginaryUnit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_real_part</span> <span class="o">=</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_collect_python_val</span><span class="p">(</span><span class="n">real</span><span class="p">),</span> <span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_imag_part</span> <span class="o">=</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_collect_python_val</span><span class="p">(</span><span class="n">imag</span><span class="p">),</span> <span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LiteralComplex._collect_python_val"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralComplex._collect_python_val">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_collect_python_val</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Literal</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">python_value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">arg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the real part of the complex literal &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_part</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">imag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the imaginary part of the complex literal &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imag_part</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">python_value</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">python_value</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralImaginaryUnit"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralImaginaryUnit">[docs]</a><span class="k">class</span> <span class="nc">LiteralImaginaryUnit</span><span class="p">(</span><span class="n">LiteralComplex</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the python value j&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">imag</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="n">j</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="LiteralString"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.LiteralString">[docs]</a><span class="k">class</span> <span class="nc">LiteralString</span><span class="p">(</span><span class="n">Literal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a string literal in python&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_string&#39;</span><span class="p">,)</span>
+    <span class="n">_dtype</span>     <span class="o">=</span> <span class="n">NativeString</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precision</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_precision</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;arg must be of type str&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_string</span> <span class="o">=</span> <span class="n">arg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the python string literal &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_string</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">LiteralString</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_string</span> <span class="o">+</span> <span class="n">o</span><span class="o">.</span><span class="n">_string</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Nil"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.Nil">[docs]</a><span class="k">class</span> <span class="nc">Nil</span><span class="p">(</span><span class="n">PyccelAstNode</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">Singleton</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    class for None object in the code.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">NativeGeneric</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_rank</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_shape</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;None&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Nil</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="s1">&#39;Nil&#39;</span><span class="p">)</span><span class="o">+</span><span class="nb">hash</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="NilArgument"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.NilArgument">[docs]</a><span class="k">class</span> <span class="nc">NilArgument</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents the python value None when passed as an argument</span>
+<span class="sd">    to an inline function. This class is necessary as to avoid</span>
+<span class="sd">    accidental substitution due to Singletons&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Argument(None)&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="get_default_literal_value"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.literals.get_default_literal_value">[docs]</a><span class="k">def</span> <span class="nf">get_default_literal_value</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the default value of a native datatype.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">LiteralComplex</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">LiteralFalse</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeString</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">LiteralString</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown type&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">convert_to_literal</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert a python value to a pyccel Literal</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value     : int/float/complex/bool/str</span>
+<span class="sd">                The python value</span>
+<span class="sd">    dtype     : DataType</span>
+<span class="sd">                The datatype of the python value</span>
+<span class="sd">                Default : Matches type of &#39;value&#39;</span>
+<span class="sd">    precision : int</span>
+<span class="sd">                The precision of the value in the generated code</span>
+<span class="sd">                Default : python precision (see default_precision)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    literal_val : Literal</span>
+<span class="sd">                  The python value &#39;value&#39; expressed as a literal</span>
+<span class="sd">                  with the specified dtype and precision</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.operators</span> <span class="kn">import</span> <span class="n">PyccelUnarySub</span> <span class="c1"># Imported here to avoid circular import</span>
+
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeFloat</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeComplex</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeBool</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">NativeString</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown type&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">precision</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NativeString</span><span class="p">():</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">literal_val</span> <span class="o">=</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">literal_val</span> <span class="o">=</span> <span class="n">PyccelUnarySub</span><span class="p">(</span><span class="n">LiteralInteger</span><span class="p">(</span><span class="o">-</span><span class="n">value</span><span class="p">,</span> <span class="n">precision</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">):</span>
+        <span class="n">literal_val</span> <span class="o">=</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">):</span>
+        <span class="n">literal_val</span> <span class="o">=</span> <span class="n">LiteralComplex</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">literal_val</span> <span class="o">=</span> <span class="n">LiteralTrue</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">literal_val</span> <span class="o">=</span> <span class="n">LiteralFalse</span><span class="p">(</span><span class="n">precision</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeString</span><span class="p">):</span>
+        <span class="n">literal_val</span> <span class="o">=</span> <span class="n">LiteralString</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown type&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">literal_val</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

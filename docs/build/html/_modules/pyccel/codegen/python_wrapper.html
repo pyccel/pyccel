@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen.python_wrapper &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.codegen.python_wrapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.codegen.python_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.bind_c</span>                      <span class="kn">import</span> <span class="n">as_static_module</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.numpy_wrapper</span>               <span class="kn">import</span> <span class="n">get_numpy_max_acceptable_version_file</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.printing.fcode</span>          <span class="kn">import</span> <span class="n">fcode</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.printing.cwrappercode</span>   <span class="kn">import</span> <span class="n">CWrapperCodePrinter</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.utilities</span>      <span class="kn">import</span> <span class="n">recompile_object</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.utilities</span>      <span class="kn">import</span> <span class="n">copy_internal_library</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.utilities</span>      <span class="kn">import</span> <span class="n">internal_libs</span>
+<span class="kn">from</span> <span class="nn">pyccel.naming</span>                 <span class="kn">import</span> <span class="n">name_clash_checkers</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.scope</span>           <span class="kn">import</span> <span class="n">Scope</span>
+<span class="kn">from</span> <span class="nn">pyccel.utilities.stage</span>        <span class="kn">import</span> <span class="n">PyccelStage</span>
+<span class="kn">from</span> <span class="nn">.compiling.basic</span>     <span class="kn">import</span> <span class="n">CompileObj</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+
+<span class="n">pyccel_stage</span> <span class="o">=</span> <span class="n">PyccelStage</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;create_shared_library&#39;</span><span class="p">]</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="create_shared_library"><a class="viewcode-back" href="../../../pyccel.codegen.html#pyccel.codegen.python_wrapper.create_shared_library">[docs]</a><span class="k">def</span> <span class="nf">create_shared_library</span><span class="p">(</span><span class="n">codegen</span><span class="p">,</span>
+                          <span class="n">main_obj</span><span class="p">,</span>
+                          <span class="n">language</span><span class="p">,</span>
+                          <span class="n">wrapper_flags</span><span class="p">,</span>
+                          <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                          <span class="n">src_compiler</span><span class="p">,</span>
+                          <span class="n">wrapper_compiler</span><span class="p">,</span>
+                          <span class="n">sharedlib_modname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">set_stage</span><span class="p">(</span><span class="s1">&#39;cwrapper&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Get module name</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="n">codegen</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="c1"># Change working directory to &#39;__pyccel__&#39;</span>
+    <span class="n">base_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">pyccel_dirpath</span><span class="p">)</span>
+
+    <span class="c1"># Name of shared library</span>
+    <span class="k">if</span> <span class="n">sharedlib_modname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sharedlib_modname</span> <span class="o">=</span> <span class="n">module_name</span>
+
+    <span class="n">wrapper_filename_root</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_wrapper&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+    <span class="n">wrapper_filename</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.c&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wrapper_filename_root</span><span class="p">)</span>
+    <span class="n">wrapper_compile_obj</span> <span class="o">=</span> <span class="n">CompileObj</span><span class="p">(</span><span class="n">wrapper_filename</span><span class="p">,</span>
+            <span class="n">pyccel_dirpath</span><span class="p">,</span>
+            <span class="n">flags</span>        <span class="o">=</span> <span class="n">wrapper_flags</span><span class="p">,</span>
+            <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(</span><span class="n">main_obj</span><span class="p">,),</span>
+            <span class="n">accelerators</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;python&#39;</span><span class="p">,))</span>
+
+    <span class="k">if</span> <span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;fortran&#39;</span><span class="p">:</span>
+        <span class="c1"># Construct static interface for passing array shapes and write it to file bind_c_MOD.f90</span>
+        <span class="n">bind_c_mod</span> <span class="o">=</span> <span class="n">as_static_module</span><span class="p">(</span><span class="n">codegen</span><span class="o">.</span><span class="n">routines</span><span class="p">,</span> <span class="n">codegen</span><span class="o">.</span><span class="n">ast</span><span class="p">)</span>
+        <span class="n">bind_c_code</span> <span class="o">=</span> <span class="n">fcode</span><span class="p">(</span><span class="n">bind_c_mod</span><span class="p">,</span> <span class="n">bind_c_mod</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">bind_c_filename</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.f90&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bind_c_mod</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">bind_c_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">bind_c_code</span><span class="p">)</span>
+
+        <span class="n">bind_c_obj</span><span class="o">=</span><span class="n">CompileObj</span><span class="p">(</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">bind_c_filename</span><span class="p">,</span>
+                <span class="n">folder</span> <span class="o">=</span> <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                <span class="n">flags</span>  <span class="o">=</span> <span class="n">main_obj</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span>
+                <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(</span><span class="n">main_obj</span><span class="p">,))</span>
+        <span class="n">wrapper_compile_obj</span><span class="o">.</span><span class="n">add_dependencies</span><span class="p">(</span><span class="n">bind_c_obj</span><span class="p">)</span>
+        <span class="n">src_compiler</span><span class="o">.</span><span class="n">compile_module</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">=</span><span class="n">bind_c_obj</span><span class="p">,</span>
+                <span class="n">output_folder</span><span class="o">=</span><span class="n">pyccel_dirpath</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1">#---------------------------------------</span>
+    <span class="c1">#     Compile cwrapper from stdlib</span>
+    <span class="c1">#---------------------------------------</span>
+    <span class="n">cwrapper_lib_dest_path</span> <span class="o">=</span> <span class="n">copy_internal_library</span><span class="p">(</span><span class="s1">&#39;cwrapper&#39;</span><span class="p">,</span> <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                                <span class="n">extra_files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;numpy_version.h&#39;</span> <span class="p">:</span>
+                                                <span class="n">get_numpy_max_acceptable_version_file</span><span class="p">()})</span>
+
+    <span class="n">cwrapper_lib</span> <span class="o">=</span> <span class="n">internal_libs</span><span class="p">[</span><span class="s2">&quot;cwrapper&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cwrapper_lib</span><span class="o">.</span><span class="n">reset_folder</span><span class="p">(</span><span class="n">cwrapper_lib_dest_path</span><span class="p">)</span>
+
+    <span class="c1"># get the include folder path and library files</span>
+    <span class="n">recompile_object</span><span class="p">(</span><span class="n">cwrapper_lib</span><span class="p">,</span>
+                      <span class="n">compiler</span> <span class="o">=</span> <span class="n">wrapper_compiler</span><span class="p">,</span>
+                      <span class="n">verbose</span>  <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">wrapper_compile_obj</span><span class="o">.</span><span class="n">add_dependencies</span><span class="p">(</span><span class="n">cwrapper_lib</span><span class="p">)</span>
+    <span class="n">extra_includes</span>  <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cwrapper&#39;</span><span class="p">]</span>
+
+    <span class="c1">#---------------------------------------</span>
+    <span class="c1">#      Print code specific cwrapper</span>
+    <span class="c1">#---------------------------------------</span>
+    <span class="n">module_old_name</span> <span class="o">=</span> <span class="n">codegen</span><span class="o">.</span><span class="n">ast</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">codegen</span><span class="o">.</span><span class="n">ast</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">sharedlib_modname</span><span class="p">)</span>
+    <span class="n">wrapper_codegen</span> <span class="o">=</span> <span class="n">CWrapperCodePrinter</span><span class="p">(</span><span class="n">codegen</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">language</span><span class="p">)</span>
+    <span class="n">Scope</span><span class="o">.</span><span class="n">name_clash_checker</span> <span class="o">=</span> <span class="n">name_clash_checkers</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
+    <span class="n">wrapper_code</span> <span class="o">=</span> <span class="n">wrapper_codegen</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="n">codegen</span><span class="o">.</span><span class="n">ast</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">errors</span><span class="o">.</span><span class="n">has_errors</span><span class="p">():</span>
+        <span class="k">return</span>
+
+    <span class="n">codegen</span><span class="o">.</span><span class="n">ast</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">module_old_name</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">wrapper_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">wrapper_code</span><span class="p">)</span>
+
+    <span class="c1">#--------------------------------------------------------</span>
+    <span class="c1">#  Compile cwrapper_ndarrays from stdlib (if necessary)</span>
+    <span class="c1">#--------------------------------------------------------</span>
+    <span class="k">if</span> <span class="s2">&quot;ndarrays&quot;</span> <span class="ow">in</span> <span class="n">wrapper_codegen</span><span class="o">.</span><span class="n">get_additional_imports</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">lib_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ndarrays&quot;</span><span class="p">,</span> <span class="s2">&quot;cwrapper_ndarrays&quot;</span><span class="p">):</span>
+            <span class="n">stdlib_folder</span><span class="p">,</span> <span class="n">stdlib</span> <span class="o">=</span> <span class="n">internal_libs</span><span class="p">[</span><span class="n">lib_name</span><span class="p">]</span>
+
+            <span class="n">lib_dest_path</span> <span class="o">=</span> <span class="n">copy_internal_library</span><span class="p">(</span><span class="n">stdlib_folder</span><span class="p">,</span> <span class="n">pyccel_dirpath</span><span class="p">)</span>
+
+            <span class="c1"># Pylint determines wrong type</span>
+            <span class="n">stdlib</span><span class="o">.</span><span class="n">reset_folder</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">)</span> <span class="c1"># pylint: disable=E1101</span>
+            <span class="c1"># get the include folder path and library files</span>
+            <span class="n">recompile_object</span><span class="p">(</span><span class="n">stdlib</span><span class="p">,</span>
+                              <span class="n">compiler</span> <span class="o">=</span> <span class="n">wrapper_compiler</span><span class="p">,</span>
+                              <span class="n">verbose</span>  <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+
+            <span class="n">wrapper_compile_obj</span><span class="o">.</span><span class="n">add_dependencies</span><span class="p">(</span><span class="n">stdlib</span><span class="p">)</span>
+        <span class="n">extra_includes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;cwrapper_ndarrays&#39;</span><span class="p">)</span>
+
+    <span class="c1">#---------------------------------------</span>
+    <span class="c1">#         Compile code</span>
+    <span class="c1">#---------------------------------------</span>
+    <span class="n">wrapper_compiler</span><span class="o">.</span><span class="n">compile_module</span><span class="p">(</span><span class="n">wrapper_compile_obj</span><span class="p">,</span>
+                                <span class="n">output_folder</span> <span class="o">=</span> <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                                <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">sharedlib_filepath</span> <span class="o">=</span> <span class="n">src_compiler</span><span class="o">.</span><span class="n">compile_shared_library</span><span class="p">(</span><span class="n">wrapper_compile_obj</span><span class="p">,</span>
+                                                    <span class="n">output_folder</span> <span class="o">=</span> <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                                                    <span class="n">sharedlib_modname</span> <span class="o">=</span> <span class="n">sharedlib_modname</span><span class="p">,</span>
+                                                    <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># Change working directory back to starting point</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span>
+
+    <span class="c1"># Return absolute path of shared library</span>
+    <span class="k">return</span> <span class="n">sharedlib_filepath</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

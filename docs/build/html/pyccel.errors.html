@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.errors package &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyccel.naming package" href="pyccel.naming.html" />
+    <link rel="prev" title="pyccel.complexity package" href="pyccel.complexity.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">docBranck</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyccel.html">pyccel package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pyccel.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyccel.ast.html">pyccel.ast package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.codegen.html">pyccel.codegen package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.commands.html">pyccel.commands package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.compilers.html">pyccel.compilers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.complexity.html">pyccel.complexity package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyccel.errors package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.naming.html">pyccel.naming package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.parser.html">pyccel.parser package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.stdlib.html">pyccel.stdlib package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.symbolic.html">pyccel.symbolic package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyccel.utilities.html">pyccel.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.decorators">pyccel.decorators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.epyccel">pyccel.epyccel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel.version">pyccel.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyccel.html#module-pyccel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">docBranck</a> &raquo;</li>
+        
+          <li><a href="pyccel.html">pyccel package</a> &raquo;</li>
+        
+      <li>pyccel.errors package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pyccel.errors.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pyccel-errors-package">
+<h1>pyccel.errors package<a class="headerlink" href="#pyccel-errors-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyccel.errors.errors">
+<span id="pyccel-errors-errors-module"></span><h2>pyccel.errors.errors module<a class="headerlink" href="#module-pyccel.errors.errors" title="Permalink to this headline">¶</a></h2>
+<p>This module contains classes and methods that manipilate the various errors and warnings
+that could be shown by pyccel.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.errors.errors.ErrorInfo">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">ErrorInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#ErrorInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.ErrorInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Representation of a single error message.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">Errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for compile errors.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors._add_error_info">
+<span class="sig-name descname"><span class="pre">_add_error_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors._add_error_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors._add_error_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.add_error_info">
+<span class="sig-name descname"><span class="pre">add_error_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.add_error_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.add_error_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.blocker_filename">
+<span class="sig-name descname"><span class="pre">blocker_filename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.blocker_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.blocker_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the file with a blocking error, or None if not possible.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.check">
+<span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.format_messages">
+<span class="sig-name descname"><span class="pre">format_messages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.format_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.format_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string list that represents the error messages.
+Use a form suitable for displaying to the user.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.has_blockers">
+<span class="sig-name descname"><span class="pre">has_blockers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.has_blockers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.has_blockers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are there any errors that are blockers?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.has_errors">
+<span class="sig-name descname"><span class="pre">has_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.has_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.has_errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are there any generated errors?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.has_warnings">
+<span class="sig-name descname"><span class="pre">has_warnings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.has_warnings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.has_warnings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are there any errors that are warnings?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#pyccel.errors.errors.Errors.mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.num_messages">
+<span class="sig-name descname"><span class="pre">num_messages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.num_messages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.num_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of generated messages.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.parser_stage">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parser_stage</span></span><a class="headerlink" href="#pyccel.errors.errors.Errors.parser_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.report">
+<span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounding_box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report message at the given line using the current error context.
+stage: ‘syntax’, ‘semantic’ or ‘codegen’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>str</em>) – The message to be displayed to the user</p></li>
+<li><p><strong>line</strong> (<em>int</em>) – The line at which the error can be found
+Default: If a symbol is provided with a known line number
+then this line number is used</p></li>
+<li><p><strong>column</strong> (<em>int</em>) – The column at which the error can be found
+Default: If a symbol is provided with a known column
+then this column is used</p></li>
+<li><p><strong>bounding_box</strong> (<em>tuple</em>) – An optional tuple containing the line and column</p></li>
+<li><p><strong>severity</strong> (<em>str</em>) – Indicates the seriousness of the error. Should be one of:
+‘warning’, ‘error’, ‘fatal’
+Default: ‘error’</p></li>
+<li><p><strong>symbol</strong> (<em>pyccel.ast.Basic</em>) – The Basic object which caused the error to need to be raised.
+This object is printed in the error message</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – The file which was being treated when the error was found</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Flag to add verbosity
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.reset_target">
+<span class="sig-name descname"><span class="pre">reset_target</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.reset_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.reset_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.set_parser_stage">
+<span class="sig-name descname"><span class="pre">set_parser_stage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.set_parser_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.set_parser_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.set_target">
+<span class="sig-name descname"><span class="pre">set_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.set_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.set_target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.target">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#pyccel.errors.errors.Errors.target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.Errors.unset_target">
+<span class="sig-name descname"><span class="pre">unset_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#Errors.unset_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.Errors.unset_target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyccel.errors.errors.ErrorsMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">ErrorsMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#ErrorsMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.ErrorsMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Developper or User mode.
+pyccel command line will set it.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyccel.errors.errors.ErrorsMode.set_mode">
+<span class="sig-name descname"><span class="pre">set_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#ErrorsMode.set_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.ErrorsMode.set_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyccel.errors.errors.ErrorsMode.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#pyccel.errors.errors.ErrorsMode.value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyccel.errors.errors.PyccelCodegenError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">PyccelCodegenError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#PyccelCodegenError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.PyccelCodegenError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pyccel.errors.errors.PyccelError" title="pyccel.errors.errors.PyccelError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyccel.errors.errors.PyccelError</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyccel.errors.errors.PyccelError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">PyccelError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#PyccelError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.PyccelError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyccel.errors.errors.PyccelSemanticError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">PyccelSemanticError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#PyccelSemanticError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.PyccelSemanticError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pyccel.errors.errors.PyccelError" title="pyccel.errors.errors.PyccelError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyccel.errors.errors.PyccelError</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyccel.errors.errors.PyccelSyntaxError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">PyccelSyntaxError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#PyccelSyntaxError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.PyccelSyntaxError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pyccel.errors.errors.PyccelError" title="pyccel.errors.errors.PyccelError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyccel.errors.errors.PyccelError</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyccel.errors.errors.make_symbol">
+<span class="sig-prename descclassname"><span class="pre">pyccel.errors.errors.</span></span><span class="sig-name descname"><span class="pre">make_symbol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyccel/errors/errors.html#make_symbol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyccel.errors.errors.make_symbol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pyccel.errors.messages">
+<span id="pyccel-errors-messages-module"></span><h2>pyccel.errors.messages module<a class="headerlink" href="#module-pyccel.errors.messages" title="Permalink to this headline">¶</a></h2>
+<p>Constants that represent simple type checker error message, i.e. messages
+that do not have any parameters.</p>
+</div>
+<div class="section" id="module-pyccel.errors">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyccel.errors" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pyccel.naming.html" class="btn btn-neutral float-right" title="pyccel.naming package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pyccel.complexity.html" class="btn btn-neutral float-left" title="pyccel.complexity package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,514 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.commands.console &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.commands.console</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.commands.console</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MyParser&#39;</span><span class="p">,</span> <span class="s1">&#39;pyccel&#39;</span><span class="p">]</span>
+
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="MyParser"><a class="viewcode-back" href="../../../pyccel.commands.html#pyccel.commands.console.MyParser">[docs]</a><span class="k">class</span> <span class="nc">MyParser</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom argument parser for printing help message in case of an error.</span>
+<span class="sd">    See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MyParser.error"><a class="viewcode-back" href="../../../pyccel.commands.html#pyccel.commands.console.MyParser.error">[docs]</a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;error: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># TODO - remove output_dir froms args</span>
+<span class="c1">#      - remove files from args</span>
+<span class="c1">#      but quickstart and build are still calling it for the moment</span>
+<div class="viewcode-block" id="pyccel"><a class="viewcode-back" href="../../../pyccel.commands.html#pyccel.commands.console.pyccel">[docs]</a><span class="k">def</span> <span class="nf">pyccel</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mpi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">openmp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">openacc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compiler</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    pyccel console command.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">MyParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;pyccel command line&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;files&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;a Pyccel file&#39;</span><span class="p">)</span>
+
+    <span class="c1">#... Version</span>
+    <span class="kn">import</span> <span class="nn">pyccel</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">pyccel</span><span class="o">.</span><span class="n">__version__</span>
+    <span class="n">libpath</span> <span class="o">=</span> <span class="n">pyccel</span><span class="o">.</span><span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">python</span>  <span class="o">=</span> <span class="s1">&#39;python </span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;pyccel </span><span class="si">{}</span><span class="s2"> from </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">libpath</span><span class="p">,</span> <span class="n">python</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-V&#39;</span><span class="p">,</span> <span class="s1">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ... compiler syntax, semantic and codegen</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Pyccel compiling stages&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-x&#39;</span><span class="p">,</span> <span class="s1">&#39;--syntax-only&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Using pyccel for Syntax Checking&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-e&#39;</span><span class="p">,</span> <span class="s1">&#39;--semantic-only&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Using pyccel for Semantic Checking&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-t&#39;</span><span class="p">,</span> <span class="s1">&#39;--convert-only&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Converts pyccel files only without build&#39;</span><span class="p">)</span>
+<span class="c1">#    group.add_argument(&#39;-f&#39;, &#39;--f2py-compatible&#39;, action=&#39;store_true&#39;,</span>
+<span class="c1">#                        help=&#39;Converts pyccel files to be compiled by f2py&#39;)</span>
+
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ... backend compiler options</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Backend compiler options&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--language&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;fortran&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">),</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Generated language&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--compiler&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Compiler family or json file containing a compiler description {GNU,intel,PGI}&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--flags&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> \
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Compiler flags.&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--wrapper-flags&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> \
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Compiler flags for the wrapper.&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--debug&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;compiles the code in a debug mode.&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--include&#39;</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;includes&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;list of include directories.&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--libdir&#39;</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;libdirs&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;list of library directories.&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--libs&#39;</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;libs&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;list of libraries to link with.&#39;</span><span class="p">)</span>
+
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--output&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>\
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;folder in which the output is stored.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ... Accelerators</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Accelerators options&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--mpi&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;uses mpi&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--openmp&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;uses openmp&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--openacc&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;uses openacc&#39;</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ... Other options</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Other options&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;enables verbose mode.&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--developer-mode&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;shows internal messages&#39;</span><span class="p">)</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--export-compile-info&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> \
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;file to which the compiler json file is exported&#39;</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+
+    <span class="c1"># TODO move to another cmd line</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--analysis&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> \
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;enables code analysis mode.&#39;</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ...</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="c1"># ...</span>
+
+    <span class="c1"># Imports</span>
+    <span class="kn">from</span> <span class="nn">pyccel.errors.errors</span>     <span class="kn">import</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">PyccelError</span>
+    <span class="kn">from</span> <span class="nn">pyccel.errors.errors</span>     <span class="kn">import</span> <span class="n">ErrorsMode</span>
+    <span class="kn">from</span> <span class="nn">pyccel.errors.messages</span>   <span class="kn">import</span> <span class="n">INVALID_FILE_DIRECTORY</span><span class="p">,</span> <span class="n">INVALID_FILE_EXTENSION</span>
+    <span class="kn">from</span> <span class="nn">pyccel.codegen.pipeline</span>  <span class="kn">import</span> <span class="n">execute_pyccel</span>
+
+    <span class="c1"># ...</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">files</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">compiler</span><span class="p">:</span>
+        <span class="n">compiler</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">compiler</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="p">:</span>
+        <span class="n">mpi</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">mpi</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">openmp</span><span class="p">:</span>
+        <span class="n">openmp</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">openmp</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">openacc</span><span class="p">:</span>
+        <span class="n">openacc</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">openacc</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">convert_only</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">syntax_only</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">semantic_only</span><span class="p">:</span>
+        <span class="n">compiler</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ...</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+        <span class="c1"># severity is error to avoid needing to catch exception</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Pyccel can currently only handle 1 file at a time&#39;</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+
+    <span class="n">compiler_export_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">export_compile_info</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">compiler_export_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;please specify a file to pyccelise&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># ... report error</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="c1"># we don&#39;t use is_valid_filename_py since it uses absolute path</span>
+            <span class="c1"># file extension</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">ext</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;py&#39;</span><span class="p">,</span> <span class="s1">&#39;pyh&#39;</span><span class="p">]):</span>
+                <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+                <span class="c1"># severity is error to avoid needing to catch exception</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">INVALID_FILE_EXTENSION</span><span class="p">,</span>
+                              <span class="n">symbol</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span>
+                              <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># we use Pyccel error manager, although we can do it in other ways</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+            <span class="c1"># severity is error to avoid needing to catch exception</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">INVALID_FILE_DIRECTORY</span><span class="p">,</span>
+                          <span class="n">symbol</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                          <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># ...</span>
+
+    <span class="k">if</span> <span class="n">compiler_export_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">compiler_export_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">compiler_export_file</span> <span class="o">=</span> <span class="n">compiler_export_file</span> <span class="o">+</span> <span class="s1">&#39;.json&#39;</span>
+        <span class="k">elif</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s1">&#39;.json&#39;</span><span class="p">:</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+            <span class="c1"># severity is error to avoid needing to catch exception</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Wrong file extension. Expecting `json`, but found&#39;</span><span class="p">,</span>
+                          <span class="n">symbol</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span>
+                          <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">accelerators</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">mpi</span><span class="p">:</span>
+        <span class="n">accelerators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;mpi&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">openmp</span><span class="p">:</span>
+        <span class="n">accelerators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;openmp&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">openacc</span><span class="p">:</span>
+        <span class="n">accelerators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;openacc&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ...</span>
+
+    <span class="c1"># ...</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">developer_mode</span><span class="p">:</span>
+        <span class="c1"># this will initialize the singelton ErrorsMode</span>
+        <span class="c1"># making this settings available everywhere</span>
+        <span class="n">err_mode</span> <span class="o">=</span> <span class="n">ErrorsMode</span><span class="p">()</span>
+        <span class="n">err_mode</span><span class="o">.</span><span class="n">set_mode</span><span class="p">(</span><span class="s1">&#39;developer&#39;</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+
+    <span class="n">base_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot output python file to same folder as this would overwrite the original file. Please specify --output&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># TODO: prune options</span>
+        <span class="n">execute_pyccel</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                       <span class="n">syntax_only</span>   <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">syntax_only</span><span class="p">,</span>
+                       <span class="n">semantic_only</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">semantic_only</span><span class="p">,</span>
+                       <span class="n">convert_only</span>  <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">convert_only</span><span class="p">,</span>
+                       <span class="n">verbose</span>       <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                       <span class="n">language</span>      <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">language</span><span class="p">,</span>
+                       <span class="n">compiler</span>      <span class="o">=</span> <span class="n">compiler</span><span class="p">,</span>
+                       <span class="n">fflags</span>        <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span>
+                       <span class="n">wrapper_flags</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">wrapper_flags</span><span class="p">,</span>
+                       <span class="n">includes</span>      <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">includes</span><span class="p">,</span>
+                       <span class="n">libdirs</span>       <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">libdirs</span><span class="p">,</span>
+                       <span class="n">modules</span>       <span class="o">=</span> <span class="p">(),</span>
+                       <span class="n">libs</span>          <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">libs</span><span class="p">,</span>
+                       <span class="n">debug</span>         <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span>
+                       <span class="n">accelerators</span>  <span class="o">=</span> <span class="n">accelerators</span><span class="p">,</span>
+                       <span class="n">folder</span>        <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">,</span>
+                       <span class="n">compiler_export_file</span> <span class="o">=</span> <span class="n">compiler_export_file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PyccelError</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># NOTE: left here for later reference</span>
+<span class="c1">#</span>
+<span class="c1">#    group.add_argument(&#39;--prefix&#39;, type=str, default = &#39;&#39;,\</span>
+<span class="c1">#                       help=&#39;add prefix to the generated file.&#39;)</span>
+<span class="c1">#    group.add_argument(&#39;--prefix-module&#39;, type=str, default = &#39;&#39;,\</span>
+<span class="c1">#                       help=&#39;add prefix module name.&#39;)</span>
+<span class="c1">#    group.add_argument(&#39;--language&#39;, type=str, help=&#39;target language&#39;)</span>
+<span class="c1">#</span>
+<span class="c1">#    ...</span>
+<span class="c1">#</span>
+<span class="c1">#    prefix = args.prefix</span>
+<span class="c1">#    prefix_module = args.prefix_module</span>
+<span class="c1">#    language = args.language</span>
+<span class="c1">#</span>
+<span class="c1">#    output_folder = args.output</span>
+<span class="c1">#</span>
+<span class="c1">#    if (len(output_folder)&gt;0 and output_folder[-1]!=&#39;/&#39;):</span>
+<span class="c1">#        output_folder+=&#39;/&#39;</span>
+<span class="c1">#</span>
+<span class="c1">#    ...</span>
+<span class="c1">#</span>
+<span class="c1">#    elif args.convert_only:</span>
+<span class="c1">#        pyccel = Parser(filename)</span>
+<span class="c1">#        ast = pyccel.parse()</span>
+<span class="c1">#        settings = {}</span>
+<span class="c1">#        if args.language:</span>
+<span class="c1">#            settings[&#39;language&#39;] = args.language</span>
+<span class="c1">#        ast = pyccel.annotate(**settings)</span>
+<span class="c1">#        name = os.path.basename(filename)</span>
+<span class="c1">#        name = os.path.splitext(name)[0]</span>
+<span class="c1">#        codegen = Codegen(ast, name)</span>
+<span class="c1">#        settings[&#39;prefix_module&#39;] = prefix_module</span>
+<span class="c1">#        code = codegen.doprint(**settings)</span>
+<span class="c1">#        if prefix:</span>
+<span class="c1">#            name = &#39;{prefix}{name}&#39;.format(prefix=prefix, name=name)</span>
+<span class="c1">#</span>
+<span class="c1">#        codegen.export(output_folder+name)</span>
+<span class="c1">#</span>
+<span class="c1">#        for son in pyccel.sons:</span>
+<span class="c1">#            if &#39;print&#39; in son.metavars.keys():</span>
+<span class="c1">#                name = son.filename.split(&#39;/&#39;)[-1].strip(&#39;.py&#39;)</span>
+<span class="c1">#                name = &#39;mod_&#39;+name</span>
+<span class="c1">#                codegen = Codegen(son.ast, name)</span>
+<span class="c1">#                code = codegen.doprint()</span>
+<span class="c1">#                codegen.export()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

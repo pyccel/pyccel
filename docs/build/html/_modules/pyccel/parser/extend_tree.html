@@ -1,0 +1,463 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.parser.extend_tree &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.parser.extend_tree</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.parser.extend_tree</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;Extended AST with CommentLine nodes</span>
+<span class="sd">======================================</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">logical_and</span><span class="p">,</span> <span class="n">where</span>
+<span class="kn">from</span> <span class="nn">ast</span>   <span class="kn">import</span> <span class="n">AST</span><span class="p">,</span> <span class="n">If</span> <span class="k">as</span> <span class="n">IfNode</span><span class="p">,</span> <span class="n">parse</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.messages</span> <span class="kn">import</span> <span class="n">INVALID_PYTHON_SYNTAX</span>
+
+<div class="viewcode-block" id="CommentLine"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.extend_tree.CommentLine">[docs]</a><span class="k">class</span> <span class="nc">CommentLine</span><span class="p">(</span><span class="n">AST</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;&quot;New AST node representing a comment line&quot;&quot;&quot;</span>
+
+    <span class="n">_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">col_offset</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span>     <span class="o">=</span> <span class="n">lineno</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">col_offset</span> <span class="o">=</span> <span class="n">col_offset</span>
+
+    <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_offset</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CommentMultiLine"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.extend_tree.CommentMultiLine">[docs]</a><span class="k">class</span> <span class="nc">CommentMultiLine</span><span class="p">(</span><span class="n">CommentLine</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;&quot;New AST node representing a multi-line comment&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="get_comments"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.extend_tree.get_comments">[docs]</a><span class="k">def</span> <span class="nf">get_comments</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">comments</span>        <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lineno_comments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">else_no</span>         <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+            <span class="n">comments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">c</span><span class="p">,</span> <span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;else&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">):</span>
+                <span class="n">else_no</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">comments</span><span class="p">:</span>
+        <span class="n">new_comments</span>    <span class="o">=</span> <span class="p">[[</span><span class="n">comments</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">comments</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">comments</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">comments</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">comments</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="n">new_comments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comments</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_comments</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">comments</span><span class="p">[</span><span class="n">index</span><span class="p">]])</span>
+
+        <span class="n">comments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">comm</span> <span class="ow">in</span> <span class="n">new_comments</span><span class="p">:</span>
+            <span class="n">lineno_comments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comm</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">comments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CommentLine</span><span class="p">(</span><span class="o">*</span><span class="n">comm</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">comm</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">lineno</span>     <span class="o">=</span> <span class="n">comm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">col_offset</span> <span class="o">=</span> <span class="n">comm</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">comm</span>       <span class="o">=</span> <span class="p">[</span><span class="n">lc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">lc</span> <span class="ow">in</span> <span class="n">comm</span><span class="p">]</span>
+                <span class="n">txt</span>        <span class="o">=</span> <span class="n">comm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comm</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+                    <span class="n">s_prev</span> <span class="o">=</span> <span class="n">comm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">s_prev</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#$&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s_prev</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">):</span>
+                        <span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#$&#39;</span><span class="p">)</span>
+                        <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">txt</span> <span class="o">=</span> <span class="n">txt</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">s</span>
+
+                <span class="n">comments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CommentMultiLine</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">col_offset</span><span class="p">))</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">lineno_comments</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">array</span><span class="p">(</span><span class="n">lineno_comments</span><span class="p">),</span> <span class="n">array</span><span class="p">(</span><span class="n">comments</span><span class="p">),</span> <span class="n">array</span><span class="p">(</span><span class="n">else_no</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="extend_tree"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.extend_tree.extend_tree">[docs]</a><span class="k">def</span> <span class="nf">extend_tree</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+    <span class="n">comment_lines_no</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">else_no</span> <span class="o">=</span> <span class="n">get_comments</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">INVALID_PYTHON_SYNTAX</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">body</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">body</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tree</span>
+
+    <span class="n">insert_comments</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">comment_lines_no</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">else_no</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tree</span></div>
+
+<div class="viewcode-block" id="get_last_lineno"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.extend_tree.get_last_lineno">[docs]</a><span class="k">def</span> <span class="nf">get_last_lineno</span><span class="p">(</span><span class="n">ast</span><span class="p">):</span>
+    <span class="k">while</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ast</span><span class="o">.</span><span class="n">orelse</span><span class="p">:</span>
+            <span class="n">ast</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ast</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">lineno</span></div>
+
+<div class="viewcode-block" id="insert_comments"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.extend_tree.insert_comments">[docs]</a><span class="k">def</span> <span class="nf">insert_comments</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span> <span class="n">comment_lines_no</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">else_no</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="n">col_offset</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">body</span>        <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+
+    <span class="c1"># Fix necessary for python &lt;= 3.6</span>
+    <span class="k">if</span> <span class="n">attr</span><span class="o">==</span><span class="s1">&#39;orelse&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IfNode</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">col_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">col_offset</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">col_offset</span>
+
+    <span class="n">node_lineno</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lineno</span>
+    <span class="n">ind</span>         <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># insert in the beginning of block</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">node_lineno</span><span class="o">&gt;</span><span class="n">comment_lines_no</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">ind</span>              <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">body</span>             <span class="o">=</span> <span class="n">comments</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">body</span>
+        <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+        <span class="n">comments</span>         <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+
+    <span class="c1"># insert between two stmts</span>
+    <span class="k">while</span> <span class="n">ind</span><span class="o">&lt;</span><span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span> <span class="p">:</span>
+
+        <span class="n">ind</span>              <span class="o">=</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">previous_stmt</span>    <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="n">ind</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">next_stmt</span>        <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="n">next_node_lineno</span> <span class="o">=</span> <span class="n">next_stmt</span><span class="o">.</span><span class="n">lineno</span>
+        <span class="n">first_comment_lineno</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">next_node_lineno</span><span class="o">&lt;</span><span class="n">first_comment_lineno</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">previous_stmt</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">):</span>
+            <span class="c1">#TODO accelerate this part with pyccel</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comment_line_no_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comment_lines_no</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">next_node_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+
+            <span class="n">body</span>             <span class="o">=</span> <span class="n">body</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span><span class="o">+</span> <span class="n">comments</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">body</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+            <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="n">comments</span>         <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="n">ind</span>             <span class="o">+=</span> <span class="n">k</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">orelse</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">previous_stmt</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">previous_stmt</span><span class="o">.</span><span class="n">orelse</span>
+
+            <span class="k">if</span> <span class="n">orelse</span><span class="p">:</span>
+                <span class="n">previous_stmt_body_last_lineno</span>  <span class="o">=</span> <span class="n">previous_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lineno</span>
+                <span class="n">elif_orelse</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">previous_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IfNode</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">previous_stmt_body_last_lineno</span>  <span class="o">=</span> <span class="n">get_last_lineno</span><span class="p">(</span><span class="n">previous_stmt</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="c1">#TODO accelerate this part with pyccel</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comment_line_no_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comment_lines_no</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">previous_stmt_body_last_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">orelse</span> <span class="ow">and</span> <span class="n">elif_orelse</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="k">elif</span> <span class="n">col_offset</span> <span class="o">&gt;=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_offset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">orelse</span> <span class="ow">or</span> <span class="n">next_node_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                        <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+
+            <span class="c1"># case of else stmt</span>
+            <span class="k">if</span> <span class="n">orelse</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">elif_orelse</span> <span class="ow">and</span> <span class="n">k</span><span class="o">&gt;</span><span class="mi">0</span> <span class="p">:</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">logical_and</span><span class="p">(</span><span class="n">else_no</span> <span class="o">&lt;=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">else_no</span><span class="o">&lt;=</span><span class="n">previous_stmt_body_last_lineno</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">else_no</span><span class="p">[</span><span class="n">expr</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">comment_lines_no</span><span class="p">[:</span><span class="n">k</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">insert_comments</span><span class="p">(</span><span class="n">previous_stmt</span><span class="p">,</span> <span class="n">comment_lines_no</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">comments</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">else_no</span><span class="p">)</span>
+            <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="n">comments</span>         <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+            <span class="k">if</span> <span class="n">orelse</span><span class="p">:</span>
+                <span class="n">previous_stmt_orelse_last_lineno</span>  <span class="o">=</span> <span class="n">get_last_lineno</span><span class="p">(</span><span class="n">previous_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="c1">#TODO accelerate this part with pyccel</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comment_line_no_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comment_lines_no</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">previous_stmt_orelse_last_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">col_offset</span> <span class="o">&gt;=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_offset</span><span class="p">:</span>
+                            <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+
+                <span class="n">insert_comments</span><span class="p">(</span><span class="n">previous_stmt</span><span class="p">,</span> <span class="n">comment_lines_no</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">comments</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">else_no</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">,</span> <span class="n">col_offset</span><span class="p">)</span>
+                <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+                <span class="n">comments</span>         <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="c1">#TODO accelerate this part with pyccel</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comment_line_no_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comment_lines_no</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">next_node_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+            <span class="n">body</span>             <span class="o">=</span> <span class="n">body</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span> <span class="o">+</span> <span class="n">comments</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">body</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+            <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="n">comments</span>         <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="n">ind</span>             <span class="o">+=</span> <span class="n">k</span>
+
+    <span class="n">last_stmt</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span> <span class="n">last_stmt</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">):</span>
+        <span class="n">orelse</span>   <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">last_stmt</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">last_stmt</span><span class="o">.</span><span class="n">orelse</span>
+
+        <span class="k">if</span> <span class="n">orelse</span><span class="p">:</span>
+            <span class="n">body_last_lineno</span>  <span class="o">=</span> <span class="n">last_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lineno</span>
+            <span class="n">elif_orelse</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">last_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">IfNode</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body_last_lineno</span>  <span class="o">=</span> <span class="n">get_last_lineno</span><span class="p">(</span><span class="n">last_stmt</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1">#TODO accelerate this part with pyccel</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comment_line_no_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comment_lines_no</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">body_last_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">orelse</span> <span class="ow">and</span> <span class="n">elif_orelse</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">col_offset</span> <span class="o">&gt;=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_offset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">orelse</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">orelse</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">elif_orelse</span> <span class="ow">and</span> <span class="n">k</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">logical_and</span><span class="p">(</span><span class="n">else_no</span> <span class="o">&lt;=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">else_no</span><span class="o">&lt;=</span><span class="n">body_last_lineno</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">else_no</span><span class="p">[</span><span class="n">expr</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">comment_lines_no</span><span class="p">[:</span><span class="n">k</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">insert_comments</span><span class="p">(</span><span class="n">last_stmt</span><span class="p">,</span> <span class="n">comment_lines_no</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">comments</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">else_no</span><span class="p">)</span>
+
+        <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+        <span class="n">comments</span>         <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">orelse</span><span class="p">:</span>
+            <span class="n">orelse_last_lineno</span>  <span class="o">=</span> <span class="n">get_last_lineno</span><span class="p">(</span><span class="n">last_stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1">#TODO accelerate this part with pyccel</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comment_line_no_k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comment_lines_no</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">orelse_last_lineno</span><span class="o">&lt;</span><span class="n">comment_line_no_k</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">col_offset</span> <span class="o">&gt;=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_offset</span><span class="p">:</span>
+                        <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
+
+            <span class="n">insert_comments</span><span class="p">(</span><span class="n">last_stmt</span><span class="p">,</span> <span class="n">comment_lines_no</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">comments</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">else_no</span><span class="p">,</span> <span class="s1">&#39;orelse&#39;</span><span class="p">,</span> <span class="n">col_offset</span><span class="p">)</span>
+            <span class="n">comment_lines_no</span> <span class="o">=</span> <span class="n">comment_lines_no</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+            <span class="n">comments</span>      <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+    <span class="c1"># insert in the rest of the comments in the end of a block</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">body</span> <span class="o">+</span> <span class="n">comments</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

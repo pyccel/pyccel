@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.mathext &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.mathext</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.mathext</h1><div class="highlight"><pre>
+<span></span><span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot; Module containing objects from the math module understood by pyccel</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span>      <span class="kn">import</span> <span class="n">PyccelFunctionDef</span><span class="p">,</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.datatypes</span> <span class="kn">import</span> <span class="n">NativeInteger</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">,</span> <span class="n">NativeFloat</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.internals</span> <span class="kn">import</span> <span class="n">PyccelInternalFunction</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.variable</span>  <span class="kn">import</span> <span class="n">Constant</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;math_mod&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;math_constants&#39;</span><span class="p">,</span>
+    <span class="c1"># ---</span>
+    <span class="s1">&#39;MathFunctionBase&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFunctionFloat&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFunctionInt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFunctionBool&#39;</span><span class="p">,</span>
+    <span class="c1"># ---</span>
+    <span class="s1">&#39;MathAcos&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathAcosh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathAsin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathAsinh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathAtan&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathAtan2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathAtanh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathCopysign&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathCos&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathCosh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathDegrees&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathErf&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathErfc&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathExp&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathExpm1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFabs&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFmod&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFsum&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathGamma&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathHypot&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLdexp&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLgamma&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLog&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLog10&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLog1p&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLog2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathPow&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathRadians&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathSin&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathSinh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathSqrt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathTan&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathTanh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathRemainder&#39;</span><span class="p">,</span>
+    <span class="c1"># ---</span>
+    <span class="s1">&#39;MathCeil&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFactorial&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFloor&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathGcd&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathLcm&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathTrunc&#39;</span><span class="p">,</span>
+    <span class="c1"># ---</span>
+    <span class="s1">&#39;MathIsclose&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathIsfinite&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathIsinf&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathIsnan&#39;</span><span class="p">,</span>
+    <span class="c1"># ---</span>
+    <span class="s1">&#39;MathFrexp&#39;</span><span class="p">,</span> <span class="c1"># TODO</span>
+    <span class="s1">&#39;MathModf&#39;</span><span class="p">,</span>  <span class="c1"># TODO</span>
+<span class="p">)</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># Base classes</span>
+<span class="c1">#==============================================================================</span>
+<div class="viewcode-block" id="MathFunctionBase"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFunctionBase">[docs]</a><span class="k">class</span> <span class="nc">MathFunctionBase</span><span class="p">(</span><span class="n">PyccelInternalFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for the Math Functions&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_shape</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_rank</span>  <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="MathFunctionFloat"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFunctionFloat">[docs]</a><span class="k">class</span> <span class="nc">MathFunctionFloat</span><span class="p">(</span><span class="n">MathFunctionBase</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;float&#39;</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">NativeFloat</span><span class="p">()</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="MathFunctionInt"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFunctionInt">[docs]</a><span class="k">class</span> <span class="nc">MathFunctionInt</span><span class="p">(</span><span class="n">MathFunctionBase</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;int&#39;</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="MathFunctionBool"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFunctionBool">[docs]</a><span class="k">class</span> <span class="nc">MathFunctionBool</span><span class="p">(</span><span class="n">MathFunctionBase</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span>
+    <span class="n">_dtype</span> <span class="o">=</span> <span class="n">NativeBool</span><span class="p">()</span>
+    <span class="n">_precision</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># Functions that return one value</span>
+<span class="c1">#==============================================================================</span>
+
+<span class="c1"># Floating-point result</span>
+<div class="viewcode-block" id="MathAcos"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAcos">[docs]</a><span class="k">class</span> <span class="nc">MathAcos</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the acos function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;acos&#39;</span></div>
+<div class="viewcode-block" id="MathAcosh"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAcosh">[docs]</a><span class="k">class</span> <span class="nc">MathAcosh</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the acosh function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;acosh&#39;</span></div>
+<div class="viewcode-block" id="MathAsin"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAsin">[docs]</a><span class="k">class</span> <span class="nc">MathAsin</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the asin function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;asin&#39;</span></div>
+<div class="viewcode-block" id="MathAsinh"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAsinh">[docs]</a><span class="k">class</span> <span class="nc">MathAsinh</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the asinh function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;asinh&#39;</span></div>
+<div class="viewcode-block" id="MathAtan"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAtan">[docs]</a><span class="k">class</span> <span class="nc">MathAtan</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the atan function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;atan&#39;</span></div>
+<div class="viewcode-block" id="MathAtan2"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAtan2">[docs]</a><span class="k">class</span> <span class="nc">MathAtan2</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the atan2 function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;atan2&#39;</span></div>
+<div class="viewcode-block" id="MathAtanh"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathAtanh">[docs]</a><span class="k">class</span> <span class="nc">MathAtanh</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the atanh function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;atanh&#39;</span></div>
+<div class="viewcode-block" id="MathCopysign"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathCopysign">[docs]</a><span class="k">class</span> <span class="nc">MathCopysign</span><span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the copysign function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;copysign&#39;</span></div>
+<div class="viewcode-block" id="MathCos"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathCos">[docs]</a><span class="k">class</span> <span class="nc">MathCos</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the cos function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;cos&#39;</span></div>
+<div class="viewcode-block" id="MathCosh"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathCosh">[docs]</a><span class="k">class</span> <span class="nc">MathCosh</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the cosh function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;cosh&#39;</span></div>
+<div class="viewcode-block" id="MathErf"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathErf">[docs]</a><span class="k">class</span> <span class="nc">MathErf</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the erf function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;erf&#39;</span></div>
+<div class="viewcode-block" id="MathErfc"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathErfc">[docs]</a><span class="k">class</span> <span class="nc">MathErfc</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the erfc function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;erfc&#39;</span></div>
+<div class="viewcode-block" id="MathExp"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathExp">[docs]</a><span class="k">class</span> <span class="nc">MathExp</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the exp function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;exp&#39;</span></div>
+<div class="viewcode-block" id="MathExpm1"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathExpm1">[docs]</a><span class="k">class</span> <span class="nc">MathExpm1</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the expm1 function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;expm1&#39;</span></div>
+<div class="viewcode-block" id="MathFabs"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFabs">[docs]</a><span class="k">class</span> <span class="nc">MathFabs</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the fabs function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;fabs&#39;</span></div>
+<div class="viewcode-block" id="MathFmod"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFmod">[docs]</a><span class="k">class</span> <span class="nc">MathFmod</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the fmod function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;fmod&#39;</span></div>
+<div class="viewcode-block" id="MathFsum"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFsum">[docs]</a><span class="k">class</span> <span class="nc">MathFsum</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the fsum function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;fsum&#39;</span></div>
+<div class="viewcode-block" id="MathGamma"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathGamma">[docs]</a><span class="k">class</span> <span class="nc">MathGamma</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the gamma function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;gamma&#39;</span></div>
+<div class="viewcode-block" id="MathHypot"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathHypot">[docs]</a><span class="k">class</span> <span class="nc">MathHypot</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the hypot function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;hypot&#39;</span></div>
+<div class="viewcode-block" id="MathLdexp"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLdexp">[docs]</a><span class="k">class</span> <span class="nc">MathLdexp</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the ldexp function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;ldexp&#39;</span></div>
+<div class="viewcode-block" id="MathLgamma"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLgamma">[docs]</a><span class="k">class</span> <span class="nc">MathLgamma</span>  <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the lgamma function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;lgamma&#39;</span></div>
+<div class="viewcode-block" id="MathLog"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLog">[docs]</a><span class="k">class</span> <span class="nc">MathLog</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the log function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;log&#39;</span></div>
+<div class="viewcode-block" id="MathLog10"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLog10">[docs]</a><span class="k">class</span> <span class="nc">MathLog10</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the log10 function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;log10&#39;</span></div>
+<div class="viewcode-block" id="MathLog1p"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLog1p">[docs]</a><span class="k">class</span> <span class="nc">MathLog1p</span>   <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the log1p function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;log1p&#39;</span></div>
+<div class="viewcode-block" id="MathLog2"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLog2">[docs]</a><span class="k">class</span> <span class="nc">MathLog2</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the log2 function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;log2&#39;</span></div>
+<div class="viewcode-block" id="MathPow"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathPow">[docs]</a><span class="k">class</span> <span class="nc">MathPow</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the pow function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;pow&#39;</span></div>
+<div class="viewcode-block" id="MathSin"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathSin">[docs]</a><span class="k">class</span> <span class="nc">MathSin</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the sin function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sin&#39;</span></div>
+<div class="viewcode-block" id="MathSinh"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathSinh">[docs]</a><span class="k">class</span> <span class="nc">MathSinh</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the sinh function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sinh&#39;</span></div>
+<div class="viewcode-block" id="MathSqrt"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathSqrt">[docs]</a><span class="k">class</span> <span class="nc">MathSqrt</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the sqrt function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sqrt&#39;</span></div>
+<div class="viewcode-block" id="MathTan"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathTan">[docs]</a><span class="k">class</span> <span class="nc">MathTan</span>     <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the tan function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;tan&#39;</span></div>
+<div class="viewcode-block" id="MathTanh"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathTanh">[docs]</a><span class="k">class</span> <span class="nc">MathTanh</span>    <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the tanh function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;tanh&#39;</span></div>
+<div class="viewcode-block" id="MathRemainder"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathRemainder">[docs]</a><span class="k">class</span> <span class="nc">MathRemainder</span> <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the remainder function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;remainder&#39;</span></div>
+
+<div class="viewcode-block" id="MathRadians"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathRadians">[docs]</a><span class="k">class</span> <span class="nc">MathRadians</span> <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the radians function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;radians&#39;</span></div>
+<div class="viewcode-block" id="MathDegrees"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathDegrees">[docs]</a><span class="k">class</span> <span class="nc">MathDegrees</span> <span class="p">(</span><span class="n">MathFunctionFloat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the degrees function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;degrees&#39;</span></div>
+
+<span class="c1"># Integer result</span>
+<div class="viewcode-block" id="MathFactorial"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFactorial">[docs]</a><span class="k">class</span> <span class="nc">MathFactorial</span><span class="p">(</span><span class="n">MathFunctionInt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the factorial function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;factorial&#39;</span></div>
+<div class="viewcode-block" id="MathGcd"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathGcd">[docs]</a><span class="k">class</span> <span class="nc">MathGcd</span>      <span class="p">(</span><span class="n">MathFunctionInt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the gcd function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;gcd&#39;</span></div>
+<div class="viewcode-block" id="MathLcm"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathLcm">[docs]</a><span class="k">class</span> <span class="nc">MathLcm</span>      <span class="p">(</span><span class="n">MathFunctionInt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the lcm function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;lcm&#39;</span></div>
+
+<div class="viewcode-block" id="MathCeil"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathCeil">[docs]</a><span class="k">class</span> <span class="nc">MathCeil</span>     <span class="p">(</span><span class="n">MathFunctionInt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the ceil function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;ceil&#39;</span></div>
+<div class="viewcode-block" id="MathFloor"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFloor">[docs]</a><span class="k">class</span> <span class="nc">MathFloor</span>    <span class="p">(</span><span class="n">MathFunctionInt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the floor function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;floor&#39;</span></div>
+<div class="viewcode-block" id="MathTrunc"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathTrunc">[docs]</a><span class="k">class</span> <span class="nc">MathTrunc</span>    <span class="p">(</span><span class="n">MathFunctionInt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the trunc function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;trunc&#39;</span></div>
+
+<span class="c1"># Boolean result</span>
+<div class="viewcode-block" id="MathIsclose"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathIsclose">[docs]</a><span class="k">class</span> <span class="nc">MathIsclose</span> <span class="p">(</span><span class="n">MathFunctionBool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the isclose function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;isclose&#39;</span></div>
+<div class="viewcode-block" id="MathIsfinite"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathIsfinite">[docs]</a><span class="k">class</span> <span class="nc">MathIsfinite</span><span class="p">(</span><span class="n">MathFunctionBool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the isfinite function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;isfinite&#39;</span></div>
+<div class="viewcode-block" id="MathIsinf"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathIsinf">[docs]</a><span class="k">class</span> <span class="nc">MathIsinf</span>   <span class="p">(</span><span class="n">MathFunctionBool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the isinf function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;isinf&#39;</span></div>
+<div class="viewcode-block" id="MathIsnan"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathIsnan">[docs]</a><span class="k">class</span> <span class="nc">MathIsnan</span>   <span class="p">(</span><span class="n">MathFunctionBool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a call to the isnan function in the Math library&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;isnan&#39;</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># Functions that return two values</span>
+<span class="c1">#==============================================================================</span>
+
+<span class="c1"># TODO</span>
+<div class="viewcode-block" id="MathFrexp"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathFrexp">[docs]</a><span class="k">class</span> <span class="nc">MathFrexp</span><span class="p">(</span><span class="n">MathFunctionBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    frexp(x)</span>
+
+<span class="sd">    Return the mantissa and exponent of x, as pair (m, e).</span>
+<span class="sd">    m is a float and e is an int, such that x = m * 2.**e.</span>
+<span class="sd">    If x is 0, m and e are both 0.  Else 0.5 &lt;= abs(m) &lt; 1.0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;frexp&#39;</span></div>
+
+<span class="c1"># TODO</span>
+<div class="viewcode-block" id="MathModf"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.mathext.MathModf">[docs]</a><span class="k">class</span> <span class="nc">MathModf</span><span class="p">(</span><span class="n">MathFunctionBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    modf(x)</span>
+
+<span class="sd">    Return the fractional and integer parts of x.  Both results carry the sign</span>
+<span class="sd">    of x and are floats.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;modf&#39;</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># Dictionary to map math functions to classes above</span>
+<span class="c1">#==============================================================================</span>
+
+<span class="n">_base_classes</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;MathFunctionBase&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFunctionFloat&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFunctionInt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MathFunctionBool&#39;</span>
+<span class="p">)</span>
+
+<span class="n">math_functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">PyccelFunctionDef</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> \
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Math&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_base_classes</span><span class="p">)]</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># Constants</span>
+<span class="c1">#==============================================================================</span>
+<span class="n">math_constants</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;e&#39;</span>  <span class="p">:</span> <span class="n">Constant</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span>  <span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">e</span>  <span class="p">),</span>
+    <span class="s1">&#39;pi&#39;</span> <span class="p">:</span> <span class="n">Constant</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;pi&#39;</span> <span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="p">),</span>
+    <span class="s1">&#39;inf&#39;</span><span class="p">:</span> <span class="n">Constant</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;inf&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
+    <span class="s1">&#39;nan&#39;</span><span class="p">:</span> <span class="n">Constant</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span>
+    <span class="s1">&#39;tau&#39;</span><span class="p">:</span> <span class="n">Constant</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="s1">&#39;tau&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">2.</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">math_mod</span> <span class="o">=</span> <span class="n">Module</span><span class="p">(</span><span class="s1">&#39;math&#39;</span><span class="p">,</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">math_constants</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
+        <span class="n">funcs</span>     <span class="o">=</span> <span class="n">math_functions</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
