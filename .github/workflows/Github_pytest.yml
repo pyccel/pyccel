@@ -190,6 +190,7 @@ jobs:
 
     runs-on: ubuntu-latest
     needs: [CoverageCollection]
+    if: ${{ always() && needs.CoverageCollection.result == 'success' }}
 
     steps:
       - uses: actions/checkout@v3
