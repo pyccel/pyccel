@@ -42,9 +42,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pip install docstr-coverage
         shell: bash
-      - name: Show workspace
+      - name: Show report
         run: |
-          echo "Documentation Coverage of Head Branch\n"
+          echo "Documentation Coverage of Head Branch"
+          echo ""
           docstr-coverage head/pyccel 2>&1 | tail -3
-          echo "\nDocumentation Coverage of Base Branch\n"
+          echo ""
+          echo "Documentation Coverage of Base Branch"
+          echo ""
           docstr-coverage base/pyccel 2>&1 | tail -3
