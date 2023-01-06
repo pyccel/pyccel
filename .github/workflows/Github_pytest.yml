@@ -96,6 +96,9 @@ jobs:
     if: github.event.pull_request.base.ref == 'cuda_main_temp'
     steps:
       - uses: actions/checkout@v2
+      - name: Install sudo
+        run: apt update && apt install sudo
+        shell: bash
       - name: CUDA Version
         run: nvcc --version # cuda install check
       - name: Install dependencies
