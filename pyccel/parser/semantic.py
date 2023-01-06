@@ -813,7 +813,7 @@ class SemanticParser(BasicParser):
         new_expr : FunctionCall or PyccelInternalFunction
         """
         if isinstance(func, FunctionDef) and 'kernel' in func.decorators:
-                errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
+            errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
@@ -926,25 +926,27 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
             if not isinstance(expr.numBlocks, LiteralInteger):
-                try:
-                    numBlocks = self.scope.variables[expr.numBlocks]
+                # expr.numBlocks could be invalid type, or PyccelSymbol
+                if isinstance(expr.numBlocks, PyccelSymbol):
+                    numBlocks = self.get_variable(expr.numBlocks)
                     if not isinstance(numBlocks.dtype, NativeInteger):
                         errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
-                except KeyError:
+                else:
                     errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
             if not isinstance(expr.tpblock, LiteralInteger):
-                try:
-                    tpblock = self.scope.variables[expr.tpblock]
+                # expr.tpblock could be invalid type, or PyccelSymbol
+                if isinstance(expr.tpblock, PyccelSymbol):
+                    tpblock = self.get_variable(expr.tpblock)
                     if not isinstance(tpblock.dtype, NativeInteger):
-                        errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                        errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
-                except KeyError:
-                    errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                else:
+                    errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
             new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
