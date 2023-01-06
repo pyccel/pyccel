@@ -185,6 +185,12 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: cobertura.xml
+      - name: Save code coverage xml report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifact-xml
+          path: cobertura.xml
+          retention-days: 1
 
   CoverageChecker:
 
@@ -206,7 +212,7 @@ jobs:
       - name: Collect coverage information
         uses: actions/download-artifact@v3
         with:
-          name: coverage-artifact
+          name: coverage-artifact-xml
       - name: Collect diff information
         run: |
           BASE_BRANCH=$GITHUB_BASE_REF
