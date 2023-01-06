@@ -45,6 +45,6 @@ jobs:
       - name: Show workspace
         run: |
           echo "Documentation Coverage of Head Branch\n"
-          docstr-coverage head/pyccel
+          docstr-coverage head/pyccel 2>&1 | tail -3
           echo "\nDocumentation Coverage of Base Branch\n"
-          docstr-coverage base/pyccel
+          docstr-coverage base/pyccel 2>&1 | tail -3
