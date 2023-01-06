@@ -11,7 +11,6 @@ The semantic stage serves several purposes:
 6.  [**Object Tree**](#Object-tree) : Ensure the object tree is correctly constructed
 7.  [**Name Collisions**](#Name-collisions) : Ensure any potential name collisions are avoided
 
-
 ## Navigation
 
 The entry point for the class `SemanticParser` is the function `annotate`.
@@ -33,15 +32,11 @@ Variables and objects which can be saved in variables (e.g. literals and arrays)
 The type indicates all the information that allows the object to be declared in a low-level language.
 The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
 The characteristics are:
-- **data type** : bool/int/float/complex/class type/etc
-
-- **precision** : The number of bytes required to store an object of this data type
-
-- **rank** : The number of dimensions of the array (0 for a scalar)
-
-- **shape** : The number of elements in each dimension of the array (`()` for a scalar)
-
-- **order** : The order in which the data is stored in memory. See [order docs](order_docs.md) for more details.
+-   **data type** : bool/int/float/complex/class type/etc
+-   **precision** : The number of bytes required to store an object of this data type
+-   **rank** : The number of dimensions of the array (0 for a scalar)
+-   **shape** : The number of elements in each dimension of the array (`()` for a scalar)
+-   **order** : The order in which the data is stored in memory. See [order docs](order_docs.md) for more details.
 
 The type of the different objects is determined in 2 different places.
 
