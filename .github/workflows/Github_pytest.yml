@@ -158,6 +158,7 @@ jobs:
         if: ${{ success() }}
         run: mv .coverage .coverage-cuda
       - name: Generate coverage report
+        if: ${{ always() }}
         run: |
             ls -a
             coverage combine
