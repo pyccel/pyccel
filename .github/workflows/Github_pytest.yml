@@ -146,7 +146,7 @@ jobs:
 
     runs-on: ubuntu-latest
     needs: [Linux, Cuda]
-    if: ${{ always() && needs.Linux.result != 'failed' }}
+    if: ${{ always() && needs.Linux.result == 'success' }}
 
     steps:
       - uses: actions/checkout@v3
