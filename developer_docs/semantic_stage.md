@@ -29,7 +29,15 @@ Each of these `_visit_X` functions should internally call the `_visit` function 
 
 ## Types
 
-`PyccelAstNode`
+Variables and objects which can be saved in variables (e.g. literals and arrays), are  characterised by their type.
+The type indicates all the information that allows the object to be declared in a low-level language.
+The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
+The characteristics are:
+- **data type** : bool/int/float/complex/class type/etc
+- **precision** : The number of bytes required to store an object of this data type
+- **rank** : The number of dimensions of the array (0 for a scalar)
+- **shape** : The number of elements in each dimension of the array (`()` for a scalar)
+- **order** : The order in which the data is stored in memory. See [order docs](order_docs.md) for more details.
 
 ## Impose Restrictions
 
