@@ -2,7 +2,7 @@ name: Pyccel CUDA tests
 
 on:
   pull_request:
-    branches: [ cuda_main ]
+    branches: [ cuda_main, cuda_main_temp ]
 
 jobs:
   Linux:
