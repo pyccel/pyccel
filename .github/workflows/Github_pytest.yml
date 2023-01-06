@@ -99,7 +99,7 @@ jobs:
       - name: Prepare docker
         run: |
           apt update && apt install sudo
-          ENV TZ=Europe/France
+          TZ=Europe/France
           ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
         shell: bash
       - name: CUDA Version
