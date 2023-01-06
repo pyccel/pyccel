@@ -44,4 +44,7 @@ jobs:
         shell: bash
       - name: Show workspace
         run: |
-          ls
+          echo "Documentation Coverage of Head Branch\n"
+          docstr-coverage head/pyccel
+          echo "\nDocumentation Coverage of Base Branch\n"
+          docstr-coverage base/pyccel
