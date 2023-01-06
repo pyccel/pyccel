@@ -2,7 +2,7 @@ name: Pyccel tests
 
 on:
   pull_request:
-    branches: [ master, cuda_main_temp ]
+    branches: [ master, cuda_main_temp, cuda_main ]
 
 jobs:
   Linux:
@@ -93,7 +93,7 @@ jobs:
 
     runs-on: ubuntu-latest
     container: nvidia/cuda:11.7.1-devel-ubuntu20.04
-    if: github.event.pull_request.base.ref == 'cuda_main_temp'
+    if: github.event.pull_request.base.ref != 'master'
     steps:
       - uses: actions/checkout@v2
       - name: Install sudo
