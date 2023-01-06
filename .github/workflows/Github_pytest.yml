@@ -96,8 +96,11 @@ jobs:
     if: github.event.pull_request.base.ref != 'master'
     steps:
       - uses: actions/checkout@v2
-      - name: Install sudo
-        run: apt update && apt install sudo
+      - name: Prepare docker
+        run: |
+          apt update && apt install sudo
+          ENV TZ=Europe/France
+          ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
         shell: bash
       - name: CUDA Version
         run: nvcc --version # cuda install check
