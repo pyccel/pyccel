@@ -162,14 +162,13 @@ jobs:
         run: mv .coverage .coverage.linux
       - name: Collect coverage information
         uses: actions/download-artifact@v3
-        if: 
+        if: needs.Cuda.result == 'success'
         with:
           name: cuda-coverage-artifact
       - name: Rename coverage file
-        if: ${{ success() }}
+        if: needs.Cuda.result == 'success'
         run: mv .coverage .coverage.cuda
       - name: Generate coverage report
-        if: ${{ always() }}
         run: |
             coverage combine
             coverage xml
