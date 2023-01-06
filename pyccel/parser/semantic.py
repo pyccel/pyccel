@@ -942,11 +942,11 @@ class SemanticParser(BasicParser):
                 if isinstance(expr.tpblock, PyccelSymbol):
                     tpblock = self.get_variable(expr.tpblock)
                     if not isinstance(tpblock.dtype, NativeInteger):
-                        errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                        errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
                         symbol = expr,
                         severity='error')
                 else:
-                    errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                    errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
                         symbol = expr,
                         severity='error')
             new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
