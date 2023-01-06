@@ -160,7 +160,7 @@ jobs:
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Coverage install
-        run: python -m pip install coverage
+        uses: ./.github/actions/coverage_install
       - name: Collect coverage information
         uses: actions/download-artifact@v3
         with:
