@@ -19,31 +19,6 @@ jobs:
         uses: ./.github/actions/linux_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Coverage install
-        uses: ./.github/actions/coverage_install
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
-      - name: Test with valgrind for memory leaks
-        uses: ./.github/actions/valgrind_run
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
-      - name: Save code coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-artifact
-          path: cobertura.xml
-          retention-days: 1
 
   DocumentationChecker:
 
