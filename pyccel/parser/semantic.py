@@ -812,8 +812,7 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
-        if isinstance(func, FunctionDef):
-            if 'kernel' in func.decorators:
+        if isinstance(func, FunctionDef) and 'kernel' in func.decorators:
                 errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
