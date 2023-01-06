@@ -34,10 +34,26 @@ The type indicates all the information that allows the object to be declared in 
 The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
 The characteristics are:
 - **data type** : bool/int/float/complex/class type/etc
+
 - **precision** : The number of bytes required to store an object of this data type
+
 - **rank** : The number of dimensions of the array (0 for a scalar)
+
 - **shape** : The number of elements in each dimension of the array (`()` for a scalar)
+
 - **order** : The order in which the data is stored in memory. See [order docs](order_docs.md) for more details.
+
+The type of the different objects is determined in 2 different places.
+
+`Variable` objects are created in the `SemanticParser._visit_Assign` function.
+Their type is determined from the type of the right hand side, which should be a `PyccelAstNode`.
+The function `SemanticParser._infer_type` infers the type from the right hand side object and returns a dictionary describing the different characteristics.
+This dictionary is passed to the function `SemanticParser._assign_lhs_variable` which should always be used to create variables as it runs various checks including the validity of the type (e.g checking if the datatype has changed).
+In addition to the above characteristics `Variable` objects also have a few additional characteristics such as the `memory_location` which are also determined in the `SemanticParser._infer_type` function.
+
+All other objects determine their type in the class definition.
+Thus each function which Pyccel recognises and handles can take the expected arguments and internally determine its characteristics.
+Errors are also raised at this point if the arguments do not match the expected restrictions, although care must be taken to ensure that these tests and the type determinations do not take place at the syntactic stage where they would cause failures.
 
 ## Impose Restrictions
 
@@ -79,6 +95,9 @@ The most important arguments are:
     -   _warning_ : An error will be printed but Pyccel will continue executing
     -   _error_ : An error will be printed but Pyccel will continue executing the syntactic stage
     -   _fatal_ : An error will be printed and Pyccel will stop executing. This is the level used the most frequently in the semantic stage as, if information such as the type cannot be determined, the object cannot be created which will cause problems later in the exection.
+
+It should be noted that Pyccel assumes that the user has provided valid code.
+It is not feasable to provide error messages for every possible coding error so we limit ourselves to simple validity checks and Pyccel restriction errors.
 
 ## Function Recognition
 
