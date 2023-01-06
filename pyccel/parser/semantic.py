@@ -122,7 +122,7 @@ from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
-from pyccel.errors.messages import (INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK, MISSING_KERNEL_CONFIGURATION,PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
+from pyccel.errors.messages import (INVALID_FUNCTION_CALL, INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK, MISSING_KERNEL_CONFIGURATION,PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
         INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
         UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
@@ -901,6 +901,10 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
+        if 'kernel' not in func.decorators:
+            errors.report(INVALID_FUNCTION_CALL,
+                        symbol = expr,
+                        severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
