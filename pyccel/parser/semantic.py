@@ -492,7 +492,10 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, CupyRavel):
-            d_var['memory_handling'] = 'alias' if isinstance(expr.arg, Variable) else 'heap'
+            if isinstance(expr.arg, Variable) and expr.arg.memory_location == "device":
+                d_var['memory_handling'] = 'alias'
+            else:
+                d_var['memory_handling'] = 'heap'
             d_var['memory_location'] = expr.memory_location
             d_var['datatype'       ] = expr.dtype
             d_var['shape'          ] = expr.shape

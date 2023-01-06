@@ -21,7 +21,9 @@ void _cuda_array_fill_int64(int64_t c, t_ndarray arr);
 __global__
 void _cuda_array_fill_double(double c, t_ndarray arr);
 
-t_ndarray   cuda_array_create(int32_t nd, int64_t *shape, enum e_types type, bool is_view, enum e_memory_locations location);
+void            cupy_ravel(t_ndarray *dest, t_ndarray src);
+
+t_ndarray       cuda_array_create(int32_t nd, int64_t *shape, enum e_types type, bool is_view, enum e_memory_locations location);
 int32_t         cuda_free_array(t_ndarray dump);
 int32_t         cuda_free_pointer(t_ndarray dump);
 #endif
