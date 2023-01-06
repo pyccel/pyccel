@@ -101,6 +101,7 @@ jobs:
           apt update && apt install sudo
           TZ=Europe/France
           ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
         shell: bash
       - name: CUDA Version
         run: nvcc --version # cuda install check
