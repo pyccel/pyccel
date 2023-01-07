@@ -12,7 +12,7 @@ def square(a):
 if __name__ == '__main__':
     threads_per_block = 5
     n_blocks = 1
-    arr_var = [0,1,2,3,4]
+    arr_var = (0,1,2,3,4)
     arr = cuda.array(arr_var)
     cuda.synchronize()
     square[n_blocks, threads_per_block](arr)
