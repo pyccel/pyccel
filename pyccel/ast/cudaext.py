@@ -250,8 +250,12 @@ class CudaBlockDim(CudaInternalVar)         : pass
 class CudaBlockIdx(CudaInternalVar)         : pass
 class CudaGridDim(CudaInternalVar)          : pass
 class CudaGrid(PyccelAstNode)               :
-    """Represents a call to cuda.grid for code generation.
-        dim  : int
+    """
+    Represents a call to cuda.grid for code generation.
+
+    Parameters
+    ----------
+    dim  : int
         The number of dimensions of requested, it should correspond
         to the number of dimensions declared when instantiating the kernel
     """
