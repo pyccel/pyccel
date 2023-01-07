@@ -548,9 +548,6 @@ class SemanticParser(BasicParser):
             d_var['cls_base'      ] = cls
             return d_var
 
-        elif isinstance(expr, GeneratorComprehension):
-            return self._infer_type(expr.lhs)
-
         else:
             type_name = type(expr).__name__
             msg = f'Type of Object : {type_name} cannot be infered'
