@@ -172,6 +172,5 @@ If variables are created as described above in the [Types](#Types) section, they
 It is also possible that they will be renamed to avoid collisions.
 For this reason it is very important to use the [`pyccel.parser.scope.Scope.find`](../pyccel/parser/scope.py) function to access variables.
 There are two helper functions in the `SemanticParser` to facilitate these  searches:
-- `SemanticParser.check_for_variable` which returns the variable if it exists and None if it doesn't
-- `SemanticParser.get_variable` which raises an error if the requested variable is not found
-
+-   `SemanticParser.check_for_variable` which returns the variable if it exists and None if it doesn't
+-   `SemanticParser.get_variable` which raises an error if the requested variable is not found
