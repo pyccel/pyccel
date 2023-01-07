@@ -13,7 +13,7 @@ def func(a, b, c):
 if __name__ == '__main__':
     threads_per_block = 32
     n_blocks = 1
-    c =[[1,2],[1,3]]
+    c = ((1, 2), (1, 3))
     host_arr = cuda.array(c, dtype=int)
     device_arr = cuda.array(c, dtype=int, memory_location='device')
     arr1 = cp.ravel(host_arr)
