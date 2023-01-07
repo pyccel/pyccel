@@ -116,7 +116,30 @@ Otherwise the object will be created in the `SemanticParser._handle_function` fu
 
 ## Low-level Objects
 
+Python is a high-level language.
+As a result many implementation details are hidden to the user.
+In low-level languages it is necessary to know this information.
+In the semantic stage we must therefore identify these details and add objects representing them.
+
+The most obvious examples of this are array allocation and garbage collection.
+However, there are other examples so it is important to consider whether there is anything happening under the hood when adding a new `_visit_X` function.
+Often to handle these hidden details new variables must be created.
+In this case it is important to use the scope to avoid name collisions.
+
 ## Object Tree
+
+All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
+This super-class stores information about how the various objects are related.
+This allows the class to provide functions such as `get_user_nodes`, `get_attribute_nodes`, `is_attribute_of`, `is_user_of`, and `substitute`.
+
+The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
+Nevertheless the object tree should be considered in two situations.
+Firstly, if the object is constructed and AST objects are then added to it (e.g. the member function `pyccel.ast.core.CodeBlock.insert2body` used for the garbage collector).
+In this case the new object does not pass through the constructor of its user.
+It is therefore important to call `set_current_user_node` on the new object to update the tree.
+Secondly, if the object contains all necessary information after the syntactic stage (e.g. `pyccel.ast.core.Continue`) we may be tempted to return the object as is.
+However if this were done there would be multiple user nodes from both the semantic and the syntactic stage.
+To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nodes` function to remove the syntactic objects from the tree.
 
 ## Name Collisions
 
