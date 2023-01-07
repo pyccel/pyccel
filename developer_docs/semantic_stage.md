@@ -137,6 +137,8 @@ The most obvious examples of this are array allocation and garbage collection.
 However, there are other examples so it is important to consider whether there is anything happening under the hood when adding a new `_visit_X` function.
 Often to handle these hidden details new variables must be created.
 In this case it is important to use the scope to avoid name collisions.
+These variables that are created should be tagged as `is_temp = True`.
+This allows Pyccel to differentiate between variables which appear in the code and should be preserved at all costs, and variables which are created by Pyccel and may be omitted if it leads to cleaner code.
 
 ## Object Tree
 
@@ -155,4 +157,14 @@ To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nod
 
 ## Name Collisions
 
-Name collisions may occur when generating 
+Name collisions may occur when generating temporary variables.
+The scope helps keep track of the variables and prevent name collisions.
+See [Scope](scope.md) for more details.
+
+If variables are created as described above in the [Types](#Types) section, they will be added to the scope.
+It is also possible that they will be renamed to avoid collisions.
+For this reason it is very important to use the [`pyccel.parser.scope.Scope.find`](../pyccel/parser/scope.py) function to access variables.
+There are two helper functions in the `SemanticParser` to facilitate these  searches:
+- `SemanticParser.check_for_variable` which returns the variable if it exists and None if it doesn't
+- `SemanticParser.get_variable` which raises an error if the requested variable is not found
+
