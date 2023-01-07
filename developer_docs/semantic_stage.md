@@ -140,6 +140,13 @@ In this case it is important to use the scope to avoid name collisions.
 These variables that are created should be tagged as `is_temp = True`.
 This allows Pyccel to differentiate between variables which appear in the code and should be preserved at all costs, and variables which are created by Pyccel and may be omitted if it leads to cleaner code.
 
+Additional objects can often appear in awkward places where they cannot be easily returned as a CodeBlock.
+This is the case for example if the object is needed to properly define something inside the right hand side of an `Assign`.
+As the right hand side of an Assign cannot be a CodeBlock the additional expressions must be collected outside the usual flow.
+The attribute `SemanticParser._additional_exprs` exists to hold these expressions.
+This object is a list of lists which is initialised and inserted in `_visit_CodeBlock`.
+A list of lists is necessary in case a CodeBlock can be found inside another (e.g. `a = [i for i in range]` where a `CodeBlock` contains the `Assign`, but another exists inside the `For` loop).
+
 ## Object Tree
 
 All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
