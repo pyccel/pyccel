@@ -114,6 +114,18 @@ Otherwise the object will be created in the `SemanticParser._handle_function` fu
 
 ## Imports
 
+In order for the semantic parser to have all information necessary for the different steps, imports must be handled correctly.
+In the case of user-defined modules the imported file must have also been parsed.
+The class [pyccel.parser.parser.Parser](../pyccel/parser/parser.py) ensures that functions are parsed in the correct order so that the information is available.
+In the `_visit_Import` function, the [`pyccel.ast.core.Module`](../pyccel/ast/core.py) object representing the imported file is therefore available.
+This object contains all necessary `FunctionDef`, `Variable` and `ClassDef` objects which may be imported.
+Thse are then placed into the `Scope.imports` dictionary so they can be recognised when they are used in the file.
+
+The case of modules supported by pyccel is somewhat simpler.
+In this case there should be an associated file `pyccel/ast/moduleext.py` (e.g. `numpyext.py`, `itertoolsext.py`) containing all the AST nodes related to this module.
+The file should also contain a [`pyccel.ast.core.Module`](../pyccel/ast/core.py), listing all the objects which are in the file.
+The `Module` object must then be saved in the [`pyccel.ast.utilities.builtin_import_registery`](../pyccel/ast/utilities.py) dictionary.
+
 ## Low-level Objects
 
 Python is a high-level language.
