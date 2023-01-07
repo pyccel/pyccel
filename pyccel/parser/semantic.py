@@ -829,8 +829,7 @@ class SemanticParser(BasicParser):
             if func in (CupyArray, CudaArray, NumpyArray):
                 if 'device' in self.scope.decorators or 'kernel' in self.scope.decorators:
                     current_context = 'device'
-                    if ('memory_location' in kwargs.keys() and kwargs['memory_location'] == 'host')\
-                        or func is NumpyArray:
+                    if kwargs.get('memory_location', 'host') == 'host':
                         errors.report("Host arrays cannot be allocated on the Device",
                             symbol = expr,
                             severity = 'fatal')
