@@ -803,12 +803,6 @@ class SemanticParser(BasicParser):
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
-            for a in args:
-                if getattr(a,'dtype',None) == 'tuple':
-                    self._infer_type(a, **settings)
-            for a in kwargs.values():
-                if getattr(a,'dtype',None) == 'tuple':
-                    self._infer_type(a, **settings)
 
             try:
                 new_expr = func(*args, **kwargs)
