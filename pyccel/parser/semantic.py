@@ -720,7 +720,7 @@ class SemanticParser(BasicParser):
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
-                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank\
+                if (isinstance(a.value, PyccelArithmeticOperator) and a.value.rank)\
                     or isinstance(a.value, (NumpyNewArray, CudaNewArray)):
                     tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
                     assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
