@@ -6,7 +6,7 @@ runs:
     - name: Install MPI, OpenMP
       run: |
         brew install open-mpi
-        brew reinstall libomp
+        brew install libomp
         if [[ ! -f "/usr/local/bin/gfortran" ]]; then
           gfort=$(ls /usr/local/bin/gfortran-* | tail -n 1)
           ln -s ${gfort} /usr/local/bin/gfortran
