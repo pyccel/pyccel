@@ -96,6 +96,22 @@ It is not feasable to provide error messages for every possible coding error so 
 
 ## Function Recognition
 
+Function calls are split into two groups which are handled in different ways.
+
+The simplest case is the case where the function is defined by the user.
+In this case the `funcdef` attribute of the [`pyccel.ast.core.FunctionCall`](../pyccel/ast/core.py) class should be an object of type [`pyccel.ast.core.FunctionDef`](../pyccel/ast/core.py).
+The type of the `FunctionCall` (required to assign the result to a `Variable`) is easily determined from the type of the result variable(s).
+
+The second case involves functions that are recognised by Pyccel.
+This includes built-in functions and functions imported from supported libraries (numpy, math, etc).
+Built-in functions do not need importing.
+Instead they are recognised via the function [`pyccel.ast.utilities.builtin_function`](../pyccel/ast/utilities.py) which uses the dictionary [`pyccel.ast.builtins.builtin_functions_dict`](../pyccel/ast/builtins.py) to identify supported functions.
+Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
+These functions are handled one of two ways.
+If there is special treatment which requires functions from the `SemantcParser` then a `_visit_X` function should be created.
+The `SemanticParser._visit_FunctionCall` function will call this visitation function internally if it exists.
+Otherwise the object will be created in the `SemanticParser._handle_function` function and its type will be determined by its constructor.
+
 ## Imports
 
 ## Low-level Objects
