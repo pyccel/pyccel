@@ -458,7 +458,6 @@ class CupyRavel(CupyArray):
     """
     name   = 'ravel'
     __slots__ = ()
-    _attribute_nodes = ('_arg',)
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
