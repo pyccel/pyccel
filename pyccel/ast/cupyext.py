@@ -471,9 +471,6 @@ class CupyRavel(CupyArray):
         self._shape = [shape if isinstance(shape, LiteralInteger) else LiteralInteger(shape)]
         self._rank = 1
 
-    @property
-    def arg(self):
-        return self._arg
 
 #==============================================================================
 cupy_funcs = {
