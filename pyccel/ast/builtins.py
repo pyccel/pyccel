@@ -689,7 +689,7 @@ class PythonZip(PyccelInternalFunction):
     Represents a zip stmt.
 
     """
-    __slots__ = ('_length')
+    __slots__ = ('_length',)
     name = 'zip'
 
     def __init__(self, *args):
