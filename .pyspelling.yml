@@ -6,7 +6,7 @@ matrix:
   - developer_docs/*.md
   aspell:
     lang: en
-    d: en_GB
+    d: en_US
   dictionary:
     wordlists:
     - .dict_custom.txt

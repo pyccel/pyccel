@@ -7,7 +7,9 @@ LAPACK
 MPI
 OpenMP
 Fortran
-pyccelise
+pyccelize
+pyccelized
+pyccelizing
 allocatable
 deallocate
 conda
@@ -25,6 +27,7 @@ Xcode
 SIMD
 runtime
 pragma
+pragmas
 API
 APIs
 Pyccel's
@@ -40,3 +43,7 @@ JSON
 CPython
 IPython
 HPC
+podman
+vectorization
+precompiled
+elementwise

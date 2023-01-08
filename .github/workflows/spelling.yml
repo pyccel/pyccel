@@ -23,5 +23,7 @@ jobs:
         sudo apt-get install aspell aspell-en
     - name: Spell check
       run: |
-         python -m pyspelling > $GITHUB_STEP_SUMMARY
+         python -m pyspelling > misspellings.txt
+         cat misspellings.txt
+         python ci_tools/summarise_pyspelling.py misspellings.txt $GITHUB_STEP_SUMMARY
 
