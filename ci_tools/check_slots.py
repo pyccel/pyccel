@@ -5,8 +5,7 @@ import importlib
 import inspect
 import os
 import sys
-from termcolor import colored
-import pyccel.ast as ast
+from pyccel import ast
 from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
@@ -54,7 +53,7 @@ for mod_name in ast_modules:
                     overridden_slots.append(f'Slot values are overwritten between `{mod_name}.{cls_name}` and `{c.__name__}`')
 
         if Basic in super_classes:
-            if cls_obj not in (PyccelAstNode, ScopedNode) and not isinstance(cls_obj._attribute_nodes, tuple):
+            if cls_obj not in (PyccelAstNode, ScopedNode) and not isinstance(cls_obj._attribute_nodes, tuple): #pylint: disable=W0212
                 missing_attribute_nodes.append(f"{mod_name}.{cls_name}")
 
         if all_attr and cls_name not in all_attr:
