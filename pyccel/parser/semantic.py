@@ -2438,22 +2438,6 @@ class SemanticParser(BasicParser):
             else:
                 d_var = self._infer_type(rhs, **settings)
 
-        elif isinstance(rhs, PythonMap):
-
-            name = str(rhs.args[0])
-            func = self.scope.find(name, 'functions')
-
-            if func is None:
-                errors.report(UNDEFINED_FUNCTION, symbol=name,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error')
-
-            dvar  = self._infer_type(rhs.args[1], **settings)
-            d_var = [self._infer_type(result, **settings) for result in func.results]
-            for d_var_i in d_var:
-                d_var_i['shape'] = dvar['shape']
-                d_var_i['rank' ]  = dvar['rank']
-
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infer_type(rhs, **settings)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
@@ -2551,26 +2535,6 @@ class SemanticParser(BasicParser):
                 return None
         else:
             lhs = self._visit(lhs, **settings)
-
-        if isinstance(rhs, (PythonMap, PythonZip)):
-            func  = _get_name(rhs.args[0])
-            alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
-            alloc.set_fst(fst)
-            index_name = self.scope.get_new_name(expr)
-            index = Variable('int',index_name, is_temp=True)
-            range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
-            name  = _get_name(lhs)
-            var   = IndexedElement(name, index)
-            args  = rhs.args[1:]
-            args  = [_get_name(arg) for arg in args]
-            args  = [IndexedElement(arg, index) for arg in args]
-            func  = FunctionCall(func, args)
-            body  = [Assign(var, func)]
-            body[0].set_fst(fst)
-            body  = For(index, range_, body)
-            body  = self._visit_For(body, **settings)
-            body  = [alloc , body]
-            return CodeBlock(body)
 
         elif not isinstance(lhs, (list, tuple)):
             lhs = [lhs]
