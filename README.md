@@ -72,7 +72,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 -   Supported libraries/APIs
     -   [OpenMP](./tutorial/openmp.md)
-    -   [Numpy](./tutorial/numpy-functions.md)
+    -   [NumPy](./tutorial/numpy-functions.md)
 
 ## Pyccel Installation Methods
 
@@ -82,8 +82,8 @@ Some advanced features of Pyccel require additional non-Python libraries to be i
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
 For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
 
-It is possible to use pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
-Support is provided for anaconda on linux/macos.
+It is possible to use Pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
+Support is provided for anaconda on linux/macOS.
 
 On Windows support is limited to examples which do not use external libraries.
 This is because we do not know of a way to reliably avoid [DLL hell](https://en.wikipedia.org/wiki/DLL_Hell).
@@ -218,7 +218,7 @@ gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
 cd -
 ```
 
-Generate static libmsmpi.a from msmpi.dll:
+Generate static `libmsmpi.a` from `msmpi.dll`:
 
 ```sh
 cd "$MSMPI_LIB64"
@@ -288,7 +288,7 @@ for a system-wide installation.
     pip3 install --user -e .[test]
     ```
 
-this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
+this will install a _python_ library **Pyccel** and a _binary_ called **`pyccel`**.
 Any required Python packages will be installed automatically from PyPI.
 
 ### On a read-only system
@@ -314,9 +314,9 @@ Most of the unit tests can also be run in parallel.
 
 ## Testing
 
-To test your Pyccel installation please run the script _tests/run\_tests\_py3.sh_ (Unix), or _tests/run\_tests.bat_ (Windows).
+To test your Pyccel installation please run the script `tests/run\_tests\_py3.sh` (Unix), or `tests/run\_tests.bat` (Windows).
 
-Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
+Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
 ## Pyccel Container Images
 
@@ -324,9 +324,9 @@ Pyccel container images are available through both Docker Hub (<docker.io>) and 
 
 The images:
 
--   are based on ubuntu:latest
--   use distro packaged python3, gcc, gfortran, BLAS and OpenMPI
--   support all pyccel releases except the legacy "0.1"
+-   are based on `ubuntu:latest`
+-   use distro packaged python3, GCC, GFortran, BLAS and OpenMPI
+-   support all Pyccel releases except the legacy "0.1"
 
 Image tags match Pyccel releases.
 

@@ -26,7 +26,7 @@ epyccel(my_func, compiler='intel')
 The user can also define their own compiler in a JSON file. To use this definition, the location of the JSON file must be passed to the _compiler_ argument. The JSON file must define the following:
 
 -   **exec** : The name of the executable
--   **mpi\_exec** : The name of the mpi executable
+-   **mpi\_exec** : The name of the MPI executable
 -   **language** : The language handled by this compiler
 -   **module\_output\_flag** : This flag is only required when the language is fortran. It specifies the flag which indicates where .mod files should be saved (e.g. '-J' for gfortran)
 -   **debug\_flags** : A list of flags used when compiling in debug mode \[optional\]
@@ -37,7 +37,7 @@ The user can also define their own compiler in a JSON file. To use this definiti
 -   **libdirs** : A list of library directories necessary for compiling \[optional\]
 -   **includes** : A list of include directories necessary for compiling \[optional\]
   
-In addition, for each accelerator (mpi/openmp/openacc/python) that you will use the JSON file must define the following:
+In addition, for each accelerator (`mpi`/`openmp`/`openacc`/`python`) that you will use the JSON file must define the following:
   
 -   **flags** : A list of flags used to impose the expected language standard \[optional\]
 -   **libs** : A list of libraries necessary for compiling \[optional\]

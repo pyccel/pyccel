@@ -8,8 +8,8 @@ Header files serve two purposes:
 -   Accelerate the parsing process of an imported Python module by parsing only its header file (automatically generated) instead of the full module.
 
 ### Examples
-#### Link with openmp
-We create the file `header.pyh` that contains an openmp function definition:
+#### Link with OpenMP
+We create the file `header.pyh` that contains an OpenMP function definition:
 
 ```python
 #$ header metavar module_name = 'omp_lib'
@@ -59,8 +59,8 @@ end module funcs
 ```
 
 We then create a static library using these commands:
--   gfortran -c funcs.f90 
--   ar rcs libfuncs.a funcs.o
+-   `gfortran -c funcs.f90`
+-   `ar rcs libfuncs.a funcs.o`
 
 In order to use this library the user needs to create a header file, we call it  `funcs_headers.pyh`
 ```python
@@ -69,7 +69,7 @@ In order to use this library the user needs to create a header file, we call it 
 
 #$ header function fib(int) results(int)
 ```
-After that we can create a Python file `test_funcs.py`,where we can import the fortran functions and use them
+After that we can create a Python file `test_funcs.py`,where we can import the Fortran functions and use them
 
 ```python
 from pyccel.decorators import types

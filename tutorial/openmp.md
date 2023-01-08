@@ -2,7 +2,7 @@
 
 ## Using the Runtime Library Routines
 
-OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the Pyccel stdlib:
+OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the `pyccel.stdlib`:
 
 Please note that files using the OpenMP Runtime library routines will only work when compiled with pyccel (i.e. they won't work in pure python mode).
 
@@ -263,9 +263,9 @@ The output of this program is:
 result : 1
 ```
 
-### taskloop/atomic Construct
+### `taskloop`/`atomic` Construct
 
-#### Syntax of *taskloop*
+#### Syntax of *`taskloop`*
 
 ```python
 #$ omp taskloop [clause[ [,]clause] ... ]
@@ -407,7 +407,7 @@ The output of this program is:
 
 #### Example
 
-The ``` #$ omp taskyield ``` pragma specifies that the current task can be suspended at this point, in favor of execution of a different task.
+The ``` #$ omp taskyield ``` pragma specifies that the current task can be suspended at this point, in favour of execution of a different task.
 
 ```python
 #$ omp task
@@ -729,7 +729,7 @@ z[ 7 ] : 3
 
 ### teams distribute simd
 
-#### Syntax of *teams distribut simd*
+#### Syntax of *teams distribute simd*
 
 ```python
 #$ omp teams distribute simd [clause[ [,]clause] ... ]
@@ -842,7 +842,7 @@ result: 49995000
 ## Supported Constructs
 
 All constructs in the OpenMP 5.1 standard are supported except:
--   scope
--   workshare
--   scan
--   interop
+-   `scope`
+-   `workshare`
+-   `scan`
+-   `interop`

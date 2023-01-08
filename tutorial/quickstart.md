@@ -96,7 +96,7 @@ We recommend using Python-style annotations, which have the syntax:
 ```python
 def fun(arg1: 'type1', arg2: 'type2', ..., argN: 'typeN') -> 'return_type':
 ```
-or to declare Numpy arrays
+or to declare NumPy arrays
 ```python
 def fun(arg1: 'type1[:]', arg2: 'type2[:,:]', ..., argN: 'typeN[dimensions]') -> 'return_type':
 ```
@@ -107,9 +107,9 @@ In general string type hints must be used to provide Pyccel with information abo
 For scalar variables and arrays Pyccel supports the following data types:
 
 -   built-in datatypes: `bool`, `int`, `float`, `complex`
--   Numpy integer types: `int8`, `int16`, `int32`, `int64`
--   Numpy real types: `float32`, `float64`, `double`
--   Numpy complex types: `complex64`, `complex128`
+-   NumPy integer types: `int8`, `int16`, `int32`, `int64`
+-   NumPy real types: `float32`, `float64`, `double`
+-   NumPy complex types: `complex64`, `complex128`
 
 ## How to use Pyccel
 
@@ -121,7 +121,7 @@ Detailed installation instructions are found in the [README](https://github.com/
 
 ### Command Line Usage
 
-After installation, the `pyccel` command will be available on a terminal app (iterm or terminal for MacOs, terminal for Linux).
+After installation, the `pyccel` command will be available on a terminal app (iterm or terminal for macOS, terminal for Linux).
 After typing `pyccel`, the usage should be displayed on the terminal; if this is the case then the installation has succeeded.
 In essence the `pyccel` command translates the given Python file to a Fortran or C file, and then compiles the generated code to a Python C extension module or a simple executable.
 
@@ -185,7 +185,7 @@ $ pyccel mod.py --language c
 By default Pyccel also compiles the C code into a Python C extension module named `mod.<TAG>.so`, which is placed in the same directory as `mod.py`.
 To achieve this Pyccel generates the additional files `mod_wrapper.c` (which interacts directly with the CPython API) and `setup_mod.py` (which defines the build procedure for the extension module), as well as a `build` directory.
 
-If the command `import mod` is now given to the Python interpreter, this will import the Python C extention module `mod.<TAG>.so` instead of the pure Python module `mod.py`.
+If the command `import mod` is now given to the Python interpreter, this will import the Python C extension module `mod.<TAG>.so` instead of the pure Python module `mod.py`.
 
 These are the contents of the current directory:
 ```bash
@@ -264,7 +264,7 @@ int64_t binomial_coefficient(int64_t n, int64_t k);
 
 Let's now see a more complicated example, where the Python module `mod.py` contains a function that performs the matrix-matrix multiplication between two arrays `a` and `b`, and writes the result into the array `c`:
 
--   The three function's arguments are 2D Numpy arrays of double-precision floating point numbers
+-   The three function's arguments are 2D NumPy arrays of double-precision floating point numbers
 -   Matrices `a` and `c` use C ordering (row-major), matrix `b` uses Fortran ordering (column-major)
 -   Since matrix `c` is modified by the function, it has `intent(inout)` in Fortran
 -   Comments starting with `#$ omp` are translated to OpenMP pragmas
@@ -380,7 +380,7 @@ end module mod
 
 ### Interactive Usage with `epyccel`
 
-In addition to the `pyccel` command, the Pyccel library provides the `epyccel` Python function, whose name stands for "embedded Pyccel": given a pure Python function `f` with type annotations, `epyccel` returns a "pyccelized" function `f_fast` that can be used in the same Python session.
+In addition to the `pyccel` command, the Pyccel library provides the `epyccel` Python function, whose name stands for "embedded Pyccel": given a pure Python function `f` with type annotations, `epyccel` returns a "pyccelised" function `f_fast` that can be used in the same Python session.
 For example:
 ```python
 from pyccel.epyccel import epyccel
@@ -390,7 +390,7 @@ f_fast = epyccel(f)
 ```
 In practice `epyccel` copies the contents of `f` into a temporary python file in the `__epyccel__` directory.
 As a result it is important that all imports are written inside the function when using `epyccel`.
-Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelized function.
+Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
 Then finally, it imports this function and returns it to the caller.
 
 #### Example 4: quicksort algorithm
@@ -418,8 +418,8 @@ def quicksort(a: 'float[:]', lo: int, hi: int):
         lo = i
         j = hi
 ```
-We now import this function from an interactive IPython terminal and pyccelize it with the `epyccel` command.
-We then use the two functions (original and pyccelized) to sort a random array of 100 elements.
+We now import this function from an interactive IPython terminal and pyccelise it with the `epyccel` command.
+We then use the two functions (original and pyccelised) to sort a random array of 100 elements.
 Finally we compare the timings obtained on an Intel Core 3 architecture.
 ```bash
 In [1]: from numpy.random import random
@@ -441,7 +441,7 @@ In [8]: %timeit y = x.copy(); quicksort_fast(y, 0, 99)
 In [9]: (280 - 0.435) / (1.76 - 0.435)
 Out[9]: 210.99245283018868
 ```
-After subtracting the amount of time required to create an array copy from the given times, we can conclude that the pyccelized function is approximately 210 times faster than the original Python function.
+After subtracting the amount of time required to create an array copy from the given times, we can conclude that the pyccelised function is approximately 210 times faster than the original Python function.
 
 ## Other Features
 
@@ -453,9 +453,9 @@ In the future we plan to support GPU programming with [CUDA](https://en.wikipedi
 
 ## Getting Help
 
-If you face problems with pyccel, please take the following steps:
+If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documention in the tutorial directory;
+1.  Consult our documentation in the tutorial directory;
 2.  Send an email message to pyccel@googlegroups.com;
 3.  Open an issue on GitHub.
 
