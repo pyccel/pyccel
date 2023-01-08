@@ -23,7 +23,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 
 Pyccel's acceleration capabilities lead to much faster code. Comparisons of Python vs Pyccel or other tools can be found in the [benchmarks](https://github.com/pyccel/pyccel-benchmarks) repository.
 The results for the master branch currently show the following performance on python 3.10:
-![Pyccel execution times for master branch](https://github.com/pyccel/pyccel-benchmarks/blob/main/version_specific_results/devel_performance_310_execution.png)
+![Pyccel execution times for master branch](https://github.com/pyccel/pyccel-benchmarks/blob/main/version_specific_results/devel_performance_310_execution.svg)
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
 
@@ -118,7 +118,7 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 
 We recommend using GFortran/GCC and Open-MPI.
 
-Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the _scipy_, _mpi4py_, _pytest_ and _coverage_ packages, while building the documentation requires [Sphinx](http://www.sphinx-doc.org/).
+Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require additional packages which are installed as optional dependencies with pip, while building the documentation requires [Sphinx](http://www.sphinx-doc.org/).
 
 ### Linux Debian-Ubuntu-Mint
 
@@ -285,7 +285,7 @@ for a system-wide installation.
     ```sh
     git clone git@github.com:pyccel/pyccel.git
     cd pyccel
-    pip3 install --user -e .
+    pip3 install --user -e .[test]
     ```
 
 this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
@@ -307,19 +307,10 @@ A warning, reminding the user to execute this command, will be printed to the sc
 In order to run the unit tests and to get a coverage report, a few additional Python packages should be installed:
 
 ```sh
-pip3 install --user scipy
-pip3 install --user mpi4py
-pip3 install --user tblib
-pip3 install --user pytest
-pip3 install --user astunparse
-pip3 install --user coverage
+pip install --user -e .[test]
 ```
 
-Most of the unit tests can also be run in parallel. This can be done by installing one additional package:
-
-```sh
-pip3 install --user pytest-xdist
-```
+Most of the unit tests can also be run in parallel.
 
 ## Testing
 
