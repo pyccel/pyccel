@@ -16,13 +16,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools
         python -m pip install pyspelling
+        python -m pip install pymdown-extensions
         # Install any additional libraries required: additional plugins, documentation building libraries, etc.
     - name: Install Aspell
       run: |
         sudo apt-get install aspell aspell-en
-    - name: Build documents
-      run: |
-        # Perform any documentation building that might be required
     - name: Spell check
       run: |
          python -m pyspelling > $GITHUB_STEP_SUMMARY
