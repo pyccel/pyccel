@@ -3,6 +3,7 @@
 import argparse
 import difflib
 import os
+import sys
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
 parser.add_argument('spelling', metavar='diffFile', type=str,
@@ -62,3 +63,6 @@ if errors:
         print(suggestion_output, file=f)
 
     f.close()
+    sys.exit(1)
+else:
+    sys.exit(0)
