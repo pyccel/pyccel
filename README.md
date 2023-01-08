@@ -16,10 +16,10 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 
 Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific Python packages to Fortran/C. The following packages will be covered (partially):
 
--   numpy
--   scipy
--   mpi4py (not available yet)
--   h5py (not available yet)
+-   `numpy`
+-   `scipy`
+-   `mpi4py` (not available yet)
+-   `h5py` (not available yet)
 
 Pyccel's acceleration capabilities lead to much faster code. Comparisons of Python vs Pyccel or other tools can be found in the [benchmarks](https://github.com/pyccel/pyccel-benchmarks) repository.
 The results for the master branch currently show the following performance on python 3.10:
@@ -42,7 +42,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
     -   [Windows](#Windows)
 
 -   [Installation](#Installation)
-    -   [From PyPi](#From-PyPi)
+    -   [From PyPI](#From-PyPI)
     -   [From sources](#From-sources)
     -   [On a read-only system](#On-a-read-only-system)
 
@@ -208,7 +208,7 @@ msiexec //i msmpisdk.msi
 
 At this point, close and reopen your terminal to refresh all environment variables!
 
-In Administrator git-bash, generate mpi.mod for gfortran according to <https://abhilashreddy.com/writing/3/mpi_instructions.html>:
+In Administrator git-bash, generate `mpi.mod` for GFortran according to <https://abhilashreddy.com/writing/3/mpi_instructions.html>:
 
 ```sh
 cd "$MSMPI_INC"
@@ -254,7 +254,7 @@ echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tool
 
 On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of Pyccel below.
 
-### From PyPi
+### From PyPI
 
 Simply run, for a user-specific installation:
 
@@ -320,12 +320,12 @@ Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/act
 
 ## Pyccel Container Images
 
-Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
+Pyccel container images are available through both Docker Hub (<docker.io>) and the GitHub Container Registry (<ghcr.io>).
 
 The images:
 
 -   are based on ubuntu:latest
--   use distro packaged python3, gcc, gfortran, blas and openmpi
+-   use distro packaged python3, gcc, gfortran, BLAS and OpenMPI
 -   support all pyccel releases except the legacy "0.1"
 
 Image tags match Pyccel releases.
