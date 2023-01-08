@@ -8,7 +8,7 @@ Pyccel's development is split into 4 main stages:
 
 ### Syntactic Stage
 
-Pyccel uses Python's [`ast` module](https://docs.python.org/3/library/ast.html) to read the input file(s). The ast does not store information in the same way as the rest of Pyccel so this stage exists to **convert Python's ast to Pyccel's ast**. The related code can be found in [parser/syntactic.py](../pyccel/parser/syntactic.py).
+Pyccel uses Python's [`ast` module](https://docs.python.org/3/library/ast.html) to read the input file(s). The abstract syntax tree (AST) of Python's `ast` module does not store information in the same way as the rest of Pyccel so this stage exists to **convert Python's AST to Pyccel's AST**. The related code can be found in [parser/syntactic.py](../pyccel/parser/syntactic.py).
 
 The syntactic stage also handles parsing header comments. This is managed using [textx](http://textx.github.io/textX/stable/). The files describing the _textx_ grammar are found in the folder [parser/grammar](../pyccel/parser/grammar). From these files _textx_ generates instances of the classes found in the folder [parser/syntax](../pyccel/parser/syntax).
 
@@ -34,7 +34,7 @@ As in the Semantic stage, the Code Generation stage also stores the current Scop
 
 ### Compilation Stage
 
-Finally the generated code is compiled. This is handled in the [pipeline](../pyccel/codegen/pipeline.py). The compilers commands are found in [codegen/compiling/compilers.py](../pyccel/codegen/compiling/compilers.py). Different compilers have different flags and need different libraries. Once Pyccel has been executed once on your machine the flags and libraries can be found in json files in the [compilers](../pyccel/compilers) folder
+Finally the generated code is compiled. This is handled in the [pipeline](../pyccel/codegen/pipeline.py). The compilers commands are found in [codegen/compiling/compilers.py](../pyccel/codegen/compiling/compilers.py). Different compilers have different flags and need different libraries. Once Pyccel has been executed once on your machine the flags and libraries can be found in JSON files in the [compilers](../pyccel/compilers) folder
 
 ### Function Naming Conventions/File Navigation
 

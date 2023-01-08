@@ -4,10 +4,10 @@ Pyccel is a **static compiler** for Python 3, using Fortran or C as a backend la
 
 Pyccel's main goal is to resolve the principal bottleneck in scientific computing: the transition from **prototype** to **production**.
 Programmers usually develop their prototype code in a user-friendly interactive language like Python, but their final application requires an HPC implementation and therefore a new production code.
-In most cases this is written in a statically compiled language like Fortran/C/C++, and it uses SIMD vectorization, parallel multi-threading, MPI parallelization, GPU offloading, etc.
+In most cases this is written in a statically compiled language like Fortran/C/C++, and it uses SIMD vectorisation, parallel multi-threading, MPI parallelisation, GPU offloading, etc.
 
 We believe that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype.
-Not only is the Pyccel-generated Fortran or C code very fast, but it is **human-readable**; hence the expert programmer can easily profile the code on the target machine and further optimize it.
+Not only is the Pyccel-generated Fortran or C code very fast, but it is **human-readable**; hence the expert programmer can easily profile the code on the target machine and further optimise it.
 
 ## Some Useful Background
 

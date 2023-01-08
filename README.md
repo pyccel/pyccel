@@ -300,7 +300,7 @@ sudo pyccel-init
 
 This step is necessary in order to [pickle header files](./tutorial/header-files.md#Pickling-header-files).
 If this command is not run then Pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
-A warning, reminding the user to execute this command, will be printed to the screen when pyccelizing files which rely on these packages if the pickling step has not been executed.
+A warning, reminding the user to execute this command, will be printed to the screen when pyccelising files which rely on these packages if the pickling step has not been executed.
 
 ## Additional packages
 

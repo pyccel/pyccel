@@ -155,7 +155,7 @@ module boo
 end module boo
 ```
 
-## Pyccel Optimization Case
+## Pyccel Optimisation Case
 
 Now, we will see a special case that is optimised by Pyccel (not optimised in C yet):
 
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     func1(a, b, foo)
 ```
 
-After trying to pyccelize the Python code above, here are the generated codes:
+After trying to pyccelise the Python code above, here are the generated codes:
 
 The generated code of the Fortran module:
 

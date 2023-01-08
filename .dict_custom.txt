@@ -66,3 +66,9 @@ boolean
 quicksort
 iterm
 textx
+tracebacks
+pytest
+docstring
+docstrings
+Codacy
+codebase
