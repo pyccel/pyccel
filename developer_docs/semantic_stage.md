@@ -149,7 +149,7 @@ A list of lists is necessary in case a CodeBlock can be found inside another (e.
 
 In order to avoid problems arising from forgetfulness we try to add additional objects in the most general place possible.
 For example, allocation occurs in the function `SemanticParser._assign_lhs_variable`.
-Declarations are created in the printer when needed from the scope variables (this allows each language to place the decorators in the most appropriate location).
+Variable declarations are created in the printer when needed from the scope variables (this allows each language to place the decorators in the most appropriate location).
 
 ## Object Tree
 
