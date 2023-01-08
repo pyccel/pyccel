@@ -1,0 +1,14 @@
+matrix:
+- name: Markdown
+  aspell:
+    lang: en_gb
+  dictionary:
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.markdown:
+      ignores:
+      - code
+  sources:
+  - 'tutorial/*.md'
+  - 'developer_docs/*.md'
+  default_encoding: utf-8
