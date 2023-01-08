@@ -22,7 +22,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | dict | No |
 | dir | No |
 | divmod | No |
-| **enumerate** | **Yes** |
+| **enumerate** | as a loop iterable |
 | eval | No |
 | exec | No |
 | filter | No |
@@ -44,7 +44,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **len** | **Yes** |
 | *list* | implemented as a tuple |
 | locals | No |
-| **map** | **Yes** |
+| **map** | as a loop iterable |
 | **max** | Fortran-only |
 | memoryview | No |
 | **min** | Fortran-only |
@@ -71,5 +71,5 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **tuple** | **Yes** |
 | **type** | **Yes** |
 | vars | No |
-| **zip** | **Yes** |
+| **zip** | as a loop iterable |
 | \_\_import\_\_ | No
