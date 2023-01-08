@@ -1,6 +1,6 @@
-# Supported Numpy function by Pyccel
+# Supported NumPy function by Pyccel
 
-In Pyccel we try to support the Numpy functions which developers use the most.. Here are some of them:
+In Pyccel we try to support the NumPy functions which developers use the most.. Here are some of them:
 
 ## [norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
@@ -18,7 +18,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 -   Supported languages: Fortran (2-norm)
 
--   python code:
+-   Python code:
 
     ```python
     from numpy.linalg import norm
@@ -32,7 +32,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print(nrm)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_norm
@@ -63,9 +63,9 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
 
--   Supported languages: C, fortran
+-   Supported languages: C, Fortran
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import imag, real, array
@@ -75,7 +75,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_imag_real
@@ -150,7 +150,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     }
     ```
 
--   python code with arrays:
+-   Python code with arrays:
 
     ```python
     from numpy import imag, real, array
@@ -160,7 +160,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_imag_real
@@ -242,9 +242,9 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     a: array_like,
         Input data.
 
--   Supported languages: fortran
+-   Supported languages: Fortran
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import array, prod
@@ -254,7 +254,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("prd: ", prd)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_prod
@@ -285,9 +285,9 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         Divisor array. If x1.shape != x2.shape, they must be
         broadcastable to a common shape (which becomes the shape of the output).
 
--   Supported language: fortran.
+-   Supported language: Fortran.
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import array, mod
@@ -297,7 +297,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("res: ", res)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_mod
@@ -325,9 +325,9 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
 
--   Supported languages: fortran (1d or 2d arrays only).
+-   Supported languages: Fortran (1d or 2d arrays only).
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import array, matmul
@@ -337,7 +337,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("res: ", res)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_matmul
@@ -361,7 +361,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [linspace](https://numpy.org/doc/stable/reference/generated/numpy.linspace.html)
 
--   Supported languages: C, fortran
+-   Supported languages: C, Fortran
 
 -   Supported parameters:
 
@@ -373,7 +373,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
     dtype: dtype, optional
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import linspace
@@ -383,7 +383,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         print(x)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_prog_test
@@ -441,13 +441,13 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [Transpose](https://numpy.org/doc/stable/reference/generated/numpy.transpose.html)
 
--   Supported languages: C, fortran
+-   Supported languages: C, Fortran
 
 -   Supported parameters:
 
     a: array_like,
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import transpose
@@ -457,7 +457,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         print(y.T)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_prog_tmp
@@ -553,11 +553,11 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     -   `empty`, `full`, `ones`, `zeros`, `arange` (`like` parameter is not supported).
     -   `empty_like`, `full_like`, `zeros_like`, and `ones_like` (`subok` parameter is not supported).
     -   `rand`, `randint`
-    -   `where`, `count_nonzero` (fortran only)
-    -   `nonzero` (fortran only, 1D only)
+    -   `where`, `count_nonzero` (Fortran only)
+    -   `nonzero` (Fortran only, 1D only)
 
 -   others:
 
     -   `amax`, `amin`, `sum`, `shape`, `size`, `floor`, `sign`
 
-If discrepancies beyond round-off error are found between [Numpy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
+If discrepancies beyond round-off error are found between [NumPy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
