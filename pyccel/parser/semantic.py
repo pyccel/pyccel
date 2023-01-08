@@ -2536,7 +2536,7 @@ class SemanticParser(BasicParser):
         else:
             lhs = self._visit(lhs, **settings)
 
-        elif not isinstance(lhs, (list, tuple)):
+        if not isinstance(lhs, (list, tuple)):
             lhs = [lhs]
             if isinstance(d_var,dict):
                 d_var = [d_var]
