@@ -106,7 +106,7 @@ In general string type hints must be used to provide Pyccel with information abo
 
 For scalar variables and arrays Pyccel supports the following data types:
 
--   built-in datatypes: `bool`, `int`, `float`, `complex`
+-   built-in data types: `bool`, `int`, `float`, `complex`
 -   NumPy integer types: `int8`, `int16`, `int32`, `int64`
 -   NumPy real types: `float32`, `float64`, `double`
 -   NumPy complex types: `complex64`, `complex128`

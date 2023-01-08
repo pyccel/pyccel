@@ -60,7 +60,10 @@ In the case of `NumpyTanh` the function which will be selected is `_print_NumpyU
 
 ### AST
 
-The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.Basic](../pyccel/ast/basic.py). These classes are found in the [ast](../pyccel/ast) folder. The ast is split into several files. There is one file for each supported extension module and files to group concepts, e.g. literals/operators/built-in functions
+The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.Basic](../pyccel/ast/basic.py).
+These classes are found in the [ast](../pyccel/ast) folder.
+The objects in the Abstract Syntax Tree (AST) are described in several files.
+There is one file for each supported extension module and files to group concepts, e.g. literals/operators/built-in functions
 
 ## Error System
 
