@@ -24,6 +24,6 @@ jobs:
       run: |
         # Perform any documentation building that might be required
     - name: Spell check
-       run: |
+      run: |
          python -m pyspelling > $GITHUB_STEP_SUMMARY
 
