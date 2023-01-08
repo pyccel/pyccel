@@ -6,6 +6,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     x: array_like
        Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
        If both axis and ord are None, the 2-norm of x.ravel will be returned.
@@ -15,6 +16,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
          If axis is a 2-tuple, it specifies the axes that hold 2-D matrices, and the matrix norms of
          these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
          matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
+    ```
 
 -   Supported languages: Fortran (2-norm)
 
@@ -239,8 +241,10 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     a: array_like,
         Input data.
+    ```
 
 -   Supported languages: Fortran
 
@@ -278,12 +282,14 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     x1: array_like
         Dividend array.
 
     x2: array_like,
         Divisor array. If x1.shape != x2.shape, they must be
         broadcastable to a common shape (which becomes the shape of the output).
+    ```
 
 -   Supported language: Fortran.
 
@@ -322,8 +328,10 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
+    ```
 
 -   Supported languages: Fortran (1d or 2d arrays only).
 
@@ -365,6 +373,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     start, stop: array_like,
 
     num: int, optional (Default is 50)
@@ -372,6 +381,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
     endpoint: bool, optional (Default is True)
 
     dtype: dtype, optional
+    ```
 
 -   Python code:
 
@@ -445,7 +455,9 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     a: array_like,
+    ```
 
 -   Python code:
 
