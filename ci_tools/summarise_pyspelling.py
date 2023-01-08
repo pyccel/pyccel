@@ -38,31 +38,30 @@ while i < n:
 
 if errors:
     all_words = set()
-    f = open(args.output, 'w', encoding="utf-8")
-    print("There are misspelled words", file=f)
-    for name, words in errors.items():
-        print("## `", name, "`", file=f)
-        for w in words:
-            print("-   ", w, file=f)
-        print(file=f)
-        all_words.update(words)
+    with open(args.output, 'w', encoding="utf-8") as f:
+        print("There are misspelled words", file=f)
+        for name, words in errors.items():
+            print("## `", name, "`", file=f)
+            for w in words:
+                print("-   ", w, file=f)
+            print(file=f)
+            all_words.update(words)
 
-    print("These errors may be due to typos, capitalisation errors, or lack of quotes around code. If this is a false positive please add your word to `.dict_custom.txt`", file=f)
+        print("These errors may be due to typos, capitalisation errors, or lack of quotes around code. If this is a false positive please add your word to `.dict_custom.txt`", file=f)
 
-    with open(os.path.join(os.path.dirname(__file__),'..','.dict_custom.txt')) as d:
-        internal_dict = [w.strip() for w in d.readlines()]
+        with open(os.path.join(os.path.dirname(__file__),'..','.dict_custom.txt'), encoding="utf-8") as d:
+            internal_dict = [w.strip() for w in d.readlines()]
 
-    suggestion_output = ''
-    for word in all_words:
-        suggestions = difflib.get_close_matches(word, internal_dict)
-        if suggestions:
-            suggestion_output += f"Did you mean {word} -> {suggestions}\n"
+        suggestion_output = ''
+        for word in all_words:
+            suggestions = difflib.get_close_matches(word, internal_dict)
+            if suggestions:
+                suggestion_output += f"Did you mean {word} -> {suggestions}\n"
 
-    if suggestion_output:
-        print("## Suggestions :", file=f)
-        print(suggestion_output, file=f)
+        if suggestion_output:
+            print("## Suggestions :", file=f)
+            print(suggestion_output, file=f)
 
-    f.close()
     sys.exit(1)
 else:
     sys.exit(0)
