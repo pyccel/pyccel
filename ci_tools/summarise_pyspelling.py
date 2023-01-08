@@ -47,7 +47,7 @@ if errors:
         print(file=f)
         all_words.update(words)
 
-    print("These errors may be due to typos, capitalisation errors, or lack of quotes around code. If this is a false positive please add your word to .dict_custom.txt", file=f)
+    print("These errors may be due to typos, capitalisation errors, or lack of quotes around code. If this is a false positive please add your word to `.dict_custom.txt`", file=f)
 
     with open(os.path.join(os.path.dirname(__file__),'..','.dict_custom.txt')) as d:
         internal_dict = [w.strip() for w in d.readlines()]
