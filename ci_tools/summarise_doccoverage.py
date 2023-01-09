@@ -28,7 +28,11 @@ for branch in [args.head, args.base]:
     i = 0
     while i < n:
         print(lines[i])
-        modname = lines[i].split()[1].strip('"')[:-4].replace('/','.').split(branch[:-4], 1)[1][1:]
+        modname = 'dummy'
+        try:
+            modname = lines[i].split()[1].strip('"')[:-4].replace('/','.').split(branch[:-4], 1)[1][1:]
+        except:
+            print(lines[i])
         i+=1
         words = set()
         while i<n and lines[i].startswith(' - '):
