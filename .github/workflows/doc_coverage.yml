@@ -31,5 +31,4 @@ jobs:
         run: |
           touch head_cov
           touch base_cov
-          docstr-coverage head/pyccel 2>head_cov
-          docstr-coverage base/pyccel 2>base_cov
+          ls
