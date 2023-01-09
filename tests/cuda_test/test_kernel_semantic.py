@@ -229,9 +229,9 @@ def test_invalid_thread_per_block(language):
 )
 def test_invalid_function_call(language):
     def invalid_function_call():
-        def function_call():
+        def non_kernel_func():
             pass
-        function_call[1, 2]()
+        non_kernel_func[1, 2]()
 
     errors = Errors()
 
@@ -242,5 +242,5 @@ def test_invalid_function_call(language):
     assert errors.num_messages() == 1
 
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func == 'function_call'
-    assert  INVALID_FUNCTION_CALL == error_info.message
+    assert error_info.symbol.func == 'non_kernel_func'
+    assert INVALID_FUNCTION_CALL == error_info.message
