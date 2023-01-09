@@ -1210,7 +1210,7 @@ class SemanticParser(BasicParser):
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif var.is_ndarray and var.is_alias:
+        elif var.is_ndarray and var.is_alias and not is_augassign:
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
@@ -2631,11 +2631,10 @@ class SemanticParser(BasicParser):
 
             new_expr = Assign(l, r)
 
-            if is_pointer_i:
-                new_expr = AliasAssign(l, r)
-
-            elif isinstance(expr, AugAssign):
+            if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
+            elif is_pointer_i:
+                new_expr = AliasAssign(l, r)
 
 
             elif new_expr.is_symbolic_alias:
