@@ -1,11 +1,12 @@
-# Supported Numpy function by Pyccel
+# Supported NumPy function by Pyccel
 
-In Pyccel we try to support the Numpy functions which developers use the most.. Here are some of them:
+In Pyccel we try to support the NumPy functions which developers use the most.. Here are some of them:
 
 ## [norm](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html)
 
 -   Supported parameters:
 
+    ```python
     x: array_like
        Input array. If axis is None, x must be 1-D or 2-D, unless ord is None.
        If both axis and ord are None, the 2-norm of x.ravel will be returned.
@@ -15,10 +16,11 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
          If axis is a 2-tuple, it specifies the axes that hold 2-D matrices, and the matrix norms of
          these matrices are computed. If axis is None then either a vector norm (when x is 1-D) or a
          matrix norm (when x is 2-D) is returned. The default is None. New in version 1.8.0.
+    ```
 
 -   Supported languages: Fortran (2-norm)
 
--   python code:
+-   Python code:
 
     ```python
     from numpy.linalg import norm
@@ -32,7 +34,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print(nrm)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_norm
@@ -63,9 +65,9 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [real](https://numpy.org/doc/stable/reference/generated/numpy.real.html) and [imag](https://numpy.org/doc/stable/reference/generated/numpy.imag.html) functions
 
--   Supported languages: C, fortran
+-   Supported languages: C, Fortran
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import imag, real, array
@@ -75,7 +77,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_imag_real
@@ -150,7 +152,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     }
     ```
 
--   python code with arrays:
+-   Python code with arrays:
 
     ```python
     from numpy import imag, real, array
@@ -160,7 +162,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("real part for arr1: " , real_part, "\nimag part for arr1: ", imag_part)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_imag_real
@@ -239,12 +241,14 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     a: array_like,
         Input data.
+    ```
 
--   Supported languages: fortran
+-   Supported languages: Fortran
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import array, prod
@@ -254,7 +258,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("prd: ", prd)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_prod
@@ -278,16 +282,18 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     x1: array_like
         Dividend array.
 
     x2: array_like,
         Divisor array. If x1.shape != x2.shape, they must be
         broadcastable to a common shape (which becomes the shape of the output).
+    ```
 
--   Supported language: fortran.
+-   Supported language: Fortran.
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import array, mod
@@ -297,7 +303,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("res: ", res)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_mod
@@ -322,12 +328,14 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 -   Supported parameters:
 
+    ```python
     x1, x2: array_like,
         Input arrays (must be 1d or 2d), scalars not allowed.
+    ```
 
--   Supported languages: fortran (1d or 2d arrays only).
+-   Supported languages: Fortran (1d or 2d arrays only).
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import array, matmul
@@ -337,7 +345,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     print("res: ", res)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_test_matmul
@@ -361,10 +369,11 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [linspace](https://numpy.org/doc/stable/reference/generated/numpy.linspace.html)
 
--   Supported languages: C, fortran
+-   Supported languages: C, Fortran
 
 -   Supported parameters:
 
+    ```python
     start, stop: array_like,
 
     num: int, optional (Default is 50)
@@ -372,8 +381,9 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
     endpoint: bool, optional (Default is True)
 
     dtype: dtype, optional
+    ```
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import linspace
@@ -383,7 +393,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         print(x)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_prog_test
@@ -441,13 +451,15 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 ## [Transpose](https://numpy.org/doc/stable/reference/generated/numpy.transpose.html)
 
--   Supported languages: C, fortran
+-   Supported languages: C, Fortran
 
 -   Supported parameters:
 
+    ```python
     a: array_like,
+    ```
 
--   python code:
+-   Python code:
 
     ```python
     from numpy import transpose
@@ -457,7 +469,7 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
         print(y.T)
     ```
 
--   fortran equivalent:
+-   Fortran equivalent:
 
     ```fortran
     program prog_prog_tmp
@@ -545,19 +557,19 @@ In Pyccel we try to support the Numpy functions which developers use the most.. 
 
 -   Supported [math functions](https://numpy.org/doc/stable/reference/routines.math.html) (optional parameters are not supported):
 
-    sqrt, abs, sin, cos, exp, log, tan, arcsin, arccos, arctan, arctan2, sinh, cosh, tanh, arcsinh, arccosh and
-    arctanh.
+    `sqrt`, `abs`, `sin`, `cos`, `exp`, `log`, `tan`, `arcsin`, `arccos`, `arctan`, `arctan2`, `sinh`, `cosh`, `tanh`, `arcsinh`, `arccosh` and
+    `arctanh`.
 
 -   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
-    -   empty, full, ones, zeros, arange (`like` parameter is not supported).
-    -   empty_like, full_like, and zeros_like, ones_like (`subok` parameter is not supported).
-    -   rand, randint
-    -   where, count_nonzero (fortran only)
-    -   nonzero (fortran only, 1D only)
+    -   `empty`, `full`, `ones`, `zeros`, `arange` (`like` parameter is not supported).
+    -   `empty_like`, `full_like`, `zeros_like`, and `ones_like` (`subok` parameter is not supported).
+    -   `rand`, `randint`
+    -   `where`, `count_nonzero` (Fortran only)
+    -   `nonzero` (Fortran only, 1D only)
 
 -   others:
 
-    -   amax, amin, sum, shape, size, floor, sign
+    -   `amax`, `amin`, `sum`, `shape`, `size`, `floor`, `sign`
 
-If discrepancies beyond round-off error are found between [Numpy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.
+If discrepancies beyond round-off error are found between [NumPy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.

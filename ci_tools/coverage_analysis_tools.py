@@ -151,7 +151,7 @@ def print_markdown_summary(untested, content_lines, commit, output):
                     end_line = line_indices[j]-1
                 else:
                     end_line = line_indices[j]
-                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}"
+                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}\n"
 
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
