@@ -119,7 +119,7 @@ In the case of user-defined modules the imported file must have also been parsed
 The class [pyccel.parser.parser.Parser](../pyccel/parser/parser.py) ensures that functions are parsed in the correct order so that the information is available.
 In the `_visit_Import` function, the [`pyccel.ast.core.Module`](../pyccel/ast/core.py) object representing the imported file is therefore available.
 This object contains all necessary `FunctionDef`, `Variable` and `ClassDef` objects which may be imported.
-Thse are then placed into the `Scope.imports` dictionary so they can be recognised when they are used in the file.
+These are then placed into the `Scope.imports` dictionary so they can be recognised when they are used in the file.
 
 The case of modules supported by pyccel is somewhat simpler.
 In this case there should be an associated file `pyccel/ast/moduleext.py` (e.g. `numpyext.py`, `itertoolsext.py`) containing all the AST nodes related to this module.
