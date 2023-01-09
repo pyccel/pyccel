@@ -43,7 +43,11 @@ if errors:
         for name, words in errors.items():
             print("## `", name, "`", file=f)
             for w in words:
-                print("-   ", w, file=f)
+                suggestions = difflib.get_close_matches(word, internal_dict)
+                if suggestions:
+                    print("-   ", w, "  f:  Did you mean {word} -> {suggestions}" file=f)
+                else:
+                    print("-   ", w, file=f)
             print(file=f)
             all_words.update(words)
 
@@ -51,16 +55,6 @@ if errors:
 
         with open(os.path.join(os.path.dirname(__file__),'..','.dict_custom.txt'), encoding="utf-8") as d:
             internal_dict = [w.strip() for w in d.readlines()]
-
-        suggestion_output = ''
-        for word in all_words:
-            suggestions = difflib.get_close_matches(word, internal_dict)
-            if suggestions:
-                suggestion_output += f"Did you mean {word} -> {suggestions}\n"
-
-        if suggestion_output:
-            print("## Suggestions :", file=f)
-            print(suggestion_output, file=f)
 
     sys.exit(1)
 else:
