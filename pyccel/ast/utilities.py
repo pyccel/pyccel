@@ -38,6 +38,7 @@ from .c_concepts import ObjectAddress
 errors = Errors()
 
 __all__ = (
+    'LoopCollection',
     'builtin_function',
     'builtin_import',
     'builtin_import_registery',

@@ -1,6 +1,6 @@
 ## Developer Setup
 
-Before beginning any development in Pyccel, it is important to ensure Pyccel is correctly installed **from source in development mode** as described [here](../README.md#from-sources). If this step is not followed then any changes made to source will not be used when `Pyccel` or `ePyccel` are used.
+Before beginning any development in Pyccel, it is important to ensure Pyccel is correctly installed **from source in development mode** as described [here](../README.md#from-sources). If this step is not followed then any changes made to source will not be used when `pyccel` or `epyccel` are used.
 
 ## Overview
 
@@ -14,7 +14,7 @@ Pyccel's development is split into 4 main stages:
 
 ### Syntactic Stage
 
-Pyccel uses Python's [ast module](https://docs.python.org/3/library/ast.html) to read the input file(s). The ast does not store information in the same way as the rest of Pyccel so this stage exists to **convert Python's ast to Pyccel's ast**. The related code can be found in [parser/syntactic.py](../Pyccel/parser/syntactic.py).
+Pyccel uses Python's [`ast` module](https://docs.python.org/3/library/ast.html) to read the input file(s). The abstract syntax tree (AST) of Python's `ast` module does not store information in the same way as the rest of Pyccel so this stage exists to **convert Python's AST to Pyccel's AST**. The related code can be found in [parser/syntactic.py](../pyccel/parser/syntactic.py).
 
 The syntactic stage also handles parsing header comments. This is managed using [textx](http://textx.github.io/textX/stable/). The files describing the _textx_ grammar are found in the folder [parser/grammar](../Pyccel/parser/grammar). From these files _textx_ generates instances of the classes found in the folder [parser/syntax](../Pyccel/parser/syntax).
 
@@ -44,11 +44,11 @@ In this stage, Pyccel creates a wrapper to interface the generated low-level cod
 
 ### Compilation Stage
 
-Finally the generated code is compiled. This is handled in the [pipeline](../Pyccel/codegen/pipeline.py). The compilers commands are found in [codegen/compiling/compilers.py](../Pyccel/codegen/compiling/compilers.py). Different compilers have different flags and need different libraries. Once Pyccel has been executed once on your machine the flags and libraries can be found in json files in the [compilers](../Pyccel/compilers) folder
+Finally the generated code is compiled. This is handled in the [pipeline](../pyccel/codegen/pipeline.py). The compilers commands are found in [codegen/compiling/compilers.py](../pyccel/codegen/compiling/compilers.py). Different compilers have different flags and need different libraries. Once Pyccel has been executed once on your machine the flags and libraries can be found in JSON files in the [compilers](../pyccel/compilers) folder.
 
 ### Function Naming Conventions/File Navigation
 
-In the syntactic, semantic, and code generation stages a similar strategy is used for traversing the Python objects. This strategy is based on function names. The majority of functions have names of the form: `_prefix_ClassName` (in the syntactic and semantic stages the prefix is `visit`, in the code generation stages it is `print`). These functions are never called directly, but instead are called via a high level function `_prefix` (e.g. `_visit` for the semantic stage). This strategy avoids large if/elif blocks to handle all possible types.
+In the syntactic, semantic, and code generation stages a similar strategy is used for traversing the Python objects. This strategy is based on function names. The majority of functions have names of the form: `_prefix_ClassName` (in the syntactic and semantic stages the prefix is `visit`, in the code generation stages it is `print`). These functions are never called directly, but instead are called via a high level function `_prefix` (e.g. `_visit` for the semantic stage). This strategy avoids large `if`/`elif` blocks to handle all possible types.
 
 #### Example
 Suppose we want to generate the code for an object of the class `NumpyTanh`, first we collect the inheritance tree of `NumpyTanh`. This gives us:
@@ -70,7 +70,10 @@ In the case of `NumpyTanh` the function which will be selected is `_print_NumpyU
 
 ### AST
 
-The objects as understood by Pyccel are each described by classes which inherit from [Pyccel.ast.basic.Basic](../Pyccel/ast/basic.py). These classes are found in the [ast](../Pyccel/ast) folder. The ast is split into several files. There is one file for each supported extension module and files to group concepts, e.g. literals/operators/built-in functions
+The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.Basic](../pyccel/ast/basic.py).
+These classes are found in the [ast](../pyccel/ast) folder.
+The objects in the Abstract Syntax Tree (AST) are described in several files.
+There is one file for each supported extension module and files to group concepts, e.g. literals/operators/built-in functions.
 
 ## Error System
 
@@ -83,4 +86,4 @@ If the error prevents further translation (e.g. the type of an object is now unk
 
 ## Getting Help
 
-While discussions within the associated Github issue are often sufficient, should you require more help do not hesitate to ask one of the other developers to add you to our slack: Pyccel.slack.com
+While discussions within the associated GitHub issue are often sufficient, should you require more help do not hesitate to ask one of the other developers to add you to our slack: <pyccel.slack.com>
