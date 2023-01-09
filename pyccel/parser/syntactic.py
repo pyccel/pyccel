@@ -786,12 +786,14 @@ class SyntaxParser(BasicParser):
         results = []
         result_counter = 1
 
+        local_symbols = self.scope.local_used_symbols
+
         for r in zip(*returns):
             r0 = r[0]
 
             pyccel_symbol  = isinstance(r0, PyccelSymbol)
             same_results   = all(r0 == ri for ri in r)
-            name_available = all(r0 != a.name for a in arguments)
+            name_available = all(r0 != a.name for a in arguments) and r0 in local_symbols
 
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
