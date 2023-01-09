@@ -2,7 +2,7 @@
 
 ## Template
 ### Templates using header comments
-A **template** in pyccel, is used to allow the same function to take arguments of different types from a selection of types the user specifies.
+A **template** in Pyccel, is used to allow the same function to take arguments of different types from a selection of types the user specifies.
 #### The usage
 In this example the argument **a**, could either be an integer or float, and the same for the argument **b**:
 ```python
@@ -32,7 +32,7 @@ def f1():
 		pass
 	pass
 ```
-In this example the arguments of **f2** can either be bool or complex, they can not be int or float:
+In this example the arguments of **f2** can either be boolean or complex, they can not be integer or float:
 ```python
 #$ header template T(int|real)
 def f1():
@@ -53,7 +53,7 @@ def f(a,b):
 ```
 Arguments:
 -   name: the name of the template
--   types: the types the tamplate represents.
+-   types: the types the template represents.
 ---
 *Note:*
 The arguments **name** and **types** could also be passed of the form
@@ -63,9 +63,9 @@ The arguments **name** and **types** could also be passed of the form
 When  a function is decorated with the template decorator:
 -   The templates are only available to the decorated function.
 -   The templates overrides any existing templates with the same name (declared as header comment).
--   If the function is decorated with two templates with the same name, the first one gets overrided.
+-   If the function is decorated with two templates with the same name, the first one gets overridden.
 ##### Examples
-In this example the arguments of **f** can either be bool or complex, they can not be int or float.
+In this example the arguments of **f** can either be boolean or complex, they can not be integer or float.
 ```python
 from pyccel.decorators import types, template
 #$ header template T(int|real)
