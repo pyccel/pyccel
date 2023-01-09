@@ -16,6 +16,7 @@ args = parser.parse_args()
 
 results = {}
 for branch in [args.head, args.base]:
+    branch = branch[:-4]
     print(branch)
     with open(args.head + '_cov', encoding="utf-8") as f:
         lines = f.readlines()
