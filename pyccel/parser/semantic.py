@@ -435,6 +435,8 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Variable):
             d_var['datatype'       ] = expr.dtype
             d_var['memory_handling'] = expr.memory_handling
+            d_var['memory_location'] = expr.memory_location
+            d_var['current_context'] = expr.current_context
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
             d_var['cls_base'       ] = expr.cls_base
