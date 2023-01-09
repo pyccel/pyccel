@@ -5,7 +5,7 @@ import difflib
 import os
 import sys
 
-parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
+parser = argparse.ArgumentParser(description='Create a neat markdown file to summarise the results')
 parser.add_argument('spelling', metavar='diffFile', type=str,
                         help='File containing the pyspelling output')
 parser.add_argument('output', metavar='output', type=str,
