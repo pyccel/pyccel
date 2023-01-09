@@ -15,10 +15,9 @@ parser.add_argument('output', metavar='output', type=str,
 args = parser.parse_args()
 
 results = {}
-for branch in [args.head, args.base]:
-    branch = branch[:-4]
-    print(branch)
-    with open(args.head + '_cov', encoding="utf-8") as f:
+for branch_file in [args.head, args.base]:
+    branch = branch_file[:-4]
+    with open(branch_file, encoding="utf-8") as f:
         lines = f.readlines()
 
     results[branch + '_summary'] = ''.join(lines[-3:])
@@ -28,12 +27,7 @@ for branch in [args.head, args.base]:
     n = len(lines)
     i = 0
     while i < n:
-        modname = lines[i].split()[1]
-        modname = modname.strip('"')
-        modname = modname[:-3]
-        modname = modname.replace('/','.')
-        modname = modname.split(branch, 1)[1]
-        modname = modname[1:]
+        modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
         i+=1
         words = set()
         while i<n and lines[i].startswith(' - '):
