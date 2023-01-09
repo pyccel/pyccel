@@ -266,7 +266,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     }
     va_end(va);
 
-    if (offset)
+    if (arr.nd - view.nd)
     {
         int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
         int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
