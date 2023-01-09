@@ -27,6 +27,7 @@ for branch in [args.head, args.base]:
     n = len(lines)
     i = 0
     while i < n:
+        print(lines[i])
         modname = lines[i].split()[1].strip('"')[:-4].replace('/','.').split(branch, 1)[1][1:]
         i+=1
         words = set()
