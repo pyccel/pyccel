@@ -4,7 +4,7 @@ The semantic stage is described by the file [pyccel.parser.semantic](../pyccel/p
 
 The semantic stage serves several purposes:
 1.  [**Types**](#Types) : Determine the type of each symbol
-2.  [**Impose Restrictions**](#Impose-restrictions) : Ensure that the code follows any restictions that Pyccel imposes
+2.  [**Impose Restrictions**](#Impose-restrictions) : Ensure that the code follows any restrictions that Pyccel imposes
 3.  [**Function Recognition**](#Function-recognition) : Identify any functions that are recognised by Pyccel
 4.  [**Imports**](#Imports) : Identify imports
 5.  [**Low-level Objects**](#Low-level-objects) : Create any objects which are hidden in high-level code, but must appear explicitly in low-level code
@@ -32,7 +32,7 @@ Variables and objects which can be saved in variables (e.g. literals and arrays)
 The type indicates all the information that allows the object to be declared in a low-level language.
 The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
 The characteristics are:
--   **data type** : bool/int/float/complex/class type/etc
+-   **data type** : boolean/integer/float/complex/class type/etc
 -   **precision** : The number of bytes required to store an object of this data type
 -   **rank** : The number of dimensions of the array (0 for a scalar)
 -   **shape** : The number of elements in each dimension of the array (`()` for a scalar)
@@ -84,15 +84,15 @@ This function takes several arguments (see docstring for more details).
 The most important arguments are:
 -   _message_ : Describe the issue that lead to the error
 
--   _symbol_ : The Python ast object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
+-   _symbol_ : The Python AST object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
 
 -   _severity_ : The severity level must be one of the following:
     -   _warning_ : An error will be printed but Pyccel will continue executing
     -   _error_ : An error will be printed but Pyccel will continue executing the syntactic stage
-    -   _fatal_ : An error will be printed and Pyccel will stop executing. This is the level used the most frequently in the semantic stage as, if information such as the type cannot be determined, the object cannot be created which will cause problems later in the exection.
+    -   _fatal_ : An error will be printed and Pyccel will stop executing. This is the level used the most frequently in the semantic stage as, if information such as the type cannot be determined, the object cannot be created which will cause problems later in the execution.
 
 It should be noted that Pyccel assumes that the user has provided valid code.
-It is not feasable to provide error messages for every possible coding error so we limit ourselves to simple validity checks and Pyccel restriction errors.
+It is not feasible to provide error messages for every possible coding error so we limit ourselves to simple validity checks and Pyccel restriction errors.
 
 ## Function Recognition
 
@@ -103,7 +103,7 @@ In this case the `funcdef` attribute of the [`pyccel.ast.core.FunctionCall`](../
 The type of the `FunctionCall` (required to assign the result to a `Variable`) is easily determined from the type of the result variable(s).
 
 The second case involves functions that are recognised by Pyccel.
-This includes built-in functions and functions imported from supported libraries (numpy, math, etc).
+This includes built-in functions and functions imported from supported libraries (`numpy`, `math`, etc).
 Built-in functions do not need importing.
 Instead they are recognised via the function [`pyccel.ast.utilities.builtin_function`](../pyccel/ast/utilities.py) which uses the dictionary [`pyccel.ast.builtins.builtin_functions_dict`](../pyccel/ast/builtins.py) to identify supported functions.
 Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
@@ -121,7 +121,7 @@ In the `_visit_Import` function, the [`pyccel.ast.core.Module`](../pyccel/ast/co
 This object contains all necessary `FunctionDef`, `Variable` and `ClassDef` objects which may be imported.
 These are then placed into the `Scope.imports` dictionary so they can be recognised when they are used in the file.
 
-The case of modules supported by pyccel is somewhat simpler.
+The case of modules supported by Pyccel is somewhat simpler.
 In this case there should be an associated file `pyccel/ast/moduleext.py` (e.g. `numpyext.py`, `itertoolsext.py`) containing all the AST nodes related to this module.
 The file should also contain a [`pyccel.ast.core.Module`](../pyccel/ast/core.py), listing all the objects which are in the file.
 The `Module` object must then be saved in the [`pyccel.ast.utilities.builtin_import_registery`](../pyccel/ast/utilities.py) dictionary.
@@ -140,12 +140,12 @@ In this case it is important to use the scope to avoid name collisions.
 These variables that are created should be tagged as `is_temp = True`.
 This allows Pyccel to differentiate between variables which appear in the code and should be preserved at all costs, and variables which are created by Pyccel and may be omitted if it leads to cleaner code.
 
-Additional objects can often appear in awkward places where they cannot be easily returned as a CodeBlock.
+Additional objects can often appear in awkward places where they cannot be easily returned as a `CodeBlock`.
 This is the case for example if the object is needed to properly define something inside the right hand side of an `Assign`.
-As the right hand side of an Assign cannot be a CodeBlock the additional expressions must be collected outside the usual flow.
+As the right hand side of an Assign cannot be a `CodeBlock` the additional expressions must be collected outside the usual flow.
 The attribute `SemanticParser._additional_exprs` exists to hold these expressions.
 This object is a list of lists which is initialised and inserted in `_visit_CodeBlock`.
-A list of lists is necessary in case a CodeBlock can be found inside another (e.g. `a = [i for i in range]` where a `CodeBlock` contains the `Assign`, but another exists inside the `For` loop).
+A list of lists is necessary in case a `CodeBlock` can be found inside another (e.g. `a = [i for i in range]` where a `CodeBlock` contains the `Assign`, but another exists inside the `For` loop).
 
 In order to avoid problems arising from forgetfulness we try to add additional objects in the most general place possible.
 For example, allocation occurs in the function `SemanticParser._assign_lhs_variable`.
@@ -155,7 +155,7 @@ Variable declarations are created in the printer when needed from the scope vari
 
 All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
 This super-class stores information about how the various objects are related.
-This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the argument is used by the node), `is_user_of` (which indicates if the argument uses the node), and `substitute` (which allows all occurences of an object in the node to be replaced by a different object).
+This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the argument is used by the node), `is_user_of` (which indicates if the argument uses the node), and `substitute` (which allows all occurrences of an object in the node to be replaced by a different object).
 See [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
 
 The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
