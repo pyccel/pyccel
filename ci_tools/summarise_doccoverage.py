@@ -1,7 +1,6 @@
 """ Script to check if documentation coverage has decreased
 """
 import argparse
-import difflib
 import os
 import sys
 
@@ -17,6 +16,7 @@ args = parser.parse_args()
 
 results = {}
 for branch in [args.head, args.base]:
+    print(branch)
     with open(args.head + '_cov', encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -27,8 +27,12 @@ for branch in [args.head, args.base]:
     n = len(lines)
     i = 0
     while i < n:
-        print(lines[i])
-        modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
+        modname = lines[i].split()[1]
+        modname = modname.strip('"')
+        modname = modname[:-3]
+        modname = modname.replace('/','.')
+        modname = modname.split(branch, 1)[1]
+        modname = modname[1:]
         i+=1
         words = set()
         while i<n and lines[i].startswith(' - '):
