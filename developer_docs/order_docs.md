@@ -2,12 +2,12 @@
 
 ## Order in numpy
 
-`order` is the parameter given to the `numpy.array` function in order to choose how the array is stored in memory.
-Both of the orders discussed here (`order_c` and `order_f`) are stored **contiguously** in memory, but they differ in how they are arranged.
+`order` is the parameter given to the `numpy.array` function in order to choose how a multi-dimensional array is stored in memory.
+For both of the orders discussed here (`C` and `F`) the arrays are stored **contiguously** in memory, but they differ in how their entries are arranged.
 
 ### Order C
 
-`order='C'` tells `Numpy` to store the array row by row (row-major), example:
+`order='C'` tells Numpy to store the array row by row (row-major). For example:
 
 ```python
 import numpy as np
@@ -20,12 +20,12 @@ if __name__ == "__main__":
  ```
 
 `array.ravel('k')` shows us how the array is stored in memory.
-This python script will output `[1 2 3 4 5 6 7 8 9]`, notice that the rows are stored one after the other.
-This is the default behaviour in python.
+This Python script will output `[1 2 3 4 5 6 7 8 9]`; notice that the rows are stored one after the other.
+This is the default behaviour in Python.
 
 ### Order F
 
-`order='F'` on the other hand tells `Numpy` to store the array column by column (column-major), example:
+`order='F'` on the other hand tells Numpy to store the array column by column (column-major). For example:
 
 ```python
 import numpy as np
@@ -37,11 +37,11 @@ if __name__ == "__main__":
   print(a.ravel('K'))
 ```
 
-This python script will output `[1 4 7 2 5 8 3 6 9]`, notice that the columns are stored one after the other.
+This Python script will output `[1 4 7 2 5 8 3 6 9]`; notice that the columns are stored one after the other.
 
-### Printing and indexing in `Numpy`
+### Printing and indexing in Numpy
 
-`order` in `Numpy` does not affect the indexing or the printing, unlike `transposing`, the `shape` of the array remains the same, only the `strides` change, example:
+The `order` of a Numpy array does not affect the indexing or the printing: unlike the `transpose` operation, the `shape` of the array remains the same, and only the `strides` change. For example:
 
 ```python
 import numpy as np
@@ -68,7 +68,7 @@ if __name__ == "__main__":
    print(b[2][1], b[0][0], b[1]) # output: 8 1 [4 5]
 ```
 
-`arr.strides` is the variable that helps us navigate the array (indexing/printing), it tells us how many bytes we have to skip in memory to move to the next position along a certain axis (dimension). For example for `memory_layout_of_a = [1 4 7 2 5 8]` and `strides_of_a = (8, 24)`, we have to skip 8 bytes (1 element for `int64`) to move to the next row, but 24 bytes (3 elements for `int64`) to get to the same position in the next column of `a`.
+`arr.strides` is the variable that helps us navigate the array (indexing/printing) by telling us how many bytes we have to skip in memory to move to the next position along a certain axis (dimension). For example for `memory_layout_of_a = [1 4 7 2 5 8]` and `strides_of_a = (8, 24)`, we have to skip 8 bytes (1 element for `int64`) to move to the next row, but 24 bytes (3 elements for `int64`) to get to the same position in the next column of `a`.
 `a[2][1]` would give us `'8'`, using the `strides`: `2 * 8 + 1 * 24 = 40`, which means that in the flattened array, we would have to skip `40` bytes to get the value of `a[2][1]`, each element is 8 bytes, so we would have to skip `40 / 8 = 5` elements to get to `'8'`
 
 The order does however change how the user writes code.
@@ -95,11 +95,11 @@ if __name__ == "__main__":
 
 ## Pyccel's C code
 
-In `Pyccel`'s C code, we aim to replicate `Numpy`'s indexing/printing and memory layout conventions.
+In Pyccel's C code, we aim to replicate Numpy's indexing/printing and memory layout conventions.
 
 ### Ordering in C code
 
-Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike `Numpy`. `Pyccel`'s strides use 'number of elements' instead of 'number of bytes' as a unit)
+Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike Numpy, Pyccel's strides use 'number of elements' instead of 'number of bytes' as a unit)
 While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
 
 Example:  
@@ -122,7 +122,7 @@ One dimensional arrays require no order, since order would not change how they b
 
 ### Indexing in C code
 
-For indexing, the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order` so that we can  mirror `Numpy`'s conventions.
+For indexing the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order` so that we can mirror Numpy's conventions.
 
 If we take the following 2D array as an example:
 |   |   |   |
@@ -229,7 +229,7 @@ int main()
 
 ### `order_f` array creation example
 
-For `order_f`, the process is similar to `order_c`, but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an `order_f ndarray`, and copy from the `temp_ndarray` to the destination `order_f ndarray` _ using `strides` and `shape` _ to get the correct column-major memory layout.
+For `order_f`, the process is similar to `order_c`, but instead of copying our data straight to the destination `ndarray`, we first create an (`order_c`) `temp_ndarray`, copy the data to the `temp_ndarray`, then create an `order_f ndarray`, and copy from the `temp_ndarray` to the destination `order_f ndarray` -- using `strides` and `shape` -- to get the correct column-major memory layout.
 
 Example:
 
@@ -313,7 +313,7 @@ int main()
 As Fortran has arrays in the language there is no need to add special handling for arrays. Fortran ordered arrays (`order_f`) are already compatible with the Fortran language. They can therefore be passed to the function as they are.
 
 In order to pass C ordered arrays (`order_c`) and retain the shape and correct element placing to be compatible with Fortran, a transpose would be needed.
-In pyccel, we prefer to avoid unnecessary copies, so instead we pass the contiguous block of memory to Fortran and change how we index the array to ensure that we access the expected element.
+In Pyccel we prefer to avoid unnecessary copies, so instead we pass the contiguous block of memory to Fortran and change how we index the array to ensure that we access the expected element.
 
 ### Ordering in Fortran code
 
@@ -351,11 +351,11 @@ In C code the index `i_1, i_2, i_3` points to the element `i_1 * (n_2 * n_3) + i
 In Fortran code the index `i_1, i_2, i_3` points to the element `i_1 + i_2 * n_1 + i_3 * (n_2 * n_3)` in memory.
 
 ### Order F
-Pyccel's translation of code with `order='F'` should look very similar to the original python code.
+Pyccel's translation of code with `order='F'` should look very similar to the original Python code.
 
 Numpy's storage of the strides ensures that the first dimension is the contiguous dimension as in Fortran, so the code is equivalent for all element-wise operations.
 
-There are some exceptions to this rule, for example printing. Python always prints arrays in a row-major format so pyccel must take care to respect this rule in the output.
+There are some exceptions to this rule, for example printing. Python always prints arrays in a row-major format so Pyccel must take care to respect this rule in the output.
 
 ### Order C
 
@@ -374,7 +374,7 @@ where the numbers indicate the position of the elements in memory. If this data 
 | 1 | 3 | 5 |
 | 2 | 4 | 6 |
 
-As a result we cannot pass the data block without either rearranging the elements (transpose), or changing the index. In pyccel we prefer avoiding unnecessary copies. As a result we pass a data block (`[1, 2, 3, 4, 5, 6]`), but we indicate a size (3,2). This gives us the following array:
+As a result we cannot pass the data block without either rearranging the elements (transposing), or changing the index. In Pyccel we prefer avoiding unnecessary copies. As a result we pass a data block (`[1, 2, 3, 4, 5, 6]`), but we indicate a size (3,2). This gives us the following array:
 
 |   |   |
 |---|---|
@@ -384,7 +384,7 @@ As a result we cannot pass the data block without either rearranging the element
 
 This is equivalent to the transpose of the original array. As a result we can obtain expected results by simply inverting the index order.
 
-Therefore the following python code:
+Therefore the following Python code
 ```python
 for i in range(2):
     for j in range(3):
