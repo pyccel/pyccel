@@ -74,6 +74,6 @@ def my_kernel(x: 'float64[:]', y: 'float64[:]', out: 'float64[:]'):
     out[i] = x[i] + y[i]
 ```
 
-The kernel uses the `cuda.threadIdx(0)`, `cuda.blockIdx(0)`, and `cuda.blockDim(0)` built-in variables to compute the global index of the current thread within the input arrays. 
+The kernel uses the `cuda.threadIdx(0)`, `cuda.blockIdx(0)`, and `cuda.blockDim(0)` built-in variables to compute the global index of the current thread within the 1D input arrays. 
 
 The global index is computed as the sum of the thread index and the block index, multiplied by the block size, in the first dimension. This allows each thread to compute its own index within the input arrays, and to exit if its index falls outside the bounds of the arrays.
