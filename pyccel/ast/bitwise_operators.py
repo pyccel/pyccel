@@ -15,12 +15,14 @@ from .internals    import max_precision
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
-    'PyccelRShift',
-    'PyccelLShift',
-    'PyccelBitXor',
-    'PyccelBitOr',
+    'PyccelBitComparisonOperator',
+    'PyccelBitOperator',
     'PyccelBitAnd',
+    'PyccelBitOr',
+    'PyccelBitXor',
     'PyccelInvert',
+    'PyccelLShift',
+    'PyccelRShift',
 )
 
 #==============================================================================
