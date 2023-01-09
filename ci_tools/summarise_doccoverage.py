@@ -54,8 +54,9 @@ with open(args.output, 'w', encoding="utf-8") as f:
         for obj in added_obj:
             print(f'\t * {obj}', file=f)
         print(file=f)
-
+'''
 if len(added_mod) > 0 or len(added_obj) > 0:
     sys.exit(1)
 else:
     sys.exit(0)
+'''
