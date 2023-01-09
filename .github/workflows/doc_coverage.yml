@@ -9,7 +9,6 @@ jobs:
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    needs: Linux
 
     steps:
       - uses: actions/checkout@v3
