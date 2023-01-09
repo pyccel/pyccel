@@ -31,10 +31,10 @@ for branch_file in [args.base, args.compare]:
         i+=1
         while i<n and lines[i].startswith(' - '):
             if lines[i].startswith(' - No module docstring'):
-                results[branch + '_no_mod'].update(modname)
+                results[branch + '_no_mod'].update([modname])
             else:
                 objname = lines[i].split()[-1].strip('`')
-                results[branch + '_no_obj'].update(objname)
+                results[branch + '_no_obj'].update([objname])
             i += 1
 
 print(results['compare_no_obj'])
