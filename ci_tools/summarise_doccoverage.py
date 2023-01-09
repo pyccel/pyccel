@@ -5,9 +5,9 @@ import os
 import sys
 
 parser = argparse.ArgumentParser(description='Check doc coverage change')
-parser.add_argument('head', metavar='head_cov', type=str,
+parser.add_argument('base', metavar='head_cov', type=str,
                         help='File containing the coverage of the head branch')
-parser.add_argument('base', metavar='base_cov', type=str,
+parser.add_argument('compare', metavar='base_cov', type=str,
                         help='File containing the coverage of the base branch')
 parser.add_argument('output', metavar='output', type=str,
                         help='File where the report will be printed')
@@ -15,7 +15,7 @@ parser.add_argument('output', metavar='output', type=str,
 args = parser.parse_args()
 
 results = {}
-for branch_file in [args.head, args.base]:
+for branch_file in [args.base, args.compare]:
     branch = branch_file[:-4]
     with open(branch_file, encoding="utf-8") as f:
         lines = f.readlines()
