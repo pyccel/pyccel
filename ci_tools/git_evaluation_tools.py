@@ -43,20 +43,6 @@ def get_diff_as_json(filename):
                 changes[current_file_name]['deletion'] = current_file_deletions
                 current_file_additions = []
                 current_file_deletions = []
-            # while not lines[i].startswith('---'):
-            #     i+=1
-            # current_file_name_del = lines[i][3:].strip()
-            # i+=1
-            # current_file_name_add = lines[i][3:].strip()
-            # if current_file_name_del == '/dev/null':
-            #     current_file_name = current_file_name_add[2:]
-            #     assert current_file_name != '/dev/null'
-            # elif current_file_name_add == '/dev/null':
-            #     current_file_name = current_file_name_del[2:]
-            #     assert current_file_name != '/dev/null'
-            # else:
-            #     current_file_name = current_file_name_del[2:]
-            #     assert current_file_name == current_file_name_add[2:]
             current_file_name = l.split(' ')[3][2:]
             i+=1
         elif l.startswith('@@'):
