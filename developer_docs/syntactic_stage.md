@@ -4,16 +4,16 @@ The syntactic stage is described by the file [pyccel.parser.syntactic](../pyccel
 
 The syntactic stage serves 4 main purposes:
 1.  [**Navigation and AST Creation**](#Navigation-and-ast-creation) : Convert Python's [AST](https://docs.Python.org/3/library/ast.html) (abstract syntax tree) representation of the Python file to Pyccel's AST representation (objects of the classes in the folder [pyccel.ast](../pyccel/ast))
-2.  [**Errors**](#Errors) : Raise an error for any syntax used that is not yet supported by pyccel
+2.  [**Errors**](#Errors) : Raise an error for any syntax used that is not yet supported by Pyccel
 3.  [**Headers**](#Headers) : Convert header comments from strings to Pyccel's AST representation
-4.  [**Scoping**](#Scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if pyccel generates Variable names
+4.  [**Scoping**](#Scoping) : Collect the name of all variables in each scope (see [scope](scope.md) for more details) to ensure no name collisions can occur if Pyccel generates Variable names
 
 ## Navigation and AST Creation
 
 The entry point for the class `SyntaxParser` is the function `parse`.
 This function is called from the constructor to examine a FST (Full Syntax Tree) object.
 The FST is the output of Python's `ast.parse` function with comments reinserted using the [`pyccel.parser.extend_tree.extend_tree`](../pyccel/parser/extend_tree.py) function.
-This is necessary as python's ast module discards all comments.
+This is necessary as python's `ast` module discards all comments.
 
 The key line of the function `parse` is the call to `self._visit(self.fst)`.
 All elements of the tree must be visited.
@@ -31,7 +31,7 @@ Consider for example the Python expression:
 ```python
 a += b
 ```
-The Python ast module parses this as:
+The Python `ast` module parses this as:
 ```python
 AugAssign(target=Name(id='a', ctx=Store()), op=Add(), value=Name(id='b', ctx=Load()))
 ```
@@ -42,7 +42,7 @@ We therefore need to visit the 2 members of `ast.AugAssign`:
 
 and use the third (`op`) to correctly construct the `pyccel.ast.core.AugAssign`.
 
-The final code therefore ressembles the following:
+The final code therefore resembles the following:
 ```python
 def _visit_AugAssign(self, stmt):
     lhs = self._visit(stmt.target)
@@ -65,7 +65,7 @@ This function takes several arguments (see docstring for more details).
 The most important arguments are:
 -   _message_ : Describe the issue that lead to the error
 
--   _symbol_ : The Python ast object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
+-   _symbol_ : The Python AST object should be passed here. This object contains information about its position in the file (line number, column) which ensures the user can more easily locate their error
 
 -   _severity_ : The severity level must be one of the following:
     -   _warning_ : An error will be printed but Pyccel will continue executing
@@ -74,7 +74,7 @@ The most important arguments are:
 
 ## Headers
 
-The headers (type declarations/openmp pragmas/etc) also have their own syntax which cannot be parsed by Python's ast module.
+The headers (type declarations/OpenMP pragmas/etc) also have their own syntax which cannot be parsed by Python's `ast` module.
 The module [textx](http://textx.github.io/textX/stable/) is used to parse these statements.
 The files describing the _textx_ grammar are found in the folder [pyccel.parser.grammar](../pyccel/parser/grammar).
 From these files _textx_ generates instances of the classes found in the folder [pyccel.parser.syntax](../pyccel/parser/syntax).
@@ -83,7 +83,7 @@ These instances can then be inserted into the abstract syntax tree.
 ## Scoping
 
 The final purpose of the syntactic stage is to collect all names declared in the code.
-This is important to avoid name collisions if pyccel creates temporaries or requires additional names.
+This is important to avoid name collisions if Pyccel creates temporaries or requires additional names.
 The names are saved in the scope (for more details see [scope](scope.md)).
 Whenever a symbol is encountered in a declaration context, it should be saved to the scope using the function `self.scope.insert_symbol`.
 This is usually done in the `_visit_Name` function, however this function is not aware of the context so it cannot determine whether it is a declaration.
@@ -134,6 +134,6 @@ The `Scope` should prevent name collisions with these objects, but that will lea
 
 Originally the syntactic stage translated from [RedBaron](https://github.com/PyCQA/redbaron)'s AST representation to Pyccel's AST representation.
 RedBaron parses Python, but makes no attempt to validate the code.
-This made pyccel's job harder as there was no guarantee that the syntax was correct.
-Since moving to Python's ast module the syntactic stage has been massively simplified.
-This is because Python's ast module checks the validity of the syntax.
+This made Pyccel's job harder as there was no guarantee that the syntax was correct.
+Since moving to Python's `ast` module the syntactic stage has been massively simplified.
+This is because Python's `ast` module checks the validity of the syntax.
