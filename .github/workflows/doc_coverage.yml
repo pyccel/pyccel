@@ -29,6 +29,8 @@ jobs:
         shell: bash
       - name: Show report
         run: |
+          cat head/pyccel/ast/basic.py
+          cat base/pyccel/ast/basic.py
           docstr-coverage head/pyccel 2>head_cov || true
           docstr-coverage base/pyccel 2>base_cov || true
           python base/ci_tools/summarise_doccoverage.py head_cov base_cov $GITHUB_STEP_SUMMARY
