@@ -39,8 +39,8 @@ for branch_file in [args.base, args.compare]:
 
 added_mod = [mod for mod in results['compare_no_mod'] if mod not in results['base_no_mod']]
 added_obj = [obj for obj in results['compare_no_obj'] if obj not in results['base_no_obj']]
-print(results['added_mod'])
-print(results['added_obj'])
+print(added_mod)
+print(added_obj)
 with open(args.output, 'w', encoding="utf-8") as f:
     print('Base Branch Summary', file=f)
     print(results['base_summary'], file=f)
