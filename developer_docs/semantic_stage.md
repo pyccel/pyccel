@@ -155,7 +155,8 @@ Variable declarations are created in the printer when needed from the scope vari
 
 All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
 This super-class stores information about how the various objects are related.
-This allows the class to provide functions such as `get_user_nodes`, `get_attribute_nodes`, `is_attribute_of`, `is_user_of`, and `substitute`.
+This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the argument is used by the node), `is_user_of` (which indicates if the argument uses the node), and `substitute` (which allows all occurences of an object in the node to be replaced by a different object).
+See [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
 
 The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
 Nevertheless the object tree should be considered in two situations.
@@ -164,6 +165,9 @@ In this case the new object does not pass through the constructor of its user.
 It is therefore important to call `set_current_user_node` on the new object to update the tree.
 Secondly, if the object contains all necessary information after the syntactic stage (e.g. `pyccel.ast.core.Continue`) we may be tempted to return the object as is.
 However if this were done there would be multiple user nodes from both the semantic and the syntactic stage.
+For example, if we need to have access to the containing function we could do `expr.get_user_nodes(FunctionDef)`.
+We expect that this only returns semantic objects if `expr` is a result of the semantic stage.
+However if objects such as `pyccel.ast.core.Continue` are returned as is, then we would get access to both the syntactic and the semantic versions of the containing function without any way to distinguish between the two.
 To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nodes` function to remove the syntactic objects from the tree.
 
 ## Name Collisions
