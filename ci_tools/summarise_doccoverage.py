@@ -17,6 +17,7 @@ args = parser.parse_args()
 
 results = {}
 for branch in [args.head, args.base]:
+    print(branch)
     with open(args.head, encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -28,11 +29,7 @@ for branch in [args.head, args.base]:
     i = 0
     while i < n:
         print(lines[i])
-        modname = 'dummy'
-        try:
-            modname = lines[i].split()[1].strip('"')[:-4].replace('/','.').split(branch[:-4], 1)[1][1:]
-        except:
-            print(lines[i])
+        modname = lines[i].split()[1].strip('"')[:-4].replace('/','.').split(branch, 1)[1][1:]
         i+=1
         words = set()
         while i<n and lines[i].startswith(' - '):
