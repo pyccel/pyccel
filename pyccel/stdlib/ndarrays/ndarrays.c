@@ -245,6 +245,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     va_list  va;
     t_slice slice;
     int32_t start = 0;
+    int32_t offset = 0;
 
     view.nd = n;
     view.type = arr.type;
@@ -257,21 +258,23 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     for (int32_t i = 0; i < arr.nd ; i++)
     {
         slice = va_arg(va, t_slice);
+        if (slice.end - slice.start > 1 && !offset)
+            offset = i;
         view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step; // we need to round up the shape
         start += slice.start * arr.strides[i];
         view.strides[i] *= slice.step;
     }
     va_end(va);
-    int32_t j = arr.nd - view.nd;
-    if (j)
+
+    if (offset)
     {
         int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
         int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
         for (int32_t i = 0; i < view.nd; i++)
         {
-            tmp_strides[i] = view.strides[j-1];
-            tmp_shape[i] = view.shape[j-1];
-            j++;
+            tmp_strides[i] = view.strides[offset];
+            tmp_shape[i] = view.shape[offset];
+            offset++;
         }
         free(view.shape);
         free(view.strides);
