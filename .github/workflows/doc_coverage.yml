@@ -31,4 +31,4 @@ jobs:
         run: |
           docstr-coverage head/pyccel 2>head_cov || true
           docstr-coverage base/pyccel 2>base_cov || true
-          python base/ci_tools/summarise_doccoverage.py head_cov base_cov $GITHUB_STEP_SUMMARY
+          python base/ci_tools/summarise_doccoverage.py head base $GITHUB_STEP_SUMMARY
