@@ -27,15 +27,16 @@ for branch in [args.head, args.base]:
     n = len(lines)
     i = 0
     while i < n:
-        modname = lines[i].split()[1][:-4].strip('"').replace('/','.').split(branch, 1)[1][1:]
+        modname = lines[i].split()[1].strip('"')[:-4].replace('/','.').split(branch, 1)[1][1:]
         i+=1
         words = set()
-        while i<n and not lines[i].startswith(' - '):
+        while i<n and lines[i].startswith(' - '):
             if lines[i].startswith(' - No module docstring'):
                 results[branch + '_no_mod'].update(modname)
             else:
                 objname = lines[i].split()[-1].strip('`')
                 results[branch + '_no_obj'].update(objname)
+            i += 1
 
 added_mod = [mod for mod in results['base_no_mod'] if mod not in results['head_no_mod']]
 added_obj = [obj for obj in results['base_no_obj'] if obj not in results['head_no_obj']]
