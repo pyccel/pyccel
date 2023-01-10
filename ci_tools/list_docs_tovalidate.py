@@ -12,7 +12,7 @@ parser.add_argument('output', metavar='output', type=str,
 args = parser.parse_args()
 
 with open(args.files,'r') as f:
-    files = f.read()
+    files = f.readlines()
 
 objects = []
 for file in files:
