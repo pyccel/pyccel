@@ -468,7 +468,7 @@ class CupyRavel(CupyArray):
     def __init__(self, arg):
         super().__init__(arg = arg)
         shape = reduce((lambda x, y: x.python_value * y.python_value), self.shape)
-        self._shape = [shape if isinstance(shape, LiteralInteger) else LiteralInteger(shape)]
+        self._shape = [shape if isinstance(shape, (LiteralInteger, PyccelArraySize)) else LiteralInteger(shape)]
         self._rank = 1
 
 
