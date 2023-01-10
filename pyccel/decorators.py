@@ -103,3 +103,4 @@ def allow_negative_index(f,*args):
 
 def kernel(f):
     return numpy.array([[f]])
+
