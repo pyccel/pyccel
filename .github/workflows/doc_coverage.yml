@@ -25,7 +25,8 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pip install docstr-coverage
+          python -m pip install docstr-coverage
+          pythom -m pip install numpydoc
         shell: bash
       - name: Show report
         run: |
@@ -40,3 +41,6 @@ jobs:
           cat changed_files.txt
           python ci_tools/list_docs_tovalidate.py changed_files.txt objects.txt
           cat objects.txt
+          while read line; do    
+            python3 -m numpydoc --validate line 
+          done < file.txt
