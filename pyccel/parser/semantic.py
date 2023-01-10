@@ -435,6 +435,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Variable):
             d_var['datatype'       ] = expr.dtype
             d_var['memory_handling'] = expr.memory_handling
+            d_var['memory_location'] = expr.memory_location
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
             d_var['cls_base'       ] = expr.cls_base
@@ -495,6 +496,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, CupyNewArray):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_location'] = expr.memory_location
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
