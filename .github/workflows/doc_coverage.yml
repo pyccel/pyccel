@@ -42,6 +42,7 @@ jobs:
           python ci_tools/list_docs_tovalidate.py changed_files.txt objects.txt
           cat objects.txt
           while read line; do    
-            echo $line
-            python3 -m numpydoc --validate $line 
+            echo $line >> report.txt
+            python3 -m numpydoc --validate $line >> report.txt || true 
           done < objects.txt
+          diff objects.txt report.txt && echo "SUCCESS! All docstrings are valid" || echo "FAILURE" && cat report.txt && exit 1
