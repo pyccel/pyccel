@@ -1902,3 +1902,21 @@ def arr_slice_2d_assign_tail_step_2(x):
 @types('float[:,:]')
 def arr_slice_2d_assign_tail_step_3(x):
     x[5::3,::3] = 2
+
+@types('float[:,:,:]')
+def arr_slice_3d_assign(x):
+    x[0,0,:] = 2
+    x[1,:,1] = 3
+    x[:,2,2] = 4
+
+@types('float[:,:,:]')
+def arr_slice_3d_assign_step_2(x):
+    x[0,0,::2] = 5
+    x[1,::2,1] = 6
+    x[::2,2,2] = 7
+
+@types('float[:,:,:]')
+def arr_slice_3d_assign_step_3(x):
+    x[0,0,::3] = 8
+    x[1,::3,::3] = 9
+    x[::3,2,::3] = 0

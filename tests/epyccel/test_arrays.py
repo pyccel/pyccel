@@ -4174,6 +4174,29 @@ def test_array_slice_2d_assign_tail(language):
     assert np.array_equal(x12, x22)
     assert np.array_equal(x13, x23)
 
+def test_array_slice_3d_assign(language):
+    f11 = arrays.arr_slice_3d_assign
+    f12 = arrays.arr_slice_3d_assign_step_2
+    f13 = arrays.arr_slice_3d_assign_step_3
+    f21 = epyccel(f11, language = language)
+    f22 = epyccel(f12, language = language)
+    f23 = epyccel(f13, language = language)
+    x11 = np.ones((2, 3, 4), dtype=float)
+    x12 = np.ones((2, 3, 4), dtype=float)
+    x13 = np.ones((2, 3, 4), dtype=float)
+    x21 = np.ones((2, 3, 4), dtype=float)
+    x22 = np.ones((2, 3, 4), dtype=float)
+    x23 = np.ones((2, 3, 4), dtype=float)
+    f11(x11)
+    f12(x12)
+    f13(x13)
+    f21(x21)
+    f22(x22)
+    f23(x23)
+    assert np.array_equal(x11, x21)
+    assert np.array_equal(x12, x22)
+    assert np.array_equal(x13, x23)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
