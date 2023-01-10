@@ -130,7 +130,7 @@ If we take the following 2D array as an example:
 | 1 | 2 | 3 |
 | 4 | 5 | 6 |
 
-with `array.rows = 2` and `array.columns = 3`, `GET_ELEMENT(arr, int32, 0, 1)` which is equivelant to `arr[0][1]` would return `2` no matter the `order`.
+with `array.rows = 2` and `array.columns = 3`, `GET_ELEMENT(arr, int32, 0, 1)` which is equivalent to `arr[0][1]` would return `2` no matter the `order`.
 
 To loop efficiently in an `order_c ndarray`, we would do this:
 ```c
