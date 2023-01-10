@@ -1,10 +1,11 @@
-from pyccel.decorators import kernel, types
+from pyccel.decorators import kernel
+from pyccel import cuda
+
 
 @kernel
-@types('int')
-def func(a):
-    print("Hello World! ", a)
+def func():
+    i = cuda.threadIdx(0) + cuda.blockIdx(0) * cuda.blockDim(0)
+    print("Hello World! ")
 
 if __name__ == '__main__':
-    arr = 0
-    func[1, 5](arr)
+    func[1, 5]()
