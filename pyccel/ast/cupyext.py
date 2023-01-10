@@ -76,7 +76,6 @@ class CupyArray(CupyNewArray):
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
@@ -153,7 +152,6 @@ class CupyArange(CupyNewArray):
         The type of the output array, if dtype is not given,
         infer the data type from the other input arguments.
     """
-    __slots__ = ('_start', '_step', '_stop', '_dtype', '_precision', '_shape', '_memory_location')
     _attribute_nodes = ('_start','_step','_stop')
     _rank = 1
     _order = None
@@ -230,7 +228,6 @@ class CupyFull(CupyNewArray):
         (row- or column-wise) order in memory.
 
     """
-    __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     name = 'full'
 
     def __init__(self, shape, fill_value, dtype=None, order='C', memory_location = 'device'):
