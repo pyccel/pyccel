@@ -1826,3 +1826,79 @@ def iterate_slice(i : int):
     for ai in a[:i]:
         res += ai
     return res
+
+#==============================================================================
+# TESTS: SLICE ASSIGN
+#==============================================================================
+
+@types('float[:]')
+def arr_slice_1d_assign_full(x):
+    x[:] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_full_step_2(x):
+    x[::2] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_full_step_3(x):
+    x[::3] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_head(x):
+    x[:5] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_head_step_2(x):
+    x[:5:2] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_head_step_3(x):
+    x[:5:3] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_tail(x):
+    x[5:] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_tail_step_2(x):
+    x[5::2] = 2
+
+@types('float[:]')
+def arr_slice_1d_assign_tail_step_3(x):
+    x[5::3] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_full(x):
+    x[:,:] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_full_step_2(x):
+    x[::2,::2] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_full_step_3(x):
+    x[::3,::3] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_head(x):
+    x[:5,:] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_head_step_2(x):
+    x[:5:2,::2] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_head_step_3(x):
+    x[:5:3,::3] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_tail(x):
+    x[5:,:] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_tail_step_2(x):
+    x[5::2,::2] = 2
+
+@types('float[:,:]')
+def arr_slice_2d_assign_tail_step_3(x):
+    x[5::3,::3] = 2
