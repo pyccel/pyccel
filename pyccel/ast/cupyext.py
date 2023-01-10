@@ -68,6 +68,12 @@ class CupyNewArray(CudaNewArray):
         self._memory_location = 'device'
         super().__init__()
 
+    @property
+    def memory_location(self):
+        """ Indicates whether a Variable has a dynamic size
+        """
+        return self._memory_location
+
 #==============================================================================
 class CupyArray(CupyNewArray):
     """
@@ -157,7 +163,7 @@ class CupyArange(CupyNewArray):
     _order = None
     name = 'arange'
 
-    def __init__(self, start, stop = None, step = None, dtype = None, memory_location = 'device'):
+    def __init__(self, start, stop = None, step = None, dtype = None):
 
         if stop is None:
             self._start = LiteralInteger(0)
@@ -230,7 +236,7 @@ class CupyFull(CupyNewArray):
     """
     name = 'full'
 
-    def __init__(self, shape, fill_value, dtype=None, order='C', memory_location = 'device'):
+    def __init__(self, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
         shape = process_shape(False, shape)
