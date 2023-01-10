@@ -63,9 +63,8 @@ class CupyNewArray(CudaNewArray):
     """ Class from which all Cupy functions which imply a call to Allocate
     inherit
     """
-    __slots__ = ('_memory_location')
+    _memory_location = 'device'
     def __init__(self):
-        self._memory_location = 'device'
         super().__init__()
 
     @property
