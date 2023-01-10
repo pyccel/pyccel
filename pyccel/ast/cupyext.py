@@ -36,7 +36,7 @@ from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
-from .cudaext        import CupyNewArray, CudaArray
+from .cudaext        import CudaNewArray, CudaArray
 from .numpyext       import process_dtype, process_shape, DtypePrecisionToCastFunction
 
 errors = Errors()
@@ -63,7 +63,9 @@ class CupyNewArray(CudaNewArray):
     """ Class from which all Cupy functions which imply a call to Allocate
     inherit
     """
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     def __init__(self):
+        self._memory_location = 'device'
         super().__init__()
 
 #==============================================================================
@@ -122,7 +124,6 @@ class CupyArray(CupyNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
-        self._memory_location = 'device'
         super().__init__()
 
     def __str__(self):
@@ -176,7 +177,6 @@ class CupyArange(CupyNewArray):
 
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(False, self._shape)
-        self._memory_location = 'device'
         super().__init__()
 
     @property
@@ -255,7 +255,7 @@ class CupyFull(CupyNewArray):
         self._dtype = dtype
         self._order = CupyNewArray._process_order(self._rank, order)
         self._precision = precision
-        self._memory_location = 'device'
+
         super().__init__(fill_value)
 
     #--------------------------------------------------------------------------
