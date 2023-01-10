@@ -11,7 +11,7 @@ They are:
 """
 import ast
 
-__all__ = ('Basic', 'Immutable', 'PyccelAstNode', 'ScopedNode')
+__all__ = ('Basic', 'PyccelAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
@@ -75,6 +75,10 @@ class Basic:
         return c is None or isinstance(c, cls._ignored_types)
 
     def invalidate_node(self):
+        """ Indicate that this node is temporary.
+        This will allow it to remove itself from its attributes' users.
+        If an attribute subsequently has no users, invalidate_node is called recursively
+        """
         for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
 
