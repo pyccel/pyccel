@@ -36,13 +36,14 @@ from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
-from .cudaext        import CudaNewArray, CudaArray
+from .cudaext        import CupyNewArray, CudaArray
 from .numpyext       import process_dtype, process_shape, DtypePrecisionToCastFunction
 
 errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'CupyNewArray',
     'CupyArray',
     'CupyEmpty',
     'CupyEmptyLike',
@@ -58,14 +59,22 @@ __all__ = (
 )
 
 #==============================================================================
-class CupyArray(CudaNewArray):
+class CupyNewArray(CudaNewArray):
+    """ Class from which all Cupy functions which imply a call to Allocate
+    inherit
+    """
+    def __init__(self):
+        super().__init__()
+
+#==============================================================================
+class CupyArray(CupyNewArray):
     """
     Represents a call to  cupy.array for code generation.
 
     arg : list, tuple, PythonList
 
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
@@ -113,6 +122,7 @@ class CupyArray(CudaNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        self._memory_location = 'device'
         super().__init__()
 
     def __str__(self):
@@ -123,7 +133,7 @@ class CupyArray(CudaNewArray):
         return self._arg
 
 #==============================================================================
-class CupyArange(CudaNewArray):
+class CupyArange(CupyNewArray):
     """
     Represents a call to  cupy.arange for code generation.
 
@@ -142,13 +152,13 @@ class CupyArange(CudaNewArray):
         The type of the output array, if dtype is not given,
         infer the data type from the other input arguments.
     """
-    __slots__ = ('_start','_step','_stop','_dtype','_precision','_shape')
+    __slots__ = ('_start', '_step', '_stop', '_dtype', '_precision', '_shape', '_memory_location')
     _attribute_nodes = ('_start','_step','_stop')
     _rank = 1
     _order = None
     name = 'arange'
 
-    def __init__(self, start, stop = None, step = None, dtype = None):
+    def __init__(self, start, stop = None, step = None, dtype = None, memory_location = 'device'):
 
         if stop is None:
             self._start = LiteralInteger(0)
@@ -166,6 +176,7 @@ class CupyArange(CudaNewArray):
 
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(False, self._shape)
+        self._memory_location = 'device'
         super().__init__()
 
     @property
@@ -198,7 +209,7 @@ class Shape(PyccelInternalFunction):
             return PythonTuple(*arg.shape)
 
 #==============================================================================
-class CupyFull(CudaNewArray):
+class CupyFull(CupyNewArray):
     """
     Represents a call to cupy.full for code generation.
 
@@ -219,10 +230,10 @@ class CupyFull(CudaNewArray):
         (row- or column-wise) order in memory.
 
     """
-    __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order', '_memory_location')
     name = 'full'
 
-    def __init__(self, shape, fill_value, dtype=None, order='C'):
+    def __init__(self, shape, fill_value, dtype=None, order='C', memory_location = 'device'):
 
         # Convert shape to PythonTuple
         shape = process_shape(False, shape)
@@ -242,9 +253,9 @@ class CupyFull(CudaNewArray):
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
-        self._order = CudaNewArray._process_order(self._rank, order)
+        self._order = CupyNewArray._process_order(self._rank, order)
         self._precision = precision
-
+        self._memory_location = 'device'
         super().__init__(fill_value)
 
     #--------------------------------------------------------------------------

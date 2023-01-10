@@ -95,6 +95,7 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
+from pyccel.ast.cupyext import CupyNewArray
 from pyccel.ast.cudaext import CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
@@ -489,6 +490,16 @@ class SemanticParser(BasicParser):
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = NumpyArrayClass
+            return d_var
+
+        elif isinstance(expr, CupyNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = CudaArrayClass
             return d_var
 
         elif isinstance(expr, CudaNewArray):
