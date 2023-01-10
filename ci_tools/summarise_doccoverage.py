@@ -60,4 +60,3 @@ else:
     print(results['base_summary'])
     print('Compare Branch Summary')
     print(results['compare_summary'])
-    sys.exit(0)

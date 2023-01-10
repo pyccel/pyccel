@@ -37,3 +37,5 @@ jobs:
           git fetch
           git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           cat pull_diff.txt
+          python compare/ci_tools/list_changed_files.py pull_diff.txt changed_files.txt
+
