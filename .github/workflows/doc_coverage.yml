@@ -42,5 +42,6 @@ jobs:
           python ci_tools/list_docs_tovalidate.py changed_files.txt objects.txt
           cat objects.txt
           while read line; do    
-            python3 -m numpydoc --validate line 
+            echo $line
+            python3 -m numpydoc --validate $line 
           done < objects.txt
