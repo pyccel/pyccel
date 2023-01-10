@@ -14,9 +14,12 @@ args = parser.parse_args()
 
 with open(args.gitdiff, encoding="utf-8") as f:
     lines = f.readlines()
-
-lines = [l for l in lines if l.startwith('diff --git a/pyccel')]
-lines = [l.split()[3][2:] for l in lines]
+changes = []
+for idx, l in enumerate(lines):
+    if l.startswith('diff --git a/pyccel') and \
+       not lines[idx + 1].startswith('deleted file '):
+       changes.append(l)
+changes = [l.split()[3][2:] for l in changes]
 with open(args.result, 'w', encoding="utf-8") as f:
     for l in lines:
         print(l, file=f)
