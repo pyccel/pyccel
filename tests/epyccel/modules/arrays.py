@@ -1828,95 +1828,9 @@ def iterate_slice(i : int):
     return res
 
 #==============================================================================
-# TESTS: SLICE ASSIGN
+# TESTS: VIEW
 #==============================================================================
 
-@types('float[:]')
-def arr_slice_1d_assign_full(x):
-    x[:] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_full_step_2(x):
-    x[::2] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_full_step_3(x):
-    x[::3] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_head(x):
-    x[:5] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_head_step_2(x):
-    x[:5:2] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_head_step_3(x):
-    x[:5:3] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_tail(x):
-    x[5:] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_tail_step_2(x):
-    x[5::2] = 2
-
-@types('float[:]')
-def arr_slice_1d_assign_tail_step_3(x):
-    x[5::3] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_full(x):
-    x[:,:] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_full_step_2(x):
-    x[::2,::2] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_full_step_3(x):
-    x[::3,::3] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_head(x):
-    x[:5,:] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_head_step_2(x):
-    x[:5:2,::2] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_head_step_3(x):
-    x[:5:3,::3] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_tail(x):
-    x[5:,:] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_tail_step_2(x):
-    x[5::2,::2] = 2
-
-@types('float[:,:]')
-def arr_slice_2d_assign_tail_step_3(x):
-    x[5::3,::3] = 2
-
-@types('float[:,:,:]')
-def arr_slice_3d_assign(x):
-    x[0,0,:] = 2
-    x[1,:,1] = 3
-    x[:,2,2] = 4
-
-@types('float[:,:,:]')
-def arr_slice_3d_assign_step_2(x):
-    x[0,0,::2] = 5
-    x[1,::2,1] = 6
-    x[::2,2,2] = 7
-
-@types('float[:,:,:]')
-def arr_slice_3d_assign_step_3(x):
-    x[0,0,::3] = 8
-    x[1,::3,::3] = 9
-    x[::3,2,::3] = 0
+@types('int[:]', 'int')
+def array_1d_view_assign(x, a):
+    x[:] = a

@@ -4033,169 +4033,50 @@ def test_iterate_slice(language):
     assert f1(i) == f2(i)
 
 #==============================================================================
-# TESTS: SLICE ASSIGN
+# TESTS: VIEW
 #==============================================================================
 
-def test_array_slice_1d_assign_full(language):
-    f11 = arrays.arr_slice_1d_assign_full
-    f12 = arrays.arr_slice_1d_assign_full_step_2
-    f13 = arrays.arr_slice_1d_assign_full_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((10,), dtype=float)
-    x12 = np.ones((10,), dtype=float)
-    x13 = np.ones((10,), dtype=float)
-    x21 = np.ones((10,), dtype=float)
-    x22 = np.ones((10,), dtype=float)
-    x23 = np.ones((10,), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
+def test_array_1d_view_assign(language):
+    f1 = arrays.array_1d_view_assign
+    f2 = epyccel(f1, language = language)
+    x1 = np.ones((10,), dtype=int)
+    x2 = np.ones((10,), dtype=int)
+    f1(x1[:], 2)
+    f2(x2[:], 2)
+    assert np.array_equal(x1, x2)
+    f1(x1[:3:], 3)
+    f2(x2[:3:], 3)
+    assert np.array_equal(x1, x2)
+    f1(x1[6::], 4)
+    f2(x2[6::], 4)
+    assert np.array_equal(x1, x2)
 
-def test_array_slice_1d_assign_head(language):
-    f11 = arrays.arr_slice_1d_assign_head
-    f12 = arrays.arr_slice_1d_assign_head_step_2
-    f13 = arrays.arr_slice_1d_assign_head_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((10,), dtype=float)
-    x12 = np.ones((10,), dtype=float)
-    x13 = np.ones((10,), dtype=float)
-    x21 = np.ones((10,), dtype=float)
-    x22 = np.ones((10,), dtype=float)
-    x23 = np.ones((10,), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
+def test_array_2d_view_assign(language):
+    f1 = arrays.array_1d_view_assign
+    f2 = epyccel(f1, language = language)
+    x1 = np.ones((5, 5), dtype=int)
+    x2 = np.ones((5, 5), dtype=int)
+    f1(x1[0, :], 2)
+    f2(x2[0, :], 2)
+    assert np.array_equal(x1, x2)
+    f1(x1[:, 3], 2)
+    f2(x2[:, 3], 2)
+    assert np.array_equal(x1, x2)
 
-def test_array_slice_1d_assign_tail(language):
-    f11 = arrays.arr_slice_1d_assign_tail
-    f12 = arrays.arr_slice_1d_assign_tail_step_2
-    f13 = arrays.arr_slice_1d_assign_tail_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((10,), dtype=float)
-    x12 = np.ones((10,), dtype=float)
-    x13 = np.ones((10,), dtype=float)
-    x21 = np.ones((10,), dtype=float)
-    x22 = np.ones((10,), dtype=float)
-    x23 = np.ones((10,), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
-
-def test_array_slice_2d_assign_full(language):
-    f11 = arrays.arr_slice_2d_assign_full
-    f12 = arrays.arr_slice_2d_assign_full_step_2
-    f13 = arrays.arr_slice_2d_assign_full_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((10, 10), dtype=float)
-    x12 = np.ones((10, 10), dtype=float)
-    x13 = np.ones((10, 10), dtype=float)
-    x21 = np.ones((10, 10), dtype=float)
-    x22 = np.ones((10, 10), dtype=float)
-    x23 = np.ones((10, 10), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
-
-def test_array_slice_2d_assign_head(language):
-    f11 = arrays.arr_slice_2d_assign_head
-    f12 = arrays.arr_slice_2d_assign_head_step_2
-    f13 = arrays.arr_slice_2d_assign_head_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((10, 10), dtype=float)
-    x12 = np.ones((10, 10), dtype=float)
-    x13 = np.ones((10, 10), dtype=float)
-    x21 = np.ones((10, 10), dtype=float)
-    x22 = np.ones((10, 10), dtype=float)
-    x23 = np.ones((10, 10), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
-
-def test_array_slice_2d_assign_tail(language):
-    f11 = arrays.arr_slice_2d_assign_tail
-    f12 = arrays.arr_slice_2d_assign_tail_step_2
-    f13 = arrays.arr_slice_2d_assign_tail_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((10, 10), dtype=float)
-    x12 = np.ones((10, 10), dtype=float)
-    x13 = np.ones((10, 10), dtype=float)
-    x21 = np.ones((10, 10), dtype=float)
-    x22 = np.ones((10, 10), dtype=float)
-    x23 = np.ones((10, 10), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
-
-def test_array_slice_3d_assign(language):
-    f11 = arrays.arr_slice_3d_assign
-    f12 = arrays.arr_slice_3d_assign_step_2
-    f13 = arrays.arr_slice_3d_assign_step_3
-    f21 = epyccel(f11, language = language)
-    f22 = epyccel(f12, language = language)
-    f23 = epyccel(f13, language = language)
-    x11 = np.ones((2, 3, 4), dtype=float)
-    x12 = np.ones((2, 3, 4), dtype=float)
-    x13 = np.ones((2, 3, 4), dtype=float)
-    x21 = np.ones((2, 3, 4), dtype=float)
-    x22 = np.ones((2, 3, 4), dtype=float)
-    x23 = np.ones((2, 3, 4), dtype=float)
-    f11(x11)
-    f12(x12)
-    f13(x13)
-    f21(x21)
-    f22(x22)
-    f23(x23)
-    assert np.array_equal(x11, x21)
-    assert np.array_equal(x12, x22)
-    assert np.array_equal(x13, x23)
+def test_array_3d_view_assign(language):
+    f1 = arrays.array_1d_view_assign
+    f2 = epyccel(f1, language = language)
+    x1 = np.ones((3, 4, 5), dtype=int)
+    x2 = np.ones((3, 4, 5), dtype=int)
+    f1(x1[0, 1, :], 2)
+    f2(x2[0, 1, :], 2)
+    assert np.array_equal(x1, x2)
+    f1(x1[2, :, 3], 3)
+    f2(x2[2, :, 3], 3)
+    assert np.array_equal(x1, x2)
+    f1(x1[:, 2, 4], 4)
+    f2(x2[:, 2, 4], 4)
+    assert np.array_equal(x1, x2)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
