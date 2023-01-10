@@ -203,7 +203,7 @@ def test_invalid_function_call(language):
     def invalid_function_call():
         def non_kernel_func():
             pass
-        non_kernel_func[1, 2]()
+        non_kernel_func[1, 2]() # pylint: disable=E1136
 
     errors = Errors()
 

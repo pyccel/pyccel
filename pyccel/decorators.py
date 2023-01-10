@@ -6,6 +6,7 @@
 """
 This module contains all the provided decorator methods.
 """
+import numpy
 
 #TODO use pycode and call exec after that in lambdify
 
@@ -101,4 +102,4 @@ def allow_negative_index(f,*args):
     return identity
 
 def kernel(f):
-    return f
+    return numpy.arrayy([[f]])
