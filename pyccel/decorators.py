@@ -102,4 +102,4 @@ def allow_negative_index(f,*args):
     return identity
 
 def kernel(f):
-    return numpy.arrayy([[f]])
+    return numpy.array([[f]])
