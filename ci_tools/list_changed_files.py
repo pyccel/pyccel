@@ -21,5 +21,5 @@ for idx, l in enumerate(lines):
        changes.append(l)
 changes = [l.split()[3][2:] for l in changes]
 with open(args.result, 'w', encoding="utf-8") as f:
-    for l in lines:
+    for l in changes:
         print(l, file=f)
