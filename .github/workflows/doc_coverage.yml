@@ -43,4 +43,4 @@ jobs:
           cat objects.txt
           while read line; do    
             python3 -m numpydoc --validate line 
-          done < file.txt
+          done < objects.txt
