@@ -31,7 +31,7 @@ for branch_file in [args.base, args.compare]:
                 results[branch + '_no_mod'].update([modname])
             else:
                 objname = lines[i].split()[-1].strip('`')
-                results[branch + '_no_obj'].update([objname])
+                results[branch + '_no_obj'].update(['.'.join(modname + objname)])
             i += 1
 
 added_mod = [mod for mod in results['compare_no_mod'] if mod not in results['base_no_mod']]
