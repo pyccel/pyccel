@@ -14,6 +14,7 @@ args = parser.parse_args()
 with open(args.files,'r') as f:
     files = f.readlines()
 
+files = [l.strip() for l in files[:-1]]
 objects = []
 for file in files:
     with open(file,'r') as f:
