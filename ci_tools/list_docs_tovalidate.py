@@ -16,7 +16,7 @@ with open(args.files,'r') as f:
 
 objects = []
 for file in files:
-    with open("../"+file,'r') as f:
+    with open(file,'r') as f:
         tree = ast.parse(f.read())
     prefix = file[:-3].replace('/', '.')
     for node in ast.walk(tree):
