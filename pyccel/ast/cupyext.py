@@ -63,14 +63,14 @@ class CupyNewArray(CudaNewArray):
     """ Class from which all Cupy functions which imply a call to Allocate
     inherit
     """
-    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order', '_memory_location')
+    __slots__ = ('_memory_location')
     def __init__(self):
         self._memory_location = 'device'
         super().__init__()
 
     @property
     def memory_location(self):
-        """ Indicates whether a Variable has a dynamic size
+        """ Indicate if the array is allocated on the host, device or has a managed memory
         """
         return self._memory_location
 
@@ -82,6 +82,7 @@ class CupyArray(CupyNewArray):
     arg : list, tuple, PythonList
 
     """
+    __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
@@ -158,6 +159,7 @@ class CupyArange(CupyNewArray):
         The type of the output array, if dtype is not given,
         infer the data type from the other input arguments.
     """
+    __slots__ = ('_start','_step','_stop','_dtype','_precision','_shape')
     _attribute_nodes = ('_start','_step','_stop')
     _rank = 1
     _order = None
@@ -234,6 +236,7 @@ class CupyFull(CupyNewArray):
         (row- or column-wise) order in memory.
 
     """
+    __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order')
     name = 'full'
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
