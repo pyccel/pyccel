@@ -896,9 +896,12 @@ class PythonType(Basic):
         can be used in a print  statement
         """
         prec = self.precision
-        return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))))
+        dtype = str(self.dtype)
+        if prec in (None, -1):
+            return LiteralString(f"<class '{dtype}'>")
+        else:
+            precision = prec * (16 if self.dtype is NativeComplex() else 8)
+            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 
 #==============================================================================
 python_builtin_datatypes_dict = {
