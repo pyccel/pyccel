@@ -828,17 +828,13 @@ class SemanticParser(BasicParser):
                         severity = 'fatal')
 
             args, kwargs = split_positional_keyword_arguments(*args)
-            if func in (CupyArray, CudaArray, NumpyArray):
+
+            if func in (CupyArray, CudaArray):
                 if 'device' in self.scope.decorators or 'kernel' in self.scope.decorators:
                     current_context = 'device'
-                    if kwargs.get('memory_location', 'host') == 'host':
-                        errors.report("Host arrays cannot be allocated on the Device",
-                            symbol = expr,
-                            severity = 'fatal')
                 else:
                     current_context = 'host'
-                if func in (CudaArray, CupyArray):
-                    kwargs['current_context'] = current_context
+                kwargs['current_context'] = current_context
 
             for a in args:
                 if getattr(a,'dtype',None) == 'tuple':
@@ -1191,6 +1187,13 @@ class SemanticParser(BasicParser):
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
+
+                if lhs.is_ndarray:
+                    if 'device' in self.scope.decorators or 'kernel' in self.scope.decorators\
+                            and getattr(lhs, 'memory_location', 'host') == 'host':
+                        errors.report("Host arrays cannot be allocated on the Device",
+                            symbol = f"{lhs} = {rhs}",
+                            severity = 'fatal')
 
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self.scope.is_loop:
