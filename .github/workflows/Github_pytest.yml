@@ -1,0 +1,128 @@
+name: Pyccel tests
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  Linux:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
+      - name: Test with valgrind for memory leaks
+        uses: ./.github/actions/valgrind_run
+      - name: Collect coverage information
+        continue-on-error: True
+        uses: ./.github/actions/coverage_collection
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@master
+        continue-on-error: True
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: cobertura.xml
+      - name: Save code coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifact
+          path: cobertura.xml
+          retention-days: 1
+
+  Windows:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+            # The second most recent version is used as
+            # setup-python installs the most recent patch
+            # which leads to linking problems as there are
+            # 2 versions of python3X.a and the wrong one
+            # is chosen
+            python-version: 3.9
+      # Uncomment to examine DLL requirements with 'objdump -x FILE'
+      #- name: Install mingw tools
+      #  uses: msys2/setup-msys2@v2
+      - name: Install dependencies
+        uses: ./.github/actions/windows_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
+
+  MacOSX:
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        uses: ./.github/actions/macos_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
+
+  CoverageChecker:
+
+    runs-on: ubuntu-latest
+    needs: Linux
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install defusedxml
+        shell: bash
+      - name: Collect coverage information
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-artifact
+      - name: Collect diff information
+        run: |
+          BASE_BRANCH=$GITHUB_BASE_REF
+          git fetch
+          git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          ls
+        shell: bash
+      - name: Check coverage
+        run: |
+          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_EVENT_PATH $GITHUB_STEP_SUMMARY
+        shell: bash
