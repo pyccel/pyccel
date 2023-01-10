@@ -16,7 +16,7 @@ changes = []
 for idx, l in enumerate(lines):
     if l.startswith('diff --git a/pyccel') and \
         not lines[idx + 1].startswith('deleted file '):
-       changes.append(l)
+        changes.append(l)
 changes = [l.split()[3][2:] for l in changes]
 with open(args.result, 'w', encoding="utf-8") as f:
     for l in changes:
