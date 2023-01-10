@@ -1,7 +1,6 @@
 """ Script to check if documentation coverage has decreased
 """
 import argparse
-import os
 import sys
 
 parser = argparse.ArgumentParser(description='Check doc coverage change')
@@ -9,8 +8,6 @@ parser.add_argument('base', metavar='head_cov', type=str,
                         help='File containing the coverage of the head branch')
 parser.add_argument('compare', metavar='base_cov', type=str,
                         help='File containing the coverage of the base branch')
-parser.add_argument('output', metavar='output', type=str,
-                        help='File where the report will be printed')
 
 args = parser.parse_args()
 
@@ -39,25 +36,28 @@ for branch_file in [args.base, args.compare]:
 
 added_mod = [mod for mod in results['compare_no_mod'] if mod not in results['base_no_mod']]
 added_obj = [obj for obj in results['compare_no_obj'] if obj not in results['base_no_obj']]
-print(added_mod)
-print(added_obj)
-with open(args.output, 'w', encoding="utf-8") as f:
-    print('Base Branch Summary', file=f)
-    print(results['base_summary'], file=f)
-    print('Compare Branch Summary', file=f)
-    print(results['compare_summary'], file=f)
-    if len(added_mod) > 0:
-        print('This pull request added these modules without docstrings:', file=f)
-        for mod in added_mod:
-            print(f'\t * {mod}', file=f)
-        print(file=f)
-    if len(added_obj) > 0:
-        print('This pull request added these objects without docstrings:', file=f)
-        for obj in added_obj:
-            print(f'\t * {obj}', file=f)
-        print(file=f)
 
 if len(added_mod) > 0 or len(added_obj) > 0:
+    print('Failure: Coverage has decreased!')
+    print('Base Branch Summary')
+    print(results['base_summary'])
+    print('Compare Branch Summary')
+    print(results['compare_summary'])
+    if len(added_mod) > 0:
+        print('This pull request added these modules without docstrings:')
+        for mod in added_mod:
+            print(f'\t * {mod}')
+        print()
+    if len(added_obj) > 0:
+        print('This pull request added these objects without docstrings:')
+        for obj in added_obj:
+            print(f'\t * {obj}')
+        print()
     sys.exit(1)
 else:
+    print('Success!')
+    print('Base Branch Summary')
+    print(results['base_summary'])
+    print('Compare Branch Summary')
+    print(results['compare_summary'])
     sys.exit(0)
