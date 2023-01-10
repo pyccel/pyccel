@@ -27,6 +27,9 @@ from .datatypes import NativeInteger
 
 from .variable  import Variable, PyccelArraySize
 
+__all__ = ('sympy_to_pyccel',
+           'pyccel_to_sympy')
+
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
     """
