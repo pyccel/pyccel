@@ -1,7 +1,7 @@
 """ Script to list the objects that should be numpydoc validated
 """
 import ast
-from _ast import *
+from _ast import FunctionDef, ClassDef, Module
 import argparse
 
 parser = argparse.ArgumentParser(description='List the objects with docstrings in the files provided')
@@ -11,13 +11,13 @@ parser.add_argument('output', metavar='output', type=str,
                         help='File to save the output to')
 args = parser.parse_args()
 
-with open(args.files,'r') as f:
+with open(args.files,'r', encoding="utf-8") as f:
     files = f.readlines()
 
 files = [l.strip() for l in files[:-1]]
 objects = []
 for file in files:
-    with open(file,'r') as f:
+    with open(file,'r', encoding="utf-8") as f:
         tree = ast.parse(f.read())
     prefix = file[:-3].replace('/', '.')
     for node in ast.walk(tree):
