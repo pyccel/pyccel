@@ -29,10 +29,11 @@ jobs:
         shell: bash
       - name: Show report
         run: |
-          BASE_BRANCH=$GITHUB_BASE_REF
-          git fetch
           docstr-coverage base/pyccel 2>base_cov || true
           docstr-coverage compare/pyccel 2>compare_cov || true
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov
+          cd compare
+          BASE_BRANCH=$GITHUB_BASE_REF
+          git fetch
           git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           cat pull_diff.txt
