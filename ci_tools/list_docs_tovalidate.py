@@ -26,11 +26,11 @@ for file in files:
                 objects.append(prefix)
             if isinstance(node, ast.FunctionDef):
                 if hasattr(node, "parent"):
-                    objects.append('.'.join(prefix,node.parent.name, node.name))
+                    objects.append('.'.join([prefix,node.parent.name, node.name]))
                 else:
-                    objects.append('.'.join(prefix, node.name))
+                    objects.append('.'.join([prefix, node.name]))
             if isinstance(node, ast.ClassDef):
-                objects.append('.'.join(prefix, node.name))
+                objects.append('.'.join([prefix, node.name]))
                 for child in node.body:
                     if isinstance(child, ast.FunctionDef):
                         child.parent = node
