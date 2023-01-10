@@ -1,9 +1,6 @@
 """ Script to list the python files changed by the PR
 """
 import argparse
-import inspect
-import os
-import sys
 
 parser = argparse.ArgumentParser(description='Collect the files that have been modified by the PR to check their docstrings')
 parser.add_argument('gitdiff', metavar='gitdiff', type=str,
