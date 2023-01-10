@@ -1,13 +1,13 @@
 # ndarrays memory layout (order)
 
-## Order in numpy
+## Order in NumPy
 
 `order` is the parameter given to the `numpy.array` function in order to choose how a multi-dimensional array is stored in memory.
 For both of the orders discussed here (`C` and `F`) the arrays are stored **contiguously** in memory, but they differ in how their entries are arranged.
 
 ### Order C
 
-`order='C'` tells Numpy to store the array row by row (row-major). For example:
+`order='C'` tells NumPy to store the array row by row (row-major). For example:
 
 ```python
 import numpy as np
@@ -25,7 +25,7 @@ This is the default behaviour in Python.
 
 ### Order F
 
-`order='F'` on the other hand tells Numpy to store the array column by column (column-major). For example:
+`order='F'` on the other hand tells NumPy to store the array column by column (column-major). For example:
 
 ```python
 import numpy as np
@@ -39,9 +39,9 @@ if __name__ == "__main__":
 
 This Python script will output `[1 4 7 2 5 8 3 6 9]`; notice that the columns are stored one after the other.
 
-### Printing and indexing in Numpy
+### Printing and indexing in NumPy
 
-The `order` of a Numpy array does not affect the indexing or the printing: unlike the `transpose` operation, the `shape` of the array remains the same, and only the `strides` change. For example:
+The `order` of a NumPy array does not affect the indexing or the printing: unlike the `transpose` operation, the `shape` of the array remains the same, and only the `strides` change. For example:
 
 ```python
 import numpy as np
@@ -95,11 +95,11 @@ if __name__ == "__main__":
 
 ## Pyccel's C code
 
-In Pyccel's C code, we aim to replicate Numpy's indexing/printing and memory layout conventions.
+In Pyccel's C code, we aim to replicate NumPy's indexing/printing and memory layout conventions.
 
 ### Ordering in C code
 
-Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike Numpy, Pyccel's strides use 'number of elements' instead of 'number of bytes' as a unit)
+Multidimensional arrays in `C` code are flattened into a one dimensional array, `strides` and `shape` are used to navigate this array (unlike NumPy, Pyccel's strides use 'number of elements' instead of 'number of bytes' as a unit)
 While the `order_c ndarrays` only require a simple copy to be populated, `order_f` array creation requires slightly different steps.
 
 Example:  
@@ -122,7 +122,7 @@ One dimensional arrays require no order, since order would not change how they b
 
 ### Indexing in C code
 
-For indexing the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order` so that we can mirror Numpy's conventions.
+For indexing the function `GET_ELEMENT(arr, type, ...)` is used, indexing does not change with `order` so that we can mirror NumPy's conventions.
 
 If we take the following 2D array as an example:
 |   |   |   |
@@ -353,7 +353,7 @@ In Fortran code the index `i_1, i_2, i_3` points to the element `i_1 + i_2 * n_1
 ### Order F
 Pyccel's translation of code with `order='F'` should look very similar to the original Python code.
 
-Numpy's storage of the strides ensures that the first dimension is the contiguous dimension as in Fortran, so the code is equivalent for all element-wise operations.
+NumPy's storage of the strides ensures that the first dimension is the contiguous dimension as in Fortran, so the code is equivalent for all element-wise operations.
 
 There are some exceptions to this rule, for example printing. Python always prints arrays in a row-major format so Pyccel must take care to respect this rule in the output.
 
