@@ -96,7 +96,9 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.cudaext import CudaArray, CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
+from pyccel.ast.cupyext import CupyNewArray
+from pyccel.ast.cudaext import CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
+
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -123,7 +125,7 @@ from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
-from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
+from pyccel.errors.messages import (INVALID_FUNCTION_CALL, INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK, MISSING_KERNEL_CONFIGURATION,PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
         INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
         UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
@@ -494,6 +496,17 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = NumpyArrayClass
             return d_var
 
+        elif isinstance(expr, CupyNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_location'] = expr.memory_location
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = CudaArrayClass
+            return d_var
+
         elif isinstance(expr, CudaNewArray):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
@@ -817,7 +830,8 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
-
+        if isinstance(func, FunctionDef) and 'kernel' in func.decorators:
+            errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
@@ -913,6 +927,10 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
+        if 'kernel' not in func.decorators:
+            errors.report(INVALID_FUNCTION_CALL,
+                        symbol = expr,
+                        severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
@@ -937,15 +955,30 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
-            if not isinstance(expr.numBlocks, (LiteralInteger, PyccelSymbol)):
-                errors.report("Invalid Block number parameter for Kernel call",
+            if not isinstance(expr.numBlocks, LiteralInteger):
+                # expr.numBlocks could be invalid type, or PyccelSymbol
+                if isinstance(expr.numBlocks, PyccelSymbol):
+                    numBlocks = self.get_variable(expr.numBlocks)
+                    if not isinstance(numBlocks.dtype, NativeInteger):
+                        errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
-            if not isinstance(expr.tpblock, (LiteralInteger, PyccelSymbol)):
-                errors.report("Invalid Thread per Block parameter for Kernel call",
+                else:
+                    errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
-
+            if not isinstance(expr.tpblock, LiteralInteger):
+                # expr.tpblock could be invalid type, or PyccelSymbol
+                if isinstance(expr.tpblock, PyccelSymbol):
+                    tpblock = self.get_variable(expr.tpblock)
+                    if not isinstance(tpblock.dtype, NativeInteger):
+                        errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                        symbol = expr,
+                        severity='error')
+                else:
+                    errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                        symbol = expr,
+                        severity='error')
             new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
 
             for a in new_expr.args:
@@ -1317,7 +1350,7 @@ class SemanticParser(BasicParser):
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif var.is_ndarray and var.is_alias:
+        elif var.is_ndarray and var.is_alias and not is_augassign:
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
@@ -2750,11 +2783,10 @@ class SemanticParser(BasicParser):
 
             new_expr = Assign(l, r)
 
-            if is_pointer_i:
-                new_expr = AliasAssign(l, r)
-
-            elif isinstance(expr, AugAssign):
+            if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
+            elif is_pointer_i:
+                new_expr = AliasAssign(l, r)
 
 
             elif new_expr.is_symbolic_alias:

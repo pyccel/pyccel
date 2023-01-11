@@ -68,14 +68,23 @@ def test_func_no_return_2(language):
     with pytest.raises(TypeError):
         c_func(unexpected_arg)
 
-def test_func_no_args_f1():
+def test_func_no_args_f1(language):
     def f1():
         from numpy import pi
         value = (2*pi)**(3/2)
         return value
 
     f = epyccel(f1)
-    assert abs(f()-f1()) < 1e-13
+    assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
+
+def test_func_return_constant(language):
+    def f1():
+        from numpy import pi
+        return pi
+
+    f = epyccel(f1)
+    assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
+
 #------------------------------------------------------------------------------
 def test_decorator_f1(language):
     @types('int')
