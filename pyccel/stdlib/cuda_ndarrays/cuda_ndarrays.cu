@@ -136,8 +136,8 @@ void cupy_ravel(t_ndarray *dest, t_ndarray src)
 {
     *dest = src;
     dest->nd = 1;
-    managed_memory(&(dest->shape), sizeof(int64_t));
-    managed_memory(&(dest->strides), sizeof(int64_t));
+    cudaMallocManaged(&(dest->shape), sizeof(int64_t));
+    cudaMallocManaged(&(dest->strides), sizeof(int64_t));
     *(dest->shape) = src.length;
     *(dest->strides) = 1;
     dest->is_view = true;
