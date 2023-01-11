@@ -2,7 +2,7 @@ name: master_tests
 
 on:
   push:
-    branches: [ master, cuda_main ]
+    branches: [ master ]
 
 jobs:
 
