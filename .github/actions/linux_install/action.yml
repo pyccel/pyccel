@@ -9,22 +9,22 @@ runs:
       shell: bash
     - name: Install fortran
       run:
-        sudo apt-get install gfortran
+        sudo apt-get install -y gfortran
       shell: bash
     - name: Install LaPack
       run:
-        sudo apt-get install libblas-dev liblapack-dev
+        sudo apt-get install -y libblas-dev liblapack-dev
       shell: bash
     - name: Install MPI
       run: |
-        sudo apt-get install libopenmpi-dev openmpi-bin
+        sudo apt-get install -y libopenmpi-dev openmpi-bin
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
     - name: Install OpenMP
       run:
-        sudo apt-get install libomp-dev libomp5
+        sudo apt-get install -y libomp-dev libomp5
       shell: bash
     - name: Install Valgrind
       run:
-        sudo apt-get install valgrind
+        sudo apt-get install -y valgrind
       shell: bash
