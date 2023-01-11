@@ -740,8 +740,7 @@ class SyntaxParser(BasicParser):
         if 'sympy' in decorators:
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [],
-                    [str(stmt)])
+            func = SympyFunction(name, arguments, [], [str(stmt)])
             func.set_fst(stmt)
             self.insert_function(func)
             return EmptyNode()
