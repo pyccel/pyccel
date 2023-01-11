@@ -95,6 +95,7 @@ from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
+from pyccel.ast.cupyext import CupyNewArray
 from pyccel.ast.cudaext import CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
@@ -434,6 +435,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, Variable):
             d_var['datatype'       ] = expr.dtype
             d_var['memory_handling'] = expr.memory_handling
+            d_var['memory_location'] = expr.memory_location
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
             d_var['cls_base'       ] = expr.cls_base
@@ -489,6 +491,17 @@ class SemanticParser(BasicParser):
             d_var['order'      ] = expr.order
             d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = NumpyArrayClass
+            return d_var
+
+        elif isinstance(expr, CupyNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_location'] = expr.memory_location
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = CudaArrayClass
             return d_var
 
         elif isinstance(expr, CudaNewArray):
@@ -1317,7 +1330,7 @@ class SemanticParser(BasicParser):
                     self._current_fst_node.col_offset),
                         severity='error', symbol=var.name)
 
-        elif var.is_ndarray and var.is_alias:
+        elif var.is_ndarray and var.is_alias and not is_augassign:
             # we allow pointers to be reassigned multiple times
             # pointers reassigning need to call free_pointer func
             # to remove memory leaks
@@ -2750,11 +2763,10 @@ class SemanticParser(BasicParser):
 
             new_expr = Assign(l, r)
 
-            if is_pointer_i:
-                new_expr = AliasAssign(l, r)
-
-            elif isinstance(expr, AugAssign):
+            if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
+            elif is_pointer_i:
+                new_expr = AliasAssign(l, r)
 
 
             elif new_expr.is_symbolic_alias:
