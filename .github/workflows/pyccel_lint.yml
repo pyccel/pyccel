@@ -1,0 +1,23 @@
+name: Pyccel Linting
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  Pyccel-Linter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Lint
+        run: |
+            python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
+        shell: bash

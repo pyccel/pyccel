@@ -123,26 +123,6 @@ jobs:
           path: .coverage
           retention-days: 1
 
-  Linter:
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pylint
-        shell: bash
-      - name: Pylint
-        run: |
-            python -m pylint --rcfile=.pylintrc pyccel/parser/semantic.py
-        shell: bash
-
   CoverageCollection:
 
     runs-on: ubuntu-latest
