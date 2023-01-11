@@ -75,7 +75,7 @@ def test_func_no_args_f1(language):
         return value
 
     f = epyccel(f1)
-    assert abs(f()-f1()) < 1e-13
+    assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
 
 def test_func_return_constant(language):
     def f1():
@@ -83,7 +83,7 @@ def test_func_return_constant(language):
         return pi
 
     f = epyccel(f1)
-    assert abs(f()-f1()) < 1e-13
+    assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
 
 #------------------------------------------------------------------------------
 def test_decorator_f1(language):
