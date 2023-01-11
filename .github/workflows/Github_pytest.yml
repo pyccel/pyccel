@@ -2,7 +2,7 @@ name: Pyccel tests
 
 on:
   pull_request:
-    branches: [ cuda_main_temp ]
+    branches: [ master, cuda_main_temp, cuda_main ]
 
 jobs:
   Linux:
@@ -32,17 +32,11 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-artifact
-          path: cobertura.xml
+          path: .coverage
           retention-days: 1
 
   Windows:
@@ -95,10 +89,94 @@ jobs:
       - name: Parallel tests with pytest
         uses: ./.github/actions/pytest_parallel
 
+  Cuda:
+
+    runs-on: ubuntu-latest
+    container: nvidia/cuda:11.7.1-devel-ubuntu20.04
+    if: github.event.pull_request.base.ref != 'master'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare docker
+        run: |
+          apt update && apt install sudo
+          TZ=Europe/France
+          ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+        shell: bash
+      - name: CUDA Version
+        run: nvcc --version # cuda install check
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Ccuda tests with pytest
+        uses: ./.github/actions/pytest_run_cuda
+      - name: Collect coverage information
+        continue-on-error: True
+        uses: ./.github/actions/coverage_collection
+      - name: Save code coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: cuda-coverage-artifact
+          path: .coverage
+          retention-days: 1
+
+  CoverageCollection:
+
+    runs-on: ubuntu-latest
+    needs: [Linux, Cuda]
+    if: ${{ always() && needs.Linux.result == 'success' && needs.Cuda.result != 'failure' }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Collect coverage information
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-artifact
+      - name: Rename coverage file
+        run: mv .coverage .coverage.linux
+      - name: Collect coverage information
+        uses: actions/download-artifact@v3
+        if: needs.Cuda.result == 'success'
+        with:
+          name: cuda-coverage-artifact
+      - name: Rename coverage file
+        if: needs.Cuda.result == 'success'
+        run: mv .coverage .coverage.cuda
+      - name: Generate coverage report
+        run: |
+            coverage combine
+            coverage xml
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@master
+        continue-on-error: True
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: cobertura.xml
+      - name: Save code coverage xml report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifact-xml
+          path: cobertura.xml
+          retention-days: 1
+
   CoverageChecker:
 
     runs-on: ubuntu-latest
-    needs: Linux
+    needs: [CoverageCollection]
+    if: ${{ always() && needs.CoverageCollection.result == 'success' && needs.Cuda.result != 'failure' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -114,7 +192,7 @@ jobs:
       - name: Collect coverage information
         uses: actions/download-artifact@v3
         with:
-          name: coverage-artifact
+          name: coverage-artifact-xml
       - name: Collect diff information
         run: |
           BASE_BRANCH=$GITHUB_BASE_REF
