@@ -21,8 +21,8 @@ runs:
         fi
         python -m pytest -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
-        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rXx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python or ccuda)" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -rXx -m "xdist_incompatible and not parallel and not (c or python or ccuda)" --ignore=symbolic --ignore=ndarrays
         pyccel-clean
         python -m pytest ndarrays/ -rXx
         pyccel-clean
