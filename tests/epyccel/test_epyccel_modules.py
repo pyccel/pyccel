@@ -70,7 +70,18 @@ def test_module_3(language):
     r = 4.5
     x_expected = mod.circle_volume(r)
     x = modnew.circle_volume(r)
-    assert np.isclose( x, x_expected, rtol=1e-14, atol=1e-14 )
+    assert np.isclose( x, x_expected, rtol=RTOL, atol=ATOL )
+
+    i = np.random.randint(4,20)
+    n = np.random.randint(2,8)
+    arr = np.array(100*np.random.random_sample(n), dtype=int)
+    x_expected, y_expected = mod.alias(arr, i)
+    x, y = modnew.alias(arr, i)
+
+    assert np.allclose( x, x_expected, rtol=RTOL, atol=ATOL )
+    assert np.allclose( y, y_expected, rtol=RTOL, atol=ATOL )
+    assert x.dtype is x_expected.dtype
+    assert y.dtype is y_expected.dtype
 
 def test_module_4(language):
     import modules.Module_6 as mod

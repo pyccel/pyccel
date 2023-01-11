@@ -317,7 +317,7 @@ def test_mix_int_array(language):
     f2(x2, a)
     assert np.array_equal( x1, x2 )
 
-    x1 = np.array([166,20,-5], dtype=np.int8)
+    x1 = np.array([126,20,-5], dtype=np.int8)
     x2 = np.copy(x1)
     f1(x1, a)
     f2(x2, a)
@@ -418,4 +418,3 @@ def test_zeros_types(language):
 
     assert fl_1 == fl_2
     assert isinstance(fl_1, type(fl_2))
-

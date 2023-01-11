@@ -5,7 +5,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose, iinfo, finfo
 import numpy as np
 
-from pyccel.decorators import types
+from pyccel.decorators import types, template
 from pyccel.epyccel import epyccel
 
 min_int8 = iinfo('int8').min
@@ -154,8 +154,8 @@ def test_absolute_call_r(language):
 
     f1 = epyccel(absolute_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), absolute_call_r(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x), absolute_call_r(-x), rtol=RTOL, atol=ATOL))
+    assert f1(x) == absolute_call_r(x)
+    assert f1(-x) == absolute_call_r(-x)
     assert matching_types(f1(x), absolute_call_r(x))
 
 def test_absolute_call_i(language):
@@ -166,9 +166,30 @@ def test_absolute_call_i(language):
 
     f1 = epyccel(absolute_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), absolute_call_i(x), rtol=RTOL, atol=ATOL))
-    assert(isclose(f1(-x), absolute_call_i(-x), rtol=RTOL, atol=ATOL))
+    assert f1(x) == absolute_call_i(x)
+    assert f1(-x) == absolute_call_i(-x)
     assert matching_types(f1(x), absolute_call_i(x))
+
+def test_absolute_call_c(language):
+    @template(name='T', types=['complex','complex64','complex128'])
+    @types('T')
+    def absolute_call_c(x):
+        from numpy import absolute
+        return absolute(x)
+
+    f1 = epyccel(absolute_call_c, language = language)
+    x = uniform(high=1e6)+1j*uniform(high=1e6)
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL))
+    assert(isclose(f1(-x), absolute_call_c(-x), rtol=RTOL, atol=ATOL))
+    assert matching_types(f1(x), absolute_call_c(x))
+
+    x = np.complex64(uniform(high=1e6)-1j*uniform(high=1e6))
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL32, atol=ATOL32))
+    assert matching_types(f1(x), absolute_call_c(x))
+
+    x = np.complex128(uniform(high=1e6)-1j*uniform(high=1e6))
+    assert(isclose(f1(x), absolute_call_c(x), rtol=RTOL, atol=ATOL))
+    assert matching_types(f1(x), absolute_call_c(x))
 
 def test_absolute_phrase_r_r(language):
     @types('real','real')
@@ -1413,6 +1434,69 @@ def test_full_dtype(language):
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(val_float), create_full_val_real_complex128(val_float))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip("full handles types in __new__ so it "
+                "cannot be used in a translated interface in python"),
+            pytest.mark.python]
+        ),
+    )
+)
+
+def test_full_dtype_auto(language):
+    @types('T')
+    @template(name='T', types=['int','float', 'complex', 'int32',
+                               'float32', 'float64', 'complex64', 'complex128'])
+    def create_full_val_auto(val):
+        from numpy import full
+        a = full(3,val)
+        return a[0]
+
+    integer   = randint(low = min_int,   high = max_int,   dtype=int)
+    integer32 = randint(low = min_int32, high = max_int32, dtype=np.int32)
+
+    fl = float(integer)
+    fl32 = np.float32(fl)
+    fl64 = np.float64(fl)
+
+    cmplx = complex(integer)
+    cmplx64 = np.complex64(fl32)
+    cmplx128 = np.complex128(fl64)
+
+    f_int = epyccel(create_full_val_auto, language = language)
+    assert(f_int(integer) == create_full_val_auto(integer))
+    assert matching_types(f_int(integer), create_full_val_auto(integer))
+
+    f_float = epyccel(create_full_val_auto, language = language)
+    assert(isclose(f_float(fl), create_full_val_auto(fl), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_float(fl), create_full_val_auto(fl))
+
+    f_complex = epyccel(create_full_val_auto, language = language)
+    assert(isclose(f_complex(cmplx), create_full_val_auto(cmplx), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_complex(cmplx), create_full_val_auto(cmplx))
+
+    f_int32 = epyccel(create_full_val_auto, language = language)
+    assert(f_int32(integer32) == create_full_val_auto(integer32))
+    assert matching_types(f_int32(integer32), create_full_val_auto(integer32))
+
+    f_float32 = epyccel(create_full_val_auto, language = language)
+    assert(isclose(f_float32(fl32)  , create_full_val_auto(fl32), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_float32(fl32), create_full_val_auto(fl32))
+
+    f_float64 = epyccel(create_full_val_auto, language = language)
+    assert(isclose(f_float64(fl64)  , create_full_val_auto(fl64), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_float64(fl64), create_full_val_auto(fl64))
+
+    f_complex64 = epyccel(create_full_val_auto, language = language)
+    assert(isclose(f_complex64(cmplx64)  , create_full_val_auto(cmplx64), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_complex64(cmplx64), create_full_val_auto(cmplx64))
+
+    f_complex128 = epyccel(create_full_val_auto, language = language)
+    assert(isclose(f_complex128(cmplx128)  , create_full_val_auto(cmplx128), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_complex128(cmplx128), create_full_val_auto(cmplx128))
+
 def test_full_combined_args(language):
     def create_full_1_shape():
         from numpy import full, shape
@@ -2568,10 +2652,23 @@ def test_full_like_order(language):
 )
 def test_full_like_dtype(language):
     @types('int')
+    def create_full_like_val_int_int_auto(val):
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9], int)
+        a = full_like(arr,val)
+        return a[0]
+    @types('int')
     def create_full_like_val_int_int(val):
         from numpy import full_like, array
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,int)
+        return a[0]
+
+    @types('int')
+    def create_full_like_val_int_float_auto(val):
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9], float)
+        a = full_like(arr,val)
         return a[0]
     @types('int')
     def create_full_like_val_int_float(val):
@@ -2579,11 +2676,25 @@ def test_full_like_dtype(language):
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,float)
         return a[0]
+
+    @types('int')
+    def create_full_like_val_int_complex_auto(val):
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9], complex)
+        a = full_like(arr,val)
+        return a[0]
     @types('int')
     def create_full_like_val_int_complex(val):
         from numpy import full_like, array
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,complex)
+        return a[0]
+
+    @types('real')
+    def create_full_like_val_real_int32_auto(val):
+        from numpy import full_like, int32, array
+        arr = array([5, 1, 8, 0, 9], int32)
+        a = full_like(arr,val)
         return a[0]
     @types('real')
     def create_full_like_val_real_int32(val):
@@ -2591,11 +2702,25 @@ def test_full_like_dtype(language):
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,int32)
         return a[0]
+
+    @types('real')
+    def create_full_like_val_real_float32_auto(val):
+        from numpy import full_like, float32, array
+        arr = array([5, 1, 8, 0, 9], float32)
+        a = full_like(arr,val)
+        return a[0]
     @types('real')
     def create_full_like_val_real_float32(val):
         from numpy import full_like, float32, array
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,float32)
+        return a[0]
+
+    @types('real')
+    def create_full_like_val_real_float64_auto(val):
+        from numpy import full_like, float64, array
+        arr = array([5, 1, 8, 0, 9], float64)
+        a = full_like(arr,val)
         return a[0]
     @types('real')
     def create_full_like_val_real_float64(val):
@@ -2603,11 +2728,25 @@ def test_full_like_dtype(language):
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,float64)
         return a[0]
+
+    @types('real')
+    def create_full_like_val_real_complex64_auto(val):
+        from numpy import full_like, complex64, array
+        arr = array([5, 1, 8, 0, 9], complex64)
+        a = full_like(arr,val)
+        return a[0]
     @types('real')
     def create_full_like_val_real_complex64(val):
         from numpy import full_like, complex64, array
         arr = array([5, 1, 8, 0, 9])
         a = full_like(arr,val,complex64)
+        return a[0]
+
+    @types('real')
+    def create_full_like_val_real_complex128_auto(val):
+        from numpy import full_like, complex128, array
+        arr = array([5, 1, 8, 0, 9], complex128)
+        a = full_like(arr,val)
         return a[0]
     @types('real')
     def create_full_like_val_real_complex128(val):
@@ -2650,6 +2789,38 @@ def test_full_like_dtype(language):
     f_real_complex128   = epyccel(create_full_like_val_real_complex128, language = language)
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_like_val_real_complex128(val_float), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(val_float), create_full_like_val_real_complex128(val_float))
+
+    f_int_int_auto   = epyccel(create_full_like_val_int_int_auto, language = language)
+    assert(     f_int_int_auto(val_int)        ==      create_full_like_val_int_int_auto(val_int))
+    assert matching_types(f_int_int(val_int), create_full_like_val_int_int_auto(val_int))
+
+    f_int_float_auto = epyccel(create_full_like_val_int_float_auto, language = language)
+    assert(isclose(     f_int_float_auto(val_int)     ,      create_full_like_val_int_float_auto(val_int), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_int_float_auto(val_int), create_full_like_val_int_float_auto(val_int))
+
+    f_int_complex_auto = epyccel(create_full_like_val_int_complex_auto, language = language)
+    assert(isclose(     f_int_complex_auto(val_int)     ,      create_full_like_val_int_complex_auto(val_int), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_int_complex_auto(val_int), create_full_like_val_int_complex_auto(val_int))
+
+    f_real_int32_auto   = epyccel(create_full_like_val_real_int32_auto, language = language)
+    assert(     f_real_int32_auto(val_float)        ==      create_full_like_val_real_int32_auto(val_float))
+    assert matching_types(f_real_int32_auto(val_float), create_full_like_val_real_int32_auto(val_float))
+
+    f_real_float32_auto   = epyccel(create_full_like_val_real_float32_auto, language = language)
+    assert(isclose(     f_real_float32_auto(val_float)       ,      create_full_like_val_real_float32_auto(val_float), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_float32_auto(val_float), create_full_like_val_real_float32_auto(val_float))
+
+    f_real_float64_auto   = epyccel(create_full_like_val_real_float64_auto, language = language)
+    assert(isclose(     f_real_float64_auto(val_float)       ,      create_full_like_val_real_float64_auto(val_float), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_float64_auto(val_float), create_full_like_val_real_float64_auto(val_float))
+
+    f_real_complex64_auto   = epyccel(create_full_like_val_real_complex64_auto, language = language)
+    assert(isclose(     f_real_complex64_auto(val_float)       ,      create_full_like_val_real_complex64_auto(val_float), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_complex64_auto(val_float), create_full_like_val_real_complex64_auto(val_float))
+
+    f_real_complex128_auto   = epyccel(create_full_like_val_real_complex128_auto, language = language)
+    assert(isclose(     f_real_complex128_auto(val_float)       ,      create_full_like_val_real_complex128_auto(val_float), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_complex128_auto(val_float), create_full_like_val_real_complex128_auto(val_float))
 
 def test_full_like_combined_args(language):
     def create_full_like_1_shape():
@@ -2756,10 +2927,22 @@ def test_empty_like_order(language):
 
 def test_empty_like_dtype(language):
 
+    def create_empty_like_val_int_auto():
+        from numpy import empty_like, array
+        arr = array([5, 1, 8, 0, 9], dtype=int)
+        a = empty_like(arr)
+        return a[0]
+
     def create_empty_like_val_int():
         from numpy import empty_like, array
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, int)
+        return a[0]
+
+    def create_empty_like_val_float_auto():
+        from numpy import empty_like, array
+        arr = array([5, 1, 8, 0, 9], dtype=float)
+        a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_float():
@@ -2768,10 +2951,22 @@ def test_empty_like_dtype(language):
         a = empty_like(arr, dtype=float)
         return a[0]
 
+    def create_empty_like_val_complex_auto():
+        from numpy import empty_like, array
+        arr = array([5, 1, 8, 0, 9], dtype=complex)
+        a = empty_like(arr)
+        return a[0]
+
     def create_empty_like_val_complex():
         from numpy import empty_like, array
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=complex)
+        return a[0]
+
+    def create_empty_like_val_int32_auto():
+        from numpy import empty_like, array, int32
+        arr = array([5, 1, 8, 0, 9], dtype=int32)
+        a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_int32():
@@ -2780,10 +2975,22 @@ def test_empty_like_dtype(language):
         a = empty_like(arr, dtype=int32)
         return a[0]
 
+    def create_empty_like_val_float32_auto():
+        from numpy import empty_like, array, float32
+        arr = array([5, 1, 8, 0, 9], dtype='float32')
+        a = empty_like(arr)
+        return a[0]
+
     def create_empty_like_val_float32():
         from numpy import empty_like, float32, array
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr, dtype=float32)
+        return a[0]
+
+    def create_empty_like_val_float64_auto():
+        from numpy import empty_like, array, float64
+        arr = array([5, 1, 8, 0, 9], dtype=float64)
+        a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_float64():
@@ -2792,10 +2999,22 @@ def test_empty_like_dtype(language):
         a = empty_like(arr,dtype=float64)
         return a[0]
 
+    def create_empty_like_val_complex64_auto():
+        from numpy import empty_like, array, complex64
+        arr = array([5, 1, 8, 0, 9], dtype=complex64)
+        a = empty_like(arr)
+        return a[0]
+
     def create_empty_like_val_complex64():
         from numpy import empty_like, complex64, array
         arr = array([5, 1, 8, 0, 9])
         a = empty_like(arr,dtype=complex64)
+        return a[0]
+
+    def create_empty_like_val_complex128_auto():
+        from numpy import empty_like, array, complex128
+        arr = array([5, 1, 8, 0, 9], dtype=complex128)
+        a = empty_like(arr)
         return a[0]
 
     def create_empty_like_val_complex128():
@@ -2805,26 +3024,51 @@ def test_empty_like_dtype(language):
         return a[0]
 
 
+    f_int_auto   = epyccel(create_empty_like_val_int_auto, language = language)
+    assert matching_types(f_int_auto(), create_empty_like_val_int_auto())
+
     f_int_int   = epyccel(create_empty_like_val_int, language = language)
     assert matching_types(f_int_int(), create_empty_like_val_int())
+
+    f_float_auto = epyccel(create_empty_like_val_float_auto, language = language)
+    assert matching_types(f_float_auto(), create_empty_like_val_float_auto())
 
     f_int_float = epyccel(create_empty_like_val_float, language = language)
     assert matching_types(f_int_float(), create_empty_like_val_float())
 
+    f_complex_auto = epyccel(create_empty_like_val_complex_auto, language = language)
+    assert matching_types(f_complex_auto(), create_empty_like_val_complex_auto())
+
     f_int_complex = epyccel(create_empty_like_val_complex, language = language)
     assert matching_types(f_int_complex(), create_empty_like_val_complex())
+
+    f_int32_auto   = epyccel(create_empty_like_val_int32_auto, language = language)
+    assert matching_types(f_int32_auto(), create_empty_like_val_int32_auto())
 
     f_real_int32   = epyccel(create_empty_like_val_int32, language = language)
     assert matching_types(f_real_int32(), create_empty_like_val_int32())
 
+    f_float32_auto   = epyccel(create_empty_like_val_float32_auto, language = language)
+    assert matching_types(f_float32_auto(), create_empty_like_val_float32_auto())
+
     f_real_float32   = epyccel(create_empty_like_val_float32, language = language)
     assert matching_types(f_real_float32(), create_empty_like_val_float32())
+
+    f_float64_auto   = epyccel(create_empty_like_val_float64_auto, language = language)
+    assert matching_types(f_float64_auto(), create_empty_like_val_float64_auto())
 
     f_real_float64   = epyccel(create_empty_like_val_float64, language = language)
     assert matching_types(f_real_float64(), create_empty_like_val_float64())
 
+    f_complex64_auto   = epyccel(create_empty_like_val_complex64_auto, language = language)
+
+    assert matching_types(f_complex64_auto(), create_empty_like_val_complex64_auto())
+
     f_real_complex64   = epyccel(create_empty_like_val_complex64, language = language)
     assert matching_types(f_real_complex64(), create_empty_like_val_complex64())
+
+    f_complex128_auto   = epyccel(create_empty_like_val_complex128_auto, language = language)
+    assert matching_types(f_complex128_auto(), create_empty_like_val_complex128_auto())
 
     f_real_complex128   = epyccel(create_empty_like_val_complex128, language = language)
     assert matching_types(f_real_complex128(), create_empty_like_val_complex128())
@@ -2936,10 +3180,22 @@ def test_ones_like_order(language):
 
 def test_ones_like_dtype(language):
 
+    def create_ones_like_val_int_auto():
+        from numpy import ones_like, array
+        arr = array([5, 1, 8, 0, 9], int)
+        a = ones_like(arr)
+        return a[0]
+
     def create_ones_like_val_int():
         from numpy import ones_like, array
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, int)
+        return a[0]
+
+    def create_ones_like_val_float_auto():
+        from numpy import ones_like, array
+        arr = array([5, 1, 8, 0, 9], float)
+        a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_float():
@@ -2948,10 +3204,22 @@ def test_ones_like_dtype(language):
         a = ones_like(arr,float)
         return a[0]
 
+    def create_ones_like_val_complex_auto():
+        from numpy import ones_like, array
+        arr = array([5, 1, 8, 0, 9], complex)
+        a = ones_like(arr)
+        return a[0]
+
     def create_ones_like_val_complex():
         from numpy import ones_like, array
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, complex)
+        return a[0]
+
+    def create_ones_like_val_int32_auto():
+        from numpy import ones_like, int32, array
+        arr = array([5, 1, 8, 0, 9], int32)
+        a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_int32():
@@ -2960,10 +3228,22 @@ def test_ones_like_dtype(language):
         a = ones_like(arr,int32)
         return a[0]
 
+    def create_ones_like_val_float32_auto():
+        from numpy import ones_like, float32, array
+        arr = array([5, 1, 8, 0, 9], float32)
+        a = ones_like(arr)
+        return a[0]
+
     def create_ones_like_val_float32():
         from numpy import ones_like, float32, array
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, float32)
+        return a[0]
+
+    def create_ones_like_val_float64_auto():
+        from numpy import ones_like, float64, array
+        arr = array([5, 1, 8, 0, 9], float64)
+        a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_float64():
@@ -2972,10 +3252,22 @@ def test_ones_like_dtype(language):
         a = ones_like(arr, float64)
         return a[0]
 
+    def create_ones_like_val_complex64_auto():
+        from numpy import ones_like, complex64, array
+        arr = array([5, 1, 8, 0, 9], complex64)
+        a = ones_like(arr)
+        return a[0]
+
     def create_ones_like_val_complex64():
         from numpy import ones_like, complex64, array
         arr = array([5, 1, 8, 0, 9])
         a = ones_like(arr, complex64)
+        return a[0]
+
+    def create_ones_like_val_complex128_auto():
+        from numpy import ones_like, complex128, array
+        arr = array([5, 1, 8, 0, 9], complex128)
+        a = ones_like(arr)
         return a[0]
 
     def create_ones_like_val_complex128():
@@ -3016,6 +3308,38 @@ def test_ones_like_dtype(language):
     f_real_complex128   = epyccel(create_ones_like_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_ones_like_val_complex128(), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(), create_ones_like_val_complex128())
+
+    f_int_int_auto   = epyccel(create_ones_like_val_int_auto, language = language)
+    assert(     f_int_int_auto()          ==      create_ones_like_val_int_auto())
+    assert matching_types(f_int_int_auto(), create_ones_like_val_int_auto())
+
+    f_int_float_auto = epyccel(create_ones_like_val_float_auto, language = language)
+    assert(isclose(     f_int_float_auto()       ,      create_ones_like_val_float_auto(), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_int_float_auto(), create_ones_like_val_float_auto())
+
+    f_int_complex_auto = epyccel(create_ones_like_val_complex_auto, language = language)
+    assert(isclose(     f_int_complex_auto()     ,      create_ones_like_val_complex_auto(), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_int_complex_auto(), create_ones_like_val_complex_auto())
+
+    f_real_int32_auto   = epyccel(create_ones_like_val_int32_auto, language = language)
+    assert(     f_real_int32_auto()       ==      create_ones_like_val_int32_auto())
+    assert matching_types(f_real_int32_auto(), create_ones_like_val_int32_auto())
+
+    f_real_float32_auto   = epyccel(create_ones_like_val_float32_auto, language = language)
+    assert(isclose(     f_real_float32_auto()    ,      create_ones_like_val_float32_auto(), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_float32_auto(), create_ones_like_val_float32_auto())
+
+    f_real_float64_auto   = epyccel(create_ones_like_val_float64_auto, language = language)
+    assert(isclose(     f_real_float64_auto()    ,      create_ones_like_val_float64_auto(), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_float64_auto(), create_ones_like_val_float64_auto())
+
+    f_real_complex64_auto   = epyccel(create_ones_like_val_complex64_auto, language = language)
+    assert(isclose(     f_real_complex64_auto()  ,      create_ones_like_val_complex64_auto(), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_complex64_auto(), create_ones_like_val_complex64_auto())
+
+    f_real_complex128_auto   = epyccel(create_ones_like_val_complex128_auto, language = language)
+    assert(isclose(     f_real_complex128_auto() ,      create_ones_like_val_complex128_auto(), rtol=RTOL, atol=ATOL))
+    assert matching_types(f_real_complex128_auto(), create_ones_like_val_complex128_auto())
 
 def test_ones_like_combined_args(language):
 
@@ -3206,6 +3530,81 @@ def test_zeros_like_dtype(language):
     f_real_complex128   = epyccel(create_zeros_like_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_zeros_like_val_complex128(), rtol=RTOL, atol=ATOL))
     assert matching_types(f_real_complex128(), create_zeros_like_val_complex128())
+
+def test_zeros_like_dtype_auto(language):
+
+    def create_zeros_like_val_int_auto():
+        from numpy import zeros_like, array
+        arr = array([5, 1, 8, 0, 9], dtype=int)
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_float_auto():
+        from numpy import zeros_like, array
+        arr = array([5, 1, 8, 0, 9], dtype=float)
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_complex_auto():
+        from numpy import zeros_like, array
+        arr = array([5, 1, 8, 0, 9], dtype=complex)
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_int32_auto():
+        from numpy import zeros_like, array, int32
+        arr = array([5, 1, 8, 0, 9], dtype=int32)
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_float32_auto():
+        from numpy import zeros_like, array, float32
+        arr = array([5, 1, 8, 0, 9], dtype='float32')
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_float64_auto():
+        from numpy import zeros_like, array, float64
+        arr = array([5, 1, 8, 0, 9], dtype=float64)
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_complex64_auto():
+        from numpy import zeros_like, array, complex64
+        arr = array([5, 1, 8, 0, 9], dtype=complex64)
+        a = zeros_like(arr)
+        return a[0]
+
+    def create_zeros_like_val_complex128_auto():
+        from numpy import zeros_like, array, complex128
+        arr = array([5, 1, 8, 0, 9], dtype=complex128)
+        a = zeros_like(arr)
+        return a[0]
+
+    f_int_auto   = epyccel(create_zeros_like_val_int_auto, language = language)
+    assert matching_types(f_int_auto(), create_zeros_like_val_int_auto())
+
+    f_float_auto = epyccel(create_zeros_like_val_float_auto, language = language)
+    assert matching_types(f_float_auto(), create_zeros_like_val_float_auto())
+
+    f_complex_auto = epyccel(create_zeros_like_val_complex_auto, language = language)
+    assert matching_types(f_complex_auto(), create_zeros_like_val_complex_auto())
+    
+    f_int32_auto   = epyccel(create_zeros_like_val_int32_auto, language = language)
+    assert matching_types(f_int32_auto(), create_zeros_like_val_int32_auto())
+
+    f_float32_auto   = epyccel(create_zeros_like_val_float32_auto, language = language)
+    assert matching_types(f_float32_auto(), create_zeros_like_val_float32_auto())
+
+    f_float64_auto   = epyccel(create_zeros_like_val_float64_auto, language = language)
+    assert matching_types(f_float64_auto(), create_zeros_like_val_float64_auto())
+
+    f_complex64_auto   = epyccel(create_zeros_like_val_complex64_auto, language = language)
+    assert matching_types(f_complex64_auto(), create_zeros_like_val_complex64_auto())
+
+    f_complex128_auto   = epyccel(create_zeros_like_val_complex128_auto, language = language)
+    assert matching_types(f_complex128_auto(), create_zeros_like_val_complex128_auto())
+
 
 def test_zeros_like_combined_args(language):
 
@@ -4124,25 +4523,33 @@ def test_numpy_prod_array_like_1d(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+    max_ok_int = int(max_int64 ** (1/5))
 
-    fl = uniform(min_float / 2, max_float / 2, size = size)
-    fl32 = uniform(min_float32 / 2, max_float32 / 2, size = size)
+    integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
+    integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
+    integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
+
+    fl = uniform(-((-min_float) ** (1/5)), max_float ** (1/5), size = size)
+
+    min_ok_float32 = -((-min_float32) ** (1/5))
+    min_ok_float64 = -((-min_float64) ** (1/5))
+    max_ok_float32 = max_float32 ** (1/5)
+    max_ok_float64 = max_float64 ** (1/5)
+
+    fl32 = uniform(min_ok_float32, max_ok_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
+    fl64 = uniform(min_ok_float64, max_ok_float64, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/5)),
-                                    high=(max_float32 ** (1/5)), size = size) + \
-                            uniform(low=-((-min_float32) ** (1/5)),
-                                    high=(max_float32 ** (1/5)), size = size) * 1j
-    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/5)),
-                                    high=(max_float64 ** (1/5)), size = size) + \
-                            uniform(low=-((-min_float64) ** (1/5)),
-                                    high=(max_float64 ** (1/5)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) + \
+                            uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) * 1j
+    cmplx128_from_float64 = uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) + \
+                            uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
@@ -4161,6 +4568,17 @@ def test_numpy_prod_array_like_1d(language):
     assert np.isclose(epyccel_func(fl64), get_prod(fl64), rtol=RTOL, atol=ATOL)
     assert np.isclose(epyccel_func(cmplx64), get_prod(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(epyccel_func(cmplx128), get_prod(cmplx128), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(bl), get_prod(bl))
+    assert matching_types(epyccel_func(integer8), get_prod(integer8))
+    assert matching_types(epyccel_func(integer16), get_prod(integer16))
+    assert matching_types(epyccel_func(integer), get_prod(integer))
+    assert matching_types(epyccel_func(integer32), get_prod(integer32))
+    assert matching_types(epyccel_func(integer64), get_prod(integer64))
+    assert matching_types(epyccel_func(fl), get_prod(fl))
+    assert matching_types(epyccel_func(fl32), get_prod(fl32))
+    assert matching_types(epyccel_func(fl64), get_prod(fl64))
+    assert matching_types(epyccel_func(cmplx64), get_prod(cmplx64))
+    assert matching_types(epyccel_func(cmplx128), get_prod(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -4198,25 +4616,33 @@ def test_numpy_prod_array_like_2d(language):
 
     bl = randint(0, 2, size = size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
-    integer = randint(min_int, max_int, size = size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+    max_ok_int = int(max_int64 ** (1/10))
 
-    fl = uniform(min_float / 10, max_float / 10, size = size)
-    fl32 = uniform(min_float32 / 10, max_float32 / 10, size = size)
+    integer8  = randint(max(min_int8, -max_ok_int), min(max_ok_int, max_int8), size = size, dtype=np.int8)
+    integer16 = randint(max(min_int16, -max_ok_int), min(max_ok_int, max_int16), size = size, dtype=np.int16)
+    integer   = randint(max(min_int, -max_ok_int), min(max_ok_int, max_int), size = size, dtype=int)
+    integer32 = randint(max(min_int32, -max_ok_int), min(max_ok_int, max_int32), size = size, dtype=np.int32)
+    integer64 = randint(-max_ok_int, max_ok_int, size = size, dtype=np.int64)
+
+    fl = uniform(-((-min_float) ** (1/10)), max_float ** (1/10), size = size)
+
+    min_ok_float32 = -((-min_float32) ** (1/10))
+    min_ok_float64 = -((-min_float64) ** (1/10))
+    max_ok_float32 = max_float32 ** (1/10)
+    max_ok_float64 = max_float64 ** (1/10)
+
+    fl32 = uniform(min_ok_float32, max_ok_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 10, max_float64 / 10, size=size)
+    fl64 = uniform(min_ok_float64, max_ok_float64, size=size)
 
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/10)),
-                                    high=(max_float32 ** (1/10)), size = size) + \
-                            uniform(low=-((-min_float32) ** (1/10)),
-                                    high=(max_float32 ** (1/10)), size = size) * 1j
-    cmplx128_from_float64 = uniform(low=-((-min_float64) ** (1/10)),
-                                    high=(max_float64 ** (1/10)), size = size) + \
-                            uniform(low=-((-min_float64) ** (1/10)),
-                                    high=(max_float64 ** (1/10)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) + \
+                            uniform(low=min_ok_float32/2,
+                                    high=max_ok_float32/2, size = size) * 1j
+    cmplx128_from_float64 = uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) + \
+                            uniform(low=min_ok_float64/2,
+                                    high=max_ok_float64/2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
@@ -4895,7 +5321,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
     @types('float64[:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        a = where(arr > 5, arr, arr*2)
+        a = where(arr > 5, arr, arr * 2)
         s = shape(a)
         return len(s), s[0], a[1], a[0]
 
@@ -4988,7 +5414,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
     @types('float64[:,:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        a = where(arr < 0, arr, arr+1)
+        a = where(arr < 0, arr, arr + 1)
         s = shape(a)
         return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
 
@@ -5139,7 +5565,7 @@ def test_numpy_linspace_scalar(language):
         for i in range(len(x)):
             result[i] = x[i]
 
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer8 = randint(min_int8, max_int8 // 2, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
@@ -5163,8 +5589,8 @@ def test_numpy_linspace_scalar(language):
     epyccel_func_type2(0, 10, out)
     assert (np.allclose(x, out))
     arr = np.zeros
-    x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100), rtol=RTOL, atol=ATOL)
+    x = randint(1, 60)
+    assert np.isclose(epyccel_func(integer8, x, 30), get_linspace(integer8, x, 30), rtol=RTOL, atol=ATOL)
     assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
     x = randint(100, 200)
     assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)

@@ -33,15 +33,15 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              If, IfSection, For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
-                             IndexedElement, HomogeneousTupleVariable,
+                             IndexedElement,
                              InhomogeneousTupleVariable,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus, PyccelNot
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators      import PyccelMod
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
 from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonPrint, PythonRange,
@@ -64,12 +64,13 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyEmpty
+from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
 from pyccel.ast.numpyext import NumpyFloat, NumpyBool
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
+from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
@@ -210,7 +211,7 @@ class FCodePrinter(CodePrinter):
         errors.set_target(filename, 'file')
 
         super().__init__()
-        self._constantImports = set()
+        self._constantImports = {}
         self._current_class    = None
 
         self._additional_code = None
@@ -220,12 +221,16 @@ class FCodePrinter(CodePrinter):
 
     def print_constant_imports(self):
         """Prints the use line for the constant imports used"""
-        macro = "use, intrinsic :: ISO_C_Binding, only : "
-        rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in self._constantImports]
-        if len(rename) == 0:
-            return ''
-        macro += " , ".join(rename)
-        return macro
+        macros = []
+        for (name, imports) in self._constantImports.items():
+
+            macro = f"use, intrinsic :: {name}, only : "
+            rename = [c if isinstance(c, str) else c[0] + ' => ' + c[1] for c in imports]
+            if len(rename) == 0:
+                continue
+            macro += " , ".join(rename)
+            macros.append(macro)
+        return "\n".join(macros)
 
     def get_additional_imports(self):
         """return the additional modules collected for importing in printing stage"""
@@ -280,10 +285,12 @@ class FCodePrinter(CodePrinter):
         constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:
-            self._constantImports.add((constant_shortcut, constant_name))
+            self._constantImports.setdefault('ISO_C_Binding', set())\
+                .add((constant_shortcut, constant_name))
             constant_name = constant_shortcut
         else:
-            self._constantImports.add(constant_name)
+            self._constantImports.setdefault('ISO_C_Binding', set())\
+                .add(constant_name)
         return constant_name
 
     def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
@@ -573,6 +580,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
+        empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
         for f in expr.expr:
             if f.has_keyword:
                 if f.keyword == 'sep':
@@ -591,25 +599,31 @@ class FCodePrinter(CodePrinter):
         tuple_sep   = LiteralString(', ')
         tuple_end   = FunctionCallArgument(LiteralString(')'))
 
-        for f in orig_args:
+        for i, f in enumerate(orig_args):
             if f.keyword:
                 continue
             else:
                 f = f.value
             if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
                 if args_format:
-                    code += self._formatted_args_to_print(args_format, args, sep, separator)
+                    code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
                     args = []
+                if i + 1 == len(orig_args):
+                    end_of_tuple = empty_end
+                else:
+                    end_of_tuple = FunctionCallArgument(sep, 'end')
                 args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end]))
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
                 args = []
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
-                    code += self._formatted_args_to_print(args_format, args, sep, separator)
+                    code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
                     args = []
                 loop_scope = self.scope.create_new_loop_scope()
@@ -620,25 +634,27 @@ class FCodePrinter(CodePrinter):
                 if f.rank == 1:
                     print_body.append(space_end)
 
-                for_body = [PythonPrint(print_body)]
+                for_body = [PythonPrint(print_body, file=expr.file)]
                 for_loop = For(for_index, for_range, for_body, scope=loop_scope)
                 for_end_char = LiteralString(']')
                 for_end = FunctionCallArgument(for_end_char,
                                                keyword='end')
 
-                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end]),
+                body = CodeBlock([PythonPrint([FunctionCallArgument(LiteralString('[')), empty_end],
+                                                file=expr.file),
                                   for_loop,
-                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end])],
+                                  PythonPrint([FunctionCallArgument(f[max_index]), for_end],
+                                                file=expr.file)],
                                  unravelled=True)
                 code += self._print(body)
             else:
                 arg_format, arg = self._get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-        code += self._formatted_args_to_print(args_format, args, end, separator)
+        code += self._formatted_args_to_print(args_format, args, end, separator, expr)
         return code
 
-    def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep):
+    def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep, expr):
         """ Produce a write statement from a list of formats, args and an end
         statement
 
@@ -650,6 +666,8 @@ class FCodePrinter(CodePrinter):
                        The args to be printed
         fend         : PyccelAstNode
                        The character describing the end of the line
+        expr         : PyccelAstNode
+                        The PythonPrint currently printed
         """
         if fargs_format == ['*']:
             # To print the result of a FunctionCall
@@ -670,8 +688,13 @@ class FCodePrinter(CodePrinter):
 
         args_code       = ' , '.join(args_list)
         args_formatting = ' '.join(fargs_format)
-        return "write(*, '({})', advance=\"{}\") {}\n"\
-            .format(args_formatting, advance, args_code)
+        if expr.file == "stderr":
+            self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
+                .add(("stderr", "error_unit"))
+            return f"write(stderr, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
+        self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
+                .add(("stdout", "output_unit"))
+        return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
     def _get_print_format_and_arg(self,var):
         """ Get the format string and the printable argument for an object.
@@ -1356,7 +1379,7 @@ class FCodePrinter(CodePrinter):
                     #TODO improve ,this is the case of character as argument
             elif isinstance(expr_dtype, BindCPointer):
                 dtype = 'type(c_ptr)'
-                self._constantImports.add('c_ptr')
+                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
             else:
                 dtype += '({0})'.format(self.print_kind(expr.variable))
 
@@ -2645,6 +2668,19 @@ class FCodePrinter(CodePrinter):
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
 
+    def _print_SysExit(self, expr):
+        code = ""
+        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
+            print_arg = FunctionCallArgument(expr.status)
+            code = self._print(PythonPrint((print_arg, ), file="stderr"))
+            arg = "1"
+        else:
+            arg = expr.status
+            if arg.precision != 4:
+                arg = NumpyInt32(arg)
+            arg = self._print(arg)
+        return f'{code}stop {arg}\n'
+
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
         try:
@@ -2656,6 +2692,31 @@ class FCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpySign(self, expr):
+        """ Print the corresponding Fortran function for a call to Numpy.sign
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with Numpy.sign call
+
+        Returns
+        -------
+            string
+                Equivalent internal function in Fortran
+
+        Example
+        -------
+            import numpy
+
+            numpy.sign(x) => numpy_sign(x)
+            numpy_sign is an interface which calls the proper function depending on the data type of x
+
+        """
+        func = PyccelFunctionDef('numpy_sign', NumpySign)
+        self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
+        return f'numpy_sign({self._print(expr.args[0])})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
@@ -3018,7 +3079,7 @@ class FCodePrinter(CodePrinter):
     def _print_CLocFunc(self, expr):
         lhs = self._print(expr.result)
         rhs = self._print(expr.arg)
-        self._constantImports.add('c_loc')
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('c_loc')
         return f'{lhs} = c_loc({rhs})\n'
 
 #=======================================================================================
