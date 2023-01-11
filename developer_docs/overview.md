@@ -86,4 +86,4 @@ If the error prevents further translation (e.g. the type of an object is now unk
 
 ## Getting Help
 
-While discussions within the associated GitHub issue are often sufficient, should you require more help do not hesitate to ask one of the other developers to add you to our Slack channel <pyccel.slack.com>.
+While discussions within the associated GitHub issue are often sufficient, should you require more help you can join our [Pyccel Discord Server](https://discord.gg/2Q6hwjfFVb).
