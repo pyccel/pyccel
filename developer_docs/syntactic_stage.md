@@ -13,7 +13,7 @@ The syntactic stage serves 4 main purposes:
 The entry point for the class `SyntaxParser` is the function `parse`.
 This function is called from the constructor to examine a FST (Full Syntax Tree) object.
 The FST is the output of Python's `ast.parse` function with comments reinserted using the [`pyccel.parser.extend_tree.extend_tree`](../pyccel/parser/extend_tree.py) function.
-This is necessary as python's `ast` module discards all comments.
+This is necessary as Python's `ast` module discards all comments.
 
 The key line of the function `parse` is the call to `self._visit(self.fst)`.
 All elements of the tree must be visited.
@@ -87,7 +87,7 @@ This is important to avoid name collisions if Pyccel creates temporaries or requ
 The names are saved in the scope (for more details see [scope](scope.md)).
 Whenever a symbol is encountered in a declaration context, it should be saved to the scope using the function `self.scope.insert_symbol`.
 This is usually done in the `_visit_Name` function, however this function is not aware of the context so it cannot determine whether it is a declaration.
-To get round this the class has the property `SyntaxParser._in_lhs_assign`, which should be `True` in a declaration context, and false elsewhere.
+To get round this the class has the attribute `SyntaxParser._in_lhs_assign`, which should be `True` in a declaration context, and `False` elsewhere.
 
 Consider for example a for loop. Such a loop has 3 main parts (which are each members of `ast.For`):
 -   target  (`ast.For.target`)
@@ -111,6 +111,7 @@ body = self._visit(stmt.body)
 ```
 
 ### Scoped Node
+
 Any functions visiting a class which inherits from `ScopedNode` must create a new scope before visiting objects and exit it after everything inside the scope has been visited.
 The scope must then be passed to the class using the keyword argument `scope`.
 Care should be taken here as this keyword is not compulsory[^1].
@@ -123,10 +124,11 @@ A child scope can be created using one of the following functions (for more deta
 -   `Scope.create_product_loop_scope`
 
 ### Temporary Creation
+
 Occasionally it is necessary to create objects in the syntactic stage.
-The `Scope` functions should be used for this purpose to avoid name collisions.
+When this happens, the `Scope` functions should be used to avoid name collisions with the objects in the original code.
 See the [scope](scope.md) docs for more details.
-In all cases it is preferable to delay this stage as long as possible to ensure that as much information is known about the scope as possible.
+In all cases it is preferable to delay the creation of new objects as long as possible to ensure that as much information is known about the scope as possible.
 This is important as at this stage there may still be conflicting names which appear later in the file.
 The `Scope` should prevent name collisions with these objects, but that will lead to them being renamed which makes the translated code harder to recognise when compared with the original.
 
