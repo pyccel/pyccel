@@ -1019,7 +1019,8 @@ class SyntaxParser(BasicParser):
         elif name == 'max':
             expr = FunctionalMax(body, result, lhs, indices)
         else:
-            return errors.report(PYCCEL_RESTRICTION_TODO,
+            expr = EmptyNode()
+            errors.report(PYCCEL_RESTRICTION_TODO,
                           symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
