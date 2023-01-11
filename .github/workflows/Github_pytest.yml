@@ -2,7 +2,7 @@ name: Pyccel tests
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ master, cuda_main, cuda_devel ]
 
 jobs:
   Linux:
