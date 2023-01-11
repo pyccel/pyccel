@@ -22,7 +22,9 @@ These functions must have the form:
 ```python
 def _visit_ClassName(self, stmt):
     ...
+    return Y
 ```
+where `Y` must be an object of a class which inherits from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
 Each of these `_visit_X` functions should internally call the `_visit` function on each of the elements of the object to obtain Pyccel AST nodes which can be combined to create a Pyccel AST node representing the current object.
 
 ### Example
@@ -71,6 +73,10 @@ The most important arguments are:
     -   _warning_ : An error will be printed but Pyccel will continue executing
     -   _error_ : An error will be printed but Pyccel will continue executing the syntactic stage
     -   _fatal_ : An error will be printed and Pyccel will stop executing. This level should rarely be needed in the syntactic stage as a failure in one visitation function (`_visit_X`) should not affect the execution of another. It is preferable to show the users all errors at once
+
+Although we failures in visitation functions (`_visit_X`) do not affect other visitation functions it is still important to ensure that the functions provide a valid output.
+In the `SyntacticParser` all `_visit_X` should return a Pyccel AST object (an object which inherits from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py), `pyccel.ast.core.EmptyNode` can be used to ensure this restriction is fulfilled.
+This is important to avoid errors caused by the construction of the tree which relates the objects (for more details see the [semantic stage](semantic_stage.md#Object-tree)).
 
 ## Headers
 
