@@ -123,7 +123,7 @@ from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
-from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
+from pyccel.errors.messages import (INVALID_FUNCTION_CALL, INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK, MISSING_KERNEL_CONFIGURATION,PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_THROWAWAY,
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
         INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
         UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
@@ -825,7 +825,8 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
-
+        if isinstance(func, FunctionDef) and 'kernel' in func.decorators:
+            errors.report(MISSING_KERNEL_CONFIGURATION, symbol = expr, severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             if func in (CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim):
@@ -913,6 +914,10 @@ class SemanticParser(BasicParser):
         =======
         new_expr : FunctionCall or PyccelInternalFunction
         """
+        if 'kernel' not in func.decorators:
+            errors.report(INVALID_FUNCTION_CALL,
+                        symbol = expr,
+                        severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
@@ -938,14 +943,29 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             # TODO : type check the NUMBER OF BLOCKS 'numBlocks' and threads per block 'tpblock'
             if not isinstance(expr.numBlocks, LiteralInteger):
-                errors.report("Invalid Block number parameter for Kernel call",
+                # expr.numBlocks could be invalid type, or PyccelSymbol
+                if isinstance(expr.numBlocks, PyccelSymbol):
+                    numBlocks = self.get_variable(expr.numBlocks)
+                    if not isinstance(numBlocks.dtype, NativeInteger):
+                        errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                        symbol = expr,
+                        severity='error')
+                else:
+                    errors.report(INVALID_KERNEL_CALL_BP_GRID,
                         symbol = expr,
                         severity='error')
             if not isinstance(expr.tpblock, LiteralInteger):
-                errors.report("Invalid Thread per Block parameter for Kernel call",
+                # expr.tpblock could be invalid type, or PyccelSymbol
+                if isinstance(expr.tpblock, PyccelSymbol):
+                    tpblock = self.get_variable(expr.tpblock)
+                    if not isinstance(tpblock.dtype, NativeInteger):
+                        errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
                         symbol = expr,
                         severity='error')
-
+                else:
+                    errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                        symbol = expr,
+                        severity='error')
             new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock, self._current_function)
 
             for a in new_expr.args:
