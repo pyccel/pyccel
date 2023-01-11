@@ -2,6 +2,7 @@ Pyccel
 Pythran
 numba
 NumPy
+NumPy's
 BLAS
 LAPACK
 MPI
