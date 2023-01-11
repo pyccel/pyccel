@@ -107,6 +107,8 @@ jobs:
         run: nvcc --version # cuda install check
       - name: Install dependencies
         uses: ./.github/actions/linux_install
+      - name: Install python (setup-python action doesn't work with containers)
+        uses: ./.github/actions/python_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Coverage install
