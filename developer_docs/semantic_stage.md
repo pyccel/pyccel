@@ -88,7 +88,7 @@ The most important arguments are:
 
 -   _severity_ : The severity level must be one of the following:
     -   _warning_ : An error will be printed but Pyccel will continue executing
-    -   _error_ : An error will be printed but Pyccel will continue executing the semantic stage. It will not proceed to the codegen stage.
+    -   _error_ : An error will be printed but Pyccel will continue executing the semantic stage. It will not proceed to the code generation stage.
     -   _fatal_ : An error will be printed and Pyccel will stop executing immediately. This is the level used the most frequently in the semantic stage as, if information such as the type cannot be determined, the object cannot be created which will cause problems later in the execution.
 
 It should be noted that Pyccel assumes that the user has provided valid code.
