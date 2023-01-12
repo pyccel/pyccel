@@ -1,0 +1,17 @@
+name: 'Pyccel pytest commands generating Ccuda'
+inputs:
+  shell_cmd:
+    description: 'Specifies the shell command (different for anaconda)'
+    required: false
+    default: "bash"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Ccuda tests with pytest
+      run: |
+        # Catch exit 5 (no tests found)
+        sh -c 'python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and ccuda" --ignore=tests/symbolic --ignore=tests/ndarrays; ret=$?; [ $ret = 5 ] && exit 0 || exit $ret'
+        pyccel-clean
+      shell: ${{ inputs.shell_cmd }}
+      working-directory: ./

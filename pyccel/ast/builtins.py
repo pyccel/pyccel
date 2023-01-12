@@ -29,6 +29,9 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Lambda',
+    'PythonAbs',
+    'PythonComplexProperty',
     'PythonReal',
     'PythonImag',
     'PythonConjugate',
@@ -43,6 +46,7 @@ __all__ = (
     'PythonMap',
     'PythonPrint',
     'PythonRange',
+    'PythonSum',
     'PythonType',
     'PythonZip',
     'PythonMax',
@@ -61,6 +65,7 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeFloat()
     _precision = -1
     _rank  = 0
@@ -132,6 +137,7 @@ class PythonConjugate(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeComplex()
     _precision = -1
     _rank  = 0
@@ -588,7 +594,8 @@ class PythonPrint(Basic):
 
     expr : PyccelAstNode
         The expression to print
-
+    file: String (Optional)
+        Select 'stdout' (default) or 'stderr' to print to
     Examples
 
     >>> from pyccel.ast.internals import symbols
@@ -597,17 +604,26 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
-    __slots__ = ('_expr')
+    __slots__ = ('_expr', '_file')
     _attribute_nodes = ('_expr',)
     name = 'print'
 
-    def __init__(self, expr):
+    def __init__(self, expr, file="stdout"):
+        if file not in ('stdout', 'stderr'):
+            raise ValueError('output_unit can be `stdout` or `stderr`')
         self._expr = expr
+        self._file = file
         super().__init__()
 
     @property
     def expr(self):
         return self._expr
+
+    @property
+    def file(self):
+        """ returns the output unit (`stdout` or `stderr`)
+        """
+        return self._file
 
 #==============================================================================
 class PythonRange(Basic):
@@ -673,8 +689,7 @@ class PythonZip(PyccelInternalFunction):
     Represents a zip stmt.
 
     """
-    __slots__ = ('_length','_args')
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_length',)
     name = 'zip'
 
     def __init__(self, *args):
@@ -886,9 +901,12 @@ class PythonType(Basic):
         can be used in a print  statement
         """
         prec = self.precision
-        return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))))
+        dtype = str(self.dtype)
+        if prec in (None, -1):
+            return LiteralString(f"<class '{dtype}'>")
+        else:
+            precision = prec * (16 if self.dtype is NativeComplex() else 8)
+            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 
 #==============================================================================
 python_builtin_datatypes_dict = {

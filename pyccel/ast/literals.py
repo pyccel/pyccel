@@ -11,6 +11,7 @@ from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, Nativ
                                   NativeComplex, NativeString)
 
 __all__ = (
+    'Literal',
     'LiteralTrue',
     'LiteralFalse',
     'LiteralInteger',
@@ -149,8 +150,8 @@ class LiteralComplex(Literal):
 
     def __init__(self, real, imag, precision = -1):
         super().__init__(precision)
-        self._real_part = LiteralFloat(self._collect_python_val(real))
-        self._imag_part = LiteralFloat(self._collect_python_val(imag))
+        self._real_part = LiteralFloat(self._collect_python_val(real), precision = precision)
+        self._imag_part = LiteralFloat(self._collect_python_val(imag), precision = precision)
 
     @staticmethod
     def _collect_python_val(arg):
@@ -212,6 +213,11 @@ class LiteralString(Literal):
 
     def __str__(self):
         return str(self.python_value)
+
+    def __add__(self, o):
+        if isinstance(o, LiteralString):
+            return LiteralString(self._string + o._string)
+        return NotImplemented
 
     @property
     def python_value(self):

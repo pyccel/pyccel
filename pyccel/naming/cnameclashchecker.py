@@ -13,7 +13,7 @@ class CNameClashChecker(metaclass = Singleton):
     """ Class containing functions to help avoid problematic names in C
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
-    keywords = set(['auto', 'break', 'case', 'char', 'const',
+    keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',
         'continue', 'default', 'do', 'double', 'else', 'enum',
         'extern', 'float', 'for', 'goto', 'if', 'inline', 'int',
         'long', 'register', 'restrict', 'return', 'short', 'signed',
