@@ -49,7 +49,7 @@ if errors:
             for w in words:
                 suggestions = difflib.get_close_matches(w, internal_dict)
                 if suggestions:
-                    print("-   ", w, "  f:  Did you mean {w} -> {suggestions}", file=f)
+                    print("-   ", w, f"  :  Did you mean {w} -> {suggestions}", file=f)
                 else:
                     print("-   ", w, file=f)
             print(file=f)
