@@ -96,7 +96,8 @@ It is not feasible to provide error messages for every possible coding error so 
 
 ## Function Recognition
 
-Function calls are split into two groups which are handled in different ways.
+After the syntactic stage, all function calls except `print` are represented by a `pyccel.ast.core.FunctionCall` object.
+In the semantic stage, function calls are split into two groups which are handled in different ways.
 
 The simplest case is the case where the function is defined by the user.
 In this case the `funcdef` attribute of the [`pyccel.ast.core.FunctionCall`](../pyccel/ast/core.py) class should be an object of type [`pyccel.ast.core.FunctionDef`](../pyccel/ast/core.py).
