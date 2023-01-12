@@ -69,7 +69,7 @@ This is for one of three reasons:
             return
     ```
 
-3.  A conscious choice has been made to not support code as there is no way to obtain a performant translation.
+3.  A conscious choice has been made to not support the code as there is no way to obtain a performant translation.
     Pyccel is designed to handle HPC applications.
     Therefore if the code cannot be performant, we prefer to warn the user so they can fix it rather than generating slow code (e.g. inhomogeneous lists).
 
