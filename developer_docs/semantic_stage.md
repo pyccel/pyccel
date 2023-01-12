@@ -103,7 +103,7 @@ In this case the `funcdef` attribute of the [`pyccel.ast.core.FunctionCall`](../
 The type of the `FunctionCall` (required to assign the result to a `Variable`) is easily determined from the type of the result variable(s).
 
 The second case involves functions that are recognised by Pyccel.
-This includes built-in functions and functions imported from supported libraries (`numpy`, `math`, etc).
+This includes Python [built-in functions](https://docs.python.org/3/library/functions.html) and functions imported from supported libraries (`numpy`, `math`, etc).
 Built-in functions do not need importing.
 Instead they are recognised via the function [`pyccel.ast.utilities.builtin_function`](../pyccel/ast/utilities.py) which uses the dictionary [`pyccel.ast.builtins.builtin_functions_dict`](../pyccel/ast/builtins.py) to identify supported functions.
 Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
