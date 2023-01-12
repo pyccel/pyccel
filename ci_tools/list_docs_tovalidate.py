@@ -33,7 +33,7 @@ for file in changes:
         if isinstance(node, (FunctionDef, ClassDef, Module)):
             if isinstance(node, Module):
                 objects.append(prefix)
-            if isinstance(node, ast.FunctionDef):
+            if isinstance(node, FunctionDef):
                 if hasattr(node, "parent"):
                     if any([x >= node.lineno and x <= node.end_lineno
                             for x in changes[file]]):
@@ -42,7 +42,7 @@ for file in changes:
                     if any([x >= node.lineno and x <= node.end_lineno
                             for x in changes[file]]):
                         objects.append('.'.join([prefix, node.name]))
-            if isinstance(node, ast.ClassDef):
+            if isinstance(node, ClassDef):
                 if any([x >= node.lineno and x <= node.end_lineno
                         for x in changes[file]]):
                     objects.append('.'.join([prefix, node.name]))
