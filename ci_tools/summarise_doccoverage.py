@@ -8,8 +8,6 @@ parser.add_argument('base', metavar='head_cov', type=str,
                         help='File containing the coverage of the head branch')
 parser.add_argument('compare', metavar='base_cov', type=str,
                         help='File containing the coverage of the base branch')
-parser.add_argument('compare', metavar='base_cov', type=str,
-                        help='File containing the coverage of the base branch')
 parser.add_argument('output', metavar='output', type=str,
                         help='File where the markdown output will be printed')
 
