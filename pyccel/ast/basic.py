@@ -369,18 +369,6 @@ class Basic:
         self._user_nodes = []
 
     def remove_user_node(self, user_node, invalidate = True):
-        """ Indicate that the current node is no longer used
-        by the user_node. This function is usually called by
-        the substitute method
-
-        Parameters
-        ----------
-        user_node : Basic
-                    Node which previously used the current node
-        invalidate : bool
-                    Indicates whether the removed object should
-                    be invalidated
-        """
         assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
         if self.is_unused and invalidate:

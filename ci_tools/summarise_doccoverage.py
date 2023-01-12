@@ -8,6 +8,10 @@ parser.add_argument('base', metavar='head_cov', type=str,
                         help='File containing the coverage of the head branch')
 parser.add_argument('compare', metavar='base_cov', type=str,
                         help='File containing the coverage of the base branch')
+parser.add_argument('compare', metavar='base_cov', type=str,
+                        help='File containing the coverage of the base branch')
+parser.add_argument('output', metavar='output', type=str,
+                        help='File where the markdown output will be printed')
 
 args = parser.parse_args()
 
@@ -53,10 +57,34 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         for obj in added_obj:
             print(f'\t * {obj}')
         print()
+    with open(args.output, "w", encoding="utf-8") as out:
+        print('## Failure: Coverage has decreased!', file=out)
+        print('### Base Branch Summary', file=out)
+        print(results['base_summary'], file=out)
+        print('### Compare Branch Summary', file=out)
+        print(results['compare_summary'], file=out)
+        if len(added_mod) > 0:
+            print('### This pull request added these modules without docstrings:')
+            for idx, mod in enumerate(added_mod):
+                print(f'{idx}. {mod}')
+            print()
+        if len(added_obj) > 0:
+            print('### This pull request added these objects without docstrings:')
+            for idx, obj in enumerate(added_obj):
+                print(f'{idx}. {obj}')
+            print()
+
     sys.exit(1)
+
 else:
     print('Success!')
     print('Base Branch Summary')
     print(results['base_summary'])
     print('Compare Branch Summary')
     print(results['compare_summary'])
+    with open(args.output, "w", encoding="utf-8") as out:
+        print('## Success!', file=out)
+        print('### Base Branch Summary', file=out)
+        print(results['base_summary'], file=out)
+        print('### Compare Branch Summary', file=out)
+        print(results['compare_summary'], file=out)

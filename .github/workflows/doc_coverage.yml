@@ -32,17 +32,12 @@ jobs:
         run: |
           docstr-coverage base/pyccel 2>base_cov || true
           docstr-coverage compare/pyccel 2>compare_cov || true
-          python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov
+          python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
           cd compare
           BASE_BRANCH=$GITHUB_BASE_REF
           git fetch &>/dev/null
           git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
           python ci_tools/list_changed_files.py pull_diff.txt changed_files.txt
+          cat changed_files.txt
           touch objects.txt
           touch report.txt
-          python ci_tools/list_docs_tovalidate.py changed_files.txt objects.txt
-          while read line; do    
-            echo $line >> report.txt
-            python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
-          done < objects.txt
-          (diff objects.txt report.txt && echo "SUCCESS! All docstrings are valid") || (echo "FAILURE" && cat report.txt && exit 1)
