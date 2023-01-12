@@ -12,11 +12,20 @@ parser.add_argument('output', metavar='output', type=str,
 args = parser.parse_args()
 
 with open(args.files,'r', encoding="utf-8") as f:
-    files = f.readlines()
+    lines = f.readlines()
 
-files = [l.strip() for l in files[:-1]]
+lines = [l.strip() for l in lines[:-1]]
+changes = {}
+for l in lines:
+    file, line_no = l.split()
+    if file in changes:
+        changes[file].append(int(line_no))
+    else:
+        changes[file] = []
+        changes[file].append(int(line_no))
+
 objects = []
-for file in files:
+for file in changes:
     with open(file,'r', encoding="utf-8") as f:
         tree = ast.parse(f.read())
     prefix = file[:-3].replace('/', '.')
@@ -26,11 +35,17 @@ for file in files:
                 objects.append(prefix)
             if isinstance(node, ast.FunctionDef):
                 if hasattr(node, "parent"):
-                    objects.append('.'.join([prefix,node.parent.name, node.name]))
+                    if any([x >= node.lineno and x <= node.end_lineno
+                            for x in changes[file]]):
+                        objects.append('.'.join([prefix,node.parent.name, node.name]))
                 else:
-                    objects.append('.'.join([prefix, node.name]))
+                    if any([x >= node.lineno and x <= node.end_lineno
+                            for x in changes[file]]):
+                        objects.append('.'.join([prefix, node.name]))
             if isinstance(node, ast.ClassDef):
-                objects.append('.'.join([prefix, node.name]))
+                if any([x >= node.lineno and x <= node.end_lineno
+                        for x in changes[file]]):
+                    objects.append('.'.join([prefix, node.name]))
                 for child in node.body:
                     if isinstance(child, ast.FunctionDef):
                         child.parent = node

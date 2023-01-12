@@ -41,3 +41,9 @@ jobs:
           cat changed_files.txt
           touch objects.txt
           touch report.txt
+          python ci_tools/list_docs_tovalidate.py changed_files.txt objects.txt
+          while read line; do    
+            echo $line >> report.txt
+            python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
+          done < objects.txt
+          (diff objects.txt report.txt && echo "## SUCCESS! All docstrings are valid" >> $GITHUB_STEP_SUMMARY) || ((echo "FAILURE" >> $GITHUB_STEP_SUMMARY) && (cat report.txt >> $GITHUB_STEP_SUMMARY) && exit 1)

@@ -13,7 +13,8 @@ args = parser.parse_args()
 results = gdj(args.gitdiff)
 with open(args.result,'w', encoding='utf-8') as out:
     for file,changes in results.items():
-        for line in changes['addition']:
-            print(file, line, sep=' ', file=out)
-        for line in changes['deletion']:
-            print(file, line, sep=' ', file=out)
+        if file.startswith('pyccel/'):
+            for line in changes['addition']:
+                print(file, line, sep=' ', file=out)
+            for line in changes['deletion']:
+                print(file, line, sep=' ', file=out)
