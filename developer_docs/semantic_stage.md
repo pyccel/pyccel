@@ -155,7 +155,7 @@ Variable declarations are created in the printer when needed from the scope vari
 
 All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
 This super-class stores information about how the various objects are related.
-This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the argument is used by the node), `is_user_of` (which indicates if the argument uses the node), and `substitute` (which allows all occurrences of an object in the node to be replaced by a different object).
+This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the node is used by the argument), `is_user_of` (which indicates if the node uses the argument), and `substitute` (which allows all occurrences of an object in the node to be replaced by a different object).
 See [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
 
 The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
