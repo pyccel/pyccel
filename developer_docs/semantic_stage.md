@@ -108,7 +108,7 @@ Built-in functions do not need importing.
 Instead they are recognised via the function [`pyccel.ast.utilities.builtin_function`](../pyccel/ast/utilities.py) which uses the dictionary [`pyccel.ast.builtins.builtin_functions_dict`](../pyccel/ast/builtins.py) to identify supported functions.
 Functions from supported libraries are saved in an object of type [`pyccel.ast.core.PyccelFunctionDef`](../pyccel/ast/core.py) when they are imported.
 These functions are handled one of two ways.
-If there is special treatment which requires functions from the `SemantcParser` then a `_visit_X` function should be created.
+If there is special treatment which requires functions from the `SemanticParser` then a `_visit_X` function should be created.
 The `SemanticParser._visit_FunctionCall` function will call this visitation function internally if it exists.
 Otherwise the object will be created in the `SemanticParser._handle_function` function and its type will be determined by its constructor.
 
