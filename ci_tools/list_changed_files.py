@@ -1,7 +1,7 @@
 """ Script to list the python files and lines changed by the PR
 """
 import argparse
-from git_evaluation_tools import git_diff_as_json as gdj
+from git_evaluation_tools import get_diff_as_json as gdj
 
 parser = argparse.ArgumentParser(
     description='Collect the files and lines that have been modified by the PR to check their docstrings')
