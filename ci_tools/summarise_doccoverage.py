@@ -62,14 +62,14 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         print('### Compare Branch Summary', file=out)
         print(results['compare_summary'], file=out)
         if len(added_mod) > 0:
-            print('### This pull request added these modules without docstrings:')
+            print('### This pull request added these modules without docstrings:', file=out)
             for idx, mod in enumerate(added_mod):
-                print(f'{idx}. {mod}')
+                print(f'{idx + 1}. {mod}', file=out)
             print()
         if len(added_obj) > 0:
-            print('### This pull request added these objects without docstrings:')
+            print('### This pull request added these objects without docstrings:', file=out)
             for idx, obj in enumerate(added_obj):
-                print(f'{idx}. {obj}')
+                print(f'{idx + 1}. {obj}', file=out)
             print()
 
     sys.exit(1)
