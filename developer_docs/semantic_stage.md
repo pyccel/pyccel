@@ -160,15 +160,26 @@ See [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py) for more information abou
 
 The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
 Nevertheless the object tree should be considered in two situations.
+
 Firstly, if the object is constructed and AST objects are then added to it (e.g. the member function `pyccel.ast.core.CodeBlock.insert2body` used for the garbage collector).
 In this case the new object does not pass through the constructor of its user.
 It is therefore important to call `set_current_user_node` on the new object to update the tree.
-Secondly, if the object contains all necessary information after the syntactic stage (e.g. `pyccel.ast.core.Continue`) we may be tempted to return the object as is.
+
+Secondly, if the object contains all necessary information after the syntactic stage (e.g. `pyccel.ast.core.Continue`) we may be tempted to return the object as is:
+```python
+def _visit_Continue(self, expr):
+    return expr
+```
 However if this were done there would be multiple user nodes from both the semantic and the syntactic stage.
 For example, if we need to have access to the containing function we could do `expr.get_user_nodes(FunctionDef)`.
 We expect that this only returns semantic objects if `expr` is a result of the semantic stage.
 However if objects such as `pyccel.ast.core.Continue` are returned as is, then we would get access to both the syntactic and the semantic versions of the containing function without any way to distinguish between the two.
-To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nodes` function to remove the syntactic objects from the tree.
+To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nodes` function to remove the syntactic objects from the tree before returning the object:
+```python
+def _visit_Continue(self, expr):
+    expr.clear_user_nodes()
+    return expr
+```
 
 ## Name Collisions
 
