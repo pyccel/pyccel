@@ -34,16 +34,17 @@ from .numpyext       import process_dtype, process_shape
 
 #==============================================================================
 __all__ = (
-    'CudaMemCopy',
-    'CudaNewArray',
     'CudaArray',
-    'CudaSynchronize',
-    'CudaInternalVar',
-    'CudaThreadIdx',
     'CudaBlockDim',
     'CudaBlockIdx',
+    'CudaCopy',
+    'CudaGrid',
     'CudaGridDim',
-    'CudaGrid'
+    'CudaInternalVar',
+    'CudaMemCopy',
+    'CudaNewArray',
+    'CudaSynchronize',
+    'CudaThreadIdx'
 )
 
 #==============================================================================
@@ -151,8 +152,9 @@ class CudaArray(CudaNewArray):
         return self._current_context
 
 class CudaSynchronize(PyccelInternalFunction):
-    "Represents a call to  Cuda.synchronize for code generation."
-    # pass
+    "Represents a call to  Cuda.deviceSynchronize for code generation."
+
+    __slots__ = ('_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ()
     def __init__(self):
         #...
@@ -164,6 +166,16 @@ class CudaSynchronize(PyccelInternalFunction):
         super().__init__()
 
 class CudaInternalVar(PyccelAstNode):
+    """
+    Represents a General Class For Cuda internal Variables Used To locate Thread In the GPU architecture"
+
+    Parameters
+    ----------
+    dim : NativeInteger
+        Represent the dimension where we want to locate our thread.
+
+    """
+    __slots__ = ('_dim','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_dim',)
 
     def __init__(self, dim=None):
@@ -245,20 +257,32 @@ class CudaCopy(CudaNewArray):
     def is_async(self):
         return self._is_async
 
-class CudaThreadIdx(CudaInternalVar)        : pass
-class CudaBlockDim(CudaInternalVar)         : pass
-class CudaBlockIdx(CudaInternalVar)         : pass
-class CudaGridDim(CudaInternalVar)          : pass
+class CudaThreadIdx(CudaInternalVar):
+    __slots__ = ()
+    pass
+class CudaBlockDim(CudaInternalVar):
+    __slots__ = ()
+    pass
+class CudaBlockIdx(CudaInternalVar):
+    __slots__ = ()
+    pass
+class CudaGridDim(CudaInternalVar):
+    __slots__ = ()
+    pass
+
 class CudaGrid(PyccelAstNode)               :
     """
-    Represents a call to cuda.grid for code generation.
+    CudaGrid locate Thread In the GPU architecture Using CudaThreadIdx, CudaBlockDim, CudaBlockIdx
+    To calculate the exact index of the thread automatically.
 
     Parameters
     ----------
-    dim  : int
-        The number of dimensions of requested, it should correspond
-        to the number of dimensions declared when instantiating the kernel
+    dim : NativeInteger
+        Represent the dimension where we want to locate our thread.
+
     """
+    __slots__ = ()
+    _attribute_nodes = ()
     def __new__(cls, dim=0):
         if not isinstance(dim, LiteralInteger):
             raise TypeError("dimension need to be an integer")
