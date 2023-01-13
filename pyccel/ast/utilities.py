@@ -70,9 +70,6 @@ def builtin_function(expr, args=None):
                     symbol=expr,
                     severity='fatal')
 
-    if name == 'lambdify':
-        return lambdify(expr, args[0])
-
     return None
 
 #==============================================================================
