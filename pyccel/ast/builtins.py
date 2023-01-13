@@ -604,20 +604,30 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
-    __slots__ = ('_expr', '_file')
-    _attribute_nodes = ('_expr',)
+    __slots__ = ('_expr', '_file', '_end', '_sep')
+    _attribute_nodes = ('_expr', '_end', '_sep')
     name = 'print'
 
-    def __init__(self, expr, file="stdout"):
+    def __init__(self, *expr, sep=None, end=None, file="stdout"):
         if file not in ('stdout', 'stderr'):
             raise ValueError('output_unit can be `stdout` or `stderr`')
         self._expr = expr
         self._file = file
+        self._end = end
+        self._sep = sep
         super().__init__()
 
     @property
     def expr(self):
         return self._expr
+
+    @property
+    def sep(self):
+        return self._sep
+
+    @property
+    def end(self):
+        return self._end
 
     @property
     def file(self):
@@ -848,13 +858,6 @@ class Lambda(Basic):
         """
         return self._expr
 
-    def __call__(self, *args):
-        """ Returns the expression with the arguments replaced with
-        the calling arguments
-        """
-        assert(len(args) == len(self.variables))
-        return self.expr.subs(self.variables, args)
-
     def __str__(self):
         return "{args} -> {expr}".format(args=self.variables,
                 expr = self.expr)
@@ -948,4 +951,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'print'    : PythonPrint,
 }

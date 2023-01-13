@@ -739,7 +739,6 @@ class SyntaxParser(BasicParser):
 
         if 'sympy' in decorators:
             # TODO maybe we should run pylint here
-            stmt.decorators.pop()
             func = SympyFunction(name, arguments, [], [str(stmt)])
             func.set_fst(stmt)
             self.insert_function(func)
@@ -889,10 +888,7 @@ class SyntaxParser(BasicParser):
         func = self._visit(stmt.func)
 
         if isinstance(func, PyccelSymbol):
-            if func == "print":
-                func = PythonPrint(PythonTuple(*args))
-            else:
-                func = FunctionCall(func, args)
+            func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
