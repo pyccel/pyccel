@@ -59,18 +59,19 @@ def builtin_function(expr, args=None):
     dic = builtin_functions_dict
 
     # Unpack FunctionCallArguments
-    args = [a.value for a in args]
+    kwargs = {a.keyword: a.value for a in args if a.has_keyword}
+    args = [a.value for a in args if not a.has_keyword]
 
     if name in dic.keys() :
         try:
-            return dic[name](*args)
+            return dic[name](*args, **kwargs)
         except PyccelError as e:
             errors.report(e,
                     symbol=expr,
                     severity='fatal')
 
     if name == 'lambdify':
-        return lambdify(expr, args)
+        return lambdify(expr, args[0])
 
     return None
 
