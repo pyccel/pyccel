@@ -43,7 +43,6 @@ from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
 from pyccel.ast.core import While
-from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import Program
 from pyccel.ast.core import EmptyNode
@@ -138,6 +137,8 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
+
+from pyccel.parser.syntax.headers import parse as hdr_parse
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -2135,7 +2136,7 @@ class SemanticParser(BasicParser):
         return self._handle_function(expr, func, (arg,), **settings)
 
     def _visit_Lambda(self, expr, **settings):
-        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
+        expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol, excluded_nodes=(FunctionCall,)))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -2145,16 +2146,6 @@ class SemanticParser(BasicParser):
         funcs = expr.expr.get_attribute_nodes(FunctionCall)
         for func in funcs:
             name = _get_name(func)
-            f = self.scope.find(name, 'symbolic_functions')
-            if f is None:
-                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal')
-            else:
-
-                f = f(*func.args)
-                expr_new = expr.expr.subs(func, f)
-                expr = Lambda(tuple(expr.variables), expr_new)
         return expr
 
     def _visit_FunctionCall(self, expr, **settings):
@@ -2183,7 +2174,8 @@ class SemanticParser(BasicParser):
 
 
         if name == 'lambdify':
-            args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
+            return self.scope.find(expr.args[0].value, 'symbolic_functions')
+
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:
@@ -2221,10 +2213,29 @@ class SemanticParser(BasicParser):
             # an appropriate FunctionCall
 
             macro = self.scope.find(name, 'macros')
+            symb_func = self.scope.find(name, 'symbolic_functions')
             if macro is not None:
                 func = macro.master.funcdef
                 name = _get_name(func.name)
                 args = macro.apply(args)
+            elif symb_func is not None:
+                if not isinstance(symb_func, Lambda):
+                    raise NotImplementedError
+                new_expr = symb_func.expr
+                new_expr = Return([new_expr])
+                new_expr.set_fst(expr.fst)
+                scope = self.create_new_function_scope(name)
+                for v in symb_func.variables:
+                    scope.insert_symbol(v.name)
+                types = [str(v.value.dtype) for v in args]
+                txt = '#$ header function ' + name + '(' + ','.join(types) + ')'
+                headers = [hdr_parse(stmts=txt)]
+                pyccel_stage.set_stage('semantic')
+                self.exit_function_scope()
+                self._visit(InlineFunctionDef(name, symb_func.variables,
+                    [self.scope.get_new_name('Out')], [new_expr],
+                    headers=headers, scope=scope))
+                func = self.scope.find(name, 'functions')
             else:
                 func = self.scope.find(name, 'functions')
             if func is None:
@@ -2281,6 +2292,8 @@ class SemanticParser(BasicParser):
             macro = self.scope.find(name, 'macros')
             if macro is None:
                 rhs = self._visit(rhs, **settings)
+                if isinstance(rhs, PythonPrint):
+                    return rhs
             else:
 
                 # TODO check types from FunctionDef
@@ -2369,17 +2382,7 @@ class SemanticParser(BasicParser):
         else:
             rhs = self._visit(rhs, **settings)
 
-        if isinstance(rhs, FunctionDef):
-
-            # case of lambdify
-
-            rhs = rhs.rename(expr.lhs.name)
-            for i in rhs.body:
-                i.set_fst(fst)
-            rhs = self._visit_FunctionDef(rhs, **settings)
-            return rhs
-
-        elif isinstance(rhs, CodeBlock):
+        if isinstance(rhs, CodeBlock):
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
                 return rhs
 
@@ -3099,7 +3102,7 @@ class SemanticParser(BasicParser):
 
         args_number = len(expr.arguments)
         templates = self.scope.find_all('templates')
-        if decorators['template']:
+        if decorators.get('template', None):
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
 
@@ -3443,37 +3446,6 @@ class SemanticParser(BasicParser):
 #           funcs = Interface(name, funcs)
 #           self.insert_function(funcs)
         return EmptyNode()
-
-    def _visit_PythonPrint(self, expr, **settings):
-        args = [self._visit(i, **settings) for i in expr.expr]
-        if len(args) == 0:
-            return PythonPrint(args)
-
-        def is_symbolic(var):
-            return isinstance(var, Variable) \
-                and isinstance(var.dtype, NativeSymbol)
-
-        # TODO fix: not yet working because of mpi examples
-#        if not test:
-#            # TODO: Add description to parser/messages.py
-#            errors.report('Either all arguments must be symbolic or none of them can be',
-#                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-#                   severity='fatal')
-
-        if is_symbolic(args[0]):
-            _args = []
-            for a in args:
-                f = self.scope.find(a.name, 'symbolic_functions')
-                if f is None:
-                    _args.append(a)
-                else:
-
-                    # TODO improve: how can we print SymbolicAssign as  lhs = rhs
-
-                    _args.append(f)
-            return SymbolicPrint(_args)
-        else:
-            return PythonPrint(args)
 
     def _visit_ClassDef(self, expr, **settings):
 
