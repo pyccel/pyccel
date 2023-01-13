@@ -29,7 +29,7 @@ from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.cwrapper    import PyModule_AddObject
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
-from pyccel.ast.datatypes import datatype, NativeVoid
+from pyccel.ast.datatypes import datatype, NativeVoid, NativeSymbol
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
@@ -803,7 +803,7 @@ class CWrapperCodePrinter(CCodePrinter):
         scope.insert_variable(mod_var)
 
         # Collect module variables from translated code
-        orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
+        orig_vars_to_wrap = [v for v in expr.variables if not v.is_private and v.dtype is not NativeSymbol()]
         body = []
         if self._target_language == 'fortran':
             # Collect python compatible module variables
@@ -1274,12 +1274,14 @@ class CWrapperCodePrinter(CCodePrinter):
                 if not v.is_private:
                     scope.insert_symbol(v.name.lower())
 
+        vars_to_wrap = [v for v in expr.variables if not v.is_private and v.dtype is not NativeSymbol()]
+
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
-                                    for v in expr.variables if not v.is_private and v.rank == 0]
+                                    for v in vars_to_wrap if v.rank == 0]
         else:
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
-                                    for v in expr.variables if not v.is_private]
+                                    for v in vars_to_wrap]
 
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
