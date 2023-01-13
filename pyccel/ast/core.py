@@ -1296,7 +1296,7 @@ class Module(ScopedNode):
         """ Returns the declarations of the variables
         """
         return [Declare(i.dtype, i, value=v, module_variable=True) \
-                for i,v in zip(self.variables, self._variable_inits)]
+                for i,v in zip(self.variables, self._variable_inits) if i.dtype is not NativeSymbol()]
 
     @property
     def body(self):
@@ -3574,44 +3574,6 @@ class Raise(Basic):
     __slots__ = ()
     _attribute_nodes = ()
 
-
-
-class SymbolicPrint(Basic):
-
-    """Represents a print function of symbolic expressions in the code.
-
-    Parameters
-    ----------
-    expr : PyccelAstNode
-        The expression to print
-
-    Examples
-    --------
-    >>> from pyccel.ast.internals import symbols
-    >>> from pyccel.ast.core import Print
-    >>> n,m = symbols('n,m')
-    >>> Print(('results', n,m))
-    Print((results, n, m))
-    """
-    __slots__ = ('_expr',)
-    _attribute_nodes = ('_expr',)
-
-    def __init__(self, expr):
-        if not iterable(expr):
-            raise TypeError('Expecting an iterable')
-
-        for i in expr:
-            if not isinstance(i, (Lambda, SymbolicAssign,
-                              SympyFunction)):
-                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
-
-        self._expr = expr
-
-        super().__init__()
-
-    @property
-    def expr(self):
-        return self._expr
 
 
 class Del(Basic):

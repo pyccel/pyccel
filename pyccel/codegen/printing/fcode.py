@@ -575,23 +575,15 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_PythonPrint(self, expr):
-        end = LiteralString('\n')
-        sep = LiteralString(' ')
+        end = expr.end or LiteralString('\n')
+        sep = expr.sep or LiteralString(' ')
         code = ''
         empty_end = FunctionCallArgument(LiteralString(''), 'end')
         space_end = FunctionCallArgument(LiteralString(' '), 'end')
         empty_sep = FunctionCallArgument(LiteralString(''), 'sep')
-        for f in expr.expr:
-            if f.has_keyword:
-                if f.keyword == 'sep':
-                    sep = f.value
-                elif f.keyword == 'end':
-                    end = f.value
-                else:
-                    errors.report("{} not implemented as a keyworded argument".format(f.keyword), severity='fatal')
         args_format = []
         args = []
-        orig_args = [f for f in expr.expr if not f.has_keyword]
+        orig_args = expr.expr
         separator = self._print(sep)
 
 
@@ -600,10 +592,6 @@ class FCodePrinter(CodePrinter):
         tuple_end   = FunctionCallArgument(LiteralString(')'))
 
         for i, f in enumerate(orig_args):
-            if f.keyword:
-                continue
-            else:
-                f = f.value
             if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
@@ -621,6 +609,10 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
+            elif f.dtype is NativeSymbol():
+                args_format.append('A')
+                func = self.scope.find(f.name, 'symbolic_functions')
+                args.append(f'"sympy> {func}"')
             elif isinstance(f.rank, int) and f.rank > 0:
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
@@ -734,11 +726,6 @@ class FCodePrinter(CodePrinter):
             arg = self._print(var)
 
         return arg_format, arg
-
-    def _print_SymbolicPrint(self, expr):
-        # for every expression we will generate a print
-        code = '\n'.join("print *, 'sympy> {}'".format(a) for a in expr.expr)
-        return self._get_statement(code) + '\n'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
