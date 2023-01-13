@@ -97,7 +97,7 @@ from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.cupyext import CupyNewArray
-from pyccel.ast.cudaext import CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
+from pyccel.ast.cudaext import CudaArray, CudaNewArray, CudaThreadIdx, CudaBlockDim, CudaBlockIdx, CudaGridDim
 
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
