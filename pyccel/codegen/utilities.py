@@ -32,6 +32,8 @@ internal_libs = {
     "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
     "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
     "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
+    "numpy_f90"    : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
+    "numpy_c"      : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
@@ -90,7 +92,7 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             to_create = False
             # If folder exists check if it needs updating
             src_files = os.listdir(lib_path)
-            dst_files = os.listdir(lib_dest_path)
+            dst_files = [f for f in os.listdir(lib_dest_path) if not f.endswith('.lock')]
             # Check if all files are present in destination
             to_update = any(s not in dst_files for s in src_files)
 
@@ -117,7 +119,8 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
                 l.acquire()
             # Remove all files in destination directory
             for d in dst_files:
-                os.remove(os.path.join(lib_dest_path, d))
+                d_file = os.path.join(lib_dest_path, d)
+                os.remove(d_file)
             # Copy all files from the source to the destination
             for s in src_files:
                 shutil.copyfile(os.path.join(lib_path, s),
@@ -125,7 +128,8 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # Create any requested extra files
             if extra_files:
                 for filename, contents in extra_files.items():
-                    with open(os.path.join(lib_dest_path, filename), 'w') as f:
+                    extra_file = os.path.join(lib_dest_path, filename)
+                    with open(extra_file, 'w', encoding="utf-8") as f:
                         f.writelines(contents)
             # Release the locks
             for l in locks:

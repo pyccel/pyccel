@@ -43,23 +43,41 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'CupyArange',
     'CupyArray',
+    'CupyArraySize',
+    'CupyAutoFill',
     'CupyEmpty',
     'CupyEmptyLike',
     'CupyFull',
     'CupyFullLike',
-    'CupyArange',
-    'CupyArraySize',
+    'CupyNewArray',
     'CupyOnes',
     'CupyOnesLike',
-    'Shape',
     'CupyZeros',
     'CupyZerosLike',
     'CupyRavel'
+    'Shape'
 )
 
 #==============================================================================
-class CupyArray(CudaNewArray):
+class CupyNewArray(CudaNewArray):
+    """ Class from which all Cupy functions which imply a call to Allocate
+    inherit
+    """
+    __slots__ = ()
+    _memory_location = 'device'
+    def __init__(self):
+        super().__init__()
+
+    @property
+    def memory_location(self):
+        """ Indicate if the array is allocated on the host, device or has a managed memory
+        """
+        return self._memory_location
+
+#==============================================================================
+class CupyArray(CupyNewArray):
     """
     Represents a call to  cupy.array for code generation.
 
@@ -131,7 +149,7 @@ class CupyArray(CudaNewArray):
         return self._memory_location
 
 #==============================================================================
-class CupyArange(CudaNewArray):
+class CupyArange(CupyNewArray):
     """
     Represents a call to  cupy.arange for code generation.
 
@@ -206,7 +224,7 @@ class Shape(PyccelInternalFunction):
             return PythonTuple(*arg.shape)
 
 #==============================================================================
-class CupyFull(CudaNewArray):
+class CupyFull(CupyNewArray):
     """
     Represents a call to cupy.full for code generation.
 
@@ -250,7 +268,7 @@ class CupyFull(CudaNewArray):
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
-        self._order = CudaNewArray._process_order(self._rank, order)
+        self._order = CupyNewArray._process_order(self._rank, order)
         self._precision = precision
 
         super().__init__(fill_value)

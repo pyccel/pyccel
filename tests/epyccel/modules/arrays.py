@@ -1813,6 +1813,12 @@ def arr_arange_6():
     a = np.arange(20, 1, -1.1)
     return np.shape(a)[0], a[0], a[-1]
 
+def arr_arange_7(arr : 'int[:,:]'):
+    import numpy as np
+    n, m = arr.shape
+    for i in range(n):
+        arr[i] = np.arange(i, i+m)
+
 def iterate_slice(i : int):
     import numpy as np
     a = np.arange(15)

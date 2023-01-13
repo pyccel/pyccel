@@ -50,29 +50,41 @@ __all__ = (
     'CodeBlock',
     'Comment',
     'CommentBlock',
+    'Concatenate',
     'ConstructorCall',
     'Continue',
     'Deallocate',
     'Declare',
+    'Decorator',
     'Del',
-    'Duplicate',
     'DoConcurrent',
+    'DottedFunctionCall',
+    'Duplicate',
     'EmptyNode',
+    'ErrorExit',
+    'Exit',
     'For',
     'ForIterator',
+    'FuncAddressDeclare',
+    'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
     'If',
+    'IfSection',
     'Import',
-    'InlineFunctionDef',
     'InProgram',
+    'InlineFunctionDef',
     'Interface',
+    'Iterable',
+    'KernelCall',
     'Module',
     'ModuleHeader',
     'Pass',
     'Program',
+    'PyccelFunctionDef',
+    'Raise',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -81,8 +93,8 @@ __all__ = (
     'SympyFunction',
     'While',
     'With',
-    'create_variable',
     'create_incremented_string',
+    'create_variable',
     'get_iterable_ranges',
     'inline',
     'subs'
@@ -2789,6 +2801,7 @@ class PyccelFunctionDef(FunctionDef):
                  The class which should be instantiated upon a FunctionCall
                  to this FunctionDef object
     """
+    __slots__ = ()
     def __init__(self, name, func_class):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
@@ -4041,6 +4054,7 @@ class Decorator(Basic):
             The name of the decorator
     """
     __slots__ = ('_name',)
+    _attribute_nodes = ()
 
     def __init__(self, name):
         self._name = name
