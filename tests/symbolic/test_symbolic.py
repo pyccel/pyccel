@@ -12,10 +12,11 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
 files = sorted(os.listdir(path_dir))
-files = [f for f in files if (f.endswith(".py"))]
+files = [os.path.join(path_dir, f) for f in files if (f.endswith(".py"))]
+print(files)
 
 @pytest.mark.parametrize( "f", files )
-@pytest.mark.xfail(reason="Broken symbolic function support, see issue #330")
+#@pytest.mark.xfail(reason="Broken symbolic function support, see issue #330")
 def test_symbolic(f):
 
     pyccel = Parser(f)
