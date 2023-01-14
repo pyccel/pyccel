@@ -3,14 +3,6 @@
 
 #include "../ndarrays/ndarrays.h"
 
-enum e_cudaMemcpyKind {
-    cudaMemcpyHostToHost = 0,
-    cudaMemcpyHostToDevice = 1,
-    cudaMemcpyDeviceToHost = 2,
-    cudaMemcpyDeviceToDevice = 3,
-    cudaMemcpyDefault = 4
-};
-
 __global__
 void cuda_array_arange_int8(t_ndarray arr, int start);
 __global__
