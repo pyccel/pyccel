@@ -496,6 +496,18 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = NumpyArrayClass
             return d_var
 
+        elif isinstance(expr, CupyArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_location'] = expr.memory_location
+            d_var['current_context'] = expr.current_context
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = CudaArrayClass
+            return d_var
+
         elif isinstance(expr, CupyNewArray):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
@@ -507,11 +519,22 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = CudaArrayClass
             return d_var
 
-        elif isinstance(expr, CudaNewArray):
+        elif isinstance(expr, CudaArray):
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['memory_location'] = expr.memory_location
             d_var['current_context'] = expr.current_context
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = CudaArrayClass
+            return d_var
+
+        elif isinstance(expr, CudaNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_location'] = expr.memory_location
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
             d_var['order'      ] = expr.order
