@@ -22,10 +22,10 @@ untested, file_contents = cov.get_untested_lines(args.coverageFile)
 
 new_untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untested, diff))
 
-with open(args.gitEvent, encoding="ascii") as pr_data_file:
+with open(args.gitEvent, encoding="utf-8") as pr_data_file:
     pr_data = json.load(pr_data_file)
 
-cov.print_markdown_summary(new_untested, file_contents, pr_data["after"], args.output)
+cov.print_markdown_summary(new_untested, file_contents, pr_data["pull_request"]["head"]["sha"], args.output)
 
 cov.show_results(new_untested)
 

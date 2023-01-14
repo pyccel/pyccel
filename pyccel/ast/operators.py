@@ -30,6 +30,11 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'PyccelOperator',
+    'PyccelArithmeticOperator',
+    'PyccelBinaryOperator',
+    'PyccelBooleanOperator',
+    'PyccelComparisonOperator',
+    'PyccelUnaryOperator',
     'PyccelPow',
     'PyccelAdd',
     'PyccelMinus',
