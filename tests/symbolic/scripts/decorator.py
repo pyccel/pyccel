@@ -19,15 +19,14 @@
 
 
 @sympy
-def f1_sympy():
+def f1_sympy(x : float, y : float):
     #This function must return a sympy expression
     #that depends on the arguments of the function
-    from sympy.abc import x,y
     expr = x*y + 2
     return expr
 
 @sympy
-def f2_sympy(x):
+def f2_sympy(x : float):
     #This function must return a sympy expression
     #that depends on the arguments of the function
     from sympy import diff
