@@ -1391,7 +1391,7 @@ class FCodePrinter(CodePrinter):
         vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
-        s = '0'
+        s = self._print(LiteralInteger(0))
         if not(is_static) and (on_heap or (var.shape is None)):
             s = ''
 
