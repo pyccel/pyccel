@@ -375,11 +375,13 @@ class FCodePrinter(CodePrinter):
 
         self._additional_imports.update(func.imports)
         if func.global_vars or func.global_funcs:
-            mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
-                for v in (*func.global_vars, *func.global_funcs)]))
-            for v in (*func.global_vars, *func.global_funcs):
-                self.scope.insert_symbol(v.name)
+            mod_lst = func.get_direct_user_nodes(lambda x: isinstance(x, Module))
+            if mod_lst:
+                mod = mod_lst[0]
+                self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                    for v in (*func.global_vars, *func.global_funcs)]))
+                for v in (*func.global_vars, *func.global_funcs):
+                    self.scope.insert_symbol(v.name)
 
         self.set_scope(scope)
         return code
@@ -609,7 +611,7 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
-            elif f.dtype is NativeSymbol():
+            elif isinstance(f, FunctionDef):
                 args_format.append('A')
                 func = self.scope.find(f.name, 'symbolic_functions')
                 args.append(f'"sympy> {func}"')
