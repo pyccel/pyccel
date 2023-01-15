@@ -37,6 +37,7 @@ __all__ = (
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
+    'PyModule_AddObject',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',

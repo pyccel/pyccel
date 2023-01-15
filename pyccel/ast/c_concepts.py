@@ -10,6 +10,10 @@ Module representing object address.
 from .basic import PyccelAstNode, Basic
 from .literals  import LiteralString
 
+__all__ = ('CMacro',
+           'CStringExpression',
+           'ObjectAddress')
+
 class ObjectAddress(PyccelAstNode):
     """Represents the address of an object.
     ObjectAddress(Variable('int','a'))                            is  &a

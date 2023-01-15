@@ -29,6 +29,9 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Lambda',
+    'PythonAbs',
+    'PythonComplexProperty',
     'PythonReal',
     'PythonImag',
     'PythonConjugate',
@@ -43,6 +46,7 @@ __all__ = (
     'PythonMap',
     'PythonPrint',
     'PythonRange',
+    'PythonSum',
     'PythonType',
     'PythonZip',
     'PythonMax',
@@ -61,6 +65,7 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeFloat()
     _precision = -1
     _rank  = 0
@@ -132,6 +137,7 @@ class PythonConjugate(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeComplex()
     _precision = -1
     _rank  = 0
@@ -683,8 +689,7 @@ class PythonZip(PyccelInternalFunction):
     Represents a zip stmt.
 
     """
-    __slots__ = ('_length','_args')
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_length',)
     name = 'zip'
 
     def __init__(self, *args):
