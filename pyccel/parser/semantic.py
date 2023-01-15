@@ -92,6 +92,7 @@ from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
+from pyccel.ast.numpyext import numpy_funcs
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -2174,7 +2175,7 @@ class SemanticParser(BasicParser):
 
 
         if name == 'lambdify':
-            return self.scope.find(expr.args[0].value, 'symbolic_functions')
+            return self.scope.find(expr.args[0].value, 'functions')
 
         F = pyccel_builtin_function(expr, args)
 
@@ -2382,7 +2383,16 @@ class SemanticParser(BasicParser):
         else:
             rhs = self._visit(rhs, **settings)
 
-        if isinstance(rhs, CodeBlock):
+        if isinstance(rhs, FunctionDef):
+
+            # case of lambdify
+            rhs_name = rhs.name
+            rhs.rename(expr.lhs)
+            self.scope.functions.pop(rhs_name)
+            self.insert_function(rhs)
+            return EmptyNode()
+
+        elif isinstance(rhs, CodeBlock):
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
                 return rhs
 
@@ -3093,6 +3103,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         is_inline       = expr.is_inline
+        is_symbolic     = False
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
         headers = []
 
@@ -3105,6 +3116,16 @@ class SemanticParser(BasicParser):
         if decorators.get('template', None):
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
+
+        if 'sympy' in decorators:
+            is_symbolic = True
+            calls = expr.body.get_attribute_nodes(FunctionCall)
+            for c in calls:
+                f_name = c.funcdef
+                if f_name in numpy_funcs:
+                    called_func = numpy_funcs[f_name]
+                    self.scope.imports['functions'][f_name] = called_func
+                    self.insert_import('numpy', [AsName(called_func, name)])
 
         tmp_headers = expr.headers
         python_name = expr.scope.get_python_name(name)
@@ -3423,6 +3444,9 @@ class SemanticParser(BasicParser):
             #clear the sympy cache
             #TODO clear all variable except the global ones
             cache.clear_cache()
+
+        insert_function = self.insert_symbolic_function if is_symbolic else self.insert_function
+
         if len(funcs) == 1:
             funcs = funcs[0]
             self.insert_function(funcs)
