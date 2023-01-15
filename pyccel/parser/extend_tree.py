@@ -253,3 +253,11 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
     # insert in the rest of the comments in the end of a block
     setattr(ast, attr, body + comments.tolist())
 
+def remove_comments(stmt):
+    if hasattr(stmt, 'body'):
+        stmt.body = [remove_comments(l) for l in stmt.body if not isinstance(l, (CommentLine, CommentMultiLine))]
+
+    if hasattr(stmt, 'orelse'):
+        stmt.orelse = [remove_comments(l) for l in stmt.orelse if not isinstance(l, (CommentLine, CommentMultiLine))]
+
+    return stmt
