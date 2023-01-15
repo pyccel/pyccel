@@ -182,6 +182,8 @@ def _visit_Continue(self, expr):
     return expr
 ```
 
+BEWARE: Doing this invalidates the old AST from the syntactic stage so this AST must not be reused after the semantic stage.
+
 ## Name Collisions
 
 Name collisions may occur when generating temporary variables.
