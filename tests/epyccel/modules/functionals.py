@@ -5,6 +5,11 @@ def functional_for_1d_range():
     a = [i for i in range(4)]
     return len(a), a[0], a[1], a[2], a[3]
 
+def functional_for_overwrite_1d_range():
+    a = [i for i in range(4)]
+    a = [i for i in range(1,5)]
+    return len(a), a[0], a[1], a[2], a[3]
+
 @types('int[:]')
 def functional_for_1d_var(y):
     a = [yi for yi in y]
