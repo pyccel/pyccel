@@ -63,7 +63,8 @@ class Compiler:
         if language=='python':
             return
         if vendor.endswith('.json') and os.path.exists(vendor):
-            self._info = json.load(open(vendor))
+            with open(vendor) as vendor_file:
+                self._info = json.load(vendor_file)
             if language != self._info['language']:
                 warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
                 self._info = available_compilers[('GNU',language)]
@@ -436,5 +437,6 @@ class Compiler:
         """ Print the information describing all compiler options
         to the specified file in json format
         """
-        print(json.dumps(self._info, indent=4),
-                file=open(compiler_export_file,'w'))
+        with open(compiler_export_file,'w') as out_file:
+            print(json.dumps(self._info, indent=4),
+                    file=out_file)
