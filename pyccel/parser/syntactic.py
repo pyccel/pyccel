@@ -6,13 +6,14 @@
 
 # pylint: disable=missing-function-docstring
 
+import ast
 import os
 import re
-
-import ast
+import traceback as tb
 
 #==============================================================================
 
+import sympy as sp
 from sympy.core import cache
 
 #==============================================================================
@@ -58,14 +59,17 @@ from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
+from pyccel.ast.literals import Literal
 from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
+from pyccel.ast.sympy_helper import sympy_to_pyccel
+
 from pyccel.parser.base        import BasicParser
-from pyccel.parser.extend_tree import extend_tree
+from pyccel.parser.extend_tree import extend_tree, remove_comments
 from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
@@ -75,7 +79,7 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelSyntaxError
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -738,11 +742,34 @@ class SyntaxParser(BasicParser):
         body = stmt.body
 
         if 'sympy' in decorators:
-            # TODO maybe we should run pylint here
-            func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_fst(stmt)
-            self.insert_function(func)
-            return EmptyNode()
+            decs = [d for d in stmt.decorator_list if d.id != 'sympy']
+            stmt.decorator_list = decs
+            glob = {}
+            loc = {}
+            commentless_stmt = remove_comments(stmt)
+            exec(compile(ast.Module([commentless_stmt], type_ignores = []),
+                        self._filename, 'exec'), glob, loc)
+            body = loc[name]
+            arg_vars = [a.var for a in arguments]
+            arg_subs = {sp.Symbol(v) : v for v in arg_vars}
+            try:
+                body = loc[name](*arg_subs.keys())
+            except Exception as e:
+                trace = e.__traceback__
+                while trace.tb_next:
+                    trace = trace.tb_next
+                e.with_traceback(trace)
+                tb.print_tb(trace)
+                raise PyccelSyntaxError("")
+            try:
+                body = [Return([sympy_to_pyccel(body, arg_subs)])]
+            except TypeError:
+                errors.report(f"Couldn't interpret sympy statement {body}",
+                        symbol=stmt, severity='fatal')
+            body[0].set_fst(stmt)
+            if isinstance(body, Literal):
+                is_inline = True
+                decorators.pop('sympy')
 
         else:
             body = self._visit(body)
