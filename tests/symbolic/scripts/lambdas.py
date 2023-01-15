@@ -7,8 +7,6 @@ g1 = lambda x: f1(x)**2 + 1
 
 # lambda expressions can be printed
 
-#$ header m1(double)
-m1 = lambdify(g1)
 print(f1)
 print(f2)
 print(g1)
