@@ -15,9 +15,11 @@ from pyccel.utilities.strings import create_incremented_string
 
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import Iterable
+from .core      import Iterable, FunctionCall
 
 from .builtins  import PythonRange, PythonTuple
+
+from .internals import PyccelSymbol
 
 from .mathext   import MathCeil
 
@@ -107,6 +109,10 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.Tuple):
         args = [sympy_to_pyccel(a, symbol_map) for a in expr]
         return PythonTuple(*args)
+
+    elif isinstance(expr, sp.Function):
+        args = [sympy_to_pyccel(a, symbol_map) for a in expr.args]
+        return FunctionCall(PyccelSymbol(str(type(expr))), args)
 
     else:
         raise TypeError(str(type(expr)))
