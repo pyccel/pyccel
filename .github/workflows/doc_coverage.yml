@@ -46,4 +46,4 @@ jobs:
             echo $line >> report.txt
             python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
           done < objects.txt
-          (diff objects.txt report.txt && echo "## SUCCESS! All docstrings are valid" >> $GITHUB_STEP_SUMMARY) || ((echo "FAILURE" >> $GITHUB_STEP_SUMMARY) && (cat report.txt >> $GITHUB_STEP_SUMMARY) && exit 1)
+          (diff objects.txt report.txt && echo "## SUCCESS! All docstrings are valid" >> $GITHUB_STEP_SUMMARY) || ((echo "## FAILURE" >> $GITHUB_STEP_SUMMARY) && (cat report.txt >> $GITHUB_STEP_SUMMARY) && exit 1)
