@@ -302,6 +302,29 @@ class CCodePrinter(CodePrinter):
         else:
             return [irregular_list]
 
+    def stored_in_c_pointer(self, a):
+        """
+        Indicates whether the object a needs to be stored in a pointer
+        in c code
+
+        Parameters
+        ----------
+        a : PyccelAstNode
+        """
+        if isinstance(a, (Nil, ObjectAddress)):
+            return True
+        if isinstance(a, FunctionCall):
+            results = a.funcdef.results
+            if len(results)==1:
+                a = a.funcdef.results[0]
+            else:
+                return False
+
+        if not isinstance(a, Variable):
+            return False
+        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
+                any(a is bi for b in self._additional_args for bi in b)
+
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
         """ print the assignment of a NdArray or a homogeneous tuple
@@ -325,19 +348,22 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
 
+        buffer_size = self._print(DottedVariable(NativeVoid(), 'buffer_size', lhs=lhs))
+        lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
+        arg_data    = self._print(DottedVariable(arg.dtype, dtype, arg=lhs))
+
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
             arg = self._print(arg)
-            cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
-            return '%s' % (cpy_data)
+            return f"memcpy({lhs_data}, {arg_data}, {buffer_size});\n"
         else :
             if arg.rank > 1:
                 # flattening the args to use them in C initialization.
                 arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
-            return  '%s%s' % (dummy_array, cpy_data)
+            cpy_data = "memcpy({lhs_data}, {dummy_array_name}, {buffer_size});\n"
+            return  dummy_array + cpy_data
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -1220,7 +1246,8 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+            shape_var = DottedVariable(NativeVoid(), 'shape', lhs=expr.variable)
+            free_code = f'if ({self._print(shape_var)} != NULL)\n'
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
@@ -1533,29 +1560,6 @@ class CCodePrinter(CodePrinter):
         self.exit_scope()
 
         return ''.join(p for p in parts if p)
-
-    def stored_in_c_pointer(self, a):
-        """
-        Indicates whether the object a needs to be stored in a pointer
-        in c code
-
-        Parameters
-        ----------
-        a : PyccelAstNode
-        """
-        if isinstance(a, (Nil, ObjectAddress)):
-            return True
-        if isinstance(a, FunctionCall):
-            results = a.funcdef.results
-            if len(results)==1:
-                a = a.funcdef.results[0]
-            else:
-                return False
-
-        if not isinstance(a, Variable):
-            return False
-        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
-                any(a is bi for b in self._additional_args for bi in b)
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
