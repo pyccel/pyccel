@@ -384,7 +384,7 @@ class Basic:
         assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
         if self.is_unused and invalidate:
-            self.invalidate_node( )
+            self.invalidate_node()
 
     @property
     def is_unused(self):
