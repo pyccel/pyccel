@@ -25,7 +25,7 @@ for l in lines:
         changes[file].append(int(line_no))
 
 objects = []
-for file in changes:
+for file, line_nos in changes.items:
     with open(file,'r', encoding="utf-8") as f:
         tree = ast.parse(f.read())
     prefix = file[:-3].replace('/', '.')
@@ -35,16 +35,16 @@ for file in changes:
                 objects.append(prefix)
             if isinstance(node, FunctionDef):
                 if hasattr(node, "parent"):
-                    if any([x >= node.lineno and x <= node.end_lineno
-                            for x in changes[file]]):
+                    if any((node.lineno <= x <= node.end_lineno
+                            for x in line_nos)):
                         objects.append('.'.join([prefix,node.parent.name, node.name]))
                 else:
-                    if any([x >= node.lineno and x <= node.end_lineno
-                            for x in changes[file]]):
+                    if any((node.lineno <= x <= node.end_lineno
+                            for x in line_nos)):
                         objects.append('.'.join([prefix, node.name]))
             if isinstance(node, ClassDef):
-                if any([x >= node.lineno and x <= node.end_lineno
-                        for x in changes[file]]):
+                if any((node.lineno <= x <= node.end_lineno
+                        for x in line_nos)):
                     objects.append('.'.join([prefix, node.name]))
                 for child in node.body:
                     if isinstance(child, ast.FunctionDef):
