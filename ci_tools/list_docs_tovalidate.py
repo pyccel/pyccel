@@ -25,7 +25,7 @@ for l in lines:
         changes[file].append(int(line_no))
 
 objects = []
-for file, line_nos in changes.items:
+for file, line_nos in changes.items():
     with open(file,'r', encoding="utf-8") as f:
         tree = ast.parse(f.read())
     prefix = file[:-3].replace('/', '.')
