@@ -10,23 +10,37 @@ from .wrapper import Wrapper
 
 class FortranToCWrapper(Wrapper):
 
-    def _get_function_def_body(self, args, array_creation_stmts, results, handled = ()):
-        optionals = [a for a in args if a.is_optional and a not in handled]
-        if len(optionals) == 0:
-            body = [array_creation_stmts[a] for a in args if v.is_ndarray]
-            return body + [Assign(results, FunctionCall(expr, args))]
+    def _get_function_def_body(self, func_def_args, func_arg_to_call_arg, results):
+        """ Get the body of the function definition by inserting if blocks
+        to check the presence of optional variables
+
+        Arguments
+        ---------
+        func_def_args : list of FunctionDefArguments
+                The arguments received by the function
+        func_arg_to_call_arg : dict
+                A dictionary mapping the arguments received by the function to the arguments
+                to be passed to the function call
+        results : list of Variables
+                The Variables where the result of the function call will be saved
+        """
+        optional = next(a for a in func_def_args if a.var.is_optional, None)
+        if optional:
+            args = func_def_args.copy()
+            true_section = IfSection(PyccelIsNot(optional, Nil()),
+                                    self._get_function_def_body(args, func_arg_to_call_arg, results))
+            args.remove(optional)
+            false_section = IfSection(LiteralTrue(),
+                                    self._get_function_def_body(args, func_arg_to_call_arg, results))
+            return If(true_section, false_section)
         else:
-            o = optionals[0]
-            true_section = IfSection(LiteralTrue(),
-                                    self._get_function_def_body(args, array_creation_stmts, results, handled))
-            passed_args = [a for a in args if a is not o]
-            false_section = IfSection(PyccelIs(o, Nil()),
-                                    self._get_function_def_body(passed_args, array_creation_stmts, results, handled + (o,)))
-            return If(false_section, true_section)
+            args = [func_arg_to_call_arg[fa] for fa in func_def_args]
+            body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], fa.sizes) for fa in func_def_args if func_arg_to_call_arg[fa].is_ndarray]
+            return body + [Assign(results, FunctionCall(expr, args))]
 
     def _get_call_argument(self, original_arg, bind_c_arg):
         if original_arg.is_ndarray:
-            new_var = a.var.clone(self.scope.get_new_name(expr.name))
+            new_var = a.var.clone(self.scope.get_new_name(expr.name), is_argument = False, is_optional = False)
             scope.insert_variable(new_var)
             start = LiteralInteger(0)
             stop = Nil()
@@ -64,6 +78,7 @@ class FortranToCWrapper(Wrapper):
         original_arguments = expr.arguments
         func_arguments = [self._wrap_FunctionDefArgument(oa) for oa in original_arguments]
         call_arguments = [self._get_call_argument(oa, fa) for oa, fa in zip(original_arguments, func_arguments)]
+        func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
 
         array_creation = {ca : C_F_Pointer(fa.var, ca, fa.sizes)
                             for ca, fa in zip(call_arguments, func_arguments) if ca.is_ndarray}
@@ -79,7 +94,7 @@ class FortranToCWrapper(Wrapper):
         var = expr.var
         if var.is_ndarray:
             new_var = Variable(BindCPointer(), func_scope.get_new_name(v.name),
-                                is_pointer=True)
+                                is_pointer=True, is_argument = True, is_optional = var.is_optional)
             return BindCFunctionDefArgument(new_var, value = expr.value,
                     kwonly = expr.kwonly, annotation = expr.annotation)
         else:
