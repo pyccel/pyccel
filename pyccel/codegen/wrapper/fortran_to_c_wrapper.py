@@ -6,15 +6,17 @@
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.core import Module, Assign, FunctionCall, FunctionDefArgument
+from pyccel.ast.core import If, IfSection
 from pyccel.ast.internals import Slice
-from pyccel.ast.literals import LiteralInteger, Nil
+from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
+from pyccel.ast.operators import PyccelIsNot
 from pyccel.ast.variable import Variable, IndexedElement
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
 
 class FortranToCWrapper(Wrapper):
 
-    def _get_function_def_body(self, func, func_def_args, func_arg_to_call_arg, results):
+    def _get_function_def_body(self, func, func_def_args, func_arg_to_call_arg, results, handled = ()):
         """ Get the body of the function definition by inserting if blocks
         to check the presence of optional variables
 
@@ -28,15 +30,16 @@ class FortranToCWrapper(Wrapper):
         results : list of Variables
                 The Variables where the result of the function call will be saved
         """
-        optional = next((a for a in func_def_args if a.var.is_optional), None)
+        optional = next((a for a in func_def_args if a.var.is_optional and a not in handled), None)
         if optional:
             args = func_def_args.copy()
+            handled += (optional, )
             true_section = IfSection(PyccelIsNot(optional, Nil()),
-                                    self._get_function_def_body(func, args, func_arg_to_call_arg, results))
+                                    self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
             args.remove(optional)
             false_section = IfSection(LiteralTrue(),
-                                    self._get_function_def_body(func, args, func_arg_to_call_arg, results))
-            return If(true_section, false_section)
+                                    self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
+            return [If(true_section, false_section)]
         else:
             args = [func_arg_to_call_arg[fa] for fa in func_def_args]
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], fa.sizes)
