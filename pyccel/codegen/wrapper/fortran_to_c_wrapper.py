@@ -10,7 +10,7 @@ from .wrapper import Wrapper
 
 class FortranToCWrapper(Wrapper):
 
-    def _get_function_def_body(args, array_creation_stmts, results, handled = ()):
+    def _get_function_def_body(self, args, array_creation_stmts, results, handled = ()):
         optionals = [a for a in args if a.is_optional and a not in handled]
         if len(optionals) == 0:
             body = [array_creation_stmts[a] for a in args if v.is_ndarray]
@@ -23,6 +23,17 @@ class FortranToCWrapper(Wrapper):
             false_section = IfSection(PyccelIs(o, Nil()),
                                     self._get_function_def_body(passed_args, array_creation_stmts, results, handled + (o,)))
             return If(false_section, true_section)
+
+    def _get_call_argument(self, original_arg, bind_c_arg):
+        if original_arg.is_ndarray:
+            new_var = a.var.clone(self.scope.get_new_name(expr.name))
+            scope.insert_variable(new_var)
+            start = LiteralInteger(0)
+            stop = Nil()
+            indexes = [Slice(start, stop, step) for step in bind_c_arg.strides]
+            return IndexedElement(oa, *indexes)
+        else:
+            return bind_c_arg.var
 
     def _wrap_Module(self, expr):
         # Define scope
@@ -50,32 +61,28 @@ class FortranToCWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(name)
         self.set_scope(func_scope)
 
-        original_arguments = [a.var.clone(func_scope.get_new_name(a.name)) for a in expr.arguments]
-        array_c_arguments = {v.name: Variable(BindCPointer(), func_scope.get_new_name(v.name),
-                                is_pointer=True) for v in original_arguments if v.is_ndarray}
+        original_arguments = expr.arguments
+        func_arguments = [self._wrap_FunctionDefArgument(oa) for oa in original_arguments]
+        call_arguments = [self._get_call_argument(oa, fa) for oa, fa in zip(original_arguments, func_arguments)]
 
-        func_arguments = {oa : BindCFunctionDefArgument(array_c_arguments[oa.name]) if oa.is_ndarray else FunctionDefArgument(oa)
-                            for oa in original_arguments}
-
-        call_arguments = [IndexedElement(oa, [Slice(LiteralInteger(0), size, stride)
-                                                for size, stride in zip(oa.sizes, oa.strides)])
-                          if oa.is_ndarray else oa for oa in original_arguments]
+        array_creation = {ca : C_F_Pointer(fa.var, ca, fa.sizes)
+                            for ca, fa in zip(call_arguments, func_arguments) if ca.is_ndarray}
 
         results = [r.clone(self.scope.get_new_name(r.name)) for r in expr.results]
         func_results = [BindCFunctionDefResult(r) for r in expr.results]
 
-        array_creation = {oa : C_F_Pointer(array_c_arguments[oa], oa, arguments[oa].sizes)
-                            for oa in original_arguments if oa.is_ndarray}
-
         body = self._get_function_def_body(call_args, array_creation, results)
 
-        return BindCFunctionDef(name, arguments.values(), func_results, body, scope=func_scope, original_function = expr)
+        return BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr)
 
     def _wrap_FunctionDefArgument(self, expr):
-        var = expr.var.clone(self.scope.get_new_name(expr.name))
-        if var.rank != 0 and var.dtype in NativeNumeric:
-            return BindCFunctionDefArgument(var, value = expr.value,
+        var = expr.var
+        if var.is_ndarray:
+            new_var = Variable(BindCPointer(), func_scope.get_new_name(v.name),
+                                is_pointer=True)
+            return BindCFunctionDefArgument(new_var, value = expr.value,
                     kwonly = expr.kwonly, annotation = expr.annotation)
         else:
-            return FunctionDefArgument(var, value = expr.value,
+            new_var = var.clone(self.scope.get_new_name(expr.name))
+            return FunctionDefArgument(new_var, value = expr.value,
                     kwonly = expr.kwonly, annotation = expr.annotation)
