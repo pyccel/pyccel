@@ -65,14 +65,14 @@ class BindCFunctionDef(FunctionDef):
 class BindCFunctionDefArgument(FunctionDefArgument):
     _attribute_nodes = FunctionDefArgument._attribute_nodes + ('_sizes', '_strides')
 
-    def __init__(self, var, scope, **kwargs):
+    def __init__(self, var, rank, scope, **kwargs):
         name = var.name
         sizes   = [Variable(dtype=NativeInteger(),
                             name=scope.get_new_name(f'{name}_shape_{i+1}'))
-                   for i in range(var.rank)]
+                   for i in range(rank)]
         strides = [Variable(dtype=NativeInteger(),
                             name=scope.get_new_name(f'{name}_stride_{i+1}'))
-                   for i in range(var.rank)]
+                   for i in range(rank)]
         self._sizes = sizes
         self._strides = strides
         super().__init__(var, **kwargs)
@@ -355,6 +355,7 @@ class C_F_Pointer(Basic):
         self._c_expr = c_expr
         self._f_expr = f_expr
         self._sizes = sizes
+        super().__init__()
 
     @property
     def c_pointer(self):
