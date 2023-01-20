@@ -1438,6 +1438,28 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpySum(self, expr):
+        '''
+        Convert a call to numpy.sum to the equivalent function in C.
+        '''
+        if not len(expr._args) == 1:
+            raise NotImplementedError('Options not implemented')
+        if not isinstance(expr._args[0], (NumpyArray, Variable, IndexedElement)):
+            raise TypeError('Expecting a NumpyArray, given {}'.format(type(expr._args[0])))
+        dtype, prec, name = (expr._args[0]._dtype,
+                             expr._args[0]._precision,
+                             self._print(expr._args[0]))
+            
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_sum_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_sum_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_sum_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_sum_bool({name})'
+        raise NotImplementedError('Sum not implemented for argument')
+
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
