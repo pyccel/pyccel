@@ -374,14 +374,78 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
-/* numpy sum */
+/*
+** sum of ndarray
+*/
 
-int32_t            numpy_sum_bool(t_ndarray arr);
-int32_t             numpy_sum_int8(t_ndarray arr);
-int32_t            numpy_sum_int16(t_ndarray arr);
-int64_t            numpy_sum_int32(t_ndarray arr);
-int64_t            numpy_sum_int64(t_ndarray arr);
-float              numpy_sum_float32(t_ndarray arr);
-double             numpy_sum_float64(t_ndarray arr);
-float complex      numpy_sum_complex64(t_ndarray arr);
-double complex     numpy_sum_complex128(t_ndarray arr);
+int32_t     numpy_sum_bool(t_ndarray arr)
+{
+    int32_t output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_bool[i];
+    return output;
+}
+
+int32_t     numpy_sum_int8(t_ndarray arr)
+{
+    int8_t output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_int8[i];
+    return output;
+}
+
+int32_t     numpy_sum_int16(t_ndarray arr)
+{
+    int16_t output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_int16[i];
+    return output;
+}
+
+int64_t     numpy_sum_int32(t_ndarray arr)
+{
+    int32_t output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_int32[i];
+    return output;
+}
+
+int64_t     numpy_sum_int64(t_ndarray arr)
+{
+    int64_t output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_int64[i];
+    return output;
+}
+
+float       numpy_sum_float32(t_ndarray arr)
+{
+    float output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_float[i];
+    return output;
+}
+
+double      numpy_sum_float64(t_ndarray arr)
+{
+    double output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_double[i];
+    return output;
+}
+
+float complex   numpy_sum_complex64(t_ndarray arr)
+{
+    float complex output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_cfloat[i];
+    return output;
+}
+
+double complex  numpy_sum_complex128(t_ndarray arr)
+{
+    double complex output = 0;
+    for (int32_t i = 0; i < arr.length; i++)
+        output += arr.nd_cdouble[i];
+    return output;
+}

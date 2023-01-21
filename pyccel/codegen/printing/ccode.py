@@ -1442,13 +1442,13 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.sum to the equivalent function in C.
         '''
-        if not len(expr._args) == 1:
-            raise NotImplementedError('Options not implemented')
-        if not isinstance(expr._args[0], (NumpyArray, Variable, IndexedElement)):
-            raise TypeError('Expecting a NumpyArray, given {}'.format(type(expr._args[0])))
-        dtype, prec, name = (expr._args[0]._dtype,
-                             expr._args[0]._precision,
-                             self._print(expr._args[0]))
+        if not isinstance(expr.arg, (NumpyArray, Variable, IndexedElement)):
+            raise TypeError('Expecting a NumpyArray, given {}'.format(type(expr.arg)))
+        dtype, prec, name = (expr.arg.dtype,
+                             expr.arg.precision,
+                             self._print(expr.arg))
+        if prec == -1:
+            prec = 8
  
         if isinstance(dtype, NativeInteger):
             return f'numpy_sum_int{prec * 8}({name})'
