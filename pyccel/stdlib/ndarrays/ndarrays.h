@@ -123,7 +123,7 @@ void        _array_fill_cdouble(double complex c, t_ndarray arr);
                 /* creating a Slice object */
 t_slice     new_slice(int32_t start, int32_t end, int32_t step);
                 /* creating an array view */
-t_ndarray   array_slicing(t_ndarray arr, int n, ...);
+t_ndarray   array_slicing(t_ndarray arr, int n, int n_slices, ...);
 
 /* assigns */
 void        alias_assign(t_ndarray *dest, t_ndarray src);
