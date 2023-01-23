@@ -2358,8 +2358,6 @@ def test_array_2d_C_slice_11(language):
 
     f1 = arrays.array_2d_C_slice_11
     f2 = epyccel(f1, language = language)
-    print(f1(a))
-    print(f2(a))
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_12(language):
@@ -3459,6 +3457,3 @@ def test_iterate_slice(language):
 #    filelist = glob.glob( pattern )
 #    for f in filelist:
 #        os.remove( f )
-
-if __name__ == '__main__':
-    test_array_2d_F_slice_2('c')
