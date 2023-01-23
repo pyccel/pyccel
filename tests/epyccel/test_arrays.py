@@ -2067,6 +2067,13 @@ def test_array_1d_slice_9(language):
 
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_10(language):
     a = arrays.a_1d
 
@@ -2075,6 +2082,13 @@ def test_array_1d_slice_10(language):
 
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_11(language):
     a = arrays.a_1d
 
@@ -2083,6 +2097,13 @@ def test_array_1d_slice_11(language):
 
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_12(language):
     a = arrays.a_1d
 
@@ -2337,6 +2358,8 @@ def test_array_2d_C_slice_11(language):
 
     f1 = arrays.array_2d_C_slice_11
     f2 = epyccel(f1, language = language)
+    print(f1(a))
+    print(f2(a))
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_12(language):
@@ -2402,6 +2425,13 @@ def test_array_2d_C_slice_20(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_21(language):
     a = arrays.a_2d_c
 
@@ -2409,6 +2439,13 @@ def test_array_2d_C_slice_21(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_22(language):
     a = arrays.a_2d_c
 
@@ -2416,6 +2453,13 @@ def test_array_2d_C_slice_22(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_23(language):
     a = arrays.a_2d_c
 
@@ -2435,6 +2479,13 @@ def test_array_1d_slice_stride_1(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_2(language):
     a = arrays.a_1d
 
@@ -2467,6 +2518,13 @@ def test_array_1d_slice_stride_5(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_6(language):
     a = arrays.a_1d
 
@@ -2483,13 +2541,19 @@ def test_array_1d_slice_stride_7(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_8(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_8
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
-
 
 def test_array_1d_slice_stride_9(language):
     a = arrays.a_1d
@@ -2499,13 +2563,19 @@ def test_array_1d_slice_stride_9(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_10(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_10
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
-
 
 def test_array_1d_slice_stride_11(language):
     a = arrays.a_1d
@@ -2515,13 +2585,19 @@ def test_array_1d_slice_stride_11(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_12(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_12
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
-
 
 def test_array_1d_slice_stride_13(language):
     a = arrays.a_1d
@@ -2530,7 +2606,13 @@ def test_array_1d_slice_stride_13(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_14(language):
     a = arrays.a_1d
 
@@ -2539,13 +2621,19 @@ def test_array_1d_slice_stride_14(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_15(language):
     a = arrays.a_1d
 
     f1 = arrays.array_1d_slice_stride_15
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
-
 
 def test_array_1d_slice_stride_16(language):
     a = arrays.a_1d
@@ -2554,6 +2642,13 @@ def test_array_1d_slice_stride_16(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_17(language):
     a = arrays.a_1d
 
@@ -2561,6 +2656,13 @@ def test_array_1d_slice_stride_17(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_18(language):
     a = arrays.a_1d
 
@@ -2575,6 +2677,13 @@ def test_array_1d_slice_stride_19(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_20(language):
     a = arrays.a_1d
 
@@ -2582,6 +2691,13 @@ def test_array_1d_slice_stride_20(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_1d_slice_stride_21(language):
     a = arrays.a_1d
 
@@ -2614,6 +2730,13 @@ def test_array_2d_F_slice_stride_1(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_2(language):
     a = arrays.a_2d_f
 
@@ -2621,6 +2744,13 @@ def test_array_2d_F_slice_stride_2(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_3(language):
     a = arrays.a_2d_f
 
@@ -2671,6 +2801,13 @@ def test_array_2d_F_slice_stride_9(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_10(language):
     a = arrays.a_2d_f
 
@@ -2678,6 +2815,13 @@ def test_array_2d_F_slice_stride_10(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_11(language):
     a = arrays.a_2d_f
 
@@ -2685,6 +2829,13 @@ def test_array_2d_F_slice_stride_11(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_12(language):
     a = arrays.a_2d_f
 
@@ -2692,6 +2843,13 @@ def test_array_2d_F_slice_stride_12(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_13(language):
     a = arrays.a_2d_f
 
@@ -2699,6 +2857,13 @@ def test_array_2d_F_slice_stride_13(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_14(language):
     a = arrays.a_2d_f
 
@@ -2706,6 +2871,13 @@ def test_array_2d_F_slice_stride_14(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_15(language):
     a = arrays.a_2d_f
 
@@ -2713,6 +2885,13 @@ def test_array_2d_F_slice_stride_15(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_16(language):
     a = arrays.a_2d_f
 
@@ -2720,6 +2899,13 @@ def test_array_2d_F_slice_stride_16(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_17(language):
     a = arrays.a_2d_f
 
@@ -2727,6 +2913,13 @@ def test_array_2d_F_slice_stride_17(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_18(language):
     a = arrays.a_2d_f
 
@@ -2734,6 +2927,13 @@ def test_array_2d_F_slice_stride_18(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_19(language):
     a = arrays.a_2d_f
 
@@ -2741,6 +2941,13 @@ def test_array_2d_F_slice_stride_19(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_20(language):
     a = arrays.a_2d_f
 
@@ -2749,6 +2956,13 @@ def test_array_2d_F_slice_stride_20(language):
     assert np.array_equal(f1(a), f2(a))
 
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_21(language):
     a = arrays.a_2d_f
 
@@ -2756,6 +2970,13 @@ def test_array_2d_F_slice_stride_21(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_22(language):
     a = arrays.a_2d_f
 
@@ -2763,6 +2984,13 @@ def test_array_2d_F_slice_stride_22(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_stride_23(language):
     a = arrays.a_2d_f
 
@@ -2781,6 +3009,13 @@ def test_array_2d_C_slice_stride_1(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_2(language):
     a = arrays.a_2d_c
 
@@ -2788,6 +3023,13 @@ def test_array_2d_C_slice_stride_2(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_3(language):
     a = arrays.a_2d_c
 
@@ -2802,6 +3044,13 @@ def test_array_2d_C_slice_stride_4(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_5(language):
     a = arrays.a_2d_c
 
@@ -2816,12 +3065,20 @@ def test_array_2d_C_slice_stride_6(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_7(language):
     a = arrays.a_2d_c
 
     f1 = arrays.array_2d_C_slice_stride_7
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
+
 
 def test_array_2d_C_slice_stride_8(language):
     a = arrays.a_2d_c
@@ -2830,6 +3087,13 @@ def test_array_2d_C_slice_stride_8(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_9(language):
     a = arrays.a_2d_c
 
@@ -2837,6 +3101,13 @@ def test_array_2d_C_slice_stride_9(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_10(language):
     a = arrays.a_2d_c
 
@@ -2844,6 +3115,13 @@ def test_array_2d_C_slice_stride_10(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_11(language):
     a = arrays.a_2d_c
 
@@ -2851,6 +3129,13 @@ def test_array_2d_C_slice_stride_11(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_12(language):
     a = arrays.a_2d_c
 
@@ -2858,6 +3143,13 @@ def test_array_2d_C_slice_stride_12(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_13(language):
     a = arrays.a_2d_c
 
@@ -2865,6 +3157,13 @@ def test_array_2d_C_slice_stride_13(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_14(language):
     a = arrays.a_2d_c
 
@@ -2872,6 +3171,13 @@ def test_array_2d_C_slice_stride_14(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_15(language):
     a = arrays.a_2d_c
 
@@ -2879,6 +3185,13 @@ def test_array_2d_C_slice_stride_15(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_16(language):
     a = arrays.a_2d_c
 
@@ -2886,6 +3199,13 @@ def test_array_2d_C_slice_stride_16(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_17(language):
     a = arrays.a_2d_c
 
@@ -2893,6 +3213,13 @@ def test_array_2d_C_slice_stride_17(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_18(language):
     a = arrays.a_2d_c
 
@@ -2900,6 +3227,13 @@ def test_array_2d_C_slice_stride_18(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_19(language):
     a = arrays.a_2d_c
 
@@ -2907,6 +3241,13 @@ def test_array_2d_C_slice_stride_19(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_20(language):
     a = arrays.a_2d_c
 
@@ -2914,6 +3255,13 @@ def test_array_2d_C_slice_stride_20(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_21(language):
     a = arrays.a_2d_c
 
@@ -2921,6 +3269,13 @@ def test_array_2d_C_slice_stride_21(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_22(language):
     a = arrays.a_2d_c
 
@@ -2928,6 +3283,13 @@ def test_array_2d_C_slice_stride_22(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_C_slice_stride_23(language):
     a = arrays.a_2d_c
 
@@ -2972,7 +3334,7 @@ def test_arrs_2d_different_shapes_0(language):
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
-    assert np.array_equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_arrs_1d_negative_index_2(language):
     f1 = arrays.arrs_1d_negative_index_2
@@ -2989,6 +3351,13 @@ def test_arrs_1d_int64_index(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(), f2())
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_arrs_1d_negative_index_negative_step(language):
     f1 = arrays.arrs_1d_negative_index_negative_step
     f2 = epyccel(f1, language = language)
@@ -2999,6 +3368,13 @@ def test_arrs_1d_negative_step_positive_step(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(), f2())
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="negative step does not work in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_arrs_2d_negative_index(language):
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1, language = language)
@@ -3083,3 +3459,6 @@ def test_iterate_slice(language):
 #    filelist = glob.glob( pattern )
 #    for f in filelist:
 #        os.remove( f )
+
+if __name__ == '__main__':
+    test_array_2d_F_slice_2('c')

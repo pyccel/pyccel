@@ -378,74 +378,235 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 ** sum of ndarray
 */
 
-int32_t     numpy_sum_bool(t_ndarray arr)
+static int64_t     get_index_from_array(t_ndarray arr, int64_t *tmp)
 {
-    int32_t output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_bool[i];
+    switch (arr.nd) {
+        case 1:
+            return GET_INDEX(arr, tmp[0]);
+        case 2:
+            return GET_INDEX(arr, tmp[0], tmp[1]);
+        case 3:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2]);
+        case 4:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3]);
+        case 5:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
+        case 6:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5]);
+        case 7:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6]);
+        case 8:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7]);
+        case 9:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7], tmp[8]);
+        case 10:
+            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7], tmp[8], tmp[9]);
+    }
+}
+
+int64_t     numpy_sum_bool(t_ndarray arr)
+{
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
+    int64_t output = 0;
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_bool[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
-int32_t     numpy_sum_int8(t_ndarray arr)
+int64_t     numpy_sum_int8(t_ndarray arr)
 {
-    int8_t output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_int8[i];
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
+    int64_t output = 0;
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_int8[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
-int32_t     numpy_sum_int16(t_ndarray arr)
+int64_t     numpy_sum_int16(t_ndarray arr)
 {
-    int16_t output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_int16[i];
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
+    int64_t output = 0;
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_int16[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
 int64_t     numpy_sum_int32(t_ndarray arr)
 {
-    int32_t output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_int32[i];
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
+    int64_t output = 0;
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_int32[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
 int64_t     numpy_sum_int64(t_ndarray arr)
 {
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
     int64_t output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_int64[i];
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_int64[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
 float       numpy_sum_float32(t_ndarray arr)
 {
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
     float output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_float[i];
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_float[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
 double      numpy_sum_float64(t_ndarray arr)
 {
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
     double output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_double[i];
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_double[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
 float complex   numpy_sum_complex64(t_ndarray arr)
 {
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
     float complex output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_cfloat[i];
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_cfloat[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
 
 double complex  numpy_sum_complex128(t_ndarray arr)
 {
+    int64_t elements = 1;
+    for (int i = 0; i <arr.nd; i++)
+        elements *= arr.shape[i];
+    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
+    memset(tmp, 0, sizeof(tmp));
     double complex output = 0;
-    for (int32_t i = 0; i < arr.length; i++)
-        output += arr.nd_cdouble[i];
+    for (int32_t i = 0; i < elements; i++)
+    {
+        output += arr.nd_cdouble[get_index_from_array(arr, tmp)];
+        tmp[0]++;
+        for (int32_t j = 0; j < arr.nd; j++)
+            if (tmp[j] == arr.shape[j])
+            {
+                tmp[j] = 0;
+                tmp[j + 1]++;
+            }
+    }
+    free(tmp);
     return output;
 }
