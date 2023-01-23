@@ -3350,6 +3350,13 @@ def test_arrs_2d_different_shapes_0(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(), f2())
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="eppycel zero gives 0 or +inf randomly"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
