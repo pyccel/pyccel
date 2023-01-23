@@ -4098,6 +4098,15 @@ def test_array_3d_view_assign(language):
     f1(x1[:, 2, 4], 4)
     f2(x2[:, 2, 4], 4)
     assert np.array_equal(x1, x2)
+    f1(x1[::2, 3, 4], 5)
+    f2(x2[::2, 3, 4], 5)
+    assert np.array_equal(x1, x2)
+    f1(x1[2, ::3, 4], 5)
+    f2(x2[2, ::3, 4], 5)
+    assert np.array_equal(x1, x2)
+    f1(x1[2, 3, ::4], 6)
+    f2(x2[2, 3, ::4], 6)
+    assert np.array_equal(x1, x2)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
