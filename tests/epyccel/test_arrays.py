@@ -4036,6 +4036,13 @@ def test_iterate_slice(language):
 # TESTS: VIEW
 #==============================================================================
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="strides not implemented in fortran"),
+            pytest.mark.fortran
+        ])
+    ]
+)
 def test_array_1d_view_assign(language):
     f1 = arrays.array_1d_view_assign
     f2 = epyccel(f1, language = language)
@@ -4051,6 +4058,13 @@ def test_array_1d_view_assign(language):
     f2(x2[6::], 4)
     assert np.array_equal(x1, x2)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="strides not implemented in fortran"),
+            pytest.mark.fortran
+        ])
+    ]
+)
 def test_array_2d_view_assign(language):
     f1 = arrays.array_1d_view_assign
     f2 = epyccel(f1, language = language)
@@ -4063,6 +4077,13 @@ def test_array_2d_view_assign(language):
     f2(x2[:, 3], 2)
     assert np.array_equal(x1, x2)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="strides not implemented in fortran"),
+            pytest.mark.fortran
+        ])
+    ]
+)
 def test_array_3d_view_assign(language):
     f1 = arrays.array_1d_view_assign
     f2 = epyccel(f1, language = language)
