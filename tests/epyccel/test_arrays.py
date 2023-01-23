@@ -226,9 +226,7 @@ def test_array_int32_1d_sub_augassign(language):
     assert np.array_equal( x1, x2 )
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Numpy sum not yet implemented for C language"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
@@ -240,9 +238,7 @@ def test_array_int_1d_initialization_1(language):
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Numpy sum not yet implemented for C language"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
@@ -254,9 +250,7 @@ def test_array_int_1d_initialization_2(language):
     assert np.array_equal(f1(), f2())
 
 @pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Numpy sum not yet implemented for C language"),
-            pytest.mark.c]),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
