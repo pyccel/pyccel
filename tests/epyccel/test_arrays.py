@@ -2256,6 +2256,13 @@ def test_array_2d_F_slice_20(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_21(language):
     a = arrays.a_2d_f
 
@@ -2263,6 +2270,13 @@ def test_array_2d_F_slice_21(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_22(language):
     a = arrays.a_2d_f
 
@@ -2270,6 +2284,13 @@ def test_array_2d_F_slice_22(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_array_2d_F_slice_23(language):
     a = arrays.a_2d_f
 
