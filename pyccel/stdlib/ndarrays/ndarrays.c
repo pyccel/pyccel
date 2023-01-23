@@ -410,7 +410,7 @@ int64_t     numpy_sum_bool(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -433,7 +433,7 @@ int64_t     numpy_sum_int8(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -456,7 +456,7 @@ int64_t     numpy_sum_int16(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -479,7 +479,7 @@ int64_t     numpy_sum_int32(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -502,7 +502,7 @@ int64_t     numpy_sum_int64(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -525,7 +525,7 @@ float       numpy_sum_float32(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     float output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -548,7 +548,7 @@ double      numpy_sum_float64(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     double output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -571,7 +571,7 @@ float complex   numpy_sum_complex64(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     float complex output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
@@ -594,7 +594,7 @@ double complex  numpy_sum_complex128(t_ndarray arr)
     for (int i = 0; i <arr.nd; i++)
         elements *= arr.shape[i];
     int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(tmp));
+    memset(tmp, 0, sizeof(int64_t) * arr.nd);
     double complex output = 0;
     for (int32_t i = 0; i < elements; i++)
     {
