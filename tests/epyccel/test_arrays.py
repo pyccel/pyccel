@@ -4040,7 +4040,8 @@ def test_iterate_slice(language):
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="strides not implemented in fortran"),
             pytest.mark.fortran
-        ])
+        ]),
+        pytest.param("c", marks = pytest.mark.c)
     ]
 )
 def test_array_1d_view_assign(language):
@@ -4062,7 +4063,8 @@ def test_array_1d_view_assign(language):
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="strides not implemented in fortran"),
             pytest.mark.fortran
-        ])
+        ]),
+        pytest.param("c", marks = pytest.mark.c)
     ]
 )
 def test_array_2d_view_assign(language):
@@ -4081,7 +4083,8 @@ def test_array_2d_view_assign(language):
         pytest.param("fortran", marks = [
             pytest.mark.skip(reason="strides not implemented in fortran"),
             pytest.mark.fortran
-        ])
+        ]),
+        pytest.param("c", marks = pytest.mark.c)
     ]
 )
 def test_array_3d_view_assign(language):
