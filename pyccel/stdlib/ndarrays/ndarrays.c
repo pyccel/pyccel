@@ -380,28 +380,12 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 static int64_t     get_index_from_array(t_ndarray arr, int64_t *tmp)
 {
-    switch (arr.nd) {
-        case 1:
-            return GET_INDEX(arr, tmp[0]);
-        case 2:
-            return GET_INDEX(arr, tmp[0], tmp[1]);
-        case 3:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2]);
-        case 4:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3]);
-        case 5:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
-        case 6:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5]);
-        case 7:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6]);
-        case 8:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7]);
-        case 9:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7], tmp[8]);
-        case 10:
-            return GET_INDEX(arr, tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6], tmp[7], tmp[8], tmp[9]);
+    int64_t idx = 0;
+    for (int64_t dim = 0; dim<arr.nd; ++dim)
+    {
+        idx += arr.strides[dim] * (tmp[dim]);
     }
+    return idx;
 }
 
 int64_t     numpy_sum_bool(t_ndarray arr)
