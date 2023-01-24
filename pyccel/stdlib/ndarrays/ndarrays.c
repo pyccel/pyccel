@@ -238,7 +238,7 @@ t_slice new_slice(int32_t start, int32_t end, int32_t step)
     slice.step = step;
     return (slice);
 }
-#include <stdio.h>
+
 t_ndarray array_slicing(t_ndarray arr, int n, int n_slices, ...)
 {
     t_ndarray view;
