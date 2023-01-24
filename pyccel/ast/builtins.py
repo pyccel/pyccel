@@ -900,11 +900,11 @@ class PythonType(Basic):
         """
         dtype = str(self.dtype)
         prec = self.precision
-        precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))
+        precision = prec * (16 if self.dtype is NativeComplex() else 8)
         if self._obj.rank > 0:
             return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
         else:
-            return LiteralString(f"<class '{dtype}{precision}'>")
+            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 
 #==============================================================================
 python_builtin_datatypes_dict = {
