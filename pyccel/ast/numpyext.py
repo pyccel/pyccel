@@ -563,8 +563,15 @@ class NumpySum(PyccelInternalFunction):
         if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = arg.dtype
-        self._precision = get_final_precision(arg)
+        if isinstance(arg.dtype, (NativeBool, NativeInteger)):
+            self._dtype = NativeInteger()
+            self._precision = 8
+        elif isinstance(arg.dtype, NativeFloat):
+            self._dtype = NativeFloat()
+            self._precision = default_precision[str(arg.dtype)]
+        elif isinstance(arg.dtype, NativeComplex):
+            self._dtype = NativeComplex()
+            self._precision = default_precision[str(arg.dtype)]
 
     @property
     def arg(self):

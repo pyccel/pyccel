@@ -1448,7 +1448,7 @@ class CCodePrinter(CodePrinter):
                              expr.arg.precision,
                              self._print(expr.arg))
         if prec == -1:
-            prec = 8
+            prec = default_precision[self._print(dtype)]
 
         if isinstance(dtype, NativeInteger):
             return f'numpy_sum_int{prec * 8}({name})'

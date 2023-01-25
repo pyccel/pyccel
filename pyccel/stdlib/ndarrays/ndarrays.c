@@ -378,219 +378,412 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 ** sum of ndarray
 */
 
-static int64_t     get_index_from_array(t_ndarray arr, int64_t *tmp)
+static int64_t     get_index_from_array(t_ndarray arr, int64_t *nd_indices)
 {
+    /*
+    ** returns the one dimentional index equivalent to
+    ** the indices in each dimension stored in nd_indices
+    */
     int64_t idx = 0;
     for (int64_t dim = 0; dim<arr.nd; ++dim)
     {
-        idx += arr.strides[dim] * (tmp[dim]);
+        idx += arr.strides[dim] * (nd_indices[dim]);
     }
     return idx;
 }
 
 int64_t     numpy_sum_bool(t_ndarray arr)
 {
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+    /*
+    ** calculates the sum of a numpy array of bools by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
-    for (int32_t i = 0; i < elements - 1; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_bool[get_index_from_array(arr, tmp)];
-        tmp[0]++;
-        for (int32_t j = 0; j < arr.nd; j++)
-            if (tmp[j] == arr.shape[j])
+        output += arr.nd_bool[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
+        for (int32_t j = 0; j < arr.nd - 1; j++)
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 int64_t     numpy_sum_int8(t_ndarray arr)
-{
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+{   
+    /*
+    ** calculates the sum of a numpy array of int8 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_int8[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_int8[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 int64_t     numpy_sum_int16(t_ndarray arr)
 {
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+    /*
+    ** calculates the sum of a numpy array of int16 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_int16[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_int16[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 int64_t     numpy_sum_int32(t_ndarray arr)
 {
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+    /*
+    ** calculates the sum of a numpy array of int32 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_int32[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_int32[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 int64_t     numpy_sum_int64(t_ndarray arr)
 {
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+    /*
+    ** calculates the sum of a numpy array of int64 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     int64_t output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_int64[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_int64[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 float       numpy_sum_float32(t_ndarray arr)
-{
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+{   
+    /*
+    ** calculates the sum of a numpy array of float32 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     float output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_float[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_float[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 double      numpy_sum_float64(t_ndarray arr)
 {
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+    /*
+    ** calculates the sum of a numpy array of float64 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     double output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_double[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_double[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 float complex   numpy_sum_complex64(t_ndarray arr)
-{
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+{   
+    /*
+    ** calculates the sum of a numpy array of complex64 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd];
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     float complex output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_cfloat[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_cfloat[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
 
 double complex  numpy_sum_complex128(t_ndarray arr)
 {
-    int64_t elements = 1;
-    for (int i = 0; i <arr.nd; i++)
-        elements *= arr.shape[i];
-    int64_t *tmp = (int64_t*)malloc(sizeof(int64_t) * arr.nd);
-    memset(tmp, 0, sizeof(int64_t) * arr.nd);
+    /*
+    ** calculates the sum of a numpy array of complex128 by
+    ** looping over the length of the array and computing
+    ** the ndimentional indices of each element
+    ** Example:
+    **      For a two dimentional array of shape (2, 3),
+    **  nd_indices is initialized to be [0, 0],
+    **  the main loop will run for 6 iterations
+    **  each iteration increments nd_indices[0] by 1, then
+    **  a carry is performed when nd_indices[i] is equal to shape[i]
+    **  iteration 0:
+    **      nd_indices = [0, 0] -> no carry
+    **  iteration 1:
+    **      nd_indices = [1, 0] -> no carry
+    **  iteration 2:
+    **      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 1] 
+    **  iteration 3:
+    **      nd_indices = [1, 1] -> no carry
+    **  iteration 4:
+    **      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+    **                          -> carry -> [0, 2] 
+    **  iteration 5:
+    **      nd_indices = [1, 2] -> no carry
+    */
+    int64_t nd_indices[arr.nd]; 
+    memset(nd_indices, 0, sizeof(int64_t) * arr.nd);
     double complex output = 0;
-    for (int32_t i = 0; i < elements; i++)
+    for (int32_t i = 0; i < arr.length; i++)
     {
-        output += arr.nd_cdouble[get_index_from_array(arr, tmp)];
-        tmp[0]++;
+        output += arr.nd_cdouble[get_index_from_array(arr, nd_indices)];
+        nd_indices[0]++;
         for (int32_t j = 0; j < arr.nd - 1; j++)
-            if (tmp[j] == arr.shape[j])
+            if (nd_indices[j] == arr.shape[j])
             {
-                tmp[j] = 0;
-                tmp[j + 1]++;
+                nd_indices[j] = 0;
+                nd_indices[j + 1]++;
             }
     }
-    free(tmp);
     return output;
 }
