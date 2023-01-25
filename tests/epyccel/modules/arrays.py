@@ -1842,7 +1842,4 @@ def arr_bool_sum():
 def tuple_sum():
     import numpy as np
     t = (1, 2, 3, 5, 8, 13)
-    a = np.array(t)
-    return np.sum(a)
-
-
+    return np.sum(t)
