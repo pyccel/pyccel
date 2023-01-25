@@ -3478,15 +3478,15 @@ def test_iterate_slice(language):
 # NUMPY SUM
 #==============================================================================
 
-def test_iterate_slice(language):
+def test_arr_bool_sum(language):
     f1 = arrays.arr_bool_sum
     f2 = epyccel(f1, language = language)
-    assert f1() == f2() 
+    assert f1() == f2()
 
 def test_tuple_sum(language):
     f1 = arrays.tuple_sum
     f2 = epyccel(f1, language = language)
-    assert f1() == f2() 
+    assert f1() == f2()
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
