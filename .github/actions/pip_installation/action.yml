@@ -7,10 +7,6 @@ runs:
       shell: bash
       run:
         python -m pip install --upgrade pip
-    - name: Install wheel
-      shell: bash
-      run:
-        python -m pip install wheel
     - name: Install Pyccel and its Python dependencies
       shell: bash
       run:
