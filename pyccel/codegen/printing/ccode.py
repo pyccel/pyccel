@@ -1109,7 +1109,7 @@ class CCodePrinter(CodePrinter):
                     else:
                         inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s, %s, %s)" % (base_name, expr.rank, len(inds), ", ".join(inds))
+                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
         else:
             raise NotImplementedError(expr)

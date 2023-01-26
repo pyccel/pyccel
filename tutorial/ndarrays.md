@@ -226,7 +226,7 @@ Some examples:
             t_ndarray b;
             a = array_create(2, (int64_t[]){10, 20}, nd_double);
             array_fill((double)1.0, a);
-            b = array_slicing(a, 2, 2, new_slice(2, a.shape[0], 1), new_slice(0, 5, 1));
+            b = array_slicing(a, 2, new_slice(2, a.shape[0], 1), new_slice(0, 5, 1));
             free_array(a);
             free_pointer(b);
             return 0;
@@ -278,7 +278,7 @@ Some examples:
             a = array_create(2, (int64_t[]){2, 4}, nd_int64);
             int64_t array_dummy_0001[] = {1, 2, 3, 4, 5, 6, 7, 8};
             memcpy(a.nd_int64, array_dummy_0001, a.buffer_size);
-            b = array_slicing(a, 1, 2, new_slice(1, 2, 1), new_slice(0, a.shape[1], 1));
+            b = array_slicing(a, 1, new_slice(1, 2, 1), new_slice(0, a.shape[1], 1));
             c = b.nd_int64[get_index(b, 2)];
             printf("%ld\n", c);
             free_array(a);
