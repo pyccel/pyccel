@@ -3482,6 +3482,7 @@ def test_arr_bool_sum(language):
     f1 = arrays.arr_bool_sum
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+    assert isinstance(f1(), type(f2()))
 
 def test_tuple_sum(language):
     f1 = arrays.tuple_sum
