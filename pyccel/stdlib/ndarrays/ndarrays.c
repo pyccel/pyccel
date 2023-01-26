@@ -263,8 +263,8 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
         {
             view.shape[j] = (slice.end - slice.start + (slice.step - 1)) / slice.step;
             view.strides[j] = arr.strides[i] * slice.step;
+        	start += slice.start * arr.strides[i];
         }
-        start += slice.start * arr.strides[i];
     }
     va_end(va);
 
