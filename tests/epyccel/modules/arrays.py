@@ -1843,3 +1843,14 @@ def tuple_sum():
     import numpy as np
     t = (1, 2, 3, 5, 8, 13)
     return np.sum(t)
+
+#==============================================================================
+# NUMPY LINSPACE
+#==============================================================================
+
+def multiple_np_linspace():
+    import numpy as np
+    x = np.linspace(0, 2, 128)
+    y = np.linspace(0, 4, 128)
+    z = np.linspace(0, 8, 128)
+    return x[0] + y[1] + z[2]

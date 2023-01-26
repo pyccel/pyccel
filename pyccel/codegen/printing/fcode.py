@@ -954,7 +954,8 @@ class FCodePrinter(CodePrinter):
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = Variable('int', 'linspace_index')
-            self.scope.insert_variable(var)
+            if var.name not in self.scope.variables:
+                self.scope.insert_variable(var)
 
         init_value = template.format(
             start = self._print(expr.start),
