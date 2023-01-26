@@ -239,13 +239,13 @@ t_slice new_slice(int32_t start, int32_t end, int32_t step)
     return (slice);
 }
 
-t_ndarray array_slicing(t_ndarray arr, int n, int n_slices, ...)
+t_ndarray array_slicing(t_ndarray arr, int n, ...)
 {
     t_ndarray view;
     va_list  va;
     t_slice slice;
     int32_t start = 0;
-    int32_t offset = 0;
+    int32_t j;
 
     view.nd = n;
     view.type = arr.type;
@@ -253,30 +253,18 @@ t_ndarray array_slicing(t_ndarray arr, int n, int n_slices, ...)
     view.shape = malloc(sizeof(int64_t) * view.nd);
     view.strides = malloc(sizeof(int64_t) * view.nd);
     view.is_view = true;
-    
-    va_start(va, n_slices);
-    for (int32_t i = 0; i < n_slices; i++)
-    {
-        slice = va_arg(va, t_slice);
-        start += slice.start * arr.strides[i];
-    }
-    va_end(va);
 
-    va_start(va, n_slices);
-    for (int32_t i = 0; i < n_slices; i++)
+    va_start(va, n);
+    j = -1;
+    for (int32_t i = 0; i < arr.nd; i++)
     {
         slice = va_arg(va, t_slice);
-        if (slice.end - slice.start > 1 && !offset)
+        if (slice.end - slice.start > 1 && ++j)
         {
-            offset = i;
-            break ;
+            view.shape[j] = (slice.end - slice.start + (slice.step - 1)) / slice.step;
+            view.strides[j] = arr.strides[i] * slice.step;
         }
-    }
-    for (int32_t i = 0; i < n; i++)
-    {
-        view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step;
-        view.strides[i] = arr.strides[offset + i] * slice.step;
-        slice = va_arg(va, t_slice);
+        start += slice.start * arr.strides[i];
     }
     va_end(va);
 
