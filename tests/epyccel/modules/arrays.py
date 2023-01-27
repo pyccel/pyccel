@@ -1850,7 +1850,8 @@ def tuple_sum():
 
 def multiple_np_linspace():
     import numpy as np
+    linspace_index = 5
     x = np.linspace(0, 2, 128)
     y = np.linspace(0, 4, 128)
     z = np.linspace(0, 8, 128)
-    return x[0] + y[1] + z[2]
+    return x[0] + y[1] + z[2] + linspace_index
