@@ -229,13 +229,17 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-t_slice new_slice(int32_t start, int32_t end, int32_t step)
+#define RANGE 1
+#define ELEMENT 0
+
+t_slice new_slice(int32_t start, int32_t end, int32_t step, int32_t type)
 {
     t_slice slice;
 
     slice.start = start;
     slice.end = end;
     slice.step = step;
+    slice.type = type;
     return (slice);
 }
 
@@ -255,16 +259,17 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     view.is_view = true;
 
     va_start(va, n);
-    j = -1;
+    j = 0;
     for (int32_t i = 0; i < arr.nd; i++)
     {
         slice = va_arg(va, t_slice);
-        if (slice.end - slice.start > 1 && ++j)
+        if (slice.type == RANGE)
         {
             view.shape[j] = (slice.end - slice.start + (slice.step - 1)) / slice.step;
             view.strides[j] = arr.strides[i] * slice.step;
-        	start += slice.start * arr.strides[i];
+            j++;
         }
+        start += slice.start * arr.strides[i];
     }
     va_end(va);
 
