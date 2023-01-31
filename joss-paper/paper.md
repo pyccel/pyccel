@@ -99,9 +99,10 @@ To this end, Pyccel is designed to allow the use of low-level legacy codes and s
 A few example codes are used to provide an indication of the performance of Pyccel as compared to the popular accelerators Numba and Pythran.
 The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
 These examples, which illustrate several common scientific computing problems, are based on open-source code samples [@JBurkhardt; @CFD].
-All tests were run with Python 3.10.8 on Ubuntu 20.04.5, using Pyccel 1.7.0, Numba 0.56.4, and Pythran 0.12.0.
-The following flags were passed to GCC 9.4.0 via Pyccel and Pythran : `-O3 -march=native -mtune=native -mavx -ffast-math`.
-The Numba test cases were compiled using the `@njit` decorator with the `fastmath` option passed to Clang 11.0.0.
+All tests were run in single-threaded mode on a CPU compute node of the HPC system Raven [@Raven], featuring an Intel Xeon IceLake-SP 8360Y processor with 72 cores and 256 GB RAM.
+The tests were run with Python 3.9.7 on Ubuntu SUSE Linux Enterprise Server 15 SP3, using Pyccel 1.7.0, Numba 0.56.4, and Pythran 0.12.1.
+The following flags were passed to GCC 12.1.0 via Pyccel and Pythran : `-O3 -march=native -mtune=native -mavx`.
+The Numba test cases were compiled using the `@njit` decorator.
 
 \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
 We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer, leading to less performant code.
