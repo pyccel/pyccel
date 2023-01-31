@@ -1106,8 +1106,10 @@ class CCodePrinter(CodePrinter):
                     if isinstance(ind, Slice):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
+                        inds[i].slice_type = Slice.Range
                     else:
                         inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1))
+                        inds[i].slice_type = Slice.Element
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
@@ -1246,7 +1248,8 @@ class CCodePrinter(CodePrinter):
         start = self._print(expr.start)
         stop = self._print(expr.stop)
         step = self._print(expr.step)
-        return 'new_slice({}, {}, {})'.format(start, stop, step)
+        slice_type = self._print(expr.slice_type)
+        return 'new_slice({}, {}, {}, {})'.format(start, stop, step, slice_type)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
