@@ -104,8 +104,9 @@ The following flags were passed to GCC 9.4.0 via Pyccel and Pythran : `-O3 -marc
 The Numba test cases were compiled using the `@njit` decorator with the `fastmath` option passed to Clang 11.0.0.
 
 \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
-We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer: this explains the missing result for the finite difference Laplace test case (FD-Laplace).
-Similarly Pythran is unable to handle one of the statements used in the molecular dynamics test case (M-D) so there are no results to report in this case.
+We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer, leading to less performant code.
+The finite difference Laplace test case (FD-Laplace) relies heavily on Numpy vectorized expression, and is the hardest to optimize for all accelerators.
+in this test only Pythran and Pyccel-Fortran can provide a speedup, while Numba and Pyccel-C generate code that is slightly slower than the original.
 
 ![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.9.7 \label{fig:execution}](./pypi_performance_39_execution.svg)
 
