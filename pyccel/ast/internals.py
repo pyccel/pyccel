@@ -137,13 +137,17 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-    __slots__ = ('_start','_stop','_step')
-    _attribute_nodes = ('_start','_stop','_step')
+    __slots__ = ('_start','_stop','_step', '_slice_type')
+    _attribute_nodes = ('_start','_stop','_step', '_slice_type')
 
-    def __init__(self, start, stop, step = None):
+    Range = LiteralInteger(1)
+    Element = LiteralInteger(0)
+
+    def __init__(self, start, stop, step = None, slice_type = Element):
         self._start = start
         self._stop = stop
         self._step = step
+        self._slice_type = slice_type
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
@@ -153,6 +157,8 @@ class Slice(Basic):
             raise TypeError('Slice stop must be Integer or None')
         if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
             raise TypeError('Slice step must be Integer or None')
+        if slice_type is not None and not (hasattr(slice_type, 'dtype') and isinstance(slice_type.dtype, NativeInteger)):
+            raise TypeError('Slice type must be Integer')
 
     @property
     def start(self):
@@ -172,6 +178,18 @@ class Slice(Basic):
         objects in the slice
         """
         return self._step
+
+    @property
+    def slice_type(self):
+        """ The type of the slice (Range or Element)
+        Range   <=> [:]
+        Element <=> [3]
+        """
+        return self._slice_type
+
+    @slice_type.setter
+    def slice_type(self, value):
+        self._slice_type = value
 
     def __str__(self):
         if self.start is None:
