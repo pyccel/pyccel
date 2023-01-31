@@ -21,6 +21,9 @@
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
 
+#define RANGE 1
+#define ELEMENT 0
+
 typedef struct  s_slice
 {
     int32_t start;

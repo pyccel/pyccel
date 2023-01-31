@@ -229,9 +229,6 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-#define RANGE 1
-#define ELEMENT 0
-
 t_slice new_slice(int32_t start, int32_t end, int32_t step, int32_t type)
 {
     t_slice slice;
