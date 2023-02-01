@@ -140,4 +140,16 @@ int64_t         get_index(t_ndarray arr, ...);
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
 
+/* numpy sum */
+
+int64_t            numpy_sum_bool(t_ndarray arr);
+int64_t            numpy_sum_int8(t_ndarray arr);
+int64_t            numpy_sum_int16(t_ndarray arr);
+int64_t            numpy_sum_int32(t_ndarray arr);
+int64_t            numpy_sum_int64(t_ndarray arr);
+float              numpy_sum_float32(t_ndarray arr);
+double             numpy_sum_float64(t_ndarray arr);
+float complex      numpy_sum_complex64(t_ndarray arr);
+double complex     numpy_sum_complex128(t_ndarray arr);
+
 #endif
