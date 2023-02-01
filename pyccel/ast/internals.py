@@ -143,7 +143,7 @@ class Slice(Basic):
     Range = LiteralInteger(1)
     Element = LiteralInteger(0)
 
-    def __init__(self, start, stop, step = None, slice_type = Element):
+    def __init__(self, start, stop, step = None, slice_type = Range):
         self._start = start
         self._stop = stop
         self._step = step
@@ -181,15 +181,11 @@ class Slice(Basic):
 
     @property
     def slice_type(self):
-        """ The type of the slice (Range or Element)
-        Range   <=> [:]
-        Element <=> [3]
+        """ The type of the slice (Range or Index)
+        Range <=> [..., :, ...]
+        Index <=> [..., 3, ...]
         """
         return self._slice_type
-
-    @slice_type.setter
-    def slice_type(self, value):
-        self._slice_type = value
 
     def __str__(self):
         if self.start is None:
