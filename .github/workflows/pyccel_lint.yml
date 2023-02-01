@@ -1,7 +1,7 @@
 name: Pyccel Linting
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ master, cuda_main, cuda_devel ]
 
 jobs:
   Pyccel-Linter:
