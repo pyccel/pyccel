@@ -21,15 +21,14 @@
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
 
-#define RANGE 1
-#define ELEMENT 0
+enum e_slice_type { ELEMENT, RANGE };
 
 typedef struct  s_slice
 {
-    int32_t start;
-    int32_t end;
-    int32_t step;
-    int32_t type;
+    int32_t             start;
+    int32_t             end;
+    int32_t             step;
+    enum e_slice_type   type;
 }               t_slice;
 
 #define GET_INDEX_EXP1(t, arr, a) t(arr, 0, a)
