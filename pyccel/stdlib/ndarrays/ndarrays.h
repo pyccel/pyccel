@@ -124,7 +124,7 @@ void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
 /* slicing */
                 /* creating a Slice object */
-t_slice     new_slice(int32_t start, int32_t end, int32_t step, int32_t type);
+t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type);
                 /* creating an array view */
 t_ndarray   array_slicing(t_ndarray arr, int n, ...);
 

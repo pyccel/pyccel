@@ -229,7 +229,7 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-t_slice new_slice(int32_t start, int32_t end, int32_t step, int32_t type)
+t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type)
 {
     t_slice slice;
 
