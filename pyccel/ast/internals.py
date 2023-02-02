@@ -157,7 +157,7 @@ class Slice(Basic):
             raise TypeError('Slice stop must be Integer or None')
         if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
             raise TypeError('Slice step must be Integer or None')
-        if slice_type is not None and not (hasattr(slice_type, 'dtype') and isinstance(slice_type.dtype, NativeInteger)):
+        if slice_type not in (Range, Element):
             raise TypeError('Slice type must be Integer')
 
     @property
@@ -181,9 +181,9 @@ class Slice(Basic):
 
     @property
     def slice_type(self):
-        """ The type of the slice (Range or Index)
+        """ The type of the slice (Range or Element)
         Range <=> [..., :, ...]
-        Index <=> [..., 3, ...]
+        Element <=> [..., 3, ...]
         """
         return self._slice_type
 
