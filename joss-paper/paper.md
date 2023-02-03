@@ -100,14 +100,14 @@ A few example codes are used to provide an indication of the performance of Pycc
 The source code can be found in \url{github.com/pyccel/pyccel-benchmarks}.
 These examples, which illustrate several common scientific computing problems, are based on open-source code samples [@JBurkhardt; @CFD].
 All tests were run in single-threaded mode on a CPU compute node of the HPC system Raven [@Raven], featuring an Intel Xeon IceLake-SP 8360Y processor with 72 cores and 256 GB RAM.
-The tests were run with Python 3.9.7 on Ubuntu SUSE Linux Enterprise Server 15 SP3, using Pyccel 1.7.0, Numba 0.56.4, and Pythran 0.12.1.
+The tests were run with Python 3.9.7 on Ubuntu SUSE Linux Enterprise Server 15 SP3, using Pyccel 1.7.2, Numba 0.56.4, and Pythran 0.12.1.
 The following flags were passed to GCC 12.1.0 via Pyccel and Pythran : `-O3 -march=native -mtune=native -mavx`.
 The Numba test cases were compiled using the `@njit` decorator.
 
 \autoref{fig:execution} shows the time required to execute the accelerated code for these test cases.
 We see that Pyccel is highly competitive in all cases, but unfortunately Pyccel's C printing is slightly less developed than the Fortran printer, leading to less performant code.
 The finite difference Laplace test case (FD-Laplace) relies heavily on Numpy vectorized expression, and is the hardest to optimize for all accelerators.
-in this test only Pythran and Pyccel-Fortran can provide a speedup, while Numba and Pyccel-C generate code that is slightly slower than the original.
+In this test only Pyccel can provide a substantial speedup (about 68%) using Fortran as a backend language; Pythran and Pyccel (C) provide a marginal speedup of 13% and 4%, respectively, while Numba is slower than the original Python code.
 
 ![Comparison of speed-up compared to Python, obtained using accelerated code for various test cases executed with Python 3.9.7 \label{fig:execution}](./pypi_performance_39_execution.svg)
 
