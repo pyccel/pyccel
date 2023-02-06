@@ -81,6 +81,7 @@ else:
     print('Compare Branch Summary')
     print(results['compare_summary'])
     with open(args.output, "w", encoding="utf-8") as out:
+        print('# Part 1:', file=out)
         print('## Success!', file=out)
         print('### Base Branch Summary', file=out)
         print(results['base_summary'], file=out)

@@ -3,26 +3,26 @@
 import ast
 from _ast import FunctionDef, ClassDef, Module
 import argparse
+from git_evaluation_tools import get_diff_as_json as gdj
 
 parser = argparse.ArgumentParser(description='List the objects with docstrings in the files provided')
-parser.add_argument('files', metavar='files', type=str,
-                        help='File containing the list of files modified by the PR')
+parser.add_argument('gitdiff', metavar='gitdiff', type=str,
+                        help='Output of git diff between PR branch and base branch')
 parser.add_argument('output', metavar='output', type=str,
                         help='File to save the output to')
 args = parser.parse_args()
 
-with open(args.files,'r', encoding="utf-8") as f:
-    lines = f.readlines()
-
-lines = [l.strip() for l in lines[:-1]]
+results = gdj(args.gitdiff)
 changes = {}
-for l in lines:
-    file, line_no = l.split()
-    if file in changes:
-        changes[file].append(int(line_no))
-    else:
-        changes[file] = []
-        changes[file].append(int(line_no))
+with open(args.result,'w', encoding='utf-8') as out:
+    for file,changes in results.items():
+        if file.startswith('pyccel/'):
+            for line_no in changes['addition']:
+                if file in changes:
+                    changes[file].append(int(line_no))
+                else:
+                    changes[file] = []
+                    changes[file].append(int(line_no))
 
 objects = []
 for file, line_nos in changes.items():

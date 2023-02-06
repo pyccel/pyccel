@@ -37,13 +37,12 @@ jobs:
           BASE_BRANCH=$GITHUB_BASE_REF
           git fetch &>/dev/null
           git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
-          python ci_tools/list_changed_files.py pull_diff.txt changed_files.txt
-          cat changed_files.txt
           touch objects.txt
           touch report.txt
-          python ci_tools/list_docs_tovalidate.py changed_files.txt objects.txt
+          python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           while read line; do    
             echo $line >> report.txt
             python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
           done < objects.txt
+          echo "# Part 2:" >> $GITHUB_STEP_SUMMARY
           (diff objects.txt report.txt && echo "## SUCCESS! All docstrings are valid" >> $GITHUB_STEP_SUMMARY) || ((echo "## FAILURE" >> $GITHUB_STEP_SUMMARY) && (cat report.txt >> $GITHUB_STEP_SUMMARY) && exit 1)
