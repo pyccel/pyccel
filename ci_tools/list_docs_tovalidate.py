@@ -14,9 +14,9 @@ args = parser.parse_args()
 
 results = gdj(args.gitdiff)
 changes = {}
-for file,changes in results.items():
+for file, upds in results.items():
     if file.startswith('pyccel/'):
-        for line_no in changes['addition']:
+        for line_no in upds['addition']:
             if file in changes:
                 changes[file].append(int(line_no))
             else:
