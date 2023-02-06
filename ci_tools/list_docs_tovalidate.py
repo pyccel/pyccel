@@ -14,15 +14,14 @@ args = parser.parse_args()
 
 results = gdj(args.gitdiff)
 changes = {}
-with open(args.result,'w', encoding='utf-8') as out:
-    for file,changes in results.items():
-        if file.startswith('pyccel/'):
-            for line_no in changes['addition']:
-                if file in changes:
-                    changes[file].append(int(line_no))
-                else:
-                    changes[file] = []
-                    changes[file].append(int(line_no))
+for file,changes in results.items():
+    if file.startswith('pyccel/'):
+        for line_no in changes['addition']:
+            if file in changes:
+                changes[file].append(int(line_no))
+            else:
+                changes[file] = []
+                changes[file].append(int(line_no))
 
 objects = []
 for file, line_nos in changes.items():
