@@ -950,7 +950,7 @@ class FCodePrinter(CodePrinter):
                 cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
         if expr.rank > 1:
             template = '({start} + {index}*{step})'
-            var = Variable('int', str(expr.ind))
+            var = self.scope.get_temporary_variable('int', str(expr.ind))
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = self.scope.get_temporary_variable('int', 'linspace_index') 
@@ -1108,9 +1108,7 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = Variable(NativeInteger(), name =  self.scope.get_new_name('i'))
-
-        self.scope.insert_variable(index)
+        index  = self.scope.get_temporary_variable('int')
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -1201,12 +1199,9 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = self.scope.get_new_name()
-        var = Variable(expr.dtype, var_name, memory_handling = 'stack',
+        var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
-
-        self.scope.insert_variable(var)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -2850,12 +2845,9 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var_name = self.scope.get_new_name()
-                var = Variable(base.dtype, var_name, memory_handling = 'stack',
+                var = self.scope.get_temporary_variable(base.dtype, memory_handling = 'stack',
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
-
-                self.scope.insert_variable(var)
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
