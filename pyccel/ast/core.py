@@ -50,40 +50,29 @@ __all__ = (
     'CodeBlock',
     'Comment',
     'CommentBlock',
-    'Concatenate',
     'ConstructorCall',
     'Continue',
     'Deallocate',
     'Declare',
-    'Decorator',
     'Del',
-    'DottedFunctionCall',
     'Duplicate',
     'DoConcurrent',
     'EmptyNode',
-    'ErrorExit',
-    'Exit',
     'For',
     'ForIterator',
-    'FuncAddressDeclare',
-    'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
     'If',
-    'IfSection',
     'Import',
     'InlineFunctionDef',
     'InProgram',
     'Interface',
-    'Iterable',
     'Module',
     'ModuleHeader',
     'Pass',
     'Program',
-    'PyccelFunctionDef',
-    'Raise',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -2746,7 +2735,6 @@ class PyccelFunctionDef(FunctionDef):
                  The class which should be instantiated upon a FunctionCall
                  to this FunctionDef object
     """
-    __slots__ = ()
     def __init__(self, name, func_class):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
@@ -3999,7 +3987,6 @@ class Decorator(Basic):
             The name of the decorator
     """
     __slots__ = ('_name',)
-    _attribute_nodes = ()
 
     def __init__(self, name):
         self._name = name
@@ -4015,7 +4002,6 @@ class Decorator(Basic):
 
 def get_iterable_ranges(it, var_name=None):
     """Returns ranges of an iterable object."""
-
 
     if isinstance(it, Variable):
         if it.cls_base is None:
@@ -4165,7 +4151,6 @@ def get_iterable_ranges(it, var_name=None):
                 return None
         elif isinstance(expr, sp_And):
             return [doit(a, targets) for a in expr.args]
-
         else:
             raise TypeError('Expecting And logical expression.')
 
