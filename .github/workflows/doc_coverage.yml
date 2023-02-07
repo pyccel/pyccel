@@ -40,6 +40,7 @@ jobs:
           touch objects.txt
           touch report.txt
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
+          ls
           while read line; do    
             echo $line >> report.txt
             python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
