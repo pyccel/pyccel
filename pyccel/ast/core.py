@@ -4165,7 +4165,7 @@ def get_iterable_ranges(it, var_name=None):
         elif isinstance(expr, sp_And):
             return [doit(a, targets) for a in expr.args]
         else:
-            raise TypeError('Expecting And logical expression.')
+            raise TypeError('Expecting And logical expression.' )
 
     # ...
 
