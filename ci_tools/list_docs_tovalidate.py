@@ -3,8 +3,8 @@
 import ast
 from _ast import FunctionDef, ClassDef
 import argparse
-from git_evaluation_tools import get_diff_as_json
 from pathlib import PurePath
+from git_evaluation_tools import get_diff_as_json
 
 parser = argparse.ArgumentParser(description='List the objects with docstrings in the files provided')
 parser.add_argument('gitdiff', metavar='gitdiff', type=str,
