@@ -1,0 +1,49 @@
+name: Doc Coverage Action
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  DocumentationChecker:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+      - uses: actions/checkout@v3
+        with:
+          path: compare
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install docstr-coverage
+          python -m pip install numpydoc
+        shell: bash
+      - name: Show report
+        run: |
+          docstr-coverage base/pyccel 2>base_cov || true
+          docstr-coverage compare/pyccel 2>compare_cov || true
+          python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
+          cd compare
+          pip install .
+          BASE_BRANCH=$GITHUB_BASE_REF
+          git fetch &>/dev/null
+          git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
+          touch objects.txt
+          touch report.txt
+          python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
+          while read line; do    
+            echo $line >> report.txt
+            python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
+          done < objects.txt
+          echo "# Part 2:" >> $GITHUB_STEP_SUMMARY
+          (diff objects.txt report.txt && echo "## SUCCESS! All docstrings are valid" >> $GITHUB_STEP_SUMMARY) || ((echo "## FAILURE" >> $GITHUB_STEP_SUMMARY) && (cat report.txt >> $GITHUB_STEP_SUMMARY) && exit 1)

@@ -229,13 +229,14 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-t_slice new_slice(int32_t start, int32_t end, int32_t step)
+t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type)
 {
     t_slice slice;
 
     slice.start = start;
     slice.end = end;
     slice.step = step;
+    slice.type = type;
     return (slice);
 }
 
@@ -245,39 +246,30 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     va_list  va;
     t_slice slice;
     int32_t start = 0;
+    int32_t j;
 
     view.nd = n;
     view.type = arr.type;
     view.type_size = arr.type_size;
-    view.shape = malloc(sizeof(int64_t) * arr.nd);
-    view.strides = malloc(sizeof(int64_t) * arr.nd);
-    memcpy(view.strides, arr.strides, sizeof(int64_t) * arr.nd);
+    view.shape = malloc(sizeof(int64_t) * view.nd);
+    view.strides = malloc(sizeof(int64_t) * view.nd);
     view.is_view = true;
+
     va_start(va, n);
-    for (int32_t i = 0; i < arr.nd ; i++)
+    j = 0;
+    for (int32_t i = 0; i < arr.nd; i++)
     {
         slice = va_arg(va, t_slice);
-        view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step; // we need to round up the shape
-        start += slice.start * arr.strides[i];
-        view.strides[i] *= slice.step;
-    }
-    va_end(va);
-    int32_t j = arr.nd - view.nd;
-    if (j)
-    {
-        int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
-        int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
-        for (int32_t i = 0; i < view.nd; i++)
+        if (slice.type == RANGE)
         {
-            tmp_strides[i] = view.strides[j];
-            tmp_shape[i] = view.shape[j];
+            view.shape[j] = (slice.end - slice.start + (slice.step - 1)) / slice.step;
+            view.strides[j] = arr.strides[i] * slice.step;
             j++;
         }
-        free(view.shape);
-        free(view.strides);
-        view.strides = tmp_strides;
-        view.shape = tmp_shape;
+        start += slice.start * arr.strides[i];
     }
+    va_end(va);
+
     view.raw_data = arr.raw_data + start * arr.type_size;
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
