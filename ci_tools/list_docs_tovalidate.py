@@ -48,14 +48,12 @@ for file, line_nos in changes.items():
         '''
         if isinstance(node, (FunctionDef, ClassDef)):
             if any((node.lineno <= x <= node.end_lineno
-                    for x in line_nos)) and node.name != 'inner_function':
+                    for x in line_nos)) and not node.name.startswith('inner_function'):
                 objects.append('.'.join([prefix, node.name]))
+            prefix = node.name if isinstance(node, ClassDef) else 'inner_function'
             for child in node.body:
                 if isinstance(child, (FunctionDef, ClassDef)):
-                    if isinstance(node, ClassDef):
-                        child.name = '.'.join([node.name, child.name])
-                    else:
-                        child.name = 'inner_function'
+                    child.name = '.'.join([prefix, child.name])
 
     with open(args.output, 'a', encoding="utf-8") as f:
         for obj in objects:
