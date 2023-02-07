@@ -4,7 +4,7 @@ import ast
 from _ast import FunctionDef, ClassDef
 import argparse
 from git_evaluation_tools import get_diff_as_json
-import pathlib
+from pathlib import PurePath
 
 parser = argparse.ArgumentParser(description='List the objects with docstrings in the files provided')
 parser.add_argument('gitdiff', metavar='gitdiff', type=str,
@@ -16,7 +16,7 @@ args = parser.parse_args()
 results = get_diff_as_json(args.gitdiff)
 changes = {}
 for file, upds in results.items():
-    if pathlib.PurePath(file).parents[1].name == 'pyccel':
+    if PurePath(file).parts[0] == 'pyccel':
         for line_no in upds['addition']:
             if file in changes:
                 changes[file].append(int(line_no))
@@ -33,7 +33,7 @@ for file, line_nos in changes.items():
     for example: the objects in the file pyccel/ast/core.py will
     have the prefix pyccel.ast.core
     '''
-    prefix = '.'.join(pathlib.PurePath(file).with_suffix('').parts)
+    prefix = '.'.join(PurePath(file).with_suffix('').parts)
 
     for node in ast.walk(tree):
         '''
@@ -48,11 +48,14 @@ for file, line_nos in changes.items():
         '''
         if isinstance(node, (FunctionDef, ClassDef)):
             if any((node.lineno <= x <= node.end_lineno
-                    for x in line_nos)):
+                    for x in line_nos)) and node.name != 'inner_function':
                 objects.append('.'.join([prefix, node.name]))
             for child in node.body:
                 if isinstance(child, (FunctionDef, ClassDef)):
-                    child.name = '.'.join([node.name, child.name])
+                    if isinstance(node, ClassDef):
+                        child.name = '.'.join([node.name, child.name])
+                    else:
+                        child.name = 'inner_function'
 
     with open(args.output, 'a', encoding="utf-8") as f:
         for obj in objects:

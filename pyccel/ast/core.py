@@ -4016,6 +4016,7 @@ class Decorator(Basic):
 def get_iterable_ranges(it, var_name=None):
     """Returns ranges of an iterable object."""
 
+
     if isinstance(it, Variable):
         if it.cls_base is None:
             raise TypeError('iterable must be an iterable Variable object'
