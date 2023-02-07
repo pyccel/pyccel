@@ -4,6 +4,7 @@ import numpy as np
 from pyccel.decorators import types, template, stack_array, allow_negative_index
 
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
+a_1d_overflow = np.array([(1 << i) - 1 for i in range(32)], dtype=int)
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
 
@@ -1813,6 +1814,12 @@ def arr_arange_6():
     a = np.arange(20, 1, -1.1)
     return np.shape(a)[0], a[0], a[-1]
 
+def arr_arange_7(arr : 'int[:,:]'):
+    import numpy as np
+    n, m = arr.shape
+    for i in range(n):
+        arr[i] = np.arange(i, i+m)
+
 def iterate_slice(i : int):
     import numpy as np
     a = np.arange(15)
@@ -1820,3 +1827,31 @@ def iterate_slice(i : int):
     for ai in a[:i]:
         res += ai
     return res
+
+#==============================================================================
+# NUMPY SUM
+#==============================================================================
+
+def arr_bool_sum():
+    import numpy as np
+    rows = [True for i in range(100)]
+    mat = [rows for j in range(100)]
+    a = np.array(mat, dtype=bool)
+    return np.sum(a)
+
+def tuple_sum():
+    import numpy as np
+    t = (1, 2, 3, 5, 8, 13)
+    return np.sum(t)
+
+#==============================================================================
+# NUMPY LINSPACE
+#==============================================================================
+
+def multiple_np_linspace():
+    import numpy as np
+    linspace_index = 5
+    x = np.linspace(0, 2, 128)
+    y = np.linspace(0, 4, 128)
+    z = np.linspace(0, 8, 128)
+    return x[0] + y[1] + z[2] + linspace_index
