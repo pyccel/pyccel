@@ -16,7 +16,7 @@ args = parser.parse_args()
 results = get_diff_as_json(args.gitdiff)
 changes = {}
 for file, upds in results.items():
-    if pathlib.PurePath(file).parents[1] == 'pyccel':
+    if pathlib.PurePath(file).parents[1].name == 'pyccel':
         for line_no in upds['addition']:
             if file in changes:
                 changes[file].append(int(line_no))
