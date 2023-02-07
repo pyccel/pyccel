@@ -50,10 +50,10 @@ for file, line_nos in changes.items():
             if any((node.lineno <= x <= node.end_lineno
                     for x in line_nos)) and not node.name.startswith('inner_function'):
                 objects.append('.'.join([prefix, node.name]))
-            prefix = node.name if isinstance(node, ClassDef) else 'inner_function'
+            obj_pref = node.name if isinstance(node, ClassDef) else 'inner_function'
             for child in node.body:
                 if isinstance(child, (FunctionDef, ClassDef)):
-                    child.name = '.'.join([prefix, child.name])
+                    child.name = '.'.join([obj_pref, child.name])
 
     with open(args.output, 'a', encoding="utf-8") as f:
         for obj in objects:
