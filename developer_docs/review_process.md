@@ -16,6 +16,8 @@ Once the pull request is opened 9 tests should be triggered they are:
 -   **Coverage Checker** : Checks that the code which has been added is used in at least one test
 -   **Doc Coverage** : Runs the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) static compiler to ensure that docstrings are present and correctly formatted. This means that they should respect NumPy's style guide as described [here](https://numpydoc.readthedocs.io/en/latest/format.html).
 
+Many of these tests generate human-friendly output so make sure you check the "Summary" section of the action to see these.
+
 Once the pull request is open the tests will be triggered every time you push new changes to the branch. Please be mindful of this and try to avoid pushing multiple times in a row to save compute resources. If you do find you need to push repeatedly, don't hesitate to cancel concurrent jobs using the GitHub "Actions" tab.
 
 When the pull request is ready for review (i.e. you are happy with it, and it is passing all tests) it can be marked as such and the review process can begin. This process is split into 3 stages which each have an associated label. The labels are described in the next sections. When a reviewer marks a PR as accepted, they should change the label to indicate the next stage of the review process. If they request changes they should remove the label so the pull request owner can react.
