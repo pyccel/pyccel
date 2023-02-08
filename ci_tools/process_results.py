@@ -1,10 +1,6 @@
-""" Script to list the objects that should be numpydoc validated
+""" Script to process the output of numpydoc validator"
 """
-import ast
-from _ast import FunctionDef, ClassDef
 import argparse
-from pathlib import PurePath
-from git_evaluation_tools import get_diff_as_json
 
 parser = argparse.ArgumentParser(description='Process the output of numpydoc validator')
 parser.add_argument('report', metavar='report', type=str,
@@ -32,7 +28,6 @@ with open(args.report, 'r', encoding='utf-8') as f:
                 errors[file_name].append(msg)
 
 fail = len(errors) > 0
-print(fail)
 
 with open(args.summary, 'a', encoding='utf-8') as f:
     print('# Part 2 : Numpydoc Validation:', file=f)
