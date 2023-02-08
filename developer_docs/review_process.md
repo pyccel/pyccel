@@ -4,12 +4,17 @@ The review process is the process through which a branch which solves an issue i
 
 When you believe your branch is ready to merge you should create a pull request. Be sure to add a description which allows other developers to understand what your changes aim to do. You may also want to include a commit summary as the pull request description forms the basis of the commit message shown on the master branch. In addition you should make sure that your pull request links to the issue that it is solving so that issue is automatically closed when the pull request is merged.
 
-Once the pull request is opened 4 tests should be triggered they are: 
+Once the pull request is opened 9 tests should be triggered they are: 
 
 -   **Linux** : Runs the suite of tests on a linux machine
 -   **MacOS** : Runs the suite of tests on a macOS machine
 -   **Windows** : Runs the suite of tests on a windows machine
 -   **Codacy** : Runs a static compiler via the [codacy](https://app.codacy.com/gh/pyccel/pyccel/dashboard) platform
+-   **Python Linting** : Does the same job as Codacy for certain files which are too large for Codacy to handle.
+-   **Pyccel Linting** : Runs a small static compiler to ensure that Pyccel coding guidelines are followed
+-   **Spellcheck** : Checks whether there are any spelling mistakes in the documentation (if a word is incorrectly flagged as a typo it should be added to the file [.dict_custom.txt](../.dict_custom.txt))
+-   **Coverage Checker** : Checks that the code which has been added is used in at least one test
+-   **Doc Coverage** : Runs the [numpydoc](https://numpydoc.readthedocs.io/en/latest/index.html) static compiler to ensure that docstrings are present and correctly formatted. This means that they should respect numpy's style guide as described [here](https://numpydoc.readthedocs.io/en/latest/format.html).
 
 Once the pull request is open the tests will be triggered every time you push new changes to the branch. Please be mindful of this and try to avoid pushing multiple times in a row to save compute resources. If you do find you need to push repeatedly, don't hesitate to cancel concurrent jobs using the GitHub "Actions" tab.
 
