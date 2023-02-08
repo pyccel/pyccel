@@ -901,8 +901,9 @@ class PythonType(Basic):
 
     @property
     def print_string(self):
-        """ Return a literal string representing the type that
-        can be used in a print  statement
+        """
+        Return a literal string representing the type that
+        can be used in a print  statement.
         """
         prec = self.precision
         dtype = str(self.dtype)
