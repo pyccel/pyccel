@@ -26,7 +26,6 @@ for file, upds in results.items():
 
 print(changes)
 
-objects = []
 for file, line_nos in changes.items():
     with open(file,'r', encoding="utf-8") as f:
         tree = ast.parse(f.read())
@@ -36,6 +35,7 @@ for file, line_nos in changes.items():
     # have the prefix pyccel.ast.core
     prefix = '.'.join(PurePath(file).with_suffix('').parts)
 
+    objects = []
     for node in ast.walk(tree):
         # This loop walks the ast and explores all objects
         # present in the file.
