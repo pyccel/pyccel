@@ -24,6 +24,8 @@ for file, upds in results.items():
             else:
                 changes[file] = [int(line_no)]
 
+print(changes)
+
 objects = []
 for file, line_nos in changes.items():
     with open(file,'r', encoding="utf-8") as f:
@@ -51,6 +53,8 @@ for file, line_nos in changes.items():
             for child in node.body:
                 if isinstance(child, (FunctionDef, ClassDef)):
                     child.name = '.'.join([obj_pref, child.name])
+
+    print(file, objects)
 
     with open(args.output, 'a', encoding="utf-8") as f:
         for obj in objects:
