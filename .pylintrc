@@ -65,7 +65,6 @@ confidence=
 # --disable=W".
 disable=invalid-name,
         import-outside-toplevel,
-        no-else-return,
         no-else-break,
         no-else-continue,
         no-else-raise,
