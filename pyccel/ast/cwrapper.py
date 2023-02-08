@@ -226,7 +226,7 @@ class PyBuildValueNode(PyccelAstNode):
     Represents a call to the function from Python.h which create a new value based on a format string
 
     Parameters
-    ---------
+    ----------
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
@@ -257,10 +257,10 @@ class PyBuildValueNode(PyccelAstNode):
 class PyModule_AddObject(PyccelAstNode):
     """
     Represents a call to the function from Python.h which adds a
-    PythonObject to a module
+    PythonObject to a module.
 
     Parameters
-    ---------
+    ----------
     mod_name : str
                 The name of the variable containing the module
     name : str
