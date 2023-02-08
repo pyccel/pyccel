@@ -1,6 +1,7 @@
 """ Script to process the output of numpydoc validator"
 """
 import argparse
+from sys import exit
 
 parser = argparse.ArgumentParser(description='Process the output of numpydoc validator')
 parser.add_argument('report', metavar='report', type=str,
@@ -17,12 +18,12 @@ with open(args.report, 'r', encoding='utf-8') as f:
     for line in f:
         file_name, code, msg = line.split(':')
         if code in warning_codes:
-            if file_name not in warnings.keys():
+            if file_name not in warnings:
                 warnings[file_name] = [msg]
-            else: 
+            else:
                 warnings[file_name].append(msg)
         else:
-            if file_name not in errors.keys():
+            if file_name not in errors:
                 errors[file_name] = [msg]
             else: 
                 errors[file_name].append(msg)
@@ -31,7 +32,6 @@ fail = len(errors) > 0
 
 with open(args.summary, 'a', encoding='utf-8') as f:
     print('# Part 2 : Numpydoc Validation:', file=f)
-    
     print(f'## {"FAILURE" if fail else "SUCCESS"}!', file=f)
     if fail:
         print('### ERRORS!', file=f)
