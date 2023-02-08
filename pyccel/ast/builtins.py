@@ -861,7 +861,13 @@ class Lambda(Basic):
 
 #==============================================================================
 class PythonType(Basic):
-    """ Represents the python builtin type function
+    """
+    Represents the python builtin type function.
+
+    Parameters
+    ==========
+    obj : PyccelAstNode
+          The object whose type we wish to investigate.
     """
     __slots__ = ('_dtype','_precision','_obj')
     _attribute_nodes = ('_obj',)
