@@ -16,14 +16,14 @@ args = parser.parse_args()
 results = get_diff_as_json(args.gitdiff)
 changes = {}
 for file, upds in results.items():
-    if PurePath(file).parts[0] == 'pyccel':
+    filepath = PurePath(file)
+    if filepath.parts[0] == 'pyccel' and filepath.suffix == '.py':
         for line_no in upds['addition']:
             if file in changes:
                 changes[file].append(int(line_no))
             else:
                 changes[file] = [int(line_no)]
 
-objects = []
 for file, line_nos in changes.items():
     with open(file,'r', encoding="utf-8") as f:
         tree = ast.parse(f.read())
@@ -33,6 +33,7 @@ for file, line_nos in changes.items():
     # have the prefix pyccel.ast.core
     prefix = '.'.join(PurePath(file).with_suffix('').parts)
 
+    objects = []
     for node in ast.walk(tree):
         # This loop walks the ast and explores all objects
         # present in the file.
@@ -43,6 +44,9 @@ for file, line_nos in changes.items():
         # inside a function or a class is updated to include
         # the name of the parent object
         if isinstance(node, (FunctionDef, ClassDef)):
+            if node.name.startswith('__') and node.name.endswith('__'):
+                # Ignore magic methods
+                continue
             if any((node.lineno <= x <= node.end_lineno
                     for x in line_nos)) and not node.name.startswith('inner_function'):
                 objects.append('.'.join([prefix, node.name]))
