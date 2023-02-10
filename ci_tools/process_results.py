@@ -16,7 +16,6 @@ errors = {}
 warnings = {}
 with open(args.report, 'r', encoding='utf-8') as f:
     for line in f:
-        print(line)
         file_name, code, msg = line.split(':', maxsplit=2)
         if code in warning_codes:
             if file_name not in warnings:

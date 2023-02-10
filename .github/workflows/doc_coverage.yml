@@ -42,6 +42,6 @@ jobs:
           touch report.txt
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           while read line; do    
-            python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
+            python3 -m numpydoc --validate $line >> report.txt || true 
           done < objects.txt
           python3 ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
