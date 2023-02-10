@@ -58,7 +58,7 @@ with open(args.summary, 'a', encoding='utf-8') as f:
         print(''.join(f'- {warn}' for warn in warns), file=f)
     if (len(parsing_errors) > 0):
         print('### PARSING ERRORS!', file=f)
-        parsing_errors = ['\n' if err.startswith('warn(msg)') else err for err in parsing_errors]
+        parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]
         print(''.join(f'{add_warn}' for add_warn in parsing_errors), file=f)
 
 sys.exit(fail)
