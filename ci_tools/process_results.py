@@ -20,13 +20,13 @@ warning_codes = ['EX01', 'SA01']
 
 errors = {}
 warnings = {}
-additional_warnings = []
+parsing_errors = []
 with open(args.report, 'r', encoding='utf-8') as f:
     for line in f:
         try:
             file_name, code, msg = line.split(':', maxsplit=2)
             if code not in all_codes:
-                additional_warnings.append(line)
+                parsing_errors.append(line)
                 continue
             if code in warning_codes:
                 if file_name not in warnings:
@@ -39,9 +39,9 @@ with open(args.report, 'r', encoding='utf-8') as f:
                 else:
                     errors[file_name].append(msg)
         except:
-            additional_warnings.append(line)
+            parsing_errors.append(line)
 
-fail = len(errors) > 0
+fail = len(errors) > 0 or len(parsing_errors) > 0
 
 with open(args.summary, 'a', encoding='utf-8') as f:
     print('# Part 2 : Numpydoc Validation:', file=f)
@@ -56,9 +56,10 @@ with open(args.summary, 'a', encoding='utf-8') as f:
     for file_name, warns in warnings.items():
         print(f'#### {file_name}', file=f)
         print(''.join(f'- {warn}' for warn in warns), file=f)
-    if (len(additional_warnings) > 0):
-        print('### ADDITIONAL WARNINGS!', file=f)
-        print(''.join(f'- {add_warn}' for add_warn in additional_warnings), file=f)
+    if (len(parsing_errors) > 0):
+        print('### PARSING ERRORS!', file=f)
+        parsing_errors = ['\n' if err == 'warn(msg)' else err for err in parsing_errors]
+        print(''.join(f'{add_warn}' for add_warn in parsing_errors), file=f)
 
 sys.exit(fail)
 
