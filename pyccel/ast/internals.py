@@ -23,8 +23,8 @@ __all__ = (
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
+    'get_final_precision',
     'max_precision',
-    'get_final_precision'
 )
 
 

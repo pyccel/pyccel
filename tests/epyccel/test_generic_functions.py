@@ -418,4 +418,3 @@ def test_zeros_types(language):
 
     assert fl_1 == fl_2
     assert isinstance(fl_1, type(fl_2))
-
