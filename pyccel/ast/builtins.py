@@ -908,7 +908,8 @@ class PythonType(Basic):
 
     @property
     def print_string(self):
-        """ Return a LiteralString describing the type
+        """
+        Return a LiteralString describing the type.
         """
         prec = self.precision
         dtype = str(self.dtype)
