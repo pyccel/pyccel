@@ -223,12 +223,17 @@ class PyArg_ParseTupleNode(Basic):
 
 class PyBuildValueNode(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which create a new value based on a format string
+    Represents a call to the function PyBuildValueNode.
+
+    The function PyBuildValueNode can be found in Python.h.
+    It describes the creation of a new python object based
+    on a format string. More details can be found in Python's
+    docs.
 
     Parameters
     ----------
-    parse_args: list of Variable
-        List of arguments which the result will be buit from
+    result_args : list of Variable
+        List of arguments which the result will be built from.
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
@@ -256,17 +261,20 @@ class PyBuildValueNode(PyccelAstNode):
 #-------------------------------------------------------------------
 class PyModule_AddObject(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which adds a
-    PythonObject to a module.
+    Represents a call to the PyModule_AddObject function.
+
+    The PyModule_AddObject function can be found in Python.h.
+    It adds a PythonObject to a module. More information about
+    this function can be found in Python's documentation.
 
     Parameters
     ----------
     mod_name : str
-                The name of the variable containing the module
+                The name of the variable containing the module.
     name : str
-                The name of the variable being added to the module
+                The name of the variable being added to the module.
     variable : Variable
-                The variable containing the PythonObject
+                The variable containing the PythonObject.
     """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
