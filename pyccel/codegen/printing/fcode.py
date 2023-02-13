@@ -17,7 +17,7 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.bind_c import BindCPointer
+from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -1781,75 +1781,6 @@ class FCodePrinter(CodePrinter):
                  '{body}\n'
                 'end Block {name}\n').format(name=expr.name, prelude=prelude, body=body_code)
 
-    def _print_BindCFunctionDef(self, expr):
-        name = self._print(expr.name)
-        results   = list(expr.results)
-        arguments = [a.var for a in expr.arguments]
-        if any(isinstance(a, FunctionAddress) for a in arguments):
-            # Functions with function addresses as arguments cannot be
-            # exposed to python so there is no need to print their signature
-            return ''
-
-        self.set_scope(expr.scope)
-        self.scope.functions[expr.name] = expr
-
-        body = self._print(expr.body)
-
-        arguments_inout = expr.arguments_inout
-        decs = OrderedDict()
-        for i,arg in enumerate(arguments):
-            if arguments_inout[i]:
-                intent='inout'
-            else:
-                intent='in'
-
-            dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            decs[arg] = dec
-
-        for result in results:
-            dec = Declare(result.dtype, result, intent='out', static=True)
-            decs[result] = dec
-
-        decs.update(self._get_external_declarations())
-
-        for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
-            decs[i] = dec
-        vars_to_print = self.scope.variables.values()
-        for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
-                decs[v] = Declare(v.dtype,v)
-
-        func_type = 'subroutine'
-        func_end  = ''
-        if len(results) == 1 and results[0].rank == 0:
-            func_type = 'function'
-            result = results.pop()
-            func_end = 'result({0})'.format(result.name)
-            dec = Declare(result.dtype, result, static=True)
-            decs[result] = dec
-
-        # ...
-
-        interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
-        arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
-        imports   = ''.join(self._print(i) for i in expr.imports)
-        prelude   = ''.join(self._print(i) for i in decs.values())
-        body_code = body
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
-
-        self.exit_scope()
-
-        parts = [doc_string,
-                '{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
-                 imports,
-                'implicit none\n',
-                 prelude,
-                 interfaces,
-                 body_code,
-                 'end {} {}\n'.format(func_type, name)]
-        return '\n'.join(p for p in parts if p)
-
     def _print_FunctionAddress(self, expr):
         return expr.name
 
@@ -1945,6 +1876,7 @@ class FCodePrinter(CodePrinter):
                     name = name.replace(i, _default_methods[i])
 
         sig_parts = self.function_signature(expr, name)
+        bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
         prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
         functions = [f for f in expr.functions if not f.is_inline]
@@ -1971,7 +1903,7 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
 
         parts = [doc_string,
-                "{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
+                f"{sig_parts['sig']}({sig_parts['arg_code']}){bind_c} {sig_parts['func_end']}\n",
                 imports,
                 'implicit none\n',
                 prelude,
