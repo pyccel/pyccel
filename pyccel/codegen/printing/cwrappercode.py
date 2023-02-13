@@ -606,22 +606,26 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
-        Responsible for collecting value and managing error and create the body
-        of arguments with rank greater than 0 in format
+        Create the code to extract an array.
+
+        This function is responsible for collecting the value of the array from
+        a provided Python variable, and saving it into a C object.
+        It also manages potential errors such as if the wrong type is provided.
+        Finally it also handles the case of an optional array.
 
         Parameters
         ----------
-        Variable : Variable
-            The optional variable
-        collect_var : variable
-            the pyobject type variable  holder of value
-        check_type : Boolean
-            True if the type is needed
+        variable : Variable
+            The C variable where the result will be stored.
+        collect_var : Variable
+            The Variable containing the Python object, of type PyObject.
+        check_type : bool
+            True if the type is needed.
 
         Returns
         -------
-        body : list
-            A list of statements
+        list
+            A list of code statements.
         """
         self.add_import(cwrapper_ndarray_import)
         body = []
@@ -740,18 +744,20 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     def get_PyArgParseType(self, variable):
         """
-        Responsible for creating any necessary intermediate variables which are used
-        to collect the result of PyArgParse, and collecting the required cast function
+        Get the variable which collects the result of PyArgParse.
+
+        This function is responsible for creating any necessary intermediate variables which are used
+        to collect the result of PyArgParse.
 
         Parameters
         ----------
         variable : Variable
-            The variable which will be passed to the translated function
+            The variable which will be passed to the translated function.
 
         Returns
         -------
-        collect_var : Variable
-            The variable which will be used to collect the argument
+        Variable
+            The variable which will be used to collect the argument.
         """
 
         collect_type = PyccelPyObject()
@@ -1066,7 +1072,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, funcs[0].name)
+        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict)
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
@@ -1102,7 +1108,28 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
-    def _create_wrapper_check(self, check_var, parse_args, types_dict, func_name):
+    def _create_wrapper_check(self, check_var, parse_args, types_dict):
+        """
+        Create a FunctionDef which checks if the type is correct.
+
+        This function is necessary when wrapping an Interface in order to determine which
+        underlying function is being called. The created FunctionDef returns an integer
+        which acts as a flag to indicate which function has been chosed.
+
+        Parameters
+        ----------
+        check_var : Variable
+            The variable which will contain the flag.
+        parse_args : list of Variables
+            The arguments to the Interface.
+        types_dict : dictionary
+            A dictionary listing all possible datatypes for each argument.
+
+        Returns
+        -------
+        FunctionDef
+            A FunctionDef describing the function which allows the flag to be set.
+        """
         check_func_body = []
         flags = (len(types_dict) - 1) * 4
         for arg in types_dict:
