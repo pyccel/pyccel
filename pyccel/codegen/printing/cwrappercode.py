@@ -79,7 +79,7 @@ class CWrapperCodePrinter(CCodePrinter):
             The name of the file being pyccelised.
     target_language : str
             The low-level language pyccel is translated to ['c'/'fortran'].
-    settings : dict
+    **settings : dict
             Any additional settings (unused).
     """
     def __init__(self, filename, target_language, **settings):
@@ -213,7 +213,7 @@ class CWrapperCodePrinter(CCodePrinter):
             The Variable where the default value should be saved.
         func_arg : FunctionDefArgument
             The argument object where the value may be provided.
-        value :
+        value : PyccelAstNode
             The default value which should be assigned.
 
         Returns
