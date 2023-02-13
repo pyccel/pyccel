@@ -252,7 +252,20 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'numpy_c']}
 
 class CCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """
+    A printer for printing code in C.
+
+    A printer to convert Pyccel's AST to strings of c code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    prefix_module : str
+            A prefix to be added to the name of the module.
+    """
     printmethod = "_ccode"
     language = "C"
 
