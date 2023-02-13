@@ -1536,12 +1536,22 @@ class CCodePrinter(CodePrinter):
 
     def stored_in_c_pointer(self, a):
         """
-        Indicates whether the object a needs to be stored in a pointer
-        in c code
+        Indicate whether the object a needs to be stored in a pointer in c code.
+
+        Some objects are stored in a c pointer so that they can be modified in
+        their scope and that modification can be retrieved elsewhere. This
+        information cannot be found trivially so this function provides that
+        information while avoiding easily outdated code to be repeated.
 
         Parameters
         ----------
         a : PyccelAstNode
+            The object whose storage we are enquiring about.
+
+        Returns
+        -------
+        bool
+            True if saved in a C pointer, False otherwise.
         """
         if isinstance(a, (Nil, ObjectAddress)):
             return True
