@@ -65,8 +65,23 @@ module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
 cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
 
 class CWrapperCodePrinter(CCodePrinter):
-    """A printer to convert a python module to strings of c code creating
-    an interface between python and an implementation of the module in c"""
+    """
+    A printer for creating the interface between python and c code.
+
+    A printer to convert a python module to strings of c code describing
+    an interface between python and an implementation of the module in c.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    target_language : str
+            The low-level language pyccel is translated to ['c'/'fortran'].
+    settings : dict
+            Any additional settings (unused).
+    """
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)
         self._target_language = target_language
@@ -82,12 +97,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def stored_in_c_pointer(self, a):
         """
-        Indicates whether the object a needs to be stored in a pointer
-        in c code
+        Indicate whether the object a needs to be stored in a pointer in c code.
+
+        Some objects are stored in a c pointer so that they can be modified in
+        their scope and that modification can be retrieved elsewhere. This
+        information cannot be found trivially so this function provides that
+        information while avoiding easily outdated code to be repeated.
 
         Parameters
         ----------
         a : PyccelAstNode
+            The object whose storage we are enquiring about.
+
+        Returns
+        -------
+        bool
+            True if saved in a C pointer, False otherwise.
         """
         if isinstance(a.dtype, PyccelPyObject):
             return True
@@ -175,6 +200,32 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_default_assign(self, arg, func_arg, value):
+        """
+        Provide the Assign which initialises an argument to its default value.
+
+        When a function def argument has a default value, this function
+        provides the code which initialises the argument. This value can
+        then either be used over overwritten with the provided argument.
+
+        Parameters
+        ----------
+        arg : Variable
+            The Variable where the default value should be saved.
+        func_arg : FunctionDefArgument
+            The argument object where the value may be provided.
+        value :
+            The default value which should be assigned.
+
+        Returns
+        -------
+        Assign
+            The code describing the assignement.
+
+        Raises
+        ------
+        NotImplementedError
+            If the type of the default value is not handled.
+        """
         if func_arg.is_optional:
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeFloat, NativeInteger, NativeBool)):
@@ -389,26 +440,28 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
+        Check if the provided variable has the expected type.
+
         Get the code which checks if the variable collected from python
-        has the expected type
+        has the expected type.
 
         Parameters
         ----------
-        variable    : Variable
-                      The variable containing the PythonObject
+        variable : Variable
+                      The variable containing the PythonObject.
         collect_var : Variable
                       The variable in which the result will be saved,
-                      used to provide information about the expected type
-        compulsory  : bool
+                      used to provide information about the expected type.
+        compulsory : bool
                       Indicates whether the argument is a compulsory argument
                       to the function (if not then it must have a default or
-                      be optional)
+                      be optional).
 
         Returns
         -------
-        check : str
+        str
                 A string containing the code which determines whether 'variable'
-                contains an object which can be saved in 'collect_var'
+                contains an object which can be saved in 'collect_var'.
         """
 
         if variable.rank > 0 :
