@@ -44,7 +44,8 @@ for file, line_nos in changes.items():
         # inside a function or a class is updated to include
         # the name of the parent object
         if isinstance(node, (FunctionDef, ClassDef)):
-            if node.name.startswith('__') and node.name.endswith('__'):
+            name = node.name.split('.')[-1]
+            if name.startswith('__') and name.endswith('__'):
                 # Ignore magic methods
                 continue
             if any((node.lineno <= x <= node.end_lineno
