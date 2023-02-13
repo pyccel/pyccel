@@ -910,6 +910,10 @@ class PythonType(Basic):
     def print_string(self):
         """
         Return a LiteralString describing the type.
+
+        Constructs a LiteralString containing the message usually
+        printed by Python to describe this type. This string can
+        then be easily printed in each language.
         """
         prec = self.precision
         dtype = str(self.dtype)
