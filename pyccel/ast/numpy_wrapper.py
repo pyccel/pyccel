@@ -217,7 +217,26 @@ def find_in_numpy_dtype_registry(var):
 
 def array_type_check(py_variable, c_variable, raise_error):
     """
-    Return the code which checks if the array has the expected type
+    Return the code which checks if the array has the expected type.
+
+    Returns the code which checks if the array has the expected rank,
+    datatype, precision, and order. The expected rank, datatype,
+    precision, and order are determined from the properties of the
+    `c_variable` argument.
+
+    Parameters
+    ----------
+    py_variable : Variable
+            A variable containing the python object passed into the wrapper.
+    c_variable : Variable
+            A variable containing the basic C object which will store the array.
+    raise_error : bool
+            Indicates whether an error should be raised if the type does not match.
+
+    Returns
+    -------
+    FunctionCall
+            The code necessary to validate the provided array.
     """
     rank     = c_variable.rank
     type_ref = find_in_numpy_dtype_registry(c_variable)
