@@ -862,7 +862,14 @@ class Lambda(Basic):
 #==============================================================================
 class PythonType(Basic):
     """
-    Represents the python builtin type function.
+    Represents a call to the Python builtin `type` function.
+
+    The use of `type` in code is usually for one of two purposes.
+    Firstly it is useful for debugging. In this case the `print_string`
+    property is useful to obtain the underlying type. It is
+    equally useful to provide datatypes to objects in templated
+    functions. This double usage should be considered when using
+    this class.
 
     Parameters
     ==========
@@ -901,9 +908,7 @@ class PythonType(Basic):
 
     @property
     def print_string(self):
-        """
-        Return a literal string representing the type that
-        can be used in a print  statement.
+        """ Return a LiteralString describing the type
         """
         prec = self.precision
         dtype = str(self.dtype)
