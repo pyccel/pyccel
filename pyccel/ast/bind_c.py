@@ -52,12 +52,19 @@ class BindCFunctionDef(FunctionDef):
         self._original_function = original_function
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
+        assert all(isinstance(a, BindCFunctionDefArgument) for a in self.arguments)
+        assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
 
     @property
     def original_function(self):
         """ The function which is wrapped by this BindCFunctionDef
         """
         return self._original_function
+
+    @property
+    def results(self):
+        result_packs = [[r.var, *r.sizes] for r in self._results]
+        return [r for rp in result_packs for r in rp]
 
 # =======================================================================================
 
@@ -89,16 +96,21 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
 
 class BindCFunctionDefResult(Basic):
+    __slots__ = ('_var', '_sizes')
     _attribute_nodes = ('_var', '_sizes')
 
-    def __init__(self, var, scope, **kwargs):
-        name = var.name
-        sizes   = [Variable(dtype=NativeInteger(),
-                            name=scope.get_new_name(f'{name}_shape_{i+1}'))
-                   for i in range(var.rank)]
+    def __init__(self, var, sizes, **kwargs):
         self._var = var
         self._sizes = sizes
         super().__init__()
+
+    @property
+    def var(self):
+        return self._var
+
+    @property
+    def sizes(self):
+        return self._sizes
 
 # =======================================================================================
 def sanitize_arguments(args):
