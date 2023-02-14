@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
-from pyccel.ast.bind_c import CLocFunc
+from pyccel.ast.bind_c import CLocFunc, BindCModule
 from pyccel.ast.core import Module, Assign, FunctionCall, FunctionDefArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import
@@ -97,7 +97,7 @@ class FortranToCWrapper(Wrapper):
     def _wrap_Module(self, expr):
         # Define scope
         scope = expr.scope
-        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy())
+        mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
         self.set_scope(mod_scope)
 
         # Wrap contents
@@ -111,10 +111,12 @@ class FortranToCWrapper(Wrapper):
 
         name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
 
-        return Module(name, (), funcs + variable_getters,
+        self.exit_scope()
+
+        return BindCModule(name, (), funcs + variable_getters,
                 init_func = init_func, free_func = free_func, 
                 interfaces = interfaces, classes = classes,
-                imports = imports,
+                imports = imports, original_module = expr,
                 scope = mod_scope)
 
     def _wrap_FunctionDef(self, expr):
@@ -142,7 +144,13 @@ class FortranToCWrapper(Wrapper):
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
 
-        return BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr)
+        self.exit_scope()
+
+        func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr)
+
+        self.scope.functions[name] = func
+
+        return func
 
     def _wrap_FunctionDefArgument(self, expr):
         var = expr.var

@@ -10,6 +10,7 @@ from collections import OrderedDict
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
+from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef
 
 from pyccel.ast.builtins import PythonTuple
 
@@ -95,6 +96,14 @@ class CWrapperCodePrinter(CCodePrinter):
             return True
         else:
             return CCodePrinter.stored_in_c_pointer(self,a)
+
+    def get_python_name(self, scope, obj):
+        if isinstance(obj, BindCFunctionDef):
+            return scope.get_python_name(obj.original_function.name)
+        elif isinstance(obj, BindCModule):
+            return obj.original_module.name
+        else:
+            return scope.get_python_name(obj.name)
 
     def function_signature(self, expr, print_arg_names = True):
         args = list(expr.arguments)
@@ -847,7 +856,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     vars_to_wrap.append(w)
         else:
             vars_to_wrap = orig_vars_to_wrap
-        var_names = [str(expr.scope.get_python_name(v.name)) for v in orig_vars_to_wrap]
+        var_names = [str(self.get_python_name(expr.scope, v)) for v in orig_vars_to_wrap]
 
         # If there are any variables in the module then add them to the module object
         if vars_to_wrap:
@@ -1250,27 +1259,27 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        scope = Scope()
+        scope = Scope(used_symbols = expr.scope.local_used_symbols.copy(), original_symbols = expr.scope.python_names.copy())
         self.set_scope(scope)
         # The initialisation and deallocation shouldn't be exposed to python
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
 
         # Insert declared objects into scope
-        if self._target_language == 'fortran':
-            for f in expr.funcs:
-                scope.insert_symbol('bind_c_'+f.name.lower())
-            for v in expr.variables:
-                if not v.is_private:
-                    if v.rank > 0:
-                        scope.insert_symbol('bind_c_'+v.name.lower())
-                    else:
-                        scope.insert_symbol(v.name.lower())
-        else:
-            for f in expr.funcs:
-                scope.insert_symbol(f.name.lower())
-            for v in expr.variables:
-                if not v.is_private:
-                    scope.insert_symbol(v.name.lower())
+        #if self._target_language == 'fortran':
+        #    for f in expr.funcs:
+        #        scope.insert_symbol('bind_c_'+f.name.lower())
+        #    for v in expr.variables:
+        #        if not v.is_private:
+        #            if v.rank > 0:
+        #                scope.insert_symbol('bind_c_'+v.name.lower())
+        #            else:
+        #                scope.insert_symbol(v.name.lower())
+        #else:
+        #    for f in expr.funcs:
+        #        scope.insert_symbol(f.name.lower())
+        #    for v in expr.variables:
+        #        if not v.is_private:
+        #            scope.insert_symbol(v.name.lower())
 
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
@@ -1279,7 +1288,7 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
                                     for v in expr.variables if not v.is_private]
 
-        self._module_name  = expr.name
+        self._module_name  = self.get_python_name(scope, expr)
         sep = self._print(SeparatorComment(40))
 
         function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in expr.funcs)
@@ -1304,7 +1313,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      'METH_VARARGS | METH_KEYWORDS,\n'
                                      '{doc_string}\n'
                                      '}},\n').format(
-                                            name = expr.scope.get_python_name(f.name),
+                                            name = self.get_python_name(expr.scope, f),
                                             wrapper_name = self._function_wrapper_names[f.name],
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""')
@@ -1337,7 +1346,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{method_def_name},\n'
                 '{slots_name}\n'
                 '}};\n'.format(module_def_name = module_def_name,
-                    mod_name = expr.name,
+                    mod_name = self._module_name,
                     method_def_name = method_def_name,
                     slots_name = slots_name))
 
@@ -1346,7 +1355,7 @@ class CWrapperCodePrinter(CCodePrinter):
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'import_array();\n'
                 'return PyModuleDef_Init(&{module_def_name});\n'
-                '}}\n'.format(mod_name=expr.name,
+                '}}\n'.format(mod_name=self._module_name,
                     module_def_name = module_def_name))
 
         # Print imports last to be sure that all additional_imports have been collected
