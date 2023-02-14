@@ -38,7 +38,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
                     errors[file_name] = [msg]
                 else:
                     errors[file_name].append(msg)
-        except:
+        except ValueError:
             parsing_errors.append(line)
 
 fail = len(errors) > 0 or len(parsing_errors) > 0
