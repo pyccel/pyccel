@@ -77,6 +77,9 @@ def create_shared_library(codegen,
         src_compiler.compile_module(compile_obj=bind_c_obj,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
+        c_ast = bind_c_mod
+    else:
+        c_ast = codegen.ast
 
     #---------------------------------------
     #     Compile cwrapper from stdlib
@@ -103,7 +106,7 @@ def create_shared_library(codegen,
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper_code = wrapper_codegen.doprint(codegen.ast)
+    wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
         return
 
