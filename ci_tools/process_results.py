@@ -10,25 +10,38 @@ parser.add_argument('summary', metavar='summary', type=str,
                         help='Github step summary')
 args = parser.parse_args()
 
+all_codes = ['GL01', 'GL02', 'GL03', 'GL05', 'GL06', 'GL07', 'GL08', 'GL09',
+             'GL10', 'SS01', 'SS02', 'SS03', 'SS04', 'SS05', 'SS06', 'ES01',
+             'PR01', 'PR02', 'PR03', 'PR04', 'PR05', 'PR06', 'PR07', 'PR08',
+             'PR09', 'PR10', 'RT01', 'RT02', 'RT03', 'RT04', 'RT05', 'YD01',
+             'SA01', 'SA02', 'SA03', 'SA04', 'EX01']
+
 warning_codes = ['EX01', 'SA01']
 
 errors = {}
 warnings = {}
+parsing_errors = []
 with open(args.report, 'r', encoding='utf-8') as f:
     for line in f:
-        file_name, code, msg = line.split(':')
-        if code in warning_codes:
-            if file_name not in warnings:
-                warnings[file_name] = [msg]
+        try:
+            file_name, code, msg = line.split(':', maxsplit=2)
+            if code not in all_codes:
+                parsing_errors.append(line)
+                continue
+            if code in warning_codes:
+                if file_name not in warnings:
+                    warnings[file_name] = [msg]
+                else:
+                    warnings[file_name].append(msg)
             else:
-                warnings[file_name].append(msg)
-        else:
-            if file_name not in errors:
-                errors[file_name] = [msg]
-            else:
-                errors[file_name].append(msg)
+                if file_name not in errors:
+                    errors[file_name] = [msg]
+                else:
+                    errors[file_name].append(msg)
+        except:
+            parsing_errors.append(line)
 
-fail = len(errors) > 0
+fail = len(errors) > 0 or len(parsing_errors) > 0
 
 with open(args.summary, 'a', encoding='utf-8') as f:
     print('# Part 2 : Numpydoc Validation:', file=f)
@@ -43,6 +56,10 @@ with open(args.summary, 'a', encoding='utf-8') as f:
     for file_name, warns in warnings.items():
         print(f'#### {file_name}', file=f)
         print(''.join(f'- {warn}' for warn in warns), file=f)
+    if (len(parsing_errors) > 0):
+        print('### PARSING ERRORS!', file=f)
+        parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]
+        print(''.join(f'{add_warn}' for add_warn in parsing_errors), file=f)
 
 sys.exit(fail)
 
