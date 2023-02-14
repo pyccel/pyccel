@@ -1123,7 +1123,7 @@ class SyntaxParser(BasicParser):
                       severity='error')
 
     def _visit_Starred(self, stmt):
-        return StarredArguments(self._visit(stmt.value) )
+        return StarredArguments(self._visit(stmt.value))
 
 #==============================================================================
 

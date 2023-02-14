@@ -1475,7 +1475,7 @@ class SemanticParser(BasicParser):
         body = self._visit(expr.program).body
         program_body      = []
         init_func_body    = []
-        mod_name = self.metavars.get('module_name', None )
+        mod_name = self.metavars.get('module_name', None)
         if mod_name is None:
             mod_name = expr.name
         else:

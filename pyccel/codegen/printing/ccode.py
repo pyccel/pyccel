@@ -550,7 +550,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonBool(self, expr):
-        value = self._print(expr.arg )
+        value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
     def _print_Literal(self, expr):
