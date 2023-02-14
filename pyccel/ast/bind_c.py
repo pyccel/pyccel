@@ -52,7 +52,6 @@ class BindCFunctionDef(FunctionDef):
         self._original_function = original_function
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
-        assert all(isinstance(a, BindCFunctionDefArgument) for a in self.arguments)
         assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
 
     @property
@@ -99,9 +98,10 @@ class BindCFunctionDefResult(Basic):
     __slots__ = ('_var', '_sizes')
     _attribute_nodes = ('_var', '_sizes')
 
-    def __init__(self, var, sizes, **kwargs):
+    def __init__(self, var, sizes = (), **kwargs):
         self._var = var
         self._sizes = sizes
+        assert len(sizes) == var.rank
         super().__init__()
 
     @property
