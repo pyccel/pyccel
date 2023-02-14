@@ -17,7 +17,7 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef
+from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCModule
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -436,7 +436,7 @@ class FCodePrinter(CodePrinter):
         # ...
         sep = self._print(SeparatorComment(40))
         interfaces = ''
-        if expr.interfaces:
+        if expr.interfaces and not isinstance(expr, BindCModule):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
         if expr.funcs:
