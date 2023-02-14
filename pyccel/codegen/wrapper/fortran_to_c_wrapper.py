@@ -8,7 +8,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule
 from pyccel.ast.core import Module, Assign, FunctionCall, FunctionDefArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
-from pyccel.ast.core import If, IfSection, Import
+from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
@@ -20,6 +20,7 @@ from .wrapper import Wrapper
 class FortranToCWrapper(Wrapper):
     def __init__(self):
         self._additional_exprs = []
+        self._wrapper_names_dict = {}
 
     def _get_function_def_body(self, func, func_def_args, func_arg_to_call_arg, results, handled = ()):
         """
@@ -110,6 +111,7 @@ class FortranToCWrapper(Wrapper):
         imports = [Import(expr.name, target = expr, mod=expr)]
 
         name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
+        self._wrapper_names_dict[expr.name.target] = name
 
         self.exit_scope()
 
@@ -121,6 +123,7 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_FunctionDef(self, expr):
         name = self.scope.get_new_name(f'bind_c_{expr.name}')
+        self._wrapper_names_dict[expr.name] = name
         func_scope = self.scope.new_child_scope(name)
         self.set_scope(func_scope)
 
@@ -151,6 +154,11 @@ class FortranToCWrapper(Wrapper):
         self.scope.functions[name] = func
 
         return func
+
+    def _wrap_Interface(self, expr):
+        functions = [self.scope.functions[self._wrapper_names_dict[f.name]] for f in expr.functions]
+        print(functions)
+        return Interface(expr.name, functions, expr.is_argument)
 
     def _wrap_FunctionDefArgument(self, expr):
         var = expr.var
