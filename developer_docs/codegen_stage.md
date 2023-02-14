@@ -60,9 +60,72 @@ The declarations are provided by the `declarations` property of the classes `Mod
 
 ## Imports
 
+While printing imports is relatively simple and can be handled in a language-specific way, there is an additional consideration for imports.
+When a file imports another it is important that this information be stored somewhere so that the compiler stage is aware that it needs to compile and link the imported files.
+This additional complexity is handled through an object called `_additional_imports` which is exposed through the functions `pyccel.codegen.printing.XCodePrinter.get_additional_imports`.
+The exact implementation of this object differs from language to language so you should check how it is used in each language when you need it.
+
 ## Loop unravelling
 
+In Python, thanks to NumPy, many vector expressions can be handled natively.
+This expressiveness makes Python very readable, however not all low-level languages implement vector expressions.
+As a result it is often necessary to unravel implicit loops into explicit for loops.
+This is done using the function [`pyccel.ast.utilities.expand_to_loops`](../pyccel/ast/utilities.py).
+This function takes a `pyccel.ast.core.CodeBlock` and manipulates it such that the necessary loops appear.
 
+In C this means unravelling all vector expressions to operate on scalars.
+The Fortran language handles some vector expressions so in this case the unravelling is not always needed.
+Expressions must just be unrolled so that all expressions have the same number of dimensions.
+
+E.g:
+```python
+def f(a : 'int[:,:]', b : 'int[:]'):
+    c = a+b
+    return c
+```
+In C with full unravelling this becomes:
+```c
+t_ndarray f(t_ndarray a, t_ndarray b)
+{
+    int64_t i;
+    int64_t i_0001;
+    t_ndarray c = {.shape = NULL};
+    c = array_create(2, (int64_t[]){a.shape[INT64_C(0)], a.shape[INT64_C(1)]}, nd_int64, false);
+    for (i = INT64_C(0); i < c.shape[INT64_C(0)]; i += INT64_C(1))
+    {
+        for (i_0001 = INT64_C(0); i_0001 < c.shape[INT64_C(1)]; i_0001 += INT64_C(1))
+        {
+            GET_ELEMENT(c, nd_int64, (int64_t)i, (int64_t)i_0001) = GET_ELEMENT(a, nd_int64, (int64_t)i, (int64_t)i_0001) + GET_ELEMENT(b, nd_int64, (int64_t)i_0001);
+        }
+    }
+    return c;
+}
+```
+While in Fortran it becomes:
+```fortran
+  subroutine f(a, b, c)
+
+    implicit none
+
+    integer(i64), allocatable, intent(out) :: c(:,:)
+    integer(i64), intent(in) :: a(0:,0:)
+    integer(i64), intent(in) :: b(0:)
+    integer(i64) :: i
+
+    allocate(c(0:size(a, 1_i64, i64) - 1_i64, 0:size(a, 2_i64, i64) - &
+          1_i64))
+    do i = 0_i64, size(c, 2_i64, i64) - 1_i64, 1_i64
+      c(:, i) = a(:, i) + b
+    end do
+    return
+
+  end subroutine f
+```
+
+The loop unravelling function must be called every time we want to print a `CodeBlock` in a language which is less flexible than Python.
+The algorithm proceeds by inserting indices into the arrays at the dimensions furthest from the contiguous dimension.
+This is done recursively until the expression is compatible with the language.
+Where possible the function tries to group expressions in the same for loop.
 
 ## C-specific problems
 
