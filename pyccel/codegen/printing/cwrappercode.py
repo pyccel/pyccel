@@ -373,9 +373,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         """
         body = []
-        static_function = self.get_static_function(expr)
         if len(results) == 0:
-            body.append(FunctionCall(static_function, static_func_args))
+            body.append(FunctionCall(expr, static_func_args))
         else:
             static_func_results = []
             for r in results:
@@ -384,7 +383,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 static_func_results.extend(s)
 
             results   = static_func_results if len(static_func_results)>1 else static_func_results[0]
-            func_call = Assign(results,FunctionCall(static_function, static_func_args))
+            func_call = Assign(results,FunctionCall(expr, static_func_args))
             body.insert(0, func_call)
 
         return body
@@ -863,8 +862,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if expr.init_func:
             # Call init function code
-            static_function = self.get_static_function(expr.init_func)
-            body.insert(0,FunctionCall(static_function,[],[]))
+            body.insert(0,FunctionCall(expr.init_func,[],[]))
 
         body.append(Return([LiteralInteger(0)]))
         self.exit_scope()
@@ -1284,11 +1282,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
 
-        if self._target_language == 'fortran':
-            static_funcs = [self.get_static_function(f) for f in expr.funcs]
-        else:
-            static_funcs = expr.funcs
-        function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in static_funcs)
+        function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in expr.funcs)
         if self._target_language == 'fortran':
             var_wrappers = [wrap_module_array_var(v, self.scope, expr) \
                     for v in expr.variables if not v.is_private and v.rank > 0]
