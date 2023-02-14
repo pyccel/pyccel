@@ -52,7 +52,13 @@ class BindCFunctionDef(FunctionDef):
         self._original_function = original_function
         super().__init__(*args, **kwargs)
         assert self.name == self.name.lower()
+        assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
         assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
+        arguments_inout = [[ai] + [False]*(2*len(a.sizes)) for ai, a in zip(self._arguments_inout, self._arguments)]
+        print(self.arguments_inout)
+        print(arguments_inout)
+        self._arguments_inout = [ai for a in arguments_inout for ai in a]
+        print(self.arguments_inout)
 
     @property
     def original_function(self):
@@ -65,14 +71,20 @@ class BindCFunctionDef(FunctionDef):
         result_packs = [[r.var, *r.sizes] for r in self._results]
         return [r for rp in result_packs for r in rp]
 
+    @property
+    def arguments(self):
+        return [ai for a in self._arguments for ai in a.get_all_function_def_arguments()]
+
 # =======================================================================================
 
 
 class BindCFunctionDefArgument(FunctionDefArgument):
-    _attribute_nodes = FunctionDefArgument._attribute_nodes + ('_sizes', '_strides')
+    __slots__ = ('_sizes', '_strides', '_original_arg_var')
+    _attribute_nodes = FunctionDefArgument._attribute_nodes + ('_sizes', '_strides', '_original_arg_var')
 
-    def __init__(self, var, rank, scope, **kwargs):
+    def __init__(self, var, scope, original_arg_var, **kwargs):
         name = var.name
+        rank = original_arg_var.rank
         sizes   = [Variable(dtype=NativeInteger(),
                             name=scope.get_new_name(f'{name}_shape_{i+1}'))
                    for i in range(rank)]
@@ -81,7 +93,12 @@ class BindCFunctionDefArgument(FunctionDefArgument):
                    for i in range(rank)]
         self._sizes = sizes
         self._strides = strides
+        self._original_arg_var = original_arg_var
         super().__init__(var, **kwargs)
+
+    @property
+    def original_function_argument_variable(self):
+        return self._original_arg_var
 
     @property
     def sizes(self):
@@ -90,6 +107,20 @@ class BindCFunctionDefArgument(FunctionDefArgument):
     @property
     def strides(self):
         return self._strides
+
+    def get_all_function_def_arguments(self):
+        args = [self]
+        args += [FunctionDefArgument(size) for size in self.sizes]
+        args += [FunctionDefArgument(stride) for stride in self.strides]
+        return args
+
+    def __repr__(self):
+        if self.has_default:
+            argument = str(self.name)
+            value = str(self.value)
+            return 'BindCFunctionDefArgument({0}={1})'.format(argument, value)
+        else:
+            return 'BindCFunctionDefArgument({})'.format(repr(self.name))
 
 # =======================================================================================
 

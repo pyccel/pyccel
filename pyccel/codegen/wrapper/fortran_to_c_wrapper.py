@@ -56,7 +56,7 @@ class FortranToCWrapper(Wrapper):
             return [If(true_section, false_section)]
         else:
             args = [func_arg_to_call_arg[fa] for fa in func_def_args]
-            body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa], fa.sizes)
+            body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, fa.sizes)
                     for fa in func_def_args if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
             func_call = Assign(results[0], FunctionCall(func, args)) if len(results) == 1 else \
                         Assign(results, FunctionCall(func, args))
@@ -86,7 +86,8 @@ class FortranToCWrapper(Wrapper):
                 being wrapped.
         """
         if original_arg.is_ndarray:
-            new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_argument = False, is_optional = False)
+            new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_argument = False, is_optional = False,
+                                memory_handling = 'alias')
             self.scope.insert_variable(new_var)
             start = LiteralInteger(0)
             stop = None
@@ -163,14 +164,13 @@ class FortranToCWrapper(Wrapper):
     def _wrap_FunctionDefArgument(self, expr):
         var = expr.var
         if var.is_ndarray:
-            new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name),
+            new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name), rank = expr.var.rank,
                                 memory_handling='alias', is_argument = True, is_optional = var.is_optional)
-            return BindCFunctionDefArgument(new_var, value = expr.value, rank = var.rank,
-                    kwonly = expr.is_kwonly, annotation = expr.annotation, scope = self.scope)
         else:
             new_var = var.clone(self.scope.get_new_name(expr.name))
-            return FunctionDefArgument(new_var, value = expr.value,
-                    kwonly = expr.is_kwonly, annotation = expr.annotation)
+
+        return BindCFunctionDefArgument(new_var, value = expr.value, original_arg_var = expr.var,
+                kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope)
 
     def _wrap_FunctionDefResult(self, expr):
         name = expr.name
@@ -186,7 +186,7 @@ class FortranToCWrapper(Wrapper):
                                 name=scope.get_new_name(f'{name}_shape_{i+1}'))
                        for i in range(expr.rank)]
             self._additional_exprs.extend([Assign(sizes[i], expr.shape[i]) for i in range(expr.rank)])
-            bind_var = Variable(dtype=BindCPointer(),
+            bind_var = Variable(dtype=BindCPointer(), rank=expr.rank,
                                 name=scope.get_new_name('bound_'+name))
             self.scope.insert_variable(bind_var)
 
@@ -201,6 +201,8 @@ class FortranToCWrapper(Wrapper):
             copy = Assign(ptr_var, expr)
             c_loc = CLocFunc(ptr_var, bind_var)
             self._additional_exprs.extend([alloc, copy, c_loc])
+
+            print(bind_var, sizes, bind_var.rank)
 
             return BindCFunctionDefResult(bind_var, sizes)
         else:

@@ -1405,7 +1405,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and not (is_static and is_optional):
+            if intent == 'in' and rank == 0 and not (is_static and is_optional) and not isinstance(expr_dtype, BindCPointer):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
@@ -3014,6 +3014,12 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.arg)
         self._constantImports.setdefault('ISO_C_Binding', set()).add('c_loc')
         return f'{lhs} = c_loc({rhs})\n'
+
+#=======================================================================================
+
+    def _print_C_F_Pointer(self, expr):
+        sizes = ','.join(self._print(s) for s in expr.sizes)
+        return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{sizes}])\n'
 
 #=======================================================================================
 

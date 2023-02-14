@@ -10,7 +10,8 @@ from collections import OrderedDict
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
-from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef
+from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef, BindCFunctionDefArgument
+from pyccel.ast.bind_c   import BindCFunctionDefResult
 
 from pyccel.ast.builtins import PythonTuple
 
@@ -341,6 +342,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         body = []
 
+        if isinstance(result, BindCFunctionDefResult):
+            print(result)
         if self._target_language == 'fortran' and result.rank > 0:
             sizes = [
                      self.scope.get_temporary_variable(NativeInteger(),
@@ -349,6 +352,7 @@ class CWrapperCodePrinter(CCodePrinter):
             nd_var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
                     name = result.name,
                     memory_handling = 'alias')
+            print(result)
             body.append(Allocate(result, shape = sizes, order = result.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
@@ -949,7 +953,8 @@ class CWrapperCodePrinter(CCodePrinter):
             self.set_scope(mini_scope)
 
             # update ndarray local variables properties
-            arg_vars = {a.var: a for a in func.arguments}
+            arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+                    for a in func.arguments}
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
@@ -1149,7 +1154,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         local_arg_vars = {}
         for a in expr.arguments:
-            v = a.var
+            v = (a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var)
             if isinstance(v, Variable):
                 new_name = self.scope.get_new_name(v.name)
                 if isinstance(v, Variable) and (v.rank > 0 or v.is_optional):
