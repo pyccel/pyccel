@@ -75,7 +75,7 @@ if __name__ == '__main__':
             # inside a function or a class is updated to include
             # the name of the parent object
             if isinstance(node, (FunctionDef, ClassDef)):
-                if should_ignore('.'.join(prefix, node.name)):
+                if should_ignore('.'.join([prefix, node.name])):
                     continue
                 if any((node.lineno <= x <= node.end_lineno
                         for x in line_nos)) and not node.name.startswith('inner_function'):
