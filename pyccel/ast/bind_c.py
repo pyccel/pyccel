@@ -113,6 +113,22 @@ class BindCFunctionDefResult(Basic):
         return self._sizes
 
 # =======================================================================================
+
+class BindCModule(Module):
+    __slots__ = ('_orig_mod',)
+    _attribute_nodes = ('_orig_mod',)
+
+    def __init__(self, *args, original_module, **kwargs):
+        self._orig_mod = original_module
+        super().__init__(*args, **kwargs)
+
+    @property
+    def original_module(self):
+        """ The module which was wrapped
+        """
+        return self._orig_mod
+
+# =======================================================================================
 def sanitize_arguments(args):
     """ Ensure that all arguments are of expected types (Variable or FunctionAddress)
     """
