@@ -20,14 +20,20 @@ def should_ignore(name):
         bool
             True if object should be ignored, False otherwise.
     '''
-    patterns_to_ignore = ['SemanticParser._visit_',
-                          'SyntacticParser._visit_',
-                          'codegen.printing._print_']
     obj_name = name.split('.')[-1]
+    #ignore magic methods
     if obj_name.startswith('__') and obj_name.endswith('__'):
         return True
-    if any(pattern in name for pattern in patterns_to_ignore):
+    #ignore _visit_ methods in the SemanticParser class
+    if 'SemanticParser._visit_' in name:
         return True
+    #ignore _visit_ methods in the SyntaxParser class
+    if 'SyntaxParser._visit_' in name:
+        return True
+    #ignore _print_ methods in the codegen.printing module
+    if '_print_' in name and 'pyccel.codegen.printing' in name:
+        return True
+
     return False
 
 if __name__ == '__main__':
