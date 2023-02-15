@@ -45,6 +45,7 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
