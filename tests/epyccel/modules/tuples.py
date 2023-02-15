@@ -383,3 +383,7 @@ def tuple_negative_slice():
 def inhomogeneous_tuple_negative_slice():
     a,b = (1,False,3)[:-1]
     return a,b
+
+def tuple_index():
+    a = (1,2,3,False)[2]
+    return a
