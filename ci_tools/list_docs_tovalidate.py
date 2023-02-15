@@ -8,17 +8,17 @@ from git_evaluation_tools import get_diff_as_json
 
 def should_ignore(name):
     '''
-        Determine if an object should be ignored from numpydoc validation.
+    Determine if an object should be ignored from numpydoc validation.
 
-        Parameters
-        ----------
-        name : str
-            Absolute name of the inspected object.
+    Parameters
+    ----------
+    name : str
+        Absolute name of the inspected object.
 
-        Returns
-        -------
-        bool
-            True if object should be ignored, False otherwise.
+    Returns
+    -------
+    bool
+        True if object should be ignored, False otherwise.
     '''
     obj_name = name.split('.')[-1]
     #ignore magic methods
