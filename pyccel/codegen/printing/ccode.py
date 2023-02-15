@@ -351,11 +351,10 @@ class CCodePrinter(CodePrinter):
 
         buffer_size = self._print(DottedVariable(NativeVoid(), 'buffer_size', lhs=lhs))
         lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
-        arg_data    = self._print(DottedVariable(arg.dtype, dtype, arg=lhs))
 
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
-            arg = self._print(arg)
+            arg_data    = self._print(DottedVariable(arg.dtype, dtype, lhs=arg))
             return f"memcpy({lhs_data}, {arg_data}, {buffer_size});\n"
         else :
             if arg.rank > 1:
@@ -363,7 +362,7 @@ class CCodePrinter(CodePrinter):
                 arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "memcpy({lhs_data}, {dummy_array_name}, {buffer_size});\n"
+            cpy_data = f"memcpy({lhs_data}, {dummy_array_name}, {buffer_size});\n"
             return  dummy_array + cpy_data
 
     def arrayFill(self, expr):
