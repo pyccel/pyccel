@@ -149,13 +149,93 @@ Finally it is also important to mention the function `stored_in_c_pointer`, whic
 If code relies on the AST nodes described above the use of this function should be limited to the printing of a few low level objects.
 However it is occasionally useful (especially when printing the wrapper), so it is important to be aware of this function.
 
-### Nested objects
+### Multiple returns
 
-### Multiple-returns
+C is not designed to allow returning multiple objects from a function.
+To get around this restriction we treat the results as pointer arguments.
+This is implemented using the list `CCodePrinter._additional_args`.
+This list contains lists of variables which are treated as pointer arguments.
+It is managed as a list of lists in order to correctly append and pop the arguments in more complicated cases such as nested functions.
 
 ### Optional arguments
 
+Optional arguments can take one of two forms depending on the default value.
+Either the default value is `None` in which case the argument is truly optional, or the default value is a literal.
+C does not handle either case explicitly.
+The latter case is the simplest to handle as we must just print the default value at the function call.
+This is handled by [`pyccel.ast.core.FunctionCall`](../pyccel/ast/core.py).
+In the former case the optional characteristic is handled using a pointer.
+The `None` value is therefore represented by a null pointer.
+This is an example of where a C pointer may be used unexpectedly.
+
+There is an addiional complexity in the case of truly optional arguments as it is common to see code such as:
+```python
+def f(a : int = None):
+    if a is None:
+        a = 3
+    ...
+```
+This does not pose a problem in Fortran as scalar arguments, even optionals, can be passed by value allowing them to be modified.
+However in C this is problmeatic as we do not wish to change the object pointed to by the pointer.
+In order to get around this problem, the CCodePrinter contains the dictionary `_optional_partners`.
+This dictionary maps optional arguments to local variables.
+This allows the above code to be translated to:
+```c
+void f(int64_t *a)
+{
+    int64_t Dummy_0000;
+    if (a == NULL)
+    {
+        a = &Dummy_0000;
+        (*a) = INT64_C(3);
+    }
+    ...
+}
+```
+As you can see the local variable `Dummy_0000` acts as a "partner" to the optional argument `a`.
+When local memory is required for `a` it is modified to point at its partner.
+In this way it has access to local memory without modifying the object passed in the argument.
+
+### Nested objects
+
+Currently nested objects are not supported in C. This includes both nested functions and functions in classes, however we plan to support this soon.
+Several solutions were investigated in discussion #1149.
+The chosen solution is detailed in issue #1150.
+It was chosen as the simplest and fastest of the proposed solutions.
+
+When printing nested objects in C we prepend the name of the context to the function name in order to identify it.
+E.g:
+```python
+def f():
+    def g():
+        pass
+```
+becomes:
+```c
+void f() {
+}
+
+void f__g() {
+}
+```
+
+Care must be taken regarding any variables local to the enclosing function which are used in the nested function.
+These variables are noted as global variables in the nested function, however as they are not entirely global they must be passed as arguments.
+If they are not modified then they can be passed as normal arguments, however if they are modified they must be passed as pointers and be saved in `CCodePrinter._additional_args` (see [Multiple returns](#multiple-returns)).
+
 ### Arrays
+
+Unlike Fortran, C does not have any native support for arrays.
+In order to translate array expressions, Pyccel contains a basic array implementation.
+This implementation can be found in the folder [pyccel/stdlib/ndarrays/](..pyccel/stdlib/ndarrays/).
+It is heavily inspired by the NumPy implementation which makes it easy to collect the array from the NumPy object and pass it to the function.
+
+When adding new array functionalities to Pyccel developers must therefore consider whether it is better/more readable to implement the function in the stdlib or in the generated code.
+Functions added to the stdlib can be more easily optimised, however such implementations can easily lead to large amounts of code duplication, especially if the function involves data manipulation and supports arguments such as `axis`.
+On the other hand implementations written directly in the generated code can decrease readability of the code (try translating the print of an array for an example).
+
+In the future we hope to add an additional option to avoid some of these problems where an implementation of common low-level functions (e.g. `sum`) is written in Python and Pyccel is used to provide the language-specific equivalent of this function with the required argument types.
+This option requires some discussion amongst the senior developers and some additional functions (e.g. `reshape`/`ravel`/`flatten`).
 
 ## Fortran-specific problems
 
@@ -171,4 +251,31 @@ It is therefore very important to think about this when allocating arrays or poi
 
 ### Ordering
 
+Different languages handle multi-dimensional arrays in different ways.
+This means that optimal indexing is not written in the same way in different languages.
+Specifically C uses row-major indexing, while Fortran uses column-major indexing.
+Python allows both indexing conventions, but it defaults to C ordering.
+As a result this must be taken into consideration when translating to Fortran in order to preserve efficient code.
+In order to avoid unnecessary copying of array arguments Pyccel handles this difference via the printing.
+This solution is quite complex so it has its own documentation.
+
+Please see the [Order Docs](./order_docs.md) for more details.
+
 ## Python-specific problems
+
+Translating Python to Python is theoretically very simple and serves mostly to test our AST (although this functionality is also leveraged by packages such as psydac).
+However there are occasionally complications as the AST is more complex than necessary to describe a python function.
+
+### Temporary variables
+
+Pyccel occasionally introduces temporary variables to help express statements in low-level languages.
+Where the language permits, we aim to not print these variables.
+As they did not exist in the original Python file it should therefore be possible to completely avoid these variables when printing Python code.
+The variables can be identified by the `is_temp` property.
+
+An example of this is return variables.
+In Pyccel the objects returned by a function are always saved into variables.
+This is useful as it provides a Variable to help define the function signature.
+In addition this variable is necessary in Fortran, and in C if the function returns more than one object.
+However in Python these variables are not necessary.
+The PythonCodePrinter must therefore take care to avoid printing them.
