@@ -231,7 +231,7 @@ This implementation can be found in the folder [pyccel/stdlib/ndarrays/](..pycce
 It is heavily inspired by the NumPy implementation which makes it easy to collect the array from the NumPy object and pass it to the function.
 
 When adding new array functionalities to Pyccel developers must therefore consider whether it is better/more readable to implement the function in the Pyccel's standard library (`stdlib`) or in the generated code.
-Functions added to the stdlib can be more easily optimised, however such implementations can easily lead to large amounts of code duplication, especially if the function involves data manipulation and supports arguments such as `axis`.
+Functions added to the standard library can be more easily optimised, however such implementations can easily lead to large amounts of code duplication, especially if the function involves data manipulation and supports arguments such as `axis`.
 On the other hand implementations written directly in the generated code can decrease readability of the code (try translating the print of an array for an example).
 
 In the future we hope to add an additional option to avoid some of these problems where an implementation of common low-level functions (e.g. `sum`) is written in Python and Pyccel is used to provide the language-specific equivalent of this function with the required argument types.
