@@ -2838,27 +2838,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        if isinstance(base, (PyccelInternalFunction, PythonTuple)):
-            indexed_type = base.dtype
-            if isinstance(base, PyccelInternalFunction) and isinstance(indexed_type, PythonTuple):
-                base = self._print_PyccelInternalFunction(expr.base.base)
-            else:
-                if (not self._additional_code):
-                    self._additional_code = ''
-                var = self.scope.get_temporary_variable(base.dtype, memory_handling = 'stack',
-                        shape=base.shape,precision=base.precision,
-                        order=base.order,rank=base.rank)
-
-                self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
-                return self._print(var[expr.indices])
-        elif isinstance(base, InhomogeneousTupleVariable):
-            if len(expr.indices)==1:
-                return self._print(base[expr.indices[0]])
-            else:
-                var = base[expr.indices[0]]
-                return self._print(var[expr.indices[1:]])
-        else:
-            base_code = self._print(base)
+        base_code = self._print(base)
 
         inds = list(expr.indices)
         if expr.base.order == 'C':
