@@ -315,11 +315,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(a, (Nil, ObjectAddress)):
             return True
         if isinstance(a, FunctionCall):
-            results = a.funcdef.results
-            if len(results)==1:
-                a = a.funcdef.results[0]
-            else:
-                return False
+            a = a.funcdef.results[0]
 
         if not isinstance(a, Variable):
             return False
