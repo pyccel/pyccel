@@ -58,6 +58,7 @@ __all__ = [
         'tuple_variable_slice',
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
+        'tuple_index',
         ]
 
 def homogenous_tuple_int():
