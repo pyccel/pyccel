@@ -950,7 +950,7 @@ class FCodePrinter(CodePrinter):
                 cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
         if expr.rank > 1:
             template = '({start} + {index}*{step})'
-            var = self.scope.get_temporary_variable('int', str(expr.ind))
+            var = expr.ind
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = self.scope.get_temporary_variable('int', 'linspace_index') 
