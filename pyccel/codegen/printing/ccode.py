@@ -348,7 +348,7 @@ class CCodePrinter(CodePrinter):
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
         """
-        Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray
+        Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray.
 
         When data is copied from a homogeneous tuple, the code declares and fills
         a dummy data_buffer and copies the data from it to a NdArray struct.
@@ -359,6 +359,7 @@ class CCodePrinter(CodePrinter):
         ----------
             expr : PyccelAstNode
                 The Assign Node used to get the lhs and rhs.
+
         Returns
         -------
         string

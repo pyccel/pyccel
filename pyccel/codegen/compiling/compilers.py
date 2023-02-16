@@ -55,7 +55,7 @@ class Compiler:
 
     Parameters
     ----------
-    vendor  : str
+    vendor : str
                Name of the family of compilers.
     language : str
                Language that we are translating to.
@@ -456,6 +456,7 @@ class Compiler:
 
         Returns
         -------
+        None
         """
         with open(compiler_export_file,'w') as out_file:
             print(json.dumps(self._info, indent=4),
