@@ -453,10 +453,6 @@ class Compiler:
         compiler_export_file : str
             The name of the file where the compiler configuration
             should be printed.
-
-        Returns
-        -------
-        None
         """
         with open(compiler_export_file,'w') as out_file:
             print(json.dumps(self._info, indent=4),
