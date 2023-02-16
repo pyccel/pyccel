@@ -46,16 +46,21 @@ def get_condaless_search_path():
 #------------------------------------------------------------
 class Compiler:
     """
-    Class which handles all compiler options
+    Class which handles all compiler options.
+
+    This class uses the compiler vendor or a json file to collect
+    all compiler configuration parameters. These are then used to
+    correctly print compiler commands such as shared library
+    compilation commands or executable creation commands.
 
     Parameters
     ----------
-    name  : str
-               Name of the family of compilers
+    vendor  : str
+               Name of the family of compilers.
     language : str
-               Language that we are translating to
+               Language that we are translating to.
     debug : bool
-            Indicates whether we are compiling in debug mode
+               Indicates whether we are compiling in debug mode.
     """
     __slots__ = ('_debug','_info')
     _acceptable_bin_paths = get_condaless_search_path()
@@ -434,8 +439,23 @@ class Compiler:
         return cmd
 
     def export_compiler_info(self, compiler_export_file):
-        """ Print the information describing all compiler options
-        to the specified file in json format
+        """
+        Export the compiler configuration to a json file.
+
+        Print the information describing all compiler options to the
+        specified file in json format. This file can be used for
+        debugging purposes or it can be manually modified and fed
+        back to Pyccel to correct compilation problems or request
+        more unusual flags/include directories/etc.
+
+        Parameters
+        ----------
+        compiler_export_file : str
+            The name of the file where the compiler configuration
+            should be printed.
+
+        Returns
+        -------
         """
         with open(compiler_export_file,'w') as out_file:
             print(json.dumps(self._info, indent=4),

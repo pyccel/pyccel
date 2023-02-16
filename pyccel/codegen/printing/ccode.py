@@ -253,7 +253,20 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'numpy_c']}
 
 class CCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """
+    A printer for printing code in C.
+
+    A printer to convert Pyccel's AST to strings of c code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    prefix_module : str
+            A prefix to be added to the name of the module.
+    """
     printmethod = "_ccode"
     language = "C"
 
@@ -305,12 +318,22 @@ class CCodePrinter(CodePrinter):
 
     def stored_in_c_pointer(self, a):
         """
-        Indicates whether the object a needs to be stored in a pointer
-        in c code
+        Indicate whether the object a needs to be stored in a pointer in c code.
+
+        Some objects are stored in a c pointer so that they can be modified in
+        their scope and that modification can be retrieved elsewhere. This
+        information cannot be found trivially so this function provides that
+        information while avoiding easily outdated code to be repeated.
 
         Parameters
         ----------
         a : PyccelAstNode
+            The object whose storage we are enquiring about.
+
+        Returns
+        -------
+        bool
+            True if saved in a C pointer, False otherwise.
         """
         if isinstance(a, (Nil, ObjectAddress)):
             return True
@@ -324,17 +347,22 @@ class CCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
-        """ print the assignment of a NdArray or a homogeneous tuple
+        """
+        Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray
 
-        parameters
+        When data is copied from a homogeneous tuple, the code declares and fills
+        a dummy data_buffer and copies the data from it to a NdArray struct.
+        When data is copied from a Ndarray this is done directly without an intermediate
+        structure.
+
+        Parameters
         ----------
             expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs
-        Return
-        ------
-            String
-                Return a str that contains the declaration of a dummy data_buffer
-                       and a call to an operator which copies it to an NdArray struct
+                The Assign Node used to get the lhs and rhs.
+        Returns
+        -------
+        string
+            A string containing the code which copies the data.
         """
         rhs = expr.rhs
         lhs = expr.lhs

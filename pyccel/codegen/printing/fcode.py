@@ -197,7 +197,20 @@ dec_regex = re.compile(end_regex_str)
 errors = Errors()
 
 class FCodePrinter(CodePrinter):
-    """A printer to convert sympy expressions to strings of Fortran code"""
+    """
+    A printer for printing code in Fortran.
+
+    A printer to convert Pyccel's AST to strings of Fortran code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    prefix_module : str
+            A prefix to be added to the name of the module.
+    """
     printmethod = "_fcode"
     language = "Fortran"
 
