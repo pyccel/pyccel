@@ -1015,8 +1015,8 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
-            The object whose type should be described.
+        expr : Variable
+            The variable whose type should be described.
 
         Returns
         -------

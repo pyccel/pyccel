@@ -65,8 +65,24 @@ module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
 cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
 
 class CWrapperCodePrinter(CCodePrinter):
-    """A printer to convert a python module to strings of c code creating
-    an interface between python and an implementation of the module in c"""
+    """
+    A printer for printing the C-Python interface.
+
+    A printer to convert Pyccel's AST describing a translated module,
+    to strings of c code which provide an interface between the module
+    and Python code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    target_language : str
+            The language which the code was translated to [fortran/c].
+    **settings : dict
+            Any additional arguments which are necessary for CCodePrinter
+    """
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)
         self._target_language = target_language
@@ -99,7 +115,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         See Also
         --------
-        CCodePrinter.is_c_pointer : The extended function
+        CCodePrinter.is_c_pointer : The extended function.
         """
         if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
             return True
@@ -119,27 +135,36 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_declare_type(self, expr):
         """
-        Get the declaration type of a variable
+        Get the string which describes the type in a declaration.
+
+        This function extends `CCodePrinter.get_declare_type` to specify types
+        which are only relevant in the C-Python interface.
 
         Parameters
-        -----------
-        variable : Variable
-            Variable holding information needed to choose the declaration type
+        ----------
+        expr : Variable
+            The variable whose type should be described.
 
         Returns
         -------
-        type_declaration : String
+        str
+            The code describing the type.
+
+        Raises
+        ------
+        PyccelCodegenError
+            If the type is not supported in the C code or the rank is too large.
+
+        See Also
+        --------
+        CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
             return 'void *'
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if dtype != "pyarrayobject":
-            #TODO: Remove when #757 is fixed
-            if expr.rank > 0 and expr.is_ndarray and expr.is_optional:
-                dtype = 't_ndarray'
-            else:
-                return CCodePrinter.get_declare_type(self, expr)
+            return CCodePrinter.get_declare_type(self, expr)
         else :
             dtype = self.find_in_dtype_registry(dtype, prec)
 
@@ -295,18 +320,20 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_static_declare_type(self, variable):
         """
+        Get the declaration type of a variable which may be passed to a Fortran binding function.
+
         Get the declaration type of a variable, this function is used for
-        C/fortran binding using native C datatypes.
+        C/Fortran binding using native C datatypes.
 
         Parameters
         ----------
         variable : Variable
-            Variable holding information needed to choose the declaration type
+            Variable holding information needed to choose the declaration type.
 
         Returns
         -------
-        string
-
+        str
+            The code describing the type.
         """
         dtype = self._print(variable.dtype)
         prec  = variable.precision
