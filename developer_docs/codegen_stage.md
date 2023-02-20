@@ -80,7 +80,7 @@ Expressions must just be unrolled so that all expressions have the same number o
 E.g:
 ```python
 def f(a : 'int[:,:]', b : 'int[:]'):
-    c = a+b
+    c = a + b
     return c
 ```
 In C with full unravelling this becomes:
@@ -275,7 +275,7 @@ The variables can be identified by the `is_temp` property.
 
 An example of this is return variables.
 In Pyccel the objects returned by a function are always saved into variables.
-This is useful as it provides a Variable to help define the function signature.
+This is useful as it provides a `Variable` to help define the function signature.
 In addition this variable is necessary in Fortran, and in C if the function returns more than one object.
 However in Python these variables are not necessary.
 The `PythonCodePrinter` must therefore take care to avoid printing them.
