@@ -1004,6 +1004,30 @@ class CCodePrinter(CodePrinter):
                     severity='fatal')
 
     def get_declare_type(self, expr):
+        """
+        Get the string which describes the type in a declaration.
+
+        This function returns the code which describes the type
+        of the `expr` object such that the declaration can be written as:
+        `f"{self.get_declare_type(expr)} {expr.name}"`
+        The function takes care of reporting errors for unknown types and
+        importing any necessary additional imports (e.g. stdint/ndarrays).
+
+        Parameters
+        ----------
+        expr : PyccelAstNode
+            The object whose type should be described.
+
+        Returns
+        -------
+        str
+            The code describing the type.
+
+        Raises
+        ------
+        PyccelCodegenError
+            If the type is not supported in the C code or the rank is too large.
+        """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
