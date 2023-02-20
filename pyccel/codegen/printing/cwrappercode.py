@@ -81,7 +81,7 @@ class CWrapperCodePrinter(CCodePrinter):
     target_language : str
             The language which the code was translated to [fortran/c].
     **settings : dict
-            Any additional arguments which are necessary for CCodePrinter
+            Any additional arguments which are necessary for CCodePrinter.
     """
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)
