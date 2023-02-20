@@ -1027,6 +1027,17 @@ class CCodePrinter(CodePrinter):
         ------
         PyccelCodegenError
             If the type is not supported in the C code or the rank is too large.
+
+        Examples
+        --------
+        >>> v = Variable('int', 'x')
+        >>> self.get_declare_type(v)
+        'int64_t '
+
+        For an object accessed via a pointer:
+        >>> v = Variable('int', 'x', is_optional=True, rank=1)
+        >>> self.get_declare_type(v)
+        't_ndarray* '
         """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
