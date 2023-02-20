@@ -80,21 +80,33 @@ class CWrapperCodePrinter(CCodePrinter):
     #                       Helper functions
     # --------------------------------------------------------------------
 
-    def stored_in_c_pointer(self, a):
+    def is_c_pointer(self, a):
         """
-        Indicates whether the object a needs to be stored in a pointer
-        in c code
+        Indicate whether the object is a pointer in C code.
+
+        This function extends `CCodePrinter.is_c_pointer` to specify more objects
+        which are always accesed via a C pointer.
 
         Parameters
         ----------
         a : PyccelAstNode
+            The object whose storage we are enquiring about.
+
+        Returns
+        -------
+        bool
+            True if a C pointer, False otherwise.
+
+        See Also
+        --------
+        CCodePrinter.is_c_pointer : The extended function
         """
         if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
         else:
-            return CCodePrinter.stored_in_c_pointer(self,a)
+            return CCodePrinter.is_c_pointer(self,a)
 
     def function_signature(self, expr, print_arg_names = True):
         args = list(expr.arguments)
@@ -131,7 +143,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else :
             dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if self.stored_in_c_pointer(expr):
+        if self.is_c_pointer(expr):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
@@ -301,7 +313,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if self.stored_in_c_pointer(variable):
+        if self.is_c_pointer(variable):
             return '{0}*'.format(dtype)
 
         elif self._target_language == 'fortran' and variable.rank > 0:
@@ -992,7 +1004,7 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
             # Call free function for C type
-            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.stored_in_c_pointer(i) \
+            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
                                         else Deallocate(i) for i in local_arg_vars if i.rank > 0]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
@@ -1233,7 +1245,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
         # Call free function for C type
-        wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.stored_in_c_pointer(i) \
+        wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
                             else Deallocate(i) for i in local_arg_vars if i.rank > 0]
         self._to_free_PyObject_list.clear()
 
