@@ -135,7 +135,7 @@ In order to implement certain concepts in C it is important to use pointers.
 These concepts include returned variables and optional variables.
 This means that all print functions in the code must be able to correctly handle both pointers and non-pointers.
 In order to simplify the developer's job and allow them to focus on the specifics of the AST element they are implementing, rather than the pointers `_print_Variable` and other similar print functions always print the value of the object.
-This is true even if the object is stored in a pointer (i.e. `(*var)` is printed).
+This is true even if the object is accessed via a pointer (i.e. `(*var)` is printed).
 If an address is required then the object must be wrapped in the [`pyccel.ast.c_concepts.ObjectAddress`](../pyccel/ast/c_concepts.py) class.
 
 Although this construction ensures that valid code can be written easily, unless care is taken unidiomatic code will be produced (e.g. `(*var).shape` instead of `var->shape`).
@@ -145,7 +145,7 @@ The following objects are very useful for this purpose:
 -   `NumpyArraySize` : The size of an array in a given dimension
 -   `PyccelArraySize` : The total size of an array
 
-Finally it is also important to mention the function `stored_in_c_pointer`, which indicates whether or not its argument is stored in a pointer in the C code.
+Finally it is also important to mention the function `is_c_pointer`, which indicates whether or not its argument is accessed via a pointer in the C code.
 If code relies on the AST nodes described above the use of this function should be limited to the printing of a few low level objects.
 However it is occasionally useful (especially when printing the wrapper), so it is important to be aware of this function.
 
