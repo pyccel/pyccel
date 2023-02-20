@@ -316,14 +316,20 @@ class CCodePrinter(CodePrinter):
         else:
             return [irregular_list]
 
-    def stored_in_c_pointer(self, a):
+    def is_c_pointer(self, a):
         """
-        Indicate whether the object a needs to be stored in a pointer in c code.
+        Indicate whether the object is a pointer in C code.
 
-        Some objects are stored in a c pointer so that they can be modified in
+        Some objects are accessed via a C pointer so that they can be modified in
         their scope and that modification can be retrieved elsewhere. This
         information cannot be found trivially so this function provides that
         information while avoiding easily outdated code to be repeated.
+
+        The main reasons for this treatment are:
+        1. It is the actual memory address of an object
+        2. It is a reference to another object (e.g. an alias, an optional argument, or one of multiple return arguments)
+
+        See codegen_stage.md in the developer docs for more details.
 
         Parameters
         ----------
@@ -333,7 +339,7 @@ class CCodePrinter(CodePrinter):
         Returns
         -------
         bool
-            True if saved in a C pointer, False otherwise.
+            True if a C pointer, False otherwise.
         """
         if isinstance(a, (Nil, ObjectAddress)):
             return True
@@ -1013,7 +1019,7 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
-        if self.stored_in_c_pointer(expr):
+        if self.is_c_pointer(expr):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
@@ -1194,12 +1200,12 @@ class CCodePrinter(CodePrinter):
         """convert dotted Variable to their C equivalent"""
 
         name_code = self._print(expr.name)
-        if self.stored_in_c_pointer(expr.lhs):
+        if self.is_c_pointer(expr.lhs):
             code = f'{self._print(ObjectAddress(expr.lhs))}->{name_code}'
         else:
             lhs_code = self._print(expr.lhs)
             code = f'{lhs_code}.{name_code}'
-        if self.stored_in_c_pointer(expr):
+        if self.is_c_pointer(expr):
             return f'(*{code})'
         else:
             return code
@@ -1257,13 +1263,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyArraySize(self, expr):
         arg = expr.arg
-        if self.stored_in_c_pointer(arg):
+        if self.is_c_pointer(arg):
             return '{}->length'.format(self._print(ObjectAddress(arg)))
         return '{}.length'.format(self._print(arg))
 
     def _print_PyccelArraySize(self, expr):
         arg    = expr.arg
-        if self.stored_in_c_pointer(arg):
+        if self.is_c_pointer(arg):
             return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
 
@@ -1595,10 +1601,10 @@ class CCodePrinter(CodePrinter):
         for a, f in zip(expr.args, func.arguments):
             a = a.value if a else Nil()
             f = f.var
-            if self.stored_in_c_pointer(f):
+            if self.is_c_pointer(f):
                 if isinstance(a, Variable):
                     args.append(ObjectAddress(a))
-                elif not self.stored_in_c_pointer(a):
+                elif not self.is_c_pointer(a):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, a)
                     self._additional_code += self._print(assign)
@@ -1642,7 +1648,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [ObjectAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
+        args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
@@ -1806,7 +1812,7 @@ class CCodePrinter(CodePrinter):
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if not self.stored_in_c_pointer(lhs_var) and \
+        if not self.is_c_pointer(lhs_var) and \
                 isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
             rhs = self._print(rhs_var)
 
@@ -1984,7 +1990,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError("Constant not implemented")
 
     def _print_Variable(self, expr):
-        if self.stored_in_c_pointer(expr):
+        if self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
@@ -1997,7 +2003,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
-        if isinstance(expr.obj, ObjectAddress) or not self.stored_in_c_pointer(expr.obj):
+        if isinstance(expr.obj, ObjectAddress) or not self.is_c_pointer(expr.obj):
             return f'&{obj_code}'
         else:
             if obj_code.startswith('(*') and obj_code.endswith(')'):
