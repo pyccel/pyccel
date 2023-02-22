@@ -1118,22 +1118,29 @@ class CCodePrinter(CodePrinter):
         return 'string'
 
     def function_signature(self, expr, print_arg_names = True):
-        """Extract from function definition all the information
-        (name, input, output) needed to create the signature
+        """
+        Get the C representation of the function signature.
+
+        Extract from the function definition `expr` all the
+        information (name, input, output) needed to create the
+        function signature and return a string describing the
+        function.
+
+        This is not a declaration as the signature does not end
+        with a semi-colon.
 
         Parameters
         ----------
-        expr            : FunctionDef
-            the function defintion
+        expr : FunctionDef
+            The function definition for which a signature is needed.
 
-        print_arg_names : Bool
-            default value True and False when we don't need to print
-            arguments names
+        print_arg_names : bool, default : True
+            Indicates whether argument names should be printed.
 
-        Return
-        ------
-        String
-            Signature of the function
+        Returns
+        -------
+        string
+            Signature of the function.
         """
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
