@@ -23,6 +23,7 @@ def should_ignore(name):
     name_parts = name.split('.')
     print(name_parts)
     obj_name = name_parts[-1]
+    print('inner_function' in name_parts)
     #ignore functions inside functions
     if 'inner_function' in name_parts:
         return True
