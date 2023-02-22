@@ -20,7 +20,11 @@ def should_ignore(name):
     bool
         True if object should be ignored, False otherwise.
     '''
-    obj_name = name.split('.')[-1]
+    name_parts = name.split('.')
+    obj_name = name_parts[-1]
+    #ignore functions inside functions
+    if 'inner_function' in name_parts:
+        return True
     #ignore magic methods
     if obj_name.startswith('__') and obj_name.endswith('__'):
         return True
@@ -78,7 +82,7 @@ if __name__ == '__main__':
                 if should_ignore('.'.join([prefix, node.name])):
                     continue
                 if any((node.lineno <= x <= node.end_lineno
-                        for x in line_nos)) and not node.name.startswith('inner_function'):
+                        for x in line_nos)):
                     objects.append('.'.join([prefix, node.name]))
                 obj_pref = node.name if isinstance(
                     node, ClassDef) else 'inner_function'
