@@ -1139,7 +1139,7 @@ class CCodePrinter(CodePrinter):
 
         Returns
         -------
-        string
+        str
             Signature of the function.
         """
         if len(expr.results) > 1:

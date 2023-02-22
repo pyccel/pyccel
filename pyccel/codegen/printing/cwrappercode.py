@@ -160,7 +160,7 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            return 'void *'
+            return 'void*'
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if dtype != "pyarrayobject":
@@ -169,9 +169,9 @@ class CWrapperCodePrinter(CCodePrinter):
             dtype = self.find_in_dtype_registry(dtype, prec)
 
         if self.is_c_pointer(expr):
-            return '{0} *'.format(dtype)
+            return f'{dtype}*'
         else:
-            return '{0} '.format(dtype)
+            return dtype
 
     def get_new_PyObject(self, name):
         """
@@ -250,18 +250,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def static_function_signature(self, expr):
         """
-        Extract from the function definition all the information (name, input, output)
-        needed to create the function signature used for C/fortran binding
+        Get the C representation of the function signature using only basic types.
+
+        Extract from the function definition `expr` all the
+        information (name, input, output) needed to create the
+        function signature used for C/Fortran binding and return
+        a string describing the function.
 
         Parameters:
         ----------
         expr : FunctionDef
-            The function defintion
+            The function definition for which a signature is needed.
 
         Return:
         ------
-        String
-            Signature of the function
+        str
+            Signature of the function.
         """
         #if target_language is C no need for the binding
         if self._target_language == 'c':
@@ -271,23 +275,23 @@ class CWrapperCodePrinter(CCodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('int'))
             args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
         else:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('void'))
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+            arg_code = ', '.join(self.function_signature(i, False)
                         if isinstance(i, FunctionAddress)
-                        else '{0}'.format(self.get_static_declare_type(i))
+                        else self.get_static_declare_type(i)
                         for i in args)
 
         if isinstance(expr, FunctionAddress):
-            return '{}(*{})({})'.format(ret_type, name, arg_code)
+            return f'{ret_type} (*{name})({arg_code})'
         else:
-            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+            return f'{ret_type} {name}({arg_code})'
 
     def get_static_args(self, argument):
         """
