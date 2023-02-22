@@ -1032,12 +1032,12 @@ class CCodePrinter(CodePrinter):
         --------
         >>> v = Variable('int', 'x')
         >>> self.get_declare_type(v)
-        'int64_t '
+        'int64_t'
 
         For an object accessed via a pointer:
         >>> v = Variable('int', 'x', is_optional=True, rank=1)
         >>> self.get_declare_type(v)
-        't_ndarray* '
+        't_ndarray*'
         """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
@@ -1055,28 +1055,28 @@ class CCodePrinter(CodePrinter):
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
         if self.is_c_pointer(expr):
-            return '{0} *'.format(dtype)
+            return f'{dtype}*'
         else:
-            return '{0} '.format(dtype)
+            return dtype
 
     def _print_FuncAddressDeclare(self, expr):
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('int'))
             args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
         else:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('void'))
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
             # TODO: extract informations needed for printing in case of function argument which itself has a function argument
             arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
-                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
+                        if isinstance(i, FunctionAddress) else f'{self.get_declare_type(i)} {i}'
                         for i in args)
-        return '{}(*{})({});\n'.format(ret_type, name, arg_code)
+        return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
@@ -1087,17 +1087,14 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
-        elif declaration_type == 't_ndarray ' and not self._in_header:
+        elif declaration_type == 't_ndarray' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
         else:
             preface = ''
             init    = ''
 
-        declaration = '{dtype}{var}{init};\n'.format(
-                            dtype = declaration_type,
-                            var   = variable,
-                            init  = init)
+        declaration = f'{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
@@ -1144,17 +1141,17 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('int'))
             args += [FunctionDefArgument(a) for a in expr.results]
         else:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('void'))
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
             def get_var_arg(arg, var):
                 code = "const " * var.is_const
-                code += self.get_declare_type(var)
+                code += self.get_declare_type(var) + ' '
                 code += arg.name * print_arg_names
                 return code
 
@@ -1167,9 +1164,9 @@ class CCodePrinter(CodePrinter):
             self._additional_args.pop()
 
         if isinstance(expr, FunctionAddress):
-            return '{}(*{})({})'.format(ret_type, name, arg_code)
+            return f'{ret_type} (*{name})({arg_code})'
         else:
-            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+            return f'{ret_type} {name}({arg_code})'
 
     def _print_IndexedElement(self, expr):
         base = expr.base
