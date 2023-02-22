@@ -257,13 +257,13 @@ class CWrapperCodePrinter(CCodePrinter):
         function signature used for C/Fortran binding and return
         a string describing the function.
 
-        Parameters:
+        Parameters
         ----------
         expr : FunctionDef
             The function definition for which a signature is needed.
 
-        Return:
-        ------
+        Returns
+        -------
         str
             Signature of the function.
         """
