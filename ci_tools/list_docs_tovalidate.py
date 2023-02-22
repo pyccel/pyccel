@@ -21,6 +21,7 @@ def should_ignore(name):
         True if object should be ignored, False otherwise.
     '''
     name_parts = name.split('.')
+    print(name_parts)
     obj_name = name_parts[-1]
     #ignore functions inside functions
     if 'inner_function' in name_parts:
