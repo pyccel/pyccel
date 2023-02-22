@@ -288,10 +288,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         else self.get_static_declare_type(i)
                         for i in args)
 
-        if isinstance(expr, FunctionAddress):
-            return f'{ret_type} (*{name})({arg_code})'
-        else:
-            return f'{ret_type} {name}({arg_code})'
+        return f'{ret_type} {name}({arg_code})'
 
     def get_static_args(self, argument):
         """
