@@ -69,7 +69,7 @@ class CWrapperCodePrinter(CCodePrinter):
     A printer for printing the C-Python interface.
 
     A printer to convert Pyccel's AST describing a translated module,
-    to strings of c code which provide an interface between the module
+    to strings of C code which provide an interface between the module
     and Python code.
     As for all printers the navigation of this file is done via _print_X
     functions.
