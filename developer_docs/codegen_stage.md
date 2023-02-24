@@ -65,6 +65,25 @@ When a file imports another it is important that this information be stored some
 This additional complexity is handled through an object called `_additional_imports` which is exposed through the functions `pyccel.codegen.printing.XCodePrinter.get_additional_imports`.
 The exact implementation of this object differs from language to language so you should check how it is used in each language when you need it.
 
+### Fortran
+
+In addition to imports mentioned in the original Fortran code, it is also necessary to import objects defined in the standard.
+In Fortran it is best practice to denote these functions with the `intrinsic` flag.
+As they do not need linking they are treated separately from the other additional imports.
+
+A `set` of function names is stored in the member dictionary `FCodePrinter._constantImports`.
+The keys of this dictionary are the names of the modules from which we wish to import.
+The simplest way to fill this dictionary is to use the `setdefault` function which adds a key and value pair, only if the key is not already present.
+For example to print the following:
+```fortran
+use, intrinsic :: ISO_FORTRAN_ENV, only : stderr
+```
+`FCodePrinter._constantImports` should be filled with the following call:
+```python
+self._constantImports.setdefault('ISO_FORTRAN_ENV', set()).add(("stderr"))
+```
+It will then be printed with the `Module` or `Program` using the function `print_constant_imports`.
+
 ## Loop unravelling
 
 In Python, thanks to NumPy, many vector expressions can be handled natively.
