@@ -55,16 +55,35 @@ class BindCFunctionDef(FunctionDef):
         assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
         assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
         arguments_inout = [[ai] + [False]*(2*len(a.sizes)) for ai, a in zip(self._arguments_inout, self._arguments)]
-        print(self.arguments_inout)
-        print(arguments_inout)
         self._arguments_inout = [ai for a in arguments_inout for ai in a]
-        print(self.arguments_inout)
 
     @property
     def original_function(self):
         """ The function which is wrapped by this BindCFunctionDef
         """
         return self._original_function
+
+    @property
+    def bind_c_arguments(self):
+        """
+        Get the BindCFunctionDefArguments of the function.
+
+        Return a list of all the arguments passed to the function.
+        These objects all have the type BindCFunctionDefArgument so
+        shapes and strides are hidden.
+        """
+        return self._arguments
+
+    @property
+    def bind_c_results(self):
+        """
+        Get the BindCFunctionDefResults of the function.
+
+        Return a list of all the results returned by the function.
+        These objects all have the type BindCFunctionDefResult so
+        shapes and strides are hidden.
+        """
+        return self._results
 
     @property
     def results(self):
