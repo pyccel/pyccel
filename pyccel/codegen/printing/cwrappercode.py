@@ -38,7 +38,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
-from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
+from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_step
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
@@ -282,10 +282,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if self._target_language == 'fortran' and argument.rank > 0:
             arg_address = ObjectAddress(argument)
-            static_args = [
+            static_args = [ObjectAddress(FunctionCall(array_get_data, [arg_address]))]
+            static_args+= [
                 FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)
             ]
-            static_args.append(ObjectAddress(FunctionCall(array_get_data, [arg_address])))
+            static_args+= [
+                FunctionCall(array_get_step, [arg_address, i]) for i in range(argument.rank)
+            ]
         else:
             static_args = [argument]
 
@@ -341,6 +344,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         body = []
+        print("get_static_results")
 
         if isinstance(result, BindCFunctionDefResult):
             print(result)
@@ -953,8 +957,13 @@ class CWrapperCodePrinter(CCodePrinter):
             self.set_scope(mini_scope)
 
             # update ndarray local variables properties
-            arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
-                    for a in func.arguments}
+            if isinstance(func, BindCFunctionDef):
+                arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+                        for a in func.bind_c_arguments}
+            else:
+                arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+                        for a in func.arguments}
+            print(arg_vars)
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
