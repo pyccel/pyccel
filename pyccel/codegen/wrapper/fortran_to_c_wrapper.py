@@ -158,14 +158,13 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_Interface(self, expr):
         functions = [self.scope.functions[self._wrapper_names_dict[f.name]] for f in expr.functions]
-        print(functions)
         return Interface(expr.name, functions, expr.is_argument)
 
     def _wrap_FunctionDefArgument(self, expr):
         var = expr.var
         if var.is_ndarray:
-            new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name), rank = expr.var.rank,
-                                memory_handling='alias', is_argument = True, is_optional = var.is_optional)
+            new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name),
+                                is_argument = True, is_optional = var.is_optional)
         else:
             new_var = var.clone(self.scope.get_new_name(expr.name))
 
@@ -201,8 +200,6 @@ class FortranToCWrapper(Wrapper):
             copy = Assign(ptr_var, expr)
             c_loc = CLocFunc(ptr_var, bind_var)
             self._additional_exprs.extend([alloc, copy, c_loc])
-
-            print(bind_var, sizes, bind_var.rank)
 
             return BindCFunctionDefResult(bind_var, sizes)
         else:
