@@ -37,6 +37,7 @@ __all__ = (
     #-------HELPERS ------
     'array_get_dim',
     'array_get_data',
+    'array_get_step',
     #-------OTHERS--------
     'get_numpy_max_acceptable_version_file'
 )
@@ -90,6 +91,13 @@ pyarray_check = FunctionDef(
 
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias'),
+                                        Variable(dtype=NativeInteger(), name = 'idx')],
+                           results   = [Variable(dtype=NativeInteger(), name = 'd')])
+
+# Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
+array_get_step = FunctionDef(name    = 'nd_step',
                            body      = [],
                            arguments = [Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias'),
                                         Variable(dtype=NativeInteger(), name = 'idx')],
