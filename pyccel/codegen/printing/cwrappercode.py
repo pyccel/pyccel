@@ -928,8 +928,17 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results = [self.get_new_PyObject("result")]
         self.scope.insert_variable(wrapper_results[0])
 
+        if isinstance(funcs[0], BindCFunctionDef):
+            example_args = funcs[0].bind_c_arguments
+            example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+                    for a in example_args}
+        else:
+            example_args = funcs[0].arguments
+            example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+                    for a in example_args}
+
         # Collect argument names for PyArgParse
-        arg_names         = [a.name for a in funcs[0].arguments]
+        arg_names         = [a.name for a in example_args]
         keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
         wrapper_body      = [keyword_list]
@@ -942,9 +951,9 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.scope.get_new_name("check"))
         scope.insert_variable(check_var, check_var.name)
-        types_dict = OrderedDict((a.var, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
+        types_dict = OrderedDict((a, set()) for a in example_arg_vars) #dict to collect each variable possible type and the corresponding flags
         # collect parse arg
-        parse_args = [self.get_PyArgParseType(a.var) for a in funcs[0].arguments]
+        parse_args = [self.get_PyArgParseType(a) for a in example_arg_vars]
 
         # Managing the body of wrapper
         for func in funcs :
@@ -963,7 +972,6 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
                         for a in func.arguments}
-            print(arg_vars)
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
@@ -1046,7 +1054,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Parsing Arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
-                                          funcs[0].arguments,
+                                          example_args,
                                           parse_args, keyword_list)
 
         wrapper_body += list(default_value.values())
