@@ -1405,7 +1405,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and not (is_static and is_optional) and not isinstance(expr_dtype, BindCPointer):
+            if intent == 'in' and rank == 0 and not (is_static and is_optional):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
