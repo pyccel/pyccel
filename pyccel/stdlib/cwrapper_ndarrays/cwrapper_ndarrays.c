@@ -430,5 +430,9 @@ int     nd_nstep(t_ndarray *a, int n)
 	if (a == NULL)
 		return 0;
 
-	return a->strides[n];
+	int step = a->strides[n];
+	for (int i = n+1; i<a->nd; ++i) {
+		step /= a->shape[i];
+	}
+	return step;
 }

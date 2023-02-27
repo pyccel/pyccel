@@ -97,7 +97,7 @@ array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
 # Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
-array_get_step = FunctionDef(name    = 'nd_step',
+array_get_step = FunctionDef(name    = 'nd_nstep',
                            body      = [],
                            arguments = [Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias'),
                                         Variable(dtype=NativeInteger(), name = 'idx')],
