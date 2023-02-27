@@ -56,8 +56,9 @@ class FortranToCWrapper(Wrapper):
             return [If(true_section, false_section)]
         else:
             args = [func_arg_to_call_arg[fa] for fa in func_def_args]
-            body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, fa.sizes)
-                    for fa in func_def_args if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
+            size = [fa.sizes[::-1] if fa.original_function_argument_variable.order == 'C' else fa.sizes for fa in func_def_args]
+            body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
+                    for fa,s in zip(func_def_args, size) if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
             func_call = Assign(results[0], FunctionCall(func, args)) if len(results) == 1 else \
                         Assign(results, FunctionCall(func, args))
             return body + [func_call]
@@ -89,7 +90,7 @@ class FortranToCWrapper(Wrapper):
             new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_argument = False, is_optional = False,
                                 memory_handling = 'alias')
             self.scope.insert_variable(new_var)
-            start = LiteralInteger(0)
+            start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
             stop = None
             indexes = [Slice(start, stop, step) for step in bind_c_arg.strides]
             return IndexedElement(new_var, *indexes)
