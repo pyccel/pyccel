@@ -3276,7 +3276,7 @@ class SemanticParser(BasicParser):
             # Collect the modified objects
             lhs_assigns   = [a.lhs for a in assigns]
             modified_args = [func_arg for f in calls
-                                for func_arg, inout in zip(f.args,f.funcdef.arguments_inout) if inout]
+                                for call_arg, func_arg in zip(f.args,f.funcdef.arguments) if func_arg.inout]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
@@ -3307,7 +3307,7 @@ class SemanticParser(BasicParser):
                         func = self.scope.find(f_name, 'functions')
 
                         j = list(fa.args).index(a)
-                        intent = func.arguments_inout[j]
+                        intent = func.arguments[j].inout
                         if intent:
                             args_inout[i] = True
 
@@ -3337,7 +3337,6 @@ class SemanticParser(BasicParser):
                     'imports':imports,
                     'decorators':decorators,
                     'is_recursive':is_recursive,
-                    'arguments_inout':args_inout,
                     'functions': sub_funcs,
                     'interfaces': func_interfaces,
                     'doc_string': doc_string,

@@ -1785,27 +1785,30 @@ class FCodePrinter(CodePrinter):
     def _print_BindCFunctionDef(self, expr):
         name = self._print(expr.name)
         results   = list(expr.results)
-        arguments = [a.var for a in expr.arguments]
-        if any(isinstance(a, FunctionAddress) for a in arguments):
-            # Functions with function addresses as arguments cannot be
-            # exposed to python so there is no need to print their signature
-            return ''
 
         self.set_scope(expr.scope)
         self.scope.functions[expr.name] = expr
 
         body = self._print(expr.body)
 
-        arguments_inout = expr.arguments_inout
         decs = OrderedDict()
-        for i,arg in enumerate(arguments):
-            if arguments_inout[i]:
+        for arg in expr.arguments:
+            if arg.inout:
                 intent='inout'
             else:
                 intent='in'
 
-            dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            decs[arg] = dec
+            arg_var = arg.var
+
+            if isinstance(arg_var, FunctionAddress):
+                # Functions with function addresses as arguments cannot be
+                # exposed to python so there is no need to print their signature
+                return ''
+
+            dec = Declare(arg_var.dtype, arg_var, intent=intent , static=True)
+            decs[arg_var] = dec
+
+        arguments = [a.var for a in expr.arguments]
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
@@ -1859,7 +1862,8 @@ class FCodePrinter(CodePrinter):
         is_elemental = expr.is_elemental
         out_args = []
         args_decs = OrderedDict()
-        arguments = [a.var for a in expr.arguments]
+        arguments = expr.arguments
+        argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -1867,7 +1871,7 @@ class FCodePrinter(CodePrinter):
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
-                if result in arguments:
+                if result in argument_vars:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
@@ -1887,18 +1891,19 @@ class FCodePrinter(CodePrinter):
             args_decs[result] = dec
         # ...
 
-        for i,arg in enumerate(arguments):
-            if isinstance(arg, Variable):
+        for i, arg in enumerate(arguments):
+            arg_var = arg.var
+            if isinstance(arg_var, Variable):
                 if i == 0 and expr.cls_name:
-                    dec = Declare(arg.dtype, arg, intent='inout', passed_from_dotted = True)
-                elif expr.arguments_inout[i]:
-                    dec = Declare(arg.dtype, arg, intent='inout')
+                    dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
+                elif arg.inout:
+                    dec = Declare(arg_var.dtype, arg_var, intent='inout')
                 else:
-                    dec = Declare(arg.dtype, arg, intent='in')
-                args_decs[arg] = dec
+                    dec = Declare(arg_var.dtype, arg_var, intent='in')
+                args_decs[arg_var] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
-        for i in arguments:
+        for i in argument_vars:
             if i in out_args:
                 out_args.remove(i)
 

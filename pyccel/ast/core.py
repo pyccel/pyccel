@@ -1862,7 +1862,7 @@ class FunctionDefArgument(PyccelAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
     _attribute_nodes = ('_value','_var')
 
     def __init__(self, name, *, value = None, kwonly=False, annotation=None):
@@ -1877,6 +1877,10 @@ class FunctionDefArgument(PyccelAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+
+        if pyccel_stage != "syntactic":
+            self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
+
         super().__init__()
 
     @property
@@ -1925,6 +1929,12 @@ class FunctionDefArgument(PyccelAstNode):
         (if not then it must be provided)
         """
         return self._value is not None
+
+    @property
+    def inout(self):
+        """ Indicates whether the argument may be modified by the function
+        """
+        return self._inout
 
     def __str__(self):
         if self.has_default:
@@ -2204,9 +2214,6 @@ class FunctionDef(ScopedNode):
     is_external: bool
         True for a function which cannot be explicitly imported or renamed
 
-    arguments_inout: list, tuple
-        a list of booleans indicating if each argument is modified by the function
-
     functions: list, tuple
         a list of functions defined within this function
 
@@ -2245,7 +2252,7 @@ class FunctionDef(ScopedNode):
     __slots__ = ('_name','_arguments','_results','_body',
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
-                 '_is_elemental','_is_private','_is_header','_arguments_inout',
+                 '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_doc_string', '_is_external')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
@@ -2268,7 +2275,6 @@ class FunctionDef(ScopedNode):
         is_private=False,
         is_header=False,
         is_external=False,
-        arguments_inout=(),
         functions=(),
         interfaces=(),
         doc_string=None,
@@ -2345,17 +2351,6 @@ class FunctionDef(ScopedNode):
         else:
             is_external = is_external and is_header and ( len(results) == 1 )
 
-        if arguments_inout:
-            if not isinstance(arguments_inout, (list, tuple)):
-                raise TypeError('Expecting a list or tuple ')
-
-            if not all([isinstance(i, bool) for i in arguments_inout]):
-                raise ValueError('Expecting booleans')
-
-        else:
-            arg_vars = [a.var for a in arguments]
-            arguments_inout = [a.rank>0 and not a.is_const if isinstance(a, Variable) else False for a in arg_vars]
-
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2377,7 +2372,6 @@ class FunctionDef(ScopedNode):
         self._is_private      = is_private
         self._is_header       = is_header
         self._is_external     = is_external
-        self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
         self._doc_string      = doc_string
@@ -2504,11 +2498,6 @@ class FunctionDef(ScopedNode):
         return False
 
     @property
-    def arguments_inout(self):
-        """ List of variables which are the modifiable function arguments """
-        return self._arguments_inout
-
-    @property
     def functions(self):
         """ List of functions within this function """
         return self._functions
@@ -2580,7 +2569,6 @@ class FunctionDef(ScopedNode):
         'is_elemental':self._is_elemental,
         'is_private':self._is_private,
         'is_header':self._is_header,
-        'arguments_inout':self._arguments_inout,
         'functions':self._functions,
         'is_external':self._is_external,
         'interfaces':self._interfaces,
