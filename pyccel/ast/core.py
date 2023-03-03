@@ -1852,8 +1852,26 @@ class FunctionCallArgument(Basic):
             return '{}'.format(str(self.value))
 
 class FunctionDefArgument(PyccelAstNode):
+    """
+    Node describing the argument of a function.
 
-    """A FunctionDef FunctionDefArgument
+    An object describing the argument of a function described
+    by a FunctionDef. This object stores all the information
+    which describes an argument but is superfluous for a Variable.
+
+    Parameters
+    ----------
+    name : PyccelSymbol, Variable, FunctionAddress
+        The name of the argument.
+
+    value : PyccelAstNode, default: None
+        The default value of the argument.
+
+    kwonly : bool
+        Indicates if the argument must be passed by keyword.
+
+    annotation : str
+        The type annotation describing the argument.
 
     Examples
     --------
@@ -1861,6 +1879,10 @@ class FunctionDefArgument(PyccelAstNode):
     >>> n = FunctionDefArgument('n')
     >>> n
     n
+
+    See also
+    --------
+    FunctionDef
     """
     __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
     _attribute_nodes = ('_value','_var')
@@ -1932,7 +1954,11 @@ class FunctionDefArgument(PyccelAstNode):
 
     @property
     def inout(self):
-        """ Indicates whether the argument may be modified by the function
+        """
+        Indicates whether the argument may be modified by the function.
+
+        True if the argument may be modified in the function. False if
+        the argument remains constant in the function.
         """
         return self._inout
 
@@ -2162,14 +2188,19 @@ class Return(Basic):
 
 class FunctionDef(ScopedNode):
 
-    """Represents a function definition.
+    """
+    Represents a function definition.
+
+    Node containing all the information necessary to describe a function.
+    This information should provide enough information to print a functionally
+    equivalent function in any target language.
 
     Parameters
     ----------
     name : str
         The name of the function.
 
-    arguments : iterable
+    arguments : iterable of FunctionDefArgument
         The arguments to the function.
 
     results : iterable
@@ -2181,47 +2212,47 @@ class FunctionDef(ScopedNode):
     global_vars : list of Symbols
         Variables which will not be passed into the function.
 
-    cls_name: str
-        Class name if the function is a method of cls_name
+    cls_name : str
+        Class name if the function is a method of cls_name.
 
-    is_static: bool
-        True for static functions. Needed for iso_c_binding interface
+    is_static : bool
+        True for static functions. Needed for iso_c_binding interface.
 
-    imports: list, tuple
-        a list of needed imports
+    imports : list, tuple
+        A list of needed imports.
 
-    decorators: list, tuple
-        a list of properties
+    decorators : list, tuple
+        A list of properties.
 
-    headers: list,tuple
-        a list of headers describing the function
+    headers : list,tuple
+        A list of headers describing the function.
 
-    is_recursive: bool
-        True for a function which calls itself
+    is_recursive : bool
+        True for a function which calls itself.
 
-    is_pure: bool
-        True for a function without side effect
+    is_pure : bool
+        True for a function without side effect.
 
-    is_elemental: bool
-        True for a function that is elemental
+    is_elemental : bool
+        True for a function that is elemental.
 
-    is_private: bool
-        True for a function that is private
+    is_private : bool
+        True for a function that is private.
 
-    is_header: bool
-        True for a function which has no body available
+    is_header : bool
+        True for a function which has no body available.
 
-    is_external: bool
-        True for a function which cannot be explicitly imported or renamed
+    is_external : bool
+        True for a function which cannot be explicitly imported or renamed.
 
-    functions: list, tuple
-        a list of functions defined within this function
+    functions : list, tuple
+        A list of functions defined within this function.
 
-    interfaces: list, tuple
-        a list of interfaces defined within this function
+    interfaces : list, tuple
+        A list of interfaces defined within this function.
 
-    doc_string: str
-        The doc string of the function
+    doc_string : str
+        The doc string of the function.
 
     Examples
     --------
@@ -2248,6 +2279,10 @@ class FunctionDef(ScopedNode):
     >>> body        = [Assign(y,x+n)]
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
+
+    See Also
+    --------
+    FunctionDefArgument
     """
     __slots__ = ('_name','_arguments','_results','_body',
                  '_global_vars','_cls_name','_is_static','_imports',
