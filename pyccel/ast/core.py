@@ -50,29 +50,40 @@ __all__ = (
     'CodeBlock',
     'Comment',
     'CommentBlock',
+    'Concatenate',
     'ConstructorCall',
     'Continue',
     'Deallocate',
     'Declare',
+    'Decorator',
     'Del',
+    'DottedFunctionCall',
     'Duplicate',
     'DoConcurrent',
     'EmptyNode',
+    'ErrorExit',
+    'Exit',
     'For',
     'ForIterator',
+    'FuncAddressDeclare',
+    'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
     'If',
+    'IfSection',
     'Import',
     'InlineFunctionDef',
     'InProgram',
     'Interface',
+    'Iterable',
     'Module',
     'ModuleHeader',
     'Pass',
     'Program',
+    'PyccelFunctionDef',
+    'Raise',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -85,7 +96,6 @@ __all__ = (
     'create_incremented_string',
     'get_iterable_ranges',
     'inline',
-    'process_shape',
     'subs'
 )
 
@@ -2736,6 +2746,7 @@ class PyccelFunctionDef(FunctionDef):
                  The class which should be instantiated upon a FunctionCall
                  to this FunctionDef object
     """
+    __slots__ = ()
     def __init__(self, name, func_class):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
@@ -3971,7 +3982,7 @@ class InProgram(PyccelAstNode):
     _dtype = NativeBool()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     _attribute_nodes = ()
     __slots__ = ()
@@ -3988,6 +3999,7 @@ class Decorator(Basic):
             The name of the decorator
     """
     __slots__ = ('_name',)
+    _attribute_nodes = ()
 
     def __init__(self, name):
         self._name = name
@@ -4215,17 +4227,4 @@ def get_iterable_ranges(it, var_name=None):
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 #==============================================================================
-def process_shape(shape):
-    if not hasattr(shape,'__iter__'):
-        shape = [shape]
-
-    new_shape = []
-    for s in shape:
-        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
-            new_shape.append(s)
-        elif isinstance(s, int):
-            new_shape.append(LiteralInteger(s))
-        else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
-    return tuple(new_shape)
 

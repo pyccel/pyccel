@@ -174,3 +174,24 @@ def test_return_None(language):
     divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
 
+def test_arg_arr_element_op(language):
+    def return_mult_arr_arg_element(i: 'int', arg:'float[:]'):
+        import numpy as np
+        a = np.ones(i)
+        return a[0] * arg[0]
+    def return_add_arr_arg_element(i: 'int', arg:'float[:]'):
+        import numpy as np
+        a = np.ones(i)
+        return a[0] + arg[0]
+    def return_op_arr_arg_element(i: 'int', arg:'float[:]'):
+        import numpy as np
+        a = np.ones(i)
+        return ((a[2] + arg[0]) * arg[2] - 2) / 4 * 2
+
+    arr = np.array([1,2,3,4], dtype=float)
+    epyc_return_mult_arr_arg_element = epyccel(return_mult_arr_arg_element, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_return_mult_arr_arg_element(7, arr) == return_mult_arr_arg_element(7, arr))
+    epyc_return_add_arr_arg_element = epyccel(return_add_arr_arg_element, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_return_add_arr_arg_element(7, arr) == return_add_arr_arg_element(7, arr))
+    epyc_return_op_arr_arg_element = epyccel(return_op_arr_arg_element, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_return_op_arr_arg_element(7, arr) == return_op_arr_arg_element(7, arr))

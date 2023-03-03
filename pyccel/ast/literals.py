@@ -7,10 +7,11 @@
 from pyccel.utilities.metaclasses import Singleton
 
 from .basic              import PyccelAstNode, Basic
-from .datatypes          import (NativeInteger, NativeBool, NativeFloat,
-                                  NativeComplex, NativeString, NativeFloat)
+from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, NativeFloat,
+                                  NativeComplex, NativeString)
 
 __all__ = (
+    'Literal',
     'LiteralTrue',
     'LiteralFalse',
     'LiteralInteger',
@@ -32,7 +33,7 @@ class Literal(PyccelAstNode):
     __slots__ = ('_precision',)
     _attribute_nodes  = ()
     _rank      = 0
-    _shape     = ()
+    _shape     = None
     _order     = None
 
     def __init__(self, precision):
@@ -152,8 +153,8 @@ class LiteralComplex(Literal):
 
     def __init__(self, real, imag, precision = -1):
         super().__init__(precision)
-        self._real_part = LiteralFloat(self._collect_python_val(real))
-        self._imag_part = LiteralFloat(self._collect_python_val(imag))
+        self._real_part = LiteralFloat(self._collect_python_val(real), precision = precision)
+        self._imag_part = LiteralFloat(self._collect_python_val(imag), precision = precision)
 
     @staticmethod
     def _collect_python_val(arg):
@@ -216,19 +217,29 @@ class LiteralString(Literal):
     def __str__(self):
         return str(self.python_value)
 
+    def __add__(self, o):
+        if isinstance(o, LiteralString):
+            return LiteralString(self._string + o._string)
+        return NotImplemented
+
     @property
     def python_value(self):
         return self.arg
 
 #------------------------------------------------------------------------------
 
-class Nil(Basic, metaclass=Singleton):
+class Nil(PyccelAstNode, metaclass=Singleton):
 
     """
     class for None object in the code.
     """
     __slots__ = ()
     _attribute_nodes = ()
+    _dtype = NativeGeneric
+    _precision = 0
+    _rank = 0
+    _shape = None
+    _order = None
 
     def __str__(self):
         return 'None'

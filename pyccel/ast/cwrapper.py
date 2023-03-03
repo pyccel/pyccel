@@ -22,7 +22,9 @@ from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .internals import get_final_precision
 
-from .variable  import Variable, VariableAddress
+from .variable  import Variable
+
+from .c_concepts import ObjectAddress
 
 
 errors = Errors()
@@ -36,6 +38,7 @@ __all__ = (
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
+    'PyModule_AddObject',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -232,7 +235,7 @@ class PyArg_ParseTupleNode(Basic):
         """
         return self._arg_names
 
-class PyBuildValueNode(Basic):
+class PyBuildValueNode(PyccelAstNode):
     """
     Represents a call to the function from Python.h which create a new value based on a format string
 
@@ -241,8 +244,13 @@ class PyBuildValueNode(Basic):
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
-    __slots__ = ('_flags','_result_args',)
+    __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
+    _dtype = PyccelPyObject
+    _rank = 0
+    _precision = 0
+    _shape = ()
+    _order = None
 
     def __init__(self, result_args = ()):
         self._flags = ''
@@ -279,7 +287,7 @@ class PyModule_AddObject(PyccelAstNode):
     _dtype = NativeInteger()
     _precision = 4
     _rank = 0
-    _shape = ()
+    _shape = None
 
     def __init__(self, mod_name, name, variable):
         if not isinstance(name, str):
@@ -289,7 +297,7 @@ class PyModule_AddObject(PyccelAstNode):
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
-        self._var = VariableAddress(variable)
+        self._var = ObjectAddress(variable)
         super().__init__()
 
     @property

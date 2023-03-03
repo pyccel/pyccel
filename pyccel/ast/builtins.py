@@ -29,6 +29,9 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Lambda',
+    'PythonAbs',
+    'PythonComplexProperty',
     'PythonReal',
     'PythonImag',
     'PythonConjugate',
@@ -43,6 +46,7 @@ __all__ = (
     'PythonMap',
     'PythonPrint',
     'PythonRange',
+    'PythonSum',
     'PythonType',
     'PythonZip',
     'PythonMax',
@@ -61,10 +65,11 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeFloat()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -132,10 +137,11 @@ class PythonConjugate(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeComplex()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     name = 'conjugate'
 
@@ -158,8 +164,8 @@ class PythonBool(PyccelAstNode):
     name = 'bool'
     _dtype = NativeBool()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _attribute_nodes = ('_arg',)
 
@@ -191,8 +197,8 @@ class PythonComplex(PyccelAstNode):
 
     _dtype = NativeComplex()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _real_cast = PythonReal
     _imag_cast = PythonImag
@@ -331,8 +337,8 @@ class PythonFloat(PyccelAstNode):
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _attribute_nodes = ('_arg',)
 
@@ -363,8 +369,8 @@ class PythonInt(PyccelAstNode):
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
-    _rank = 0
-    _shape = ()
+    _rank  = 0
+    _shape = None
     _order = None
     _attribute_nodes  = ('_arg',)
 
@@ -386,10 +392,10 @@ class PythonInt(PyccelAstNode):
 class PythonTuple(PyccelAstNode):
     """ Represents a call to Python's native tuple() function.
     """
-    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous','_dtype','_precision','_rank','_shape')
+    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
+            '_dtype','_precision','_rank','_shape','_order')
     _iterable        = True
     _attribute_nodes = ('_args',)
-    _order = 'C'
 
     def __init__(self, *args):
         self._args = args
@@ -399,8 +405,9 @@ class PythonTuple(PyccelAstNode):
         elif len(args) == 0:
             self._dtype = NativeGeneric()
             self._precision = 0
-            self._rank = 0
-            self._shape = ()
+            self._rank  = 0
+            self._shape = None
+            self._order = None
             self._is_homogeneous = False
             return
         arg0 = args[0]
@@ -421,7 +428,7 @@ class PythonTuple(PyccelAstNode):
                 self._dtype = NativeString()
                 self._precision = 0
                 self._rank  = 0
-                self._shape = ()
+                self._shape = None
             else:
                 if complexes:
                     self._dtype     = NativeComplex()
@@ -439,17 +446,21 @@ class PythonTuple(PyccelAstNode):
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
-                shapes     = [a.shape for a in args]
+                inner_shape = [() if a.rank == 0 else a.shape for a in args]
                 self._rank = max(a.rank for a in args) + 1
-                if all(sh is not None for sh in shapes):
-                    self._shape = (LiteralInteger(len(args)), ) + shapes[0]
-                    self._rank  = len(self._shape)
+                self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+                self._rank  = len(self._shape)
 
         else:
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
-            self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+            if self._rank == 1:
+                self._shape     = (LiteralInteger(len(args)), )
+            else:
+                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+
+        self._order = None if self._rank < 2 else 'C'
 
     def __getitem__(self,i):
         def is_int(a):
@@ -523,7 +534,7 @@ class PythonLen(PyccelInternalFunction):
     _dtype     = NativeInteger()
     _precision = -1
     _rank      = 0
-    _shape     = ()
+    _shape     = None
     _order     = None
 
     def __init__(self, arg):
@@ -583,7 +594,8 @@ class PythonPrint(Basic):
 
     expr : PyccelAstNode
         The expression to print
-
+    file: String (Optional)
+        Select 'stdout' (default) or 'stderr' to print to
     Examples
 
     >>> from pyccel.ast.internals import symbols
@@ -592,17 +604,26 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
-    __slots__ = ('_expr')
+    __slots__ = ('_expr', '_file')
     _attribute_nodes = ('_expr',)
     name = 'print'
 
-    def __init__(self, expr):
+    def __init__(self, expr, file="stdout"):
+        if file not in ('stdout', 'stderr'):
+            raise ValueError('output_unit can be `stdout` or `stderr`')
         self._expr = expr
+        self._file = file
         super().__init__()
 
     @property
     def expr(self):
         return self._expr
+
+    @property
+    def file(self):
+        """ returns the output unit (`stdout` or `stderr`)
+        """
+        return self._file
 
 #==============================================================================
 class PythonRange(Basic):
@@ -668,8 +689,7 @@ class PythonZip(PyccelInternalFunction):
     Represents a zip stmt.
 
     """
-    __slots__ = ('_length','_args')
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_length',)
     name = 'zip'
 
     def __init__(self, *args):
@@ -726,7 +746,7 @@ class PythonSum(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name   = 'sum'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg):
@@ -749,7 +769,7 @@ class PythonMax(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name   = 'max'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, *x):
@@ -778,7 +798,7 @@ class PythonMin(PyccelInternalFunction):
     __slots__ = ('_dtype','_precision')
     name   = 'min'
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     def __init__(self, *x):
         if len(x)==1:
@@ -881,9 +901,12 @@ class PythonType(Basic):
         can be used in a print  statement
         """
         prec = self.precision
-        return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else prec*8))
+        dtype = str(self.dtype)
+        if prec in (None, -1):
+            return LiteralString(f"<class '{dtype}'>")
+        else:
+            precision = prec * (16 if self.dtype is NativeComplex() else 8)
+            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 
 #==============================================================================
 python_builtin_datatypes_dict = {

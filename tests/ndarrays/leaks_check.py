@@ -36,6 +36,15 @@ def conditional_alloc(b1 : bool, b2 : bool):
         n = x.shape[0]
     return n
 
+def return_array():
+    a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
+    return a
+
+def arrays_in_multi_returns():
+    a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
+    b = zeros(4)
+    return a, b, 4
+
 # testing garbage collecting in a Function
 
 if __name__ == '__main__':
@@ -50,6 +59,8 @@ if __name__ == '__main__':
 
     # testing garbage collecting in a Program
 
+    z = return_array()
+    y,x,s = arrays_in_multi_returns()
     a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     b = a
     c = a[1:]

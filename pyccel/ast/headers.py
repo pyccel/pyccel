@@ -10,7 +10,7 @@ from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .datatypes         import datatype, DataTypeFactory, UnionType
+from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
@@ -25,6 +25,7 @@ __all__ = (
     'MacroVariable',
     'MetaVariable',
     'MethodHeader',
+    'Template',
     'VariableHeader',
 )
 
@@ -284,6 +285,10 @@ class FunctionHeader(Header):
 
             order = None
             shape = None
+
+            if rank and precision == -1:
+                precision = default_precision[dtype]
+
             if rank >1:
                 order = dc['order']
 
@@ -763,7 +768,7 @@ class MacroFunction(Header):
                     new=arg
 
                 newargs.append(new)
-            newargs = tuple(newargs)
+            newargs = None if len(newargs) == 0 else tuple(newargs)
             results_shapes.append(newargs)
         return results_shapes
 

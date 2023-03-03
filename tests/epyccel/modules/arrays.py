@@ -1,11 +1,21 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
 
-from pyccel.decorators import types, stack_array, allow_negative_index
+from pyccel.decorators import types, template, stack_array, allow_negative_index
 
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
+a_1d_overflow = np.array([(1 << i) - 1 for i in range(32)], dtype=int)
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
+
+
+@types('T', 'T')
+@template(name='T' , types=['int', 'int8', 'int16', 'int32', 'int64', 'float',
+                            'float32', 'float64', 'complex64', 'complex128'])
+def array_return_first_element(a, b):
+    from numpy import array
+    x = array([a,b])
+    return x[0]
 
 #==============================================================================
 # 1D ARRAYS OF INT-32
@@ -287,6 +297,10 @@ def array_real_1d_scalar_mul( x, a ):
 def array_real_1d_scalar_div( x, a ):
     x[:] /= a
 
+@types( 'real[:]', 'real')
+def array_real_1d_scalar_mod( x, a ):
+    x[:] %= a
+
 @types( 'real[:]', 'real' )
 def array_real_1d_scalar_idiv( x, a ):
     x[:] = x // a
@@ -306,6 +320,10 @@ def array_real_1d_mul( x, y ):
 @types( 'real[:]', 'real[:]' )
 def array_real_1d_div( x, y ):
     x[:] /= y
+
+@types( 'real[:]', 'real[:]')
+def array_real_1d_mod( x, y ):
+    x[:] %= y
 
 @types( 'real[:]', 'real[:]' )
 def array_real_1d_idiv( x, y ):
@@ -331,6 +349,10 @@ def array_real_2d_C_scalar_mul( x, a ):
 def array_real_2d_C_scalar_div( x, a ):
     x[:,:] /= a
 
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_mod( x, a ):
+    x[:,:] %= a
+
 @types( 'real[:,:]', 'real[:,:]' )
 def array_real_2d_C_add( x, y ):
     x[:,:] += y
@@ -346,6 +368,10 @@ def array_real_2d_C_mul( x, y ):
 @types( 'real[:,:]', 'real[:,:]' )
 def array_real_2d_C_div( x, y ):
     x[:,:] /= y
+
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_mod( x, y ):
+    x[:,:] %= y
 
 @types('real[:,:]')
 def array_real_2d_C_array_initialization(a):
@@ -393,6 +419,10 @@ def array_real_2d_F_scalar_mul( x, a ):
 def array_real_2d_F_scalar_div( x, a ):
     x[:,:] /= a
 
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_mod( x, a ):
+    x[:,:] %= a
+
 @types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
 def array_real_2d_F_add( x, y ):
     x[:,:] += y
@@ -408,6 +438,10 @@ def array_real_2d_F_mul( x, y ):
 @types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
 def array_real_2d_F_div( x, y ):
     x[:,:] /= y
+
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_mod( x, y ):
+    x[:,:] %= y
 
 @types('real[:,:](order=F)')
 def array_real_2d_F_array_initialization(a):
@@ -790,6 +824,20 @@ def test_argument_negative_index_2(a, b):
     c = -2
     d = 3
     return a[c], a[d], b[c], b[d]
+
+@allow_negative_index('a', 'b')
+@types('int[:,:]', 'int[:,:]')
+def test_c_order_argument_negative_index(a, b):
+    c = -2
+    d = 2
+    return a[c,0], a[1,d], b[c,1], b[d,0]
+
+@allow_negative_index('a', 'b')
+@types('int[:,:](order=F)', 'int[:,:](order=F)')
+def test_f_order_argument_negative_index(a, b):
+    c = -2
+    d = 3
+    return a[c,0], a[1,d], b[c,1], b[0,d]
 
 #==============================================================================
 # SHAPE INITIALISATION
@@ -1766,6 +1814,12 @@ def arr_arange_6():
     a = np.arange(20, 1, -1.1)
     return np.shape(a)[0], a[0], a[-1]
 
+def arr_arange_7(arr : 'int[:,:]'):
+    import numpy as np
+    n, m = arr.shape
+    for i in range(n):
+        arr[i] = np.arange(i, i+m)
+
 def iterate_slice(i : int):
     import numpy as np
     a = np.arange(15)
@@ -1773,3 +1827,31 @@ def iterate_slice(i : int):
     for ai in a[:i]:
         res += ai
     return res
+
+#==============================================================================
+# NUMPY SUM
+#==============================================================================
+
+def arr_bool_sum():
+    import numpy as np
+    rows = [True for i in range(100)]
+    mat = [rows for j in range(100)]
+    a = np.array(mat, dtype=bool)
+    return np.sum(a)
+
+def tuple_sum():
+    import numpy as np
+    t = (1, 2, 3, 5, 8, 13)
+    return np.sum(t)
+
+#==============================================================================
+# NUMPY LINSPACE
+#==============================================================================
+
+def multiple_np_linspace():
+    import numpy as np
+    linspace_index = 5
+    x = np.linspace(0, 2, 128)
+    y = np.linspace(0, 4, 128)
+    z = np.linspace(0, 8, 128)
+    return x[0] + y[1] + z[2] + linspace_index
