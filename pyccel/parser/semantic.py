@@ -170,16 +170,36 @@ def _get_name(var):
 #==============================================================================
 
 class SemanticParser(BasicParser):
+    """
+    Class which handles the semantic stage as described in the developer docs.
 
-    """ Class for a Semantic Parser.
-    It takes a syntactic parser as input for the moment"""
+    This class is described in detail in developer_docs/semantic_stage.md.
+    It determines all semantic information which must be deduced in order to
+    print a representation of the AST resulting from the syntactic stage in one
+    of the target languages.
 
-    def __init__(self, inputs, **kwargs):
+    Parameters
+    ----------
+    inputs : SyntaxParser
+        A syntactic parser which has been used to generate a representation of
+        the input code using Pyccel nodes.
+
+    parents : list
+        A list of parsers describing the files which import this file.
+
+    d_parsers : list
+        A list of parsers describing files imported by this file
+
+    **kwargs : dict
+        Additional keyword arguments for BasicParser
+    """
+
+    def __init__(self, inputs, parents = (), d_parsers = (), **kwargs):
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
-        self._parents = kwargs.pop('parents', [])
-        self._d_parsers = kwargs.pop('d_parsers', {})
+        self._parents = list(parents)
+        self._d_parsers = dict(d_parsers)
 
         # ...
         if not isinstance(inputs, SyntaxParser):

@@ -1858,6 +1858,20 @@ class FCodePrinter(CodePrinter):
         return expr.name
 
     def function_signature(self, expr, name):
+        """
+        Print the signature of the function `expr`.
+
+        A helper function to print just the signature of the function
+        including the declarations of the arguments and results.
+
+        Parameters
+        ----------
+        expr : FunctionDef
+            The function whose signature should be printed.
+        name : str
+            The name which should be printed as the name of the function.
+            (May be different from expr.name in the case of interfaces).
+        """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         out_args = []
