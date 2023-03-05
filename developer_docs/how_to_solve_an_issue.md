@@ -10,7 +10,7 @@ To add a new function:
 -   Add a class to represent the function. The class should go in the appropriate file in the [ast](../pyccel/ast) folder. This function will probably inherit from [PyccelInternalFunction](../pyccel/ast/internals.py)
 -   Ensure the function is recognised in the semantic stage by adding it to the appropriate dictionary (see the function `builtin_function` and the dictionary `builtin_import_registery` in [ast/utilities.py](../pyccel/ast/utilities.py)
 -   Add the print functions for the 3 languages
--   Add tests in the folder tests/epyccel
+-   Add tests in the folder `tests/epyccel`
 
 ## Language Specific Bug Fixes
 

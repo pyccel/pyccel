@@ -10,6 +10,8 @@ from numpy import pi
 from .core import Module, Import
 from .variable import Constant
 
+__all__ = ('scipy_mod', 'scipy_pi_const')
+
 scipy_pi_const = Constant('float', 'pi', value=pi)
 
 scipy_mod = Module('scipy',

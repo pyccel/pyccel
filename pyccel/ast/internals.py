@@ -8,6 +8,7 @@ File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
 
+from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
@@ -22,8 +23,8 @@ __all__ = (
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
+    'get_final_precision',
     'max_precision',
-    'get_final_precision'
 )
 
 
@@ -71,7 +72,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
 
     def __init__(self, arg, index):
@@ -136,13 +137,17 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-    __slots__ = ('_start','_stop','_step')
-    _attribute_nodes = ('_start','_stop','_step')
+    __slots__ = ('_start','_stop','_step', '_slice_type')
+    _attribute_nodes = ('_start','_stop','_step', '_slice_type')
 
-    def __init__(self, start, stop, step = None):
+    Range = LiteralInteger(1)
+    Element = LiteralInteger(0)
+
+    def __init__(self, start, stop, step = None, slice_type = Range):
         self._start = start
         self._stop = stop
         self._step = step
+        self._slice_type = slice_type
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
@@ -152,6 +157,8 @@ class Slice(Basic):
             raise TypeError('Slice stop must be Integer or None')
         if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
             raise TypeError('Slice step must be Integer or None')
+        if slice_type not in (Slice.Range, Slice.Element):
+            raise TypeError('Slice type must be Range (1) or Element (0)')
 
     @property
     def start(self):
@@ -171,6 +178,14 @@ class Slice(Basic):
         objects in the slice
         """
         return self._step
+
+    @property
+    def slice_type(self):
+        """ The type of the slice (Range or Element)
+        Range <=> [..., :, ...]
+        Element <=> [..., 3, ...]
+        """
+        return self._slice_type
 
     def __str__(self):
         if self.start is None:
@@ -292,8 +307,10 @@ def max_precision(objs : list, dtype = None, allow_native = True):
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
-        return max(default_precision[str(o.dtype)] if o.precision == -1 \
-                else o.precision for o in objs)
+        ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
+        if ndarray_list:
+            return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
+        return max(get_final_precision(o) for o in objs)
 
 def get_final_precision(obj):
     """

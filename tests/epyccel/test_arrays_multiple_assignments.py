@@ -11,16 +11,6 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE,
                                     STACK_ARRAY_UNKNOWN_SHAPE)
 
-@pytest.fixture(params=[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('python', marks = pytest.mark.python),
-    pytest.param('c'      , marks = [pytest.mark.c,
-        pytest.mark.skip(reason='NumpySum not implemented in C')])
-    ]
-)
-def language(request):
-    return request.param
-
 #==============================================================================
 def test_no_reallocation(language):
 

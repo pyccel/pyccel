@@ -1,4 +1,4 @@
-# Const keyword
+# `const` keyword
 
 In order to make sure that a function argument is not modified by the function call, Pyccel provides the `const` keyword, which is converted to an equivalent datatype qualifier in the target language. Here is a simple example of its usage:
 
@@ -28,7 +28,7 @@ int64_t func1(t_ndarray arr)
 /*........................................*/
 ```
 
-The fortran equivalent:
+The Fortran equivalent:
 
 ```fortran
 module boo
@@ -57,7 +57,7 @@ module boo
 end module boo
 ```
 
-Now we will see what happens if we try to modify a const array:
+Now we will see what happens if we try to modify a constant array:
 
 ```Python
 def func1(arr: 'const int[:]', i: 'int', v: 'int', z:'int'):
@@ -67,7 +67,7 @@ def func1(arr: 'const int[:]', i: 'int', v: 'int', z:'int'):
     return 0
 ```
 
-Pyccel will recognize that a const array cannot be changed and will raise an error similar to:
+Pyccel will recognise that a constant array cannot be changed and will raise an error similar to:
 
 ```sh
 ERROR at annotation (semantic) stage
@@ -77,9 +77,9 @@ pyccel:
 
 ## Getting Help
 
-If you face problems with pyccel, please take the following steps:
+If you face problems with Pyccel, please take the following steps:
 
-1.  Consult our documention in the tutorial directory;
+1.  Consult our documentation in the tutorial directory;
 2.  Send an email message to pyccel@googlegroups.com;
 3.  Open an issue on GitHub.
 

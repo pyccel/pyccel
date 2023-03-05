@@ -27,7 +27,7 @@ __all__ = (
     'NativeGeneric',
     'NativeInteger',
     'NativeTuple',
-#    'NativeNil',
+    'NativeNil',
     'NativeRange',
     'NativeFloat',
     'NativeString',
@@ -193,6 +193,7 @@ class CustomDataType(DataType):
         self._name = name
 
 class NativeGeneric(DataType):
+    __slots__ = ()
     _name = 'Generic'
 
 

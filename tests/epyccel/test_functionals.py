@@ -14,6 +14,9 @@ def compare_epyccel(f, language, *args):
 def test_functional_for_1d_range(language):
     compare_epyccel(functionals.functional_for_1d_range, language)
 
+def test_functional_for_overwrite_1d_range(language):
+    compare_epyccel(functionals.functional_for_overwrite_1d_range, language)
+
 def test_functional_for_1d_var(language):
     y = randint(99,size = 4)
     compare_epyccel(functionals.functional_for_1d_var, language, y)

@@ -38,6 +38,7 @@ __all__ = (
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
+    'PyModule_AddObject',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -286,7 +287,7 @@ class PyModule_AddObject(PyccelAstNode):
     _dtype = NativeInteger()
     _precision = 4
     _rank = 0
-    _shape = ()
+    _shape = None
 
     def __init__(self, mod_name, name, variable):
         if not isinstance(name, str):

@@ -201,6 +201,85 @@ static bool _check_pyarray_type(PyObject *a)
 	return true;
 }
 
+enum NPY_TYPES get_numpy_type(t_ndarray *o)
+{
+    enum e_types nd_type = o->type;
+    enum NPY_TYPES npy_type;
+    switch (nd_type)
+    {
+        case nd_bool:
+            npy_type = NPY_BOOL;
+            break;
+        case nd_int8:
+            npy_type = NPY_INT8;
+            break;
+        case nd_int16:
+            npy_type = NPY_INT16;
+            break;
+        case nd_int32:
+            npy_type = NPY_INT32;
+            break;
+        case nd_int64:
+            npy_type = NPY_INT64;
+            break;
+        case nd_float:
+            npy_type = NPY_FLOAT;
+            break;
+        case nd_double:
+            npy_type = NPY_DOUBLE;
+            break;
+        case nd_cfloat:
+            npy_type = NPY_CFLOAT;
+            break;
+        case nd_cdouble:
+            npy_type = NPY_CDOUBLE;
+            break;
+        default:
+            printf("Unknown data type\n");
+            exit(1);
+    }
+    return npy_type;
+}
+
+enum e_types get_ndarray_type(PyArrayObject *a)
+{
+    enum NPY_TYPES npy_type = PyArray_TYPE(a);
+    enum e_types nd_type;
+    switch (npy_type)
+    {
+        case NPY_BOOL:
+            nd_type = nd_bool;
+            break;
+        case NPY_INT8:
+            nd_type = nd_int8;
+            break;
+        case NPY_INT16:
+            nd_type = nd_int16;
+            break;
+        case NPY_INT32:
+            nd_type = nd_int32;
+            break;
+        case NPY_INT64:
+            nd_type = nd_int64;
+            break;
+        case NPY_FLOAT:
+            nd_type = nd_float;
+            break;
+        case NPY_DOUBLE:
+            nd_type = nd_double;
+            break;
+        case NPY_CFLOAT:
+            nd_type = nd_cfloat;
+            break;
+        case NPY_CDOUBLE:
+            nd_type = nd_cdouble;
+            break;
+        default:
+            printf("Unknown data type\n");
+            exit(1);
+    }
+    return nd_type;
+}
 
 /* converting numpy array to c nd array*/
 t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
@@ -210,7 +289,7 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
 	array.nd          = PyArray_NDIM(a);
 	array.raw_data    = PyArray_DATA(a);
 	array.type_size   = PyArray_ITEMSIZE(a);
-	array.type        = PyArray_TYPE(a);
+	array.type        = get_ndarray_type(a);
 	array.length      = PyArray_SIZE(a);
 	array.buffer_size = PyArray_NBYTES(a);
 	array.shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(a), array.nd);
@@ -231,7 +310,9 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
         FLAGS = 0;
     }
 
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+    enum NPY_TYPES npy_type = get_numpy_type(o);
+
+    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
@@ -240,7 +321,10 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
 PyObject* c_ndarray_to_pyarray(t_ndarray *o)
 {
     int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+
+    enum NPY_TYPES npy_type = get_numpy_type(o);
+
+    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);

@@ -2,9 +2,9 @@
 
 ## Using the Runtime Library Routines
 
-OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the Pyccel stdlib:
+OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the `pyccel.stdlib`:
 
-Please note that files using the OpenMP Runtime library routines will only work when compiled with pyccel (i.e. they won't work in pure python mode).
+Please note that files using the OpenMP Runtime library routines will only work when compiled with Pyccel (i.e. they won't work in pure python mode).
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
@@ -65,9 +65,9 @@ Other references:
 
 [*OpenMP Clauses*](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses)
 
-### parallel Construct
+### `parallel` Construct
 
-#### Syntax of *parallel*
+#### Syntax of `parallel`
 
 ```python
 #$ omp parallel [clause[ [,] clause] ... ]
@@ -96,9 +96,9 @@ hello from thread: 0
 hello from thread: 1
 ```
 
-### loop Construct
+### `loop` Construct
 
-#### Syntax of *loop*
+#### Syntax of `loop`
 
 ```python
 #$ omp for [nowait] [clause[ [,] clause] ... ]
@@ -127,9 +127,9 @@ The output of this program is:
 893116
 ```
 
-### single Construct
+### `single` Construct
 
-#### Syntax of *single*
+#### Syntax of `single`
 
 ```python
 #$ omp single [nowait] [clause[ [,] clause] ... ]
@@ -163,9 +163,9 @@ hello from thread number:            3
 hello from thread number:            0
 ```
 
-### critical Construct
+### `critical` Construct
 
-#### Syntax of *critical*
+#### Syntax of `critical`
 
 ```python
 #$ omp critical [(name) [ [,] hint (hint-expression)]]
@@ -195,9 +195,9 @@ The output of this program is:
 893116
 ```
 
-### barrier Construct
+### `barrier` Construct
 
-#### Syntax of *barrier*
+#### Syntax of `barrier`
 
 ```python
 #$ omp barrier
@@ -233,9 +233,9 @@ The output of this program is:
 1786232
 ```
 
-### masked Construct
+### `masked` Construct
 
-#### Syntax of *masked*
+#### Syntax of `masked`
 
 ```python
 #$ omp masked [ filter(integer-expression) ]
@@ -263,16 +263,16 @@ The output of this program is:
 result : 1
 ```
 
-### taskloop/atomic Construct
+### `taskloop`/`atomic` Construct
 
-#### Syntax of *taskloop*
+#### Syntax of `taskloop`
 
 ```python
 #$ omp taskloop [clause[ [,]clause] ... ]
 for-loops
 ```
 
-#### Syntax of *atomic*
+#### Syntax of `atomic`
 
 ```python
 #$ omp atomic [clause[ [,]clause] ... ]
@@ -315,9 +315,9 @@ x1 : 200
 x2 : 100
 ```
 
-### simd Construct
+### `simd` Construct
 
-#### Syntax of *simd*
+#### Syntax of `simd`
 
 ```python
 #$ omp simd [clause[ [,]clause] ... ]
@@ -349,9 +349,9 @@ The output of this program is:
 Result: 893116
 ```
 
-### task / taskwait Construct
+### `task` / `taskwait` Construct
 
-#### Syntax of *task*
+#### Syntax of `task`
 
 ```python
 #$ omp task [clause[ [,]clause] ... ]
@@ -359,7 +359,7 @@ structured-block
 #$ omp end task
 ```
 
-#### Syntax *taskwait*
+#### Syntax `taskwait`
 
 ```python
 #$ omp taskwait
@@ -368,7 +368,7 @@ structured-block
 #### Example
 
 The ``` #$ omp task ``` pragma is used here to define an explicit task.\
-The ``` #$ omp taskwait ``` pragma is used here to specify that the current task region remains suspended until all child tasks that it generated before the taskwait construct complete execution.
+The ``` #$ omp taskwait ``` pragma is used here to specify that the current task region remains suspended until all child tasks that it generated before the `taskwait` construct complete execution.
 ```python
 @types('int', results='int')
 def fib(n):
@@ -397,9 +397,9 @@ The output of this program is:
 55
 ```
 
-### taskyield Construct
+### `taskyield` Construct
 
-#### Syntax of *taskyield*
+#### Syntax of `taskyield`
 
 ```python
 #$ omp taskyield
@@ -407,7 +407,7 @@ The output of this program is:
 
 #### Example
 
-The ``` #$ omp taskyield ``` pragma specifies that the current task can be suspended at this point, in favor of execution of a different task.
+The ``` #$ omp taskyield ``` pragma specifies that the current task can be suspended at this point, in favour of execution of a different task.
 
 ```python
 #$ omp task
@@ -417,9 +417,9 @@ long_function_2()
 #$ omp end task
 ```
 
-### flush Construct
+### `flush` Construct
 
-#### Syntax of *flush*
+#### Syntax of `flush`
 
 ```python
 #$ omp flush
@@ -454,9 +454,9 @@ Thread 1 released
 flag: 2
 ```
 
-### cancel Construct
+### `cancel` Construct
 
-#### Syntax of *cancel*
+#### Syntax of `cancel`
 
 ```python
 #$ omp cancel construct-type-clause[ [ , ] if-clause]
@@ -479,9 +479,9 @@ for i in range(len(v)):
 #$ omp end parallel
 ```
 
-### teams/target/distribute Constructs
+### `teams`/`target`/`distribute` Constructs
 
-#### Syntax *target*
+#### Syntax of `target`
 
 ```python
 #$ omp target [clause[ [,]clause] ... ]
@@ -489,7 +489,7 @@ structured-block
 #$ omp end target
 ```
 
-#### Syntax of *teams*
+#### Syntax of `teams`
 
 ```python
 #$ omp teams [clause[ [,]clause] ... ]
@@ -541,9 +541,9 @@ Team num : 1
 Team num : 1
 ```
 
-### sections Construct
+### `sections` Construct
 
-#### Syntax of *sections*
+#### Syntax of `sections`
 
 ```python
 #$ omp sections [nowait] [clause[ [,]clause] ... ]
@@ -605,9 +605,9 @@ sum3 : 28, thread : 1
 
 ## Combined Constructs Usage on Pyccel
 
-### parallel for
+### `parallel for`
 
-#### Syntax of *parallel for*
+#### Syntax of `parallel for`
 
 ```python
 #$ omp parallel for [clause[ [,]clause] ... ]
@@ -616,7 +616,7 @@ loop-nest
 
 #### Example
 
-The ```#$ omp parallel for``` construct specifies a parallel construct containing a worksharingloop construct with a canonical loop nest.
+The ```#$ omp parallel for``` construct specifies a parallel construct containing a work sharing loop construct with a canonical loop nest.
 
 ```python
 import numpy as np
@@ -635,9 +635,9 @@ The output of this program is :
 result: 28
 ```
 
-### parallel for simd
+### `parallel for simd`
 
-#### Syntax of *parallel for simd*
+#### Syntax of `parallel for simd`
 
 ```python
 #$ omp parallel for simd [clause[ [,]clause] ... ]
@@ -646,7 +646,7 @@ loop-nest
 
 #### Example
 
-The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loop SIMD construct.
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one work sharing loop SIMD construct.
 
 ```python
 import numpy as np
@@ -675,9 +675,9 @@ z[ 5 ] : 3
 z[ 6 ] : 3
 z[ 7 ] : 3
 ```
-### for simd
+### `for simd`
 
-#### Syntax of *for simd*
+#### Syntax of `for simd`
 
 ```python
 
@@ -685,9 +685,9 @@ z[ 7 ] : 3
 for-loops
 ```
 
-### teams distribute
+### `teams distribute`
 
-#### Syntax of *teams distribute*
+#### Syntax of `teams distribute`
 
 ```python
 #$ omp teams distribute [clause[ [,]clause] ... ]
@@ -727,27 +727,27 @@ z[ 7 ] : 3
 ```
 
 
-### teams distribute simd
+### `teams distribute simd`
 
-#### Syntax of *teams distribut simd*
+#### Syntax of `teams distribute simd`
 
 ```python
 #$ omp teams distribute simd [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### teams distribute parallel for
+### `teams distribute parallel for`
 
-#### Syntax of *teams distribute parallel for*
+#### Syntax of `teams distribute parallel for`
 
 ```python
 #$ omp teams distribute parallel for [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### target parallel
+### `target parallel`
 
-#### Syntax of *target parallel*
+#### Syntax of `target parallel`
 
 ```python
 #$ omp target parallel [clause[ [,]clause] ... ]
@@ -755,27 +755,27 @@ structured-block
 #$ omp end target parallel
 ```
 
-### target parallel for
+### `target parallel for`
 
-#### Syntax of *target parallel for*
+#### Syntax of `target parallel for`
 
 ```python
 #$ omp target parallel for [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### target parallel for simd
+### `target parallel for simd`
 
-#### Syntax of *target parallel for simd*
+#### Syntax of `target parallel for simd`
 
 ```python
 #$ omp target parallel for simd [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### target teams
+### `target teams`
 
-#### Syntax of *target teams*
+#### Syntax of `target teams`
 
 ```python
 #$ omp target teams [clause[ [,]clause] ... ]
@@ -783,36 +783,36 @@ structured-block
 #$ omp end target teams
 ```
 
-### target teams distribute
+### `target teams distribute`
 
-#### Syntax of *target teams distribute*
+#### Syntax of `target teams distribute`
 
 ```python
 #$ omp target teams distribute [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### target teams distribute simd
+### `target teams distribute simd`
 
-#### Syntax of *target teams distribute simd*
+#### Syntax of `target teams distribute simd`
 
 ```python
 #$ omp target teams distribute simd [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### target teams distribute parallel for
+### `target teams distribute parallel for`
 
-#### Syntax of *target teams distribute parallel for*
+#### Syntax of `target teams distribute parallel for`
 
 ```python
 #$ omp target teams distribute parallel for [clause[ [,]clause] ... ]
 loop-nest
 ```
 
-### target teams distribute parallel for simd
+### `target teams distribute parallel for simd`
 
-#### Syntax of *target teams distribute parallel for simd*
+#### Syntax of `target teams distribute parallel for simd`
 
 ```python
 #$ omp target teams distribute parallel for simd [clause[ [,]clause] ... ]
@@ -821,7 +821,7 @@ loop-nest
 
 #### Example
 
-The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loop SIMD construct.
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one work sharing loop SIMD construct.
 
 ```python
 r = 0
@@ -842,7 +842,7 @@ result: 49995000
 ## Supported Constructs
 
 All constructs in the OpenMP 5.1 standard are supported except:
--   scope
--   workshare
--   scan
--   interop
+-   `scope`
+-   `workshare`
+-   `scan`
+-   `interop`

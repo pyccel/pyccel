@@ -8,8 +8,8 @@ Header files serve two purposes:
 -   Accelerate the parsing process of an imported Python module by parsing only its header file (automatically generated) instead of the full module.
 
 ### Examples
-#### Link with openmp
-We create the file `header.pyh` that contains an openmp function definition:
+#### Link with OpenMP
+We create the file `header.pyh` that contains an OpenMP function definition:
 
 ```python
 #$ header metavar module_name = 'omp_lib'
@@ -59,8 +59,8 @@ end module funcs
 ```
 
 We then create a static library using these commands:
--   gfortran -c funcs.f90 
--   ar rcs libfuncs.a funcs.o
+-   `gfortran -c funcs.f90`
+-   `ar rcs libfuncs.a funcs.o`
 
 In order to use this library the user needs to create a header file, we call it  `funcs_headers.pyh`
 ```python
@@ -69,7 +69,7 @@ In order to use this library the user needs to create a header file, we call it 
 
 #$ header function fib(int) results(int)
 ```
-After that we can create a Python file `test_funcs.py`,where we can import the fortran functions and use them
+After that we can create a Python file `test_funcs.py`,where we can import the Fortran functions and use them
 
 ```python
 from pyccel.decorators import types
@@ -82,7 +82,7 @@ def print_fib(x):
 To compile this file we execute the following command `pyccel test_funcs.py --libs=funcs --libdir=$PWD`, this will create the shared library `test_funcs.so`
 
 ## Pickling header files
-Parsing a large Pyccel header file with hundreds of function declarations may require a significant amount of time, therefore it is important that this process is only done once when pyccelizing multiple Python source files in a large project.
+Parsing a large Pyccel header file with hundreds of function declarations may require a significant amount of time, therefore it is important that this process is only done once when pyccelising multiple Python source files in a large project.
 
 To this end, Pyccel uses the [pickle](https://docs.python.org/3/library/pickle.html) Python module to store the result of the parser to a `.pyccel` binary file, which is created in the same directory as the header file.
 Afterwards Pyccel will load the precompiled parser from the `.pyccel` file, instead of parsing the header file again.
