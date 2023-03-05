@@ -65,7 +65,8 @@ if __name__ == '__main__':
         prefix = '.'.join(PurePath(file).with_suffix('').parts)
 
         objects = []
-        for node in ast.walk(tree):
+        to_visit = list(ast.iter_child_nodes(tree))
+        for node in to_visit:
             # This loop walks the ast and explores all objects
             # present in the file.
             # If the object is an instance of a FunctionDef or
@@ -78,13 +79,14 @@ if __name__ == '__main__':
                 if should_ignore('.'.join([prefix, node.name])):
                     continue
                 if any((node.lineno <= x <= node.end_lineno
-                        for x in line_nos)) and not node.name.startswith('inner_function'):
+                        for x in line_nos)):
                     objects.append('.'.join([prefix, node.name]))
-                obj_pref = node.name if isinstance(
-                    node, ClassDef) else 'inner_function'
-                for child in node.body:
-                    if isinstance(child, (FunctionDef, ClassDef)):
-                        child.name = '.'.join([obj_pref, child.name])
+                if isinstance(node, ClassDef):
+                    obj_pref = node.name
+                    for child in node.body:
+                        if isinstance(child, (FunctionDef, ClassDef)):
+                            child.name = '.'.join([obj_pref, child.name])
+                            to_visit.append(child)
 
         with open(args.output, 'a', encoding="utf-8") as f:
             for obj in objects:
