@@ -3284,9 +3284,6 @@ class SemanticParser(BasicParser):
             namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            # ... computing inout arguments
-            args_inout = [False] * len(args)
-
             results_names = [i.name for i in results]
 
             # Find all nodes which can modify variables
@@ -3313,11 +3310,13 @@ class SemanticParser(BasicParser):
                 for a in a_args:
                     d_apps[a].append(f)
 
+            # ... computing inout arguments
             for i, a in enumerate(args):
+                inout = False
                 if a.name in chain(results_names, permanent_assign, ['self']):
-                    args_inout[i] = True
+                    inout = True
 
-                if d_apps[a] and not( args_inout[i] ):
+                elif d_apps[a]:
                     intent = False
                     n_fa = len(d_apps[a])
                     i_fa = 0
@@ -3329,7 +3328,7 @@ class SemanticParser(BasicParser):
                         j = list(fa.args).index(a)
                         intent = func.arguments[j].inout
                         if intent:
-                            args_inout[i] = True
+                            inout = True
 
                         i_fa += 1
                 if isinstance(a.var, Variable):
@@ -3339,6 +3338,8 @@ class SemanticParser(BasicParser):
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal')
+                if not inout:
+                    a.make_const()
             # ...
 
             # Raise an error if one of the return arguments is an alias.

@@ -1962,6 +1962,15 @@ class FunctionDefArgument(PyccelAstNode):
         """
         return self._inout
 
+    def make_const(self):
+        """
+        Indicate that the argument does not change in the function.
+
+        Indicate that the argument does not change in the function by
+        modifying the inout flag.
+        """
+        self._inout = False
+
     def __str__(self):
         if self.has_default:
             argument = str(self.name)
