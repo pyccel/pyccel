@@ -3333,7 +3333,7 @@ class SemanticParser(BasicParser):
                         i_fa += 1
                 if isinstance(a.var, Variable):
                     v = a.var
-                    if v.is_const and (args_inout[i] or (v.name in local_assign)):
+                    if v.is_const and (inout or (v.name in local_assign)):
                         msg = f"Cannot modify 'const' argument ({v})"
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
