@@ -1867,7 +1867,7 @@ class FCodePrinter(CodePrinter):
 
     def function_signature(self, expr, name):
         """
-        Print the signature of the function `expr`.
+        Get the different parts of the signature of the function `expr`.
 
         A helper function to print just the signature of the function
         including the declarations of the arguments and results.
@@ -1879,6 +1879,16 @@ class FCodePrinter(CodePrinter):
         name : str
             The name which should be printed as the name of the function.
             (May be different from expr.name in the case of interfaces).
+
+        Returns
+        -------
+        dict
+            A dictionary with the keys :
+                sig - The declaration of the function/subroutine with any necessary keywords.
+                arg_code - A string containing a list of the arguments.
+                func_end - Any code to be added to the signature after the arguments (ie result).
+                arg_decs - The code necessary to declare the arguments of the function/subroutine.
+                func_type - Subroutine or function.
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental

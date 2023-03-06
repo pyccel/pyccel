@@ -188,10 +188,10 @@ class SemanticParser(BasicParser):
         A list of parsers describing the files which import this file.
 
     d_parsers : list
-        A list of parsers describing files imported by this file
+        A list of parsers describing files imported by this file.
 
     **kwargs : dict
-        Additional keyword arguments for BasicParser
+        Additional keyword arguments for BasicParser.
     """
 
     def __init__(self, inputs, parents = (), d_parsers = (), **kwargs):

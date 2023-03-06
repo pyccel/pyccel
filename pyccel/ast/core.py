@@ -1873,16 +1873,16 @@ class FunctionDefArgument(PyccelAstNode):
     annotation : str
         The type annotation describing the argument.
 
+    See Also
+    --------
+    FunctionDef
+
     Examples
     --------
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n')
     >>> n
     n
-
-    See also
-    --------
-    FunctionDef
     """
     __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
     _attribute_nodes = ('_value','_var')
@@ -2254,6 +2254,10 @@ class FunctionDef(ScopedNode):
     doc_string : str
         The doc string of the function.
 
+    See Also
+    --------
+    FunctionDefArgument
+
     Examples
     --------
     >>> from pyccel.ast.core import Assign, Variable, FunctionDef
@@ -2279,10 +2283,6 @@ class FunctionDef(ScopedNode):
     >>> body        = [Assign(y,x+n)]
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
-
-    See Also
-    --------
-    FunctionDefArgument
     """
     __slots__ = ('_name','_arguments','_results','_body',
                  '_global_vars','_cls_name','_is_static','_imports',
