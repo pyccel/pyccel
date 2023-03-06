@@ -3147,6 +3147,7 @@ class SemanticParser(BasicParser):
 
         for i, m in enumerate(interfaces):
             args           = []
+            arg_vars       = []
             results        = []
             global_vars    = []
             imports        = []
@@ -3171,7 +3172,6 @@ class SemanticParser(BasicParser):
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
                     ah = ah.var
-                    additional_args = []
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
@@ -3212,10 +3212,8 @@ class SemanticParser(BasicParser):
                                 kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
-                    if additional_args:
-                        args += additional_args
-
                     args.append(arg_new)
+                    arg_vars.append(a_new)
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
@@ -3292,53 +3290,22 @@ class SemanticParser(BasicParser):
 
             # Collect the modified objects
             lhs_assigns   = [a.lhs for a in assigns]
-            modified_args = [func_arg for f in calls
+            modified_args = [call_arg.value for f in calls
                                 for call_arg, func_arg in zip(f.args,f.funcdef.arguments) if func_arg.inout]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
-            permanent_assign = [a.name for a in all_assigned if a.rank > 0]
-            local_assign     = [i.name for i in all_assigned]
-
-            apps = [i for i in calls if (i.funcdef.name
-                    not in sub_funcs)]
-
-            d_apps = {a: [] for a in args}
-            for f in apps:
-                a_args = set(f.args) & set(args)
-                for a in a_args:
-                    d_apps[a].append(f)
-
             # ... computing inout arguments
-            for i, a in enumerate(args):
-                inout = False
-                if a.name in chain(results_names, permanent_assign, ['self']):
-                    inout = True
-
-                elif d_apps[a]:
-                    intent = False
-                    n_fa = len(d_apps[a])
-                    i_fa = 0
-                    while not(intent) and i_fa < n_fa:
-                        fa = d_apps[a][i_fa]
-                        f_name = fa.funcdef.name
-                        func = self.scope.find(f_name, 'functions')
-
-                        j = list(fa.args).index(a)
-                        intent = func.arguments[j].inout
-                        if intent:
-                            inout = True
-
-                        i_fa += 1
-                if isinstance(a.var, Variable):
+            for a in args:
+                if a.name in chain(results_names, ['self']) or a.var in all_assigned:
                     v = a.var
-                    if v.is_const and (inout or (v.name in local_assign)):
-                        msg = f"Cannot modify 'const' argument ({v})"
-                        errors.report(msg, bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                            severity='fatal')
-                if not inout:
+                    if isinstance(v, Variable) and v.is_const:
+                            msg = f"Cannot modify 'const' argument ({v})"
+                            errors.report(msg, bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset),
+                                severity='fatal')
+                else:
                     a.make_const()
             # ...
 
