@@ -1875,7 +1875,7 @@ class FunctionDefArgument(PyccelAstNode):
 
     See Also
     --------
-    FunctionDef
+    FunctionDef : The class where these objects will be stored.
 
     Examples
     --------
@@ -2263,9 +2263,12 @@ class FunctionDef(ScopedNode):
     doc_string : str
         The doc string of the function.
 
+    scope : parser.scope.Scope
+        The scope containing all objects scoped to the inside of this function.
+
     See Also
     --------
-    FunctionDefArgument
+    FunctionDefArgument : The type used to store the arguments.
 
     Examples
     --------
