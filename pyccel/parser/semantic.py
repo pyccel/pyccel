@@ -3301,10 +3301,10 @@ class SemanticParser(BasicParser):
                 if a.name in chain(results_names, ['self']) or a.var in all_assigned:
                     v = a.var
                     if isinstance(v, Variable) and v.is_const:
-                            msg = f"Cannot modify 'const' argument ({v})"
-                            errors.report(msg, bounding_box=(self._current_fst_node.lineno,
-                                self._current_fst_node.col_offset),
-                                severity='fatal')
+                        msg = f"Cannot modify 'const' argument ({v})"
+                        errors.report(msg, bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                            severity='fatal')
                 else:
                     a.make_const()
             # ...
