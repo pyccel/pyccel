@@ -44,4 +44,5 @@ jobs:
           while read line; do    
             python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
           done < objects.txt
+          cat report.txt
           python3 ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY

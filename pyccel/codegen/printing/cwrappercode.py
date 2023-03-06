@@ -66,10 +66,11 @@ cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays'
 
 class CWrapperCodePrinter(CCodePrinter):
     """
-    A printer for creating the interface between python and c code.
+    A printer for printing the C-Python interface.
 
-    A printer to convert a python module to strings of c code describing
-    an interface between python and an implementation of the module in c.
+    A printer to convert Pyccel's AST describing a translated module,
+    to strings of C code which provide an interface between the module
+    and Python code.
     As for all printers the navigation of this file is done via _print_X
     functions.
 
@@ -78,9 +79,9 @@ class CWrapperCodePrinter(CCodePrinter):
     filename : str
             The name of the file being pyccelised.
     target_language : str
-            The low-level language pyccel is translated to ['c'/'fortran'].
+            The language which the code was translated to [fortran/c].
     **settings : dict
-            Any additional settings (unused).
+            Any additional arguments which are necessary for CCodePrinter.
     """
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)
@@ -95,14 +96,12 @@ class CWrapperCodePrinter(CCodePrinter):
     #                       Helper functions
     # --------------------------------------------------------------------
 
-    def stored_in_c_pointer(self, a):
+    def is_c_pointer(self, a):
         """
-        Indicate whether the object a needs to be stored in a pointer in c code.
+        Indicate whether the object is a pointer in C code.
 
-        Some objects are stored in a c pointer so that they can be modified in
-        their scope and that modification can be retrieved elsewhere. This
-        information cannot be found trivially so this function provides that
-        information while avoiding easily outdated code to be repeated.
+        This function extends `CCodePrinter.is_c_pointer` to specify more objects
+        which are always accesed via a C pointer.
 
         Parameters
         ----------
@@ -112,14 +111,18 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns
         -------
         bool
-            True if saved in a C pointer, False otherwise.
+            True if a C pointer, False otherwise.
+
+        See Also
+        --------
+        CCodePrinter.is_c_pointer : The extended function.
         """
         if isinstance(a.dtype, PyccelPyObject):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
         else:
-            return CCodePrinter.stored_in_c_pointer(self,a)
+            return CCodePrinter.is_c_pointer(self,a)
 
     def function_signature(self, expr, print_arg_names = True):
         args = list(expr.arguments)
@@ -132,34 +135,43 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_declare_type(self, expr):
         """
-        Get the declaration type of a variable
+        Get the string which describes the type in a declaration.
+
+        This function extends `CCodePrinter.get_declare_type` to specify types
+        which are only relevant in the C-Python interface.
 
         Parameters
-        -----------
-        variable : Variable
-            Variable holding information needed to choose the declaration type
+        ----------
+        expr : Variable
+            The variable whose type should be described.
 
         Returns
         -------
-        type_declaration : String
+        str
+            The code describing the type.
+
+        Raises
+        ------
+        PyccelCodegenError
+            If the type is not supported in the C code or the rank is too large.
+
+        See Also
+        --------
+        CCodePrinter.get_declare_type : The extended function.
         """
         if expr.dtype is BindCPointer():
-            return 'void *'
+            return 'void*'
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         if dtype != "pyarrayobject":
-            #TODO: Remove when #757 is fixed
-            if expr.rank > 0 and expr.is_ndarray and expr.is_optional:
-                dtype = 't_ndarray'
-            else:
-                return CCodePrinter.get_declare_type(self, expr)
+            return CCodePrinter.get_declare_type(self, expr)
         else :
             dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if self.stored_in_c_pointer(expr):
-            return '{0} *'.format(dtype)
+        if self.is_c_pointer(expr):
+            return f'{dtype}*'
         else:
-            return '{0} '.format(dtype)
+            return dtype
 
     def get_new_PyObject(self, name):
         """
@@ -262,18 +274,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def static_function_signature(self, expr):
         """
-        Extract from the function definition all the information (name, input, output)
-        needed to create the function signature used for C/fortran binding
+        Get the C representation of the function signature using only basic types.
 
-        Parameters:
+        Extract from the function definition `expr` all the
+        information (name, input, output) needed to create the
+        function signature used for C/Fortran binding and return
+        a string describing the function.
+
+        Parameters
         ----------
         expr : FunctionDef
-            The function defintion
+            The function definition for which a signature is needed.
 
-        Return:
-        ------
-        String
-            Signature of the function
+        Returns
+        -------
+        str
+            Signature of the function.
         """
         #if target_language is C no need for the binding
         if self._target_language == 'c':
@@ -283,23 +299,20 @@ class CWrapperCodePrinter(CCodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('int'))
             args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
         else:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('void'))
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+            arg_code = ', '.join(self.function_signature(i, False)
                         if isinstance(i, FunctionAddress)
-                        else '{0}'.format(self.get_static_declare_type(i))
+                        else self.get_static_declare_type(i)
                         for i in args)
 
-        if isinstance(expr, FunctionAddress):
-            return '{}(*{})({})'.format(ret_type, name, arg_code)
-        else:
-            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+        return f'{ret_type} {name}({arg_code})'
 
     def get_static_args(self, argument):
         """
@@ -332,25 +345,27 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_static_declare_type(self, variable):
         """
+        Get the declaration type of a variable which may be passed to a Fortran binding function.
+
         Get the declaration type of a variable, this function is used for
-        C/fortran binding using native C datatypes.
+        C/Fortran binding using native C datatypes.
 
         Parameters
         ----------
         variable : Variable
-            Variable holding information needed to choose the declaration type
+            Variable holding information needed to choose the declaration type.
 
         Returns
         -------
-        string
-
+        str
+            The code describing the type.
         """
         dtype = self._print(variable.dtype)
         prec  = variable.precision
 
         dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if self.stored_in_c_pointer(variable):
+        if self.is_c_pointer(variable):
             return '{0}*'.format(dtype)
 
         elif self._target_language == 'fortran' and variable.rank > 0:
@@ -1051,7 +1066,7 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
             # Call free function for C type
-            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.stored_in_c_pointer(i) \
+            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
                                         else Deallocate(i) for i in local_arg_vars if i.rank > 0]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
@@ -1307,7 +1322,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
         # Call free function for C type
-        wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.stored_in_c_pointer(i) \
+        wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
                             else Deallocate(i) for i in local_arg_vars if i.rank > 0]
         self._to_free_PyObject_list.clear()
 
