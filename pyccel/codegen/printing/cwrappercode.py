@@ -1132,27 +1132,26 @@ class CWrapperCodePrinter(CCodePrinter):
             The function which determines the Interface key.
         """
         check_func_body = []
-        step = 1
         for arg in types_dict:
             var_name = ""
             body = []
             arg_type_check_list = list(types_dict[arg])
             types = [elem[0] for elem in arg_type_check_list]
-            error = ' or '.join(['{} {}'.format(str(v.precision * 8)+' bit' if v.precision != -1 else 'native',
-                                                    str_dtype(v.dtype))
-                            if not isinstance(v.dtype, NativeBool)
-                            else  str_dtype(v.dtype) for v in types])
+            precisions = [f'{v.precision * 8} bit' if v.precision != -1 else 'native' for v in types]
+            type_strs = [str_dtype(v.dtype) for v in types]
+            error = ' or '.join([f'{p} {t}' if not isinstance(v.dtype, NativeBool) else t
+                        for p,t,v in zip(precisions, type_strs, types)])
             if len(arg_type_check_list) == 1:
                 elem = arg_type_check_list[0]
                 var_name = elem[0].name
                 assert elem[2] == 0
-                body.append(IfSection(PyccelNot(elem[1]), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([PyccelUnarySub(LiteralInteger(1))])]))
+                body.append(IfSection(PyccelNot(elem[1]), [PyErr_SetString('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
             else:
                 arg_type_check_list.sort(key= lambda x : x[2])
                 for elem in arg_type_check_list:
                     var_name = elem[0].name
                     body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,elem[2])]))
-                body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([PyccelUnarySub(LiteralInteger(1))])]))
+                body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
             check_func_body += [If(*body)]
 
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
