@@ -972,15 +972,7 @@ class CWrapperCodePrinter(CCodePrinter):
         parse_args = [self.get_PyArgParseType(a.var) for a in funcs[0].arguments]
 
         # Determine flags which indicate argument type
-        argument_type_flags = {func:[] for func in funcs}
-        step = 1
-        for i, p_arg in enumerate(parse_args):
-            interface_args = [func.arguments[i].var for func in funcs]
-            interface_types = [(a.dtype, a.precision) for a in interface_args]
-            possible_types = list(dict.fromkeys(interface_types)) # Remove duplicates but preserve order
-            for func, t in zip(funcs, interface_types):
-                argument_type_flags[func].append(possible_types.index(t)*step)
-            step *= len(possible_types)
+        argument_type_flags = self._determine_interface_flags(funcs, parse_args)
 
         # Managing the body of wrapper
         for func in funcs :
@@ -1100,6 +1092,60 @@ class CWrapperCodePrinter(CCodePrinter):
         self.exit_scope()
 
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
+
+    def _determine_interface_flags(self, funcs):
+        """
+        Determine the flags which allow correct function to be identified from the interface.
+
+        Each function must be identifiable by a different integer value. This value is known
+        as a flag. Different parts of the flag to indicate the types of different arguments.
+        Take for example the following function:
+        ```python
+        @types('int', 'int')
+        @types('float', 'float')
+        def f(a, b):
+            pass
+        ```
+        The values 0 (int) and 1 (float) would indicate the type of the argument a. In order
+        to preserve this information the values which indicate the type of the argument b
+        must only change the part of the flag which does not contain this information. In other
+        words `flag % n_types_a = flag_a`. Therefore the values 0 (int) and 2(float) indicate
+        the type of the argument b.
+        We then finally have the following four options:
+          1. 0 = 0 + 0 => (int,int)
+          2. 1 = 1 + 0 => (float,int)
+          3. 2 = 0 + 2 => (int, float)
+          4. 3 = 1 + 2 => (float, float)
+
+        of which only the first and last flags indicate acceptable arguments.
+
+        The function returns a dictionary whose keys are the functions and whose values are
+        a list of the flags which would indicate the correct types.
+        In the above example we would return `{func_0 : [0,0], func_1 : [1,2]}`.
+
+        Parameters
+        ----------
+        funcs : list of FunctionDefs
+            The functions in the Interface.
+
+        Returns
+        -------
+        dict
+            A dictionary whose keys are the functions and whose values are a list of integers
+            which should be used to increment the byte flag if the argument at the same index
+            has the type expected by the function.
+        """
+        argument_type_flags = {func:[] for func in funcs}
+        nargs = len(funcs[0].arguments)
+        step = 1
+        for i in range(nargs):
+            interface_args = [func.arguments[i].var for func in funcs]
+            interface_types = [(a.dtype, a.precision) for a in interface_args]
+            possible_types = list(dict.fromkeys(interface_types)) # Remove duplicates but preserve order
+            for func, t in zip(funcs, interface_types):
+                argument_type_flags[func].append(possible_types.index(t)*step)
+            step *= len(possible_types)
+        return argument_type_flags
 
     def _create_wrapper_check(self, check_var, parse_args, types_dict, func_name):
         """
