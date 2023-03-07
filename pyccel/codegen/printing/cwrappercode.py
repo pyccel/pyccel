@@ -1105,6 +1105,12 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Generate the function which determines the relevant interface.
 
+        Creates a function which tests each of the arguments passed to the function.
+        For each of the arguments it checks if it has one of the expected types. If
+        this is not the case, then an error is raised, otherwise the received type is
+        saved into a byte flag. This flag is then used to determine exactly which
+        function in the interface is being called.
+
         Parameters
         ----------
         check_var : Variable
@@ -1123,7 +1129,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns
         -------
         FunctionDef
-            The function which determines the Interface key
+            The function which determines the Interface key.
         """
         check_func_body = []
         step = 1
