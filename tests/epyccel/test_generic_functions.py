@@ -421,7 +421,7 @@ def test_zeros_types(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="In generic interface 'scalar_or_array' at (1) procedures must be either all SUBROUTINEs or all FUNCTIONs. Using subroutines first requires issue #297"),
-            pytest.mark.python]
+            pytest.mark.fortran]
         ),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
@@ -446,3 +446,39 @@ def test_scalar_or_array(language):
     assert isinstance(a_1[0], type(a_2[0]))
     assert np.array_equal(a_1, a_2)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="In generic interface 'add_scalars_or_arrays' at (1) procedures must be either all SUBROUTINEs or all FUNCTIONs. Using subroutines first requires issue #297"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_add_scalars_or_arrays(language):
+    f1 = epyccel(mod2.add_scalars_or_arrays, language = language)
+    f2 = mod2.add_scalars_or_arrays
+
+    i_1 = f1(0)
+    i_2 = f2(0)
+
+    assert i_1 == i_2
+    assert isinstance(i_1, type(i_2))
+
+    a = np.zeros(3, dtype=float)
+
+    a_1 = f1(a)
+    a_2 = f2(a)
+
+    assert isinstance(a_1, type(a_2))
+    assert isinstance(a_1[0], type(a_2[0]))
+    assert np.array_equal(a_1, a_2)
+
+    b = np.zeros((3,4), dtype=complex)
+
+    b_1 = f1(b)
+    b_2 = f2(b)
+
+    assert isinstance(b_1, type(b_2))
+    assert isinstance(b_1[0,0], type(b_2[0,0]))
+    assert np.array_equal(b_1, b_2)

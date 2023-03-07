@@ -186,3 +186,7 @@ def zeros_type(a : 'T'):
 @types('int[:]')
 def scalar_or_array(a):
     return a+2
+
+@template('T', ['int', 'float[:]', 'complex[:, :]'])
+def add_scalars_or_arrays(a: T, b: T):
+    return a + b + 1
