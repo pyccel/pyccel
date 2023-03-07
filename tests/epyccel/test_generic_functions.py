@@ -420,7 +420,7 @@ def test_zeros_types(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="In generic interface 'scalar_or_array' at (1) procedures must be either all SUBROUTINEs or all FUNCTIONs. Using subroutines first requires issue #297"),
+            pytest.mark.xfail(reason="Issue #1339"),
             pytest.mark.fortran]
         ),
         pytest.param("c", marks = pytest.mark.c),
@@ -448,7 +448,7 @@ def test_scalar_or_array(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="In generic interface 'add_scalars_or_arrays' at (1) procedures must be either all SUBROUTINEs or all FUNCTIONs. Using subroutines first requires issue #297"),
+            pytest.mark.xfail(reason="Issue #1339"),
             pytest.mark.fortran]
         ),
         pytest.param("c", marks = pytest.mark.c),
