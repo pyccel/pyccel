@@ -1006,7 +1006,7 @@ class CWrapperCodePrinter(CCodePrinter):
         parse_args = [self.get_PyArgParseType(a.var) for a in funcs[0].arguments]
 
         # Determine flags which indicate argument type
-        argument_type_flags = self._determine_interface_flags(funcs, parse_args)
+        argument_type_flags = self._determine_interface_flags(funcs)
 
         # Managing the body of wrapper
         for func in funcs :
