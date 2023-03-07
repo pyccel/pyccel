@@ -11,7 +11,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
 
-from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.builtins import PythonTuple, PythonType
 
 from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
@@ -24,17 +24,17 @@ from pyccel.ast.cwrapper    import PyArgKeywords
 from pyccel.ast.cwrapper    import Py_None, Py_DECREF
 from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
 from pyccel.ast.cwrapper    import scalar_object_check
-from pyccel.ast.cwrapper    import PyccelPyArrayObject, PyccelPyObject
+from pyccel.ast.cwrapper    import PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.cwrapper    import PyModule_AddObject
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, str_dtype
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat
 from pyccel.ast.datatypes import datatype, NativeVoid
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.numpy_wrapper   import array_checker, array_type_check
+from pyccel.ast.numpy_wrapper   import array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
@@ -117,7 +117,7 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.dtype, (PyccelPyArrayObject, PyccelPyObject)):
+        if isinstance(a.dtype, PyccelPyObject):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
@@ -212,9 +212,33 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_default_assign(self, arg, func_arg, value):
-        if arg.rank > 0 :
-            return AliasAssign(arg, Nil())
-        elif func_arg.is_optional:
+        """
+        Provide the Assign which initialises an argument to its default value.
+
+        When a function def argument has a default value, this function
+        provides the code which initialises the argument. This value can
+        then either be used or overwritten with the provided argument.
+
+        Parameters
+        ----------
+        arg : Variable
+            The Variable where the default value should be saved.
+        func_arg : FunctionDefArgument
+            The argument object where the value may be provided.
+        value : PyccelAstNode
+            The default value which should be assigned.
+
+        Returns
+        -------
+        Assign
+            The code describing the assignement.
+
+        Raises
+        ------
+        NotImplementedError
+            If the type of the default value is not handled.
+        """
+        if func_arg.is_optional:
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeFloat, NativeInteger, NativeBool)):
             return Assign(arg, value)
@@ -431,38 +455,38 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_check_type_statement(self, variable, collect_var, compulsory):
         """
+        Check if the provided variable has the expected type.
+
         Get the code which checks if the variable collected from python
-        has the expected type
+        has the expected type.
 
         Parameters
         ----------
-        variable    : Variable
-                      The variable containing the PythonObject
+        variable : Variable
+                      The variable containing the PythonObject.
         collect_var : Variable
                       The variable in which the result will be saved,
-                      used to provide information about the expected type
-        compulsory  : bool
+                      used to provide information about the expected type.
+        compulsory : bool
                       Indicates whether the argument is a compulsory argument
                       to the function (if not then it must have a default or
-                      be optional)
+                      be optional).
 
         Returns
         -------
-        check : str
+        str
                 A string containing the code which determines whether 'variable'
-                contains an object which can be saved in 'collect_var'
+                contains an object which can be saved in 'collect_var'.
         """
 
         if variable.rank > 0 :
-            check = array_type_check(collect_var, variable)
+            check = array_type_check(collect_var, variable, False)
 
         else :
             check = scalar_object_check(collect_var, variable)
 
         if not compulsory:
-            default = PyccelNot(ObjectAddress(collect_var)) \
-                            if variable.rank > 0 else \
-                      PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
+            default = PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
         return check
@@ -597,36 +621,52 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
-        Responsible for collecting value and managing error and create the body
-        of arguments with rank greater than 0 in format
+        Create the code to extract an array.
+
+        This function is responsible for collecting the value of the array from
+        a provided Python variable, and saving it into a C object.
+        It also manages potential errors such as if the wrong type is provided.
+        Finally it also handles the case of an optional array.
 
         Parameters
         ----------
-        Variable : Variable
-            The optional variable
-        collect_var : variable
-            the pyobject type variable  holder of value
-        check_type : Boolean
-            True if the type is needed
+        variable : Variable
+            The C variable where the result will be stored.
+        collect_var : Variable
+            The Variable containing the Python object, of type PyObject.
+        check_type : bool
+            True if the type is needed.
 
         Returns
         -------
-        body : list
-            A list of statements
+        list
+            A list of code statements.
         """
+        self.add_import(cwrapper_ndarray_import)
         body = []
+
+        in_if = False
+
         #check optional :
         if variable.is_optional :
-            check = PyccelNot(ObjectAddress(collect_var))
+            check = PyccelEq(ObjectAddress(collect_var), ObjectAddress(Py_None))
             body += [IfSection(check, [AliasAssign(variable, Nil())])]
+            in_if = True
 
-        check = array_checker(collect_var, variable, check_type, self._target_language)
-        body += [IfSection(check, [Return([Nil()])])]
+        if check_type:
+            check = array_type_check(collect_var, variable, True)
+            body += [IfSection(PyccelNot(check), [Return([Nil()])])]
+            in_if = True
 
         collect_func = FunctionCall(pyarray_to_ndarray, [collect_var])
-        body += [IfSection(LiteralTrue(), [Assign(variable,
-                            collect_func)])]
-        body = [If(*body)]
+        if in_if:
+            # Use this if other array storage (e.g. cuda arrays) is available
+            #body += [IfSection(FunctionCall(PyArray_Check, [collect_var]), [Assign(variable,
+            #                    collect_func)])]
+            body += [IfSection(LiteralTrue(), [Assign(variable, collect_func)])]
+            body = [If(*body)]
+        else:
+            body = [Assign(variable, collect_func)]
 
         return body
 
@@ -719,32 +759,26 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     def get_PyArgParseType(self, variable):
         """
-        Responsible for creating any necessary intermediate variables which are used
-        to collect the result of PyArgParse, and collecting the required cast function
+        Get the variable which collects the result of PyArgParse.
+
+        This function is responsible for creating any necessary intermediate variables which are used
+        to collect the result of PyArgParse.
 
         Parameters
         ----------
         variable : Variable
-            The variable which will be passed to the translated function
+            The variable which will be passed to the translated function.
 
         Returns
         -------
-        collect_var : Variable
-            The variable which will be used to collect the argument
+        Variable
+            The variable which will be used to collect the argument.
         """
 
-        if variable.rank > 0:
-            collect_type = PyccelPyArrayObject()
-            collect_var  = Variable(dtype = collect_type,
-                                memory_handling='alias', rank = variable.rank,
-                                order= variable.order,
-                                name=self.scope.get_new_name(variable.name+"_tmp"))
-
-        else:
-            collect_type = PyccelPyObject()
-            collect_var  = Variable(dtype = collect_type,
-                                memory_handling='alias',
-                                name=self.scope.get_new_name(variable.name+"_tmp"))
+        collect_type = PyccelPyObject()
+        collect_var  = Variable(dtype = collect_type,
+                            memory_handling='alias',
+                            name=self.scope.get_new_name(variable.name+"_tmp"))
         self.scope.insert_variable(collect_var)
 
         return collect_var
@@ -1057,7 +1091,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, funcs[0].name)
+        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict)
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
@@ -1151,11 +1185,14 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Generate the function which determines the relevant interface.
 
-        Creates a function which tests each of the arguments passed to the function.
-        For each of the arguments it checks if it has one of the expected types. If
-        this is not the case, then an error is raised, otherwise the received type is
-        used to increment a type flag. This flag is then used to determine exactly which
-        function in the interface is being called (see _determine_interface_flags for more detail).
+
+        Creates a FunctionDef which tests each of the arguments passed to the Interface.
+        For each of the arguments it checks if it has one of the expected types.
+        This function is necessary when wrapping an Interface in order to determine which
+        underlying function is being called. The created FunctionDef returns an integer
+        which acts as a flag to indicate which function has been chosed and raises an error
+        if the type received does not match any of the expected types. See _determine_interface_flags
+        for more detail about how the flag is defined.
 
         Parameters
         ----------
@@ -1175,7 +1212,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns
         -------
         FunctionDef
-            The function which determines the Interface key.
+            A FunctionDef describing the function which allows the flag to be set.
         """
         check_func_body = []
         for arg in types_dict:
@@ -1183,10 +1220,8 @@ class CWrapperCodePrinter(CCodePrinter):
             body = []
             arg_type_check_list = list(types_dict[arg])
             types = [elem[0] for elem in arg_type_check_list]
-            precisions = [f'{v.precision * 8} bit' if v.precision != -1 else 'native' for v in types]
-            type_strs = [str_dtype(v.dtype) for v in types]
-            error = ' or '.join([f'{p} {t}' if not isinstance(v.dtype, NativeBool) else t
-                        for p,t,v in zip(precisions, type_strs, types)])
+            description = [PythonType(v).print_string for v in types]
+            error = ' or '.join([d.python_value for d in description])
             if len(arg_type_check_list) == 1:
                 elem = arg_type_check_list[0]
                 var_name = elem[0].name
@@ -1213,10 +1248,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
-
-    def _print_PyccelPyArrayObject(self, expr):
-        self.add_import(cwrapper_ndarray_import)
-        return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'
