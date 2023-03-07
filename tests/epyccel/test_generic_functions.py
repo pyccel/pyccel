@@ -459,25 +459,27 @@ def test_add_scalars_or_arrays(language):
     f1 = epyccel(mod2.add_scalars_or_arrays, language = language)
     f2 = mod2.add_scalars_or_arrays
 
-    i_1 = f1(0)
-    i_2 = f2(0)
+    i_1 = f1(0,1)
+    i_2 = f2(0,1)
 
     assert i_1 == i_2
     assert isinstance(i_1, type(i_2))
 
     a = np.zeros(3, dtype=float)
+    b = np.ones(3, dtype=float)
 
-    a_1 = f1(a)
-    a_2 = f2(a)
+    a_1 = f1(a,b)
+    a_2 = f2(a,b)
 
     assert isinstance(a_1, type(a_2))
     assert isinstance(a_1[0], type(a_2[0]))
     assert np.array_equal(a_1, a_2)
 
-    b = np.zeros((3,4), dtype=complex)
+    c = np.zeros((3,4), dtype=complex)
+    d = np.ones((3,4), dtype=complex)
 
-    b_1 = f1(b)
-    b_2 = f2(b)
+    b_1 = f1(c,d)
+    b_2 = f2(c,d)
 
     assert isinstance(b_1, type(b_2))
     assert isinstance(b_1[0,0], type(b_2[0,0]))
