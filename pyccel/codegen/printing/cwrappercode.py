@@ -23,7 +23,7 @@ from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import PyArgKeywords
 from pyccel.ast.cwrapper    import Py_None, Py_DECREF
 from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
-from pyccel.ast.cwrapper    import scalar_object_check, flags_registry
+from pyccel.ast.cwrapper    import scalar_object_check
 from pyccel.ast.cwrapper    import PyccelPyArrayObject, PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
 from pyccel.ast.cwrapper    import PyModule_AddObject
@@ -39,7 +39,7 @@ from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
+from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub, PyccelNe
 
 from pyccel.ast.variable  import Variable, DottedVariable
 
@@ -971,6 +971,17 @@ class CWrapperCodePrinter(CCodePrinter):
         # collect parse arg
         parse_args = [self.get_PyArgParseType(a.var) for a in funcs[0].arguments]
 
+        # Determine flags which indicate argument type
+        argument_type_flags = {func:[] for func in funcs}
+        step = 1
+        for i, p_arg in enumerate(parse_args):
+            interface_args = [func.arguments[i].var for func in funcs]
+            interface_types = [(a.dtype, a.precision) for a in interface_args]
+            possible_types = list(dict.fromkeys(interface_types)) # Remove duplicates but preserve order
+            for func, t in zip(funcs, interface_types):
+                argument_type_flags[func].append(possible_types.index(t)*step)
+            step *= len(possible_types)
+
         # Managing the body of wrapper
         for func in funcs :
             mini_wrapper_func_body = []
@@ -990,10 +1001,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 mini_scope.insert_variable(a)
             for r in func.results:
                 mini_scope.insert_variable(r)
-            flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
-            for p_arg, (f_var, f_arg) in zip(parse_args, local_arg_vars.items()):
+            for idx, (p_arg, (f_var, f_arg)) in enumerate(zip(parse_args, local_arg_vars.items())):
                 collect_var  = self.get_PyArgParseType(f_var)
                 body, tmp_variable = self._body_management(f_var, p_arg, f_arg.value)
 
@@ -1010,9 +1020,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 # Get Bind/C arguments
                 static_func_args.extend(self.get_static_args(f_var))
 
-                flag_value = flags_registry[(f_var.dtype, f_var.precision)]
-                flags = (flags << 4) + flag_value  # shift by 4 to the left
-                types_dict[f_var].add((f_var, check, flag_value)) # collect variable type for each arguments
+                # Save flag to types dict for interface recognition
+                flag_value = argument_type_flags[func][idx]
+                if flag_value >= len(types_dict[f_var]):
+                    types_dict[f_var].add((f_var, check, flag_value)) # collect variable type for each arguments
+
                 mini_wrapper_func_body += body
 
             # create the corresponding function call
@@ -1048,7 +1060,7 @@ class CWrapperCodePrinter(CCodePrinter):
             funcs_def.append(mini_wrapper_func_def)
 
             # append check condition to the functioncall
-            body_tmp.append(IfSection(PyccelEq(check_var, LiteralInteger(flags)), [AliasAssign(wrapper_results[0],
+            body_tmp.append(IfSection(PyccelEq(check_var, LiteralInteger(sum(argument_type_flags[func]))), [AliasAssign(wrapper_results[0],
                     FunctionCall(mini_wrapper_func_def, parse_args))]))
 
         # Errors / Types management
@@ -1057,7 +1069,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
-        body_tmp = [IfSection(PyccelNot(check_var), [Return([Nil()])])] + body_tmp
+        body_tmp = [IfSection(PyccelNe(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
         body_tmp.append(IfSection(LiteralTrue(),
             [PyErr_SetString('PyExc_TypeError', '"This combination of arguments is not valid"'),
             Return([Nil()])]))
@@ -1090,31 +1102,57 @@ class CWrapperCodePrinter(CCodePrinter):
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
     def _create_wrapper_check(self, check_var, parse_args, types_dict, func_name):
+        """
+        Generate the function which determines the relevant interface.
+
+        Parameters
+        ----------
+        check_var : Variable
+            The integer variable which will be returned by the function.
+
+        parse_args : list of Variable
+            The arguments passed to the function in the Python code.
+
+        types_dict : dictionary
+            A dictionary linking the parsed arguments to the possible types.
+            The values are tuples containing the expected argument, the type check, and the flag.
+
+        func_name : str
+            The name of the interface.
+
+        Returns
+        -------
+        FunctionDef
+            The function which determines the Interface key
+        """
         check_func_body = []
-        flags = (len(types_dict) - 1) * 4
+        step = 1
         for arg in types_dict:
             var_name = ""
             body = []
-            types = []
             arg_type_check_list = list(types_dict[arg])
-            arg_type_check_list.sort(key= lambda x : x[0].precision)
-            for elem in arg_type_check_list:
-                var_name = elem[0].name
-                value = elem[2] << flags
-                body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,value)]))
-                types.append(elem[0])
-            flags -= 4
+            types = [elem[0] for elem in arg_type_check_list]
             error = ' or '.join(['{} {}'.format(str(v.precision * 8)+' bit' if v.precision != -1 else 'native',
                                                     str_dtype(v.dtype))
                             if not isinstance(v.dtype, NativeBool)
                             else  str_dtype(v.dtype) for v in types])
-            body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
+            if len(arg_type_check_list) == 1:
+                elem = arg_type_check_list[0]
+                var_name = elem[0].name
+                assert elem[2] == 0
+                body.append(IfSection(PyccelNot(elem[1]), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([PyccelUnarySub(LiteralInteger(1))])]))
+            else:
+                arg_type_check_list.sort(key= lambda x : x[2])
+                for elem in arg_type_check_list:
+                    var_name = elem[0].name
+                    body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,elem[2])]))
+                body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([PyccelUnarySub(LiteralInteger(1))])]))
             check_func_body += [If(*body)]
 
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
         # Creating check function definition
-        check_func_name = self.scope.parent_scope.get_new_name('type_check')
+        check_func_name = self.scope.parent_scope.get_new_name(f'type_check_{func_name}')
         check_func_def = FunctionDef(name = check_func_name,
             arguments = parse_args,
             results = [check_var],
