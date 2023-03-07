@@ -1091,7 +1091,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict)
+        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, funcs[0].name)
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
