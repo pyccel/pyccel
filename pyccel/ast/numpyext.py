@@ -344,9 +344,9 @@ DtypePrecisionToCastFunction = {
 
 def process_dtype(dtype):
     """
-    Analyse a dtype passed to a numpy array creation function.
+    Analyse a dtype passed to a NumPy array creation function.
 
-    This function takes a dtype passed to a numpy array creation function,
+    This function takes a dtype passed to a NumPy array creation function,
     processes it in different ways depending on its type, and finally extracts
     the corresponding type and precision from the `dtype_registry` dictionary.
 

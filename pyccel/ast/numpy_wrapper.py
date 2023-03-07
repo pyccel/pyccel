@@ -220,14 +220,13 @@ def array_type_check(py_variable, c_variable, raise_error):
     Return the code which checks if the array has the expected type.
 
     Returns the code which checks if the array has the expected rank,
-    datatype, precision, and order. The expected rank, datatype,
-    precision, and order are determined from the properties of the
-    `c_variable` argument.
+    datatype, precision, and order. These are determined from the
+    properties of the `c_variable` argument.
 
     Parameters
     ----------
     py_variable : Variable
-            A variable containing the python object passed into the wrapper.
+            A variable containing the Python object passed into the wrapper.
     c_variable : Variable
             A variable containing the basic C object which will store the array.
     raise_error : bool

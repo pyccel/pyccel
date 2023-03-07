@@ -226,7 +226,7 @@ class PyBuildValueNode(PyccelAstNode):
     Represents a call to the function PyBuildValueNode.
 
     The function PyBuildValueNode can be found in Python.h.
-    It describes the creation of a new python object based
+    It describes the creation of a new Python object based
     on a format string. More details can be found in Python's
     docs.
 

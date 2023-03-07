@@ -217,7 +217,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         When a function def argument has a default value, this function
         provides the code which initialises the argument. This value can
-        then either be used over overwritten with the provided argument.
+        then either be used or overwritten with the provided argument.
 
         Parameters
         ----------
