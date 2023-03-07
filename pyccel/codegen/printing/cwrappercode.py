@@ -39,7 +39,7 @@ from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub, PyccelNe
+from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
 
 from pyccel.ast.variable  import Variable, DottedVariable
 
@@ -1069,7 +1069,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
-        body_tmp = [IfSection(PyccelNe(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
+        body_tmp = [IfSection(PyccelEq(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
         body_tmp.append(IfSection(LiteralTrue(),
             [PyErr_SetString('PyExc_TypeError', '"This combination of arguments is not valid"'),
             Return([Nil()])]))
