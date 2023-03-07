@@ -1942,6 +1942,69 @@ class FunctionDefArgument(PyccelAstNode):
         else:
             return 'FunctionDefArgument({})'.format(repr(self.name))
 
+class FunctionDefResult(PyccelAstNode):
+    """
+    Node describing the result of a function.
+
+    An object describing the result of a function described
+    by a FunctionDef. This object stores all the information
+    which describes an result but is superfluous for a Variable.
+
+    Parameters
+    ----------
+    var : Variable
+        The variable which represents the returned value.
+
+    annotation : str
+        The type annotation describing the argument.
+
+    originates_in_arg : bool
+        Indicate whether the result is also an argument.
+
+    See Also
+    --------
+    FunctionDef : The class where these objects will be stored.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import FunctionDefArgument
+    >>> n = FunctionDefArgument('n')
+    >>> n
+    n
+    """
+    __slots__ = ('_var','_originates_in_arg','_annotation')
+    _attribute_nodes = ('_var',)
+
+    def __init__(self, var, *, originates_in_arg, annotation=None):
+        if not isinstance(var, Variable):
+            raise TypeError("Var must be a Variable")
+        self._var        = var
+        self._annotation = annotation
+
+        super().__init__()
+
+    @property
+    def var(self):
+        """ The variable representing the result
+        (available after the semantic treatment).
+        """
+        return self._var
+
+    def annotation(self):
+        """ The argument annotation providing dtype information
+        """
+        return self._annotation
+
+    @property
+    def has_default(self):
+        """ Indicates whether the argument has a default value
+        (if not then it must be provided)
+        """
+        return self._value is not None
+
+    def __repr__(self):
+        return 'FunctionDefResult({})'.format(repr(self.var))
+
 class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
@@ -2018,11 +2081,11 @@ class FunctionCall(PyccelAstNode):
 
         self._funcdef       = func
         self._arguments     = args
-        self._dtype         = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
-        self._rank          = func.results[0].rank      if len(func.results) == 1 else None
-        self._shape         = func.results[0].shape     if len(func.results) == 1 else None
-        self._precision     = func.results[0].precision if len(func.results) == 1 else None
-        self._order         = func.results[0].order     if len(func.results) == 1 else None
+        self._dtype         = func.results[0].var.dtype     if len(func.results) == 1 else NativeTuple()
+        self._rank          = func.results[0].var.rank      if len(func.results) == 1 else None
+        self._shape         = func.results[0].var.shape     if len(func.results) == 1 else None
+        self._precision     = func.results[0].var.precision if len(func.results) == 1 else None
+        self._order         = func.results[0].var.order     if len(func.results) == 1 else None
         self._func_name     = func.name
         super().__init__()
 
@@ -2294,6 +2357,7 @@ class FunctionDef(ScopedNode):
             raise TypeError('arguments must be an iterable')
 
         arguments = tuple(a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in arguments)
+        arg_vars = [a.var for a in arguments]
 
         # body
 
@@ -2307,7 +2371,7 @@ class FunctionDef(ScopedNode):
 
         if not iterable(results):
             raise TypeError('results must be an iterable')
-        results = tuple(results)
+        results = [FunctionDefResult(r, originates_in_arg = (r in arg_vars)) for r in results]
 
         # if method
 
