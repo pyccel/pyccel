@@ -1154,8 +1154,8 @@ class CWrapperCodePrinter(CCodePrinter):
         Creates a function which tests each of the arguments passed to the function.
         For each of the arguments it checks if it has one of the expected types. If
         this is not the case, then an error is raised, otherwise the received type is
-        saved into a byte flag. This flag is then used to determine exactly which
-        function in the interface is being called.
+        used to increment a type flag. This flag is then used to determine exactly which
+        function in the interface is being called (see _determine_interface_flags for more detail).
 
         Parameters
         ----------
