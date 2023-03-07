@@ -194,7 +194,7 @@ class SemanticParser(BasicParser):
         Additional keyword arguments for BasicParser.
     """
 
-    def __init__(self, inputs, parents = (), d_parsers = (), **kwargs):
+    def __init__(self, inputs, *, parents = (), d_parsers = (), **kwargs):
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
@@ -3291,7 +3291,7 @@ class SemanticParser(BasicParser):
             # Collect the modified objects
             lhs_assigns   = [a.lhs for a in assigns]
             modified_args = [call_arg.value for f in calls
-                                for call_arg, func_arg in zip(f.args,f.funcdef.arguments) if func_arg.inout]
+                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
