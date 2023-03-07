@@ -531,23 +531,3 @@ def scalar_object_check(py_object, c_object):
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     return FunctionCall(check_func, [py_object])
-
-# This registry is used for interface management,
-# mapping each data type to a given flag
-# Those flags are used in a bitset #TODO
-flags_registry = {
-    (NativeInteger(), 4)       : 1,
-    (NativeInteger(), 8)       : 2,
-    (NativeInteger(), 2)       : 3,
-    (NativeInteger(), 1)       : 4,
-    (NativeInteger(), -1)      : 5,
-    (NativeFloat(), 8)         : 6,
-    (NativeFloat(), 4)         : 7,
-    (NativeFloat(), -1)        : 8,
-    (NativeComplex(), 4)       : 9,
-    (NativeComplex(), 8)       : 10,
-    (NativeComplex(), -1)      : 11,
-    (NativeBool(), 4)          : 12,
-    (NativeBool(), -1)         : 12,
-    (NativeString(), 0)        : 13
-}
