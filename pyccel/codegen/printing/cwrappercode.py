@@ -1185,7 +1185,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Generate the function which determines the relevant interface.
 
-
         Creates a FunctionDef which tests each of the arguments passed to the Interface.
         For each of the arguments it checks if it has one of the expected types.
         This function is necessary when wrapping an Interface in order to determine which
