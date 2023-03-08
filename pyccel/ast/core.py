@@ -1976,7 +1976,10 @@ class FunctionDefResult(PyccelAstNode):
     _attribute_nodes = ('_var',)
 
     def __init__(self, var, *, originates_in_arg, annotation=None):
-        if not isinstance(var, Variable):
+        if pyccel_stage == 'syntactic':
+            if not isinstance(var, PyccelSymbol):
+                raise TypeError("Var must be a PyccelSymbol")
+        elif not isinstance(var, Variable):
             raise TypeError("Var must be a Variable")
         self._var        = var
         self._annotation = annotation
@@ -2355,8 +2358,9 @@ class FunctionDef(ScopedNode):
 
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
+        if not all(isinstance(r, FunctionDefArgument) for r in results):
+            raise TypeError('results must be all be FunctionDefResults')
 
-        arguments = tuple(a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in arguments)
         arg_vars = [a.var for a in arguments]
 
         # body
@@ -2371,7 +2375,8 @@ class FunctionDef(ScopedNode):
 
         if not iterable(results):
             raise TypeError('results must be an iterable')
-        results = [FunctionDefResult(r, originates_in_arg = (r in arg_vars)) for r in results]
+        if not all(isinstance(r, FunctionDefResult) for r in results):
+            raise TypeError('results must be all be FunctionDefResults')
 
         # if method
 
