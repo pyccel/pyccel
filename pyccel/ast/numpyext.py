@@ -344,7 +344,9 @@ DtypePrecisionToCastFunction = {
 
 def process_dtype(dtype):
     """
-    This function takes a dtype passed to a numpy array creation function,
+    Analyse a dtype passed to a NumPy array creation function.
+
+    This function takes a dtype passed to a NumPy array creation function,
     processes it in different ways depending on its type, and finally extracts
     the corresponding type and precision from the `dtype_registry` dictionary.
 
@@ -353,23 +355,26 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype: PythonType | PyccelFunctionDef | String
-        The actual dtype passed to the numpy function
+    dtype : PythonType | PyccelFunctionDef | String
+        The actual dtype passed to the NumPy function.
+
+    Returns
+    -------
+    Datatype
+        The Datatype corresponding to the passed dtype.
+    int
+        The precision corresponding to the passed dtype.
 
     Raises
     ------
     TypeError: In the case of unrecognized argument type.
     TypeError: In the case of passed string argument not recognized as valid dtype.
-
-    Returns:
-    ----------
-    dtype: Datatype
-        The Datatype corresponding to the passed dtype.
-    precision: int
-        The precision corresponding to the passed dtype.
     """
 
     if isinstance(dtype, PythonType):
+        if dtype.arg.rank > 0:
+            errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
+                    symbol=dtype, severity="fatal")
         return dtype.dtype, get_final_precision(dtype)
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
