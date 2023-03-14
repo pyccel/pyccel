@@ -11,6 +11,6 @@ jobs:
 
     steps:
       - run: |
-        echo ${{ github.pull_request.labels }}
+          echo "${{ github.pull_request.labels }}"
         shell: bash
 
