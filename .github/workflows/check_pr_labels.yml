@@ -11,8 +11,8 @@ jobs:
 
     steps:
       - run: |
-          MULTI_LABELS=${{ (${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW}) }}
-          HAS_LABEL=${{ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} }}
+          MULTI_LABELS=$(( (${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW}) ))
+          HAS_LABEL=$(( ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} ))
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
           if [ $MULTI_LABELS ]
           then
