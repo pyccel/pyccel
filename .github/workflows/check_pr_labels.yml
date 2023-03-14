@@ -11,8 +11,13 @@ jobs:
 
     steps:
       - run: |
+          if [ ${FIRST_REVIEW} ] || [ ${SENIOR_REVIEW} ] || [ ${COMPLETED_REVIEW} ]
+          then
+             HAS_LABELS=true
+          else
+             HAS_LABELS=false
+          fi
           MULTI_LABELS=$(( (${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW}) ))
-          HAS_LABEL=$(( ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} ))
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
           if [ $MULTI_LABELS ]
           then
@@ -21,6 +26,10 @@ jobs:
           then
               gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
           fi
+          echo ${{github.event.pull_request.url}}
+          echo ${{github.event.pull_request.html_url}}
+          echo ${{github.event.pull_request.issue_url}}
+          echo ${{github.event.pull_request.comments_url}}
           gh pr comment ${{github.event.pull_request.url}} -b "Github writing!"
           gh pr edit ${{github.event.pull_request.url}} --add-label needs_initial_review
         shell: bash
