@@ -35,7 +35,7 @@ jobs:
           elif [[ ${NLABELS} == 0 ]] && [[ "${DRAFT}" = "true" ]]
           then
               gh pr comment ${{github.event.pull_request.number}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
-          elif [[ ${NLABELS} > 0 ]] && [[ "${DRAFT}" = "false" ]]
+          elif [[ ${NLABELS} == 0 ]] && [[ "${DRAFT}" = "false" ]]
           then
               gh pr comment ${{github.event.pull_request.number}} -b "This PR is marked as ready for a review but it does not have the correct label as per the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md). I will add it for you."
               gh pr edit ${{github.event.pull_request.number}} --add-label needs_initial_review
