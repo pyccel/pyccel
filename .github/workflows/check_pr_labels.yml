@@ -19,6 +19,7 @@ jobs:
              HAS_LABEL=false
           fi
           if (( ${FIRST_REVIEW} ^ ${SENIOR_REVIEW} ^ ${COMPLETED_REVIEW} ))
+          then
              MULTI_LABELS=true
           else
              MULTI_LABELS=false
