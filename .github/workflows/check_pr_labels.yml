@@ -11,6 +11,8 @@ jobs:
 
     steps:
       - run: |
+          MULTI_LABELS=${{ (${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW}) }}
+          HAS_LABEL=${{ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} }}
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
           if [ $MULTI_LABELS ]
           then
@@ -27,7 +29,5 @@ jobs:
           SENIOR_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_for_review' ) }}
           COMPLETED_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_to_merge' ) }}
           DRAFT: ${{ github.event.pull_request.draft }}
-          MULTI_LABELS: ${{ ${FIRST_REVIEW} ^ ${SENIOR_REVIEW} ^ ${COMPLETED_REVIEW} }}
-          HAS_LABEL: ${{ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} }}
           GH_TOKEN: ${{ github.token }}
 
