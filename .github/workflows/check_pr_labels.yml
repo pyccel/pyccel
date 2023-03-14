@@ -27,7 +27,7 @@ jobs:
           SENIOR_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_for_review' ) }}
           COMPLETED_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_to_merge' ) }}
           DRAFT: ${{ github.event.pull_request.draft }}
-          MULTI_LABELS: $FIRST_REVIEW ^ $SENIOR_REVIEW ^ $COMPLETED_REVIEW
-          HAS_LABEL: $FIRST_REVIEW || $SENIOR_REVIEW || $COMPLETED_REVIEW
+          MULTI_LABELS: ${{ ${FIRST_REVIEW} ^ ${SENIOR_REVIEW} ^ ${COMPLETED_REVIEW} }}
+          HAS_LABEL: ${{ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} }}
           GH_TOKEN: ${{ github.token }}
 
