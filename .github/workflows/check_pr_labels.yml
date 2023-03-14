@@ -12,9 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          echo ${{ github.event.pull_request.base.ref }}
-          echo ${{ github.event.pull_request.head.ref }}
-          if [[ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} ]]
+          git checkout ${{ github.event.pull_request.head.ref }}
+          if [[ (${FIRST_REVIEW} || ${SENIOR_REVIEW}) || ${COMPLETED_REVIEW} ]]
           then
              HAS_LABEL=true
           else
