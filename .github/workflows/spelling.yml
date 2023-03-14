@@ -4,7 +4,7 @@ on:
     branches: [ master ]
 
 concurrency:
-  group: spelling_${{ gihub.head_ref }}
+  group: spelling_${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:

@@ -1,0 +1,16 @@
+name: Check Pull Request Compliance
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, labeled, unlabeled, ready_for_review, converted_to_draft ]
+
+jobs:
+  Check_Labels:
+    name: Check labels
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+        echo ${{ github.pull_request.labels }}
+        shell: bash
+
