@@ -12,14 +12,15 @@ jobs:
     steps:
       - run: |
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW}
-          MULTI_LABELS=(${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW})
-          HAS_LABEL=${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW}
-          if [ ${MULTI_LABELS} ]
+          if [ ${FIRST_REVIEW} = 'true' ] ^ [ ${SENIOR_REVIEW} = true ] ^ [ ${COMPLETED_REVIEW} = true ]
+          then
+            if [ ${HAS_LABEL} ] && [ ${DRAFT} ]
+            then
+                gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
+            fi
+          else
           then
               gh pr comment ${{github.event.pull_request.url}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
-          elif [ ${HAS_LABEL} ] && [ ${DRAFT} ]
-          then
-              gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
           fi
           gh pr comment ${{github.event.pull_request.url}} -b "Github writing!"
           gh pr edit ${{github.event.pull_request.url}} --add-label needs_initial_review
@@ -29,5 +30,7 @@ jobs:
           SENIOR_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_for_review' ) }}
           COMPLETED_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_to_merge' ) }}
           DRAFT: ${{ github.event.pull_request.draft }}
+          MULTI_LABELS: $FIRST_REVIEW ^ $SENIOR_REVIEW ^ $COMPLETED_REVIEW
+          HAS_LABEL: $FIRST_REVIEW || $SENIOR_REVIEW || $COMPLETED_REVIEW
           GH_TOKEN: ${{ github.token }}
 
