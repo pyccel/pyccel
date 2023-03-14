@@ -20,9 +20,9 @@ jobs:
           fi
           if (( ${FIRST_REVIEW} ^ ${SENIOR_REVIEW} ^ ${COMPLETED_REVIEW} ))
           then
-             MULTI_LABELS=true
-          else
              MULTI_LABELS=false
+          else
+             MULTI_LABELS=$HAS_LABEL
           fi
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
           if [ $MULTI_LABELS ]
