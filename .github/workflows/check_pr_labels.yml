@@ -17,7 +17,7 @@ jobs:
           else
              HAS_LABEL=false
           fi
-          HAS_LABELS=$(( ${FIRST_REVIEW} || ${SENIOR_REVIEW}) ||  ${COMPLETED_REVIEW} ))
+          HAS_LABELS=$(( ${FIRST_REVIEW} || ${SENIOR_REVIEW} ||  ${COMPLETED_REVIEW} ))
           echo $HAS_LABELS
           MULTI_LABELS=$(( (${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW}) ))
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
