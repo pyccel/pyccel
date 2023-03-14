@@ -118,8 +118,11 @@ jobs:
         uses: ./.github/actions/linux_install
       - name: Install python (setup-python action doesn't work with containers)
         uses: ./.github/actions/python_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
+      - name: Install Pyccel with tests
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install .[test]
+        shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
       - name: Ccuda tests with pytest
@@ -148,8 +151,11 @@ jobs:
           python-version: 3.7
       - name: Install dependencies
         uses: ./.github/actions/linux_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
+      - name: Install Pyccel with tests
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install .[test]
+        shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
       - name: Collect coverage information
