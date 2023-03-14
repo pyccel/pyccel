@@ -175,6 +175,8 @@ jobs:
       - name: Generate coverage report
         run: |
             coverage combine
+            ls
+            coverage xml -i
             coverage xml
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
