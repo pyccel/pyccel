@@ -369,13 +369,6 @@ def process_dtype(dtype):
     ------
     TypeError: In the case of unrecognized argument type.
     TypeError: In the case of passed string argument not recognized as valid dtype.
-
-    Returns:
-    ----------
-    dtype: Datatype
-        The Datatype corresponding to the passed dtype.
-    precision: int
-        The precision corresponding to the passed dtype.
     """
 
     if isinstance(dtype, PythonType):
