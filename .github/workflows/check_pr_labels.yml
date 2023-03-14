@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
       - run: |
           if [[ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} ]]
           then
@@ -25,18 +26,18 @@ jobs:
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
           if [ $MULTI_LABELS ]
           then
-              gh pr comment ${{github.event.pull_request.url}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
+              gh pr comment ${{github.event.pull_request.id}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
           elif [[ ${HAS_LABEL} && ${DRAFT} ]]
           then
-              gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
+              gh pr comment ${{github.event.pull_request.id}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
           fi
           echo "Do nothing"
           echo "${{github.event.pull_request.url}}"
           echo "${{github.event.pull_request.html_url}}"
           echo "${{github.event.pull_request.issue_url}}"
           echo "${{github.event.pull_request.comments_url}}"
-          gh pr comment ${{github.event.pull_request.url}} -b "Github writing!"
-          gh pr edit ${{github.event.pull_request.url}} --add-label needs_initial_review
+          gh pr comment ${{github.event.pull_request.id}} -b "Github writing!"
+          gh pr edit ${{github.event.pull_request.id}} --add-label needs_initial_review
         shell: bash
         env:
           FIRST_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'needs_initial_review' ) }}
