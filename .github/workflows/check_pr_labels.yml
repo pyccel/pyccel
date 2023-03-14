@@ -11,10 +11,11 @@ jobs:
 
     steps:
       - run: |
-          FIRST_REVIEW=${{ contains( github.event.pull_request.labels, 'needs_initial_review' }}
-          SENIOR_REVIEW=${{ contains( github.event.pull_request.labels, 'Ready_for_review' }}
-          COMPLETED_REVIEW=${{ contains( github.event.pull_request.labels, 'Ready_to_merge' }}
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW}
           gh pr edit --add-label needs_initial_review
         shell: bash
+        env:
+          FIRST_REVIEW: ${{ contains( github.event.pull_request.labels, 'needs_initial_review' }}
+          SENIOR_REVIEW: ${{ contains( github.event.pull_request.labels, 'Ready_for_review' }}
+          COMPLETED_REVIEW: ${{ contains( github.event.pull_request.labels, 'Ready_to_merge' }}
 
