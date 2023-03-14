@@ -3,6 +3,10 @@ on:
   pull_request:
     branches: [ master ]
 
+concurrency:
+  group: spelling_${{ gihub.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   Spelling:
     runs-on: ubuntu-latest

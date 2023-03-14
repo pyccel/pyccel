@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [ master ]
 
+concurrency:
+  group: doc_${{ gihub.head_ref }}
+  cancel-in-progress: true
+
 jobs:
 
   DocumentationChecker:

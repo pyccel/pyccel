@@ -3,6 +3,10 @@ on:
   pull_request:
     branches: [ master ]
 
+concurrency:
+  group: pyccel_lint_${{ gihub.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest

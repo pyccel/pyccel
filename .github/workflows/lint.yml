@@ -3,6 +3,10 @@ on:
   pull_request:
     branches: [ master ]
 
+concurrency:
+  group: python_lint_${{ gihub.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   Linter:
     runs-on: ubuntu-latest
