@@ -13,16 +13,18 @@ jobs:
       - run: |
           if [[ ${FIRST_REVIEW} || ${SENIOR_REVIEW} || ${COMPLETED_REVIEW} ]]
           then
-             HAS_LABELS=true
+             HAS_LABEL=true
           else
-             HAS_LABELS=false
+             HAS_LABEL=false
           fi
+          HAS_LABELS=$(( ${FIRST_REVIEW} || ${SENIOR_REVIEW}) ||  ${COMPLETED_REVIEW} ))
+          echo $HAS_LABELS
           MULTI_LABELS=$(( (${FIRST_REVIEW} && ${SENIOR_REVIEW}) || (${FIRST_REVIEW} && ${COMPLETED_REVIEW}) || (${SENIOR_REVIEW} && ${COMPLETED_REVIEW}) ))
           echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
           if [ $MULTI_LABELS ]
           then
               gh pr comment ${{github.event.pull_request.url}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
-          elif [ ${HAS_LABEL} ] && [ ${DRAFT} ]
+          elif [[ ${HAS_LABEL} && ${DRAFT} ]]
           then
               gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
           fi
