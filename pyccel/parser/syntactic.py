@@ -176,10 +176,9 @@ class SyntaxParser(BasicParser):
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
             else:
-
-                raise errors.report(PYCCEL_INVALID_HEADER,
+                errors.report(PYCCEL_INVALID_HEADER,
                               symbol = stmt,
-                              severity='error')
+                              severity='fatal')
 
         else:
             txt = line[1:].lstrip()
@@ -210,8 +209,8 @@ class SyntaxParser(BasicParser):
             return result
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
-                      severity='fatal')
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
+                      severity='error')
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
@@ -259,7 +258,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Dict(self, stmt):
         errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol=stmt, severity='fatal')
+                symbol=stmt, severity='error')
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -309,28 +308,25 @@ class SyntaxParser(BasicParser):
         lhs = self._visit(stmt.target)
         rhs = self._visit(stmt.value)
         if isinstance(stmt.op, ast.Add):
-            expr = AugAssign(lhs, '+', rhs)
+            return AugAssign(lhs, '+', rhs)
         elif isinstance(stmt.op, ast.Sub):
-            expr = AugAssign(lhs, '-', rhs)
+            return AugAssign(lhs, '-', rhs)
         elif isinstance(stmt.op, ast.Mult):
-            expr = AugAssign(lhs, '*', rhs)
+            return AugAssign(lhs, '*', rhs)
         elif isinstance(stmt.op, ast.Div):
-            expr = AugAssign(lhs, '/', rhs)
+            return AugAssign(lhs, '/', rhs)
         elif isinstance(stmt.op, ast.Mod):
-            expr = AugAssign(lhs, '%', rhs)
+            return AugAssign(lhs, '%', rhs)
         else:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
-                      severity='fatal')
-
-        # we set the fst to keep track of needed information for errors
-
-        return expr
+            return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
+                    severity='error')
 
     def _visit_arguments(self, stmt):
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
-                    severity='fatal')
+                    severity='error')
+            return []
 
         arguments       = []
         if stmt.args:
@@ -473,7 +469,7 @@ class SyntaxParser(BasicParser):
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
-                          severity='fatal')
+                          severity='error')
 
         return Func(target)
 
@@ -522,9 +518,9 @@ class SyntaxParser(BasicParser):
             return NumpyMatmul(first, second)
 
         else:
-            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+            return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
-                          severity='fatal')
+                          severity='error')
 
     def _visit_BoolOp(self, stmt):
 
@@ -536,15 +532,15 @@ class SyntaxParser(BasicParser):
         if isinstance(stmt.op, ast.Or):
             return PyccelOr(*args)
 
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt.op,
-                      severity='fatal')
+                      severity='error')
 
     def _visit_Compare(self, stmt):
         if len(stmt.ops)>1:
-            errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
+            return errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
                       symbol = stmt,
-                      severity='fatal')
+                      severity='error')
 
         first = self._visit(stmt.left)
         second = self._visit(stmt.comparators[0])
@@ -567,9 +563,9 @@ class SyntaxParser(BasicParser):
         if isinstance(op, ast.IsNot):
             return PyccelIsNot(first, second)
 
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
-                      severity='fatal')
+                      severity='error')
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
@@ -741,11 +737,10 @@ class SyntaxParser(BasicParser):
 
         body = stmt.body
 
-        if 'sympy' in decorators.keys():
+        if 'sympy' in decorators:
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [],
-                    [stmt.__str__()])
+            func = SympyFunction(name, arguments, [], [str(stmt)])
             func.set_fst(stmt)
             self.insert_function(func)
             return EmptyNode()
@@ -757,10 +752,10 @@ class SyntaxParser(BasicParser):
             doc_string.header = ''
             body = body[1:]
 
-        if 'pure' in decorators.keys():
+        if 'pure' in decorators:
             is_pure = True
 
-        if 'elemental' in decorators.keys():
+        if 'elemental' in decorators:
             is_elemental = True
             if len(arguments) > 1:
                 errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
@@ -768,10 +763,10 @@ class SyntaxParser(BasicParser):
                               bounding_box=(stmt.lineno, stmt.col_offset),
                               severity='error')
 
-        if 'private' in decorators.keys():
+        if 'private' in decorators:
             is_private = True
 
-        if 'inline' in decorators.keys():
+        if 'inline' in decorators:
             is_inline = True
 
         body = CodeBlock(body)
@@ -1024,10 +1019,11 @@ class SyntaxParser(BasicParser):
         elif name == 'max':
             expr = FunctionalMax(body, result, lhs, indices)
         else:
+            expr = EmptyNode()
             errors.report(PYCCEL_RESTRICTION_TODO,
                           symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
-                          severity='fatal')
+                          severity='error')
 
         expr.set_fst(parent)
 

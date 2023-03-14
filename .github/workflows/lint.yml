@@ -1,7 +1,7 @@
 name: Python Linting
 on:
   pull_request:
-    branches: [ master, cuda_main, cuda_devel ]
+    branches: [ master, development ]
 
 jobs:
   Linter:

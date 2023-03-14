@@ -2,7 +2,7 @@ name: Benchmarks
 
 on:
   push:
-    branches: [ master ]
+    branches: [ pyccel/master ]
 
 jobs:
 

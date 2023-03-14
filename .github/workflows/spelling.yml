@@ -1,7 +1,7 @@
 name: Spellcheck Action
 on:
   pull_request:
-    branches: [ master, cuda_main, cuda_devel ]
+    branches: [ master, development ]
 
 jobs:
   Spelling:
