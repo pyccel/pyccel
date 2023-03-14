@@ -11,16 +11,13 @@ jobs:
 
     steps:
       - run: |
-          echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW}
-          if [ ${FIRST_REVIEW} = 'true' ] ^ [ ${SENIOR_REVIEW} = true ] ^ [ ${COMPLETED_REVIEW} = true ]
-          then
-            if [ ${HAS_LABEL} ] && [ ${DRAFT} ]
-            then
-                gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
-            fi
-          else
+          echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${MULTI_LABELS} ${HAS_LABEL}
+          if [ $MULTI_LABELS ]
           then
               gh pr comment ${{github.event.pull_request.url}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
+          elif [ ${HAS_LABEL} ] && [ ${DRAFT} ]
+          then
+              gh pr comment ${{github.event.pull_request.url}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
           fi
           gh pr comment ${{github.event.pull_request.url}} -b "Github writing!"
           gh pr edit ${{github.event.pull_request.url}} --add-label needs_initial_review
