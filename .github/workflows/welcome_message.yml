@@ -1,0 +1,18 @@
+name: Check for new users
+
+on:
+  pull_request:
+    types: [ opened ]
+
+jobs:
+  Welcome:
+    name: Welcome
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.author_association == FIRST_TIMER || github.event.pull_request.author_association == FIRST_TIME_CONTRIBUTOR }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          git fetch
+          git checkout ${{ github.event.pull_request.head.ref }}
+          gh pr comment ${{github.event.pull_request.number}} -b "Hello! Welcome to Pyccel! Thank you very much for your contribution :heart:.\n\nI am the GitHub bot. I will help guide you through the different stages necessary to validate a review in Pyccel. If you haven't yet seen our developer docs make sure you check them out [here](https://github.com/pyccel/pyccel/tree/master/developer_docs). Amongst other things they describe the [review process](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) that we have just started."
