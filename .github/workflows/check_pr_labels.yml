@@ -13,7 +13,10 @@ jobs:
       - uses: actions/checkout@v3
       - run: |
           git fetch
+          git remote add pyc git@github.com:pyccel/pyccel.git
+          git fetch pyc
           git checkout ${{ github.event.pull_request.head.ref }}
+          git checkout fix-1327
           NLABELS=0
           if [[ "${FIRST_REVIEW}" = "true" ]]
           then
