@@ -33,7 +33,7 @@ jobs:
           then
               gh pr comment ${{github.event.pull_request.number}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
               gh pr edit ${{github.event.pull_request.number}} --remove-label needs_initial_review --remove-label Ready_for_review --remove-label Ready_to_merge
-          elif [[ ${NLABELS} == 0 ]] && [[ "${DRAFT}" = "true" ]]
+          elif [[ ${NLABELS} != 0 ]] && [[ "${DRAFT}" = "true" ]]
           then
               gh pr comment ${{github.event.pull_request.number}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
           elif [[ ${NLABELS} == 0 ]] && [[ "${DRAFT}" = "false" ]]
