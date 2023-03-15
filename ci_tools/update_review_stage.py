@@ -1,8 +1,8 @@
 """ Script to determine which stage of the review is in progress and add appropriate labels
 """
+from collections import namedtuple
 from datetime import datetime
 import json
-import namedtuple
 import shutil
 import subprocess
 import sys
@@ -11,20 +11,20 @@ github_cli = shutil.which('gh')
 
 ReviewComment = namedtuple('ReviewComment', ['state', 'date'])
 
-possible_comments = {'REVIEW_FOR_DRAFT', 'This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels.',
-                     'MULTIPLE_STAGES', 'This PR has too many review flags. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag.',
-                     'NOT_PASSING',"Unfortunately this PR does not yet pass the required tests. I'm going to flag it as a Draft for now. Please remove the Draft status when you think it is ready for review.",
+possible_comments = {'REVIEW_FOR_DRAFT': 'This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels.',
+                     'MULTIPLE_STAGES': 'This PR has too many review flags. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag.',
+                     'NOT_PASSING':"Unfortunately this PR does not yet pass the required tests. I'm going to flag it as a Draft for now. Please remove the Draft status when you think it is ready for review.",
+                     'READY_FOR_REVIEW':'This PR looks like it is ready for review. I will add the appropriate labels for you.',
                      'FIRST_REVIEW_OK': "Congratulations, your first review seems to have been successful. I'm moving this on to the next stage of the review process.",
                      'CONGRATULATIONS': "Congratulations, a senior developer thinks your PR looks great! :tada:\nThis PR is nearly ready to merge I will move it to the final stage for merging.",
                      'REVIEWS_GONE': "There don't seem to be any successful reviews here. I'm going to move this PR back to the start of the review cycle.",
-                     'SENIOR_REVIEWS_CHANGE': "Sorry, it looks like a senior developer has found an issue with this PR. I'm going to move it back to the \"Ready_for_review\" stage to make sure this problem is fully scrutinised."
+                     'SENIOR_REVIEWS_CHANGE': "Sorry, it looks like a senior developer has found an issue with this PR. I'm going to move it back to the \"Ready_for_review\" stage to make sure this problem is fully scrutinised.",
+                     'REVIEW_NUDGE':"Hi {changes}, it looks like {approved} has approved this PR. Do you agree with them? We need your review to move on to the next stage of the review process."
                      }
 
 status_labels = {'needs_initial_review':1, 'Ready_for_review':2, 'Ready_to_merge':3}
 
 senior_reviewers = ('yguclu', 'EmilyBourne', 'saidctb', 'bauom')
-
-comment_lookup = dict([reversed(i) for i in possible_comments.items()])
 
 def get_pr_number():
     """
@@ -142,92 +142,6 @@ def get_review_status():
     return review_status, requested_authors
 
 
-def check_previous_comments():
-    cmds = [github_cli, 'pr', 'status', '--json', 'comments']
-
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
-
-    previous_comments = json.loads(result)['currentBranch']['comments']
-
-    my_comments = [ReviewComment(c["body"], datetime.fromisoformat(c['createdAt'].strip('Z')))
-                        for c in previous_comments if ['author']['login'] == 'github-actions']
-
-    if len(my_comments) == 0:
-        return [], '', None
-    else:
-        last_messages = {}
-        final_message = comment_lookup.get(my_comments[0].state, None)
-        final_date = my_comments[0].date
-
-        for c in my_comments:
-            key = comment_lookup.get(c.state, None)
-            assert key is not None
-            if key not in last_message:
-                last_message[key] = c.date
-            elif last_message[key] < c.date:
-                last_message[key] = c.date
-
-            if final_date < c.date:
-                final_message = c.state
-                final_date = c.date
-
-        return last_messages, final_message, final_date
-
-def leave_comment(number, comment_key):
-    """
-    Leave a comment on the PR.
-
-    Use GitHub's command-line interface to leave a comment
-    on the request PR related to this branch.
-
-    Parameters
-    ----------
-    number : int
-        The number of the PR.
-
-    comment : str
-        The key to a comment which should be left on the PR (as defined in possible_comments).
-    """
-    previous_comments, last_comment, last_date = check_previous_comments()
-
-    comment = possible_comments[comment_key]
-
-    if last_comment != comment:
-        cmds = [github_cli, 'pr', 'comment', str(number), '-b', f'"{comment}"']
-
-        print("Commenting : ", cmds)
-
-        #p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-        #result, err = p.communicate()
-
-def set_draft(number):
-    """
-    Set PR to draft and remove review labels.
-
-    Use GitHub's command-line interface to set the PR to a draft and
-    remove the labels indicating the review stage.
-
-    Parameters
-    ----------
-    number : int
-        The number of the PR.
-    """
-    print("Draft")
-    return
-    cmds = [github_cli, 'pr', 'ready', '--undo']
-
-    p = subprocess.Popen(cmds)
-    p.communicate()
-
-    cmds = [github_cli, 'pr', 'edit']
-    for lab in status_labels:
-        cmds += ['--remove-label', lab]
-
-    p = subprocess.Popen(cmds)
-    p.communicate()
-
-
 def check_passing():
     """
     Check if tests are passing for this PR.
@@ -250,10 +164,69 @@ def check_passing():
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
     result, err = p.communicate()
 
-    checks = json.loads(result)
+    checks = json.loads(result)['currentBranch']['statusCheckRollup']
     passing = all(c['conclusion'] == 'SUCCESS' for c in checks if c['name'] not in ('CoverageChecker', 'Check labels', 'Welcome'))
 
     return passing
+
+
+
+def leave_comment(number, comment, allow_duplicate):
+    """
+    Leave a comment on the PR.
+
+    Use GitHub's command-line interface to leave a comment
+    on the request PR related to this branch.
+
+    Parameters
+    ----------
+    number : int
+        The number of the PR.
+
+    comment : str
+        The comment which should be left on the PR.
+
+    allow_duplicate : bool
+        Allow the bot to post the same message twice in a row.
+    """
+    previous_comments, last_comment, last_date = check_previous_comments()
+
+    if allow_duplicate or last_comment != comment:
+        cmds = [github_cli, 'pr', 'comment', str(number), '-b', f'"{comment}"']
+
+        print("Commenting : ", cmds)
+
+        #p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
+        #result, err = p.communicate()
+    else:
+        print("Not duplicating comment:")
+        print(comment)
+
+
+
+def set_draft(number):
+    """
+    Set PR to draft and remove review labels.
+
+    Use GitHub's command-line interface to set the PR to a draft and
+    remove the labels indicating the review stage.
+
+    Parameters
+    ----------
+    number : int
+        The number of the PR.
+    """
+    cmds = [github_cli, 'pr', 'ready', '--undo']
+
+    p = subprocess.Popen(cmds)
+    p.communicate()
+
+    cmds = [github_cli, 'pr', 'edit']
+    for lab in status_labels:
+        cmds += ['--remove-label', lab]
+
+    p = subprocess.Popen(cmds)
+    p.communicate()
 
 
 
@@ -283,33 +256,38 @@ def set_status(current_status, new_status, hanging_authors):
 
     if current_status == '':
         cmd = cmd[:-2]
-        leave_comment(pr_id, 'READY_FOR_REVIEW')
-        cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
+        leave_comment(pr_id, possible_comments['READY_FOR_REVIEW'], True)
+        if new_status == 'needs_initial_review':
+            cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
+        elif new_status == 'Ready_for_review':
+            cmd.extend(['--add-reviewer', 'EmilyBourne'])
+        elif new_status == 'Ready_to_merge':
+            cmd.extend(['--add-reviewer', 'yguclu'])
         
     elif current_status == 'needs_initial_review':
         if new_status == 'Ready_for_review':
-            leave_comment(pr_id, 'FIRST_REVIEW_OK')
+            leave_comment(pr_id, possible_comments['FIRST_REVIEW_OK'], True)
             cmd.extend(['--add-reviewer', 'EmilyBourne'])
 
         elif new_status == 'Ready_to_merge':
-            leave_comment(pr_id, 'CONGRATULATIONS')
+            leave_comment(pr_id, possible_comments['CONGRATULATIONS'], True)
             cmd.extend(['--add-reviewer', 'yguclu'])
 
     elif current_status == 'Ready_for_review':
         if new_status == 'needs_initial_review':
-            leave_comment(pr_id, 'REVIEWS_GONE')
+            leave_comment(pr_id, possible_comments['REVIEWS_GONE'], True)
             cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
 
         elif new_status == 'Ready_to_merge':
-            leave_comment(pr_id, 'CONGRATULATIONS')
+            leave_comment(pr_id, possible_comments['CONGRATULATIONS'], True)
             cmd.extend(['--add-reviewer', 'yguclu'])
 
     elif current_status == 'Ready_to_merge':
         if new_status == 'Ready_for_review':
-            leave_comment(pr_id, 'SENIOR_REVIEWS_CHANGE')
+            leave_comment(pr_id, possible_comments['SENIOR_REVIEWS_CHANGE'], True)
 
         elif new_status == 'Ready_for_review':
-            leave_comment(pr_id, 'REVIEWS_GONE')
+            leave_comment(pr_id, possible_comments['REVIEWS_GONE'], True)
             cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
 
     if new_status != 'needs_initial_review':
@@ -321,6 +299,51 @@ def set_status(current_status, new_status, hanging_authors):
 
     p = subprocess.Popen(cmd)
     p.communicate()
+
+
+def check_previous_comments():
+    """
+    Get information about previous comments made by the bot.
+
+    Get a list of all comments left by the bot as well as its most recent comment
+    to avoid it repeating itself unnecessarily
+
+    Results
+    -------
+    list : A list of all messages left by the bot on this PR.
+
+    str : The last message left by the bot.
+
+    datetime : The last time the bot commented.
+    """
+    cmds = [github_cli, 'pr', 'status', '--json', 'comments']
+
+    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
+    result, err = p.communicate()
+
+    previous_comments = json.loads(result)['currentBranch']['comments']
+
+    my_comments = [ReviewComment(c["body"], datetime.fromisoformat(c['createdAt'].strip('Z')))
+                        for c in previous_comments if c['author']['login'] == 'github-actions']
+
+    if len(my_comments) == 0:
+        return [], '', None
+    else:
+        last_messages = {}
+        final_message = my_comments[0].state
+        final_date = my_comments[0].date
+
+        for c in my_comments:
+            if c.state not in last_messages:
+                last_messages[c.state] = c.date
+            elif last_messages[c.state] < c.date:
+                last_messages[c.state] = c.date
+
+            if final_date < c.date:
+                final_message = c.state
+                final_date = c.date
+
+        return last_messages, final_message, final_date
 
 if __name__ == '__main__':
     pr_id = get_pr_number()
@@ -337,45 +360,54 @@ if __name__ == '__main__':
     labels = get_labels()
     flagged_status = set(labels).intersection(status_labels.keys())
 
-    print(draft, labels)
-    print(draft, flagged_status)
-
     if draft:
         if flagged_status:
-            leave_comment(pr_id, 'REVIEW_FOR_DRAFT')
+            leave_comment(pr_id, possible_comments['REVIEW_FOR_DRAFT'], False)
         sys.exit(0)
 
+    print("Not a draft")
     # Not draft
 
     if len(flagged_status) > 1:
-        leave_comment(pr_id, 'MULTIPLE_STAGES')
+        leave_comment(pr_id, possible_comments['MULTIPLE_STAGES'], False)
         sys.exit(0)
 
+    print("Flags make sense")
     passing = check_passing()
 
     if not passing:
-        leave_comment(pr_id, 'NOT_PASSING')
-        set_draft()
+        leave_comment(pr_id, possible_comments['NOT_PASSING'], True)
+        set_draft(pr_id)
         sys.exit(0)
 
+    print("Tests passing")
     # Passing
 
     reviews, hanging_authors = get_review_status()
-    approved = any(r.state == 'APPROVED' for r in reviews.values())
-    senior_approved = any(r.state == 'APPROVED' for a,r in reviews.items() if a in senior_reviewers)
-    requested_changes = [a for a,r in reviews.items() if r == 'CHANGES_REQUESTED']
+    approval = {a:r for a,r in reviews.items() if r.state == 'APPROVED'}
+    requested_changes = {a:r for a,r in reviews.items() if r == 'CHANGES_REQUESTED'}
+
+    approved = len(approval)>0
+    senior_approved = any(a in senior_reviewers for a in approval)
 
     if approved and senior_approved and not any(r in senior_reviewers for r in requested_changes):
         predicted_status = 'Ready_to_merge'
-    elif approved and not any(r not in senior_reviewers for r in requested_changes)
+    elif approved and not any(r not in senior_reviewers for r in requested_changes):
         predicted_status = 'Ready_for_review'
     else:
         predicted_status = 'needs_initial_review'
 
+    print(f"I think the status should be {predicted_status}")
+
     if predicted_status == 'needs_initial_review' and approved:
-        if 
+        last_approved = max(r.date for r in approval.values())
+        if all((datetime.last_approved - r.date).days > 1):
+            approvers = ', '.join(f'@{a}' for a in approval)
+            requesters = ', '.join(f'@{a}' for a in requested_changes)
+            leave_comment(pr_id, possible_comments['REVIEW_NUDGE'].format(changes = requesters, approved = approvers), False)
 
     if flagged_status:
+        print(f"The current status is {flagged_status}")
         flagged_status = flagged_status.pop()
         if flagged_status == 'Ready_to_merge':
             if not senior_approved:
@@ -391,11 +423,14 @@ if __name__ == '__main__':
                 status = 'Ready_for_review'
         else:
             status = 'needs_initial_review'
+        print(f"The current status is {status}")
     else:
         status = ''
 
     if status_labels[predicted_status] > status_labels.get(status, 0):
         # Move to next review stage
         predicted_status = status
+
+    print(f"Changing status from {flagged_status} to {status}")
 
     set_status(flagged_status, status)
