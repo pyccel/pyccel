@@ -2,7 +2,9 @@ name: Check Pull Request Compliance
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, labeled, unlabeled, ready_for_review, converted_to_draft ]
+    types: [ opened, synchronize, reopened, ready_for_review, converted_to_draft ]
+  pull_request_review:
+    types: [ submitted ]
 
 jobs:
   Check_Labels:
@@ -11,42 +13,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - run: |
           git fetch
-          #git checkout ${{ github.event.pull_request.head.ref }}
-          git checkout cuda_memcopy
-          NLABELS=0
-          if [[ "${FIRST_REVIEW}" = "true" ]]
-          then
-              NLABELS=$(( $NLABELS + 1 ))
-          fi
-          if [[ "${SENIOR_REVIEW}" = true ]]
-          then
-              NLABELS=$(( $NLABELS + 1 ))
-          fi
-          if [[ "${COMPLETED_REVIEW}" = "true" ]]
-          then
-              NLABELS=$(( $NLABELS + 1 ))
-          fi
-          echo ${FIRST_REVIEW} ${SENIOR_REVIEW} ${COMPLETED_REVIEW} ${DRAFT} ${NLABELS}
-          if [[ $NLABELS > 1 ]]
-          then
-              gh pr comment ${{github.event.pull_request.number}} -b "It looks like you are have mixed up the review labels. Please check the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md) to find the correct flag"
-              gh pr edit ${{github.event.pull_request.number}} --remove-label needs_initial_review --remove-label Ready_for_review --remove-label Ready_to_merge
-          elif [[ ${NLABELS} != 0 ]] && [[ "${DRAFT}" = "true" ]]
-          then
-              gh pr comment ${{github.event.pull_request.number}} -b "This PR is asking for a review but it is still in draft. Please either remove the Draft status or remove the labels."
-          elif [[ ${NLABELS} == 0 ]] && [[ "${DRAFT}" = "false" ]]
-          then
-              gh pr comment ${{github.event.pull_request.number}} -b "This PR is marked as ready for a review but it does not have the correct label as per the [review process docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md). I will add it for you."
-              gh pr edit ${{github.event.pull_request.number}} --add-label needs_initial_review
-          fi
-          gh pr status --json reviewDecision
+          git checkout ${{ github.event.pull_request.head.ref }}
+          python3 ci_tools/update_review_stage.py
         shell: bash
         env:
-          FIRST_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'needs_initial_review' ) }}
-          SENIOR_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_for_review' ) }}
-          COMPLETED_REVIEW: ${{ contains( github.event.pull_request.labels.*.name, 'Ready_to_merge' ) }}
-          DRAFT: ${{ github.event.pull_request.draft }}
           GH_TOKEN: ${{ github.token }}
 
