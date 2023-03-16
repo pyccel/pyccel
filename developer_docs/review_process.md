@@ -20,33 +20,34 @@ Many of these tests generate human-friendly output so make sure you check the "S
 
 Once the pull request is open the tests will be triggered every time you push new changes to the branch. Please be mindful of this and try to avoid pushing multiple times in a row to save compute resources. If you do find you need to push repeatedly, don't hesitate to cancel concurrent jobs using the GitHub "Actions" tab.
 
-When the pull request is ready for review (i.e. you are happy with it, and it is passing all tests) it can be marked as such and the review process can begin. This process is split into 3 stages which each have an associated label. The labels are described in the next sections. When a reviewer marks a PR as accepted, they should change the label to indicate the next stage of the review process. If they request changes they should remove the label so the pull request owner can react.
+When the pull request is ready for review (i.e. you are happy with it, and it is passing all tests) it can be marked as such and the review process can begin. This process is split into 3 stages which each have an associated label. The labels are described in the next sections. Pyccel has a bot which takes care of adding the appropriate label.
 
 Once your pull request has been reviewed please react to the open conversations. If you disagree you can say this, if not please leave a reference to the commit which fixes the mentioned issue. This makes the review process faster and more streamlined. Please only resolve conversations that you opened. You may think you fixed the problem, but the reviewer may disagree and leaving the discussion open makes it easier for them to verify that they agree with you. If you are reviewing then please close all conversations that you open once the problem is resolved. If you don't this can block the merge.
 
-Finally once you think you have handled all the issues raised in a review please re-request a review from the reviewer who requested changes and put back the appropriate label.
+Finally once you think you have handled all the issues raised in a review please re-request a review from the reviewer who requested changes.
 
 ## Review Stage Labels
 
 ### Needs Initial Review
 
-To request the first stage of the review process you should add the label `needs_inital_review` to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_inital_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
+To request the first stage of the review process you should ensure that your pull request is not marked as draft. If this is the case the label `needs_inital_review` will be added to your pull request. This asks for a review from anyone. The aim is to review the Python code and ensure that it is clean. New developers are encouraged to review any pull requests marked `needs_inital_review` as the process of understanding how developers integrate their improvements into the existing codebase can be quite instructive when getting to grips with the code. Examples of things to look out for in your review are:
 
+-   Missing/Unclear pull request description
 -   Unclear comments/docstrings
 -   Missing/Incomplete tests
 -   Code which could be faster (e.g. use of loops instead of list comprehensions)
 -   Lack of `__slots__`
 -   Unnecessary code duplication
 
-Once the initial reviewer is happy with the branch they should accept the pull request and change the label from `needs_inital_review` to `Ready_for_review`
+Once the initial reviewer is happy with the branch they should accept the pull request. This will then trigger the label to be changed from `needs_inital_review` to `Ready_for_review` (unless there are other requested changes from other developers).
 
 ### Ready for Review
 
-By this stage the code should be quite clean and should be mostly ready to merge. This label indicates that it is now ready for a senior developer to review. All of our senior developers are volunteers with busy schedules so the review has been split in two in this way to allow pull requests to be reviewed faster. By only requiring that senior developers review once the code is already somewhat cleaned up we avoid the small number of senior developers compared to junior developers becoming a bottleneck for merging.
+By this stage the code should be clean and understandable for at least two developers (the author and the reviewer). This label indicates that it is now ready for a senior developer to review. All of our senior developers are volunteers with busy schedules so the review has been split in two in this way to allow pull requests to be reviewed faster. By only requiring that senior developers review once the code is already somewhat cleaned up we avoid the small number of senior developers compared to junior developers becoming a bottleneck for merging.
 
-Senior developers will look for anything missed in the initial review. They will also ensure that the pull request makes sense in the context of planned future developments for Pyccel.
+Senior developers will look for anything missed in the initial review and any code which does not fit with the usual practices used in Pyccel. They will also ensure that the pull request makes sense in the context of planned future developments.
 
-Once the senior developer is happy with the branch they should accept the pull request and change the label from `Ready_for_review` to `Ready_to_merge`
+Once the senior developer is happy with the branch they should accept the pull request. This will then trigger the label to be changed from `Ready_for_review` to `Ready_to_merge` (unless there are other requested changes from other senior developers).
 
 ### Ready to merge
 
