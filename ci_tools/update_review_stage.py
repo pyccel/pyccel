@@ -58,7 +58,7 @@ def set_status(current_status, new_status, hanging_authors):
             cmd.extend(['--add-reviewer', 'EmilyBourne'])
         elif new_status == 'Ready_to_merge':
             cmd.extend(['--add-reviewer', 'yguclu'])
-        
+
     elif current_status == 'needs_initial_review':
         if new_status == 'Ready_for_review':
             leave_comment(pr_id, possible_comments['FIRST_REVIEW_OK'], True)
@@ -92,8 +92,8 @@ def set_status(current_status, new_status, hanging_authors):
             if a not in requested_authors_to_keep:
                 cmd.extend(['--remove-reviewer', a])
 
-    p = subprocess.Popen(cmd)
-    p.communicate()
+    with subprocess.Popen(cmds) as p:
+        p.communicate()
 
 if __name__ == '__main__':
     pr_id = get_pr_number()
@@ -102,7 +102,7 @@ if __name__ == '__main__':
             print("Multiple PRs open for this branch : ", ", ".join(pr_id))
         else:
             print("No PR open for this branch")
-        exit(1)
+        sys.exit(1)
 
     print("Examining PR", pr_id)
 

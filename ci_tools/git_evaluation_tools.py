@@ -128,8 +128,8 @@ def check_previous_comments():
     """
     cmds = [github_cli, 'pr', 'status', '--json', 'comments']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     previous_comments = json.loads(result)['currentBranch']['comments']
 
@@ -170,8 +170,8 @@ def get_pr_number():
     """
     cmds = [github_cli, 'pr', 'status', '--json', 'number']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     output = json.loads(result)
 
@@ -199,8 +199,8 @@ def get_labels():
     """
     cmds = [github_cli, 'pr', 'status', '--json', 'labels']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     label_json = json.loads(result)['currentBranch']['labels']
     current_labels = [l['name'] for l in label_json]
@@ -221,8 +221,8 @@ def is_draft():
     """
     cmds = [github_cli, 'pr', 'status', '--json', 'isDraft']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     return json.loads(result)['currentBranch']['isDraft']
 
@@ -241,15 +241,15 @@ def get_review_status():
     """
     cmds = [github_cli, 'pr', 'status', '--json', 'reviews']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     reviews = json.loads(result)['currentBranch']['reviews']
 
     cmds = [github_cli, 'pr', 'status', '--json', 'reviewRequests']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     requests = json.loads(result)['currentBranch']['reviewRequests']
     requested_authors = [r["login"] for r in requests]
@@ -284,15 +284,15 @@ def check_passing():
     # Wait till tests have finished
     cmds = [github_cli, 'pr', 'checks', '--required', '--watch']
 
-    p = subprocess.Popen(cmds)
-    p.communicate()
+    with subprocess.Popen(cmds) as p:
+        p.communicate()
 
 
     # Collect results
     cmds = [github_cli, 'pr', 'status', '--json', 'statusCheckRollup']
 
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, _ = p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
 
     checks = json.loads(result)['currentBranch']['statusCheckRollup']
     passing = all(c['conclusion'] == 'SUCCESS' for c in checks if c['name'] not in ('CoverageChecker', 'Check labels', 'Welcome'))
@@ -328,8 +328,8 @@ def leave_comment(number, comment, allow_duplicate):
     if ok_to_print:
         cmds = [github_cli, 'pr', 'comment', str(number), '-b', f'"{comment}"']
 
-        p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-        result, _ = p.communicate()
+        with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+            p.communicate()
     else:
         print("Not duplicating comment:")
         print(comment)
@@ -355,8 +355,8 @@ def remove_labels(number, labels):
     for lab in labels:
         cmds += ['--remove-label', lab]
 
-    p = subprocess.Popen(cmds)
-    p.communicate()
+    with subprocess.Popen(cmds) as p:
+        p.communicate()
 
 
 def set_draft(number):
@@ -372,5 +372,5 @@ def set_draft(number):
     """
     cmds = [github_cli, 'pr', 'ready', str(number), '--undo']
 
-    p = subprocess.Popen(cmds)
-    p.communicate()
+    with subprocess.Popen(cmds) as p:
+        p.communicate()
