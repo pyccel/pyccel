@@ -260,9 +260,13 @@ def leave_comment(number, comment, allow_duplicate):
     allow_duplicate : bool
         Allow the bot to post the same message twice in a row.
     """
-    previous_comments, last_comment, last_date = check_previous_comments()
+    if not allow_duplicate:
+        previous_comments, last_comment, last_date = check_previous_comments()
+        ok_to_print = last_comment != comment
+    else:
+        ok_to_print = allow_duplicate
 
-    if allow_duplicate or last_comment != comment:
+    if ok_to_print:
         cmds = [github_cli, 'pr', 'comment', str(number), '-b', f'"{comment}"']
 
         p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
