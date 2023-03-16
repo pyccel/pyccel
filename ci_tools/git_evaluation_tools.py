@@ -326,7 +326,7 @@ def leave_comment(number, comment, allow_duplicate):
         ok_to_print = allow_duplicate
 
     if ok_to_print:
-        cmds = [github_cli, 'pr', 'comment', str(number), '-b', f'"{comment}"']
+        cmds = [github_cli, 'pr', 'comment', str(number), '-b', comment]
 
         with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
             p.communicate()
