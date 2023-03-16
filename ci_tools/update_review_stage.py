@@ -176,7 +176,7 @@ if __name__ == '__main__':
             status = 'needs_initial_review'
         print(f"The current status is {status}")
     else:
-        flagged_status = None
+        flagged_status = ''
         status = ''
 
     if status_labels[predicted_status] > status_labels.get(status, 0):
