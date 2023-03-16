@@ -55,30 +55,30 @@ def set_status(pr_id, current_status, new_status, hanging_authors):
     if current_status == '':
         cmd = cmd[:-2]
         leave_comment(pr_id, possible_comments['READY_FOR_REVIEW'], True)
-        if new_status == 'needs_initial_review':
-            cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
-        elif new_status == 'Ready_for_review':
-            cmd.extend(['--add-reviewer', 'EmilyBourne'])
-        elif new_status == 'Ready_to_merge':
-            cmd.extend(['--add-reviewer', 'yguclu'])
+        #if new_status == 'needs_initial_review':
+        #    cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
+        #elif new_status == 'Ready_for_review':
+        #    cmd.extend(['--add-reviewer', 'EmilyBourne'])
+        #elif new_status == 'Ready_to_merge':
+        #    cmd.extend(['--add-reviewer', 'yguclu'])
 
     elif current_status == 'needs_initial_review':
         if new_status == 'Ready_for_review':
             leave_comment(pr_id, possible_comments['FIRST_REVIEW_OK'], True)
-            cmd.extend(['--add-reviewer', 'EmilyBourne'])
+            #cmd.extend(['--add-reviewer', 'EmilyBourne'])
 
         elif new_status == 'Ready_to_merge':
             leave_comment(pr_id, possible_comments['CONGRATULATIONS'], True)
-            cmd.extend(['--add-reviewer', 'yguclu'])
+            #cmd.extend(['--add-reviewer', 'yguclu'])
 
     elif current_status == 'Ready_for_review':
         if new_status == 'needs_initial_review':
             leave_comment(pr_id, possible_comments['REVIEWS_GONE'], True)
-            cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
+            #cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
 
         elif new_status == 'Ready_to_merge':
             leave_comment(pr_id, possible_comments['CONGRATULATIONS'], True)
-            cmd.extend(['--add-reviewer', 'yguclu'])
+            #cmd.extend(['--add-reviewer', 'yguclu'])
 
     elif current_status == 'Ready_to_merge':
         if new_status == 'Ready_for_review':
@@ -86,7 +86,7 @@ def set_status(pr_id, current_status, new_status, hanging_authors):
 
         elif new_status == 'Ready_for_review':
             leave_comment(pr_id, possible_comments['REVIEWS_GONE'], True)
-            cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
+            #cmd.extend(['--add-reviewer', 'pyccel/pyccel-dev'])
 
     if new_status != 'needs_initial_review':
         requested_authors_to_keep = senior_reviewers if new_status == 'Ready_for_review' else ('yguclu',)
