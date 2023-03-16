@@ -25,7 +25,7 @@ senior_reviewers = ('yguclu', 'EmilyBourne', 'saidctb')
 
 
 
-def set_status(current_status, new_status, hanging_authors):
+def set_status(pr_id, current_status, new_status, hanging_authors):
     """
     Set the PR to the requested stage of the review process.
 
@@ -34,6 +34,9 @@ def set_status(current_status, new_status, hanging_authors):
 
     Parameters
     ----------
+    number : int
+        The number of the PR.
+
     current_status : str
         The current stage of the review process.
 
@@ -47,7 +50,7 @@ def set_status(current_status, new_status, hanging_authors):
     if current_status == new_status:
         return
 
-    cmd = [github_cli, 'pr', 'edit', '--add-label', new_status, '--remove-label', current_status]
+    cmd = [github_cli, 'pr', 'edit', str(pr_id), '--add-label', new_status, '--remove-label', current_status]
 
     if current_status == '':
         cmd = cmd[:-2]
@@ -187,4 +190,4 @@ if __name__ == '__main__':
 
     print(f"Changing status from {flagged_status} to {status}")
 
-    set_status(flagged_status, status, hanging_authors)
+    set_status(pr_id, flagged_status, status, hanging_authors)
