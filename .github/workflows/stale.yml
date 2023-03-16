@@ -1,0 +1,34 @@
+name: Stale search
+
+on:
+  schedule:
+    - cron:  '30 09 * * *' # Check at 09:30 every day
+
+jobs:
+  Search_for_stale:
+    name: Search for stale
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          git fetch
+          git checkout master
+          CUTOFF=$(python3 -c "import datetime; print('<',datetime.datetime.utcnow()-datetime.timedelta(weeks=1))")
+          gh search prs --repo pyccel/pyccel --state open --draft --updated "${CUTOFF}" > week_old_draft_prs.txt
+          PRS=$(awk -F "\"*\t\"*" '{print $2}' week_old_draft_prs.txt)
+          python3 ci_tools/check_accidental_draft.py ${PRS}
+
+          CUTOFF=$(python3 -c "import datetime; print('<',datetime.datetime.utcnow()-datetime.timedelta(month=1))")
+          gh search prs --repo pyccel/pyccel --state open --updated "${CUTOFF}" > month_old_prs.txt
+          PRS=$(awk -F "\"*\t\"*" '{print $2}' month_old_prs.txt)
+          python3 ci_tools/check_stale_state.py ${PRS}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+
