@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-from git_evaluation_tools import github_cli, ReviewComment, get_pr_number, get_labels
+from git_evaluation_tools import github_cli, get_pr_number, get_labels
 from git_evaluation_tools import is_draft, get_review_status, check_passing, leave_comment
 from git_evaluation_tools import remove_labels, set_draft
 
@@ -94,56 +94,11 @@ def set_status(current_status, new_status, hanging_authors):
     p = subprocess.Popen(cmd)
     p.communicate()
 
-
-def check_previous_comments():
-    """
-    Get information about previous comments made by the bot.
-
-    Get a list of all comments left by the bot as well as its most recent comment
-    to avoid it repeating itself unnecessarily
-
-    Results
-    -------
-    list : A list of all messages left by the bot on this PR.
-
-    str : The last message left by the bot.
-
-    datetime : The last time the bot commented.
-    """
-    cmds = [github_cli, 'pr', 'status', '--json', 'comments']
-
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
-
-    previous_comments = json.loads(result)['currentBranch']['comments']
-
-    my_comments = [ReviewComment(c["body"], datetime.fromisoformat(c['createdAt'].strip('Z')))
-                        for c in previous_comments if c['author']['login'] == 'github-actions']
-
-    if len(my_comments) == 0:
-        return [], '', None
-    else:
-        last_messages = {}
-        final_message = my_comments[0].state
-        final_date = my_comments[0].date
-
-        for c in my_comments:
-            if c.state not in last_messages:
-                last_messages[c.state] = c.date
-            elif last_messages[c.state] < c.date:
-                last_messages[c.state] = c.date
-
-            if final_date < c.date:
-                final_message = c.state
-                final_date = c.date
-
-        return last_messages, final_message, final_date
-
 if __name__ == '__main__':
     pr_id = get_pr_number()
     if isinstance(pr_id, list):
         if pr_id:
-            print("Multiple PRs open for this branch : ", ", ".join(PRs))
+            print("Multiple PRs open for this branch : ", ", ".join(pr_id))
         else:
             print("No PR open for this branch")
         exit(1)
@@ -172,7 +127,7 @@ if __name__ == '__main__':
     if not passing:
         leave_comment(pr_id, possible_comments['NOT_PASSING'], True)
         set_draft(pr_id)
-        remove_labels(status_labels)
+        remove_labels(pr_id, status_labels)
         sys.exit(0)
 
     print("Tests passing")
@@ -228,4 +183,4 @@ if __name__ == '__main__':
 
     print(f"Changing status from {flagged_status} to {status}")
 
-    set_status(flagged_status, status)
+    set_status(flagged_status, status, hanging_authors)

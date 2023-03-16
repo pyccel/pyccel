@@ -6,6 +6,20 @@ import json
 import shutil
 import subprocess
 
+__all__ = ('github_cli',
+           'ReviewComment',
+           'get_diff_as_json',
+           'check_previous_comments',
+           'get_pr_number',
+           'get_labels',
+           'is_draft',
+           'get_review_status',
+           'check_passing',
+           'leave_comment',
+           'remove_labels',
+           'set_draft',
+           )
+
 github_cli = shutil.which('gh')
 
 ReviewComment = namedtuple('ReviewComment', ['state', 'date'])
@@ -97,6 +111,51 @@ def get_diff_as_json(filename):
     return changes
 
 
+def check_previous_comments():
+    """
+    Get information about previous comments made by the bot.
+
+    Get a list of all comments left by the bot as well as its most recent comment
+    to avoid it repeating itself unnecessarily
+
+    Results
+    -------
+    list : A list of all messages left by the bot on this PR.
+
+    str : The last message left by the bot.
+
+    datetime : The last time the bot commented.
+    """
+    cmds = [github_cli, 'pr', 'status', '--json', 'comments']
+
+    p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
+    result, err = p.communicate()
+
+    previous_comments = json.loads(result)['currentBranch']['comments']
+
+    my_comments = [ReviewComment(c["body"], datetime.fromisoformat(c['createdAt'].strip('Z')))
+                        for c in previous_comments if c['author']['login'] == 'github-actions']
+
+    if len(my_comments) == 0:
+        return [], '', None
+    else:
+        last_messages = {}
+        final_message = my_comments[0].state
+        final_date = my_comments[0].date
+
+        for c in my_comments:
+            if c.state not in last_messages:
+                last_messages[c.state] = c.date
+            elif last_messages[c.state] < c.date:
+                last_messages[c.state] = c.date
+
+            if final_date < c.date:
+                final_message = c.state
+                final_date = c.date
+
+        return last_messages, final_message, final_date
+
+
 def get_pr_number():
     """
     Check if this branch has exactly 1 related PR.
@@ -112,7 +171,7 @@ def get_pr_number():
     cmds = [github_cli, 'pr', 'status', '--json', 'number']
 
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    result, _ = p.communicate()
 
     output = json.loads(result)
 
@@ -141,7 +200,7 @@ def get_labels():
     cmds = [github_cli, 'pr', 'status', '--json', 'labels']
 
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    result, _ = p.communicate()
 
     label_json = json.loads(result)['currentBranch']['labels']
     current_labels = [l['name'] for l in label_json]
@@ -163,7 +222,7 @@ def is_draft():
     cmds = [github_cli, 'pr', 'status', '--json', 'isDraft']
 
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    result, _ = p.communicate()
 
     return json.loads(result)['currentBranch']['isDraft']
 
@@ -183,14 +242,14 @@ def get_review_status():
     cmds = [github_cli, 'pr', 'status', '--json', 'reviews']
 
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    result, _ = p.communicate()
 
     reviews = json.loads(result)['currentBranch']['reviews']
 
     cmds = [github_cli, 'pr', 'status', '--json', 'reviewRequests']
 
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    result, _ = p.communicate()
 
     requests = json.loads(result)['currentBranch']['reviewRequests']
     requested_authors = [r["login"] for r in requests]
@@ -233,7 +292,7 @@ def check_passing():
     cmds = [github_cli, 'pr', 'status', '--json', 'statusCheckRollup']
 
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    result, _ = p.communicate()
 
     checks = json.loads(result)['currentBranch']['statusCheckRollup']
     passing = all(c['conclusion'] == 'SUCCESS' for c in checks if c['name'] not in ('CoverageChecker', 'Check labels', 'Welcome'))
@@ -261,7 +320,7 @@ def leave_comment(number, comment, allow_duplicate):
         Allow the bot to post the same message twice in a row.
     """
     if not allow_duplicate:
-        previous_comments, last_comment, last_date = check_previous_comments()
+        _, last_comment, _ = check_previous_comments()
         ok_to_print = last_comment != comment
     else:
         ok_to_print = allow_duplicate
@@ -270,7 +329,7 @@ def leave_comment(number, comment, allow_duplicate):
         cmds = [github_cli, 'pr', 'comment', str(number), '-b', f'"{comment}"']
 
         p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-        result, err = p.communicate()
+        result, _ = p.communicate()
     else:
         print("Not duplicating comment:")
         print(comment)
