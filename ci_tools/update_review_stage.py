@@ -92,6 +92,8 @@ def set_status(current_status, new_status, hanging_authors):
             if a not in requested_authors_to_keep:
                 cmd.extend(['--remove-reviewer', a])
 
+    print(cmd)
+
     with subprocess.Popen(cmd) as p:
         p.communicate()
 
