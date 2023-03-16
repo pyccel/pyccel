@@ -281,8 +281,8 @@ def check_passing():
     bool : Indicates if tests are passed
     """
 
-    # Wait till tests have finished
-    cmds = [github_cli, 'pr', 'checks', '--required', '--watch']
+    # Wait till tests have finished (refresh every minute)
+    cmds = [github_cli, 'pr', 'checks', '--required', '--watch', '-i', '60']
 
     with subprocess.Popen(cmds) as p:
         p.communicate()
