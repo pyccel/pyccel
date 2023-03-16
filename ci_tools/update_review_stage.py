@@ -1,5 +1,6 @@
 """ Script to determine which stage of the review is in progress and add appropriate labels
 """
+import datetime
 import subprocess
 import sys
 
@@ -151,7 +152,7 @@ if __name__ == '__main__':
 
     if predicted_status == 'needs_initial_review' and approved:
         last_approved = max(r.date for r in approval.values())
-        if all((datetime.last_approved - r.date).days > 1):
+        if all((datetime.utcnow() - last_approved).days > 2):
             approvers = ', '.join(f'@{a}' for a in approval)
             requesters = ', '.join(f'@{a}' for a in requested_changes)
             leave_comment(pr_id, possible_comments['REVIEW_NUDGE'].format(changes = requesters, approved = approvers), False)
