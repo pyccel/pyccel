@@ -6,6 +6,10 @@ on:
   pull_request_review:
     types: [ submitted ]
 
+concurrency:
+  group: review_labels_${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   Check_Labels:
     name: Check labels

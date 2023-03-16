@@ -20,7 +20,7 @@ possible_comments = {'REVIEW_FOR_DRAFT': 'This PR is asking for a review but it 
 
 status_labels = {'needs_initial_review':1, 'Ready_for_review':2, 'Ready_to_merge':3}
 
-senior_reviewers = ('yguclu', 'EmilyBourne', 'saidctb', 'bauom')
+senior_reviewers = ('yguclu', 'EmilyBourne', 'saidctb')
 
 
 
