@@ -15,7 +15,7 @@ SCRIPT_DIR=$(dirname -- "$(realpath -- "$0")")
 #python3 "$SCRIPT_DIR"/internal/test_internal.py
 #python3 "$SCRIPT_DIR"/external/test_external.py
 #python3 "$SCRIPT_DIR"/macro/test_macro.py
-
+python3 -m pytest "$SCRIPT_DIR"/cuda_test -v
 python3 -m pytest "$SCRIPT_DIR"/pyccel -v
 python3 -m pytest "$SCRIPT_DIR"/epyccel -v -m "not parallel"
 mpirun -n 4 python3 -m pytest "$SCRIPT_DIR"/epyccel/test_epyccel_mpi_modules.py -v

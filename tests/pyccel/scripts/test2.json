@@ -1,0 +1,64 @@
+{
+    "exec": "gfortran",
+    "mpi_exec": "mpif90",
+    "language": "fortran",
+    "module_output_flag": "-J",
+    "debug_flags": [
+        "-fcheck=bounds"
+    ],
+    "release_flags": [
+        "-O3",
+        "-funroll-loops"
+    ],
+    "general_flags": [
+        "-fPIC"
+    ],
+    "standard_flags": [
+        "-std=f2003"
+    ],
+    "mpi": {},
+    "openmp": {
+        "flags": [
+            "-fopenmp"
+        ],
+        "libs": [
+            "gomp"
+        ]
+    },
+    "openacc": {
+        "flags": [
+            "-ta=multicore",
+            "-Minfo=accel"
+        ]
+    },
+    "family": "GNU",
+    "libs": [],
+    "python": {
+        "flags": [
+            "-Wno-unused-result",
+            "-Wsign-compare",
+            "-Wunreachable-code",
+            "-fno-common",
+            "-dynamic",
+            "-DNDEBUG",
+            "-g",
+            "-fwrapv",
+            "-O3",
+            "-Wall",
+            "-isysroot",
+            "/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk"
+        ],
+        "includes": [
+            "/opt/homebrew/opt/python@3.10/Frameworks/Python.framework/Versions/3.10/include/python3.10",
+            "/opt/homebrew/lib/python3.10/site-packages/numpy/core/include"
+        ],
+        "shared_suffix": ".cpython-310-darwin.so",
+        "libs": [
+            "python3.10"
+        ],
+        "libdirs": [
+            "/opt/homebrew/opt/python@3.10/Frameworks/Python.framework/Versions/3.10/lib/python3.10/config-3.10-darwin",
+            "/opt/homebrew/opt/python@3.10/Frameworks/Python.framework/Versions/3.10/lib"
+        ]
+    }
+}
