@@ -1,3 +1,4 @@
+#pylint: disable=unused-import
 """ Script to check up on a stale PR
 """
 import argparse
@@ -18,6 +19,6 @@ if __name__ == '__main__':
     for pr_id in prs:
         previous_comments, last_comment, last_date = check_previous_comments()
         if last_comment != stale_comment or (datetime.datetime.utcnow()-last_date)>datetime.timedelta(weeks=8):
-            #TODO: Uncomment before merging
+            #TODO: Uncomment before merging and remove pylint disable
             #leave_comment(pr_id, stale_comment, True)
             pass

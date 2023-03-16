@@ -1,3 +1,4 @@
+#pylint: disable=unused-import
 """ Script to check if a dev has forgotten to remove the draft status from their PR.
 """
 import argparse
@@ -18,6 +19,6 @@ if __name__ == '__main__':
     for pr_id in prs:
         previous_comments, last_comment, last_date = check_previous_comments()
         if last_comment not in (draft_comment, stale_comment):
-            #TODO: Uncomment before merging
+            #TODO: Uncomment before merging and remove pylint disable
             #leave_comment(pr_id, draft_comment, True)
             pass
