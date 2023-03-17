@@ -1079,8 +1079,11 @@ class Block(ScopedNode):
 
 
 class Module(ScopedNode):
+    """
+    Represents a module in the code.
 
-    """Represents a module in the code. A block consists of the following inputs
+    The Pyccel node representing a Python module. A module consists of everything
+    inside a given Python file.
 
     Parameters
     ----------
@@ -1117,21 +1120,26 @@ class Module(ScopedNode):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.variable import Variable
+    >>> from pyccel.ast.core import FunctionDefArgument, Assign, FunctionDefResult
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
+    >>> from pyccel.ast.literals import LiteralInteger
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
     >>> z = Variable('float', 'z')
     >>> t = Variable('float', 't')
     >>> a = Variable('float', 'a')
     >>> b = Variable('float', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> body = [Assign(z,PyccelAdd(x,a))]
+    >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
+    >>> results = [FunctionDefResult(res) for res in [z,t]]
+    >>> translate = FunctionDef('translate', args, results, body)
     >>> attributes   = [x,y]
     >>> methods     = [translate]
     >>> Point = ClassDef('Point', attributes, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> incr = FunctionDef('incr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelAdd(x,LiteralInteger(1)))])
+    >>> decr = FunctionDef('decr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelMinus(x,LiteralInteger(1)))])
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
@@ -1338,32 +1346,44 @@ class Module(ScopedNode):
         return self._internal_dictionary.keys()
 
 class ModuleHeader(Basic):
+    """
+    Represents the header file for a module.
 
-    """Represents the header file for a module
+    This class is simply a wrapper around a module. It is helpful to differentiate
+    between headers and sources when printing.
 
     Parameters
     ----------
     module: Module
         the module
 
+    See Also
+    --------
+    Module : The module itself
+
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.variable import Variable
+    >>> from pyccel.ast.core import FunctionDefArgument, Assign, FunctionDefResult
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
+    >>> from pyccel.ast.literals import LiteralInteger
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
     >>> z = Variable('float', 'z')
     >>> t = Variable('float', 't')
     >>> a = Variable('float', 'a')
     >>> b = Variable('float', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> body = [Assign(z,PyccelAdd(x,a))]
+    >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
+    >>> results = [FunctionDefResult(res) for res in [z,t]]
+    >>> translate = FunctionDef('translate', args, results, body)
     >>> attributes   = [x,y]
     >>> methods     = [translate]
     >>> Point = ClassDef('Point', attributes, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-    >>> mod = Module('my_module', [], [incr, decr], classes = [Point])
+    >>> incr = FunctionDef('incr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelAdd(x,LiteralInteger(1)))])
+    >>> decr = FunctionDef('decr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelMinus(x,LiteralInteger(1)))])
+    >>> Module('my_module', [], [incr, decr], classes = [Point])
     >>> ModuleHeader(mod)
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
@@ -1975,7 +1995,7 @@ class FunctionDefResult(PyccelAstNode):
     __slots__ = ('_var','_originates_in_arg','_annotation')
     _attribute_nodes = ('_var',)
 
-    def __init__(self, var, *, originates_in_arg, annotation=None):
+    def __init__(self, var, *, originates_in_arg = False, annotation=None):
         if pyccel_stage == 'syntactic':
             if not isinstance(var, PyccelSymbol):
                 raise TypeError("Var must be a PyccelSymbol")
@@ -2007,6 +2027,9 @@ class FunctionDefResult(PyccelAstNode):
 
     def __repr__(self):
         return 'FunctionDefResult({})'.format(repr(self.var))
+
+    def __str__(self):
+        return str(self.var)
 
 class FunctionCall(PyccelAstNode):
 
@@ -2284,14 +2307,18 @@ class FunctionDef(ScopedNode):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Assign, Variable, FunctionDef
+    >>> from pyccel.ast.variable import Variable
+    >>> from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
+    >>> from pyccel.ast.core import Assign, FunctionDef
+    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.literals import LiteralInteger
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
-    >>> args        = [x]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+1)]
+    >>> args        = [FunctionDefArgument(x)]
+    >>> results     = [FunctionDefResult(y)]
+    >>> body        = [Assign(y,PyccelAdd(x,LiteralInteger(1)))]
     >>> FunctionDef('incr', args, results, body)
-    FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
+    FunctionDef(incr, (x,), (y,), [y := x + 1], [], [], None, False, function)
 
     One can also use parametrized argument, using FunctionDefArgument
 
@@ -2358,8 +2385,8 @@ class FunctionDef(ScopedNode):
 
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
-        if not all(isinstance(r, FunctionDefArgument) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
+        if not all(isinstance(a, FunctionDefArgument) for a in arguments):
+            raise TypeError('arguments must be all be FunctionDefArguments')
 
         arg_vars = [a.var for a in arguments]
 
