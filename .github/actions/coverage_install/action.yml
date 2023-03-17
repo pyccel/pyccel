@@ -13,7 +13,7 @@ runs:
         SITE_DIR=$(dirname ${INSTALL_DIR})
         echo "SITE_DIR = ${SITE_DIR}"
         echo -e "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth
-        echo -e "[run]\nparallel = True\nrelative_files = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
+        echo -e "[run]\nparallel = True\nrelative_files = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[paths]\nsource =\n    /opt/hostedtoolcache/Python/3.7.16/x64/lib/python3.7/site-packages/pyccel\n    /usr/local/lib/python3.8/dist-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
         echo "SITE_DIR=${SITE_DIR}" >> $GITHUB_ENV
         echo "COVERAGE_PROCESS_START=$(pwd)/.coveragerc" >> $GITHUB_ENV
         cat .coveragerc
