@@ -175,8 +175,8 @@ jobs:
       - name: Generate coverage report
         run: |
             INSTALL_DIR=$(cd tests; python -c "import pyccel; print(pyccel.__path__[0])")
-            echo -e "[report]\ninclude = ${INSTALL_DIR}/*\n[paths]\nsource = */site-packages/pyccel\n" > .coveragrc
-            coverage combine --rcfile=.coveragrc
+            echo -e "[run]\nsource = ${INSTALL_DIR}[report]\ninclude = ${INSTALL_DIR}/*\n[paths]\nsource = */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragrc
+            coverage combine --rcfile=.coveragrc --debug=pathmap
             coverage xml
             coverage json
             cat coverage.json
