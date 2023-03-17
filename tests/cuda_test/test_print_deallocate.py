@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-# pylint: disable=protected-access
 import pytest
 from pyccel.ast.variable import Variable
 from pyccel.codegen.printing.ccudacode import CcudaCodePrinter
@@ -14,27 +13,27 @@ def test_print_deallocate(language):
     var = Variable('int', 'y', memory_location='host')
     expr = Deallocate(var)
     printer = CcudaCodePrinter('')
-    output = printer._print_Deallocate(expr)
+    output = printer.doprint(expr)
     expected_output = "cuda_free_host(y);\n"
     assert output == expected_output
     # Test case 2: variable is in device memory
     var = Variable('int', 'y', memory_location='device')
     expr = Deallocate(var)
     printer = CcudaCodePrinter('')
-    output = printer._print_Deallocate(expr)
+    output = printer.doprint(expr)
     expected_output = "cuda_free(y);\n"
     assert output == expected_output
     #Test case 3: Memory location of variable is managed
     var = Variable('int', 'y', memory_location='managed')
     expr = Deallocate(var)
     printer = CcudaCodePrinter('')
-    output = printer._print_Deallocate(expr)
+    output = printer.doprint(expr)
     expected_output = "cuda_free(y);\n"
     assert output == expected_output
     #Test case 4: variable is an alias
     var = Variable('int', 'y', memory_handling='alias')
     expr = Deallocate(var)
     printer = CcudaCodePrinter('')
-    output = printer._print_Deallocate(expr)
+    output = printer.doprint(expr)
     expected_output = "cuda_free_pointer((*y));\n"
     assert output == expected_output
