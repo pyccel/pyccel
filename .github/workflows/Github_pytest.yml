@@ -117,7 +117,9 @@ jobs:
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
       - name: View coverage
-        run: coverage report
+        run: |
+          coverage report
+          coverage json
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
