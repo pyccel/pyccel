@@ -36,6 +36,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import FunctionDefArgument
+from pyccel.ast.core import FunctionDefResult
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -795,7 +796,7 @@ class SyntaxParser(BasicParser):
             else:
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
-            results.append(result_name)
+            results.append(FunctionDefResult(result_name))
 
         self.exit_function_scope()
 
