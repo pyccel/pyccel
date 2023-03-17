@@ -119,7 +119,6 @@ jobs:
       - name: Install Pyccel with tests
         run: |
             PATH=${PATH}:$HOME/.local/bin
-            echo $PATH
             echo "PATH=${PATH}" >> $GITHUB_ENV
             python -m pip install --upgrade pip
             python -m pip install --user .[test]
@@ -176,11 +175,8 @@ jobs:
         run: |
             INSTALL_DIR=$(cd tests; python -c "import pyccel; print(pyccel.__path__[0])")
             echo -e "[paths]\nsource =\n   ${INSTALL_DIR}\n   */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
-            coverage combine --debug=pathmap
+            coverage combine
             coverage xml
-            coverage json
-            cat coverage.json
-            cat cobertura.xml
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
