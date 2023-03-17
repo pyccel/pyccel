@@ -166,6 +166,7 @@ jobs:
             coverage xml
             coverage json
             cat coverage.json
+            cat cobertura.xml
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
