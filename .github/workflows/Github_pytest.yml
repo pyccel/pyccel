@@ -21,8 +21,8 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      #- name: Fortran/C tests with pytest
-      #  uses: ./.github/actions/pytest_run
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
@@ -39,55 +39,55 @@ jobs:
           path: .coverage
           retention-days: 1
 
-  #Windows:
+  Windows:
 
-  #  runs-on: windows-latest
+    runs-on: windows-latest
 
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - name: Setup Python 3.9
-  #      uses: actions/setup-python@v4
-  #      with:
-  #          # The second most recent version is used as
-  #          # setup-python installs the most recent patch
-  #          # which leads to linking problems as there are
-  #          # 2 versions of python3X.a and the wrong one
-  #          # is chosen
-  #          python-version: 3.9
-  #    # Uncomment to examine DLL requirements with 'objdump -x FILE'
-  #    #- name: Install mingw tools
-  #    #  uses: msys2/setup-msys2@v2
-  #    - name: Install dependencies
-  #      uses: ./.github/actions/windows_install
-  #    - name: Install python dependencies
-  #      uses: ./.github/actions/pip_installation
-  #    - name: Fortran/C tests with pytest
-  #      uses: ./.github/actions/pytest_run
-  #    - name: Python tests with pytest
-  #      uses: ./.github/actions/pytest_run_python
-  #    - name: Parallel tests with pytest
-  #      uses: ./.github/actions/pytest_parallel
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+            # The second most recent version is used as
+            # setup-python installs the most recent patch
+            # which leads to linking problems as there are
+            # 2 versions of python3X.a and the wrong one
+            # is chosen
+            python-version: 3.9
+      # Uncomment to examine DLL requirements with 'objdump -x FILE'
+      #- name: Install mingw tools
+      #  uses: msys2/setup-msys2@v2
+      - name: Install dependencies
+        uses: ./.github/actions/windows_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
 
-  #MacOSX:
+  MacOSX:
 
-  #  runs-on: macos-latest
+    runs-on: macos-latest
 
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #    - name: Set up Python 3.10
-  #      uses: actions/setup-python@v4
-  #      with:
-  #        python-version: '3.10'
-  #    - name: Install dependencies
-  #      uses: ./.github/actions/macos_install
-  #    - name: Install python dependencies
-  #      uses: ./.github/actions/pip_installation
-  #    - name: Fortran/C tests with pytest
-  #      uses: ./.github/actions/pytest_run
-  #    - name: Python tests with pytest
-  #      uses: ./.github/actions/pytest_run_python
-  #    - name: Parallel tests with pytest
-  #      uses: ./.github/actions/pytest_parallel
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        uses: ./.github/actions/macos_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
 
   Cuda:
 
@@ -116,11 +116,6 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: View coverage
-        run: |
-          coverage report
-          coverage json
-          cat coverage.json
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
@@ -164,9 +159,6 @@ jobs:
         run: |
             coverage combine
             coverage xml
-            coverage json
-            cat coverage.json
-            cat cobertura.xml
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
