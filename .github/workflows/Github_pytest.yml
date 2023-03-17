@@ -121,7 +121,6 @@ jobs:
       - name: Install Pyccel with tests
         run: |
             PATH=${PATH}:$HOME/.local/bin
-            echo $PATH
             echo "PATH=${PATH}" >> $GITHUB_ENV
             python -m pip install --upgrade pip
             python -m pip install --user .[test]
