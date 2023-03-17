@@ -10,6 +10,7 @@ from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
+from .core              import FunctionDefArgument, FunctionDefResult
 from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
@@ -285,6 +286,7 @@ class FunctionHeader(Header):
 
             order = None
             shape = None
+            annotation = None
 
             if rank and precision == -1:
                 precision = default_precision[dtype]
@@ -293,6 +295,7 @@ class FunctionHeader(Header):
                 order = dc['order']
 
             if isinstance(dtype, str):
+                annotation = dtype
                 try:
                     dtype = datatype(dtype)
                 except ValueError:
@@ -302,7 +305,7 @@ class FunctionHeader(Header):
                            rank=rank, shape=shape ,order=order, precision=precision,
                            is_argument=True, is_temp=True)
 
-            return var
+            return FunctionDefArgument(var, annotation = annotation)
 
         def process_template(signature, Tname, d_type):
             #Replaces templates named Tname inside signature, with the given type.
@@ -370,7 +373,7 @@ class FunctionHeader(Header):
                 is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
-                results.append(var)
+                results.append(FunctionDefResult(var, annotation = str(dtype)))
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
                 d_var['datatype'] = dtype
