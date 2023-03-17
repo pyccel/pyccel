@@ -16,4 +16,5 @@ runs:
         echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\nrelative_files = True\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
         echo "SITE_DIR=${SITE_DIR}" >> $GITHUB_ENV
         echo "COVERAGE_PROCESS_START=$(pwd)/.coveragerc" >> $GITHUB_ENV
+        cat .coveragerc
       shell: bash
