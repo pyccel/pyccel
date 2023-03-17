@@ -172,7 +172,6 @@ jobs:
         run: mv .coverage .coverage.cuda
       - name: Generate coverage report
         run: |
-            INSTALL_DIR=$(cd tests; python -c "import pyccel; print(pyccel.__path__[0])")
             echo -e "[paths]\nsource =\n   $(pwd)/pyccel\n   */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
             coverage combine
             coverage xml
