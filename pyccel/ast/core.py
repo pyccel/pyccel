@@ -71,6 +71,7 @@ __all__ = (
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
+    'FunctionDefResult',
     'If',
     'IfSection',
     'Import',
