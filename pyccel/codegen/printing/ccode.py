@@ -1143,7 +1143,7 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         if len(expr.results) > 1:
-            self._additional_args.append(expr.results)
+            self._additional_args.append([r.var for r in expr.results])
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0].var)
@@ -1597,20 +1597,22 @@ class CCodePrinter(CodePrinter):
             return ''
         self.set_scope(expr.scope)
 
+        arguments = [a.var for a in expr.arguments]
+        results = [r.var for r in expr.results]
         if len(expr.results) > 1:
-            self._additional_args.append(expr.results)
+            self._additional_args.append(results)
+
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
-        if len(expr.results) <= 1 :
-            for r in expr.results:
-                i = r.var
+
+        if len(results) <= 1 :
+            for i in results:
                 if isinstance(i, Variable) and not i.is_temp:
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
-        arguments = [a.var for a in expr.arguments]
         decs += [Declare(v.dtype,v) for v in self.scope.variables.values() \
-                if v not in chain(expr.local_vars, expr.results, arguments)]
+                if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))

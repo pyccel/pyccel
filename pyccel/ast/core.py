@@ -2546,7 +2546,8 @@ class FunctionDef(ScopedNode):
         """ List of variables defined in the function """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        return tuple(l for l in local_vars if l not in self.results and l not in argument_vars)
+        result_vars = [r.var for r in self.results]
+        return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
 
     @property
     def global_vars(self):

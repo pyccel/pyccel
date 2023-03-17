@@ -18,6 +18,7 @@ from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import SeparatorComment, Allocate
 from pyccel.ast.core import Import, Module, Declare
 from pyccel.ast.core import AugAssign, CodeBlock
+from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 
 from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import PyArgKeywords
@@ -740,8 +741,8 @@ class CWrapperCodePrinter(CCodePrinter):
         current_scope = self.scope
         wrapper_func = FunctionDef(
                 name      = wrapper_name,
-                arguments = wrapper_args,
-                results   = wrapper_results,
+                arguments = [FunctionDefArgument(a) for a in wrapper_args],
+                results   = [FunctionDefResult(r) for r in wrapper_results],
                 body      = [
                                 PyErr_SetString('PyExc_NotImplementedError',
                                             '"{}"'.format(error_msg)),
@@ -944,9 +945,9 @@ class CWrapperCodePrinter(CCodePrinter):
         self.exit_scope()
 
         func = FunctionDef(name = exec_func_name,
-            arguments = (mod_var,),
-            results = (scope.get_temporary_variable(NativeInteger(),
-                precision = 4),),
+            arguments = (FunctionDefArgument(mod_var),),
+            results = (FunctionDefResult(scope.get_temporary_variable(NativeInteger(),
+                precision = 4)),),
             body = CodeBlock(body),
             scope = scope)
         func_code = super()._print_FunctionDef(func).split('\n')
@@ -1020,12 +1021,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # update ndarray local variables properties
             arg_vars = {a.var: a for a in func.arguments}
+            result_vars = [r.var for r in func.results]
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
             for a in local_arg_vars:
                 mini_scope.insert_variable(a)
-            for r in func.results:
+            for r in result_vars:
                 mini_scope.insert_variable(r)
 
             # Loop for all args in every functions and create the corresponding condition and body
@@ -1054,11 +1056,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 mini_wrapper_func_body += body
 
             # create the corresponding function call
-            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, func.results))
+            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, result_vars))
 
 
             # Loop for all res in every functions and create the corresponding body and cast
-            for r in func.results :
+            for r in result_vars :
                 collect_var, cast_func = self.get_PyBuildValue(r)
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
@@ -1079,8 +1081,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Building Mini wrapper function
             mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
-                arguments = parse_args,
-                results = wrapper_results,
+                arguments = [FunctionDefArgument(a) for a in parse_args],
+                results = [FunctionDefResult(r) for r in wrapper_results],
                 body = mini_wrapper_func_body,
                 scope = mini_scope)
             funcs_def.append(mini_wrapper_func_def)
@@ -1116,8 +1118,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Create FunctionDef
         funcs_def.append(FunctionDef(name = wrapper_name,
-            arguments = wrapper_args,
-            results = wrapper_results,
+            arguments = [FunctionDefArgument(a) for a in wrapper_args],
+            results = [FunctionDefResult(r) for r in wrapper_results],
             body = wrapper_body,
             scope = scope))
 
@@ -1239,8 +1241,8 @@ class CWrapperCodePrinter(CCodePrinter):
         # Creating check function definition
         check_func_name = self.scope.parent_scope.get_new_name(f'type_check_{func_name}')
         check_func_def = FunctionDef(name = check_func_name,
-            arguments = parse_args,
-            results = [check_var],
+            arguments = [FunctionDefArgument(a) for a in parse_args],
+            results = [FunctionDefResult(check_var)],
             body = check_func_body,
             scope = self.scope.new_child_scope(check_func_name))
         return check_func_def
@@ -1314,7 +1316,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 self.scope.functions[v.name] = v
                 local_arg_vars[v] = a
 
-        result_vars = [v.clone(self.scope.get_new_name(v.name)) for v in expr.results]
+        result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in expr.results]
         for v in result_vars:
             self.scope.insert_variable(v)
         # update ndarray and optional local variables properties
@@ -1401,8 +1403,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Create FunctionDef and write using classic method
         wrapper_func = FunctionDef(name = wrapper_name,
-            arguments = wrapper_args,
-            results = wrapper_results,
+            arguments = [FunctionDefArgument(a) for a in wrapper_args],
+            results = [FunctionDefResult(r) for r in wrapper_results],
             body = wrapper_body,
             scope = self.scope)
 
