@@ -358,9 +358,9 @@ class FunctionHeader(Header):
                     for dc in d['results']:
                         _name, _count = create_incremented_string(used_names, 'out', _count)
                         var = build_argument(_name, dc)
-                        results.append(var)
+                        results.append(FunctionDefResult(var.var))
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = FunctionAddress(arg_name, decs, results, [])
+                    arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results, []))
 
                 else:
                     arg_name = 'arg_{0}'.format(str(i))

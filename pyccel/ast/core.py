@@ -2033,8 +2033,8 @@ class FunctionDefResult(PyccelAstNode):
 
     Examples
     --------
-    >>> from pyccel.ast.core import FunctionDefArgument
-    >>> n = FunctionDefArgument('n')
+    >>> from pyccel.ast.core import FunctionDefResult
+    >>> n = FunctionDefResult('n')
     >>> n
     n
     """

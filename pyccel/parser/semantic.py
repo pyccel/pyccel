@@ -828,11 +828,11 @@ class SemanticParser(BasicParser):
             return new_expr
         else:
             if self._current_function == func.name:
-                if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
+                if len(func.results)>0 and not isinstance(func.results[0].var, PyccelAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-            if not parent_assign and len(func.results) == 1 and func.results[0].rank > 0:
+            if not parent_assign and len(func.results) == 1 and func.results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
                 assign.set_fst(expr.fst)
@@ -906,7 +906,7 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
                 (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
-                iterable = rhs.funcdef.results
+                iterable = [r.var for r in rhs.funcdef.results]
             else:
                 iterable = rhs
             elem_vars = []
@@ -1874,7 +1874,7 @@ class SemanticParser(BasicParser):
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
-            first = results[0]
+            first = results[0].var
         rhs_name = _get_name(rhs)
         attr_name = []
 
@@ -2346,7 +2346,7 @@ class SemanticParser(BasicParser):
                 else:
                     # If macro is function, create left-hand side variable
                     if isinstance(master, FunctionDef) and master.results:
-                        d_var = self._infer_type(master.results[0], **settings)
+                        d_var = self._infer_type(master.results[0].var, **settings)
                         dtype = d_var.pop('datatype')
                         lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
                         var = self.check_for_variable(lhs.name)
@@ -2419,9 +2419,9 @@ class SemanticParser(BasicParser):
                 results = func.results
                 if results:
                     if len(results)==1:
-                        d_var = self._infer_type(results[0], **settings)
+                        d_var = self._infer_type(results[0].var, **settings)
                     else:
-                        d_var = self._infer_type(PythonTuple(*results), **settings)
+                        d_var = self._infer_type(PythonTuple(*[r.var for r in results]), **settings)
                 elif expr.lhs.is_temp:
                     return rhs
                 else:
@@ -2448,7 +2448,7 @@ class SemanticParser(BasicParser):
                         d_var['order'          ] = arg.order
 
             elif isinstance(func, Interface):
-                d_var = [self._infer_type(i, **settings) for i in
+                d_var = [self._infer_type(i.var, **settings) for i in
                          func.functions[0].results]
 
                 # TODO imporve this will not work for
@@ -2507,7 +2507,7 @@ class SemanticParser(BasicParser):
             n = len(lhs)
             if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
                 if isinstance(rhs, FunctionCall):
-                    r_iter = rhs.funcdef.results
+                    r_iter = [r.var for r in rhs.funcdef.results]
                 else:
                     r_iter = rhs
                 new_lhs = []
@@ -3224,12 +3224,13 @@ class SemanticParser(BasicParser):
                 new_results = []
 
                 for a, ah in zip(results, header_results):
-                    d_var = self._infer_type(ah, **settings)
+                    av = a.var
+                    d_var = self._infer_type(ah.var, **settings)
                     dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, self.scope.get_expected_name(a),
-                            **d_var, is_temp = a.is_temp)
-                    self.scope.insert_variable(a_new, a)
-                    new_results.append(a_new)
+                    a_new = Variable(dtype, self.scope.get_expected_name(av),
+                            **d_var, is_temp = av)
+                    self.scope.insert_variable(a_new, av)
+                    new_results.append(FunctionDefResult(a_new, annotation = ah.annotation))
 
                 results = new_results
 

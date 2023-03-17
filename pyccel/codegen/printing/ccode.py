@@ -1146,10 +1146,10 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(expr.results)
         args = list(expr.arguments)
         if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
+            ret_type = self.get_declare_type(expr.results[0].var)
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int'))
-            args += [FunctionDefArgument(a) for a in expr.results]
+            args += [FunctionDefArgument(a.var) for a in expr.results]
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
@@ -1602,7 +1602,8 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
-            for i in expr.results:
+            for r in expr.results:
+                i = r.var
                 if isinstance(i, Variable) and not i.is_temp:
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
