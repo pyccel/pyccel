@@ -268,7 +268,6 @@ class CcudaCodePrinter(CCodePrinter):
         # memory
         # Key is optional variable
         self._optional_partners = {}
-        print("This line is tested")
 
     def function_signature(self, expr, print_arg_names = True):
         """Extract from function definition all the information
