@@ -120,6 +120,7 @@ jobs:
         run: |
           coverage report
           coverage json
+          cat coverage.json
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
