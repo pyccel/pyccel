@@ -35,8 +35,8 @@ jobs:
       - name: View coverage
         run: |
           coverage report
-          coverage json
-          cat coverage.json
+          coverage xml
+          cat cobertura.xml
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
@@ -124,8 +124,8 @@ jobs:
       - name: View coverage
         run: |
           coverage report
-          coverage json
-          cat coverage.json
+          coverage xml
+          cat cobertura.xml
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
