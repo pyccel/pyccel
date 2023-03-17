@@ -47,7 +47,7 @@ def test_openmp(f, language):
 )
 @pytest.mark.external
 def test_ccuda(f, language):
-    execute_pyccel(f, language=language, verbose=True)
+    execute_pyccel(f, language=language)
 
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #@pytest.mark.external
