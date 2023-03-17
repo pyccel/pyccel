@@ -17,7 +17,7 @@ from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString
 
-from .core      import FunctionDefArgument
+from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .internals import get_final_precision
@@ -326,7 +326,7 @@ Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias')],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
 
 #-------------------------------------------------------------------
@@ -352,8 +352,8 @@ def Python_to_C(c_object):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')],
-                       results   = [Variable(dtype=dtype, name = 'v', precision = prec)])
+                       arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                       results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
 
     return cast_func
 
@@ -395,8 +395,8 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
-                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')])
+                       arguments = [FunctionDefArgument(Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision))],
+                       results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
 
@@ -424,7 +424,7 @@ c_to_py_registry = {
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias')],
+                             results   = [FunctionDefResult(Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias'))],
                              body      = [])
 
 def PyErr_SetString(exception, message):
@@ -444,8 +444,8 @@ def PyErr_SetString(exception, message):
     """
     func = FunctionDef(name = 'PyErr_SetString',
                   body      = [],
-                  arguments = [Variable(dtype = PyccelPyObject(), name = 'o'),
-                               Variable(dtype = NativeString(), name = 's')],
+                  arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
+                               FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
                   results   = [])
 
     exception = Variable(PyccelPyObject(), name = exception)
@@ -521,7 +521,7 @@ def scalar_object_check(py_object, c_object):
 
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'alias')],
-                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+                    arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'alias'))],
+                    results   = [FunctionDefResult(Variable(dtype=NativeBool(), name = 'r'))])
 
     return FunctionCall(check_func, [py_object])
