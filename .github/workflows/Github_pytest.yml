@@ -32,16 +32,13 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: View coverage
-        run: |
-          coverage report
-          coverage xml
-          cat cobertura.xml
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-artifact
-          path: .coverage
+          path: |
+            .coverage
+            .coveragerc.source
           retention-days: 1
 
   #Windows:
@@ -121,16 +118,13 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: View coverage
-        run: |
-          coverage report
-          coverage xml
-          cat cobertura.xml
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
           name: cuda-coverage-artifact
-          path: .coverage
+          path: |
+            .coverage
+            .coveragerc.source
           retention-days: 1
 
   CoverageCollection:
@@ -150,13 +144,17 @@ jobs:
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Coverage install
-        uses: ./.github/actions/coverage_install
+        run: |
+          python -m pip install coverage
+        shell: bash
       - name: Collect coverage information
         uses: actions/download-artifact@v3
         with:
           name: coverage-artifact
       - name: Rename coverage file
-        run: mv .coverage .coverage.linux
+        run: |
+          mv .coverage .coverage.linux
+          mv .coveragerc.source .coveragerc.linux
       - name: Collect coverage information
         uses: actions/download-artifact@v3
         if: needs.Cuda.result == 'success'
@@ -164,9 +162,14 @@ jobs:
           name: cuda-coverage-artifact
       - name: Rename coverage file
         if: needs.Cuda.result == 'success'
-        run: mv .coverage .coverage.cuda
+        run: |
+          mv .coverage .coverage.cuda
+          mv .coveragerc.source .coveragerc.cuda
       - name: Generate coverage report
         run: |
+            echo -e "[paths]\nsource =\n" > .coveragrc
+            cat .coveragerc.linux >> .coveragrc
+            cat .coveragerc.cuda >> .coveragrc
             coverage combine
             coverage xml
             coverage json
