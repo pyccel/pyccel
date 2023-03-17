@@ -100,6 +100,8 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             if not to_update:
                 to_update = any(not_a_copy(lib_path, lib_dest_path, s) for s in src_files)
 
+        print("copy_internal_library", lib_folder, to_create, to_update)
+
         if to_create:
             # Copy all files from the source to the destination
             shutil.copytree(lib_path, lib_dest_path)
