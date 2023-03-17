@@ -35,7 +35,7 @@ from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
-from pyccel.ast.core import Return, FunctionDefArgument
+from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import DottedFunctionCall
@@ -3033,14 +3033,15 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        return_vars = self.scope.find(f_name, 'functions').results
+        return_objs = self.scope.find(f_name, 'functions').results
         assigns     = []
-        for v,r in zip(return_vars, results):
+        for o,r in zip(return_objs, results):
+            v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
 
-        results = [self._visit(i, **settings) for i in return_vars]
+        results = [self._visit(i.var, **settings) for i in return_objs]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
@@ -3171,8 +3172,8 @@ class SemanticParser(BasicParser):
 
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
-                    ah = ah.var
-                    if isinstance(ah, FunctionAddress):
+                    ahv = ah.var
+                    if isinstance(ahv, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
                         d_var['memory_handling'] = 'alias'
@@ -3181,12 +3182,12 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
                         a_new = FunctionAddress(self.scope.get_expected_name(a.name),
-                                        ah.arguments, ah.results, [], **d_var)
+                                        ahv.arguments, ahv.results, [], **d_var)
                     else:
-                        d_var = self._infer_type(ah, **settings)
-                        d_var['shape'] = ah.alloc_shape
+                        d_var = self._infer_type(ahv, **settings)
+                        d_var['shape'] = ahv.alloc_shape
                         d_var['is_argument'] = True
-                        d_var['is_const'] = ah.is_const
+                        d_var['is_const'] = ahv.is_const
                         dtype = d_var.pop('datatype')
                         if not d_var['cls_base']:
                             d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
@@ -3210,7 +3211,7 @@ class SemanticParser(BasicParser):
                     arg_new = FunctionDefArgument(a_new,
                                 value=value,
                                 kwonly=a.is_kwonly,
-                                annotation=a.annotation)
+                                annotation=ah.annotation)
 
                     args.append(arg_new)
                     arg_vars.append(a_new)
@@ -3282,7 +3283,7 @@ class SemanticParser(BasicParser):
             namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            results_names = [i.name for i in results]
+            results_names = [i.var.name for i in results]
 
             # Find all nodes which can modify variables
             assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
@@ -3311,7 +3312,7 @@ class SemanticParser(BasicParser):
 
             # Raise an error if one of the return arguments is an alias.
             for r in results:
-                if r.is_alias:
+                if r.var.is_alias:
                     errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')
@@ -3799,3 +3800,7 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
+
+    def _visit_FunctionDefResult(self, expr, **settings):
+        var = self._visit(expr.var)
+        return FunctionDefResult(var, originates_in_arg = var.is_argument, annotation = expr.annotation)
