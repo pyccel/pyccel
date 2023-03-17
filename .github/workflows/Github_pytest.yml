@@ -36,9 +36,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-artifact
-          path: |
-            .coverage
-            .coveragerc.source
+          path: .coverage
           retention-days: 1
 
   #Windows:
@@ -122,9 +120,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cuda-coverage-artifact
-          path: |
-            .coverage
-            .coveragerc.source
+          path: .coverage
           retention-days: 1
 
   CoverageCollection:
@@ -154,7 +150,6 @@ jobs:
       - name: Rename coverage file
         run: |
           mv .coverage .coverage.linux
-          mv .coveragerc.source .coveragerc.linux
       - name: Collect coverage information
         uses: actions/download-artifact@v3
         if: needs.Cuda.result == 'success'
@@ -164,12 +159,9 @@ jobs:
         if: needs.Cuda.result == 'success'
         run: |
           mv .coverage .coverage.cuda
-          mv .coveragerc.source .coveragerc.cuda
       - name: Generate coverage report
         run: |
-            echo -e "[paths]\nsource =\n" > .coveragrc
-            cat .coveragerc.linux >> .coveragrc
-            cat .coveragerc.cuda >> .coveragrc
+            echo -e "[paths]\nsource = */site-packages/pyccel\n" > .coveragrc
             coverage combine
             coverage xml
             coverage json
