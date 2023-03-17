@@ -171,7 +171,7 @@ jobs:
         run: mv .coverage .coverage.cuda
       - name: Generate coverage report
         run: |
-            echo -e "[paths]\nsource = */site-packages/pyccel\n" > .coveragrc
+            echo -e "[paths]\nsource =\n    */site-packages/pyccel\n" > .coveragrc
             coverage combine --rcfile=.coveragrc
             coverage xml
             coverage json
