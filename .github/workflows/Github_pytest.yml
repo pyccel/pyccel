@@ -116,6 +116,8 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
+      - name: View coverage
+        run: converage report
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
