@@ -8,6 +8,7 @@ from pyccel.ast.basic import Basic
 from pyccel.ast.core import CodeBlock, FunctionCall, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
@@ -136,7 +137,7 @@ def as_static_function(func, *, mod_scope, name=None):
             shape_new = tuple(additional_args)
             # ...
 
-            _args += additional_args
+            _args += [FunctionDefArgument(a) for a in additional_args]
 
             a_new = Variable( a.dtype, a.name,
                               memory_handling = a.memory_handling,
@@ -146,14 +147,13 @@ def as_static_function(func, *, mod_scope, name=None):
                               order       = a.order,
                               precision   = a.precision)
 
-            if not( a.name in results_names ):
-                _args += [a_new]
+            _args += [FunctionDefArgument(a_new)]
 
-            else:
-                _results += [a_new]
+            if a.name in results_names:
+                _results += [FunctionDefResult(a_new, originates_in_arg = True)]
 
         else:
-            _args += [a]
+            _args += [FunctionDefArgument(a)]
 
     args = _args
     results = _results
