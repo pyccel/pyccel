@@ -152,7 +152,7 @@ jobs:
       - name: Install Pyccel with tests
         run: |
             python -m pip install --upgrade pip
-            python -m pip install .[test]
+            python -m pip install .
             python -m pip install coverage
         shell: bash
       - name: Collect coverage information
@@ -171,7 +171,8 @@ jobs:
         run: mv .coverage .coverage.cuda
       - name: Generate coverage report
         run: |
-            echo -e "[paths]\nsource =\n    */site-packages/pyccel\n" > .coveragrc
+            INSTALL_DIR=$(cd tests; python -c "import pyccel; print(pyccel.__path__[0])")
+            echo -e "[report]\ninclude = ${INSTALL_DIR}/*\n[paths]\nsource = */site-packages/pyccel\n" > .coveragrc
             coverage combine --rcfile=.coveragrc
             coverage xml
             coverage json
