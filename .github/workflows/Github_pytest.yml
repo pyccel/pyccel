@@ -153,10 +153,9 @@ jobs:
           python-version: 3.7
       - name: Install dependencies
         uses: ./.github/actions/linux_install
-      - name: Install Pyccel with tests
+      - name: Install coverage
         run: |
             python -m pip install --upgrade pip
-            python -m pip install .
             python -m pip install coverage
         shell: bash
       - name: Collect coverage information
@@ -175,8 +174,7 @@ jobs:
         run: mv .coverage .coverage.cuda
       - name: Generate coverage report
         run: |
-            INSTALL_DIR=$(cd tests; python -c "import pyccel; print(pyccel.__path__[0])")
-            echo -e "[paths]\nsource =\n   ${INSTALL_DIR}\n   */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
+            echo -e "[paths]\nsource =\n   $(pwd)/pyccel\n   */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
             coverage combine
             coverage xml
       - name: Run codacy-coverage-reporter
