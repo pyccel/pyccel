@@ -1,7 +1,7 @@
 name: Spellcheck Action
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ master, development ]
 
 jobs:
   Spelling:

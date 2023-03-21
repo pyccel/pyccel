@@ -6,7 +6,6 @@ runs:
     - name: Coverage collection
       run: |
         coverage combine
-        coverage xml
         rm ${SITE_DIR}/pyccel_cov.pth
       shell: bash
 
