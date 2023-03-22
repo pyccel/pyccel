@@ -11,16 +11,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.7
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.11
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel with tests
         run: |
             python -m pip install --upgrade pip
             python -m pip install .[test]
+            python -m pip install pyclean
         shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
@@ -72,6 +73,7 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             python -m pip install .[test]
+            python -m pip install pyclean
         shell: bash
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
@@ -96,6 +98,7 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             python -m pip install .[test]
+            python -m pip install pyclean
         shell: bash
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
