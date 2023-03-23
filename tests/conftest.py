@@ -8,6 +8,7 @@ from pyccel.commands.pyccel_clean import pyccel_clean
 
 # Uncomment to debug  pytest-xdist errors
 github_debugging = 'ACTIONS_RUNNER_DEBUG' in os.environ
+print("Found : ", github_debugging, os.environ)
 if github_debugging:
     import sys
     sys.stdout = sys.stderr
