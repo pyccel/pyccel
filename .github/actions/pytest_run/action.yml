@@ -11,6 +11,10 @@ runs:
   steps:
     - name: Test with pytest
       run: |
+        if [ ${{ runner.debug }} ]
+        then
+            export ACTIONS_RUNNER_DEBUG=1
+        fi
         which python
         if [ -z ${ACTIONS_RUNNER_DEBUG} ]
         then
