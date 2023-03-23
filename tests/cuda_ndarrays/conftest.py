@@ -12,7 +12,6 @@ NEEDS_FROM_PARENT = hasattr(pytest.Item, "from_parent")
 def pytest_collect_file(parent, path):
     """
     A hook to collect test_*.cu test files.
-
     """
     if path.ext == ".cu" and path.basename.startswith("test_"):
         if NEEDS_FROM_PARENT:
@@ -22,7 +21,6 @@ def pytest_collect_file(parent, path):
 def pytest_collection_modifyitems(items):
     """
     a hook to modify the items before the tests for C Cuda unit test files.
-
     """
     for item in items:
         if item.fspath.ext == ".cu":
@@ -31,7 +29,6 @@ def pytest_collection_modifyitems(items):
 class CTestFile(pytest.File):
     """
     A custom file handler class for C unit test files.
-
     """
 
     @classmethod
@@ -42,7 +39,6 @@ class CTestFile(pytest.File):
         """
         Overridden collect method to collect the results from each
         C unit test executable.
-
         """
         # Run the exe that corresponds to the .c file and capture the output.
         test_exe = os.path.splitext(str(self.fspath))[0]
@@ -96,7 +92,6 @@ class CTestItem(pytest.Item):
     """
     Pytest.Item subclass to handle each test result item. There may be
     more than one test result from a test function.
-
     """
 
     def __init__(self, *, test_result, **kwargs):
@@ -121,7 +116,6 @@ class CTestItem(pytest.Item):
         """
         Called when runtest() raises an exception. The method is used
         to format the output of the failed test result.
-
         """
         if isinstance(exception.value, CTestException):
             return (f"Test failed : {self.test_result['file_name']}:{self.test_result['line_number']} {self.test_result['function_name']} < {self.test_result['DSCR']} >\n INFO : {self.test_result['INFO']}")
