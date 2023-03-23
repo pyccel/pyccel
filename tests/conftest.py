@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+import logging
 import os
 import shutil
 import pytest
@@ -52,6 +53,9 @@ def pytest_sessionstart(session):
     if session.config.option.developer_mode:
         from pyccel.errors.errors import ErrorsMode
         ErrorsMode().set_mode('developer')
+
+    logging.basicConfig()
+    logging.getLogger("filelock").setLevel(logging.DEBUG)
 
     # Clean path before beginning but never delete anything in parallel mode
     path_dir = os.path.dirname(os.path.realpath(__file__))
