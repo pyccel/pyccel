@@ -12,11 +12,12 @@ runs:
     - name: Test with pytest
       run: |
         which python
-        if [ -z ${ACTIONS_RUNNER_DEBUG} ] then
+        if [ -z ${ACTIONS_RUNNER_DEBUG} ]
+        then
           LOG_LEVEL=DEBUG
         else
           LOG_LEVEL=INFO
-        endif
+        fi
         python -m pytest -n auto -rXx -vs -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
