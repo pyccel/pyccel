@@ -98,7 +98,6 @@ class CompileObj:
         """
         if self.has_target_file:
             self._includes.remove(self._folder)
-            self._includes.add(folder)
 
         self._file = os.path.join(folder, os.path.basename(self._file))
         self._folder = folder
