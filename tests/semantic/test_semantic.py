@@ -15,6 +15,11 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize( "f", files )
 def test_semantic(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
     pyccel.parse()
@@ -22,9 +27,7 @@ def test_semantic(f):
     settings = {}
     pyccel.annotate(**settings)
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+    ErrorsMode().set_mode(mode)
 
 
 
