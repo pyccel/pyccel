@@ -57,18 +57,21 @@ def execute_pyccel(fname, *,
                    output_name   = None,
                    compiler_export_file = None):
     """
-    Carries out the main steps required to execute pyccel
-    - Parses the python file (syntactic stage)
+    Carry out the main steps required to execute Pyccel
+
+    This file is called by both the pyccel executable and the
+    epyccel function. It carries out the following stages:
+    - Parses the Python file (syntactic stage)
     - Annotates the abstract syntax tree (semantic stage)
     - Generates the translated file(s) (codegen stage)
     - Compiles the files to generate an executable and/or a shared library
 
     Parameters
     ----------
-    fname         : str
+    fname : str
                     Name of python file to be translated
 
-    syntax_only   : bool
+    syntax_only : bool
                     Boolean indicating whether the pipeline should stop
                     after the syntax stage
                     Default : False
@@ -78,28 +81,28 @@ def execute_pyccel(fname, *,
                     after the semantic stage
                     Default : False
 
-    convert_only  : bool
+    convert_only : bool
                     Boolean indicating whether the pipeline should stop
                     after the codegen stage
                     Default : False
 
-    verbose       : bool
+    verbose : bool
                     Boolean indicating whether debugging messages should be printed
                     Default : False
 
-    folder        : str
+    folder : str
                     Path to the working directory
                     Default : folder containing the file to be translated
 
-    language      : str
+    language : str
                     The language which pyccel is translating to
                     Default : fortran
 
-    compiler      : str
+    compiler : str
                     The compiler used to compile the generated files
                     Default : GNU
 
-    fflags        : str
+    fflags : str
                     The flags passed to the compiler
                     Default : provided by Compiler
 
@@ -107,27 +110,27 @@ def execute_pyccel(fname, *,
                     The flags passed to the compiler to compile the c wrapper
                     Default : provided by Compiler
 
-    includes      : list
+    includes : list
                     list of include directories paths
 
-    libdirs       : list
+    libdirs : list
                     list of paths to directories containing the required libraries
 
-    modules       : list
+    modules : list
                     list of files which must also be compiled in order to compile this module
 
-    libs          : list
+    libs : list
                     list of required libraries
 
-    debug         : bool
+    debug : bool
                     Boolean indicating whether the file should be compiled in debug mode
                     (currently this only implies that the flag -fcheck=bounds is added)
                     Default : False
 
-    accelerators  : iterable
+    accelerators : iterable
                     Tool used to accelerate the code (e.g. openmp openacc)
 
-    output_name   : str
+    output_name : str
                     Name of the generated module
                     Default : Same name as the file which was translated
     export_compile_info : str
