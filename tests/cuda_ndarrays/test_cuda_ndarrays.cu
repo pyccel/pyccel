@@ -5,15 +5,13 @@
 #include "ndarrays.h"
 #include "cuda_ndarrays.h"
 
-#define getname(X) #X
-
 void assert_double(double v1 , double v2, const char *dscr,
         const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
         printf("[FAIL] %s:%d:%s\n", file, line, func);
-        printf("[INFO] %s:%f != %s:%f\n", getname(v1), v1, getname(v2),v2);
+        printf("[INFO] v1:%f != v2:%f\n", v1, v2);
         printf("[DSCR] %s\n", dscr);
         return ;
     }
@@ -27,7 +25,7 @@ void assert_float(float v1 , float v2, const char *dscr,
     if (v1 != v2)
     {
         printf("[FAIL] %s:%d:%s\n", file, line, func);
-        printf("[INFO] %s:%f != %s:%f\n", getname(v1), v1, getname(v2),v2);
+        printf("[INFO] v1:%f != v2:%f\n", v1, v2);
         printf("[DSCR] %s\n", dscr);
         return ;
     }
@@ -41,7 +39,7 @@ void assert_int64(int64_t v1, int64_t v2, const char *dscr,
     if (v1 != v2)
     {
         printf("[FAIL] %s:%d:%s\n", file, line, func);
-        printf("[INFO] %s:%ld != %s:%ld\n", getname(v1), v1, getname(v2),v2);
+        printf("[INFO] v1:%ld != v2:%ld\n", v1, v2);
         printf("[DSCR] %s\n", dscr);
         return ;
     }
@@ -55,7 +53,7 @@ void assert_int32(int32_t v1 , int32_t v2, const char *dscr,
     if (v1 != v2)
     {
         printf("[FAIL] %s:%d:%s\n", file, line, func);
-        printf("[INFO] %s:%d != %s:%d\n", getname(v1), v1, getname(v2),v2);
+        printf("[INFO] v1:%d != v2:%d\n", v1, v2);
         printf("[DSCR] %s\n", dscr);
         return ;
     }
@@ -69,7 +67,7 @@ void assert_int16(int16_t v1 , int16_t v2, const char *dscr,
     if (v1 != v2)
     {
         printf("[FAIL] %s:%d:%s\n", file, line, func);
-        printf("[INFO] %s:%d != %s:%d\n", getname(v1), v1, getname(v2),v2);
+        printf("[INFO] v1:%d != v2:%d\n", v1, v2);
         printf("[DSCR] %s\n", dscr);
         return ;
     }
@@ -83,7 +81,7 @@ void assert_int8(int8_t v1 , int8_t v2, const char *dscr,
     if (v1 != v2)
     {
         printf("[FAIL] %s:%d:%s\n", file, line, func);
-        printf("[INFO] %s:%d != %s:%d\n", getname(v1), v1, getname(v2),v2);
+        printf("[INFO] v1:%d != v2:%d\n", v1, v2);
         printf("[DSCR] %s\n", dscr);
         return ;
     }
