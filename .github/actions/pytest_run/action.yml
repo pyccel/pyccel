@@ -11,7 +11,7 @@ runs:
   steps:
     - name: Test with pytest
       run: |
-        if [[ ${{ runner.debug }} == 1 ]]
+        if [ -z ${{ runner.debug }} ]
         then
           export DEBUG=1
           FLAGS="-s --log-cli-level DEBUG"
