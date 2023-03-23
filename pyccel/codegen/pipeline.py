@@ -57,7 +57,7 @@ def execute_pyccel(fname, *,
                    output_name   = None,
                    compiler_export_file = None):
     """
-    Carry out the main steps required to execute Pyccel
+    Carry out the main steps required to execute Pyccel.
 
     This file is called by both the pyccel executable and the
     epyccel function. It carries out the following stages:
