@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
-import logging
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
