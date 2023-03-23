@@ -12,7 +12,7 @@ import pytest
 
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
-from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError, PyccelError
+from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError, PyccelError, ErrorsMode
 
 
 def get_files_from_folder(foldername):
@@ -28,6 +28,8 @@ def test_syntax_blockers(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
 
@@ -35,18 +37,22 @@ def test_syntax_blockers(f):
         ast = pyccel.parse()
 
     assert(errors.has_blockers())
+    ErrorsMode().set_mode(mode)
 
 @pytest.mark.parametrize("f",get_files_from_folder("syntax_errors"))
 def test_syntax_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
 
     ast = pyccel.parse()
 
     assert(errors.has_errors())
+    ErrorsMode().set_mode(mode)
 
 @pytest.mark.parametrize("f",get_files_from_folder("semantic/blocking"))
 def test_semantic_blocking_errors(f):
@@ -55,6 +61,8 @@ def test_semantic_blocking_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
     ast = pyccel.parse()
@@ -64,6 +72,7 @@ def test_semantic_blocking_errors(f):
         ast = pyccel.annotate(**settings)
 
     assert(errors.has_blockers())
+    ErrorsMode().set_mode(mode)
 
 semantic_non_blocking_errors_args = [f for f in get_files_from_folder("semantic/non_blocking")]
 @pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
@@ -73,6 +82,8 @@ def test_semantic_non_blocking_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
     ast = pyccel.parse()
@@ -81,6 +92,7 @@ def test_semantic_non_blocking_errors(f):
     ast = pyccel.annotate(**settings)
 
     assert(errors.has_errors())
+    ErrorsMode().set_mode(mode)
 
 
 @pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
@@ -88,6 +100,8 @@ def test_codegen_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
     ast = pyccel.parse()
@@ -103,12 +117,15 @@ def test_codegen_errors(f):
         codegen.doprint()
 
     assert(errors.has_errors())
+    ErrorsMode().set_mode(mode)
 
 @pytest.mark.parametrize("f",get_files_from_folder("known_bugs"))
 def test_neat_errors_for_known_bugs(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     pyccel = Parser(f)
     with pytest.raises(PyccelError):
@@ -124,6 +141,7 @@ def test_neat_errors_for_known_bugs(f):
         codegen.doprint()
 
     assert(errors.has_errors())
+    ErrorsMode().set_mode(mode)
 
 ######################
 if __name__ == '__main__':

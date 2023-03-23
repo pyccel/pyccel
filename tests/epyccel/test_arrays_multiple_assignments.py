@@ -346,9 +346,6 @@ def test_Assign_between_nested_If(lang):
 #==============================================================================
 
 if __name__ == '__main__':
-    logging.basicConfig()
-    logging.getLogger("filelock").setLevel(logging.DEBUG)
-
     for l in ['fortran']:
 
         test_no_reallocation(l)
