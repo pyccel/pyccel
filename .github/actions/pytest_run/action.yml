@@ -12,19 +12,24 @@ runs:
     - name: Test with pytest
       run: |
         which python
-        python -m pytest -n auto -rXx -vs -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays --developer-mode --log-cli-level DEBUG
+        if [ -z ${ACTIONS_RUNNER_DEBUG} ] then
+          LOG_LEVEL=DEBUG
+        else
+          LOG_LEVEL=INFO
+        endif
+        python -m pytest -n auto -rXx -vs -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
             touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
-            python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py --developer-mode --log-cli-level DEBUG
+            python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py --log-cli-level ${LOG_LEVEL}
         fi
-        python -m pytest -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays --developer-mode --log-cli-level DEBUG
+        python -m pytest -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
         pyccel-clean
-        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays --developer-mode --log-cli-level DEBUG
-        python -m pytest -rXx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays --developer-mode --log-cli-level DEBUG
+        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
+        python -m pytest -rXx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
         pyccel-clean
-        python -m pytest ndarrays/ -rXx --developer-mode --log-cli-level DEBUG
+        python -m pytest ndarrays/ -rXx --developer-mode --log-cli-level ${LOG_LEVEL}
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
