@@ -4,7 +4,7 @@ import logging
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
-from pyccel.errors.errors import Errors, PyccelSemanticError
+from pyccel.errors.errors import Errors, PyccelSemanticError, ErrorsMode
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
@@ -28,7 +28,7 @@ def test_no_reallocation(language):
         return x.sum() + y.sum()
 
     # TODO: check that we don't get any Pyccel warnings
-    g = epyccel(f, language=language, developer-mode=False)
+    g = epyccel(f, language=language)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -43,10 +43,14 @@ def test_reallocation_heap(language):
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language, developer-mode=False)
+    g = epyccel(f, language=language)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -59,6 +63,7 @@ def test_reallocation_heap(language):
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 def test_reallocation_stack(language):
@@ -71,11 +76,15 @@ def test_reallocation_stack(language):
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language, developer-mode=False)
+        epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors()
@@ -85,6 +94,7 @@ def test_reallocation_stack(language):
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == INCOMPATIBLE_REDEFINITION_STACK_ARRAY
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 def test_creation_in_loop_heap(language):
@@ -96,10 +106,14 @@ def test_creation_in_loop_heap(language):
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language, developer-mode=False)
+    g = epyccel(f, language=language)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -112,6 +126,7 @@ def test_creation_in_loop_heap(language):
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_DEFINITION_IN_LOOP
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 def test_creation_in_loop_stack(language):
@@ -124,11 +139,15 @@ def test_creation_in_loop_stack(language):
         return x.sum()
 
     # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language, developer-mode=False)
+        epyccel(f, language=language)
 
     # Check that we got exactly 2 Pyccel errors
     assert errors.has_errors()
@@ -142,6 +161,7 @@ def test_creation_in_loop_stack(language):
     error_info = error_info_list[1]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 def test_creation_in_if_heap(language):
@@ -156,7 +176,7 @@ def test_creation_in_if_heap(language):
         return x.sum()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language, developer-mode=False)
+    g = epyccel(f, language=language)
 
     # Check result of pyccelized function
     import numpy as np
@@ -173,12 +193,17 @@ def test_Reassign_to_Target():
         x = np.ones ((4, 5), dtype=int)
         return c.sum()
 
-     # Initialize singleton that stores Pyccel errors
+    # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
+
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, developer-mode=False)
+        epyccel(f)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -188,6 +213,7 @@ def test_Reassign_to_Target():
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == ARRAY_ALREADY_IN_USE
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 
@@ -201,12 +227,16 @@ def test_Assign_Between_Allocatables():
         x[0][0] = 1
         return y.sum()
 
-     # Initialize singleton that stores Pyccel errors
+    # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, developer-mode=False)
+        epyccel(f)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -216,6 +246,7 @@ def test_Assign_Between_Allocatables():
     error_info = [*errors.error_info_map.values()][0][0]
     assert str(error_info.symbol)  == 'x'
     assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 
@@ -232,11 +263,15 @@ def test_Assign_after_If():
         m = x.shape[0]
         return n,m
 
-     # Initialize singleton that stores Pyccel errors
+    # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # epyccel should raise an Exception
-    f2 = epyccel(f, developer-mode=False)
+    f2 = epyccel(f)
 
     # Check that we got exactly 1 Pyccel warning
     assert errors.has_warnings()
@@ -249,6 +284,7 @@ def test_Assign_after_If():
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 def test_stack_array_if(language):
@@ -263,7 +299,7 @@ def test_stack_array_if(language):
         return x[0]
 
     # Initialize singleton that stores Pyccel errors
-    f2 = epyccel(f, language=language, developer-mode=False)
+    f2 = epyccel(f, language=language)
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
@@ -289,11 +325,15 @@ def test_Assign_between_nested_If(lang):
             n = x.shape[0]
         return n
 
-     # Initialize singleton that stores Pyccel errors
+    # Initialize singleton that stores Pyccel errors
+    # and ensure all errors are collected
     errors = Errors()
+    errors.initialize()
+    mode = errors.mode
+    ErrorsMode().set_mode('user')
 
     # epyccel should raise an Exception
-    f2 = epyccel(f, language=lang, developer-mode=False)
+    f2 = epyccel(f, language=lang)
 
     # Check that we don't get a Pyccel warning
     assert not errors.has_warnings()
@@ -301,6 +341,7 @@ def test_Assign_between_nested_If(lang):
     assert f(True,True) == f2(True,True)
     assert f(True,False) == f2(True,False)
     assert f(False,True) == f2(False,True)
+    ErrorsMode().set_mode(mode)
 
 #==============================================================================
 
