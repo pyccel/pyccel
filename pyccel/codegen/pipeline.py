@@ -102,16 +102,16 @@ def execute_pyccel(fname, *,
                     The flags passed to the compiler to compile the c wrapper.
 
     includes : list
-                    list of include directories paths.
+                    List of include directories paths.
 
     libdirs : list
-                    list of paths to directories containing the required libraries.
+                    List of paths to directories containing the required libraries.
 
     modules : list
-                    list of files which must also be compiled in order to compile this module.
+                    List of files which must also be compiled in order to compile this module.
 
     libs : list
-                    list of required libraries.
+                    List of required libraries.
 
     debug : bool, default: False
                     Boolean indicating whether the file should be compiled in debug mode
@@ -123,7 +123,7 @@ def execute_pyccel(fname, *,
     output_name : str, default: Same name as the file which was translated
                     Name of the generated module.
 
-    export_compile_info : str, default: None
+    compiler_export_file : str, default: None
                     Name of the json file to which compiler information is exported.
     """
     if fname.endswith('.pyh'):
