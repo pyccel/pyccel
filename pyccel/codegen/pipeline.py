@@ -69,73 +69,62 @@ def execute_pyccel(fname, *,
     Parameters
     ----------
     fname : str
-                    Name of python file to be translated
+                    Name of python file to be translated.
 
-    syntax_only : bool
+    syntax_only : bool, default: False
                     Boolean indicating whether the pipeline should stop
-                    after the syntax stage
-                    Default : False
+                    after the syntax stage.
 
-    semantic_only : bool
+    semantic_only : bool, default: False
                     Boolean indicating whether the pipeline should stop
-                    after the semantic stage
-                    Default : False
+                    after the semantic stage.
 
-    convert_only : bool
+    convert_only : bool, default: False
                     Boolean indicating whether the pipeline should stop
-                    after the codegen stage
-                    Default : False
+                    after the codegen stage.
 
-    verbose : bool
-                    Boolean indicating whether debugging messages should be printed
-                    Default : False
+    verbose : bool, default: False
+                    Boolean indicating whether debugging messages should be printed.
 
-    folder : str
-                    Path to the working directory
-                    Default : folder containing the file to be translated
+    folder : str, default: folder containing the file to be translated
+                    Path to the working directory.
 
-    language : str
-                    The language which pyccel is translating to
-                    Default : fortran
+    language : str, default: fortran
+                    The language which pyccel is translating to.
 
-    compiler : str
-                    The compiler used to compile the generated files
-                    Default : GNU
+    compiler : str, default: GNU
+                    The compiler used to compile the generated files.
 
-    fflags : str
-                    The flags passed to the compiler
-                    Default : provided by Compiler
+    fflags : str, default: provided by Compiler
+                    The flags passed to the compiler.
 
-    wrapper_flags : str
-                    The flags passed to the compiler to compile the c wrapper
-                    Default : provided by Compiler
+    wrapper_flags : str, default: provided by Compiler
+                    The flags passed to the compiler to compile the c wrapper.
 
     includes : list
-                    list of include directories paths
+                    list of include directories paths.
 
     libdirs : list
-                    list of paths to directories containing the required libraries
+                    list of paths to directories containing the required libraries.
 
     modules : list
-                    list of files which must also be compiled in order to compile this module
+                    list of files which must also be compiled in order to compile this module.
 
     libs : list
-                    list of required libraries
+                    list of required libraries.
 
-    debug : bool
+    debug : bool, default: False
                     Boolean indicating whether the file should be compiled in debug mode
-                    (currently this only implies that the flag -fcheck=bounds is added)
-                    Default : False
+                    (currently this only implies that the flag -fcheck=bounds is added).
 
     accelerators : iterable
-                    Tool used to accelerate the code (e.g. openmp openacc)
+                    Tool used to accelerate the code (e.g. openmp openacc).
 
-    output_name : str
-                    Name of the generated module
-                    Default : Same name as the file which was translated
-    export_compile_info : str
-                    Name of the json file to which compiler information is exported
-                    Default : None
+    output_name : str, default: Same name as the file which was translated
+                    Name of the generated module.
+
+    export_compile_info : str, default: None
+                    Name of the json file to which compiler information is exported.
     """
     if fname.endswith('.pyh'):
         syntax_only = True
