@@ -53,7 +53,7 @@ class CTestFile(pytest.File):
                     "-I", cuda_ndarray_path,
                     "-o", test_exe,]
 
-        subprocess.run(comp_cmd, check= 'TRUE')
+        subprocess.run(comp_cmd, check=True)
         if sys.platform.startswith("win"):
             test_exe += ".exe"
         test_output = subprocess.check_output("./" + test_exe)
