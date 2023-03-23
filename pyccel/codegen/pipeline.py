@@ -61,10 +61,10 @@ def execute_pyccel(fname, *,
 
     This file is called by both the pyccel executable and the
     epyccel function. It carries out the following stages:
-    - Parses the Python file (syntactic stage)
-    - Annotates the abstract syntax tree (semantic stage)
-    - Generates the translated file(s) (codegen stage)
-    - Compiles the files to generate an executable and/or a shared library
+    - Parses the Python file (syntactic stage).
+    - Annotates the abstract syntax tree (semantic stage).
+    - Generates the translated file(s) (codegen stage).
+    - Compiles the files to generate an executable and/or a shared library.
 
     Parameters
     ----------
