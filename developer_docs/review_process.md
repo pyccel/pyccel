@@ -22,7 +22,11 @@ Once the pull request is open the tests will be triggered every time you push ne
 
 When the pull request is ready for review (i.e. you are happy with it, and it is passing all tests) it can be marked as such and the review process can begin. This process is split into 3 stages which each have an associated label. The labels are described in the next sections. Pyccel has a bot which takes care of adding the appropriate label.
 
-Once your pull request has been reviewed please react to the open conversations. If you disagree you can say this, if not please leave a reference to the commit which fixes the mentioned issue. This makes the review process faster and more streamlined. Please only resolve conversations that you opened. You may think you fixed the problem, but the reviewer may disagree and leaving the discussion open makes it easier for them to verify that they agree with you. If you are reviewing then please close all conversations that you open once the problem is resolved. If you don't this can block the merge.
+Once your pull request has been reviewed please react to the open conversations. These can take 2 forms.
+  1. Reviewers may ask for changes on the PR. If you disagree please explain why (reviewers have less awareness of the details of the issue than the author so they may not understand why a decision was made). If you agree then please fix the problem and comment with a reference to the commit which fixes the mentioned issue. This makes the review process faster and more streamlined.
+  2. Reviewers may ask for more details on the PR, or on the thought process behind a certain code choice. This helps the reviewer learn about other approaches and better understand the code (which is important for understanding potential pitfalls for future PRs).
+
+Please only resolve conversations that you opened. You may think you fixed the problem, but the reviewer may disagree and leaving the discussion open makes it easier for them to verify that they agree with you. If you are reviewing then please close all conversations that you open once the problem is resolved. If you don't this can block the merge.
 
 Finally once you think you have handled all the issues raised in a review please re-request a review from the reviewer who requested changes.
 
@@ -48,6 +52,8 @@ By this stage the code should be clean and understandable for at least two devel
 Senior developers will look for anything missed in the initial review and any code which does not fit with the usual practices used in Pyccel. They will also ensure that the pull request makes sense in the context of planned future developments.
 
 Once the senior developer is happy with the branch they should accept the pull request. This will then trigger the label to be changed from `Ready_for_review` to `Ready_to_merge` (unless there are other requested changes from other senior developers).
+
+Remember senior developers are humans too and can also miss things or misunderstand what is necessary for the issue. Don't be scared to push back on their suggested changes if you feel they may be wrong.
 
 ### Ready to merge
 
