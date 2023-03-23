@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
+import logging
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
@@ -304,6 +305,8 @@ def test_Assign_between_nested_If(lang):
 #==============================================================================
 
 if __name__ == '__main__':
+    logging.basicConfig()
+    logging.getLogger("filelock").setLevel(logging.DEBUG)
 
     for l in ['fortran']:
 
