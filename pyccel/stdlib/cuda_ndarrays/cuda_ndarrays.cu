@@ -120,7 +120,7 @@ t_ndarray   cuda_array_create(int32_t nd, int64_t *shape,
         arr.shape[i] = shape[i];
     }
     arr.buffer_size = arr.length * arr.type_size;
-     cudaMallocManaged(&(arr.strides), nd * sizeof(int64_t));
+    cudaMallocManaged(&(arr.strides), nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.strides[i] = 1;
