@@ -13,29 +13,25 @@ runs:
       run: |
         if [[ ${{ runner.debug }} == 1 ]]
         then
-            export ACTIONS_RUNNER_DEBUG=1
-            echo $ACTIONS_RUNNER_DEBUG
+          export DEBUG=1
+          FLAGS=-s --log-cli-level DEBUG
+        else
+          FLAGS
         fi
         which python
-        if [ -z ${ACTIONS_RUNNER_DEBUG} ]
-        then
-          LOG_LEVEL=DEBUG
-        else
-          LOG_LEVEL=INFO
-        fi
-        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
+        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays ${FLAGS}
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
             touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
-            python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py --log-cli-level ${LOG_LEVEL}
+            python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py ${FLAGS}
         fi
-        python -m pytest -rXx -v -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
+        python -m pytest -rXx -v -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays ${FLAGS}
         pyccel-clean
-        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
-        python -m pytest -rXx -v -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays --log-cli-level ${LOG_LEVEL}
+        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays ${FLAGS}
+        python -m pytest -rXx -v -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays ${FLAGS}
         pyccel-clean
-        python -m pytest ndarrays/ -rXx -v --developer-mode --log-cli-level ${LOG_LEVEL}
+        python -m pytest ndarrays/ -rXx -v ${FLAGS}
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
