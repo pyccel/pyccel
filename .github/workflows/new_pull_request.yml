@@ -1,0 +1,19 @@
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  Linux:
+
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Set to draft
+        run:
+          gh pr ready ${{ github.event.pull_request.number }} --undo
