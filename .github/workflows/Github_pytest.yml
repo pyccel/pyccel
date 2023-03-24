@@ -1,4 +1,4 @@
-name: Pyccel tests
+name: Triggered Pyccel tests
 
 on:
   pull_request:
