@@ -1,5 +1,5 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-# pylint: disable=arguments-differ, inconsistent-return-statements, protected-access, abstract-method/
+# pylint: disable=missing-module-docstring/
+# pylint: disable=arguments-differ, inconsistent-return-statements
 import subprocess
 import os
 import pathlib
@@ -18,13 +18,6 @@ def pytest_collect_file(parent, path):
             return CTestFile.from_parent(path=pathlib.Path(path), parent=parent)
         return CTestFile(parent=parent, path=pathlib.Path(path))
 
-def pytest_collection_modifyitems(items):
-    """
-    a hook to modify the items before the tests for C Cuda unit test files.
-    """
-    for item in items:
-        if item.fspath.ext == ".cu":
-            item._nodeid = item.nodeid + " < " + item.test_result["DSCR"] + " >"
 
 class CTestFile(pytest.File):
     """
@@ -81,10 +74,10 @@ class CTestFile(pytest.File):
                 test_results[-1][token] = data
         for test_result in test_results:
             if NEEDS_FROM_PARENT:
-                yield CTestItem.from_parent(name = test_result["function_name"],
+                yield CTestItem.from_parent(name = test_result["function_name"] + " < " + test_result["DSCR"] + " >",
                         parent = self, test_result = test_result)
             else:
-                yield CTestItem(name = test_result["function_name"], parent = self,
+                yield CTestItem(name = test_result["function_name"] + " < " + test_result["DSCR"] + " >", parent = self,
                         test_result = test_result)
 
 
