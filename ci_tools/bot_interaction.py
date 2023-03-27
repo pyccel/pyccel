@@ -90,10 +90,6 @@ bot_triggers = {'welcome' : welcome,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
-    parser.add_argument('pr_number', type=int,
-                            help='Number of the pull request')
-    parser.add_argument('command', type=str,
-                            help='The command left in the comment')
     parser.add_argument('gitEvent', metavar='gitEvent', type=str,
                         help='File containing the json description of the triggering event')
     parser.add_argument('output', metavar='output', type=str,
@@ -101,10 +97,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    pr_id = args.pr_number
-
     with open(args.gitEvent, encoding="utf-8") as event_file:
         event = json.load(event_file)
+
+    print(event)
+
+    exit()
 
     status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,mergeCommit')
 
