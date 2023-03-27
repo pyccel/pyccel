@@ -5,7 +5,7 @@ on:
     branches: [ master ]
     types: [ ready_for_review, synchronize ]
   issue_comment:
-    types: created
+    types: [ created ]
 
 jobs:
   Bot:
@@ -28,14 +28,14 @@ jobs:
       - id: run_bot
         run: |
           python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
-          #echo "run_linux=false" >> "$GITHUB_OUTPUT"
-          #echo "run_windows=false" >> "$GITHUB_OUTPUT"
-          #echo "run_macosx=false" >> "$GITHUB_OUTPUT"
-          #echo "run_coverage=false" >> "$GITHUB_OUTPUT"
-          #echo "run_docs=false" >> "$GITHUB_OUTPUT"
-          #echo "run_pylint=false" >> "$GITHUB_OUTPUT"
-          #echo "run_lint=false" >> "$GITHUB_OUTPUT"
-          #echo "run_spelling=false" >> "$GITHUB_OUTPUT"
+          echo "run_linux=false" >> "$GITHUB_OUTPUT"
+          echo "run_windows=false" >> "$GITHUB_OUTPUT"
+          echo "run_macosx=false" >> "$GITHUB_OUTPUT"
+          echo "run_coverage=false" >> "$GITHUB_OUTPUT"
+          echo "run_docs=false" >> "$GITHUB_OUTPUT"
+          echo "run_pylint=false" >> "$GITHUB_OUTPUT"
+          echo "run_lint=false" >> "$GITHUB_OUTPUT"
+          echo "run_spelling=false" >> "$GITHUB_OUTPUT"
 
   Linux:
     needs: Bot
