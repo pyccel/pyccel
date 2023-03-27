@@ -1,0 +1,5 @@
+- [ ] Write a clear PR description
+- [ ] Add tests to check your code works as expected
+- [ ] Update documentation if necessary
+- [ ] Update Changelog
+- [ ] Ensure tests are passing
