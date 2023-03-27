@@ -60,3 +60,28 @@ jobs:
       ./.github/workflows/coverage.yml
     with:
       python_version: 3.7
+
+  DocumentationChecker:
+    needs: Bot
+    if: ${{ needs.Bot.outputs.run_docs }} == 'true'
+    uses:
+      ./.github/workflows/doc_coverage.yml
+    with:
+      python_version: 3.8
+      base: ${{ github.event.pull_request.base.sha }}
+
+  PythonLint:
+    needs: Bot
+    if: ${{ needs.Bot.outputs.run_pylint }} == 'true'
+    uses:
+      ./.github/workflows/lint.yml
+    with:
+      python_version: 3.8
+
+  PyccelLint:
+    needs: Bot
+    if: ${{ needs.Bot.outputs.run_lint }} == 'true'
+    uses:
+      ./.github/workflows/pyccel_lint.yml
+    with:
+      python_version: 3.8
