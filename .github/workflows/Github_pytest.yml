@@ -20,6 +20,7 @@ jobs:
       run_lint: ${{ steps.run_bot.outputs.run_lint }}
       run_spelling: ${{ steps.run_bot.outputs.run_spelling }}
     steps:
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
