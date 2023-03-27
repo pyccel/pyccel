@@ -1,5 +1,5 @@
 import argparse
-from git_evaluation_tools import leave_comment, get_previous_pr_comments, get_head_ref
+#from git_evaluation_tools import leave_comment, get_previous_pr_comments, get_head_ref
 
 #senior_reviewer = ['yguclu', 'ebourne']
 senior_reviewer = ['ebourne']
@@ -107,13 +107,13 @@ if __name__ == '__main__':
     status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,mergeCommit')
 
     outputs = {'run_linux': False,
-    ￼          'run_windows': False,
-    ￼          'run_macosx': False,
-    ￼          'run_coverage': False,
-    ￼          'run_docs': False,
-    ￼          'run_pylint': False,
-    ￼          'run_lint': False,
-    ￼          'run_spelling': False}
+               'run_windows': False,
+               'run_macosx': False,
+               'run_coverage': False,
+               'run_docs': False,
+               'run_pylint': False,
+               'run_lint': False,
+               'run_spelling': False}
 
     ref = status['headRefOid']
     mergeCommit = status['mergeCommit']
