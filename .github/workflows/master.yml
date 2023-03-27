@@ -29,6 +29,8 @@ jobs:
   MacOSX:
 
     runs-on: macos-latest
+    uses:
+      ./.github/workflows/macosx.yml
     with:
       python_version: '3.9'
 
