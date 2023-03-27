@@ -6,27 +6,56 @@ on:
     types: [ ready_for_review, synchronize ]
 
 jobs:
+  Bot:
+    runs-on: ubuntu-latest
+    outputs:
+      run_linux: ${{ steps.run_bot.outputs.run_linux }}
+      run_windows: ${{ steps.run_bot.outputs.run_windows }}
+      run_macosx: ${{ steps.run_bot.outputs.run_macosx }}
+      run_coverage: ${{ steps.run_bot.outputs.run_coverage }}
+      run_docs: ${{ steps.run_bot.outputs.run_docs }}
+      run_pylint: ${{ steps.run_bot.outputs.run_pylint }}
+      run_lint: ${{ steps.run_bot.outputs.run_lint }}
+      run_spelling: ${{ steps.run_bot.outputs.run_spelling }}
+    steps:
+      - id: run_bot
+        run: |
+          echo "run_linux=true" >> "$GITHUB_OUTPUT"
+          echo "run_windows=true" >> "$GITHUB_OUTPUT"
+          echo "run_macosx=true" >> "$GITHUB_OUTPUT"
+          echo "run_coverage=true" >> "$GITHUB_OUTPUT"
+          echo "run_docs=true" >> "$GITHUB_OUTPUT"
+          echo "run_pylint=true" >> "$GITHUB_OUTPUT"
+          echo "run_lint=true" >> "$GITHUB_OUTPUT"
+          echo "run_spelling=true" >> "$GITHUB_OUTPUT"
+
   Linux:
+    needs: Bot
+    if: ${{ needs.Bot.outputs.run_linux }} == 'true'
     uses:
       ./.github/workflows/linux.yml
     with:
       python_version: 3.7
 
   Windows:
+    needs: Bot
+    if: ${{ needs.Bot.outputs.run_windows }} == 'true'
     uses:
       ./.github/workflows/windows.yml
     with:
       python_version: 3.7
 
   MacOSX:
+    needs: Bot
+    if: ${{ needs.Bot.outputs.run_macosx }} == 'true'
     uses:
       ./.github/workflows/macosx.yml
     with:
       python_version: '3.10'
 
   CoverageChecker:
-
-    needs: Linux
+    needs: Bot, Linux
+    if: ${{ needs.Bot.outputs.run_coverage }} == 'true'
     uses:
       ./.github/workflows/coverage.yml
     with:
