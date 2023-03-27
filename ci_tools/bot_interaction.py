@@ -5,6 +5,8 @@ import json
 #senior_reviewer = ['yguclu', 'ebourne']
 senior_reviewer = ['ebourne']
 
+comment_folder = os.path.join(os.path.dirname(__FILE__), 'bot_messages')
+
 def run_tests(pr_id, event, outputs):
     """
     Run the tests for the pull request.
@@ -79,11 +81,10 @@ def print_commands(pr_id, event, outputs):
 
     leave_comment(pr_id, bot_commands)
 
-def welcome(pr_id, event, outputs):
+def welcome(pr_id, event):
     pass
 
-bot_triggers = {'welcome' : welcome,
-                'run tests' : run_tests,
+bot_triggers = {'run tests' : run_tests,
                 'mark as ready': mark_as_ready,
                 'trust user': lambda pr_id, new_user: None,
                 'commands' : print_commands}
@@ -100,6 +101,19 @@ if __name__ == '__main__':
 
     with open(args.gitEvent, encoding="utf-8") as event_file:
         event = json.load(event_file)
+
+    if event['action'] == 'opened':
+        new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
+        if new_user:
+            with open(os.path.join(comment_folder, 'welcome_newcomer.txt')) as msg_file:
+                comment = msg_file.read()
+        else:
+            with open(os.path.join(comment_folder, 'welcome_friend.txt')) as msg_file:
+                comment = msg_file.read()
+        with open(os.path.join(comment_folder, 'checklist.txt')) as msg_file:
+            comment += msg_file.read()
+
+        leave_comment(pr_id, comment)
 
     print(event)
 
