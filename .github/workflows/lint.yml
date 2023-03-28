@@ -6,7 +6,6 @@ on:
       python_version:
         required: true
         type: string
-    inputs:
       base_ref:
         required: false
         type: string
