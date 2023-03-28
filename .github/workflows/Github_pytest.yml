@@ -20,6 +20,8 @@ jobs:
       run_pylint: ${{ steps.run_bot.outputs.run_pylint }}
       run_lint: ${{ steps.run_bot.outputs.run_lint }}
       run_spelling: ${{ steps.run_bot.outputs.run_spelling }}
+      HEAD: ${{ steps.run_bot.outputs.HEAD }}
+      REF: ${{ steps.run_bot.outputs.REF }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ inputs.python_version }}
@@ -29,14 +31,14 @@ jobs:
       - id: run_bot
         run: |
           python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
-          echo "run_linux=false" >> "$GITHUB_OUTPUT"
-          echo "run_windows=false" >> "$GITHUB_OUTPUT"
-          echo "run_macosx=false" >> "$GITHUB_OUTPUT"
-          echo "run_coverage=false" >> "$GITHUB_OUTPUT"
-          echo "run_docs=false" >> "$GITHUB_OUTPUT"
-          echo "run_pylint=True" >> "$GITHUB_OUTPUT"
-          echo "run_lint=false" >> "$GITHUB_OUTPUT"
-          echo "run_spelling=false" >> "$GITHUB_OUTPUT"
+          #echo "run_linux=false" >> "$GITHUB_OUTPUT"
+          #echo "run_windows=false" >> "$GITHUB_OUTPUT"
+          #echo "run_macosx=false" >> "$GITHUB_OUTPUT"
+          #echo "run_coverage=false" >> "$GITHUB_OUTPUT"
+          #echo "run_docs=false" >> "$GITHUB_OUTPUT"
+          #echo "run_pylint=True" >> "$GITHUB_OUTPUT"
+          #echo "run_lint=false" >> "$GITHUB_OUTPUT"
+          #echo "run_spelling=false" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -88,6 +90,7 @@ jobs:
       ./.github/workflows/lint.yml
     with:
       python_version: 3.8
+      ref: ${{ needs.Bot.outputs.REF }}
 
   PyccelLint:
     needs: Bot

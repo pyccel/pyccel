@@ -1,7 +1,8 @@
 import argparse
 import json
 import os
-#from git_evaluation_tools import leave_comment, get_previous_pr_comments, get_head_ref
+import sys
+from git_evaluation_tools import leave_comment, get_status_json
 
 #senior_reviewer = ['yguclu', 'ebourne']
 senior_reviewer = ['ebourne']
@@ -103,6 +104,16 @@ if __name__ == '__main__':
     with open(args.gitEvent, encoding="utf-8") as event_file:
         event = json.load(event_file)
 
+    if 'comment' in event and 'pull_request' in event['issue'] and event['comment']['body'].startswith('/bot'):
+        pr_id = event['issue']['number']
+        event_name = 'comment'
+    elif 'pull_request' in event:
+        pr_id = event['number']
+        event_name = 'pull_request'
+    else:
+        pr_id = None
+        event_name = None
+
     if event['action'] == 'opened':
         new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
         if new_user:
@@ -115,10 +126,7 @@ if __name__ == '__main__':
             comment += msg_file.read()
 
         leave_comment(pr_id, comment)
-
-    print(event)
-
-    exit()
+        sys.exit()
 
     status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,mergeCommit')
 
@@ -138,9 +146,10 @@ if __name__ == '__main__':
 
     print(event)
 
-    command = args.command.split('/bot')[1].strip()
+    if event_name == 'comment':
+        command = args.command.split('/bot')[1].strip()
 
-    bot_triggers.get(command, print_commands)(args.pr_number, event, outputs)
+        bot_triggers.get(command, print_commands)(args.pr_number, event, outputs)
 
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
