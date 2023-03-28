@@ -109,7 +109,7 @@ def message_from_file(filename):
         comment = msg_file.read()
     return comment
 
-def update_test_information(pr_id, event, outputs):
+def update_test_information(pr_id, event):
     """
     Update the PR with the information about the tests.
 
@@ -125,16 +125,13 @@ def update_test_information(pr_id, event, outputs):
 
     event : dict
         The event payload of the GitHub workflow.
-
-    outputs : dict
-        The dictionary containing the output of the bot.
     """
     messages, last_message, date = check_previous_comments(pr_id)
 
     data = get_job_information(event['run_number'])
     print(data)
 
-    ref_sha = outputs['SHA']
+    ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
     comment = f"Ran tests on commit {ref_sha}, for more details see [here]({url})\n"
     passed = True
