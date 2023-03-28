@@ -55,7 +55,7 @@ def run_tests(pr_id, command_words, output, event):
         The event payload of the GitHub workflow.
     """
     url = get_run_url(event)
-    comment = f"Running tests, for more details see [here]({url}/actions/runs/{run_id})\n"
+    comment = f"Running tests, for more details see [here]({url})\n"
     tests = command_words[1:]
     if tests == ['all']:
         tests = test_keys
