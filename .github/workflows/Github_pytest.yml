@@ -32,6 +32,7 @@ jobs:
         run: |
           echo "$GITHUB_OUTPUT"
           echo $GITHUB_OUTPUT
+          echo ${{ github.run_id } ${{ github.run_number }}} ${{ github.run_attempt }}
           python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
           #echo "run_linux=false" >> "$GITHUB_OUTPUT"
           #echo "run_windows=false" >> "$GITHUB_OUTPUT"
@@ -84,7 +85,7 @@ jobs:
       ./.github/workflows/doc_coverage.yml
     with:
       python_version: 3.8
-      base: ${{ github.event.pull_request.base.sha }}
+      base: ${{ needs.Bot.outputs.REF }}
 
   PythonLint:
     needs: Bot
