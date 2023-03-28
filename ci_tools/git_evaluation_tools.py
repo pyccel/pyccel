@@ -432,8 +432,8 @@ def update_test_status(status_url, state, run_url, description):
     """
     assert state in ('error', 'failure', 'pending', 'success')
     cmds = [github_cli, 'api', '--method', 'POST', "-H", "Accept: application/vnd.github+json",
-            status_url, '-f', "state='{state}'", '-f', "target_url='{run_url}'", '-f',
-            "description='{description}'", "-f", "context='Tests on Draft'"]
+            status_url, '-f', f"state='{state}'", '-f', f"target_url='{run_url}'", '-f',
+            f"description='{description}'", "-f", "context='Tests on Draft'"]
 
     print(cmds)
 
