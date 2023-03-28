@@ -173,6 +173,10 @@ if __name__ == '__main__':
 
     print(event)
 
+    print("FOUND: ",args.cleanup_trigger)
+
+    cleanup_trigger = args.cleanup_trigger
+
     # Initialise outputs
     outputs = {'run_linux': False,
                'run_windows': False,
@@ -186,11 +190,11 @@ if __name__ == '__main__':
                'HEAD': '',
                'REF': ''}
 
-    if 'cleanup_trigger' == 'request_review_status':
+    if cleanup_trigger == 'request_review_status':
         mark_as_ready(pr_id)
         sys.exit()
 
-    elif 'cleanup_trigger' == 'update_test_information':
+    elif cleanup_trigger == 'update_test_information':
         # If reporting after run
 
         pr_id = event['issue']['number']
