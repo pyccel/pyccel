@@ -435,5 +435,7 @@ def update_test_status(status_url, state, run_url, description):
             status_url, '-f', "state='{state}'", '-f', "target_url='{run_url}'", '-f',
             "description='{description}'", "-f", "context='Tests on Draft'"]
 
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        p.communicate()
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+        out, err = p.communicate()
+    print(out)
+    print(err)
