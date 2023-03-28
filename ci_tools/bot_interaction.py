@@ -138,9 +138,6 @@ def update_test_information(pr_id, event):
 
     leave_comment(pr_id, comment, url in last_message)
 
-bot_triggers = {'mark as ready': mark_as_ready,
-                'commands' : print_commands}
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
