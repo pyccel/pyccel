@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sys
-from git_evaluation_tools import leave_comment, get_status_json
+from git_evaluation_tools import leave_comment, get_status_json, update_test_status, github_cli, get_job_information
 
 #senior_reviewer = ['yguclu', 'ebourne']
 senior_reviewer = ['ebourne']
@@ -126,10 +126,7 @@ def update_test_information(pr_id, event):
     """
     messages, last_message, date = check_previous_comments(pr_id)
 
-    cmd = [github_cli, 'run', 'view', args.run_id, '--json', 'jobs']
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        result, _ = p.communicate()
-    data = json.loads(result)['jobs']
+    data = get_job_information(event['run_number'])
     print(data)
 
     ref_sha = get_status_json(pr_id, 'headRefOid')
@@ -215,10 +212,7 @@ if __name__ == '__main__':
             outputs['cleanup_trigger'] = 'update_test_information'
 
         elif command == 'mark as ready':
-            cmds = [github_cli, 'pr', 'ready', str(pr_id)]
-
-            with subprocess.Popen(cmds) as p:
-                p.communicate()
+            set_ready(pr_id)
 
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))

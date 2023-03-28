@@ -11,15 +11,15 @@ __all__ = ('github_cli',
            'get_diff_as_json',
            'get_previous_pr_comments',
            'check_previous_comments',
-           'get_pr_number',
            'get_labels',
            'is_draft',
            'get_review_status',
-           'check_passing',
            'leave_comment',
            'remove_labels',
            'set_draft',
-           'update_test_status'
+           'set_ready',
+           'update_test_status',
+           'get_job_information'
            )
 
 github_cli = shutil.which('gh')
@@ -271,27 +271,21 @@ def get_review_status():
     return review_status, requested_authors
 
 
-def check_passing():
+def get_job_information(run_id):
     """
-    Check if tests are passing for this PR.
+    Get information about the jobs run.
+
+    Use the GitHub CLI to check all information about the jobs
+    related to a workflow.
 
     Results
     -------
     bool : Indicates if tests are passed
     """
-
-    # Wait till tests have finished (refresh every minute)
-    cmds = [github_cli, 'pr', 'checks', '--required', '--watch', '-i', '60']
-
-    with subprocess.Popen(cmds) as p:
-        p.communicate()
-
-
-    # Collect results
-    checks = get_status_json(pr_id, 'statusCheckRollup')
-    passing = all(c['conclusion'] == 'SUCCESS' for c in checks if c['name'] not in ('CoverageChecker', 'Check labels', 'Welcome'))
-
-    return passing
+    cmd = [github_cli, 'run', 'view', run_id, '--json', 'jobs']
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
+    return json.loads(result)['jobs']
 
 
 def leave_comment(number, comment, edit = False):
@@ -375,6 +369,24 @@ def remove_labels(number, labels):
     cmds = [github_cli, 'pr', 'edit', str(number)]
     for lab in labels:
         cmds += ['--remove-label', lab]
+
+    with subprocess.Popen(cmds) as p:
+        p.communicate()
+
+
+def set_ready(number):
+    """
+    Remove draft status from PR.
+
+    Use GitHub's command-line interface to remove the draft status of
+    the PR.
+
+    Parameters
+    ----------
+    number : int
+        The number of the PR.
+    """
+    cmds = [github_cli, 'pr', 'ready', str(number)]
 
     with subprocess.Popen(cmds) as p:
         p.communicate()
