@@ -433,7 +433,7 @@ def update_test_status(status_url, state, run_url, description):
     assert state in ('error', 'failure', 'pending', 'success')
     cmds = [github_cli, 'api', '--method', 'POST', "-H", "Accept: application/vnd.github+json",
             status_url, '-f', "state='{state}'", '-f', "target_url='{run_url}'", '-f',
-            "description='{description}'", "-f", "Tests on Draft"]
+            "description='{description}'", "-f", "context='Tests on Draft'"]
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         p.communicate()
