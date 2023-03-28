@@ -54,8 +54,9 @@ def run_tests(pr_id, command_words, output, event):
     event : dict
         The event payload of the GitHub workflow.
     """
+    ref_sha = get_status_json('headRefOid')
     url = get_run_url(event)
-    comment = f"Running tests, for more details see [here]({url})\n"
+    comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
     tests = command_words[1:]
     if tests == ['all']:
         tests = test_keys
@@ -160,6 +161,8 @@ if __name__ == '__main__':
     # Save run number with event information
     event['run_number'] = args.run_id
 
+    print(event)
+
     # Initialise outputs
     outputs = {'run_linux': False,
                'run_windows': False,
@@ -221,8 +224,6 @@ if __name__ == '__main__':
     if pr_id is not None:
         outputs['HEAD'] = get_status_json(pr_id, 'baseRefName')
         outputs['REF'] = f'refs/pull/{pr_id}/merge'
-
-    print(event)
 
     print(outputs)
 
