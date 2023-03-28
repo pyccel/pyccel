@@ -20,7 +20,7 @@ jobs:
   Windows:
 
     uses:
-      ./.github/workflows/linux.yml
+      ./.github/workflows/windows.yml
     with:
       python_version: 3.7
 
