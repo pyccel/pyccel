@@ -130,7 +130,7 @@ def update_test_information(pr_id, event):
 
     url = get_run_url(event)
 
-    comment = f"Ran tests, for more details see [here]({url}/actions/runs/{run_id})\n"
+    comment = f"Ran tests, for more details see [here]({url})\n"
     for job in data:
         conclusion = job['conclusion']
         if conclusion == 'skipped':
