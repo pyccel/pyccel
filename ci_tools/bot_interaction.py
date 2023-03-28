@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     print(event)
 
-    prinT(outputs)
+    print(outputs)
 
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
