@@ -34,7 +34,7 @@ jobs:
           echo "run_macosx=false" >> "$GITHUB_OUTPUT"
           echo "run_coverage=false" >> "$GITHUB_OUTPUT"
           echo "run_docs=false" >> "$GITHUB_OUTPUT"
-          echo "run_pylint=false" >> "$GITHUB_OUTPUT"
+          echo "run_pylint=True" >> "$GITHUB_OUTPUT"
           echo "run_lint=false" >> "$GITHUB_OUTPUT"
           echo "run_spelling=false" >> "$GITHUB_OUTPUT"
         env:
