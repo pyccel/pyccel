@@ -283,7 +283,7 @@ def get_job_information(run_id):
     bool : Indicates if tests are passed
     """
     cmd = [github_cli, 'run', 'view', run_id, '--json', 'jobs']
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
     return json.loads(result)['jobs']
 
