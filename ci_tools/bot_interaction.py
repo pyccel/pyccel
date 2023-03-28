@@ -6,7 +6,7 @@ import os
 #senior_reviewer = ['yguclu', 'ebourne']
 senior_reviewer = ['ebourne']
 
-comment_folder = os.path.join(os.path.dirname(__FILE__), 'bot_messages')
+comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
 def run_tests(pr_id, event, outputs):
     """
