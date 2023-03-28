@@ -1,0 +1,5 @@
+Hello again! Thank you for this new pull request :star_struck:.
+
+Don't forget to let me know when it is complete with the command `@bot mark as ready`.
+
+Here is your checklist:
