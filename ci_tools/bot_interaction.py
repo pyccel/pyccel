@@ -124,14 +124,21 @@ if __name__ == '__main__':
         command_words = command.split()
 
         if command_words[0] == 'run':
-            if command_words[1] == 'tests':
-                for k in test_keys:
-                    outputs[f'run_{k}'] = True
-            else:
-                for k in command_words[1:]:
-                    outputs[f'run_{k}'] = True
+            url = event['repository']['url']
+            comment = "Running tests at {url}\n"
+            tests = command_words[1:]
+            if tests == ['tests']:
+                tests = test_keys
+            for t in tests:
+                outputs[f'run_{t}'] = True
+                comment += f"* :hourglass_flowing_sand: {t}"
+            leave_comment(pr_id, comment)
         elif command == 'mark as ready':
             pass
+        elif command == 'show tests':
+            with open(os.path.join(comment_folder, 'show_tests.txt')) as msg_file:
+                comment = msg_file.read()
+            leave_comment(pr_id, comment)
         else:
             print_commands(pr_id)
 
@@ -154,13 +161,12 @@ if __name__ == '__main__':
             comment += msg_file.read()
 
         leave_comment(pr_id, comment)
+    else:
+        pr_id = None
 
     if pr_id is not None:
-        status = get_status_json(pr_id, 'headRefName,baseRefName,potentialMergeCommit')
-        merge_commit = status['potentialMergeCommit']['oid']
-        outputs['HEAD'] = status['baseRefName']
-        #outputs['REF'] = f'refs/pull/{pr_id}/merge'
-        outputs['REF'] = status['headRefName']
+        outputs['HEAD'] = get_status_json(pr_id, 'baseRefName')
+        outputs['REF'] = f'refs/pull/{pr_id}/merge'
 
     print(event)
 
