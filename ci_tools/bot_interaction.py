@@ -161,8 +161,6 @@ if __name__ == '__main__':
         outputs['HEAD'] = status['baseRefName']
         outputs['REF'] = f'+{merge_commit}:refs/remotes/pull/{pr_id}/merge'
 
-        if event_name == 'comment':
-
     print(event)
 
     with open(args.output, encoding="utf-8", mode='a') as out_file:
