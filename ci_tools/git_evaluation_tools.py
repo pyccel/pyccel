@@ -19,8 +19,7 @@ __all__ = ('github_cli',
            'leave_comment',
            'remove_labels',
            'set_draft',
-           'get_head_ref',
-           'trigger_test'
+           'update_test_status'
            )
 
 github_cli = shutil.which('gh')
@@ -397,26 +396,32 @@ def set_draft(number):
     with subprocess.Popen(cmds) as p:
         p.communicate()
 
-def get_head_ref(number):
-    return get_status_json(number, 'headRefName')
-
-def trigger_test(number, workflow_name, head_ref):
+def update_test_status(status_url, state, run_url, description):
     """
-    Trigger the requested workflow.
+    Update the status of the pull request.
 
-    Use GitHub's command-line interface to trigger the named
-    workflow via the workflow_dispatch trigger.
+    Use the GitHub CLI and the GitHub API to create a commit status
+    as described in the docs:
+    https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#create-a-commit-status
 
     Parameters
     ----------
-    number : int
-        The number of the PR.
+    status_url : str
+        The url where the status should be sent.
 
-    workflow_name : str
-        The name of the workflow to be triggered.
+    state : str
+        The state to be posted.
+
+    run_url : str
+        The url where the details of the run can be seen.
+
+    description : str
+        The tag of the triggered test.
     """
-    print(workflow_name, head_ref)
-    cmds = [github_cli, 'workflow', 'run', workflow_name, 'comments', '--ref', head_ref]
+    assert state in ('error', 'failure', 'pending', 'success')
+    cmd = [github_cli, 'api', '--method', 'POST', "-H", "Accept: application/vnd.github+json",
+            status_url, '-f', "state='{state}'", '-f', "target_url='{run_url}'", '-f',
+            "description='{description}'", "-f", "Tests on Draft"]
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         p.communicate()

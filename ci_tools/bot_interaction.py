@@ -64,6 +64,9 @@ def run_tests(pr_id, command_words, outputs, event):
         outputs[f'run_{t}'] = True
     leave_comment(pr_id, comment)
 
+    update_test_status(event['repository']['statuses_url'].format(sha=ref_sha),
+            state='pending', run_url = url, description = 'run '+', '.join(command_words[1:]))
+
 def mark_as_ready(pr_id):
     """
     Mark the pull request as ready for review.
@@ -129,18 +132,26 @@ def update_test_information(pr_id, event):
     data = json.loads(result)['jobs']
     print(data)
 
+    ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
-
-    comment = f"Ran tests, for more details see [here]({url})\n"
+    comment = f"Ran tests on commit {ref_sha}, for more details see [here]({url})\n"
+    passed = True
     for job in data:
         conclusion = job['conclusion']
         if conclusion == 'skipped':
             continue
         name = job['name']
-        icon = ':heavy_check_mark:' if conclusion == 'completed' else ':x:'
+        job_passed = (conclusion == 'completed')
+        icon = ':heavy_check_mark:' if job_passed else ':x:'
         comment += f"- {icon} {name}\n"
+        passed &= job_passed
 
     leave_comment(pr_id, comment, url in last_message)
+
+    state = 'success' if passed else 'failure'
+
+    update_test_status(event['repository']['statuses_url'].format(sha=ref_sha),
+            state=state, run_url = url, description = 'run '+', '.join(command_words[1:]))
 
 
 if __name__ == '__main__':
@@ -244,17 +255,3 @@ if __name__ == '__main__':
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
             print(f"{o}={v}", file=out_file)
-
-
-
-"""
-gh api \
-  --method POST \
-  -H "Accept: application/vnd.github+json" \
-  -H "X-GitHub-Api-Version: 2022-11-28" \
-  /repos/OWNER/REPO/statuses/SHA \
-  -f state='success' \
- -f target_url='https://example.com/build/status' \
- -f description='The build succeeded!' \
- -f context='continuous-integration/jenkins'
-"""

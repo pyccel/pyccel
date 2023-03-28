@@ -1,5 +1,5 @@
 This bot reacts to all comments which begin with `/bot`. This phrase can be followed by any of these commands:
 - `show tests` : Lists the tests which can be triggered
-- `run X` : Triggers the test X (X must be `all` or one of the values listed by `show tests`)
+- `run X` : Triggers the test X (X must be `all` or one of the values listed by `show tests`). Multiple tests can be specified separated by spaces.
 - `mark as ready` : Adds the appropriate review flag and requests reviews. This command should be used when the PR is first ready for review, or when a review has been answered.
 - `commands` : Shows this list detailing all the commands which are understood
