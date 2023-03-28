@@ -134,10 +134,11 @@ def update_test_information(pr_id, event):
     passed = True
     for job in data:
         conclusion = job['conclusion']
-        if conclusion == 'skipped':
-            continue
         name = job['name']
-        job_passed = (conclusion == 'completed')
+        if conclusion == 'skipped' or name in ('Bot', 'CleanUpBot'):
+            continue
+        print(conclusion)
+        job_passed = (conclusion == 'success')
         icon = ':heavy_check_mark:' if job_passed else ':x:'
         comment += f"- {icon} {name}\n"
         passed &= job_passed

@@ -123,7 +123,7 @@ jobs:
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
             ${{ needs.Bot.outputs.status_url }} \
-            -f state="${{ steps.run_bot.outputs.global_bot }}" -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
+            -f state="${{ steps.run_bot.outputs.global_state }}" -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
         env:
           GH_TOKEN: ${{ github.token }}
