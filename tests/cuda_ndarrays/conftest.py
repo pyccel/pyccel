@@ -112,7 +112,7 @@ class CTestItem(pytest.Item):
         """
         if isinstance(excinfo.value, CTestException):
             return f"Test failed : {self.test_result['file_name']}:{self.test_result['line_number']} {self.test_result['function_name']} < {self.test_result['DSCR']} >\n INFO : {self.test_result['INFO']}"
-        return None
+        return super().repr_failure(excinfo)
 
 
 
