@@ -54,7 +54,7 @@ def run_tests(pr_id, command_words, outputs, event):
     event : dict
         The event payload of the GitHub workflow.
     """
-    ref_sha = get_status_json(pr_id, 'headRefOid')
+    ref_sha = outputs['SHA']
     url = get_run_url(event)
     comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
     tests = command_words[1:]
@@ -107,7 +107,7 @@ def message_from_file(filename):
         comment = msg_file.read()
     return comment
 
-def update_test_information(pr_id, event):
+def update_test_information(pr_id, event, outputs):
     """
     Update the PR with the information about the tests.
 
@@ -123,13 +123,16 @@ def update_test_information(pr_id, event):
 
     event : dict
         The event payload of the GitHub workflow.
+
+    outputs : dict
+        The dictionary containing the output of the bot.
     """
     messages, last_message, date = check_previous_comments(pr_id)
 
     data = get_job_information(event['run_number'])
     print(data)
 
-    ref_sha = get_status_json(pr_id, 'headRefOid')
+    ref_sha = outputs['SHA']
     url = get_run_url(event)
     comment = f"Ran tests on commit {ref_sha}, for more details see [here]({url})\n"
     passed = True
@@ -188,7 +191,8 @@ if __name__ == '__main__':
                'run_spelling': False,
                'additional_trigger': '',
                'HEAD': '',
-               'REF': ''}
+               'REF': '',
+               'SHA': get_status_json(pr_id, 'headRefOid')}
 
     if cleanup_trigger == 'request_review_status':
         mark_as_ready(pr_id)

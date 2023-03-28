@@ -36,7 +36,6 @@ def get_status_json(pr_id, tags):
     cmds = [github_cli, 'pr', 'status', '--json', f'{tags},number']
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
-        print(result, pr_id)
     # Return to master branch
     cmds = ['git', 'checkout', 'master']
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
@@ -283,6 +282,7 @@ def get_job_information(run_id):
     bool : Indicates if tests are passed
     """
     cmd = [github_cli, 'run', 'view', run_id, '--json', 'jobs']
+    print(cmd)
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
     return json.loads(result)['jobs']
