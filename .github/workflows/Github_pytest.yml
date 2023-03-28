@@ -22,6 +22,7 @@ jobs:
       run_spelling: ${{ steps.run_bot.outputs.run_spelling }}
       HEAD: ${{ steps.run_bot.outputs.HEAD }}
       REF: ${{ steps.run_bot.outputs.REF }}
+      cleanup_trigger: ${{ steps.run_bot.outputs.cleanup_trigger }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ inputs.python_version }}
@@ -91,3 +92,19 @@ jobs:
       ./.github/workflows/pyccel_lint.yml
     with:
       python_version: 3.8
+
+  CleanUpBot:
+    needs: [ Bot, Linux, Windows, MacOSX, CoverageChecker, DocumentationChecker, PythonLint, PyccelLint ]
+    if: ${{ needs.Bot.outputs.cleanup_trigger != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - id: run_bot
+        run: |
+          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.event.run_id }} ${{ needs.Bot.outputs.cleanup_trigger }}
+        env:
+          GH_TOKEN: ${{ github.token }}

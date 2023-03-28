@@ -32,7 +32,7 @@ def get_run_url(event):
     run_id = event['run_number']
     return f"{url}/actions/runs/{run_id}"
 
-def run_tests(pr_id, command_words, output, event):
+def run_tests(pr_id, command_words, outputs, event):
     """
     Run the requested tests and leave a comment on the PR.
 
@@ -48,7 +48,7 @@ def run_tests(pr_id, command_words, output, event):
     command_words : list of strs
         The command issued to the bot.
 
-    output : dict
+    outputs : dict
         The dictionary containing the output of the bot.
 
     event : dict
@@ -64,7 +64,7 @@ def run_tests(pr_id, command_words, output, event):
         outputs[f'run_{t}'] = True
     leave_comment(pr_id, comment)
 
-def mark_as_ready(pr_id, outputs):
+def mark_as_ready(pr_id):
     """
     Mark the pull request as ready for review.
 
@@ -145,11 +145,13 @@ def update_test_information(pr_id, event):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
-    parser.add_argument('gitEvent', metavar='gitEvent', type=str,
+    parser.add_argument('gitEvent', type=str,
                         help='File containing the json description of the triggering event')
-    parser.add_argument('output', metavar='output', type=str,
+    parser.add_argument('output', type=str,
                         help='File where the variables should be saved')
-    parser.add_argument('run_id', metavar='output', type=int,
+    parser.add_argument('run_id', type=int,
+                        help='The id of the runner (used to identify the action page)')
+    parser.add_argument('cleanup_trigger', type=str, nargs='?', default='',
                         help='The id of the runner (used to identify the action page)')
 
     args = parser.parse_args()
@@ -172,10 +174,23 @@ if __name__ == '__main__':
                'run_pylint': False,
                'run_lint': False,
                'run_spelling': False,
+               'additional_trigger': '',
                'HEAD': '',
                'REF': ''}
 
-    if 'comment' in event and 'pull_request' in event['issue'] and event['comment']['body'].startswith('/bot'):
+    if 'cleanup_trigger' == 'request_review_status':
+        mark_as_ready(pr_id)
+        sys.exit()
+
+    elif 'cleanup_trigger' == 'update_test_information':
+        # If reporting after run
+
+        pr_id = event['issue']['number']
+
+        update_test_information(pr_id, event)
+        sys.exit()
+
+    elif 'comment' in event and 'pull_request' in event['issue'] and event['comment']['body'].startswith('/bot'):
         # If bot called explicitly
 
         pr_id = event['issue']['number']
@@ -186,9 +201,13 @@ if __name__ == '__main__':
 
         if command_words[0] == 'run':
             run_tests(pr_id, command_words, outputs, event)
+            outputs['cleanup_trigger'] = 'update_test_information'
 
         elif command == 'mark as ready':
-            run_tests(pr_id, 'run all', outputs, event)
+            cmds = [github_cli, 'pr', 'ready', str(pr_id)]
+
+            with subprocess.Popen(cmds) as p:
+                p.communicate()
 
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
@@ -213,11 +232,6 @@ if __name__ == '__main__':
         pr_id = event['number']
         run_tests(pr_id, 'run all', outputs, event)
 
-    elif 'workflow_run' in event and event['action'] == 'completed':
-        # If tidying up after previous run
-
-        update_test_information(pr_id, event)
-
     else:
         pr_id = None
 
@@ -230,3 +244,17 @@ if __name__ == '__main__':
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
             print(f"{o}={v}", file=out_file)
+
+
+
+"""
+gh api \
+  --method POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  /repos/OWNER/REPO/statuses/SHA \
+  -f state='success' \
+ -f target_url='https://example.com/build/status' \
+ -f description='The build succeeded!' \
+ -f context='continuous-integration/jenkins'
+"""
