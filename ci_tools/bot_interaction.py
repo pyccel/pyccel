@@ -156,11 +156,11 @@ if __name__ == '__main__':
         leave_comment(pr_id, comment)
 
     if pr_id is not None:
-        status = get_status_json(pr_id, 'baseRefName,potentialMergeCommit')
+        status = get_status_json(pr_id, 'headRefName,baseRefName,potentialMergeCommit')
         merge_commit = status['potentialMergeCommit']['oid']
         outputs['HEAD'] = status['baseRefName']
         #outputs['REF'] = f'refs/pull/{pr_id}/merge'
-        outputs['REF'] = f'refs/pull/{pr_id}/head'
+        outputs['REF'] = status['headRefName']
 
     print(event)
 
