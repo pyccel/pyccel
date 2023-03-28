@@ -41,6 +41,8 @@ jobs:
           gh api --method POST -H "Accept: application/vnd.github+json" \
             status_url -f state='pending' -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   Linux:
     needs: Bot
@@ -121,3 +123,5 @@ jobs:
           gh api --method POST -H "Accept: application/vnd.github+json" \
             status_url -f state='error' -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
+        env:
+          GH_TOKEN: ${{ github.token }}
